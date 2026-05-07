@@ -8,11 +8,12 @@
   "packageManager": "pnpm@10.13.1",
   "devDependencies": {
     "@trivago/prettier-plugin-sort-imports": "^6.0.2",
-    "eslint": "^10.3.0",
+    "eslint": "catalog:",
     "husky": "^9.1.7",
     "lint-staged": "^17.0.2",
     "prettier": "^3.8.3",
-    "prettier-plugin-tailwindcss": "^0.8.0"
+    "prettier-plugin-tailwindcss": "^0.8.0",
+    "typescript": "catalog:"
   },
   "scripts": {
     "prepare": "husky",

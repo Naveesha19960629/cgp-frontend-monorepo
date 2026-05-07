@@ -1,3 +1,12 @@
 packages:
-  - "apps/*"
-  - "packages/*"
+  - 'apps/*'
+  - 'packages/*'
+
+catalog:
+  eslint: ^10.3.0
+  typescript: ~6.0.2
+  typescript-eslint: ^8.58.2
+  '@eslint/js': ^10.0.1
+  globals: ^17.5.0
+  eslint-plugin-react-hooks: ^7.1.1
+  eslint-plugin-react-refresh: ^0.5.2
