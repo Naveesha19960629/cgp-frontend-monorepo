@@ -5,7 +5,8 @@
     "paths": {
       "@/*": ["./src/*"],
       "@cgp/ui/*": ["../../packages/ui/src/*"]
-    }
+    },
+    "types": ["vitest/globals"]
   },
   "include": ["src"]
 }

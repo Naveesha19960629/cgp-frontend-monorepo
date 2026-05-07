@@ -18,6 +18,7 @@
   "scripts": {
     "prepare": "husky",
     "lint": "pnpm -r run lint",
+    "test": "pnpm -r run test",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,css,md}\""
   },
