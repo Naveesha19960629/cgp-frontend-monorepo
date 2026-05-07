@@ -1,0 +1,57 @@
+{
+  "name": "@cgp/ui-kit",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./globals.css": "./src/styles/globals.css",
+    "./lib/*": "./src/lib/*.ts",
+    "./components/*": "./src/components/*.tsx",
+    "./hooks/*": "./src/hooks/*.ts"
+  },
+  "dependencies": {
+    "@base-ui/react": "^1.3.0",
+    "@fontsource-variable/inter": "^5.2.8",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "cmdk": "^1.1.1",
+    "embla-carousel-react": "^8.6.0",
+    "iconsax-reactjs": "^0.0.8",
+    "input-otp": "^1.4.2",
+    "lucide-react": "^1.14.0",
+    "next-themes": "^0.4.6",
+    "radix-ui": "^1.4.3",
+    "react": "^19.2.4",
+    "react-day-picker": "^9.14.0",
+    "react-dom": "^19.2.4",
+    "react-hook-form": "^7.75.0",
+    "react-i18next": "^17.0.6",
+    "react-phone-number-input": "^3.4.16",
+    "react-router": "^7.15.0",
+    "shadcn": "^4.7.0",
+    "sonner": "^2.0.7",
+    "tailwind-merge": "^3.5.0",
+    "tw-animate-css": "^1.4.0",
+    "use-debounce": "^10.1.1",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@cgp/tsconfig": "workspace:*",
+    "@eslint/js": "^9.39.2",
+    "@tailwindcss/vite": "^4.1.18",
+    "@types/node": "^25.1.0",
+    "@types/react": "^19.2.10",
+    "@types/react-dom": "^19.2.3",
+    "eslint": "^9.39.2",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.4.24",
+    "globals": "^17.2.0",
+    "tailwindcss": "^4.1.18",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.54.0"
+  },
+  "peerDependencies": {
+    "react": ">=19",
+    "react-dom": ">=19"
+  }
+}

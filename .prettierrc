@@ -1,0 +1,54 @@
+{
+  "semi": true,
+  "trailingComma": "es5",
+  "singleQuote": true,
+  "printWidth": 80,
+  "tabWidth": 2,
+  "useTabs": false,
+  "bracketSpacing": true,
+  "bracketSameLine": false,
+  "arrowParens": "avoid",
+  "endOfLine": "lf",
+  "importOrderParserPlugins": ["typescript", "jsx", "decorators-legacy"],
+  "plugins": [
+    "@trivago/prettier-plugin-sort-imports",
+    "prettier-plugin-tailwindcss"
+  ],
+  "importOrderSeparation": true,
+  "importOrderSortSpecifiers": true,
+  "importOrder": [
+    "^axios",
+    "^class-variance-authority",
+    "^clsx(.*)$",
+    "^@hookform/resolvers(.*)$",
+    "^lodash(.*)$",
+    "^lucide-react.*",
+    "^next-themes.*",
+    "^nuqs(.*)$",
+    "^iconsax-reactjs(.*)$",
+    "^@radix.*",
+    "^@hookform.*",
+    "^msw.*",
+    "^rc-pagination(.*)$",
+    "^react(.*)$",
+    "^react-dom(.*)$",
+    "^react-hook-form(.*)$",
+    "^react-router(.*)$",
+    "^react-router-dom(.*)$",
+    "^sonner.*",
+    "^@tanstack/react-query(.*)$",
+    "^@testing-library.*",
+    "^vite(.*)$",
+    "^@vitejs/(.*)$",
+    "^zod(.*)$",
+
+    "^@/(.*)$",
+
+    "^@/(components|hooks|utils|lib|store|types|constants)/(.*)$",
+    "^@/(pages|views)/(.*)$",
+    "^@/(assets|styles)/(.*)$",
+
+    "<THIRD_PARTY_MODULES>",
+    "^[./]"
+  ]
+}
