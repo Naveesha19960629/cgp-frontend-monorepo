@@ -1,0 +1,19 @@
+{
+  "name": "@cgp/data-access",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./http-client": "./src/http-client.ts",
+    "./query-client": "./src/query-client.ts"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "^5.80.5",
+    "axios": "^1.9.0"
+  },
+  "devDependencies": {
+    "@cgp/tsconfig": "workspace:*",
+    "@types/node": "^24.12.2"
+  }
+}

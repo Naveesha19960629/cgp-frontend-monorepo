@@ -33,8 +33,9 @@ This monorepo hosts the CGP frontend codebase. It currently contains:
 
 | Location | Name | Description |
 |---|---|---|
-| `apps/recruiter-portal` | `recruiter-portal` | Main React SPA for recruiters |
+| `apps/recruiter-portal-shell` | `recruiter-portal-shell` | Main React SPA for recruiters |
 | `packages/ui-kit` | `@cgp/ui-kit` | Shared component library (shadcn/ui + Radix) |
+| `packages/data-access` | `@cgp/data-access` | Shared data fetching (Axios + TanStack Query) |
 | `packages/eslint-config` | `@cgp/eslint-config` | Shared ESLint configuration |
 | `packages/tsconfig` | `@cgp/tsconfig` | Shared TypeScript base configs |
 
@@ -45,15 +46,23 @@ This monorepo hosts the CGP frontend codebase. It currently contains:
 ```
 cgp-frontend-monorepo/
 ├── apps/
-│   └── recruiter-portal/        # React app
+│   └── recruiter-portal-shell/  # React app (shell / entry point)
 │       ├── src/
 │       │   ├── components/      # App-specific components
 │       │   ├── test/            # Test setup and globals
 │       │   └── App.tsx
+│       ├── .env                 # Default env vars (committed, localhost values)
+│       ├── .env.local           # Developer overrides (gitignored)
+│       ├── .env.example         # Template – copy to .env.local to get started
 │       ├── vite.config.ts       # Vite build config
 │       ├── vitest.config.ts     # Vitest test config (separate from vite to avoid version conflicts)
 │       └── package.json
 ├── packages/
+│   ├── data-access/             # Shared data-fetching layer (Axios + TanStack Query)
+│   │   └── src/
+│   │       ├── http-client.ts   # Axios instance (reads VITE_API_BASE_URL)
+│   │       ├── query-client.ts  # TanStack QueryClient singleton
+│   │       └── index.ts         # Public API re-exports
 │   ├── ui-kit/                  # Shared UI component library
 │   │   └── src/
 │   │       ├── components/
@@ -108,8 +117,12 @@ cd cgp-frontend-monorepo
 # 2. Install dependencies (installs for all apps and packages at once)
 pnpm install
 
-# 3. Start the recruiter portal dev server
-pnpm nx serve recruiter-portal
+# 3. Configure environment (per-app, not at root)
+cp apps/recruiter-portal-shell/.env.example apps/recruiter-portal-shell/.env.local
+# then edit .env.local with your local API URL
+
+# 4. Start the recruiter portal dev server
+pnpm nx serve recruiter-portal-shell
 ```
 
 Open http://localhost:5173 in your browser.
@@ -123,15 +136,15 @@ All tasks should be run via Nx so that caching, dependency ordering, and affecte
 ### Development Server
 
 ```bash
-# Start the recruiter-portal dev server
-pnpm nx serve recruiter-portal
+# Start the recruiter-portal-shell dev server
+pnpm nx serve recruiter-portal-shell
 ```
 
 ### Build
 
 ```bash
 # Build a single project
-pnpm nx build recruiter-portal
+pnpm nx build recruiter-portal-shell
 
 # Build all projects (respects build order)
 pnpm nx run-many -t build
@@ -144,13 +157,13 @@ pnpm nx affected -t build
 
 ```bash
 # Run tests for a single project (runs once, no watch)
-pnpm nx test recruiter-portal
+pnpm nx test recruiter-portal-shell
 
 # Run tests for a single project in watch mode
-pnpm nx vite:test recruiter-portal
+pnpm nx vite:test recruiter-portal-shell
 
 # Run tests with coverage
-pnpm nx test:coverage recruiter-portal
+pnpm nx test:coverage recruiter-portal-shell
 
 # Run tests for all projects
 pnpm nx run-many -t test
@@ -163,7 +176,7 @@ pnpm nx affected -t test
 
 ```bash
 # Lint a single project
-pnpm nx eslint:lint recruiter-portal
+pnpm nx eslint:lint recruiter-portal-shell
 
 # Lint all projects
 pnpm nx run-many -t eslint:lint
@@ -231,6 +244,24 @@ pnpm format:check  # checks formatting without writing
 ---
 
 ## Packages Reference
+
+### `@cgp/data-access`
+
+Shared data-fetching layer. Wraps Axios and TanStack Query with workspace-wide defaults.
+
+```ts
+import { useQuery, useMutation, httpClient } from '@cgp/data-access';
+
+// Use the pre-configured Axios instance
+function useJobs() {
+  return useQuery({
+    queryKey: ['jobs'],
+    queryFn: () => httpClient.get('/jobs').then((r) => r.data),
+  });
+}
+```
+
+The `httpClient` base URL is read from `VITE_API_BASE_URL` — configured per-app in `.env` / `.env.local`.
 
 ### `@cgp/ui-kit`
 
@@ -321,9 +352,9 @@ pnpm nx run <project>:<target>
 
 Examples:
 ```bash
-pnpm nx serve recruiter-portal
-pnpm nx vite:build recruiter-portal
-pnpm nx eslint:lint recruiter-portal
+pnpm nx serve recruiter-portal-shell
+pnpm nx vite:build recruiter-portal-shell
+pnpm nx eslint:lint recruiter-portal-shell
 ```
 
 ### Caching
