@@ -7,13 +7,22 @@
   "license": "ISC",
   "packageManager": "pnpm@10.13.1",
   "devDependencies": {
+    "@nx/eslint": "22.7.1",
+    "@nx/vite": "22.7.1",
+    "@nx/vitest": "22.7.1",
+    "@nx/web": "22.7.1",
     "@trivago/prettier-plugin-sort-imports": "^6.0.2",
+    "@vitest/ui": "^3.0.0",
     "eslint": "catalog:",
     "husky": "^9.1.7",
+    "jiti": "2.4.2",
     "lint-staged": "^17.0.2",
+    "nx": "22.7.1",
     "prettier": "^3.8.3",
     "prettier-plugin-tailwindcss": "^0.8.0",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vite": "^8.0.0",
+    "vitest": "^3.0.0"
   },
   "scripts": {
     "prepare": "husky",
@@ -26,5 +35,6 @@
     "**/*.{ts,tsx,js,jsx,json,css,md}": [
       "pnpm exec prettier --write"
     ]
-  }
+  },
+  "dependencies": {}
 }
