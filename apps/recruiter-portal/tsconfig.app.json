@@ -6,7 +6,7 @@
       "@/*": ["./src/*"],
       "@cgp/ui/*": ["../../packages/ui/src/*"]
     },
-    "types": ["vitest/globals"]
+    "types": ["vite/client", "vitest/globals"]
   },
   "include": ["src"]
 }

@@ -50,7 +50,8 @@ cgp-frontend-monorepo/
 │       │   ├── components/      # App-specific components
 │       │   ├── test/            # Test setup and globals
 │       │   └── App.tsx
-│       ├── vite.config.ts       # Vite + Vitest config
+│       ├── vite.config.ts       # Vite build config
+│       ├── vitest.config.ts     # Vitest test config (separate from vite to avoid version conflicts)
 │       └── package.json
 ├── packages/
 │   ├── ui-kit/                  # Shared UI component library
@@ -177,8 +178,6 @@ pnpm format:check
 Root-level convenience scripts (defined in the root `package.json`):
 
 ```bash
-pnpm test          # runs tests across all packages
-pnpm lint          # runs lint across all packages
 pnpm format        # formats all files with Prettier
 pnpm format:check  # checks formatting without writing
 ```
