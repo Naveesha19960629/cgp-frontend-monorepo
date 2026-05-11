@@ -36,6 +36,7 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@cgp/eslint-config": "workspace:*",
     "@cgp/tsconfig": "workspace:*",
     "@tailwindcss/vite": "^4.1.18",
     "@types/node": "^25.1.0",

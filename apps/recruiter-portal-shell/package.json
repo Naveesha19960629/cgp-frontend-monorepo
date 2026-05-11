@@ -3,6 +3,9 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "nx": {
+    "projectType": "application"
+  },
   "scripts": {
     "dev": "nx serve",
     "build": "tsc -b && nx vite:build",
