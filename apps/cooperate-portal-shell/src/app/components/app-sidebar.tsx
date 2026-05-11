@@ -22,13 +22,33 @@ export function AppSidebar() {
         />
       </SidebarHeader>
       <SidebarContent>
-        <SidebarGroup>
+        <SidebarGroup className="mt-12 px-6">
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <a href={'/dashboard/ats'}>
-                  <I3Square variant="Bold" />
+              <SidebarMenuButton
+                asChild
+                className="h-10 gap-3 text-[16px]/6 font-semibold text-slate-600 hover:bg-[#E6EEEE] hover:text-slate-600"
+              >
+                <a href={'/dashboard/ats/vacancies'}>
+                  <I3Square
+                    variant="Bold"
+                    className="text-brand-primary-500 size-6!"
+                  />
                   <span>Vacancies</span>
+                </a>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                className="h-10 gap-3 text-[16px]/6 font-semibold text-slate-600 hover:bg-[#E6EEEE] hover:text-slate-600"
+              >
+                <a href={'/dashboard/ats/vacancies'}>
+                  <I3Square
+                    variant="Bold"
+                    className="text-brand-primary-500 size-6!"
+                  />
+                  <span>Find Candidate</span>
                 </a>
               </SidebarMenuButton>
             </SidebarMenuItem>
