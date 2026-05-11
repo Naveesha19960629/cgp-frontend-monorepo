@@ -1,21 +1,22 @@
-import { Button } from '@cgp/ui-kit/components/ui/button';
+import { RouterProvider } from 'react-router-dom';
 
-export default function App() {
+import { ThemeProvider } from '@/app/providers/theme-provider';
+import router from '@/app/router';
+
+import { QueryClientProvider, queryClient } from '@cgp/data-access';
+import { LandscapeBlocker } from '@cgp/ui-kit/components/landscape-blocker';
+import { Toaster } from '@cgp/ui-kit/components/ui/sonner';
+
+function App() {
   return (
-    <div className="flex min-h-svh p-6">
-      <div className="flex max-w-md min-w-0 flex-col gap-4 text-sm leading-loose">
-        <div>
-          <h1 className="font-medium">Project ready!</h1>
-          <p>You may now add components and start building.a</p>
-          <p>We&apos;ve already added the button component for you.</p>
-          <Button className="mt-2" variant="destructive">
-            Button
-          </Button>
-        </div>
-        <div className="text-muted-foreground font-mono text-xs">
-          (Press <kbd>d</kbd> to toggle dark mode)
-        </div>
-      </div>
-    </div>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider defaultTheme="light" storageKey="ui-theme">
+        <LandscapeBlocker />
+        <RouterProvider router={router} />
+      </ThemeProvider>
+      <Toaster position="bottom-right" />
+    </QueryClientProvider>
   );
 }
+
+export default App;

@@ -77,7 +77,7 @@ function isEditableTarget(target: EventTarget | null) {
   return false;
 }
 
-export function ThemeProvider({
+function ThemeProvider({
   children,
   defaultTheme = 'system',
   storageKey = 'theme',
@@ -219,7 +219,7 @@ export function ThemeProvider({
   );
 }
 
-export const useTheme = () => {
+const useTheme = () => {
   const context = React.useContext(ThemeProviderContext);
 
   if (context === undefined) {
@@ -228,3 +228,5 @@ export const useTheme = () => {
 
   return context;
 };
+
+export { ThemeProvider, useTheme };

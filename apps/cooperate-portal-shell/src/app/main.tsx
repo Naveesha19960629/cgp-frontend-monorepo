@@ -1,21 +1,13 @@
-import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import App from '@/app/app';
-import { ThemeProvider } from '@/components/theme-provider.tsx';
+import { initI18n } from '@/app/utils/i18n';
 
-import { QueryClientProvider, queryClient } from '@cgp/data-access';
-import { TooltipProvider } from '@cgp/ui-kit/components/ui/tooltip';
 import '@cgp/ui-kit/globals.css';
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <TooltipProvider>
-          <App />
-        </TooltipProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
-  </StrictMode>
-);
+async function bootstrap() {
+  await initI18n();
+  createRoot(document.getElementById('root')!).render(<App />);
+}
+
+await bootstrap();
