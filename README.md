@@ -33,7 +33,7 @@ This monorepo hosts the CGP frontend codebase. It currently contains:
 
 | Location | Name | Description |
 |---|---|---|
-| `apps/recruiter-portal-shell` | `recruiter-portal-shell` | Main React SPA for recruiters |
+| `apps/cooperate-portal-shell` | `cooperate-portal-shell` | Main React SPA for cooperates |
 | `packages/ui-kit` | `@cgp/ui-kit` | Shared component library (shadcn/ui + Radix) |
 | `packages/data-access` | `@cgp/data-access` | Shared data fetching (Axios + TanStack Query) |
 | `packages/eslint-config` | `@cgp/eslint-config` | Shared ESLint configuration |
@@ -46,7 +46,7 @@ This monorepo hosts the CGP frontend codebase. It currently contains:
 ```
 cgp-frontend-monorepo/
 ├── apps/
-│   └── recruiter-portal-shell/  # React app (shell / entry point)
+│   └── cooperate-portal-shell/  # React app (shell / entry point)
 │       ├── src/
 │       │   ├── components/      # App-specific components
 │       │   ├── test/            # Test setup and globals
@@ -118,11 +118,11 @@ cd cgp-frontend-monorepo
 pnpm install
 
 # 3. Configure environment (per-app, not at root)
-cp apps/recruiter-portal-shell/.env.example apps/recruiter-portal-shell/.env.local
+cp apps/cooperate-portal-shell/.env.example apps/cooperate-portal-shell/.env.local
 # then edit .env.local with your local API URL
 
-# 4. Start the recruiter portal dev server
-pnpm nx serve recruiter-portal-shell
+# 4. Start the cooperate portal dev server
+pnpm nx serve cooperate-portal-shell
 ```
 
 Open http://localhost:5173 in your browser.
@@ -136,15 +136,15 @@ All tasks should be run via Nx so that caching, dependency ordering, and affecte
 ### Development Server
 
 ```bash
-# Start the recruiter-portal-shell dev server
-pnpm nx serve recruiter-portal-shell
+# Start the cooperate-portal-shell dev server
+pnpm nx serve cooperate-portal-shell
 ```
 
 ### Build
 
 ```bash
 # Build a single project
-pnpm nx build recruiter-portal-shell
+pnpm nx build cooperate-portal-shell
 
 # Build all projects (respects build order)
 pnpm nx run-many -t build
@@ -157,13 +157,13 @@ pnpm nx affected -t build
 
 ```bash
 # Run tests for a single project (runs once, no watch)
-pnpm nx test recruiter-portal-shell
+pnpm nx test cooperate-portal-shell
 
 # Run tests for a single project in watch mode
-pnpm nx vite:test recruiter-portal-shell
+pnpm nx vite:test cooperate-portal-shell
 
 # Run tests with coverage
-pnpm nx test:coverage recruiter-portal-shell
+pnpm nx test:coverage cooperate-portal-shell
 
 # Run tests for all projects
 pnpm nx run-many -t test
@@ -176,7 +176,7 @@ pnpm nx affected -t test
 
 ```bash
 # Lint a single project
-pnpm nx eslint:lint recruiter-portal-shell
+pnpm nx eslint:lint cooperate-portal-shell
 
 # Lint all projects
 pnpm nx run-many -t eslint:lint
@@ -225,7 +225,7 @@ pnpm format:check  # checks formatting without writing
 
 4. Run `pnpm install` to link the workspace packages.
 
-5. Follow the patterns in `apps/recruiter-portal` for ESLint config (`eslint.config.js`), TypeScript config (`tsconfig.json`), and Vite config (`vite.config.ts`).
+5. Follow the patterns in `apps/cooperate-portal` for ESLint config (`eslint.config.js`), TypeScript config (`tsconfig.json`), and Vite config (`vite.config.ts`).
 
 ### New Library / Package
 
@@ -352,17 +352,17 @@ pnpm nx run <project>:<target>
 
 Examples:
 ```bash
-pnpm nx serve recruiter-portal-shell
-pnpm nx vite:build recruiter-portal-shell
-pnpm nx eslint:lint recruiter-portal-shell
+pnpm nx serve cooperate-portal-shell
+pnpm nx vite:build cooperate-portal-shell
+pnpm nx eslint:lint cooperate-portal-shell
 ```
 
 ### Caching
 
-Nx caches task outputs locally in `.nx/cache`. If you run `nx build recruiter-portal` twice with no file changes, the second run is instant. To force a fresh run:
+Nx caches task outputs locally in `.nx/cache`. If you run `nx build cooperate-portal` twice with no file changes, the second run is instant. To force a fresh run:
 
 ```bash
-pnpm nx build recruiter-portal --skip-nx-cache
+pnpm nx build cooperate-portal --skip-nx-cache
 ```
 
 ### Affected commands

@@ -1,6 +1,6 @@
 import { screen } from '@testing-library/react';
 
-import App from '@/App';
+import App from '@/app/app';
 
 describe('App', () => {
   it('renders the project ready heading', () => {
