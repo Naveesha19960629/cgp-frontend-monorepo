@@ -1,7 +1,7 @@
 import * as React from 'react';
 
+import { applyTypography } from '@cgp/ui-kit/lib/typography';
 import { cn } from '@cgp/ui-kit/lib/utils';
-import { applyTypography } from '@cgp/ui/lib/typography';
 
 function Input({ className, type, ...props }: React.ComponentProps<'input'>) {
   return (

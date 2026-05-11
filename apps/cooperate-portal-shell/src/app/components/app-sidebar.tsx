@@ -1,0 +1,41 @@
+import { I3Square } from 'iconsax-reactjs';
+
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+} from '@cgp/ui-kit/components/ui/sidebar';
+
+export function AppSidebar() {
+  return (
+    <Sidebar className="w-73 bg-slate-50">
+      <SidebarHeader className="mt-7 ml-6 items-start p-0">
+        <img
+          src={import.meta.env.VITE_PORTAL_LOGO as string}
+          alt="Company Logo"
+          className="h-5.5 w-auto"
+        />
+      </SidebarHeader>
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <a href={'/dashboard/ats'}>
+                  <I3Square variant="Bold" />
+                  <span>Vacancies</span>
+                </a>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroup>
+      </SidebarContent>
+      <SidebarFooter />
+    </Sidebar>
+  );
+}

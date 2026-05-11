@@ -1,12 +1,20 @@
 import { Outlet } from 'react-router-dom';
 
+import { AppSidebar } from '@/app/components/app-sidebar';
+
+import {
+  SidebarProvider,
+  SidebarTrigger,
+} from '@cgp/ui-kit/components/ui/sidebar';
+
 export default function MainLayout() {
   return (
-    <div>
-      <div>
-        <p>sidebar</p>
+    <SidebarProvider>
+      <AppSidebar />
+      <main>
+        <SidebarTrigger />
         <Outlet />
-      </div>
-    </div>
+      </main>
+    </SidebarProvider>
   );
 }
