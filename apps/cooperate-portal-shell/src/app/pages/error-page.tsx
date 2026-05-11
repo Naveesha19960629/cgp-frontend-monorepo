@@ -67,7 +67,7 @@ export default function ErrorPage({ error }: { error?: Error }) {
             <img
               src="/images/error-question-mark.svg"
               alt="error"
-              className="ml-1 inline-block size-7 -translate-y-0 sm:ml-1 sm:size-8.5 sm:-translate-y-0"
+              className="ml-1 inline-block size-7 translate-y-0 sm:ml-1 sm:size-8.5 sm:translate-y-0"
             />
           </span>
         </p>

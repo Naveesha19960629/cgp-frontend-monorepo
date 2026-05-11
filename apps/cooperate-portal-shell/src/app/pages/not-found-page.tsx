@@ -48,7 +48,7 @@ export default function NotFoundPage() {
             <img
               src="/images/error-question-mark.svg"
               alt="error"
-              className="ml-1 inline-block size-7 -translate-y-0 sm:ml-1 sm:size-8.5 sm:-translate-y-0"
+              className="ml-1 inline-block size-7 translate-y-0 sm:ml-1 sm:size-8.5 sm:translate-y-0"
             />
           </span>
         </p>
@@ -56,7 +56,7 @@ export default function NotFoundPage() {
       {/* Error message */}
       <p
         className={clsx(
-          'mt-4 mb-7 max-w-[406px] text-center text-slate-600',
+          'mt-4 mb-7 max-w-101.5 text-center text-slate-600',
           applyTypography('body-semibold')
         )}
       >
