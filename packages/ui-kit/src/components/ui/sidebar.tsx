@@ -2,7 +2,7 @@
 
 import { type VariantProps, cva } from 'class-variance-authority';
 
-import { PanelLeftIcon } from 'lucide-react';
+import { SidebarLeft, SidebarRight } from 'iconsax-reactjs';
 
 import * as React from 'react';
 
@@ -257,14 +257,14 @@ function SidebarTrigger({
   onClick,
   ...props
 }: React.ComponentProps<typeof Button>) {
-  const { toggleSidebar } = useSidebar();
+  const { open, toggleSidebar } = useSidebar();
 
   return (
     <Button
       data-sidebar="trigger"
       data-slot="sidebar-trigger"
       variant="ghost"
-      size="sm"
+      size="lg"
       className={cn(className)}
       onClick={event => {
         onClick?.(event);
@@ -272,7 +272,11 @@ function SidebarTrigger({
       }}
       {...props}
     >
-      <PanelLeftIcon />
+      {open ? (
+        <SidebarLeft className="size-6" stroke="1.5" />
+      ) : (
+        <SidebarRight className="size-6" stroke="1.5" />
+      )}
       <span className="sr-only">Toggle Sidebar</span>
     </Button>
   );
