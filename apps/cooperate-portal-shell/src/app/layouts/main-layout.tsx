@@ -17,7 +17,7 @@ export default function MainLayout() {
     >
       <AppSidebar />
       <SidebarInset>
-        <header className="flex h-17 shrink-0 items-center gap-3 border-b px-4">
+        <header className="flex h-17 shrink-0 items-center gap-3 border-b px-7">
           <SidebarTrigger className="m-0! h-6 p-0!" />
           <AppBreadcrumb />
         </header>

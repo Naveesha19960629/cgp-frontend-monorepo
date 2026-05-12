@@ -55,10 +55,10 @@ export function AppSidebar() {
                     className={cn(
                       'h-10 gap-3 text-[16px]/6 font-semibold text-slate-600',
                       'hover:bg-[#E6EEEE] hover:text-slate-600',
-                      'data-[active=true]:bg-[#E6EEEE] data-[active=true]:text-slate-600'
+                      'data-[active=true]:bg-[#E6EEEE] data-[active=true]:font-semibold data-[active=true]:text-slate-600'
                     )}
                   >
-                    <Link to={item.href}>
+                    <Link to={item.href} className="active:font-semibold!">
                       <Icon
                         variant={isActive ? 'Bold' : ''}
                         className={cn(
