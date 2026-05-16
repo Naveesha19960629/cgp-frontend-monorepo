@@ -19,14 +19,19 @@ export default defineConfig({
         from: 'vite',
         format: 'esm',
       },
-      shared: ['react', 'react-dom', '@tanstack/react-query'],
+      shared: [
+        'react',
+        'react-dom',
+        'react-router-dom',
+        '@tanstack/react-query',
+      ],
     }),
   ],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
     },
-    dedupe: ['react', 'react-dom', '@tanstack/react-query'],
+    dedupe: ['react', 'react-dom', 'react-router-dom', '@tanstack/react-query'],
   },
   server: {
     port: 5174,

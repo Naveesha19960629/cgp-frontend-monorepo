@@ -1,10 +1,12 @@
+import { Suspense, lazy } from 'react';
 import { createBrowserRouter } from 'react-router-dom';
 
 import MainLayout from '@/app/layouts/main-layout';
 import ErrorPage from '@/app/pages/error-page';
+import LoadingPage from '@/app/pages/loading-page';
 import NotFoundPage from '@/app/pages/not-found-page';
 
-import Vacancyies from 'ats-module/Vacancyies';
+const AtsRoutes = lazy(() => import('ats-module/AtsRoutes'));
 
 const router = createBrowserRouter([
   {
@@ -13,17 +15,13 @@ const router = createBrowserRouter([
     errorElement: <ErrorPage />,
     children: [
       {
-        path: 'ats/vacancies',
+        // Delegate all /dashboard/ats/* navigation to the ats-module
+        path: 'ats/*',
         element: (
-          <div>
-            Vacancies
-            <Vacancyies />
-          </div>
+          <Suspense fallback={<LoadingPage />}>
+            <AtsRoutes />
+          </Suspense>
         ),
-      },
-      {
-        path: 'ats/find-candidate',
-        element: <div>Find Candidate</div>,
       },
     ],
   },

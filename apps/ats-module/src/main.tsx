@@ -1,12 +1,17 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import { RouterProvider } from 'react-router-dom';
 
-import App from '@/app.tsx';
+import { createStandaloneRouter } from '@/router';
 
 import '@cgp/ui-kit/globals.css';
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>
-);
+const standalone = !window.__POWERED_BY_SHELL__;
+
+if (standalone) {
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <RouterProvider router={createStandaloneRouter()} />
+    </StrictMode>
+  );
+}

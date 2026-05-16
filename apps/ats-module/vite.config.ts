@@ -16,15 +16,21 @@ export default defineConfig({
       filename: 'remoteEntry.js',
       exposes: {
         './Vacancyies': './src/vacancyies.tsx',
+        './AtsRoutes': './src/router/index.tsx',
       },
-      shared: ['react', 'react-dom', '@tanstack/react-query'],
+      shared: [
+        'react',
+        'react-dom',
+        'react-router-dom',
+        '@tanstack/react-query',
+      ],
     }),
   ],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
     },
-    dedupe: ['react', 'react-dom', '@tanstack/react-query'],
+    dedupe: ['react', 'react-dom', 'react-router-dom', '@tanstack/react-query'],
   },
   server: {
     port: 5173,
