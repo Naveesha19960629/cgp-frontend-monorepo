@@ -1,3 +1,3 @@
 export default function VacanciesPage() {
-  return <div>Vacanciesa</div>;
+  return <div>Vacancies</div>;
 }

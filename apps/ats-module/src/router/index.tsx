@@ -1,12 +1,11 @@
-import { Route, Routes, createBrowserRouter } from 'react-router-dom';
+import { Navigate, Route, Routes, createBrowserRouter } from 'react-router-dom';
 
-import NewVacancyPage from '@/pages/vacancies/new-vacancy-page';
-import VacanciesPage from '@/pages/vacancies/vacancies-page';
-import VacancyIdNewPage from '@/pages/vacancies/vacancy-id-new-page';
+import { NewVacancyPage, VacanciesPage, VacancyIdNewPage } from '@/app/vacancy';
 
 /**
  * AtsRoutes — rendered by the shell under its wildcard `ats/*` route.
  * Uses a nested <Routes> so paths are relative to the shell's mount point.
+ * Unmatched paths redirect to /not-found which the shell's * route handles.
  */
 export function AtsRoutes() {
   return (
@@ -16,6 +15,7 @@ export function AtsRoutes() {
       <Route path="vacancies/new" element={<NewVacancyPage />} />
       <Route path="vacancies/:id/edit" element={<VacancyIdNewPage />} />
       <Route path="find-candidate" element={<div>Find Candidate</div>} />
+      <Route path="*" element={<Navigate to="/not-found" replace />} />
     </Routes>
   );
 }

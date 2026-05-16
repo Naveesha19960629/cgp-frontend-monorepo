@@ -16,6 +16,10 @@ A monorepo for CGP frontend applications, managed with [Nx](https://nx.dev) and 
   - [Build](#build)
   - [Testing](#testing)
   - [Linting & Formatting](#linting--formatting)
+- [Routing Architecture](#routing-architecture)
+  - [Shell Router](#shell-router)
+  - [ATS Module Routes](#ats-module-routes)
+  - [Standalone Development Mode](#standalone-development-mode)
 - [Creating a New Project](#creating-a-new-project)
   - [New Application](#new-application)
   - [New Library / Package](#new-library--package)
@@ -194,6 +198,71 @@ Root-level convenience scripts (defined in the root `package.json`):
 pnpm format        # formats all files with Prettier
 pnpm format:check  # checks formatting without writing
 ```
+
+---
+
+## Routing Architecture
+
+This project uses a **micro-frontend (MFE) routing** pattern via [Module Federation](https://github.com/originjs/vite-plugin-federation). The shell owns the top-level router; each remote module owns its own nested routes.
+
+### Shell Router
+
+`apps/cooperate-portal-shell` creates the single `createBrowserRouter` for the entire application. It defines top-level layout and delegates feature segments to remote modules via a wildcard route.
+
+```
+/dashboard              → MainLayout (shell)
+  /dashboard/ats/*      → AtsRoutes  (lazy-loaded from ats-module remote)
+/not-found              → NotFoundPage
+*                       → NotFoundPage
+```
+
+The shell sets `window.__POWERED_BY_SHELL__ = true` before mounting so remote modules can detect whether they are embedded or running standalone.
+
+### ATS Module Routes
+
+`apps/ats-module` exposes an `AtsRoutes` component (a nested `<Routes>`) that handles all feature navigation under `/dashboard/ats`. Paths are **relative** to the shell's mount point.
+
+| Full URL | Component |
+|---|---|
+| `/dashboard/ats` | `VacanciesPage` (index) |
+| `/dashboard/ats/vacancies` | `VacanciesPage` |
+| `/dashboard/ats/vacancies/new` | `NewVacancyPage` |
+| `/dashboard/ats/vacancies/:id/edit` | `VacancyIdNewPage` |
+| `/dashboard/ats/find-candidate` | Find Candidate |
+| `/dashboard/ats/**` (no match) | Redirects to `/not-found` |
+
+Page components live in `src/app/vacancy/pages/` and are exported through barrel files:
+
+```
+src/app/
+└── vacancy/
+    ├── index.ts              ← barrel (re-exports pages)
+    └── pages/
+        ├── index.ts          ← barrel
+        ├── vacancies-page.tsx
+        ├── new-vacancy-page.tsx
+        └── vacancy-id-new-page.tsx
+```
+
+### Standalone Development Mode
+
+Each remote module can run independently without the shell. The `ats-module` detects this with:
+
+```ts
+const standalone = !window.__POWERED_BY_SHELL__;
+```
+
+When `standalone` is `true`, `main.tsx` mounts its own `createBrowserRouter` with the same absolute paths (`/dashboard/ats/...`). The `AtsRoutes` component is **not** used in this mode.
+
+```bash
+# Start ats-module in standalone mode (port 5173)
+pnpm nx serve ats-module
+
+# Start the shell (port 5174) — loads ats-module as a remote
+pnpm nx serve cooperate-portal-shell
+```
+
+> **Shared singletons** — `react`, `react-dom`, `react-router-dom`, and `@tanstack/react-query` are listed in `shared` in both Vite federation configs so that only one instance of each library is loaded at runtime.
 
 ---
 
