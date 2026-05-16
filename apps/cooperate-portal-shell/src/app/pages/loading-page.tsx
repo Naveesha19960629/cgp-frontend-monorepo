@@ -1,11 +1,11 @@
 export default function LoadingPage() {
-  const oxoLogo = import.meta.env.VITE_OXO_LOGO_URL || '/oxo_careers_logo.svg';
+  const oxoLogo = import.meta.env.VITE_PORTAL_LOGO || '/oxo_careers_logo.svg';
 
   return (
     <div
       className="flex min-h-screen flex-col items-center justify-center bg-white px-4"
       style={{
-        backgroundImage: 'url(/error_background.svg)',
+        backgroundImage: 'url(/images/error_background.svg)',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
       }}
@@ -16,7 +16,7 @@ export default function LoadingPage() {
           <div className="h-41.5 w-41.5 rounded-full bg-[linear-gradient(130deg,rgba(243,115,46,0.29)_-15.49%,#fff_185.6%)]"></div>
         </div>
         <img
-          src="/loading-avatar.svg"
+          src="/images/loading-avatar.svg"
           alt="error avatar"
           className="absolute top-4 left-4 z-10 h-33.5 w-33.5 rounded-full"
         />
