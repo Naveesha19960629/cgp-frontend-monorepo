@@ -14,4 +14,8 @@ export default defineConfig({
     },
     dedupe: ['react', 'react-dom', '@tanstack/react-query'],
   },
+  server: {
+    port: 5173,
+    strictPort: true,
+  },
 });
