@@ -2,12 +2,24 @@ import { defineConfig } from 'vite';
 
 import react from '@vitejs/plugin-react';
 
+import federation from '@originjs/vite-plugin-federation';
 import tailwindcss from '@tailwindcss/vite';
 import path from 'path';
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [
+    react(),
+    tailwindcss(),
+    federation({
+      name: 'ats-module',
+      filename: 'remoteEntry.js',
+      exposes: {
+        './Vacancyies': './src/vacancyies.tsx',
+      },
+      shared: ['react', 'react-dom', '@tanstack/react-query'],
+    }),
+  ],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
@@ -17,5 +29,10 @@ export default defineConfig({
   server: {
     port: 5173,
     strictPort: true,
+  },
+  build: {
+    modulePreload: false,
+    target: 'esnext',
+    minify: 'esbuild',
   },
 });

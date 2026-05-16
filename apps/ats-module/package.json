@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "nx serve",
     "build": "tsc -b && nx vite:build",
+    "build:watch": "tsc -b --watch & nx vite:build --watch",
     "lint": "nx eslint:lint",
     "preview": "nx vite:preview",
     "test": "vitest run",
@@ -38,6 +39,7 @@
   "devDependencies": {
     "@cgp/eslint-config": "workspace:*",
     "@cgp/tsconfig": "workspace:*",
+    "@originjs/vite-plugin-federation": "^1.4.1",
     "@tailwindcss/vite": "^4.1.18",
     "@testing-library/jest-dom": "catalog:",
     "@testing-library/react": "catalog:",
