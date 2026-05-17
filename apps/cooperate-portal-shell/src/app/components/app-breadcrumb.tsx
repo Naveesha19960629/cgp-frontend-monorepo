@@ -25,7 +25,11 @@ interface BreadcrumbRoute {
 const breadcrumbRoutes: BreadcrumbRoute[] = [
   {
     url: '/dashboard/ats/vacancies',
-    items: [{ label: 'Vacancies' }, { label: 'View All' }],
+    items: [],
+  },
+  {
+    url: '/dashboard/ats/vacancies/new',
+    items: [{ label: 'Vacancies' }, { label: 'Create Vacancy' }],
   },
   {
     url: '/dashboard/ats/find-candidate',
