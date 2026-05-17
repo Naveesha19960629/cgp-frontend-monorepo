@@ -1,5 +1,7 @@
 import { Status } from 'iconsax-reactjs';
 
+import { useTranslation } from 'react-i18next';
+
 import {
   VACANCY_STEPS,
   useVacancyForm,
@@ -27,7 +29,7 @@ function StepIndicator({
 
   if (isCompleted) {
     return (
-      <span className="bg-brand-primary-500 flex size-5 shrink-0 items-center justify-center rounded-full">
+      <span className="bg-brand-primary-400 flex size-5 shrink-0 items-center justify-center rounded-full">
         <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
           <path
             d="M5.1665 8.00385L7.05317 9.89052L10.8332 6.11719"
@@ -55,6 +57,7 @@ function StepIndicator({
 }
 
 export default function VacancyCreateStepperForm() {
+  const { t } = useTranslation('ats');
   const {
     currentStepIndex,
     setCurrentStepIndex,
@@ -67,7 +70,7 @@ export default function VacancyCreateStepperForm() {
   const currentStepKey = VACANCY_STEPS[currentStepIndex].key;
 
   return (
-    <div className="mt-6 flex flex-1 overflow-hidden">
+    <div className="flex flex-1 overflow-hidden">
       <Tabs
         value={currentStepKey}
         onValueChange={value => {
@@ -80,14 +83,16 @@ export default function VacancyCreateStepperForm() {
         {/* Left sidebar — step list */}
         <TabsList
           variant="line"
-          className="w-60 shrink-0 flex-col items-start justify-start overflow-y-auto rounded-none border-r border-slate-200 bg-white py-4"
+          className="w-76.75 shrink-0 flex-col items-start justify-start overflow-y-auto rounded-none border-r border-slate-200 bg-white py-4"
         >
-          <p>hi</p>
+          <p className="text-2xl/8 font-bold text-slate-900">
+            {t('vacancies.createVacancyButton')}
+          </p>
           {VACANCY_STEPS.map((step, index) => (
             <div key={step.key} className="flex w-full flex-col">
               <TabsTrigger
                 value={step.key}
-                className="h-auto w-full items-center justify-start gap-3 rounded-none border-transparent px-5 py-2.5 text-sm [&::after]:hidden"
+                className="h-auto w-full cursor-pointer items-center justify-start gap-3 rounded-none border-none border-transparent p-0 text-[16px]/6 font-bold [&::after]:hidden"
               >
                 <StepIndicator
                   index={index}
@@ -105,7 +110,7 @@ export default function VacancyCreateStepperForm() {
                 </span>
               </TabsTrigger>
               {index < VACANCY_STEPS.length - 1 && (
-                <div className="ml-7.5 h-4 w-px bg-slate-200" />
+                <div className="my-2 ml-2.5 h-4 w-px bg-slate-400" />
               )}
             </div>
           ))}

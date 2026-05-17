@@ -1,5 +1,3 @@
-import { useTranslation } from 'react-i18next';
-
 import { VacancyCreateStepperForm } from '@/views/vacancies';
 import {
   VacancyFormProvider,
@@ -55,14 +53,9 @@ function NewVacancyContent() {
 }
 
 export default function NewVacancyPage() {
-  const { t } = useTranslation('ats');
-
   return (
     <VacancyFormProvider>
       <section className="flex min-h-screen flex-col p-7">
-        <p className="text-2xl/8 font-bold text-slate-900">
-          {t('vacancies.createVacancyButton')}
-        </p>
         <NewVacancyContent />
       </section>
     </VacancyFormProvider>
