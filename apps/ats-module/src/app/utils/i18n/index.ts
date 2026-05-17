@@ -13,7 +13,7 @@
  */
 import { initReactI18next } from 'react-i18next';
 
-import atsEn from '@/app/i18n/locales/en/ats.json';
+import atsEn from '@/app/utils/i18n/locales/en/ats.json';
 
 import i18n from 'i18next';
 

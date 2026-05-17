@@ -1,6 +1,6 @@
 import { Navigate, Route, Routes, createBrowserRouter } from 'react-router-dom';
 
-import { addAtsTranslations } from '@/app/i18n';
+import { addAtsTranslations } from '@/app/utils/i18n';
 import {
   NewVacancyPage,
   VacanciesPage,

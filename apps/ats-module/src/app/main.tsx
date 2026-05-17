@@ -1,7 +1,7 @@
 import { createRoot } from 'react-dom/client';
 
 import App from '@/app/app.jsx';
-import { initAtsI18n } from '@/app/i18n';
+import { initAtsI18n } from '@/app/utils/i18n';
 
 import '@cgp/ui-kit/globals.css';
 
