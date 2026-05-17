@@ -1,6 +1,6 @@
-import { Button } from '@cgp/ui-kit/components/ui/button';
+import type { StepProps } from '@/views/vacancies';
 
-import type { StepProps } from './step-props';
+import { Button } from '@cgp/ui-kit/components/ui/button';
 
 export default function SecondaryEducationStep({ onNext, onBack }: StepProps) {
   return (
