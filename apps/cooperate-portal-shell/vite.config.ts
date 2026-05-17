@@ -14,6 +14,9 @@ export default defineConfig({
     federation({
       name: 'cooperate-portal-shell',
       filename: 'remoteEntry.js',
+      exposes: {
+        './i18n': './src/app/utils/i18n/index.ts',
+      },
       remotes: {
         'ats-module': 'http://localhost:4173/assets/remoteEntry.js',
         from: 'vite',
@@ -23,6 +26,8 @@ export default defineConfig({
         'react',
         'react-dom',
         'react-router-dom',
+        'i18next',
+        'react-i18next',
         '@tanstack/react-query',
       ],
     }),
@@ -31,7 +36,14 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, './src'),
     },
-    dedupe: ['react', 'react-dom', 'react-router-dom', '@tanstack/react-query'],
+    dedupe: [
+      'react',
+      'react-dom',
+      'react-router-dom',
+      'i18next',
+      'react-i18next',
+      '@tanstack/react-query',
+    ],
   },
   server: {
     port: 5174,

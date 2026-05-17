@@ -1,3 +1,7 @@
+import { useTranslation } from 'react-i18next';
+
 export default function NewVacancyPage() {
-  return <div>New Vacancy</div>;
+  const { t } = useTranslation('ats');
+
+  return <div>{t('vacancies.title')}</div>;
 }

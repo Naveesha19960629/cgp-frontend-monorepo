@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "nx serve",
-    "build": "tsc -b && nx vite:build",
+    "build": "tsc -b && nx vite:build ",
     "build:watch": "tsc -b --watch & nx vite:build --watch",
     "lint": "nx eslint:lint",
     "preview": "nx vite:preview",

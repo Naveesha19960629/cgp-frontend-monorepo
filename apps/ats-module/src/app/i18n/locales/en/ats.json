@@ -1,0 +1,10 @@
+{
+  "vacancies": {
+    "title": "Vacancies chamod key",
+    "newVacancy": "New Vacancy",
+    "editVacancy": "Edit Vacancy"
+  },
+  "findCandidate": {
+    "title": "Find Candidate"
+  }
+}

@@ -22,6 +22,8 @@ export default defineConfig({
         'react',
         'react-dom',
         'react-router-dom',
+        'i18next',
+        'react-i18next',
         '@tanstack/react-query',
       ],
     }),
@@ -30,7 +32,14 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, './src'),
     },
-    dedupe: ['react', 'react-dom', 'react-router-dom', '@tanstack/react-query'],
+    dedupe: [
+      'react',
+      'react-dom',
+      'react-router-dom',
+      'i18next',
+      'react-i18next',
+      '@tanstack/react-query',
+    ],
   },
   server: {
     port: 5173,

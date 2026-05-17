@@ -20,6 +20,11 @@ A monorepo for CGP frontend applications, managed with [Nx](https://nx.dev) and 
   - [Shell Router](#shell-router)
   - [ATS Module Routes](#ats-module-routes)
   - [Standalone Development Mode](#standalone-development-mode)
+- [Internationalization (i18n)](#internationalization-i18n)
+  - [Shell i18n Setup](#shell-i18n-setup)
+  - [Remote Module Translations](#remote-module-translations)
+  - [Standalone i18n Mode](#standalone-i18n-mode)
+  - [Using Translations in Components](#using-translations-in-components)
 - [Creating a New Project](#creating-a-new-project)
   - [New Application](#new-application)
   - [New Library / Package](#new-library--package)
@@ -263,6 +268,120 @@ pnpm nx serve cooperate-portal-shell
 ```
 
 > **Shared singletons** — `react`, `react-dom`, `react-router-dom`, and `@tanstack/react-query` are listed in `shared` in both Vite federation configs so that only one instance of each library is loaded at runtime.
+
+---
+
+## Internationalization (i18n)
+
+This project uses [i18next](https://www.i18next.com) with [react-i18next](https://react.i18next.com) for translations. The setup follows the same micro-frontend split as routing: the shell initializes i18n, and each remote module owns its own namespace and translation files.
+
+`i18next` and `react-i18next` are declared as **shared singletons** in both Vite federation configs, ensuring only one i18n instance is loaded at runtime. Importing `i18n from 'i18next'` inside a remote resolves to the exact same object the shell initialized.
+
+### Shell i18n Setup
+
+The shell initializes i18n once on startup before the app mounts:
+
+```ts
+// apps/cooperate-portal-shell/src/app/utils/i18n/index.ts
+export async function initI18n() {
+  await i18n.use(initReactI18next).init({
+    resources: { en: { translation: enLang } },
+    lng: 'en',
+    fallbackLng: 'en',
+    interpolation: { escapeValue: false },
+  });
+}
+
+export default i18n; // the initialized singleton
+```
+
+The shell also exposes its i18n instance via Module Federation (`./i18n`) so it can be explicitly imported by any consumer:
+
+```ts
+// In any remote (if shell is listed as a remote in vite.config.ts)
+import i18n from 'cooperate-portal-shell/i18n';
+```
+
+Translation files live in `src/app/utils/i18n/locales/<lang>/` and use the default `translation` namespace.
+
+### Remote Module Translations
+
+Each remote module owns its own i18n **namespace** and translation files. When the shell loads a remote, the remote registers its namespace into the shared i18n singleton at module-load time — before any component renders.
+
+**ATS Module example:**
+
+```
+apps/ats-module/src/app/i18n/
+├── index.ts                  ← addAtsTranslations() + initAtsI18n()
+└── locales/
+    └── en/
+        └── ats.json          ← ATS-owned translation keys
+```
+
+```ts
+// src/app/i18n/index.ts
+export function addAtsTranslations(): void {
+  // Registers the 'ats' namespace into the shared i18n singleton.
+  // Since i18next is a shared singleton, this modifies the shell's
+  // already-initialized instance.
+  if (!i18n.hasResourceBundle('en', 'ats')) {
+    i18n.addResourceBundle('en', 'ats', atsEn);
+  }
+}
+```
+
+This function is called at module-load time in the router entry (`src/app/router/index.tsx`), which is the federation-exposed file — so translations are registered the moment the shell lazy-loads the remote.
+
+### Standalone i18n Mode
+
+When a remote runs without the shell (`window.__POWERED_BY_SHELL__` is falsy), it must initialize i18n itself:
+
+```ts
+// src/app/i18n/index.ts
+export async function initAtsI18n(): Promise<void> {
+  if (i18n.isInitialized) {
+    // Shell already initialized — just add the namespace
+    addAtsTranslations();
+    return;
+  }
+  // Standalone: full init with only the ATS namespace
+  await i18n.use(initReactI18next).init({
+    resources: { en: { ats: atsEn } },
+    ns: ['ats'],
+    defaultNS: 'ats',
+    lng: 'en',
+    fallbackLng: 'en',
+  });
+}
+```
+
+```ts
+// src/app/main.tsx — standalone entry point
+const standalone = !window.__POWERED_BY_SHELL__;
+
+if (standalone) {
+  await initAtsI18n(); // full init before mounting
+  createRoot(document.getElementById('root')!).render(<App />);
+}
+```
+
+### Using Translations in Components
+
+All components use the standard `useTranslation` hook. Specify the namespace when consuming a remote module's translations:
+
+```ts
+// Shell components (default namespace)
+import { useTranslation } from 'react-i18next';
+const { t } = useTranslation();
+t('errorPage.title');
+
+// ATS module components
+const { t } = useTranslation('ats');
+t('vacancies.title');     // → "Vacancies"
+t('vacancies.newVacancy'); // → "New Vacancy"
+```
+
+> **Adding a new remote module** — create `src/app/i18n/locales/en/<module>.json`, export `addTranslations()` and `initI18n()` from `src/app/i18n/index.ts`, call `addTranslations()` at the top of the federation-exposed file, and call `initI18n()` in `main.tsx` for standalone mode.
 
 ---
 

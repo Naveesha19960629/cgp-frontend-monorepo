@@ -1,10 +1,16 @@
 import { Navigate, Route, Routes, createBrowserRouter } from 'react-router-dom';
 
+import { addAtsTranslations } from '@/app/i18n';
 import {
   NewVacancyPage,
   VacanciesPage,
   VacancyIdNewPage,
 } from '@/views/vacancies';
+
+// Register ATS translations into the shared i18n singleton at module-load time.
+// When embedded in the shell, i18next is a shared library (vite.config.ts shared[]),
+// so this instance is the same one the shell already initialized via initI18n().
+addAtsTranslations();
 
 /**
  * AtsRoutes — rendered by the shell under its wildcard `ats/*` route.
