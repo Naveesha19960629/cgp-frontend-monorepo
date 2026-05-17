@@ -17,7 +17,7 @@ addAtsTranslations();
  * Uses a nested <Routes> so paths are relative to the shell's mount point.
  * Unmatched paths redirect to /not-found which the shell's * route handles.
  */
-export function AtsRoutes() {
+function AtsRoutes() {
   return (
     <Routes>
       <Route index element={<VacanciesPage />} />
@@ -30,13 +30,11 @@ export function AtsRoutes() {
   );
 }
 
-export default AtsRoutes;
-
 /**
  * Standalone router — used when ats-module runs without the shell.
  * Full absolute paths mirror the shell's mount point /dashboard/ats.
  */
-export function createStandaloneRouter() {
+function createStandaloneRouter() {
   return createBrowserRouter([
     {
       path: '/dashboard/ats',
@@ -54,3 +52,6 @@ export function createStandaloneRouter() {
     },
   ]);
 }
+
+export { createStandaloneRouter, AtsRoutes };
+export default AtsRoutes;
