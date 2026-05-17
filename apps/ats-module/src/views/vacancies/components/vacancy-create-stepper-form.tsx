@@ -83,9 +83,9 @@ export default function VacancyCreateStepperForm() {
         {/* Left sidebar — step list */}
         <TabsList
           variant="line"
-          className="w-76.75 shrink-0 flex-col items-start justify-start overflow-y-auto rounded-none border-r border-slate-200 bg-white py-4"
+          className="w-76.75 shrink-0 flex-col items-start justify-start overflow-y-auto rounded-none border-r border-slate-200 bg-white px-4 py-7"
         >
-          <p className="text-2xl/8 font-bold text-slate-900">
+          <p className="mb-9 text-2xl/8 font-bold text-slate-900">
             {t('vacancies.createVacancyButton')}
           </p>
           {VACANCY_STEPS.map((step, index) => (
