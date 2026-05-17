@@ -1,6 +1,10 @@
 import { Navigate, Route, Routes, createBrowserRouter } from 'react-router-dom';
 
-import { NewVacancyPage, VacanciesPage, VacancyIdNewPage } from '@/app/vacancy';
+import {
+  NewVacancyPage,
+  VacanciesPage,
+  VacancyIdNewPage,
+} from '@/views/vacancies';
 
 /**
  * AtsRoutes — rendered by the shell under its wildcard `ats/*` route.

@@ -16,7 +16,7 @@ export default defineConfig({
       filename: 'remoteEntry.js',
       exposes: {
         './Vacancyies': './src/vacancyies.tsx',
-        './AtsRoutes': './src/router/index.tsx',
+        './AtsRoutes': './src/app/router/index.tsx',
       },
       shared: [
         'react',
