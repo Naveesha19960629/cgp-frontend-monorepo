@@ -1,7 +1,7 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 @import 'shadcn/tailwind.css';
-@import '@fontsource-variable/inter';
+@import '@fontsource-variable/plus-jakarta-sans';
 
 @custom-variant dark (&:is(.dark *));
 @source '../../../../apps/**/*.{ts,tsx}';
@@ -48,7 +48,7 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
-  --font-sans: 'Inter Variable', sans-serif;
+  --font-sans: 'Plus Jakarta Sans Variable', sans-serif;
 }
 
 :root {
@@ -118,6 +118,23 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+}
+
+@theme {
+  --color-mint-500: oklch(0.72 0.11 178);
+  --color-brand-primary-900: #062120;
+  --color-brand-primary-800: #093231;
+  --color-brand-primary-700: #0b3a39;
+  --color-brand-primary-600: #0c4241;
+  --color-brand-primary-500: #0f5351;
+  --color-brand-primary-400: #3f7574;
+  --color-brand-primary-300: #6f9897;
+  --color-brand-primary-200: #9fbab9;
+  --color-brand-primary-100: #cfdddc;
+  --breakpoint-tablet: 67.375rem; /* 1078px */
+  --breakpoint-desktop-custom-upper: 72.0625rem; /* 1153px */
+  --breakpoint-desktop-custom: 70.625rem; /* 1130px */
+  --breakpoint-desktop-custom-mid: 85.9375rem; /* 1375px */
 }
 
 @layer base {

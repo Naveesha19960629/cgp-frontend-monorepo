@@ -1,0 +1,10 @@
+{
+  "vacancies": {
+    "title": "Vacancies",
+    "createVacancyButton": "Create Vacancy",
+    "editVacancy": "Edit Vacancy"
+  },
+  "findCandidate": {
+    "title": "Find Candidate"
+  }
+}

@@ -8,9 +8,17 @@
     "./react": "./src/react.js"
   },
   "dependencies": {
-    "@eslint/js": "^10.0.1",
-    "globals": "^17.5.0",
-    "typescript-eslint": "^8.58.2"
+    "@eslint/js": "catalog:",
+    "@vitest/eslint-plugin": "catalog:",
+    "eslint-plugin-check-file": "catalog:",
+    "eslint-plugin-import-x": "catalog:",
+    "eslint-config-prettier": "catalog:",
+    "eslint-plugin-prettier": "catalog:",
+    "eslint-plugin-react-hooks": "catalog:",
+    "eslint-plugin-react-refresh": "catalog:",
+    "globals": "catalog:",
+    "prettier": "catalog:",
+    "typescript-eslint": "catalog:"
   },
   "peerDependencies": {
     "eslint": ">=9"

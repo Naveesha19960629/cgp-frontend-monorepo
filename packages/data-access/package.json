@@ -1,0 +1,24 @@
+{
+  "name": "@cgp/data-access",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./http-client": "./src/http-client.ts",
+    "./query-client": "./src/query-client.ts"
+  },
+  "dependencies": {
+    "axios": "^1.9.0"
+  },
+  "peerDependencies": {
+    "@tanstack/react-query": "^5.0.0",
+    "react": "^18.0.0 || ^19.0.0"
+  },
+  "devDependencies": {
+    "@cgp/tsconfig": "workspace:*",
+    "@tanstack/react-query": "^5.80.5",
+    "@types/node": "^24.12.2",
+    "react": "^19.2.4"
+  }
+}

@@ -1,4 +1,11 @@
 import reactConfig from '@cgp/eslint-config/react';
-import { defineConfig } from 'eslint-define-config';
 
-export default defineConfig([...reactConfig]);
+export default [
+  ...reactConfig,
+  {
+    rules: {
+      'react-hooks/set-state-in-effect': 'warn',
+      'react-hooks/preserve-manual-memoization': 'warn',
+    },
+  },
+];

@@ -7,11 +7,13 @@
     "./globals.css": "./src/styles/globals.css",
     "./lib/*": "./src/lib/*.ts",
     "./components/*": "./src/components/*.tsx",
-    "./hooks/*": "./src/hooks/*.ts"
+    "./hooks/*": "./src/hooks/*.ts",
+    "./assets/images/*": "./src/assets/images/*"
   },
   "dependencies": {
     "@base-ui/react": "^1.3.0",
     "@fontsource-variable/inter": "^5.2.8",
+    "@fontsource-variable/plus-jakarta-sans": "^5.2.8",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
@@ -36,19 +38,16 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@cgp/eslint-config": "workspace:*",
     "@cgp/tsconfig": "workspace:*",
-    "@eslint/js": "^9.39.2",
     "@tailwindcss/vite": "^4.1.18",
     "@types/node": "^25.1.0",
     "@types/react": "^19.2.10",
     "@types/react-dom": "^19.2.3",
-    "eslint": "^9.39.2",
-    "eslint-plugin-react-hooks": "^7.0.1",
-    "eslint-plugin-react-refresh": "^0.4.24",
-    "globals": "^17.2.0",
+    "eslint": "catalog:",
     "tailwindcss": "^4.1.18",
-    "typescript": "^5.9.3",
-    "typescript-eslint": "^8.54.0"
+    "typescript": "catalog:",
+    "typescript-eslint": "catalog:"
   },
   "peerDependencies": {
     "react": ">=19",
