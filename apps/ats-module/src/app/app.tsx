@@ -1,5 +1,6 @@
 import { RouterProvider } from 'react-router-dom';
 
+import { UserProvider } from '@/app/contexts/user-context';
 import { createStandaloneRouter } from '@/app/router';
 import atsKeycloak, { atsKeycloakInitOptions } from '@/app/services/keycloak';
 
@@ -16,7 +17,9 @@ export default function App() {
       authClient={atsKeycloak}
       initOptions={atsKeycloakInitOptions}
     >
-      <RouterProvider router={createStandaloneRouter()} />
+      <UserProvider>
+        <RouterProvider router={createStandaloneRouter()} />
+      </UserProvider>
     </ReactKeycloakProvider>
   );
 }

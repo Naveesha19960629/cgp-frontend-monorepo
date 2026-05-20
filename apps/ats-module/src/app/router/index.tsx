@@ -1,5 +1,7 @@
 import { Navigate, Route, Routes, createBrowserRouter } from 'react-router-dom';
 
+import AtsProtectedRoute from '@/app/components/protected-route';
+import { UserProvider } from '@/app/contexts/user-context';
 import { addAtsTranslations } from '@/app/utils/i18n';
 import {
   NewVacancyPage,
@@ -16,28 +18,35 @@ addAtsTranslations();
  * AtsRoutes — rendered by the shell under its wildcard `ats/*` route.
  * Uses a nested <Routes> so paths are relative to the shell's mount point.
  * Unmatched paths redirect to /not-found which the shell's * route handles.
+ *
+ * UserProvider is mounted here so ATS pages can call useUser() in embedded mode.
+ * In standalone mode the UserProvider in app.tsx covers the same tree.
  */
 function AtsRoutes() {
   return (
-    <Routes>
-      <Route index element={<VacanciesPage />} />
-      <Route path="vacancies" element={<VacanciesPage />} />
-      <Route path="vacancies/new" element={<NewVacancyPage />} />
-      <Route path="vacancies/:id/edit" element={<VacancyIdNewPage />} />
-      <Route path="find-candidate" element={<div>Find Candidate</div>} />
-      <Route path="*" element={<Navigate to="/not-found" replace />} />
-    </Routes>
+    <UserProvider>
+      <Routes>
+        <Route index element={<VacanciesPage />} />
+        <Route path="vacancies" element={<VacanciesPage />} />
+        <Route path="vacancies/new" element={<NewVacancyPage />} />
+        <Route path="vacancies/:id/edit" element={<VacancyIdNewPage />} />
+        <Route path="find-candidate" element={<div>Find Candidate</div>} />
+        <Route path="*" element={<Navigate to="/not-found" replace />} />
+      </Routes>
+    </UserProvider>
   );
 }
 
 /**
  * Standalone router — used when ats-module runs without the shell.
  * Full absolute paths mirror the shell's mount point /dashboard/ats.
+ * AtsProtectedRoute redirects unauthenticated users to Keycloak.
  */
 function createStandaloneRouter() {
   return createBrowserRouter([
     {
       path: '/dashboard/ats',
+      element: <AtsProtectedRoute />,
       children: [
         { index: true, element: <VacanciesPage /> },
         { path: 'vacancies', element: <VacanciesPage /> },

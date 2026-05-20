@@ -1,30 +1,25 @@
 import type { ComponentType, ReactNode } from 'react';
 
-import type Keycloak from 'keycloak-js';
-import type { KeycloakInitOptions } from 'keycloak-js';
-
 declare module 'cooperate-portal-shell/KeycloakContext' {
-  export interface KeycloakContextValue {
-    keycloak: Keycloak;
-    initialized: boolean;
-    isLoggedIn: boolean;
-  }
-
-  export function useKeycloak(): KeycloakContextValue;
-
-  export function KeycloakProvider(props: {
-    keycloak: Keycloak;
-    initOptions: KeycloakInitOptions;
-    children: ReactNode;
-  }): JSX.Element;
+  // Shell's keycloak-context.tsx re-exports useKeycloak from @react-keycloak/web.
+  // Prefer importing useKeycloak directly from '@react-keycloak/web' in ATS code.
+  export { useKeycloak } from '@react-keycloak/web';
 }
 
 declare module 'cooperate-portal-shell/UserContext' {
   export interface User {
     id: string;
     email: string;
-    firstName?: string;
-    lastName?: string;
+    emailVerified: boolean;
+    name: string;
+    firstName: string;
+    lastName: string;
+    givenName: string;
+    familyName: string;
+    preferredUsername: string;
+    salutation?: string;
+    phoneNumber?: string;
+    picture?: string;
   }
 
   export interface UserContextValue {
@@ -33,7 +28,6 @@ declare module 'cooperate-portal-shell/UserContext' {
   }
 
   export function useUser(): UserContextValue;
-
   export function UserProvider(props: { children: ReactNode }): JSX.Element;
 }
 
@@ -49,7 +43,6 @@ declare module 'cooperate-portal-shell/i18n' {
   export default i18nInstance;
 }
 
-// Existing ATS module declarations re-exported for completeness
 declare module 'ats-module/AtsRoutes' {
   const AtsRoutes: ComponentType;
   export default AtsRoutes;
