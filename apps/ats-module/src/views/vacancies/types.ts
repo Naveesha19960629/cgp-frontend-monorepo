@@ -55,6 +55,36 @@ interface StepProps {
   onSubmit: () => void;
 }
 
+interface GenderItem {
+  id: string;
+  label: string;
+  source: string;
+}
+
+interface PageContent<T> {
+  content: T[];
+  empty: boolean;
+  first: boolean;
+  last: boolean;
+  number: number;
+  numberOfElements: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+}
+
+interface GendersData {
+  type: string;
+  items: PageContent<GenderItem>;
+}
+
+interface GendersResponse {
+  requestId: string;
+  success: boolean;
+  message: string;
+  data: GendersData;
+}
+
 export type {
   AddOrSelectOption,
   SelectOption,
@@ -64,4 +94,8 @@ export type {
   VacancyForm,
   StepProps,
   VacancyStep,
+  GenderItem,
+  PageContent,
+  GendersData,
+  GendersResponse,
 };
