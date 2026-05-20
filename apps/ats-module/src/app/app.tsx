@@ -1,7 +1,22 @@
 import { RouterProvider } from 'react-router-dom';
 
 import { createStandaloneRouter } from '@/app/router';
+import atsKeycloak, { atsKeycloakInitOptions } from '@/app/services/keycloak';
 
+import { ReactKeycloakProvider } from '@react-keycloak/web';
+
+/**
+ * Standalone App — rendered only when ats-module runs outside the shell.
+ * Wraps with its own ReactKeycloakProvider so auth works in the dev server.
+ * In embedded mode the shell's ReactKeycloakProvider covers all routes.
+ */
 export default function App() {
-  return <RouterProvider router={createStandaloneRouter()} />;
+  return (
+    <ReactKeycloakProvider
+      authClient={atsKeycloak}
+      initOptions={atsKeycloakInitOptions}
+    >
+      <RouterProvider router={createStandaloneRouter()} />
+    </ReactKeycloakProvider>
+  );
 }

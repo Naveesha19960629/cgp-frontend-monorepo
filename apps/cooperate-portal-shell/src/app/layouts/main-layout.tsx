@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom';
 
 import { AppBreadcrumb } from '@/app/components/app-breadcrumb';
 import { AppSidebar } from '@/app/components/app-sidebar';
+import HeaderControls from '@/app/components/header-controls';
 
 import {
   SidebarInset,
@@ -17,9 +18,12 @@ export default function MainLayout() {
     >
       <AppSidebar />
       <SidebarInset>
-        <header className="flex h-17 shrink-0 items-center gap-3 border-b px-7">
-          <SidebarTrigger className="m-0! h-6 p-0!" />
-          <AppBreadcrumb />
+        <header className="flex h-17 shrink-0 items-center justify-between border-b px-7">
+          <div className="flex items-center gap-3">
+            <SidebarTrigger className="m-0! h-6 p-0!" />
+            <AppBreadcrumb />
+          </div>
+          <HeaderControls />
         </header>
         <div className="flex flex-1 flex-col">
           <Outlet />

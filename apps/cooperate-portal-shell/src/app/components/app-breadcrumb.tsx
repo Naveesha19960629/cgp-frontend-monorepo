@@ -3,6 +3,8 @@ import clsx from 'clsx';
 import * as React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
+import type { BreadcrumbRoute } from '@/app/types';
+
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -11,16 +13,6 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@cgp/ui-kit/components/ui/breadcrumb';
-
-interface BreadcrumbItemConfig {
-  label: string;
-  link?: string;
-}
-
-interface BreadcrumbRoute {
-  url: string;
-  items: BreadcrumbItemConfig[];
-}
 
 const breadcrumbRoutes: BreadcrumbRoute[] = [
   {

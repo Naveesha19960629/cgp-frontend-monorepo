@@ -1,4 +1,4 @@
-export { httpClient } from './http-client';
+export { httpClient, setTokenGetter } from './http-client';
 export { queryClient } from './query-client';
 export {
   QueryClientProvider,
