@@ -26,7 +26,7 @@ export default function VacanciesPage() {
           <Button
             className="h-12 w-45 gap-1"
             onClick={() => {
-              void navigate('new');
+              void navigate('vacancies/new');
             }}
           >
             <Add className="size-5 stroke-2" />
