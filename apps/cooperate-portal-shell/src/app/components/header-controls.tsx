@@ -34,39 +34,41 @@ export default function HeaderControls() {
 
   return (
     <div className="flex items-center gap-4">
-      <Button variant="outline" size="icon" className="size-11 rounded-lg">
-        <Notification size="20" />
+      <Button
+        variant="outline"
+        size="icon"
+        className="size-11 rounded-lg border-slate-300"
+      >
+        <Notification className="size-5! text-slate-500" />
       </Button>
-
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            className="flex h-auto items-center gap-1 rounded-full p-0 hover:bg-transparent focus-visible:ring-0"
-          >
-            <Avatar className="size-11">
-              <AvatarImage
-                src={user?.picture ?? undefined}
-                alt={user?.name ?? 'User avatar'}
-              />
-              <AvatarFallback>{initials}</AvatarFallback>
-            </Avatar>
-            <ArrowDown2 size="16" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-32" align="end">
-          <DropdownMenuGroup>
-            <DropdownMenuItem>Profile</DropdownMenuItem>
-            <DropdownMenuItem>Settings</DropdownMenuItem>
-          </DropdownMenuGroup>
-          <DropdownMenuSeparator />
-          <DropdownMenuGroup>
-            <DropdownMenuItem variant="destructive" onSelect={handleLogout}>
-              Log out
-            </DropdownMenuItem>
-          </DropdownMenuGroup>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <div className="flex items-center gap-1">
+        <Avatar className="size-11">
+          <AvatarImage
+            src={user?.picture ?? undefined}
+            alt={user?.name ?? 'User avatar'}
+          />
+          <AvatarFallback>{initials}</AvatarFallback>
+        </Avatar>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="p-0!">
+              <ArrowDown2 size="16" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-32" align="end">
+            <DropdownMenuGroup>
+              <DropdownMenuItem>Profile</DropdownMenuItem>
+              <DropdownMenuItem>Settings</DropdownMenuItem>
+            </DropdownMenuGroup>
+            <DropdownMenuSeparator />
+            <DropdownMenuGroup>
+              <DropdownMenuItem variant="destructive" onSelect={handleLogout}>
+                Log out
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
     </div>
   );
 }
