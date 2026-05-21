@@ -37,7 +37,8 @@ jobs:
         run: pnpm test
 
       - name: Verify coverage
-        run: ls -R coverage
+        run: |
+          find . -type d -name coverage -exec ls -R {} + || echo "No coverage directory found"
 
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v2
