@@ -31,7 +31,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 9
+          version: 10.13.1
           run_install: false
 
       - name: Get pnpm store directory
@@ -56,7 +56,11 @@ jobs:
       #        run: pnpm run lint --if-present
 
       - name: Run Tests
-        run: pnpm test --if-present
+        run: pnpm test
+
+      - name: Verify coverage (optional)
+        run: |
+          find . -type d -name coverage -exec ls -R {} + || echo "No coverage directory found"
 
       - name: Build Application
         env:
@@ -71,7 +75,7 @@ jobs:
           VITE_KEYCLOAK_CLIENT_ID: ${{ secrets.VITE_KEYCLOAK_CLIENT_ID }}
           VITE_BACKEND_API_URL: ${{ secrets.VITE_BACKEND_API_URL }}
           VITE_BACKEND_API_VERSION: ${{ secrets.VITE_BACKEND_API_VERSION }}
-        run: pnpm run build
+        run: pnpm nx run-many -t build
 
   deploy-to-cloud-run:
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
