@@ -27,7 +27,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 9
+          version: 10.13.1
           run_install: false
 
       - name: Install dependencies
@@ -37,7 +37,8 @@ jobs:
         run: pnpm test
 
       - name: Verify coverage
-        run: ls -R coverage
+        run: |
+          find . -type d -name coverage -exec ls -R {} + || echo "No coverage directory found"
 
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v2

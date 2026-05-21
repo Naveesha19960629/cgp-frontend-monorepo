@@ -1,6 +1,6 @@
 {
   "name": "cgp-frontend-monorepo",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "",
   "keywords": [],
   "author": "",
@@ -41,6 +41,8 @@
     "vitest": "^3.0.0"
   },
   "scripts": {
+    "test": "pnpm nx run-many -t test",
+    "test:coverage": "pnpm nx run-many -t test:coverage",
     "prepare": "husky",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,css,md}\""
