@@ -73,9 +73,9 @@ function UserProvider({ children }: { children: ReactNode }) {
 
     const p = keycloak.tokenParsed as Record<string, unknown>;
     const str = (key: string, fallback = '') =>
-      typeof p[key] === 'string' ? (p[key] as string) : fallback;
+      typeof p[key] === 'string' ? p[key] : fallback;
     const optStr = (key: string) =>
-      typeof p[key] === 'string' ? (p[key] as string) : undefined;
+      typeof p[key] === 'string' ? p[key] : undefined;
 
     startTransition(() =>
       setUser({

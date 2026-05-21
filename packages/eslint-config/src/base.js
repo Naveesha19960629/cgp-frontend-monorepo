@@ -67,6 +67,20 @@ export default tseslint.config(
         { 'src/**': 'KEBAB_CASE' },
       ],
 
+      // Enforce workspace HTTP client — never import axios directly
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: 'axios',
+              message:
+                "Import 'httpClient' from '@cgp/data-access' instead of using axios directly.",
+            },
+          ],
+        },
+      ],
+
       // Prettier
       'prettier/prettier': ['error', { endOfLine: 'auto' }],
     },
