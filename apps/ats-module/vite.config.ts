@@ -25,6 +25,8 @@ export default defineConfig({
         'i18next',
         'react-i18next',
         '@tanstack/react-query',
+        'keycloak-js',
+        '@react-keycloak/web',
       ],
     }),
   ],
@@ -39,6 +41,8 @@ export default defineConfig({
       'i18next',
       'react-i18next',
       '@tanstack/react-query',
+      'keycloak-js',
+      '@react-keycloak/web',
     ],
   },
   server: {

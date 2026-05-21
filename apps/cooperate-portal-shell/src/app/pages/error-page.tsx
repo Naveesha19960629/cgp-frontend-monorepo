@@ -3,15 +3,10 @@ import clsx from 'clsx';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useRouteError } from 'react-router';
 
+import type { RouteError } from '@/app/types';
+
 import { Button } from '@cgp/ui-kit/components/ui/button';
 import { applyTypography } from '@cgp/ui-kit/lib/typography';
-
-interface RouteError {
-  status?: number;
-  statusText?: string;
-  message?: string;
-  data?: string;
-}
 
 export default function ErrorPage({ error }: { error?: Error }) {
   const { t } = useTranslation();

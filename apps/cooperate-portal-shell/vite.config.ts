@@ -16,6 +16,9 @@ export default defineConfig({
       filename: 'remoteEntry.js',
       exposes: {
         './i18n': './src/app/utils/i18n/index.ts',
+        './KeycloakContext': './src/app/contexts/keycloak-context.tsx',
+        './UserContext': './src/app/contexts/user-context.tsx',
+        './keycloak': './src/app/services/keycloak.ts',
       },
       remotes: {
         'ats-module': 'http://localhost:4173/assets/remoteEntry.js',
@@ -29,6 +32,8 @@ export default defineConfig({
         'i18next',
         'react-i18next',
         '@tanstack/react-query',
+        'keycloak-js',
+        '@react-keycloak/web',
       ],
     }),
   ],
@@ -43,6 +48,8 @@ export default defineConfig({
       'i18next',
       'react-i18next',
       '@tanstack/react-query',
+      'keycloak-js',
+      '@react-keycloak/web',
     ],
   },
   server: {

@@ -55,6 +55,46 @@ interface StepProps {
   onSubmit: () => void;
 }
 
+interface GenderItem {
+  id: string;
+  label: string;
+  source: string;
+}
+
+interface Sort {
+  empty: boolean;
+  sorted: boolean;
+  unsorted: boolean;
+}
+
+interface ApiResponse<T> {
+  requestId: string;
+  success: boolean;
+  message: string;
+  data: {
+    type: string;
+    items: {
+      content: T;
+      empty: boolean;
+      first: boolean;
+      last: boolean;
+      number: number;
+      numberOfElements: number;
+      size: number;
+      totalElements: number;
+      totalPages: number;
+      pageable: {
+        offset: number;
+        pageNumber: number;
+        pageSize: number;
+        paged: boolean;
+        unpaged: boolean;
+        sort: Sort;
+      };
+      sort: Sort;
+    };
+  };
+}
 export type {
   AddOrSelectOption,
   SelectOption,
@@ -64,4 +104,6 @@ export type {
   VacancyForm,
   StepProps,
   VacancyStep,
+  GenderItem,
+  ApiResponse,
 };
