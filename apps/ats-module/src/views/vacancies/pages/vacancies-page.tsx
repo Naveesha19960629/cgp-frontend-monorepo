@@ -4,10 +4,9 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
 import { useUser } from '@/app/contexts/user-context';
+import { useGendersQuery } from '@/views/vacancies';
 
 import { Button } from '@cgp/ui-kit/components/ui/button';
-
-import { useGendersQuery } from '../hooks/queries';
 
 export default function VacanciesPage() {
   const { user } = useUser();
