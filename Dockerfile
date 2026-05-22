@@ -28,9 +28,17 @@ ENV VITE_KEYCLOAK_CLIENT_ID=$VITE_KEYCLOAK_CLIENT_ID
 
 RUN npm install -g pnpm
 WORKDIR /app
+# Copy all workspace config files and folders needed for Nx
 COPY package.json pnpm-lock.yaml* ./
+COPY nx.json ./
+COPY pnpm-workspace.yaml ./
+COPY tsconfig.base.json ./
+COPY tsconfig.json ./
+COPY .nx ./.nx
+COPY apps ./apps
+COPY packages ./packages
+# Install dependencies and build
 RUN pnpm install --frozen-lockfile
-COPY . .
 RUN pnpm run build
 
 FROM nginx:alpine
