@@ -150,12 +150,14 @@ export const tertiaryEducationService = {
     return response.data;
   },
 
-  addTertiaryAwardingBody: async (
-    displayValue: string
-  ): Promise<CreatePendingApiResponse> => {
+  addTertiaryAwardingBody: async (params: {
+    displayValue: string;
+    locationId?: string;
+    url?: string;
+  }): Promise<CreatePendingApiResponse> => {
     const response = await httpClient.post<CreatePendingApiResponse>(
       '/tertiary-awarding-bodies',
-      { type: 'TERTIARY_AWARDING_BODY', displayValue }
+      { type: 'TERTIARY_AWARDING_BODY', ...params }
     );
     return response.data;
   },

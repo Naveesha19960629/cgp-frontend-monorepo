@@ -99,18 +99,43 @@ describe('useAddQualificationMutation', () => {
 // -- useAddTertiaryAwardingBodyMutation ------------------------------------
 
 describe('useAddTertiaryAwardingBodyMutation', () => {
-  it('mutationFn calls addTertiaryAwardingBody with the display value', async () => {
+  it('mutationFn calls addTertiaryAwardingBody with params', async () => {
     const mutation =
-      useAddTertiaryAwardingBodyMutation() as unknown as MockMutation<string>;
-    await mutation.mutationFn('University of Moratuwa');
-    expect(mockAddTertiaryAwardingBody).toHaveBeenCalledWith(
-      'University of Moratuwa'
-    );
+      useAddTertiaryAwardingBodyMutation() as unknown as MockMutation<{
+        displayValue: string;
+        locationId?: string;
+        url?: string;
+      }>;
+    await mutation.mutationFn({ displayValue: 'University of Moratuwa' });
+    expect(mockAddTertiaryAwardingBody).toHaveBeenCalledWith({
+      displayValue: 'University of Moratuwa',
+    });
+  });
+
+  it('mutationFn passes locationId and url when provided', async () => {
+    const mutation =
+      useAddTertiaryAwardingBodyMutation() as unknown as MockMutation<{
+        displayValue: string;
+        locationId?: string;
+        url?: string;
+      }>;
+    await mutation.mutationFn({
+      displayValue: 'MIT',
+      locationId: 'loc-1',
+      url: 'https://mit.edu',
+    });
+    expect(mockAddTertiaryAwardingBody).toHaveBeenCalledWith({
+      displayValue: 'MIT',
+      locationId: 'loc-1',
+      url: 'https://mit.edu',
+    });
   });
 
   it("onSuccess invalidates the ['tertiary-awarding-bodies'] query cache", async () => {
     const mutation =
-      useAddTertiaryAwardingBodyMutation() as unknown as MockMutation<string>;
+      useAddTertiaryAwardingBodyMutation() as unknown as MockMutation<{
+        displayValue: string;
+      }>;
     await mutation.onSuccess();
     expect(mockInvalidateQueries).toHaveBeenCalledWith({
       queryKey: ['tertiary-awarding-bodies'],

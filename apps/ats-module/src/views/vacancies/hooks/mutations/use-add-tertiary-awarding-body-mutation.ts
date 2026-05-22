@@ -6,12 +6,17 @@ const useAddTertiaryAwardingBodyMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (displayValue: string) =>
-      tertiaryEducationService.addTertiaryAwardingBody(displayValue),
+    mutationFn: (params: {
+      displayValue: string;
+      locationId?: string;
+      url?: string;
+    }) => tertiaryEducationService.addTertiaryAwardingBody(params),
     onSuccess: () => {
-      void queryClient.invalidateQueries({
-        queryKey: ['tertiary-awarding-bodies'],
-      });
+      queryClient
+        .invalidateQueries({
+          queryKey: ['tertiary-awarding-bodies'],
+        })
+        .catch(() => {});
     },
   });
 };

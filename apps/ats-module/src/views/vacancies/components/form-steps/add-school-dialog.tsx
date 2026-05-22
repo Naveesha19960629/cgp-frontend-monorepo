@@ -7,8 +7,10 @@ import {
   useAddSchoolMutation,
   useSchoolLocationsSearch,
 } from '@/views/vacancies/hooks';
+import type { AddSchoolDialogProps } from '@/views/vacancies/types';
 
 import { CharacterCount } from '@cgp/ui-kit/components/character-count';
+import { ErrorToast, SuccessToast } from '@cgp/ui-kit/components/custom-toast';
 import MultipleSelector from '@cgp/ui-kit/components/multiple-selector';
 import type { Option } from '@cgp/ui-kit/components/multiple-selector';
 import { Button } from '@cgp/ui-kit/components/ui/button';
@@ -16,17 +18,20 @@ import { Dialog, DialogContent } from '@cgp/ui-kit/components/ui/dialog';
 import { Input } from '@cgp/ui-kit/components/ui/input';
 import { Label } from '@cgp/ui-kit/components/ui/label';
 
-interface SchoolOption {
-  id: string;
-  label: string;
-  source: string;
-}
-
-interface AddSchoolDialogProps {
-  open: boolean;
-  initialName: string;
-  onClose: () => void;
-  onAdded: (option: SchoolOption) => void;
+function validateUrl(
+  url: string,
+  t: (key: string) => string
+): string | undefined {
+  if (!url) return undefined;
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    return t('secondaryEducation.addSchoolDialog.schoolUrlInvalid');
+  }
+  try {
+    new URL(url);
+  } catch {
+    return t('secondaryEducation.addSchoolDialog.schoolUrlFormat');
+  }
+  return undefined;
 }
 
 export function AddSchoolDialog({
@@ -34,12 +39,13 @@ export function AddSchoolDialog({
   initialName,
   onClose,
   onAdded,
-}: AddSchoolDialogProps) {
+}: Readonly<AddSchoolDialogProps>) {
   const { t } = useTranslation('ats');
 
   const [name, setName] = useState('');
   const [location, setLocation] = useState<Option[]>([]);
   const [url, setUrl] = useState('');
+  const [urlError, setUrlError] = useState<string | undefined>();
 
   // Adjust state during rendering when the dialog opens — this is the
   // React-recommended pattern for resetting state on a prop change
@@ -49,6 +55,7 @@ export function AddSchoolDialog({
     setName(initialName);
     setLocation([]);
     setUrl('');
+    setUrlError(undefined);
     setPrevOpen(true);
   } else if (!open && prevOpen) {
     setPrevOpen(false);
@@ -57,18 +64,47 @@ export function AddSchoolDialog({
   const addSchoolMutation = useAddSchoolMutation();
   const searchLocations = useSchoolLocationsSearch();
 
+  const handleUrlChange = (value: string) => {
+    setUrl(value);
+    setUrlError(validateUrl(value, t));
+  };
+
   const handleAdd = async () => {
-    const result = await addSchoolMutation.mutateAsync({
-      displayValue: name,
-      locationId: location[0]?.id,
-      url: url || undefined,
-    });
-    onAdded({
-      id: result.data.pendingId,
-      label: name,
-      source: 'PENDING',
-    });
-    onClose();
+    const urlValidation = validateUrl(url, t);
+    if (urlValidation) {
+      setUrlError(urlValidation);
+      return;
+    }
+    try {
+      const result = await addSchoolMutation.mutateAsync({
+        displayValue: name,
+        locationId: location[0]?.id,
+        url: url || undefined,
+      });
+      onAdded({
+        id: result.data.pendingId,
+        label: name,
+        source: 'PENDING',
+      });
+      SuccessToast({
+        title: t('secondaryEducation.addSchoolDialog.success.title'),
+        description: t('secondaryEducation.addSchoolDialog.success.message'),
+      });
+      onClose();
+    } catch (error) {
+      ErrorToast({
+        title: t(
+          error instanceof TypeError
+            ? 'notifications.networkError.title'
+            : 'notifications.apiError.save.title'
+        ),
+        description: t(
+          error instanceof TypeError
+            ? 'notifications.networkError.message'
+            : 'notifications.apiError.save.message'
+        ),
+      });
+    }
   };
 
   return (
@@ -154,12 +190,13 @@ export function AddSchoolDialog({
               </div>
               <Input
                 value={url}
-                onChange={e => setUrl(e.target.value)}
+                onChange={e => handleUrlChange(e.target.value)}
                 maxLength={200}
                 placeholder={t(
                   'secondaryEducation.addSchoolDialog.schoolUrlPlaceholder'
                 )}
               />
+              {urlError && <p className="text-xs text-red-500">{urlError}</p>}
             </div>
           </div>
         </div>
@@ -173,7 +210,10 @@ export function AddSchoolDialog({
             className="h-12 w-36"
             onClick={() => void handleAdd()}
             disabled={
-              !name.trim() || !location.length || addSchoolMutation.isPending
+              !name.trim() ||
+              !location.length ||
+              !!urlError ||
+              addSchoolMutation.isPending
             }
           >
             {t('secondaryEducation.addSchoolDialog.addNow')}

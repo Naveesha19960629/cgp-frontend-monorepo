@@ -5,6 +5,15 @@ import userEvent from '@testing-library/user-event';
 
 import TertiaryEducationStep from '@/views/vacancies/components/form-steps/tertiary-education-step';
 
+// ── Mock AddAwardingBodyDialog ─────────────────────────────────────────────
+
+vi.mock(
+  '@/views/vacancies/components/form-steps/add-awarding-body-dialog',
+  () => ({
+    AddAwardingBodyDialog: () => null,
+  })
+);
+
 // ── Mock react-i18next ─────────────────────────────────────────────────────
 
 vi.mock('react-i18next', () => ({
@@ -43,9 +52,6 @@ vi.mock('@/views/vacancies/hooks', async importOriginal => {
     useDepartmentsSearch: () => vi.fn(() => Promise.resolve([])),
     useFacultiesSearch: () => vi.fn(() => Promise.resolve([])),
     useAddQualificationMutation: () => ({
-      mutateAsync: vi.fn().mockResolvedValue({ data: { pendingId: 'new-id' } }),
-    }),
-    useAddTertiaryAwardingBodyMutation: () => ({
       mutateAsync: vi.fn().mockResolvedValue({ data: { pendingId: 'new-id' } }),
     }),
     useAddLevelOfQualificationMutation: () => ({

@@ -5,6 +5,7 @@ import { Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
 import MessageBox from '@/app/components/message-box';
+import { AddAwardingBodyDialog } from '@/views/vacancies/components/form-steps/add-awarding-body-dialog';
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import {
   useAddBatchMutation,
@@ -13,7 +14,6 @@ import {
   useAddLevelOfQualificationMutation,
   useAddQualificationMutation,
   useAddSpecializationMutation,
-  useAddTertiaryAwardingBodyMutation,
   useBatchesSearch,
   useDeliverySchedulesSearch,
   useDepartmentsSearch,
@@ -100,19 +100,23 @@ export default function TertiaryEducationStep({
 
   // ── Add-Now mutations ────────────────────────────────────────────────────
   const addQualificationMutation = useAddQualificationMutation();
-  const addTertiaryAwardingBodyMutation = useAddTertiaryAwardingBodyMutation();
   const addLevelOfQualificationMutation = useAddLevelOfQualificationMutation();
   const addSpecializationMutation = useAddSpecializationMutation();
   const addBatchMutation = useAddBatchMutation();
   const addDepartmentMutation = useAddDepartmentMutation();
   const addFacultyMutation = useAddFacultyMutation();
 
+  // ── Awarding body dialog state ───────────────────────────────────────────
+  const awardingBodyValue = watch('entry.tertiaryAwardingBody');
+  const [addAwardingBodyDialogOpen, setAddAwardingBodyDialogOpen] =
+    useState(false);
+  const [pendingAwardingBodyLabel, setPendingAwardingBodyLabel] = useState('');
+
   // ── Disable confirmation dialog state ───────────────────────────────
   const [confirmDisableOpen, setConfirmDisableOpen] = useState(false);
 
   // ── Creatable input tracking (for character count) ───────────────────────
   const [qualificationInput, setQualificationInput] = useState('');
-  const [awardingBodyInput, setAwardingBodyInput] = useState('');
   const [levelInput, setLevelInput] = useState('');
   const [specializationInput, setSpecializationInput] = useState('');
   const [batchInput, setBatchInput] = useState('');
@@ -447,13 +451,7 @@ export default function TertiaryEducationStep({
             {/* Row 3: Awarding Body/Institute Name | Level of Qualification */}
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-1">
-                <div className="flex items-center justify-between">
-                  <Label>{t('tertiaryEducation.tertiaryAwardingBody')}</Label>
-                  <CharacterCount
-                    currentLength={awardingBodyInput.length}
-                    maxLength={100}
-                  />
-                </div>
+                <Label>{t('tertiaryEducation.tertiaryAwardingBody')}</Label>
                 <Controller
                   control={control}
                   name="entry.tertiaryAwardingBody"
@@ -464,13 +462,13 @@ export default function TertiaryEducationStep({
                       onChange={options => {
                         if (options.length < MAX_SELECTIONS)
                           clearMax('awardingBody');
-                        setAwardingBodyInput('');
-                        void handleCreatableChange(
-                          options,
-                          field.onChange,
-                          label =>
-                            addTertiaryAwardingBodyMutation.mutateAsync(label)
-                        );
+                        const newItem = options.find(o => !o.id);
+                        if (newItem) {
+                          setPendingAwardingBodyLabel(newItem.label);
+                          setAddAwardingBodyDialogOpen(true);
+                        } else {
+                          field.onChange(options);
+                        }
                       }}
                       maxSelected={MAX_SELECTIONS}
                       onMaxSelected={() => setMax('awardingBody')}
@@ -481,10 +479,6 @@ export default function TertiaryEducationStep({
                       }
                       creatable
                       triggerSearchOnFocus
-                      inputProps={{
-                        maxLength: 100,
-                        onValueChange: val => setAwardingBodyInput(val),
-                      }}
                       placeholder={t(
                         'tertiaryEducation.placeholders.awardingBody'
                       )}
@@ -790,6 +784,20 @@ export default function TertiaryEducationStep({
           </Button>
         </div>
       </div>
+
+      {/* ── Add Awarding Body dialog ─────────────────────────────────────── */}
+      <AddAwardingBodyDialog
+        open={addAwardingBodyDialogOpen}
+        initialName={pendingAwardingBodyLabel}
+        onClose={() => setAddAwardingBodyDialogOpen(false)}
+        onAdded={option => {
+          setValue('entry.tertiaryAwardingBody', [
+            ...awardingBodyValue,
+            option,
+          ]);
+          setAddAwardingBodyDialogOpen(false);
+        }}
+      />
 
       {/* ── Disable confirmation dialog ─────────────────────────────────── */}
       <Dialog

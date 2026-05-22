@@ -182,6 +182,21 @@ interface ApiResponse<T> {
     };
   };
 }
+
+interface AddSchoolDialogProps {
+  open: boolean;
+  initialName: string;
+  onClose: () => void;
+  onAdded: (option: AddOrSelectOption) => void;
+}
+
+interface AddAwardingBodyDialogProps {
+  open: boolean;
+  initialName: string;
+  onClose: () => void;
+  onAdded: (option: AddOrSelectOption) => void;
+}
+
 export type {
   AddOrSelectOption,
   SelectOption,
@@ -203,4 +218,6 @@ export type {
   TertiaryEducationRef,
   TertiaryEducationEntry,
   TertiaryEducation,
+  AddSchoolDialogProps,
+  AddAwardingBodyDialogProps,
 };

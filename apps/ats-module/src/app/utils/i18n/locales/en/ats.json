@@ -37,7 +37,13 @@
       "schoolLocationPlaceholder": "Select school location",
       "schoolUrlPlaceholder": "Enter your school URL",
       "cancel": "Cancel",
-      "addNow": "Add Now"
+      "addNow": "Add Now",
+      "schoolUrlInvalid": "School URL must start with http:// or https://.",
+      "schoolUrlFormat": "School URL must be a valid format.",
+      "success": {
+        "title": "Successfully Added",
+        "message": "New school has been successfully added."
+      }
     },
     "placeholders": {
       "school": "Select or add school",
@@ -83,6 +89,23 @@
     "back": "Back",
     "cancel": "Cancel",
     "next": "Next",
+    "addAwardingBodyDialog": {
+      "title": "Add Awarding Body/Institute",
+      "name": "Awarding Body/Institute Name",
+      "location": "Awarding Body/Institute Location",
+      "url": "Awarding Body/Institute URL",
+      "namePlaceholder": "Enter awarding body/institute name",
+      "locationPlaceholder": "Select awarding body/institute location",
+      "urlPlaceholder": "Enter awarding body/institute URL",
+      "cancel": "Cancel",
+      "addNow": "Add Now",
+      "urlInvalid": "Awarding Body/Institute URL must start with http:// or https://.",
+      "urlFormat": "Awarding Body/Institute URL must be a valid format.",
+      "success": {
+        "title": "Successfully Added",
+        "message": "New Awarding Body/Institute has been successfully added."
+      }
+    },
     "placeholders": {
       "qualificationName": "Select or add required qualification",
       "awardingBody": "Select or add preferred awarding body/institute name",
