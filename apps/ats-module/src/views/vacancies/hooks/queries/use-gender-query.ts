@@ -1,6 +1,6 @@
-import { useQuery } from '@tanstack/react-query';
+import { genderService } from '@/views/vacancies';
 
-import { genderService } from '@/views/vacancies/services';
+import { useQuery } from '@cgp/data-access';
 
 const GENDERS_QUERY_KEY = ['genders'] as const;
 
