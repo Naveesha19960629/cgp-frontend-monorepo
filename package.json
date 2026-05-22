@@ -41,6 +41,7 @@
     "vitest": "^3.0.0"
   },
   "scripts": {
+    "build": "pnpm nx run-many -t build",
     "test": "pnpm nx run-many -t test",
     "test:coverage": "pnpm nx run-many -t test:coverage",
     "prepare": "husky",
