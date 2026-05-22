@@ -33,8 +33,6 @@ COPY package.json pnpm-lock.yaml* ./
 COPY nx.json ./
 COPY pnpm-workspace.yaml ./
 COPY tsconfig.base.json ./
-COPY tsconfig.json ./
-COPY .nx ./.nx
 COPY apps ./apps
 COPY packages ./packages
 # Install dependencies and build
