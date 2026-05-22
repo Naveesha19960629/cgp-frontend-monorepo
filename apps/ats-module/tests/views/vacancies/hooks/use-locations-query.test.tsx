@@ -4,9 +4,26 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import { renderHook, waitFor } from '@testing-library/react';
 
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { useLocationsQuery } from '@/views/vacancies/hooks/use-locations-query';
+import * as locationServiceModule from '@/views/vacancies/services/location.service';
+
+// Mock location data
+const mockLocations = [
+  { id: '1', label: 'United States' },
+  { id: '2', label: 'United Kingdom' },
+  { id: '3', label: 'Canada' },
+  { id: '4', label: 'Australia' },
+  { id: '5', label: 'Germany' },
+];
+
+// Mock the location service
+vi.mock('@/views/vacancies/services/location.service', () => ({
+  locationService: {
+    getLocations: vi.fn(),
+  },
+}));
 
 describe('useLocationsQuery', () => {
   let queryClient: QueryClient;
@@ -17,6 +34,7 @@ describe('useLocationsQuery', () => {
         queries: { retry: false },
       },
     });
+    vi.clearAllMocks();
   });
 
   const createWrapper = (client: QueryClient) => {
@@ -26,6 +44,10 @@ describe('useLocationsQuery', () => {
   };
 
   it('should return empty array initially', async () => {
+    vi.mocked(
+      locationServiceModule.locationService.getLocations
+    ).mockResolvedValue(mockLocations);
+
     const { result } = renderHook(() => useLocationsQuery(''), {
       wrapper: createWrapper(queryClient),
     });
@@ -39,6 +61,10 @@ describe('useLocationsQuery', () => {
   });
 
   it('should return all locations when search is empty', async () => {
+    vi.mocked(
+      locationServiceModule.locationService.getLocations
+    ).mockResolvedValue(mockLocations);
+
     const { result } = renderHook(() => useLocationsQuery(''), {
       wrapper: createWrapper(queryClient),
     });
@@ -51,6 +77,13 @@ describe('useLocationsQuery', () => {
   });
 
   it('should filter locations by search query', async () => {
+    const filteredLocations = mockLocations.filter(loc =>
+      loc.label.includes('United')
+    );
+    vi.mocked(
+      locationServiceModule.locationService.getLocations
+    ).mockResolvedValue(filteredLocations);
+
     const { result } = renderHook(() => useLocationsQuery('United'), {
       wrapper: createWrapper(queryClient),
     });
@@ -66,6 +99,10 @@ describe('useLocationsQuery', () => {
   });
 
   it('should return empty array for non-matching search', async () => {
+    vi.mocked(
+      locationServiceModule.locationService.getLocations
+    ).mockResolvedValue([]);
+
     const { result } = renderHook(() => useLocationsQuery('XYZ123'), {
       wrapper: createWrapper(queryClient),
     });
@@ -78,6 +115,10 @@ describe('useLocationsQuery', () => {
   });
 
   it('should have id and label properties', async () => {
+    vi.mocked(
+      locationServiceModule.locationService.getLocations
+    ).mockResolvedValue(mockLocations);
+
     const { result } = renderHook(() => useLocationsQuery(''), {
       wrapper: createWrapper(queryClient),
     });
@@ -95,6 +136,13 @@ describe('useLocationsQuery', () => {
   });
 
   it('should be case-insensitive in search', async () => {
+    const filteredLocations = mockLocations.filter(loc =>
+      loc.label.toLowerCase().includes('united states')
+    );
+    vi.mocked(
+      locationServiceModule.locationService.getLocations
+    ).mockResolvedValue(filteredLocations);
+
     const { result } = renderHook(() => useLocationsQuery('united states'), {
       wrapper: createWrapper(queryClient),
     });
@@ -107,6 +155,10 @@ describe('useLocationsQuery', () => {
   });
 
   it('should not have errors', async () => {
+    vi.mocked(
+      locationServiceModule.locationService.getLocations
+    ).mockResolvedValue(mockLocations);
+
     const { result } = renderHook(() => useLocationsQuery(''), {
       wrapper: createWrapper(queryClient),
     });
