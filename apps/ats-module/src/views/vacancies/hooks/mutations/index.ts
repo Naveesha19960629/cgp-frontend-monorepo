@@ -2,3 +2,10 @@ export { useAddSchoolMutation } from '@/views/vacancies/hooks/mutations/use-add-
 export { useAddExaminationMutation } from '@/views/vacancies/hooks/mutations/use-add-examination-mutation';
 export { useAddAwardingBodyMutation } from '@/views/vacancies/hooks/mutations/use-add-awarding-body-mutation';
 export { useAddFieldOfStudyMutation } from '@/views/vacancies/hooks/mutations/use-add-field-of-study-mutation';
+export { useAddQualificationMutation } from '@/views/vacancies/hooks/mutations/use-add-qualification-mutation';
+export { useAddTertiaryAwardingBodyMutation } from '@/views/vacancies/hooks/mutations/use-add-tertiary-awarding-body-mutation';
+export { useAddLevelOfQualificationMutation } from '@/views/vacancies/hooks/mutations/use-add-level-of-qualification-mutation';
+export { useAddSpecializationMutation } from '@/views/vacancies/hooks/mutations/use-add-specialization-mutation';
+export { useAddBatchMutation } from '@/views/vacancies/hooks/mutations/use-add-batch-mutation';
+export { useAddDepartmentMutation } from '@/views/vacancies/hooks/mutations/use-add-department-mutation';
+export { useAddFacultyMutation } from '@/views/vacancies/hooks/mutations/use-add-faculty-mutation';

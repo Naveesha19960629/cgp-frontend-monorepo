@@ -130,6 +130,9 @@ const DEFAULT_FORM: VacancyForm = {
   secondaryEducation: [
     { isEnabled: false, dataTakenFromCandidate: false, content: [] },
   ],
+  tertiaryEducation: [
+    { isEnabled: false, dataTakenFromCandidate: false, content: [] },
+  ],
 };
 
 interface VacancyFormContextValue {

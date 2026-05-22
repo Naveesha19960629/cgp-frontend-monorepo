@@ -75,6 +75,37 @@ interface SecondaryEducation {
   content: SecondaryEducationEntry[];
 }
 
+// ─── Tertiary Education ───────────────────────────────────────────────────────
+
+interface TertiaryEducationRef {
+  source: 'MASTER' | 'PENDING';
+  id: string;
+  name?: string;
+}
+
+interface TertiaryEducationEntry {
+  qualificationName: TertiaryEducationRef[];
+  tertiaryAwardingBody: TertiaryEducationRef[];
+  tertiaryAwardingBodyLocations: TertiaryEducationRef[];
+  levelOfQualification: TertiaryEducationRef[];
+  specialization: TertiaryEducationRef[];
+  studyMode: TertiaryEducationRef[];
+  studyPattern: TertiaryEducationRef[];
+  deliverySchedule: TertiaryEducationRef[];
+  batch: TertiaryEducationRef[];
+  department: TertiaryEducationRef[];
+  faculty: TertiaryEducationRef[];
+  grade: string;
+}
+
+interface TertiaryEducation {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  content: TertiaryEducationEntry[];
+}
+
+// ─── Pending Item ─────────────────────────────────────────────────────────────
+
 interface CreatePendingItemResponse {
   pendingId: string;
   type: string;
@@ -98,6 +129,7 @@ interface VacancyForm {
   jobRequirements: JobRequirement[];
   profileRequirements: ProfileRequirements[];
   secondaryEducation: SecondaryEducation[];
+  tertiaryEducation: TertiaryEducation[];
 }
 interface VacancyStep {
   readonly key: string;
@@ -168,4 +200,7 @@ export type {
   SecondaryEducation,
   CreatePendingItemResponse,
   CreatePendingApiResponse,
+  TertiaryEducationRef,
+  TertiaryEducationEntry,
+  TertiaryEducation,
 };

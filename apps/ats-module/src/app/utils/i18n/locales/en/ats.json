@@ -59,5 +59,52 @@
       "cancel": "Cancel",
       "disable": "Disable"
     }
+  },
+  "tertiaryEducation": {
+    "title": "Tertiary Educational Requirements",
+    "sectionTitle": "Tertiary Education",
+    "collectFromCandidates": "If selected, no manual input is required, and data will be taken from the candidate profile",
+    "qualificationName": "Required Qualification(s)",
+    "tertiaryAwardingBody": "Preferred Awarding Body / Institute Name",
+    "tertiaryAwardingBodyLocations": "Desired Awarding Body / Institute Location",
+    "levelOfQualification": "Level of the Qualification",
+    "specialization": "Specialization",
+    "studyMode": "Mode of Study",
+    "studyPattern": "Study Pattern",
+    "deliverySchedule": "Delivery Schedule",
+    "batch": "Batch",
+    "department": "Department",
+    "faculty": "Faculty",
+    "grade": "Grade",
+    "bannerTitle": "Build the Application Form",
+    "bannerMessageHighlight": "Certain fields",
+    "bannerMessageRest": "in this section are always collected from candidates to support consistent candidate profiles. Any fields you don't select won't be collected",
+    "addEntry": "Add",
+    "back": "Back",
+    "cancel": "Cancel",
+    "next": "Next",
+    "placeholders": {
+      "qualificationName": "Select or add qualification",
+      "awardingBody": "Select or add awarding body / institute",
+      "awardingBodyLocation": "Select location",
+      "levelOfQualification": "Select or add level",
+      "specialization": "Select or add specialization",
+      "studyMode": "Select mode of study",
+      "studyPattern": "Select study pattern",
+      "deliverySchedule": "Select delivery schedule",
+      "batch": "Select or add batch",
+      "department": "Select or add department",
+      "faculty": "Select or add faculty",
+      "grade": "Enter grade"
+    },
+    "errors": {
+      "maxSelections": "Exceeded maximum of 10 selections."
+    },
+    "confirmDisableDialog": {
+      "title": "Are you sure?",
+      "message": "Are you sure you want to disable this section? Disabling this section will permanently remove all added data. This action cannot be undone",
+      "cancel": "Cancel",
+      "disable": "Disable"
+    }
   }
 }
