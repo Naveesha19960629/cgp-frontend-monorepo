@@ -6,5 +6,58 @@
   },
   "findCandidate": {
     "title": "Find Candidate"
+  },
+  "secondaryEducation": {
+    "title": "Secondary Educational Requirements",
+    "sectionTitle": "Secondary Education",
+    "collectFromCandidates": "If selected, no manual input is required, and data will be taken from the candidate profile",
+    "acceptsHomeSchooling": "Accepts Home Schooling",
+    "schoolName": "School Name",
+    "schoolLocation": "School Location",
+    "examination": "Examination",
+    "awardingBody": "Awarding Body",
+    "fieldOfStudy": "Field of Study",
+    "grade": "Grade",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "results": "Results",
+    "bannerTitle": "Build the Application Form",
+    "bannerMessageHighlight": "Certain fields",
+    "bannerMessageRest": "in this section are always collected from candidates to support consistent candidate profiles. Any fields you don't select won't be collected",
+    "addEntry": "Add",
+    "back": "Back",
+    "cancel": "Cancel",
+    "next": "Next",
+    "addSchoolDialog": {
+      "title": "Add School",
+      "schoolName": "School Name",
+      "schoolLocation": "School Location",
+      "schoolUrl": "School URL",
+      "schoolNamePlaceholder": "Enter your school name",
+      "schoolLocationPlaceholder": "Select school location",
+      "schoolUrlPlaceholder": "Enter your school URL",
+      "cancel": "Cancel",
+      "addNow": "Add Now"
+    },
+    "placeholders": {
+      "school": "Select or add school",
+      "schoolLocation": "Select location",
+      "examination": "Select or add examination",
+      "awardingBody": "Select or add awarding body",
+      "fieldOfStudy": "Select or add field of study",
+      "grade": "Enter grade",
+      "startDate": "Select start date",
+      "endDate": "Select end date",
+      "results": "Enter your results"
+    },
+    "errors": {
+      "maxSelections": "Exceeded maximum of 10 selections."
+    },
+    "confirmDisableDialog": {
+      "title": "Are you sure?",
+      "message": "Are you sure you want to disable this section? Disabling this section will permanently remove all added data. This action cannot be undone",
+      "cancel": "Cancel",
+      "disable": "Disable"
+    }
   }
 }

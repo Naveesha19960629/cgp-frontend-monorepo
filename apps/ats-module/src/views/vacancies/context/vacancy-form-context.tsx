@@ -127,6 +127,9 @@ const DEFAULT_FORM: VacancyForm = {
   lastActiveStep: VACANCY_STEPS[0].key,
   jobRequirements: [],
   profileRequirements: [],
+  secondaryEducation: [
+    { isEnabled: false, dataTakenFromCandidate: false, content: [] },
+  ],
 };
 
 interface VacancyFormContextValue {

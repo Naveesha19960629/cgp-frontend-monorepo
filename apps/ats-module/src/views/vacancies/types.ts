@@ -37,12 +37,67 @@ interface ProfileRequirements {
   address: Address[];
 }
 
+// ─── Secondary Education ──────────────────────────────────────────────────────
+
+interface LookupItem {
+  id: string;
+  label: string;
+  source: 'MASTER' | 'PENDING';
+}
+
+interface LocationLookupItem {
+  id: string;
+  label: string;
+}
+
+interface SecondaryEducationRef {
+  source: 'MASTER' | 'PENDING';
+  id: string;
+  name?: string;
+}
+
+interface SecondaryEducationEntry {
+  acceptsHomeSchooling: boolean;
+  schools: SecondaryEducationRef[];
+  schoolLocations: SecondaryEducationRef[];
+  examinations: SecondaryEducationRef[];
+  secondaryAwardingBody: SecondaryEducationRef[];
+  fieldsOfStudy: SecondaryEducationRef[];
+  grade: string;
+  startDate: string;
+  endDate: string;
+  result: string;
+}
+
+interface SecondaryEducation {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  content: SecondaryEducationEntry[];
+}
+
+interface CreatePendingItemResponse {
+  pendingId: string;
+  type: string;
+  value: string;
+  status: 'PENDING';
+}
+
+interface CreatePendingApiResponse {
+  requestId: string;
+  success: boolean;
+  message: string;
+  data: CreatePendingItemResponse;
+}
+
+// ─── Vacancy Form ─────────────────────────────────────────────────────────────
+
 interface VacancyForm {
   title: string;
   status: string;
   lastActiveStep: string;
   jobRequirements: JobRequirement[];
   profileRequirements: ProfileRequirements[];
+  secondaryEducation: SecondaryEducation[];
 }
 interface VacancyStep {
   readonly key: string;
@@ -106,4 +161,11 @@ export type {
   VacancyStep,
   GenderItem,
   ApiResponse,
+  LookupItem,
+  LocationLookupItem,
+  SecondaryEducationRef,
+  SecondaryEducationEntry,
+  SecondaryEducation,
+  CreatePendingItemResponse,
+  CreatePendingApiResponse,
 };
