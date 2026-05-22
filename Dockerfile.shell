@@ -1,0 +1,37 @@
+FROM node:20-alpine AS builder
+
+ARG ATS_MODULE_URL
+
+ENV ATS_MODULE_URL=$ATS_MODULE_URL
+
+RUN corepack enable && corepack prepare pnpm@10.13.1 --activate
+
+WORKDIR /app
+
+COPY package.json pnpm-lock.yaml* ./
+COPY nx.json ./
+COPY pnpm-workspace.yaml ./
+COPY tsconfig.base.json ./
+COPY apps ./apps
+COPY packages ./packages
+
+RUN pnpm install --frozen-lockfile
+
+ENV NX_DAEMON=false
+
+RUN pnpm nx build cooperate-portal-shell
+
+# Inject runtime config
+RUN sed "s|__ATS_MODULE_URL__|$ATS_MODULE_URL|g" \
+    apps/cooperate-portal-shell/public/runtime-config.js \
+    > apps/cooperate-portal-shell/dist/runtime-config.js
+
+FROM nginx:alpine
+
+COPY --from=builder /app/apps/cooperate-portal-shell/dist/ /usr/share/nginx/html/
+
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]
