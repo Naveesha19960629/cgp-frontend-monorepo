@@ -477,7 +477,7 @@ const MultipleSelector = React.forwardRef<
             inputRef?.current?.focus();
           }}
         >
-          <div className="relative flex min-w-0 flex-wrap gap-1">
+          <div className="relative flex min-w-0 flex-1 flex-wrap gap-1">
             {/* {selected.map(option => {
               return (
                 <Badge

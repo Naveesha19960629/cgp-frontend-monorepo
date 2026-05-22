@@ -84,10 +84,10 @@
     "cancel": "Cancel",
     "next": "Next",
     "placeholders": {
-      "qualificationName": "Select or add qualification",
-      "awardingBody": "Select or add awarding body / institute",
+      "qualificationName": "Select or add required qualification",
+      "awardingBody": "Select or add preferred awarding body/institute name",
       "awardingBodyLocation": "Select location",
-      "levelOfQualification": "Select or add level",
+      "levelOfQualification": "Select or add level of the qualification",
       "specialization": "Select or add specialization",
       "studyMode": "Select mode of study",
       "studyPattern": "Select study pattern",
