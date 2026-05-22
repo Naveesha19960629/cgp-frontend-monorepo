@@ -22,6 +22,7 @@ import type { StepProps } from '@/views/vacancies/types';
 import { toSecondaryEducationPayload } from '@/views/vacancies/utils';
 
 import { CharacterCount } from '@cgp/ui-kit/components/character-count';
+import { ErrorToast } from '@cgp/ui-kit/components/custom-toast';
 import MultipleSelector from '@cgp/ui-kit/components/multiple-selector';
 import type { Option } from '@cgp/ui-kit/components/multiple-selector';
 import { Button } from '@cgp/ui-kit/components/ui/button';
@@ -51,7 +52,10 @@ function formatDate(iso?: string): string {
   return format(new Date(iso), 'do MMM yyyy');
 }
 
-export default function SecondaryEducationStep({ onNext, onBack }: StepProps) {
+export default function SecondaryEducationStep({
+  onNext,
+  onBack,
+}: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
   const { form: vacancyForm } = useVacancyForm();
 
@@ -113,6 +117,19 @@ export default function SecondaryEducationStep({ onNext, onBack }: StepProps) {
   const [awardingBodyInput, setAwardingBodyInput] = useState('');
   const [fieldOfStudyInput, setFieldOfStudyInput] = useState('');
 
+  // ── Max-selection tracking ───────────────────────────────────────────────
+  const [maxReachedFields, setMaxReachedFields] = useState<Set<string>>(
+    new Set()
+  );
+  const setMax = (field: string) =>
+    setMaxReachedFields(prev => new Set([...prev, field]));
+  const clearMax = (field: string) =>
+    setMaxReachedFields(prev => {
+      const s = new Set(prev);
+      s.delete(field);
+      return s;
+    });
+
   // ── Async search via React Query hooks (gender pattern) ──────────────────
   const searchSchools = useSchoolsSearch();
   const searchLocations = useSchoolLocationsSearch();
@@ -128,13 +145,29 @@ export default function SecondaryEducationStep({ onNext, onBack }: StepProps) {
   ) => {
     const newItem = options.find(o => !o.id);
     if (newItem) {
-      const result = await addMutation(newItem.label);
-      const updated = options.map(o =>
-        !o.id && o.label === newItem.label
-          ? { ...o, id: result.data.pendingId, source: 'PENDING' }
-          : o
-      );
-      onFieldChange(updated);
+      try {
+        const result = await addMutation(newItem.label);
+        const updated = options.map(o =>
+          !o.id && o.label === newItem.label
+            ? { ...o, id: result.data.pendingId, source: 'PENDING' }
+            : o
+        );
+        onFieldChange(updated);
+      } catch (error) {
+        onFieldChange(options.filter(o => o.id));
+        ErrorToast({
+          title: t(
+            error instanceof TypeError
+              ? 'notifications.networkError.title'
+              : 'notifications.apiError.save.title'
+          ),
+          description: t(
+            error instanceof TypeError
+              ? 'notifications.networkError.message'
+              : 'notifications.apiError.save.message'
+          ),
+        });
+      }
     } else {
       onFieldChange(options);
     }
@@ -279,6 +312,8 @@ export default function SecondaryEducationStep({ onNext, onBack }: StepProps) {
                       value={field.value}
                       onSearch={searchSchools}
                       onChange={options => {
+                        if (options.length < MAX_SELECTIONS)
+                          clearMax('schools');
                         const newItem = options.find(o => !o.id);
                         if (newItem) {
                           setPendingSchoolLabel(newItem.label);
@@ -288,7 +323,12 @@ export default function SecondaryEducationStep({ onNext, onBack }: StepProps) {
                         }
                       }}
                       maxSelected={MAX_SELECTIONS}
-                      onMaxSelected={() => {}}
+                      onMaxSelected={() => setMax('schools')}
+                      errorMessage={
+                        maxReachedFields.has('schools')
+                          ? t('secondaryEducation.errors.maxSelections')
+                          : undefined
+                      }
                       creatable
                       triggerSearchOnFocus
                       placeholder={t('secondaryEducation.placeholders.school')}
@@ -306,9 +346,18 @@ export default function SecondaryEducationStep({ onNext, onBack }: StepProps) {
                     <MultipleSelector
                       value={field.value}
                       onSearch={searchLocations}
-                      onChange={field.onChange}
+                      onChange={options => {
+                        if (options.length < MAX_SELECTIONS)
+                          clearMax('schoolLocations');
+                        field.onChange(options);
+                      }}
                       maxSelected={MAX_SELECTIONS}
-                      onMaxSelected={() => {}}
+                      onMaxSelected={() => setMax('schoolLocations')}
+                      errorMessage={
+                        maxReachedFields.has('schoolLocations')
+                          ? t('secondaryEducation.errors.maxSelections')
+                          : undefined
+                      }
                       triggerSearchOnFocus
                       placeholder={t(
                         'secondaryEducation.placeholders.schoolLocation'
@@ -451,6 +500,8 @@ export default function SecondaryEducationStep({ onNext, onBack }: StepProps) {
                       value={field.value}
                       onSearch={searchExaminations}
                       onChange={options => {
+                        if (options.length < MAX_SELECTIONS)
+                          clearMax('examinations');
                         setExaminationInput('');
                         void handleCreatableChange(
                           options,
@@ -459,7 +510,12 @@ export default function SecondaryEducationStep({ onNext, onBack }: StepProps) {
                         );
                       }}
                       maxSelected={MAX_SELECTIONS}
-                      onMaxSelected={() => {}}
+                      onMaxSelected={() => setMax('examinations')}
+                      errorMessage={
+                        maxReachedFields.has('examinations')
+                          ? t('secondaryEducation.errors.maxSelections')
+                          : undefined
+                      }
                       creatable
                       triggerSearchOnFocus
                       inputProps={{
@@ -490,6 +546,8 @@ export default function SecondaryEducationStep({ onNext, onBack }: StepProps) {
                       value={field.value}
                       onSearch={searchAwardingBodies}
                       onChange={options => {
+                        if (options.length < MAX_SELECTIONS)
+                          clearMax('awardingBodies');
                         setAwardingBodyInput('');
                         void handleCreatableChange(
                           options,
@@ -498,7 +556,12 @@ export default function SecondaryEducationStep({ onNext, onBack }: StepProps) {
                         );
                       }}
                       maxSelected={MAX_SELECTIONS}
-                      onMaxSelected={() => {}}
+                      onMaxSelected={() => setMax('awardingBodies')}
+                      errorMessage={
+                        maxReachedFields.has('awardingBodies')
+                          ? t('secondaryEducation.errors.maxSelections')
+                          : undefined
+                      }
                       creatable
                       triggerSearchOnFocus
                       inputProps={{
@@ -532,6 +595,8 @@ export default function SecondaryEducationStep({ onNext, onBack }: StepProps) {
                       value={field.value}
                       onSearch={searchFieldsOfStudy}
                       onChange={options => {
+                        if (options.length < MAX_SELECTIONS)
+                          clearMax('fieldsOfStudy');
                         setFieldOfStudyInput('');
                         void handleCreatableChange(
                           options,
@@ -540,7 +605,12 @@ export default function SecondaryEducationStep({ onNext, onBack }: StepProps) {
                         );
                       }}
                       maxSelected={MAX_SELECTIONS}
-                      onMaxSelected={() => {}}
+                      onMaxSelected={() => setMax('fieldsOfStudy')}
+                      errorMessage={
+                        maxReachedFields.has('fieldsOfStudy')
+                          ? t('secondaryEducation.errors.maxSelections')
+                          : undefined
+                      }
                       creatable
                       triggerSearchOnFocus
                       inputProps={{

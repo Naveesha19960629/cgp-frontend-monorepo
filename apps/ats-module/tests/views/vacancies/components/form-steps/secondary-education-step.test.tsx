@@ -62,8 +62,26 @@ vi.mock('@/app/components/message-box', () => ({
 // ── Mock MultipleSelector ───────────────────────────────────────────────────
 
 vi.mock('@cgp/ui-kit/components/multiple-selector', () => ({
-  default: ({ placeholder }: { placeholder: string }) => (
-    <input placeholder={placeholder} readOnly />
+  default: ({
+    placeholder,
+    onMaxSelected,
+    errorMessage,
+  }: {
+    placeholder: string;
+    onMaxSelected?: () => void;
+    errorMessage?: string;
+  }) => (
+    <>
+      <input placeholder={placeholder} readOnly />
+      {onMaxSelected && (
+        <button
+          type="button"
+          data-testid={`max-trigger-${placeholder}`}
+          onClick={() => onMaxSelected()}
+        />
+      )}
+      {errorMessage && <p>{errorMessage}</p>}
+    </>
   ),
 }));
 
@@ -387,6 +405,38 @@ describe('SecondaryEducationStep', () => {
       );
 
       expect(onBack).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('max selection inline error', () => {
+    it('shows error message when max selections is reached on the school name field', async () => {
+      const user = userEvent.setup();
+      renderStep();
+      await enableSection(user);
+
+      await user.click(
+        screen.getByTestId('max-trigger-secondaryEducation.placeholders.school')
+      );
+
+      expect(
+        screen.getByText('secondaryEducation.errors.maxSelections')
+      ).toBeInTheDocument();
+    });
+
+    it('shows error message when max selections is reached on the examination field', async () => {
+      const user = userEvent.setup();
+      renderStep();
+      await enableSection(user);
+
+      await user.click(
+        screen.getByTestId(
+          'max-trigger-secondaryEducation.placeholders.examination'
+        )
+      );
+
+      expect(
+        screen.getByText('secondaryEducation.errors.maxSelections')
+      ).toBeInTheDocument();
     });
   });
 });

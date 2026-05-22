@@ -75,8 +75,26 @@ vi.mock('@/app/components/message-box', () => ({
 // ── Mock MultipleSelector ───────────────────────────────────────────────────
 
 vi.mock('@cgp/ui-kit/components/multiple-selector', () => ({
-  default: ({ placeholder }: { placeholder: string }) => (
-    <input placeholder={placeholder} readOnly />
+  default: ({
+    placeholder,
+    onMaxSelected,
+    errorMessage,
+  }: {
+    placeholder: string;
+    onMaxSelected?: () => void;
+    errorMessage?: string;
+  }) => (
+    <>
+      <input placeholder={placeholder} readOnly />
+      {onMaxSelected && (
+        <button
+          type="button"
+          data-testid={`max-trigger-${placeholder}`}
+          onClick={() => onMaxSelected()}
+        />
+      )}
+      {errorMessage && <p>{errorMessage}</p>}
+    </>
   ),
 }));
 
@@ -401,6 +419,40 @@ describe('TertiaryEducationStep', () => {
       );
 
       expect(onBack).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('max selection inline error', () => {
+    it('shows error message when max selections is reached on the qualification name field', async () => {
+      const user = userEvent.setup();
+      renderStep();
+      await enableSection(user);
+
+      await user.click(
+        screen.getByTestId(
+          'max-trigger-tertiaryEducation.placeholders.qualificationName'
+        )
+      );
+
+      expect(
+        screen.getByText('tertiaryEducation.errors.maxSelections')
+      ).toBeInTheDocument();
+    });
+
+    it('shows error message when max selections is reached on the level of qualification field', async () => {
+      const user = userEvent.setup();
+      renderStep();
+      await enableSection(user);
+
+      await user.click(
+        screen.getByTestId(
+          'max-trigger-tertiaryEducation.placeholders.levelOfQualification'
+        )
+      );
+
+      expect(
+        screen.getByText('tertiaryEducation.errors.maxSelections')
+      ).toBeInTheDocument();
     });
   });
 });

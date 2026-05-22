@@ -87,6 +87,8 @@ interface MultipleSelectorProps {
   >;
   /** hide the clear all button. */
   hideClearAllButton?: boolean;
+  /** Inline error message displayed below the input and above the selected badges. */
+  errorMessage?: string;
 }
 
 export interface MultipleSelectorRef {
@@ -206,6 +208,7 @@ const MultipleSelector = React.forwardRef<
       commandProps,
       inputProps,
       hideClearAllButton = false,
+      errorMessage,
     }: MultipleSelectorProps,
     ref: React.Ref<MultipleSelectorRef>
   ) => {
@@ -688,6 +691,9 @@ const MultipleSelector = React.forwardRef<
             </CommandList>
           )}
         </div>
+        {errorMessage && (
+          <p className="mt-1 text-xs text-red-500">{errorMessage}</p>
+        )}
         {selected.length > 0 && (
           <div className="mt-2 flex flex-wrap gap-3">
             {selected.map(option => {

@@ -106,5 +106,25 @@
       "cancel": "Cancel",
       "disable": "Disable"
     }
+  },
+  "notifications": {
+    "loading": {
+      "title": "We are loading your vacancy content..",
+      "message": "Every vacancy you post brings the right talent one step closer to your team. Start building your pipeline!"
+    },
+    "apiError": {
+      "save": {
+        "title": "Try Again",
+        "message": "Some changes could not be saved. Please try again."
+      },
+      "fetch": {
+        "title": "Try Again",
+        "message": "Some changes could not be loaded. Please try again."
+      }
+    },
+    "networkError": {
+      "title": "Try Again",
+      "message": "Some changes could not be saved. Please retry."
+    }
   }
 }

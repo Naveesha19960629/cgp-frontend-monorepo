@@ -31,6 +31,7 @@ import type { StepProps } from '@/views/vacancies/types';
 import { toTertiaryEducationPayload } from '@/views/vacancies/utils';
 
 import { CharacterCount } from '@cgp/ui-kit/components/character-count';
+import { ErrorToast } from '@cgp/ui-kit/components/custom-toast';
 import MultipleSelector from '@cgp/ui-kit/components/multiple-selector';
 import type { Option } from '@cgp/ui-kit/components/multiple-selector';
 import { Button } from '@cgp/ui-kit/components/ui/button';
@@ -47,7 +48,10 @@ import { Switch as SwitchPrimitive } from 'radix-ui';
 
 const MAX_SELECTIONS = 10;
 
-export default function TertiaryEducationStep({ onNext, onBack }: StepProps) {
+export default function TertiaryEducationStep({
+  onNext,
+  onBack,
+}: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
   const { form: vacancyForm } = useVacancyForm();
 
@@ -115,6 +119,19 @@ export default function TertiaryEducationStep({ onNext, onBack }: StepProps) {
   const [departmentInput, setDepartmentInput] = useState('');
   const [facultyInput, setFacultyInput] = useState('');
 
+  // ── Max-selection tracking ───────────────────────────────────────────────
+  const [maxReachedFields, setMaxReachedFields] = useState<Set<string>>(
+    new Set()
+  );
+  const setMax = (field: string) =>
+    setMaxReachedFields(prev => new Set([...prev, field]));
+  const clearMax = (field: string) =>
+    setMaxReachedFields(prev => {
+      const s = new Set(prev);
+      s.delete(field);
+      return s;
+    });
+
   // ── Async search hooks ───────────────────────────────────────────────────
   const searchQualifications = useQualificationsSearch();
   const searchAwardingBodies = useTertiaryAwardingBodiesSearch();
@@ -136,13 +153,29 @@ export default function TertiaryEducationStep({ onNext, onBack }: StepProps) {
   ) => {
     const newItem = options.find(o => !o.id);
     if (newItem) {
-      const result = await addMutation(newItem.label);
-      const updated = options.map(o =>
-        !o.id && o.label === newItem.label
-          ? { ...o, id: result.data.pendingId, source: 'PENDING' }
-          : o
-      );
-      onFieldChange(updated);
+      try {
+        const result = await addMutation(newItem.label);
+        const updated = options.map(o =>
+          !o.id && o.label === newItem.label
+            ? { ...o, id: result.data.pendingId, source: 'PENDING' }
+            : o
+        );
+        onFieldChange(updated);
+      } catch (error) {
+        onFieldChange(options.filter(o => o.id));
+        ErrorToast({
+          title: t(
+            error instanceof TypeError
+              ? 'notifications.networkError.title'
+              : 'notifications.apiError.save.title'
+          ),
+          description: t(
+            error instanceof TypeError
+              ? 'notifications.networkError.message'
+              : 'notifications.apiError.save.message'
+          ),
+        });
+      }
     } else {
       onFieldChange(options);
     }
@@ -275,6 +308,8 @@ export default function TertiaryEducationStep({ onNext, onBack }: StepProps) {
                       value={field.value}
                       onSearch={searchQualifications}
                       onChange={options => {
+                        if (options.length < MAX_SELECTIONS)
+                          clearMax('qualificationName');
                         setQualificationInput('');
                         void handleCreatableChange(
                           options,
@@ -283,7 +318,12 @@ export default function TertiaryEducationStep({ onNext, onBack }: StepProps) {
                         );
                       }}
                       maxSelected={MAX_SELECTIONS}
-                      onMaxSelected={() => {}}
+                      onMaxSelected={() => setMax('qualificationName')}
+                      errorMessage={
+                        maxReachedFields.has('qualificationName')
+                          ? t('tertiaryEducation.errors.maxSelections')
+                          : undefined
+                      }
                       creatable
                       triggerSearchOnFocus
                       inputProps={{
@@ -339,9 +379,18 @@ export default function TertiaryEducationStep({ onNext, onBack }: StepProps) {
                     <MultipleSelector
                       value={field.value}
                       onSearch={searchLocations}
-                      onChange={field.onChange}
+                      onChange={options => {
+                        if (options.length < MAX_SELECTIONS)
+                          clearMax('awardingBodyLocations');
+                        field.onChange(options);
+                      }}
                       maxSelected={MAX_SELECTIONS}
-                      onMaxSelected={() => {}}
+                      onMaxSelected={() => setMax('awardingBodyLocations')}
+                      errorMessage={
+                        maxReachedFields.has('awardingBodyLocations')
+                          ? t('tertiaryEducation.errors.maxSelections')
+                          : undefined
+                      }
                       triggerSearchOnFocus
                       placeholder={t(
                         'tertiaryEducation.placeholders.awardingBodyLocation'
@@ -367,6 +416,7 @@ export default function TertiaryEducationStep({ onNext, onBack }: StepProps) {
                       value={field.value}
                       onSearch={searchBatches}
                       onChange={options => {
+                        if (options.length < MAX_SELECTIONS) clearMax('batch');
                         setBatchInput('');
                         void handleCreatableChange(
                           options,
@@ -375,7 +425,12 @@ export default function TertiaryEducationStep({ onNext, onBack }: StepProps) {
                         );
                       }}
                       maxSelected={MAX_SELECTIONS}
-                      onMaxSelected={() => {}}
+                      onMaxSelected={() => setMax('batch')}
+                      errorMessage={
+                        maxReachedFields.has('batch')
+                          ? t('tertiaryEducation.errors.maxSelections')
+                          : undefined
+                      }
                       creatable
                       triggerSearchOnFocus
                       inputProps={{
@@ -407,6 +462,8 @@ export default function TertiaryEducationStep({ onNext, onBack }: StepProps) {
                       value={field.value}
                       onSearch={searchAwardingBodies}
                       onChange={options => {
+                        if (options.length < MAX_SELECTIONS)
+                          clearMax('awardingBody');
                         setAwardingBodyInput('');
                         void handleCreatableChange(
                           options,
@@ -416,7 +473,12 @@ export default function TertiaryEducationStep({ onNext, onBack }: StepProps) {
                         );
                       }}
                       maxSelected={MAX_SELECTIONS}
-                      onMaxSelected={() => {}}
+                      onMaxSelected={() => setMax('awardingBody')}
+                      errorMessage={
+                        maxReachedFields.has('awardingBody')
+                          ? t('tertiaryEducation.errors.maxSelections')
+                          : undefined
+                      }
                       creatable
                       triggerSearchOnFocus
                       inputProps={{
@@ -447,6 +509,8 @@ export default function TertiaryEducationStep({ onNext, onBack }: StepProps) {
                       value={field.value}
                       onSearch={searchLevels}
                       onChange={options => {
+                        if (options.length < MAX_SELECTIONS)
+                          clearMax('levelOfQualification');
                         setLevelInput('');
                         void handleCreatableChange(
                           options,
@@ -456,7 +520,12 @@ export default function TertiaryEducationStep({ onNext, onBack }: StepProps) {
                         );
                       }}
                       maxSelected={MAX_SELECTIONS}
-                      onMaxSelected={() => {}}
+                      onMaxSelected={() => setMax('levelOfQualification')}
+                      errorMessage={
+                        maxReachedFields.has('levelOfQualification')
+                          ? t('tertiaryEducation.errors.maxSelections')
+                          : undefined
+                      }
                       creatable
                       triggerSearchOnFocus
                       inputProps={{
@@ -490,6 +559,8 @@ export default function TertiaryEducationStep({ onNext, onBack }: StepProps) {
                       value={field.value}
                       onSearch={searchSpecializations}
                       onChange={options => {
+                        if (options.length < MAX_SELECTIONS)
+                          clearMax('specialization');
                         setSpecializationInput('');
                         void handleCreatableChange(
                           options,
@@ -498,7 +569,12 @@ export default function TertiaryEducationStep({ onNext, onBack }: StepProps) {
                         );
                       }}
                       maxSelected={MAX_SELECTIONS}
-                      onMaxSelected={() => {}}
+                      onMaxSelected={() => setMax('specialization')}
+                      errorMessage={
+                        maxReachedFields.has('specialization')
+                          ? t('tertiaryEducation.errors.maxSelections')
+                          : undefined
+                      }
                       creatable
                       triggerSearchOnFocus
                       inputProps={{
@@ -522,9 +598,18 @@ export default function TertiaryEducationStep({ onNext, onBack }: StepProps) {
                     <MultipleSelector
                       value={field.value}
                       onSearch={searchStudyModes}
-                      onChange={field.onChange}
+                      onChange={options => {
+                        if (options.length < MAX_SELECTIONS)
+                          clearMax('studyMode');
+                        field.onChange(options);
+                      }}
                       maxSelected={MAX_SELECTIONS}
-                      onMaxSelected={() => {}}
+                      onMaxSelected={() => setMax('studyMode')}
+                      errorMessage={
+                        maxReachedFields.has('studyMode')
+                          ? t('tertiaryEducation.errors.maxSelections')
+                          : undefined
+                      }
                       triggerSearchOnFocus
                       placeholder={t(
                         'tertiaryEducation.placeholders.studyMode'
@@ -546,9 +631,18 @@ export default function TertiaryEducationStep({ onNext, onBack }: StepProps) {
                     <MultipleSelector
                       value={field.value}
                       onSearch={searchStudyPatterns}
-                      onChange={field.onChange}
+                      onChange={options => {
+                        if (options.length < MAX_SELECTIONS)
+                          clearMax('studyPattern');
+                        field.onChange(options);
+                      }}
                       maxSelected={MAX_SELECTIONS}
-                      onMaxSelected={() => {}}
+                      onMaxSelected={() => setMax('studyPattern')}
+                      errorMessage={
+                        maxReachedFields.has('studyPattern')
+                          ? t('tertiaryEducation.errors.maxSelections')
+                          : undefined
+                      }
                       triggerSearchOnFocus
                       placeholder={t(
                         'tertiaryEducation.placeholders.studyPattern'
@@ -567,9 +661,18 @@ export default function TertiaryEducationStep({ onNext, onBack }: StepProps) {
                     <MultipleSelector
                       value={field.value}
                       onSearch={searchDeliverySchedules}
-                      onChange={field.onChange}
+                      onChange={options => {
+                        if (options.length < MAX_SELECTIONS)
+                          clearMax('deliverySchedule');
+                        field.onChange(options);
+                      }}
                       maxSelected={MAX_SELECTIONS}
-                      onMaxSelected={() => {}}
+                      onMaxSelected={() => setMax('deliverySchedule')}
+                      errorMessage={
+                        maxReachedFields.has('deliverySchedule')
+                          ? t('tertiaryEducation.errors.maxSelections')
+                          : undefined
+                      }
                       triggerSearchOnFocus
                       placeholder={t(
                         'tertiaryEducation.placeholders.deliverySchedule'
@@ -598,6 +701,8 @@ export default function TertiaryEducationStep({ onNext, onBack }: StepProps) {
                       value={field.value}
                       onSearch={searchDepartments}
                       onChange={options => {
+                        if (options.length < MAX_SELECTIONS)
+                          clearMax('department');
                         setDepartmentInput('');
                         void handleCreatableChange(
                           options,
@@ -606,7 +711,12 @@ export default function TertiaryEducationStep({ onNext, onBack }: StepProps) {
                         );
                       }}
                       maxSelected={MAX_SELECTIONS}
-                      onMaxSelected={() => {}}
+                      onMaxSelected={() => setMax('department')}
+                      errorMessage={
+                        maxReachedFields.has('department')
+                          ? t('tertiaryEducation.errors.maxSelections')
+                          : undefined
+                      }
                       creatable
                       triggerSearchOnFocus
                       inputProps={{
@@ -637,6 +747,8 @@ export default function TertiaryEducationStep({ onNext, onBack }: StepProps) {
                       value={field.value}
                       onSearch={searchFaculties}
                       onChange={options => {
+                        if (options.length < MAX_SELECTIONS)
+                          clearMax('faculty');
                         setFacultyInput('');
                         void handleCreatableChange(
                           options,
@@ -645,7 +757,12 @@ export default function TertiaryEducationStep({ onNext, onBack }: StepProps) {
                         );
                       }}
                       maxSelected={MAX_SELECTIONS}
-                      onMaxSelected={() => {}}
+                      onMaxSelected={() => setMax('faculty')}
+                      errorMessage={
+                        maxReachedFields.has('faculty')
+                          ? t('tertiaryEducation.errors.maxSelections')
+                          : undefined
+                      }
                       creatable
                       triggerSearchOnFocus
                       inputProps={{
