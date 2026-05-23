@@ -23,7 +23,8 @@ export default defineConfig({
 
       remotes: {
         'ats-module':
-          process.env.VITE_ATS_MODULE_URL + '/assets/remoteEntry.js',
+          process.env.VITE_ATS_MODULE_URL +
+          '/dashboard/ats/assets/remoteEntry.js',
       },
 
       shared: [
