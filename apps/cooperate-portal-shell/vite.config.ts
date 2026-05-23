@@ -6,7 +6,6 @@ import federation from '@originjs/vite-plugin-federation';
 import tailwindcss from '@tailwindcss/vite';
 import path from 'path';
 
-// https://vite.dev/config/
 export default defineConfig({
   plugins: [
     react(),
@@ -14,17 +13,19 @@ export default defineConfig({
     federation({
       name: 'cooperate-portal-shell',
       filename: 'remoteEntry.js',
+
       exposes: {
         './i18n': './src/app/utils/i18n/index.ts',
         './KeycloakContext': './src/app/contexts/keycloak-context.tsx',
         './UserContext': './src/app/contexts/user-context.tsx',
         './keycloak': './src/app/services/keycloak.ts',
       },
+
       remotes: {
-        'ats-module': 'http://localhost:4173/assets/remoteEntry.js',
-        from: 'vite',
-        format: 'esm',
+        'ats-module':
+          process.env.VITE_ATS_MODULE_URL + '/assets/remoteEntry.js',
       },
+
       shared: [
         'react',
         'react-dom',
@@ -37,6 +38,7 @@ export default defineConfig({
       ],
     }),
   ],
+
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
@@ -52,10 +54,12 @@ export default defineConfig({
       '@react-keycloak/web',
     ],
   },
+
   server: {
     port: 5174,
     strictPort: true,
   },
+
   build: {
     modulePreload: false,
     target: 'esnext',

@@ -40,6 +40,21 @@ jobs:
 
       - name: Run Tests
         run: pnpm test
+      
+      - name: Build Application
+        env:
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+          VITE_FALLBACK_LANG: ${{ secrets.VITE_FALLBACK_LANG }}
+          VITE_LANG: ${{ secrets.VITE_LANG }}
+          VITE_OXO_LOGO_URL: ${{ secrets.VITE_OXO_LOGO_URL }}
+          VITE_OXO_LOGO_WHITE_URL: ${{ secrets.VITE_OXO_LOGO_WHITE_URL }}
+          VITE_WS_URL: ${{ secrets.VITE_WS_URL }}
+          VITE_KEYCLOAK_URL: ${{ secrets.VITE_KEYCLOAK_URL }}
+          VITE_KEYCLOAK_REALM: ${{ secrets.VITE_KEYCLOAK_REALM }}
+          VITE_KEYCLOAK_CLIENT_ID: ${{ secrets.VITE_KEYCLOAK_CLIENT_ID }}
+          VITE_BACKEND_API_URL: ${{ secrets.VITE_BACKEND_API_URL }}
+          VITE_BACKEND_API_VERSION: ${{ secrets.VITE_BACKEND_API_VERSION }}
+        run: pnpm nx run-many -t build
 
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -76,9 +91,23 @@ jobs:
       # =========================
       - name: Build ATS Image
         run: |
-          docker build \
+          docker build  --no-cache \
             -f Dockerfile.ats \
+            --build-arg COMMIT_SHA=${{ github.sha }} \
+            --build-arg BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') \
+            --build-arg VITE_API_URL=${{ secrets.VITE_API_URL }} \
+            --build-arg VITE_FALLBACK_LANG=${{ secrets.VITE_FALLBACK_LANG }} \
+            --build-arg VITE_LANG=${{ secrets.VITE_LANG }} \
+            --build-arg VITE_OXO_LOGO_URL=${{ secrets.VITE_OXO_LOGO_URL }} \
+            --build-arg VITE_OXO_LOGO_WHITE_URL=${{ secrets.VITE_OXO_LOGO_WHITE_URL }} \
+            --build-arg VITE_KEYCLOAK_URL=${{ secrets.VITE_KEYCLOAK_URL }} \
+            --build-arg VITE_KEYCLOAK_REALM=${{ secrets.VITE_KEYCLOAK_REALM }} \
+            --build-arg VITE_KEYCLOAK_CLIENT_ID=${{ secrets.VITE_KEYCLOAK_CLIENT_ID }} \
+            --build-arg VITE_BACKEND_API_URL=${{ secrets.VITE_BACKEND_API_URL }} \
+            --build-arg VITE_BACKEND_API_VERSION=${{ secrets.VITE_BACKEND_API_VERSION }} \
+            --build-arg VITE_WS_URL=${{ secrets.VITE_WS_URL }} \
             -t $AR_HOSTNAME/$PROJECT_ID/$REPOSITORY/$ATS_SERVICE:${{ steps.version.outputs.version }} \
+            -t $AR_HOSTNAME/$PROJECT_ID/$REPOSITORY/$SERVICE_NAME:latest \
             .
 
       - name: Push ATS Image
@@ -96,7 +125,12 @@ jobs:
             --region=$REGION \
             --platform=managed \
             --allow-unauthenticated \
+            --memory=1Gi \
+            --cpu=1 \
             --port=80 \
+            --set-env-vars="NODE_ENV=production" \
+            --revision-suffix=${{ github.sha }} \
+            --labels="commit=${{ github.sha }},branch=develop,app=ats-module" \
             --quiet
 
           ATS_URL=$(gcloud run services describe $ATS_SERVICE \
@@ -111,10 +145,24 @@ jobs:
       # =========================
       - name: Build Shell Image
         run: |
-          docker build \
+          docker build --no-cache \
             -f Dockerfile.shell \
-            --build-arg ATS_MODULE_URL=${{ steps.deploy_ats.outputs.ats_url }} \
+            --build-arg VITE_ATS_MODULE_URL=${{ steps.deploy_ats.outputs.ats_url }} \
+            --build-arg COMMIT_SHA=${{ github.sha }} \
+            --build-arg BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') \
+            --build-arg VITE_API_URL=${{ secrets.VITE_API_URL }} \
+            --build-arg VITE_FALLBACK_LANG=${{ secrets.VITE_FALLBACK_LANG }} \
+            --build-arg VITE_LANG=${{ secrets.VITE_LANG }} \
+            --build-arg VITE_OXO_LOGO_URL=${{ secrets.VITE_OXO_LOGO_URL }} \
+            --build-arg VITE_OXO_LOGO_WHITE_URL=${{ secrets.VITE_OXO_LOGO_WHITE_URL }} \
+            --build-arg VITE_KEYCLOAK_URL=${{ secrets.VITE_KEYCLOAK_URL }} \
+            --build-arg VITE_KEYCLOAK_REALM=${{ secrets.VITE_KEYCLOAK_REALM }} \
+            --build-arg VITE_KEYCLOAK_CLIENT_ID=${{ secrets.VITE_KEYCLOAK_CLIENT_ID }} \
+            --build-arg VITE_BACKEND_API_URL=${{ secrets.VITE_BACKEND_API_URL }} \
+            --build-arg VITE_BACKEND_API_VERSION=${{ secrets.VITE_BACKEND_API_VERSION }} \
+            --build-arg VITE_WS_URL=${{ secrets.VITE_WS_URL }} \
             -t $AR_HOSTNAME/$PROJECT_ID/$REPOSITORY/$SHELL_SERVICE:${{ steps.version.outputs.version }} \
+            -t $AR_HOSTNAME/$PROJECT_ID/$REPOSITORY/$SERVICE_NAME:latest \
             .
 
       - name: Push Shell Image
@@ -132,7 +180,12 @@ jobs:
             --region=$REGION \
             --platform=managed \
             --allow-unauthenticated \
+            --memory=1Gi \
+            --cpu=1 \
             --port=80 \
+            --set-env-vars="NODE_ENV=production" \
+            --revision-suffix=${{ github.sha }} \
+            --labels="commit=${{ github.sha }},branch=develop,app=cgp-shell" \
             --quiet
 
           SHELL_URL=$(gcloud run services describe $SHELL_SERVICE \
