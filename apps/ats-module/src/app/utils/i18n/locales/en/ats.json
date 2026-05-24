@@ -2,8 +2,18 @@
   "vacancies": {
     "title": "Vacancies",
     "createVacancyButton": "Create Vacancy",
-    "editVacancy": "Edit Vacancy"
+    "editVacancy": "Edit Vacancy",
+    "createVacancy": {
+      "heading": "Create Vacancy",
+      "formTitle": "Lets Begin with the Vacancy Title",
+      "fieldTitle": "Title",
+      "titlePlaceholder": "Enter title",
+      "titleRequired": "Title is required",
+      "cancelButton": "Cancel",
+      "nextButton": "Next"
+    }
   },
+
   "findCandidate": {
     "title": "Find Candidate"
   }
