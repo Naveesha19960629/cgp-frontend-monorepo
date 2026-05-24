@@ -95,6 +95,20 @@ interface ApiResponse<T> {
     };
   };
 }
+interface PreferredPatentTag {
+  label: string;
+  id?: string;
+}
+
+interface PreferredPatent {
+  id: string;
+  relatedIndustries: PreferredPatentTag[];
+  statuses: PreferredPatentTag[];
+  fromDate: string;
+  toDate: string;
+  isOpen: boolean;
+}
+
 export type {
   AddOrSelectOption,
   SelectOption,
@@ -106,4 +120,6 @@ export type {
   VacancyStep,
   GenderItem,
   ApiResponse,
+  PreferredPatentTag,
+  PreferredPatent,
 };

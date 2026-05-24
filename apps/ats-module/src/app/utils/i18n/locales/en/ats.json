@@ -16,5 +16,39 @@
 
   "findCandidate": {
     "title": "Find Candidate"
+  },
+
+  "preferredPatents": {
+    "title": "Preferred Patents",
+    "back": "Back",
+    "bannerTitle": "Build the Application Form",
+    "bannerCertainFields": "Certain fields",
+    "bannerDescription": " in this section are always collected from candidates to support consistent candidate profiles. Any fields you don't select won't be collected",
+    "dataTakenFromCandidate": "If selected, no manual input is required, and data will be taken from the candidate profile",
+    "patentTitle": "Patent {{number}}",
+    "relatedIndustry": "Related Industry",
+    "relatedIndustryPlaceholder": "Select or add related industry",
+    "status": "Status",
+    "statusPlaceholder": "Select status",
+    "from": "From",
+    "fromPlaceholder": "Select start date",
+    "to": "To",
+    "toPlaceholder": "Select end date",
+    "addPatent": "Add patent",
+    "removePatent": "Remove patent",
+    "collapse": "Collapse",
+    "expand": "Expand",
+    "cancelButton": "Cancel",
+    "nextButton": "Next",
+    "fieldList": {
+      "patentTitle": "Patent Title",
+      "patentApplicationNumber": "Patent/ Application Number",
+      "relatedIndustry": "Industry",
+      "status": "Status",
+      "issueDate": "Issue Date",
+      "fillingDate": "Filling Date",
+      "otherInventors": "Other Inventors",
+      "patentURL": "Patent URL"
+    }
   }
 }
