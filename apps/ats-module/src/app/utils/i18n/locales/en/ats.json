@@ -1,4 +1,9 @@
 {
+  "common": {
+    "back": "Back",
+    "cancel": "Cancel",
+    "next": "Next"
+  },
   "vacancies": {
     "title": "Vacancies",
     "createVacancyButton": "Create Vacancy",
@@ -148,6 +153,34 @@
     "networkError": {
       "title": "Try Again",
       "message": "Some changes could not be saved. Please retry."
+    }
+  },
+  "preferredSkills": {
+    "title": "Preferred Skills",
+    "dataTakenFromCandidate": "If selected, no manual input is required, and data will be taken from the candidate profile",
+    "sectionLabel": "Tools, Technologies, Skills and Frameworks",
+    "input": {
+      "placeholder": "Select or add a skill",
+      "addNew": "Add \"{{value}}\"",
+      "typeToSearch": "Type to search skills…"
+    },
+    "validation": {
+      "maxSkills": "Exceeded maximum of {{max}} skills"
+    },
+    "chip": {
+      "remove": "Remove {{name}}"
+    },
+    "careerPath": {
+      "title": "Add Career Path",
+      "description": "Linking each skill to a career path helps the system understand your strengths clearly and recommend better opportunities",
+      "label": "Career Path",
+      "addButton": "Add Now",
+      "input": {
+        "placeholder": "Select or add career path"
+      },
+      "validation": {
+        "required": "Please select or add a Career Path to continue"
+      }
     }
   }
 }
