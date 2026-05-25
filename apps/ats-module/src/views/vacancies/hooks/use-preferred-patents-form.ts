@@ -1,6 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import { useForm } from 'react-hook-form';
+import type { Resolver } from 'react-hook-form';
 
 import { z } from 'zod';
 
@@ -16,32 +17,26 @@ const patentStatusSchema = z.object({
 });
 
 const patentEntrySchema = z.object({
-  relatedIndustries: z.array(patentIndustrySchema).default([]),
-  statuses: z.array(patentStatusSchema).default([]),
+  relatedIndustries: z.array(patentIndustrySchema),
+  statuses: z.array(patentStatusSchema),
   fromDate: z.date().optional(),
   toDate: z.date().optional(),
-  isOpen: z.boolean().default(true),
+  isOpen: z.boolean(),
 });
 
 const preferredPatentsSchema = z.object({
-  isEnabled: z.boolean().default(true),
-  dataTakenFromCandidate: z.boolean().default(false),
-  patents: z.array(patentEntrySchema).default([
-    {
-      relatedIndustries: [],
-      statuses: [],
-      fromDate: undefined,
-      toDate: undefined,
-      isOpen: true,
-    },
-  ]),
+  isEnabled: z.boolean(),
+  dataTakenFromCandidate: z.boolean(),
+  patents: z.array(patentEntrySchema),
 });
 
 type PreferredPatentsFormValues = z.infer<typeof preferredPatentsSchema>;
 
 const usePreferredPatentsForm = () =>
   useForm<PreferredPatentsFormValues>({
-    resolver: zodResolver(preferredPatentsSchema),
+    resolver: zodResolver(
+      preferredPatentsSchema
+    ) as Resolver<PreferredPatentsFormValues>,
     defaultValues: {
       isEnabled: false,
       dataTakenFromCandidate: false,
