@@ -87,6 +87,8 @@ interface MultipleSelectorProps {
   >;
   /** hide the clear all button. */
   hideClearAllButton?: boolean;
+  /** Inline error message displayed below the input and above the selected badges. */
+  errorMessage?: string;
 }
 
 export interface MultipleSelectorRef {
@@ -206,6 +208,7 @@ const MultipleSelector = React.forwardRef<
       commandProps,
       inputProps,
       hideClearAllButton = false,
+      errorMessage,
     }: MultipleSelectorProps,
     ref: React.Ref<MultipleSelectorRef>
   ) => {
@@ -477,7 +480,7 @@ const MultipleSelector = React.forwardRef<
             inputRef?.current?.focus();
           }}
         >
-          <div className="relative flex flex-wrap gap-1">
+          <div className="relative flex min-w-0 flex-1 flex-wrap gap-1">
             {/* {selected.map(option => {
               return (
                 <Badge
@@ -569,7 +572,8 @@ const MultipleSelector = React.forwardRef<
           <ChevronDownIcon
             className={cn(
               'text-muted-foreground/50 size-5',
-              (hideClearAllButton ||
+              (creatable ||
+                hideClearAllButton ||
                 disabled ||
                 selected.length >= 1 ||
                 selected.filter(s => s.fixed).length !== selected.length) &&
@@ -688,6 +692,9 @@ const MultipleSelector = React.forwardRef<
             </CommandList>
           )}
         </div>
+        {errorMessage && (
+          <p className="mt-1 text-xs text-red-500">{errorMessage}</p>
+        )}
         {selected.length > 0 && (
           <div className="mt-2 flex flex-wrap gap-3">
             {selected.map(option => {
