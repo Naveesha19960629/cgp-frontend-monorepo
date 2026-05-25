@@ -54,7 +54,8 @@ export default function PreferredLanguagesStep({
     ),
   ];
 
-  const exceedsMax = selectedLanguages.length >= MAX_LANGUAGES;
+  const atMax = selectedLanguages.length >= MAX_LANGUAGES;
+  const [showMaxError, setShowMaxError] = useState(false);
 
   // ── Handlers ─────────────────────────────────────────────────────────────
 
@@ -62,8 +63,12 @@ export default function PreferredLanguagesStep({
     const alreadySelected = selectedLanguages.some(l => l.id === id);
     if (alreadySelected) {
       setSelectedLanguages(prev => prev.filter(l => l.id !== id));
+      setShowMaxError(false);
     } else {
-      if (exceedsMax) return;
+      if (atMax) {
+        setShowMaxError(true);
+        return;
+      }
       setSelectedLanguages(prev => [...prev, { id, label }]);
     }
   };
@@ -76,7 +81,11 @@ export default function PreferredLanguagesStep({
     const alreadySelected = selectedLanguages.some(
       l => l.label.toLowerCase() === trimmed.toLowerCase()
     );
-    if (alreadySelected || exceedsMax) return;
+    if (alreadySelected) return;
+    if (atMax) {
+      setShowMaxError(true);
+      return;
+    }
 
     // Register in local list so it shows as checked in dropdown
     const existsInList = languages.some(
@@ -200,13 +209,13 @@ export default function PreferredLanguagesStep({
               onClick={() => setIsDropdownOpen(true)}
               onKeyDown={handleInputKeyDown}
               onBlur={() => setTimeout(() => setIsDropdownOpen(false), 150)}
-              disabled={dataTakenFromCandidate || exceedsMax}
+              disabled={dataTakenFromCandidate}
               placeholder={t('preferredLanguages.input.placeholder')}
               className="w-full rounded-md border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:ring-1 focus:ring-teal-600 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
             />
 
             {/* Dropdown */}
-            {isDropdownOpen && !dataTakenFromCandidate && !exceedsMax && (
+            {isDropdownOpen && !dataTakenFromCandidate && (
               <div className="absolute z-30 mt-1 max-h-56 w-full overflow-y-auto rounded-md border border-slate-200 bg-white shadow-md">
                 {/* Add new (custom) option */}
                 {langSearch.trim() &&
@@ -266,7 +275,7 @@ export default function PreferredLanguagesStep({
           </div>
 
           {/* Exceeded max error */}
-          {exceedsMax && (
+          {showMaxError && (
             <p className="mt-1.5 text-xs text-red-500">
               {t('preferredLanguages.validation.maxLanguages', {
                 max: MAX_LANGUAGES,

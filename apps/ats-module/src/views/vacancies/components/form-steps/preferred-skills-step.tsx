@@ -68,7 +68,8 @@ export default function PreferredSkillsStep({
     ),
   ];
 
-  const exceedsMax = selectedSkills.length >= MAX_SKILLS;
+  const atMax = selectedSkills.length >= MAX_SKILLS;
+  const [showMaxError, setShowMaxError] = useState(false);
 
   // ── Skill selection ───────────────────────────────────────────────────────
 
@@ -79,6 +80,12 @@ export default function PreferredSkillsStep({
       const alreadyAdded = selectedSkills.some(s => s.skillId === id);
       if (alreadyAdded) {
         setSelectedSkills(prev => prev.filter(s => s.skillId !== id));
+        setShowMaxError(false);
+        return;
+      }
+
+      if (atMax) {
+        setShowMaxError(true);
         return;
       }
 
@@ -104,6 +111,10 @@ export default function PreferredSkillsStep({
         s => s.skillName.toLowerCase() === name.toLowerCase()
       );
       if (alreadyAdded) return;
+      if (atMax) {
+        setShowMaxError(true);
+        return;
+      }
 
       // Close the skill dropdown and open career path panel
       setIsSkillDropdownOpen(false);
@@ -167,6 +178,7 @@ export default function PreferredSkillsStep({
 
   const handleRemoveSkill = (index: number) => {
     setSelectedSkills(prev => prev.filter((_, i) => i !== index));
+    setShowMaxError(false);
   };
 
   // ── Submit ────────────────────────────────────────────────────────────────
@@ -268,13 +280,13 @@ export default function PreferredSkillsStep({
               onBlur={() =>
                 setTimeout(() => setIsSkillDropdownOpen(false), 150)
               }
-              disabled={dataTakenFromCandidate || exceedsMax}
+              disabled={dataTakenFromCandidate}
               placeholder={t('preferredSkills.input.placeholder')}
               className="w-full rounded-md border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:ring-1 focus:ring-teal-600 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
             />
 
             {/* Dropdown */}
-            {isSkillDropdownOpen && !dataTakenFromCandidate && !exceedsMax && (
+            {isSkillDropdownOpen && !dataTakenFromCandidate && (
               <div className="absolute z-30 mt-1 max-h-56 w-full overflow-y-auto rounded-md border border-slate-200 bg-white shadow-md">
                 {skillSearch.trim() && (
                   <button
@@ -323,7 +335,7 @@ export default function PreferredSkillsStep({
           </div>
 
           {/* Exceeded max error */}
-          {exceedsMax && (
+          {showMaxError && (
             <p className="mt-1.5 text-xs text-red-500">
               {t('preferredSkills.validation.maxSkills', {
                 max: MAX_SKILLS,

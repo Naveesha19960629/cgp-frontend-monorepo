@@ -45,7 +45,8 @@ export default function PreferredHobbiesStep({
     ),
   ];
 
-  const exceedsMax = selectedHobbies.length >= MAX_HOBBIES;
+  const atMax = selectedHobbies.length >= MAX_HOBBIES;
+  const [showMaxError, setShowMaxError] = useState(false);
 
   // ── Handlers ─────────────────────────────────────────────────────────────
 
@@ -53,8 +54,12 @@ export default function PreferredHobbiesStep({
     const alreadySelected = selectedHobbies.some(h => h.id === id);
     if (alreadySelected) {
       setSelectedHobbies(prev => prev.filter(h => h.id !== id));
+      setShowMaxError(false);
     } else {
-      if (exceedsMax) return;
+      if (atMax) {
+        setShowMaxError(true);
+        return;
+      }
       setSelectedHobbies(prev => [...prev, { id, label }]);
     }
   };
@@ -67,7 +72,11 @@ export default function PreferredHobbiesStep({
     const alreadySelected = selectedHobbies.some(
       h => h.label.toLowerCase() === trimmed.toLowerCase()
     );
-    if (alreadySelected || exceedsMax) return;
+    if (alreadySelected) return;
+    if (atMax) {
+      setShowMaxError(true);
+      return;
+    }
 
     const existsInList = hobbies.some(
       h => h.label.toLowerCase() === trimmed.toLowerCase()
@@ -190,13 +199,13 @@ export default function PreferredHobbiesStep({
               onClick={() => setIsDropdownOpen(true)}
               onKeyDown={handleInputKeyDown}
               onBlur={() => setTimeout(() => setIsDropdownOpen(false), 150)}
-              disabled={dataTakenFromCandidate || exceedsMax}
+              disabled={dataTakenFromCandidate}
               placeholder={t('preferredHobbies.input.placeholder')}
               className="w-full rounded-md border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:ring-1 focus:ring-teal-600 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
             />
 
             {/* Dropdown */}
-            {isDropdownOpen && !dataTakenFromCandidate && !exceedsMax && (
+            {isDropdownOpen && !dataTakenFromCandidate && (
               <div className="absolute z-30 mt-1 max-h-56 w-full overflow-y-auto rounded-md border border-slate-200 bg-white shadow-md">
                 {/* Add new (custom) option */}
                 {hobbySearch.trim() &&
@@ -256,7 +265,7 @@ export default function PreferredHobbiesStep({
           </div>
 
           {/* Exceeded max error */}
-          {exceedsMax && (
+          {showMaxError && (
             <p className="mt-1.5 text-xs text-red-500">
               {t('preferredHobbies.validation.maxHobbies', {
                 max: MAX_HOBBIES,
