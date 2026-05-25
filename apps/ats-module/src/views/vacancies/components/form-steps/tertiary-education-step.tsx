@@ -1,5 +1,7 @@
 import { ChevronLeftIcon, ChevronUpIcon } from 'lucide-react';
 
+import * as SwitchPrimitive from '@radix-ui/react-switch';
+
 import { useState } from 'react';
 import { Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -44,7 +46,6 @@ import {
 import { Input } from '@cgp/ui-kit/components/ui/input';
 import { Label } from '@cgp/ui-kit/components/ui/label';
 import { cn } from '@cgp/ui-kit/lib/utils';
-import { Switch as SwitchPrimitive } from 'radix-ui';
 
 const MAX_SELECTIONS = 10;
 

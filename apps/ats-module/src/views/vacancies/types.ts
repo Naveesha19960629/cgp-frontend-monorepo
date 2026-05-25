@@ -307,6 +307,56 @@ interface DisableDialogProps {
 interface StepFooterProps {
   onNext: () => void;
   onCancel: () => void;
+// ─── Project ──────────────────────────────────────────────────────────────────
+
+interface ProjectRef {
+  source: 'MASTER' | 'PENDING';
+  id: string;
+}
+
+interface ProjectEntry {
+  relatedIndustry: ProjectRef[];
+  organization: ProjectRef[];
+  organizationLocations: ProjectRef[];
+  startDate: string;
+  endDate: string;
+}
+
+interface ProjectRequirement {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  content: ProjectEntry[];
+}
+
+interface Project {
+  id: string;
+  name: string;
+  organization: string;
+  organizationLocation: string;
+  location: string;
+  industry: string;
+  startDate: string;
+  endDate: string;
+  durationLabel: string;
+  description: string;
+  skills: string[];
+}
+
+interface ProjectApiData {
+  name: string;
+  organization: string;
+  location: string;
+  industry: string;
+  startDate: string;
+  endDate: string;
+  description: string;
+  skills: string[];
+}
+
+interface ProjectResponse<T> {
+  message: string[];
+  statusCode: number;
+  data: T;
 }
 
 export type {
@@ -348,4 +398,10 @@ export type {
   HobbyItem,
   HobbyEntry,
   PreferredHobbies,
+  ProjectRef,
+  ProjectEntry,
+  ProjectRequirement,
+  Project,
+  ProjectApiData,
+  ProjectResponse,
 };
