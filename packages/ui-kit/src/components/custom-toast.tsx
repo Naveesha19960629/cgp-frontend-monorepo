@@ -4,11 +4,12 @@ import { Add, CloseCircle, TickCircle } from 'iconsax-reactjs';
 
 import { toast as sonnerToast } from 'sonner';
 
-import errorAvatar from '@cgp/ui-kit/assets/images/error-toast-avatar.svg';
-import successAvatar from '@cgp/ui-kit/assets/images/success-toast-avatar.svg';
-import warningAvatar from '@cgp/ui-kit/assets/images/warning-toast-avatar.svg';
 import { Button } from '@cgp/ui-kit/components/ui/button';
 import { applyTypography } from '@cgp/ui-kit/lib/typography';
+
+import errorAvatar from '../assets/images/error-toast-avatar.svg';
+import successAvatar from '../assets/images/success-toast-avatar.svg';
+import warningAvatar from '../assets/images/warning-toast-avatar.svg';
 
 interface ToastProps {
   id: string | number;
@@ -18,13 +19,24 @@ interface ToastProps {
   type?: 'success' | 'error' | 'warning';
 }
 
-function Toast({ id, dismissIds, title, description, type }: ToastProps) {
+function Toast({
+  id,
+  dismissIds,
+  title,
+  description,
+  type,
+}: Readonly<ToastProps>) {
+  let avatarSrc = warningAvatar;
+  if (type === 'success') avatarSrc = successAvatar;
+  else if (type === 'error') avatarSrc = errorAvatar;
+
   return (
     <div
       className="pointer-events-auto relative"
       onClick={e => e.stopPropagation()}
       onPointerDown={e => e.stopPropagation()}
       onMouseDown={e => e.stopPropagation()}
+      onKeyDown={e => e.stopPropagation()}
     >
       <div className="relative z-9999 rounded-2xl bg-white">
         <div className="flex w-99.5 items-center justify-between gap-3 p-6 sm:w-102.25">
@@ -110,15 +122,9 @@ function Toast({ id, dismissIds, title, description, type }: ToastProps) {
         </div>
       </div>
       <img
-        src={
-          type === 'success'
-            ? successAvatar
-            : type === 'error'
-              ? errorAvatar
-              : warningAvatar
-        }
+        src={avatarSrc}
         alt={`${(type || 'info').charAt(0).toUpperCase() + (type || 'info').slice(1)} Avatar`}
-        className="absolute top-[-175px] right-[10px] z-[-10]"
+        className="absolute -top-43.75 right-2.5 -z-10"
         style={{ pointerEvents: 'none' }}
         onError={e => {
           e.currentTarget.style.display = 'none';

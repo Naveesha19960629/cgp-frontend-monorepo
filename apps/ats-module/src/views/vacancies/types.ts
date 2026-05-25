@@ -286,6 +286,29 @@ interface AddAwardingBodyDialogProps {
   onAdded: (option: AddOrSelectOption) => void;
 }
 
+interface StepHeaderProps {
+  title: string;
+  isEnabled: boolean;
+  onBack: () => void;
+  onToggle: () => void;
+}
+
+interface DisableDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  title: string;
+  message: string;
+  cancelLabel: string;
+  disableLabel: string;
+  onCancel: () => void;
+  onDisable: () => void;
+}
+
+interface StepFooterProps {
+  onNext: () => void;
+  onCancel: () => void;
+}
+
 export type {
   AddOrSelectOption,
   SelectOption,
@@ -309,6 +332,9 @@ export type {
   TertiaryEducation,
   AddSchoolDialogProps,
   AddAwardingBodyDialogProps,
+  StepHeaderProps,
+  DisableDialogProps,
+  StepFooterProps,
   SkillItem,
   CareerPathItem,
   SkillCareerPathEntry,
