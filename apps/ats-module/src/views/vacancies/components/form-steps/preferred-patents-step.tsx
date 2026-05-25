@@ -1,4 +1,4 @@
-import { ChevronUp, Plus, Trash2 } from 'lucide-react';
+import { ChevronUp, Loader2, Plus, Trash2 } from 'lucide-react';
 
 import { ArrowLeft2, Calendar as CalenderIcon } from 'iconsax-reactjs';
 
@@ -11,10 +11,12 @@ import MessageBox from '@/components/message-box';
 import { StepDisableDialog } from '@/views/vacancies';
 import {
   type PreferredPatentsFormValues,
+  useCreateIndustryMutation,
   useIndustriesQuery,
   usePreferredPatentsForm,
 } from '@/views/vacancies/hooks';
 import type { PatentStatus, StepProps } from '@/views/vacancies/types';
+import { resolveUserCreatedIndustries } from '@/views/vacancies/utils';
 
 import { CharacterCount } from '@cgp/ui-kit/components/character-count';
 import MultipleSelector from '@cgp/ui-kit/components/multi-select';
@@ -434,6 +436,9 @@ export default function PreferredPatentsStep({ onNext, onBack }: StepProps) {
   });
 
   const [showDisableConfirm, setShowDisableConfirm] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const { mutateAsync } = useCreateIndustryMutation();
 
   const handleConfirmDisable = () => {
     form.setValue('isEnabled', false);
@@ -449,7 +454,24 @@ export default function PreferredPatentsStep({ onNext, onBack }: StepProps) {
     setShowDisableConfirm(false);
   };
 
-  const handleSubmit = (_data: PreferredPatentsFormValues) => {
+  const handleSubmit = async (data: PreferredPatentsFormValues) => {
+    const hasUserCreated = data.patents
+      .flatMap(p => p.relatedIndustries)
+      .some(i => i.source === 'USER_CREATED');
+
+    if (hasUserCreated) {
+      setIsSubmitting(true);
+      try {
+        const updatedPatents = await resolveUserCreatedIndustries(
+          data.patents,
+          mutateAsync
+        );
+        form.setValue('patents', updatedPatents);
+      } finally {
+        setIsSubmitting(false);
+      }
+    }
+
     onNext();
   };
 
@@ -591,8 +613,12 @@ export default function PreferredPatentsStep({ onNext, onBack }: StepProps) {
             >
               {t('preferredPatents.cancelButton')}
             </Button>
-            <Button type="submit" className="h-12 w-48">
-              {t('preferredPatents.nextButton')}
+            <Button type="submit" className="h-12 w-48" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                t('preferredPatents.nextButton')
+              )}
             </Button>
           </div>
         </form>

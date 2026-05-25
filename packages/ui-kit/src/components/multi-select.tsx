@@ -401,7 +401,7 @@ const MultipleSelector = React.forwardRef<
         ]) ||
         selected.find(s => s.value === inputValue.trim()) ||
         selected.find(
-          s => s.label.toLowerCase() === inputValue.trim().toLowerCase()
+          s => s.label?.toLowerCase() === inputValue.trim().toLowerCase()
         )
       ) {
         return undefined;

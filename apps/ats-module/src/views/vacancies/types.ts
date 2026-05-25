@@ -107,6 +107,19 @@ interface IndustryItem {
   source: string;
 }
 
+interface SingleApiResponse<T> {
+  requestId: string;
+  success: boolean;
+  message: string;
+  data: T;
+}
+
+interface IndustryCreateResponse {
+  id: string;
+  label: string;
+  source: string;
+}
+
 type PatentStatus = 'PATENT_PENDING' | 'PATENT_ISSUED';
 
 interface PatentIndustryOption {
@@ -131,7 +144,9 @@ export type {
   VacancyStep,
   GenderItem,
   ApiResponse,
+  SingleApiResponse,
   IndustryItem,
+  IndustryCreateResponse,
   PatentStatus,
   PatentIndustryOption,
   PatentStatusOption,
