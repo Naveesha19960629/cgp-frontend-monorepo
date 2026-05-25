@@ -214,5 +214,21 @@
     "chip": {
       "remove": "Remove {{name}}"
     }
+  },
+  "preferredHobbies": {
+    "title": "Preferred Hobbies",
+    "dataTakenFromCandidate": "If selected, no manual input is required, and data will be taken from the candidate profile",
+    "sectionLabel": "Hobbies",
+    "input": {
+      "placeholder": "Select or add Hobbies",
+      "addNew": "Add \"{{value}}\"",
+      "typeToSearch": "Type to search hobbies…"
+    },
+    "validation": {
+      "maxHobbies": "Exceeded maximum of {{max}} hobbies"
+    },
+    "chip": {
+      "remove": "Remove {{name}}"
+    }
   }
 }

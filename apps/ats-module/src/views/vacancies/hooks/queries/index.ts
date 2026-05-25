@@ -3,6 +3,7 @@ export { useSkillsQuery } from '@/views/vacancies/hooks/queries/use-skills-query
 export { useCareerPathsQuery } from '@/views/vacancies/hooks/queries/use-career-paths-query';
 export { useLanguagesQuery } from '@/views/vacancies/hooks/queries/use-languages-query';
 export { useCausesQuery } from '@/views/vacancies/hooks/queries/use-causes-query';
+export { useHobbiesQuery } from '@/views/vacancies/hooks/queries/use-hobbies-query';
 export {
   useSchoolsQuery,
   useSchoolsSearch,
