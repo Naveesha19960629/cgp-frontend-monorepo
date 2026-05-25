@@ -5,6 +5,7 @@ import { createStandaloneRouter } from '@/app/router';
 import atsKeycloak, { atsKeycloakInitOptions } from '@/app/services/keycloak';
 
 import { QueryClientProvider, queryClient } from '@cgp/data-access';
+import { Toaster } from '@cgp/ui-kit/components/ui/sonner';
 import { ReactKeycloakProvider } from '@react-keycloak/web';
 
 /**
@@ -23,6 +24,7 @@ export default function App() {
           <RouterProvider router={createStandaloneRouter()} />
         </UserProvider>
       </ReactKeycloakProvider>
+      <Toaster position="bottom-right" />
     </QueryClientProvider>
   );
 }
