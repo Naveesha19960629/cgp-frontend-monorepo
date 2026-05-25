@@ -7,6 +7,11 @@ import type {
   OrganizationSelectOptions,
 } from '../types/organization';
 
+const WHITESPACE_PATTERN = /\s/;
+const HTTP_PROTOCOL_PATTERN = /^https?:\/\//i;
+const HTTPS_PROTOCOL_STRICT_PATTERN = /^https?:$/;
+const VALID_HOSTNAME_PATTERN = /^([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/;
+
 /**
  * Scrolls to the first error field in a form
  */
@@ -35,7 +40,7 @@ export function scrollToFirstError<T extends FieldValues>(
  */
 export function isUrlProtocolValid(url: string | undefined): boolean {
   if (!url) return true;
-  return /^https?:\/\//i.test(url);
+  return HTTP_PROTOCOL_PATTERN.test(url);
 }
 
 /**
@@ -43,11 +48,11 @@ export function isUrlProtocolValid(url: string | undefined): boolean {
  */
 export function isUrlFormatValid(url: string | undefined): boolean {
   if (!url) return true;
-  if (/\s/.test(url)) return false;
+  if (WHITESPACE_PATTERN.test(url)) return false;
 
   try {
     const u = new URL(url);
-    if (!/^([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/.test(u.hostname)) {
+    if (!VALID_HOSTNAME_PATTERN.test(u.hostname)) {
       return false;
     }
     return true;
@@ -61,15 +66,12 @@ export function isUrlFormatValid(url: string | undefined): boolean {
  */
 export function isUrlValid(url: string | undefined): boolean {
   if (!url) return true;
-  if (/\s/.test(url)) return false;
+  if (WHITESPACE_PATTERN.test(url)) return false;
 
   try {
     const u = new URL(url);
-    if (!/^https?:$/.test(u.protocol)) return false;
-    if (!/^([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/.test(u.hostname)) {
-      return false;
-    }
-    return true;
+    if (!HTTPS_PROTOCOL_STRICT_PATTERN.test(u.protocol)) return false;
+    return isUrlFormatValid(url);
   } catch {
     return false;
   }

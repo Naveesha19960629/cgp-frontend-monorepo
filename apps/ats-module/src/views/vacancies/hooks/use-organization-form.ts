@@ -5,6 +5,9 @@ import { useTranslation } from 'react-i18next';
 
 import { z } from 'zod';
 
+const URL_PATTERN =
+  /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/;
+
 function isUrlProtocolValid(url: string): boolean {
   if (!url) return true;
   try {
@@ -17,9 +20,7 @@ function isUrlProtocolValid(url: string): boolean {
 
 function isUrlFormatValid(url: string): boolean {
   if (!url) return true;
-  const urlPattern =
-    /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/;
-  return urlPattern.test(url);
+  return URL_PATTERN.test(url);
 }
 
 function createOrganizationFormSchema(

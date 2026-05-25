@@ -15,7 +15,8 @@ export function rememberOrganizationDisplayName(
       displayName.trim()
     );
   } catch {
-    // quota / private mode
+    // Silently fail if sessionStorage is unavailable (private/incognito mode)
+    // or storage quota is exceeded. This is non-critical caching functionality.
   }
 }
 
@@ -27,6 +28,7 @@ export function getRememberedOrganizationDisplayName(
     const v = sessionStorage.getItem(`${STORAGE_PREFIX}${organizationId}`);
     return v?.trim() || undefined;
   } catch {
+    // Silently fail if sessionStorage is unavailable (private/incognito mode)
     return undefined;
   }
 }

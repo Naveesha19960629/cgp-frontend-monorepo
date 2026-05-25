@@ -2,6 +2,10 @@
  * Utility functions for filtering and detecting emoji characters
  */
 
+const NON_ASCII_PATTERN = /[^\x20-\x7E]/g;
+const ALLOWED_CHARS_PATTERN =
+  /[^a-zA-Z0-9\s.,!?@#$%^&*()_\-+=<>:/\\[\]{}|~`'";]/g;
+
 /**
  * Removes emoji characters from a string
  * @param text - The input text to filter
@@ -17,9 +21,7 @@ export function removeEmoji(text: string): string {
   // - Variation selectors
   // - Regional indicators
   // - Emoji component characters
-  return text
-    .replace(/[^\x20-\x7E]/g, '')
-    .replace(/[^a-zA-Z0-9\s.,!?@#$%^&*()_\-+=<>:/\\[\]{}|~`'";]/g, '');
+  return text.replace(NON_ASCII_PATTERN, '').replace(ALLOWED_CHARS_PATTERN, '');
 }
 
 /**
