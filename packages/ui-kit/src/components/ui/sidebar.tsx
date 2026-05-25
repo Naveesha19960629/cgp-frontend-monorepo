@@ -4,6 +4,8 @@ import { type VariantProps, cva } from 'class-variance-authority';
 
 import { SidebarLeft, SidebarRight } from 'iconsax-reactjs';
 
+import { Slot } from '@radix-ui/react-slot';
+
 import * as React from 'react';
 
 import { Button } from '@cgp/ui-kit/components/ui/button';
@@ -24,7 +26,6 @@ import {
 } from '@cgp/ui-kit/components/ui/tooltip';
 import { useIsMobile } from '@cgp/ui-kit/hooks/use-mobile';
 import { cn } from '@cgp/ui-kit/lib/utils';
-import { Slot } from 'radix-ui';
 
 const SIDEBAR_COOKIE_NAME = 'sidebar_state';
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;

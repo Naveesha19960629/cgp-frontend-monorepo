@@ -1,8 +1,9 @@
+import * as ScrollAreaPrimitive from '@radix-ui/react-scroll-area';
+
 import * as React from 'react';
 
 import { ScrollBar } from '@cgp/ui-kit/components/ui/scroll-area';
 import { cn } from '@cgp/ui-kit/lib/utils';
-import { ScrollArea as ScrollAreaPrimitive } from 'radix-ui';
 
 interface ScrollAreaWithShadowProps extends React.ComponentProps<
   typeof ScrollAreaPrimitive.Root

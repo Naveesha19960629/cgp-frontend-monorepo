@@ -2,6 +2,8 @@
 
 import { Calendar as CalendarIcon } from 'iconsax-reactjs';
 
+import * as SwitchPrimitive from '@radix-ui/react-switch';
+
 import { useState } from 'react';
 import { Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -47,7 +49,6 @@ import {
 } from '@cgp/ui-kit/components/ui/popover';
 import { Textarea } from '@cgp/ui-kit/components/ui/textarea';
 import { cn } from '@cgp/ui-kit/lib/utils';
-import { Switch as SwitchPrimitive } from 'radix-ui';
 
 const MAX_SELECTIONS = 10;
 
