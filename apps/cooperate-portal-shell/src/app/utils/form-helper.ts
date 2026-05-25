@@ -65,14 +65,18 @@ export function isUrlFormatValid(url: string | undefined): boolean {
  * Validates if a URL is valid (with proper protocol and format)
  */
 export function isUrlValid(url: string | undefined): boolean {
-  if (!url) return true;
-  if (WHITESPACE_PATTERN.test(url)) return false;
+  // Delegate basic format validation to isUrlFormatValid
+  if (!isUrlFormatValid(url)) return false;
 
+  // Empty URL is valid (already validated by isUrlFormatValid)
+  if (!url) return true;
+
+  // Additional check for http/https protocol
   try {
     const u = new URL(url);
-    if (!HTTPS_PROTOCOL_STRICT_PATTERN.test(u.protocol)) return false;
-    return isUrlFormatValid(url);
+    return HTTPS_PROTOCOL_STRICT_PATTERN.test(u.protocol);
   } catch {
+    // URL constructor should not throw since isUrlFormatValid passed
     return false;
   }
 }
