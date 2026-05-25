@@ -1,12 +1,13 @@
 import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from 'lucide-react';
 
+import * as ScrollAreaPrimitive from '@radix-ui/react-scroll-area';
+import * as SelectPrimitive from '@radix-ui/react-select';
+
 import * as React from 'react';
 
 import { ScrollBar } from '@cgp/ui-kit/components/ui/scroll-area';
 import { applyTypography } from '@cgp/ui-kit/lib/typography';
 import { cn } from '@cgp/ui-kit/lib/utils';
-import { Select as SelectPrimitive } from 'radix-ui';
-import { ScrollArea as ScrollAreaPrimitive } from 'radix-ui';
 
 function Select({
   ...props
