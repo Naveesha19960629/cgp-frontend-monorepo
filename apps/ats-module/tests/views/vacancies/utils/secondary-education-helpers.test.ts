@@ -1,4 +1,7 @@
-import { toSecondaryEducationPayload } from '@/views/vacancies/utils/secondary-education-helpers';
+import {
+  formatDate,
+  toSecondaryEducationPayload,
+} from '@/views/vacancies/utils/secondary-education-helpers';
 
 const EMPTY_ENTRY = {
   acceptsHomeSchooling: false,
@@ -136,5 +139,23 @@ describe('toSecondaryEducationPayload', () => {
     });
 
     expect(result[0].content[0].acceptsHomeSchooling).toBe(true);
+  });
+});
+
+describe('formatDate', () => {
+  it('returns empty string when value is undefined', () => {
+    expect(formatDate(undefined)).toBe('');
+  });
+
+  it('returns empty string when value is an empty string', () => {
+    expect(formatDate('')).toBe('');
+  });
+
+  it('formats an ISO date string using the display format', () => {
+    expect(formatDate('2020-01-01T00:00:00.000Z')).toBe('1st Jan 2020');
+  });
+
+  it('formats a mid-month date correctly', () => {
+    expect(formatDate('2022-06-15T00:00:00.000Z')).toBe('15th Jun 2022');
   });
 });

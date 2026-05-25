@@ -19,7 +19,10 @@ import {
   useSecondaryEducationForm,
 } from '@/views/vacancies/hooks';
 import type { StepProps } from '@/views/vacancies/types';
-import { toSecondaryEducationPayload } from '@/views/vacancies/utils';
+import {
+  formatDate,
+  toSecondaryEducationPayload,
+} from '@/views/vacancies/utils';
 
 import { CharacterCount } from '@cgp/ui-kit/components/character-count';
 import { ErrorToast } from '@cgp/ui-kit/components/custom-toast';
@@ -42,15 +45,9 @@ import {
 } from '@cgp/ui-kit/components/ui/popover';
 import { Textarea } from '@cgp/ui-kit/components/ui/textarea';
 import { cn } from '@cgp/ui-kit/lib/utils';
-import { format } from 'date-fns';
 import { Switch as SwitchPrimitive } from 'radix-ui';
 
 const MAX_SELECTIONS = 10;
-
-function formatDate(iso?: string): string {
-  if (!iso) return '';
-  return format(new Date(iso), 'do MMM yyyy');
-}
 
 export default function SecondaryEducationStep({
   onNext,

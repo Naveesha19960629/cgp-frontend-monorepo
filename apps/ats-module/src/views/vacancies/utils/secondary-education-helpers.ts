@@ -3,6 +3,14 @@ import type {
   SecondaryEducation,
   SecondaryEducationRef,
 } from '@/views/vacancies/types';
+import { DATE_DISPLAY_FORMAT } from '@/views/vacancies/utils/constants';
+
+import { format } from 'date-fns';
+
+function formatDate(iso?: string): string {
+  if (!iso) return '';
+  return format(new Date(iso), DATE_DISPLAY_FORMAT);
+}
 
 const toSecondaryEducationPayload = (
   values: SecondaryEducationFormValues
@@ -67,4 +75,4 @@ const toSecondaryEducationPayload = (
   ];
 };
 
-export { toSecondaryEducationPayload };
+export { toSecondaryEducationPayload, formatDate };

@@ -8,6 +8,7 @@ import {
   useSchoolLocationsSearch,
 } from '@/views/vacancies/hooks';
 import type { AddSchoolDialogProps } from '@/views/vacancies/types';
+import { URL_PROTOCOL_HTTP, URL_PROTOCOL_HTTPS } from '@/views/vacancies/utils';
 
 import { CharacterCount } from '@cgp/ui-kit/components/character-count';
 import { ErrorToast, SuccessToast } from '@cgp/ui-kit/components/custom-toast';
@@ -23,7 +24,10 @@ function validateUrl(
   t: (key: string) => string
 ): string | undefined {
   if (!url) return undefined;
-  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+  if (
+    !url.startsWith(URL_PROTOCOL_HTTP) &&
+    !url.startsWith(URL_PROTOCOL_HTTPS)
+  ) {
     return t('secondaryEducation.addSchoolDialog.schoolUrlInvalid');
   }
   try {
