@@ -95,18 +95,23 @@ interface ApiResponse<T> {
     };
   };
 }
-interface PreferredPatentTag {
+interface IndustryItem {
+  id: string;
   label: string;
-  id?: string;
+  source: string;
 }
 
-interface PreferredPatent {
-  id: string;
-  relatedIndustries: PreferredPatentTag[];
-  statuses: PreferredPatentTag[];
-  fromDate: string;
-  toDate: string;
-  isOpen: boolean;
+type PatentStatus = 'PATENT_PENDING' | 'PATENT_ISSUED';
+
+interface PatentIndustryOption {
+  value: string;
+  label: string;
+  source: string;
+}
+
+interface PatentStatusOption {
+  value: PatentStatus;
+  label: string;
 }
 
 export type {
@@ -120,6 +125,8 @@ export type {
   VacancyStep,
   GenderItem,
   ApiResponse,
-  PreferredPatentTag,
-  PreferredPatent,
+  IndustryItem,
+  PatentStatus,
+  PatentIndustryOption,
+  PatentStatusOption,
 };

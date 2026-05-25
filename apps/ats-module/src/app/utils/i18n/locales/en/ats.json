@@ -40,6 +40,12 @@
     "expand": "Expand",
     "cancelButton": "Cancel",
     "nextButton": "Next",
+    "statusPending": "Patent Pending",
+    "statusIssued": "Patent Issued",
+    "industries": {
+      "loading": "Loading...",
+      "noData": "No results found"
+    },
     "fieldList": {
       "patentTitle": "Patent Title",
       "patentApplicationNumber": "Patent/ Application Number",
@@ -49,6 +55,9 @@
       "fillingDate": "Filling Date",
       "otherInventors": "Other Inventors",
       "patentURL": "Patent URL"
+    },
+    "validation": {
+      "maxExceeded": "Exceeded maximum of {{max}} sections"
     }
   }
 }
