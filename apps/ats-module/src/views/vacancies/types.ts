@@ -22,6 +22,12 @@ interface JobRequirement {
   engagementModel: AddOrSelectOption[];
 }
 
+interface StepDisableDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onConfirm: () => void;
+}
+
 interface Address {
   cityRefId: string;
   stateRefId: string;
@@ -129,4 +135,5 @@ export type {
   PatentStatus,
   PatentIndustryOption,
   PatentStatusOption,
+  StepDisableDialogProps,
 };

@@ -18,3 +18,4 @@ export { default as ScheduleVacancyStep } from '@/views/vacancies/components/for
 export { default as SecondaryEducationStep } from '@/views/vacancies/components/form-steps/secondary-education-step';
 export { default as TertiaryEducationStep } from '@/views/vacancies/components/form-steps/tertiary-education-step';
 export { default as VacancyCreateStepperForm } from '@/views/vacancies/components/vacancy-create-stepper-form';
+export { default as StepDisableDialog } from '@/views/vacancies/components/step-disable-dialog';

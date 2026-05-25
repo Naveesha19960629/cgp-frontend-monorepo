@@ -58,6 +58,12 @@
     },
     "validation": {
       "maxExceeded": "Exceeded maximum of {{max}} sections"
+    },
+    "disableDialog": {
+      "title": "Are you sure?",
+      "description": "Are you sure you want to disable this section? Disabling this section will permanently remove all added data. This action cannot be undone",
+      "cancelButton": "Cancel",
+      "confirmButton": "Disable"
     }
   }
 }

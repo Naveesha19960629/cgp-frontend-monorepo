@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
 import MessageBox from '@/components/message-box';
+import { StepDisableDialog } from '@/views/vacancies';
 import {
   type PreferredPatentsFormValues,
   useIndustriesQuery,
@@ -68,6 +69,7 @@ function PatentCard({
   const industriesData = industriesResponse?.data.items.content ?? [];
 
   const isOpen = form.watch(`patents.${index}.isOpen`);
+  const isEnabled = form.watch('isEnabled');
 
   const STATUS_OPTIONS: Option[] = [
     { value: 'PATENT_PENDING', label: t('preferredPatents.statusPending') },
@@ -182,6 +184,7 @@ function PatentCard({
                         triggerSearchOnFocus
                         hideClearAllButton
                         maxSelected={10}
+                        disabled={!isEnabled}
                         inputProps={{ maxLength: 100 }}
                         loading={isIndustriesLoading}
                         placeholder={t(
@@ -233,6 +236,7 @@ function PatentCard({
                       options={STATUS_OPTIONS}
                       hideClearAllButton
                       keepSelectedInList
+                      disabled={!isEnabled}
                       placeholder={t('preferredPatents.statusPlaceholder')}
                       emptyIndicator={
                         <p className="px-3 pb-3 text-sm text-slate-500">
@@ -260,7 +264,9 @@ function PatentCard({
                       modal
                       open={openDatePopover === 'fromDate'}
                       onOpenChange={open =>
-                        setOpenDatePopover(open ? 'fromDate' : null)
+                        setOpenDatePopover(
+                          isEnabled && open ? 'fromDate' : null
+                        )
                       }
                     >
                       <PopoverTrigger asChild>
@@ -268,6 +274,7 @@ function PatentCard({
                           <Button
                             type="button"
                             variant="outline"
+                            disabled={!isEnabled}
                             className={cn(
                               'border-input flex h-11 w-full items-center justify-between rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
                               !field.value && 'text-slate-500',
@@ -276,7 +283,7 @@ function PatentCard({
                               'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
                               'dark:bg-input/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
                               applyTypography('body-medium'),
-                              '!shadow-none'
+                              'shadow-none!'
                             )}
                           >
                             {field.value ? (
@@ -342,7 +349,7 @@ function PatentCard({
                       modal
                       open={openDatePopover === 'toDate'}
                       onOpenChange={open =>
-                        setOpenDatePopover(open ? 'toDate' : null)
+                        setOpenDatePopover(isEnabled && open ? 'toDate' : null)
                       }
                     >
                       <PopoverTrigger asChild>
@@ -350,6 +357,7 @@ function PatentCard({
                           <Button
                             type="button"
                             variant="outline"
+                            disabled={!isEnabled}
                             className={cn(
                               'border-input flex h-11 w-full items-center justify-between rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
                               !field.value && 'text-slate-500',
@@ -358,7 +366,7 @@ function PatentCard({
                               'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
                               'dark:bg-input/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
                               applyTypography('body-medium'),
-                              '!shadow-none'
+                              'shadow-none!'
                             )}
                           >
                             {field.value ? (
@@ -366,11 +374,11 @@ function PatentCard({
                             ) : (
                               <span>{t('preferredPatents.toPlaceholder')}</span>
                             )}
-                            {/* <CalendarIcon
-                            variant="Linear"
-                            size={20}
-                            className="text-zinc-800"
-                          /> */}
+                            <CalenderIcon
+                              variant="Linear"
+                              size={20}
+                              className="text-zinc-800"
+                            />
                           </Button>
                         </FormControl>
                       </PopoverTrigger>
@@ -420,10 +428,26 @@ export default function PreferredPatentsStep({ onNext, onBack }: StepProps) {
   const navigate = useNavigate();
 
   const form = usePreferredPatentsForm();
-  const { fields, append, remove } = useFieldArray({
+  const { fields, append, remove, replace } = useFieldArray({
     control: form.control,
     name: 'patents',
   });
+
+  const [showDisableConfirm, setShowDisableConfirm] = useState(false);
+
+  const handleConfirmDisable = () => {
+    form.setValue('isEnabled', false);
+    replace([
+      {
+        relatedIndustries: [],
+        statuses: [],
+        fromDate: undefined,
+        toDate: undefined,
+        isOpen: true,
+      },
+    ]);
+    setShowDisableConfirm(false);
+  };
 
   const handleSubmit = (_data: PreferredPatentsFormValues) => {
     onNext();
@@ -434,122 +458,151 @@ export default function PreferredPatentsStep({ onNext, onBack }: StepProps) {
   };
 
   return (
-    <Form {...form}>
-      <form
-        onSubmit={e => {
-          void form.handleSubmit(handleSubmit)(e);
-        }}
-        className="flex flex-col"
-      >
-        <MessageBox
-          fields={[
-            t('preferredPatents.fieldList.patentTitle'),
-            t('preferredPatents.fieldList.patentApplicationNumber'),
-            t('preferredPatents.fieldList.relatedIndustry'),
-            t('preferredPatents.fieldList.status'),
-            t('preferredPatents.fieldList.issueDate'),
-            t('preferredPatents.fieldList.fillingDate'),
-            t('preferredPatents.fieldList.otherInventors'),
-            t('preferredPatents.fieldList.patentURL'),
-          ]}
-        />
+    <>
+      <Form {...form}>
+        <form
+          onSubmit={e => {
+            void form.handleSubmit(handleSubmit)(e);
+          }}
+          className="flex flex-col"
+        >
+          <MessageBox
+            fields={[
+              t('preferredPatents.fieldList.patentTitle'),
+              t('preferredPatents.fieldList.patentApplicationNumber'),
+              t('preferredPatents.fieldList.relatedIndustry'),
+              t('preferredPatents.fieldList.status'),
+              t('preferredPatents.fieldList.issueDate'),
+              t('preferredPatents.fieldList.fillingDate'),
+              t('preferredPatents.fieldList.otherInventors'),
+              t('preferredPatents.fieldList.patentURL'),
+            ]}
+          />
 
-        {/* Section header: back arrow + title + toggle */}
-        <div className="flex items-center justify-between px-7 py-8">
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={onBack}
-              className="text-slate-700 transition-colors hover:text-slate-900"
-              aria-label={t('preferredPatents.back')}
-            >
-              <ArrowLeft2 size={24} />
-            </button>
-            <h2 className="text-xl font-bold tracking-tight text-slate-900">
-              {t('preferredPatents.title')}
-            </h2>
+          {/* Section header: back arrow + title + toggle */}
+          <div className="flex items-center justify-between px-7 py-8">
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={onBack}
+                className="text-slate-700 transition-colors hover:text-slate-900"
+                aria-label={t('preferredPatents.back')}
+              >
+                <ArrowLeft2 size={24} />
+              </button>
+              <h2 className="text-xl font-bold tracking-tight text-slate-900">
+                {t('preferredPatents.title')}
+              </h2>
+            </div>
+
+            {/* Toggle switch */}
+            <FormField
+              control={form.control}
+              name="isEnabled"
+              render={({ field }) => (
+                <Switch
+                  checked={field.value}
+                  onCheckedChange={checked => {
+                    if (!checked) {
+                      const patents = form.getValues('patents');
+                      const hasData = patents.some(
+                        p =>
+                          p.relatedIndustries.length > 0 ||
+                          p.statuses.length > 0 ||
+                          p.fromDate != null ||
+                          p.toDate != null
+                      );
+                      if (hasData) {
+                        setShowDisableConfirm(true);
+                      } else {
+                        field.onChange(false);
+                      }
+                    } else {
+                      field.onChange(true);
+                    }
+                  }}
+                />
+              )}
+            />
           </div>
 
-          {/* Toggle switch */}
-          <FormField
-            control={form.control}
-            name="isEnabled"
-            render={({ field }) => (
-              <Switch checked={field.value} onCheckedChange={field.onChange} />
-            )}
-          />
-        </div>
-
-        {/* Checkbox: data from candidate profile */}
-        <div className="flex items-center gap-3 px-7 pb-8">
-          <FormField
-            control={form.control}
-            name="dataTakenFromCandidate"
-            render={({ field }) => (
-              <>
-                <Checkbox
-                  id="data-from-candidate"
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                />
-                <label
-                  htmlFor="data-from-candidate"
-                  className="cursor-pointer text-sm font-medium text-slate-900"
-                >
-                  {t('preferredPatents.dataTakenFromCandidate')}
-                </label>
-              </>
-            )}
-          />
-        </div>
-
-        {/* Patent cards */}
-        <div className="flex flex-col gap-4 px-6">
-          {fields.map((field, index) => (
-            <PatentCard
-              key={field.id}
-              index={index}
-              form={form}
-              onRemove={() => remove(index)}
+          {/* Checkbox: data from candidate profile */}
+          <div className="flex items-center gap-3 px-7 pb-8">
+            <FormField
+              control={form.control}
+              name="dataTakenFromCandidate"
+              render={({ field }) => (
+                <>
+                  <Checkbox
+                    id="data-from-candidate"
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                  <label
+                    htmlFor="data-from-candidate"
+                    className="cursor-pointer text-sm font-medium text-slate-900"
+                  >
+                    {t('preferredPatents.dataTakenFromCandidate')}
+                  </label>
+                </>
+              )}
             />
-          ))}
-        </div>
+          </div>
 
-        {/* Add patent button */}
-        <div className="flex justify-end px-6 py-4">
-          <Button
-            type="button"
-            variant="secondary"
-            className="size-11 rounded-lg bg-gray-200 px-3 text-sm"
-            onClick={() =>
-              append({
-                relatedIndustries: [],
-                statuses: [],
-                fromDate: undefined,
-                toDate: undefined,
-                isOpen: true,
-              })
-            }
-          >
-            <Plus className="size-4 text-neutral-600!" />
-          </Button>
-        </div>
+          {/* Patent cards */}
+          <div className="flex flex-col gap-4 px-6">
+            {fields.map((field, index) => (
+              <PatentCard
+                key={field.id}
+                index={index}
+                form={form}
+                onRemove={() => remove(index)}
+              />
+            ))}
+          </div>
 
-        {/* Footer: Cancel + Next */}
-        <div className="sticky bottom-0 flex items-center justify-end gap-4 bg-white px-6 py-7 shadow-[0px_-8px_6.8px_0px_rgba(0,0,0,0.04)]">
-          <Button
-            type="button"
-            variant="secondary"
-            className="h-12 w-48"
-            onClick={handleCancel}
-          >
-            {t('preferredPatents.cancelButton')}
-          </Button>
-          <Button type="submit" className="h-12 w-48">
-            {t('preferredPatents.nextButton')}
-          </Button>
-        </div>
-      </form>
-    </Form>
+          {/* Add patent button */}
+          <div className="flex justify-end px-6 py-4">
+            <Button
+              type="button"
+              variant="secondary"
+              className="size-11 rounded-lg bg-gray-200 px-3 text-sm"
+              onClick={() =>
+                append({
+                  relatedIndustries: [],
+                  statuses: [],
+                  fromDate: undefined,
+                  toDate: undefined,
+                  isOpen: true,
+                })
+              }
+            >
+              <Plus className="size-4 text-neutral-600!" />
+            </Button>
+          </div>
+
+          {/* Footer: Cancel + Next */}
+          <div className="sticky bottom-0 flex items-center justify-end gap-4 bg-white px-6 py-7 shadow-[0px_-8px_6.8px_0px_rgba(0,0,0,0.04)]">
+            <Button
+              type="button"
+              variant="secondary"
+              className="h-12 w-48"
+              onClick={handleCancel}
+            >
+              {t('preferredPatents.cancelButton')}
+            </Button>
+            <Button type="submit" className="h-12 w-48">
+              {t('preferredPatents.nextButton')}
+            </Button>
+          </div>
+        </form>
+      </Form>
+
+      <StepDisableDialog
+        open={showDisableConfirm}
+        onOpenChange={setShowDisableConfirm}
+        onConfirm={handleConfirmDisable}
+      />
+    </>
   );
 }
