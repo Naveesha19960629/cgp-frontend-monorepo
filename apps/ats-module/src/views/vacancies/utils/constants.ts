@@ -1,0 +1,6 @@
+const URL_PROTOCOL_HTTP = 'http://';
+const URL_PROTOCOL_HTTPS = 'https://';
+
+const DATE_DISPLAY_FORMAT = 'do MMM yyyy';
+
+export { URL_PROTOCOL_HTTP, URL_PROTOCOL_HTTPS, DATE_DISPLAY_FORMAT };

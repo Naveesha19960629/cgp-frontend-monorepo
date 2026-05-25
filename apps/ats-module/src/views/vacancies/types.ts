@@ -37,12 +37,99 @@ interface ProfileRequirements {
   address: Address[];
 }
 
+// ─── Secondary Education ──────────────────────────────────────────────────────
+
+interface LookupItem {
+  id: string;
+  label: string;
+  source: 'MASTER' | 'PENDING';
+}
+
+interface LocationLookupItem {
+  id: string;
+  label: string;
+}
+
+interface SecondaryEducationRef {
+  source: 'MASTER' | 'PENDING';
+  id: string;
+  name?: string;
+}
+
+interface SecondaryEducationEntry {
+  acceptsHomeSchooling: boolean;
+  schools: SecondaryEducationRef[];
+  schoolLocations: SecondaryEducationRef[];
+  examinations: SecondaryEducationRef[];
+  secondaryAwardingBody: SecondaryEducationRef[];
+  fieldsOfStudy: SecondaryEducationRef[];
+  grade: string;
+  startDate: string;
+  endDate: string;
+  result: string;
+}
+
+interface SecondaryEducation {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  content: SecondaryEducationEntry[];
+}
+
+// ─── Tertiary Education ───────────────────────────────────────────────────────
+
+interface TertiaryEducationRef {
+  source: 'MASTER' | 'PENDING';
+  id: string;
+  name?: string;
+}
+
+interface TertiaryEducationEntry {
+  qualificationName: TertiaryEducationRef[];
+  tertiaryAwardingBody: TertiaryEducationRef[];
+  tertiaryAwardingBodyLocations: TertiaryEducationRef[];
+  levelOfQualification: TertiaryEducationRef[];
+  specialization: TertiaryEducationRef[];
+  studyMode: TertiaryEducationRef[];
+  studyPattern: TertiaryEducationRef[];
+  deliverySchedule: TertiaryEducationRef[];
+  batch: TertiaryEducationRef[];
+  department: TertiaryEducationRef[];
+  faculty: TertiaryEducationRef[];
+  grade: string;
+}
+
+interface TertiaryEducation {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  content: TertiaryEducationEntry[];
+}
+
+// ─── Pending Item ─────────────────────────────────────────────────────────────
+
+interface CreatePendingItemResponse {
+  pendingId: string;
+  type: string;
+  value: string;
+  status: 'PENDING';
+}
+
+interface CreatePendingApiResponse {
+  requestId: string;
+  success: boolean;
+  message: string;
+  data: CreatePendingItemResponse;
+}
+
+// ─── Vacancy Form ─────────────────────────────────────────────────────────────
+
 interface VacancyForm {
   title: string;
   status: string;
   lastActiveStep: string;
   jobRequirements: JobRequirement[];
   profileRequirements: ProfileRequirements[];
+  secondaryEducation: SecondaryEducation[];
+  tertiaryEducation: TertiaryEducation[];
 }
 interface VacancyStep {
   readonly key: string;
@@ -95,6 +182,21 @@ interface ApiResponse<T> {
     };
   };
 }
+
+interface AddSchoolDialogProps {
+  open: boolean;
+  initialName: string;
+  onClose: () => void;
+  onAdded: (option: AddOrSelectOption) => void;
+}
+
+interface AddAwardingBodyDialogProps {
+  open: boolean;
+  initialName: string;
+  onClose: () => void;
+  onAdded: (option: AddOrSelectOption) => void;
+}
+
 export type {
   AddOrSelectOption,
   SelectOption,
@@ -106,4 +208,16 @@ export type {
   VacancyStep,
   GenderItem,
   ApiResponse,
+  LookupItem,
+  LocationLookupItem,
+  SecondaryEducationRef,
+  SecondaryEducationEntry,
+  SecondaryEducation,
+  CreatePendingItemResponse,
+  CreatePendingApiResponse,
+  TertiaryEducationRef,
+  TertiaryEducationEntry,
+  TertiaryEducation,
+  AddSchoolDialogProps,
+  AddAwardingBodyDialogProps,
 };
