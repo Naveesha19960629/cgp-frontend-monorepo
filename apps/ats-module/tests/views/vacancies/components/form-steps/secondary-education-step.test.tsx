@@ -262,6 +262,54 @@ describe('SecondaryEducationStep', () => {
         screen.getByText('secondaryEducation.placeholders.endDate')
       ).toBeInTheDocument();
     });
+
+    it('renders the school location field placeholder', () => {
+      renderStep();
+      expect(
+        screen.getByPlaceholderText(
+          'secondaryEducation.placeholders.schoolLocation'
+        )
+      ).toBeInTheDocument();
+    });
+
+    it('renders the grade input placeholder', () => {
+      renderStep();
+      expect(
+        screen.getByPlaceholderText('secondaryEducation.placeholders.grade')
+      ).toBeInTheDocument();
+    });
+
+    it('renders the awarding body field placeholder', () => {
+      renderStep();
+      expect(
+        screen.getByPlaceholderText(
+          'secondaryEducation.placeholders.awardingBody'
+        )
+      ).toBeInTheDocument();
+    });
+
+    it('renders the field of study placeholder', () => {
+      renderStep();
+      expect(
+        screen.getByPlaceholderText(
+          'secondaryEducation.placeholders.fieldOfStudy'
+        )
+      ).toBeInTheDocument();
+    });
+
+    it('renders the results textarea placeholder', () => {
+      renderStep();
+      expect(
+        screen.getByPlaceholderText('secondaryEducation.placeholders.results')
+      ).toBeInTheDocument();
+    });
+
+    it('renders the accepts home schooling checkbox', () => {
+      renderStep();
+      expect(
+        screen.getByLabelText('secondaryEducation.acceptsHomeSchooling')
+      ).toBeInTheDocument();
+    });
   });
 
   describe('enable/disable toggle', () => {
@@ -437,6 +485,75 @@ describe('SecondaryEducationStep', () => {
       expect(
         screen.getByText('secondaryEducation.errors.maxSelections')
       ).toBeInTheDocument();
+    });
+
+    it('shows error message when max selections is reached on the school location field', async () => {
+      const user = userEvent.setup();
+      renderStep();
+      await enableSection(user);
+
+      await user.click(
+        screen.getByTestId(
+          'max-trigger-secondaryEducation.placeholders.schoolLocation'
+        )
+      );
+
+      expect(
+        screen.getByText('secondaryEducation.errors.maxSelections')
+      ).toBeInTheDocument();
+    });
+
+    it('shows error message when max selections is reached on the awarding body field', async () => {
+      const user = userEvent.setup();
+      renderStep();
+      await enableSection(user);
+
+      await user.click(
+        screen.getByTestId(
+          'max-trigger-secondaryEducation.placeholders.awardingBody'
+        )
+      );
+
+      expect(
+        screen.getByText('secondaryEducation.errors.maxSelections')
+      ).toBeInTheDocument();
+    });
+
+    it('shows error message when max selections is reached on the field of study', async () => {
+      const user = userEvent.setup();
+      renderStep();
+      await enableSection(user);
+
+      await user.click(
+        screen.getByTestId(
+          'max-trigger-secondaryEducation.placeholders.fieldOfStudy'
+        )
+      );
+
+      expect(
+        screen.getByText('secondaryEducation.errors.maxSelections')
+      ).toBeInTheDocument();
+    });
+  });
+
+  describe('accepts home schooling checkbox', () => {
+    it('is unchecked by default', () => {
+      renderStep();
+      expect(
+        screen.getByLabelText('secondaryEducation.acceptsHomeSchooling')
+      ).not.toBeChecked();
+    });
+
+    it('checks when clicked', async () => {
+      const user = userEvent.setup();
+      renderStep();
+
+      const checkbox = screen.getByLabelText(
+        'secondaryEducation.acceptsHomeSchooling'
+      );
+      await user.click(checkbox);
+
+      expect(checkbox).toBeChecked();
     });
   });
 });

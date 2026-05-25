@@ -572,7 +572,8 @@ const MultipleSelector = React.forwardRef<
           <ChevronDownIcon
             className={cn(
               'text-muted-foreground/50 size-5',
-              (hideClearAllButton ||
+              (creatable ||
+                hideClearAllButton ||
                 disabled ||
                 selected.length >= 1 ||
                 selected.filter(s => s.fixed).length !== selected.length) &&

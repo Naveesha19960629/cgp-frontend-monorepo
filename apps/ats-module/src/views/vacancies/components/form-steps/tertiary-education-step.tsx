@@ -295,8 +295,8 @@ export default function TertiaryEducationStep({
             )}
           >
             {/* Row 1: Required Qualification(s) | Grade */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex flex-col gap-1">
+            <div className="grid grid-cols-4 gap-4">
+              <div className="col-span-2 flex flex-col gap-1">
                 <div className="flex items-center justify-between">
                   <Label>{t('tertiaryEducation.qualificationName')}</Label>
                   <CharacterCount
@@ -363,6 +363,7 @@ export default function TertiaryEducationStep({
                     <Input
                       {...field}
                       maxLength={80}
+                      className="h-11"
                       placeholder={t('tertiaryEducation.placeholders.grade')}
                     />
                   )}
@@ -370,12 +371,14 @@ export default function TertiaryEducationStep({
               </div>
             </div>
 
-            {/* Row 2: Awarding Body/Institute Location | Batch */}
+            {/* Row 2: Location | Batch */}
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-1">
-                <Label>
-                  {t('tertiaryEducation.tertiaryAwardingBodyLocations')}
-                </Label>
+                <div className="flex h-5 items-center">
+                  <Label>
+                    {t('tertiaryEducation.tertiaryAwardingBodyLocations')}
+                  </Label>
+                </div>
                 <Controller
                   control={control}
                   name="entry.tertiaryAwardingBodyLocations"
@@ -448,10 +451,12 @@ export default function TertiaryEducationStep({
               </div>
             </div>
 
-            {/* Row 3: Awarding Body/Institute Name | Level of Qualification */}
+            {/* Row 3: Awarding Body | Level of Qualification */}
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-1">
-                <Label>{t('tertiaryEducation.tertiaryAwardingBody')}</Label>
+                <div className="flex h-5 items-center">
+                  <Label>{t('tertiaryEducation.tertiaryAwardingBody')}</Label>
+                </div>
                 <Controller
                   control={control}
                   name="entry.tertiaryAwardingBody"
@@ -584,7 +589,9 @@ export default function TertiaryEducationStep({
               </div>
 
               <div className="flex flex-col gap-1">
-                <Label>{t('tertiaryEducation.studyMode')}</Label>
+                <div className="flex h-5 items-center">
+                  <Label>{t('tertiaryEducation.studyMode')}</Label>
+                </div>
                 <Controller
                   control={control}
                   name="entry.studyMode"

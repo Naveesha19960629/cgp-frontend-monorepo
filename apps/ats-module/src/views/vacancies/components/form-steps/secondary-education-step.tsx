@@ -1,4 +1,6 @@
-﻿import { CalendarIcon, ChevronLeftIcon, ChevronUpIcon } from 'lucide-react';
+﻿import { ChevronLeftIcon, ChevronUpIcon } from 'lucide-react';
+
+import { Calendar as CalendarIcon } from 'iconsax-reactjs';
 
 import { useState } from 'react';
 import { Controller } from 'react-hook-form';
@@ -366,7 +368,7 @@ export default function SecondaryEducationStep({
             </div>
 
             {/* Row 2: Grade | Start Date | End Date */}
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-4 gap-4">
               <div className="flex flex-col gap-1">
                 <div className="flex items-center justify-between">
                   <Label>{t('secondaryEducation.grade')}</Label>
@@ -388,6 +390,7 @@ export default function SecondaryEducationStep({
                     <Input
                       {...field}
                       maxLength={80}
+                      className="h-11"
                       placeholder={t('secondaryEducation.placeholders.grade')}
                     />
                   )}
@@ -395,7 +398,9 @@ export default function SecondaryEducationStep({
               </div>
 
               <div className="flex flex-col gap-1">
-                <Label>{t('secondaryEducation.startDate')}</Label>
+                <div className="flex h-5 items-center">
+                  <Label>{t('secondaryEducation.startDate')}</Label>
+                </div>
                 <Controller
                   control={control}
                   name="entry.startDate"
@@ -405,14 +410,18 @@ export default function SecondaryEducationStep({
                         <Button
                           variant="outline"
                           className={cn(
-                            'h-9 w-full justify-between text-left font-normal',
+                            'h-11 w-full justify-between text-left font-normal',
                             !field.value && 'text-slate-500'
                           )}
                         >
                           {field.value
                             ? formatDate(field.value)
                             : t('secondaryEducation.placeholders.startDate')}
-                          <CalendarIcon className="h-4 w-4 shrink-0 opacity-60" />
+                          <CalendarIcon
+                            variant="Linear"
+                            size={20}
+                            className="text-slate-400"
+                          />
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0" align="start">
@@ -435,7 +444,9 @@ export default function SecondaryEducationStep({
               </div>
 
               <div className="flex flex-col gap-1">
-                <Label>{t('secondaryEducation.endDate')}</Label>
+                <div className="flex h-5 items-center">
+                  <Label>{t('secondaryEducation.endDate')}</Label>
+                </div>
                 <Controller
                   control={control}
                   name="entry.endDate"
@@ -445,14 +456,18 @@ export default function SecondaryEducationStep({
                         <Button
                           variant="outline"
                           className={cn(
-                            'h-9 w-full justify-between text-left font-normal',
+                            'h-11 w-full justify-between text-left font-normal',
                             !field.value && 'text-slate-500'
                           )}
                         >
                           {field.value
                             ? formatDate(field.value)
                             : t('secondaryEducation.placeholders.endDate')}
-                          <CalendarIcon className="h-4 w-4 shrink-0 opacity-60" />
+                          <CalendarIcon
+                            variant="Linear"
+                            size={20}
+                            className="text-slate-400"
+                          />
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-0" align="start">
@@ -643,6 +658,7 @@ export default function SecondaryEducationStep({
                     <Textarea
                       {...field}
                       maxLength={1000}
+                      className="min-h-42.5"
                       placeholder={t('secondaryEducation.placeholders.results')}
                     />
                   )}
