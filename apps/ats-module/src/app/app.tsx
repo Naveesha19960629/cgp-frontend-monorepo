@@ -1,10 +1,10 @@
 import { RouterProvider } from 'react-router-dom';
 
 import { UserProvider } from '@/app/contexts/user-context';
+import { QueryProvider } from '@/app/providers/query-provider';
 import { createStandaloneRouter } from '@/app/router';
 import atsKeycloak, { atsKeycloakInitOptions } from '@/app/services/keycloak';
 
-import { QueryClientProvider, queryClient } from '@cgp/data-access';
 import { ReactKeycloakProvider } from '@react-keycloak/web';
 
 /**
@@ -14,15 +14,15 @@ import { ReactKeycloakProvider } from '@react-keycloak/web';
  */
 export default function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <ReactKeycloakProvider
-        authClient={atsKeycloak}
-        initOptions={atsKeycloakInitOptions}
-      >
-        <UserProvider>
+    <ReactKeycloakProvider
+      authClient={atsKeycloak}
+      initOptions={atsKeycloakInitOptions}
+    >
+      <UserProvider>
+        <QueryProvider>
           <RouterProvider router={createStandaloneRouter()} />
-        </UserProvider>
-      </ReactKeycloakProvider>
-    </QueryClientProvider>
+        </QueryProvider>
+      </UserProvider>
+    </ReactKeycloakProvider>
   );
 }
