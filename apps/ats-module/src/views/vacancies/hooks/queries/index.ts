@@ -1,6 +1,7 @@
 export { useGendersQuery } from '@/views/vacancies/hooks/queries/use-gender-query';
 export { useSkillsQuery } from '@/views/vacancies/hooks/queries/use-skills-query';
 export { useCareerPathsQuery } from '@/views/vacancies/hooks/queries/use-career-paths-query';
+export { useLanguagesQuery } from '@/views/vacancies/hooks/queries/use-languages-query';
 export {
   useSchoolsQuery,
   useSchoolsSearch,

@@ -182,5 +182,21 @@
         "required": "Please select or add a Career Path to continue"
       }
     }
+  },
+  "preferredLanguages": {
+    "title": "Preferred Languages",
+    "dataTakenFromCandidate": "If selected, no manual input is required, and data will be taken from the candidate profile",
+    "sectionLabel": "Name of the language",
+    "input": {
+      "placeholder": "Select or add language",
+      "addNew": "Add \"{{value}}\"",
+      "typeToSearch": "Type to search languages…"
+    },
+    "validation": {
+      "maxLanguages": "Exceeded maximum of {{max}} languages"
+    },
+    "chip": {
+      "remove": "Remove {{name}}"
+    }
   }
 }
