@@ -307,7 +307,7 @@ interface DisableDialogProps {
 interface StepFooterProps {
   onNext: () => void;
   onCancel: () => void;
-}// ─── Project ──────────────────────────────────────────────────────────────────
+} // ─── Project ──────────────────────────────────────────────────────────────────
 
 interface ProjectRef {
   source: 'MASTER' | 'PENDING';
@@ -359,6 +359,55 @@ interface ProjectResponse<T> {
   data: T;
 }
 
+// ─── Publication ──────────────────────────────────────────────────────────────
+
+interface PublicationRef {
+  source: 'MASTER' | 'PENDING';
+  id: string;
+}
+
+interface PublicationEntry {
+  acceptedPublisher: string;
+  publishedDateFrom: string;
+  publishedDateTo: string;
+}
+
+interface PublicationRequirement {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  content: PublicationEntry[];
+}
+
+interface Publication {
+  id: string;
+  title: string;
+  publisher: string;
+  publicationDate: string;
+  publicationDateLabel: string;
+  coAuthors: string[];
+  publicationUrl: string;
+  description: string;
+  skills: {
+    visibleToEveryone: string[];
+    hiddenFromPublic: string[];
+  };
+}
+
+interface PublicationApiData {
+  title: string;
+  publisher: string;
+  publicationDate: string;
+  coAuthors: string[];
+  publicationUrl: string;
+  description: string;
+}
+
+interface PublicationResponse<T> {
+  message: string[];
+  statusCode: number;
+  data: T;
+}
+
 export type {
   AddOrSelectOption,
   SelectOption,
@@ -404,4 +453,10 @@ export type {
   Project,
   ProjectApiData,
   ProjectResponse,
+  PublicationRef,
+  PublicationEntry,
+  PublicationRequirement,
+  Publication,
+  PublicationApiData,
+  PublicationResponse,
 };
