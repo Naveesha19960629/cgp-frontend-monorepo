@@ -1,10 +1,12 @@
-import type { PreferredPatentsFormValues } from '@/views/vacancies/hooks';
-import type { IndustryCreateResponse } from '@/views/vacancies/types';
+import type {
+  IndustryCreateResponse,
+  PatentEntrySchemaType,
+} from '@/views/vacancies/types';
 
 async function resolveUserCreatedIndustries(
-  patents: PreferredPatentsFormValues['patents'],
+  patents: PatentEntrySchemaType[],
   createFn: (label: string) => Promise<IndustryCreateResponse>
-): Promise<PreferredPatentsFormValues['patents']> {
+): Promise<PatentEntrySchemaType[]> {
   const allUserCreated = patents
     .flatMap(p => p.relatedIndustries)
     .filter(i => i.source === 'USER_CREATED');

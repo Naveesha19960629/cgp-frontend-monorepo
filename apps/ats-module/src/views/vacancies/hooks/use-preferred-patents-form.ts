@@ -1,7 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 
-import { useForm } from 'react-hook-form';
-import type { Resolver } from 'react-hook-form';
+import { useFieldArray, useForm } from 'react-hook-form';
 
 import { z } from 'zod';
 
@@ -32,11 +31,9 @@ const preferredPatentsSchema = z.object({
 
 type PreferredPatentsFormValues = z.infer<typeof preferredPatentsSchema>;
 
-const usePreferredPatentsForm = () =>
-  useForm<PreferredPatentsFormValues>({
-    resolver: zodResolver(
-      preferredPatentsSchema
-    ) as Resolver<PreferredPatentsFormValues>,
+export function usePreferredPatentsForm() {
+  const form = useForm<PreferredPatentsFormValues>({
+    resolver: zodResolver(preferredPatentsSchema),
     defaultValues: {
       isEnabled: false,
       dataTakenFromCandidate: false,
@@ -52,5 +49,10 @@ const usePreferredPatentsForm = () =>
     },
   });
 
-export { usePreferredPatentsForm };
-export type { PreferredPatentsFormValues };
+  const { fields, append, remove, replace } = useFieldArray({
+    control: form.control,
+    name: 'patents',
+  });
+
+  return { form, fields, append, remove, replace };
+}

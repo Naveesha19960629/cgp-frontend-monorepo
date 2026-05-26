@@ -133,6 +133,31 @@ interface PatentStatusOption {
   label: string;
 }
 
+interface PatentIndustrySchemaType {
+  value: string;
+  label: string;
+  source: string;
+}
+
+interface PatentStatusSchemaType {
+  value: 'PATENT_PENDING' | 'PATENT_ISSUED';
+  label: string;
+}
+
+interface PatentEntrySchemaType {
+  relatedIndustries: PatentIndustrySchemaType[];
+  statuses: PatentStatusSchemaType[];
+  fromDate?: Date | undefined;
+  toDate?: Date | undefined;
+  isOpen: boolean;
+}
+
+interface preferredPatentsSchema {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  patents: PatentEntrySchemaType[];
+}
+
 export type {
   AddOrSelectOption,
   SelectOption,
@@ -151,4 +176,8 @@ export type {
   PatentIndustryOption,
   PatentStatusOption,
   StepDisableDialogProps,
+  preferredPatentsSchema,
+  PatentEntrySchemaType,
+  PatentIndustrySchemaType,
+  PatentStatusSchemaType,
 };

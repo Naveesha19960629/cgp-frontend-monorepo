@@ -3,19 +3,22 @@ import { ChevronUp, Loader2, Plus, Trash2 } from 'lucide-react';
 import { ArrowLeft2, Calendar as CalenderIcon } from 'iconsax-reactjs';
 
 import { useState } from 'react';
-import { type UseFormReturn, useFieldArray } from 'react-hook-form';
+import { type UseFormReturn } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
 import MessageBox from '@/components/message-box';
 import { StepDisableDialog } from '@/views/vacancies';
 import {
-  type PreferredPatentsFormValues,
   useCreateIndustryMutation,
   useIndustriesQuery,
   usePreferredPatentsForm,
 } from '@/views/vacancies/hooks';
-import type { PatentStatus, StepProps } from '@/views/vacancies/types';
+import type {
+  PatentStatus,
+  StepProps,
+  preferredPatentsSchema,
+} from '@/views/vacancies/types';
 import { resolveUserCreatedIndustries } from '@/views/vacancies/utils';
 
 import { CharacterCount } from '@cgp/ui-kit/components/character-count';
@@ -56,7 +59,7 @@ function PatentCard({
   onRemove,
 }: {
   index: number;
-  form: UseFormReturn<PreferredPatentsFormValues>;
+  form: UseFormReturn<preferredPatentsSchema>;
   onRemove: () => void;
 }) {
   const { t } = useTranslation('ats');
@@ -429,11 +432,7 @@ export default function PreferredPatentsStep({ onNext, onBack }: StepProps) {
   const { t } = useTranslation('ats');
   const navigate = useNavigate();
 
-  const form = usePreferredPatentsForm();
-  const { fields, append, remove, replace } = useFieldArray({
-    control: form.control,
-    name: 'patents',
-  });
+  const { form, fields, append, remove, replace } = usePreferredPatentsForm();
 
   const [showDisableConfirm, setShowDisableConfirm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -454,7 +453,7 @@ export default function PreferredPatentsStep({ onNext, onBack }: StepProps) {
     setShowDisableConfirm(false);
   };
 
-  const handleSubmit = async (data: PreferredPatentsFormValues) => {
+  const handleSubmit = async (data: preferredPatentsSchema) => {
     const hasUserCreated = data.patents
       .flatMap(p => p.relatedIndustries)
       .some(i => i.source === 'USER_CREATED');
