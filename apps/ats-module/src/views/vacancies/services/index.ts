@@ -1,4 +1,9 @@
 export { genderService } from '@/views/vacancies/services/gender.service';
+export { skillService } from '@/views/vacancies/services/skill.service';
+export { careerPathService } from '@/views/vacancies/services/career-path.service';
+export { languageService } from '@/views/vacancies/services/language.service';
+export { causeService } from '@/views/vacancies/services/cause.service';
+export { hobbyService } from '@/views/vacancies/services/hobby.service';
 export { locationService } from '@/views/vacancies/services/location.service';
 export type { LocationOption } from '@/views/vacancies/services/location.service';
 export { projectService } from '@/views/vacancies/services/project.service';

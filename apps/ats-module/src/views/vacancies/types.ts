@@ -130,6 +130,10 @@ interface VacancyForm {
   profileRequirements: ProfileRequirements[];
   secondaryEducation: SecondaryEducation[];
   tertiaryEducation: TertiaryEducation[];
+  preferredSkills?: PreferredSkills;
+  preferredLanguages?: PreferredLanguages;
+  preferredCauses?: PreferredCauses;
+  preferredHobbies?: PreferredHobbies;
 }
 interface VacancyStep {
   readonly key: string;
@@ -183,6 +187,91 @@ interface ApiResponse<T> {
   };
 }
 
+// ─── Preferred Skills ────────────────────────────────────────────────────────
+
+interface SkillItem {
+  id: string;
+  label: string;
+  source?: string;
+}
+
+interface CareerPathItem {
+  id: string;
+  label: string;
+  source?: string;
+}
+
+interface SkillCareerPathEntry {
+  skillId: string;
+  skillName: string;
+  careerPathId?: string;
+  careerPathName: string;
+  displayValue: string;
+}
+
+interface PreferredSkills {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  skills: SkillCareerPathEntry[];
+}
+
+// ─── Preferred Languages ──────────────────────────────────────────────────────
+
+interface LanguageItem {
+  id: string;
+  label: string;
+  source?: string;
+}
+
+interface LanguageEntry {
+  id: string;
+  label: string;
+}
+
+interface PreferredLanguages {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  languages: LanguageEntry[];
+}
+
+// ─── Preferred Causes ─────────────────────────────────────────────────────────
+
+interface CauseItem {
+  id: string;
+  label: string;
+  source?: string;
+}
+
+interface CauseEntry {
+  id: string;
+  label: string;
+}
+
+interface PreferredCauses {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  causes: CauseEntry[];
+}
+
+// ─── Preferred Hobbies ────────────────────────────────────────────────────────
+
+interface HobbyItem {
+  id: string;
+  label: string;
+  source?: string;
+}
+
+interface HobbyEntry {
+  id: string;
+  label: string;
+}
+
+interface PreferredHobbies {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  hobbies: HobbyEntry[];
+}
+
 interface AddSchoolDialogProps {
   open: boolean;
   initialName: string;
@@ -197,7 +286,28 @@ interface AddAwardingBodyDialogProps {
   onAdded: (option: AddOrSelectOption) => void;
 }
 
-// ─── Project ──────────────────────────────────────────────────────────────────
+interface StepHeaderProps {
+  title: string;
+  isEnabled: boolean;
+  onBack: () => void;
+  onToggle: () => void;
+}
+
+interface DisableDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  title: string;
+  message: string;
+  cancelLabel: string;
+  disableLabel: string;
+  onCancel: () => void;
+  onDisable: () => void;
+}
+
+interface StepFooterProps {
+  onNext: () => void;
+  onCancel: () => void;
+}// ─── Project ──────────────────────────────────────────────────────────────────
 
 interface ProjectRef {
   source: 'MASTER' | 'PENDING';
@@ -272,6 +382,22 @@ export type {
   TertiaryEducation,
   AddSchoolDialogProps,
   AddAwardingBodyDialogProps,
+  StepHeaderProps,
+  DisableDialogProps,
+  StepFooterProps,
+  SkillItem,
+  CareerPathItem,
+  SkillCareerPathEntry,
+  PreferredSkills,
+  LanguageItem,
+  LanguageEntry,
+  PreferredLanguages,
+  CauseItem,
+  CauseEntry,
+  PreferredCauses,
+  HobbyItem,
+  HobbyEntry,
+  PreferredHobbies,
   ProjectRef,
   ProjectEntry,
   ProjectRequirement,

@@ -1,4 +1,9 @@
 {
+  "common": {
+    "back": "Back",
+    "cancel": "Cancel",
+    "next": "Next"
+  },
   "vacancies": {
     "title": "Vacancies",
     "createVacancyButton": "Create Vacancy",
@@ -148,6 +153,154 @@
     "networkError": {
       "title": "Try Again",
       "message": "Some changes could not be saved. Please retry."
+    }
+  },
+  "preferredSkills": {
+    "title": "Preferred Skills",
+    "dataTakenFromCandidate": "If selected, no manual input is required, and data will be taken from the candidate profile",
+    "sectionLabel": "Tools, Technologies, Skills and Frameworks",
+    "input": {
+      "placeholder": "Select or add a skill",
+      "addNew": "Add \"{{value}}\"",
+      "typeToSearch": "Type to search skills…"
+    },
+    "validation": {
+      "maxSkills": "Exceeded maximum of {{max}} skills"
+    },
+    "chip": {
+      "remove": "Remove {{name}}"
+    },
+    "careerPath": {
+      "title": "Add Career Path",
+      "description": "Linking each skill to a career path helps the system understand your strengths clearly and recommend better opportunities",
+      "label": "Career Path",
+      "addButton": "Add Now",
+      "input": {
+        "placeholder": "Select or add career path"
+      },
+      "validation": {
+        "required": "Please select or add a Career Path to continue"
+      }
+    },
+    "confirmDisableDialog": {
+      "title": "Are you sure?",
+      "message": "Are you sure you want to disable this section? Disabling this section will permanently remove all added data. This action cannot be undone",
+      "cancel": "Cancel",
+      "disable": "Disable"
+    },
+    "emptyDisableDialog": {
+      "title": "Are you sure?",
+      "message": "You've enabled this section but haven't filled any fields. This section will be disabled for this vacancy and no data will be collected from candidates",
+      "cancel": "Cancel",
+      "disable": "Disable"
+    },
+    "notifications": {
+      "disable": {
+        "title": "Successfully Disabled",
+        "message": "Preferred Skills have been successfully disabled."
+      }
+    }
+  },
+  "preferredLanguages": {
+    "title": "Preferred Languages",
+    "dataTakenFromCandidate": "If selected, no manual input is required, and data will be taken from the candidate profile",
+    "sectionLabel": "Name of the language",
+    "input": {
+      "placeholder": "Select or add language",
+      "addNew": "Add \"{{value}}\"",
+      "typeToSearch": "Type to search languages…"
+    },
+    "validation": {
+      "maxLanguages": "Exceeded maximum of {{max}} languages"
+    },
+    "chip": {
+      "remove": "Remove {{name}}"
+    },
+    "confirmDisableDialog": {
+      "title": "Are you sure?",
+      "message": "Are you sure you want to disable this section? Disabling this section will permanently remove all added data. This action cannot be undone",
+      "cancel": "Cancel",
+      "disable": "Disable"
+    },
+    "emptyDisableDialog": {
+      "title": "Are you sure?",
+      "message": "You've enabled this section but haven't filled any fields. This section will be disabled for this vacancy and no data will be collected from candidates",
+      "cancel": "Cancel",
+      "disable": "Disable"
+    },
+    "notifications": {
+      "disable": {
+        "title": "Successfully Disabled",
+        "message": "Preferred Languages have been successfully disabled."
+      }
+    }
+  },
+  "preferredCauses": {
+    "title": "Preferred Causes",
+    "dataTakenFromCandidate": "If selected, no manual input is required, and data will be taken from the candidate profile",
+    "sectionLabel": "Causes",
+    "input": {
+      "placeholder": "Select or add Cause",
+      "addNew": "Add \"{{value}}\"",
+      "typeToSearch": "Type to search causes…"
+    },
+    "validation": {
+      "maxCauses": "Exceeded maximum of {{max}} causes"
+    },
+    "chip": {
+      "remove": "Remove {{name}}"
+    },
+    "confirmDisableDialog": {
+      "title": "Are you sure?",
+      "message": "Are you sure you want to disable this section? Disabling this section will permanently remove all added data. This action cannot be undone",
+      "cancel": "Cancel",
+      "disable": "Disable"
+    },
+    "emptyDisableDialog": {
+      "title": "Are you sure?",
+      "message": "You've enabled this section but haven't filled any fields. This section will be disabled for this vacancy and no data will be collected from candidates",
+      "cancel": "Cancel",
+      "disable": "Disable"
+    },
+    "notifications": {
+      "disable": {
+        "title": "Successfully Disabled",
+        "message": "Preferred Causes have been successfully disabled."
+      }
+    }
+  },
+  "preferredHobbies": {
+    "title": "Preferred Hobbies",
+    "dataTakenFromCandidate": "If selected, no manual input is required, and data will be taken from the candidate profile",
+    "sectionLabel": "Hobbies",
+    "input": {
+      "placeholder": "Select or add Hobbies",
+      "addNew": "Add \"{{value}}\"",
+      "typeToSearch": "Type to search hobbies…"
+    },
+    "validation": {
+      "maxHobbies": "Exceeded maximum of {{max}} hobbies"
+    },
+    "chip": {
+      "remove": "Remove {{name}}"
+    },
+    "confirmDisableDialog": {
+      "title": "Are you sure?",
+      "message": "Are you sure you want to disable this section? Disabling this section will permanently remove all added data. This action cannot be undone",
+      "cancel": "Cancel",
+      "disable": "Disable"
+    },
+    "emptyDisableDialog": {
+      "title": "Are you sure?",
+      "message": "You've enabled this section but haven't filled any fields. This section will be disabled for this vacancy and no data will be collected from candidates",
+      "cancel": "Cancel",
+      "disable": "Disable"
+    },
+    "notifications": {
+      "disable": {
+        "title": "Successfully Disabled",
+        "message": "Preferred Hobbies have been successfully disabled."
+      }
     }
   }
 }
