@@ -12,8 +12,8 @@ import { URL_PROTOCOL_HTTP, URL_PROTOCOL_HTTPS } from '@/views/vacancies/utils';
 
 import { CharacterCount } from '@cgp/ui-kit/components/character-count';
 import { ErrorToast, SuccessToast } from '@cgp/ui-kit/components/custom-toast';
-import MultipleSelector from '@cgp/ui-kit/components/multiple-selector';
-import type { Option } from '@cgp/ui-kit/components/multiple-selector';
+import MultipleSelector from '@cgp/ui-kit/components/multi-select';
+import type { Option } from '@cgp/ui-kit/components/multi-select';
 import { Button } from '@cgp/ui-kit/components/ui/button';
 import { Dialog, DialogContent } from '@cgp/ui-kit/components/ui/dialog';
 import { Input } from '@cgp/ui-kit/components/ui/input';
@@ -82,11 +82,11 @@ export function AddAwardingBodyDialog({
     try {
       const result = await addAwardingBodyMutation.mutateAsync({
         displayValue: name,
-        locationId: location[0]?.id,
+        locationId: location[0]?.value,
         url: url || undefined,
       });
       onAdded({
-        id: result.data.pendingId,
+        value: result.data.pendingId,
         label: name,
         source: 'PENDING',
       });

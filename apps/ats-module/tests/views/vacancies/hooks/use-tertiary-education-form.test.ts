@@ -88,47 +88,47 @@ describe('useTertiaryEducationForm', () => {
 
       expect(values.isEnabled).toBe(true);
       expect(values.entry.qualificationName[0]).toMatchObject({
-        id: 'q-uuid',
+        value: 'q-uuid',
         label: 'BSc Computer Science',
       });
       expect(values.entry.tertiaryAwardingBody[0]).toMatchObject({
-        id: 'ab-uuid',
+        value: 'ab-uuid',
         label: 'University of Moratuwa',
       });
       expect(values.entry.tertiaryAwardingBodyLocations[0]).toMatchObject({
-        id: 'loc-uuid',
+        value: 'loc-uuid',
         label: 'Colombo',
       });
       expect(values.entry.levelOfQualification[0]).toMatchObject({
-        id: 'l-uuid',
+        value: 'l-uuid',
         label: "Bachelor's",
       });
       expect(values.entry.specialization[0]).toMatchObject({
-        id: 's-uuid',
+        value: 's-uuid',
         label: 'Data Science',
       });
       expect(values.entry.studyMode[0]).toMatchObject({
-        id: 'sm-uuid',
+        value: 'sm-uuid',
         label: 'Online',
       });
       expect(values.entry.studyPattern[0]).toMatchObject({
-        id: 'sp-uuid',
+        value: 'sp-uuid',
         label: 'Full-Time',
       });
       expect(values.entry.deliverySchedule[0]).toMatchObject({
-        id: 'ds-uuid',
+        value: 'ds-uuid',
         label: 'Weekday',
       });
       expect(values.entry.batch[0]).toMatchObject({
-        id: 'b-uuid',
+        value: 'b-uuid',
         label: 'Batch 2020',
       });
       expect(values.entry.department[0]).toMatchObject({
-        id: 'd-uuid',
+        value: 'd-uuid',
         label: 'IT Department',
       });
       expect(values.entry.faculty[0]).toMatchObject({
-        id: 'f-uuid',
+        value: 'f-uuid',
         label: 'Faculty of Engineering',
       });
       expect(values.entry.grade).toBe('GPA 3.8');

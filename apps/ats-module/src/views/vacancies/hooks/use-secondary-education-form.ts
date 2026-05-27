@@ -8,13 +8,13 @@ import { z } from 'zod';
 import type { SecondaryEducation } from '@/views/vacancies/types';
 
 const selectionItemSchema = z.object({
-  id: z.string().optional(),
+  value: z.string(),
   label: z.string(),
   source: z.string(),
 });
 
 const locationItemSchema = z.object({
-  id: z.string(),
+  value: z.string(),
   label: z.string(),
 });
 
@@ -75,26 +75,26 @@ function buildDefaultValues(
       ? {
           acceptsHomeSchooling: firstEntry.acceptsHomeSchooling,
           schools: firstEntry.schools.map(r => ({
-            id: r.id,
+            value: r.id,
             label: r.name ?? r.id,
             source: r.source,
           })),
           schoolLocations: firstEntry.schoolLocations.map(r => ({
-            id: r.id,
+            value: r.id,
             label: r.name ?? r.id,
           })),
           examinations: firstEntry.examinations.map(r => ({
-            id: r.id,
+            value: r.id,
             label: r.name ?? r.id,
             source: r.source,
           })),
           awardingBodies: firstEntry.secondaryAwardingBody.map(r => ({
-            id: r.id,
+            value: r.id,
             label: r.name ?? r.id,
             source: r.source,
           })),
           fieldsOfStudy: firstEntry.fieldsOfStudy.map(r => ({
-            id: r.id,
+            value: r.id,
             label: r.name ?? r.id,
             source: r.source,
           })),

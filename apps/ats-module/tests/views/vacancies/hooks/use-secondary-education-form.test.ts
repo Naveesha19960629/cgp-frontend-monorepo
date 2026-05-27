@@ -56,23 +56,23 @@ describe('useSecondaryEducationForm', () => {
 
       expect(values.isEnabled).toBe(true);
       expect(values.entry.schools[0]).toMatchObject({
-        id: 'school-uuid',
+        value: 'school-uuid',
         label: 'Oxford High',
       });
       expect(values.entry.schoolLocations[0]).toMatchObject({
-        id: 'loc-uuid',
+        value: 'loc-uuid',
         label: 'London',
       });
       expect(values.entry.examinations[0]).toMatchObject({
-        id: 'exam-uuid',
+        value: 'exam-uuid',
         label: 'O-Levels',
       });
       expect(values.entry.awardingBodies[0]).toMatchObject({
-        id: 'ab-uuid',
+        value: 'ab-uuid',
         label: 'AQA',
       });
       expect(values.entry.fieldsOfStudy[0]).toMatchObject({
-        id: 'fos-uuid',
+        value: 'fos-uuid',
         label: 'Science',
       });
       expect(values.entry.grade).toBe('A');

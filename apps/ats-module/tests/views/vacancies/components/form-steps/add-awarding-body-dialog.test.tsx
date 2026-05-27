@@ -46,20 +46,20 @@ vi.mock('@cgp/ui-kit/components/ui/dialog', () => ({
 
 // ── Mock MultipleSelector ─────────────────────────────────────────────────
 
-vi.mock('@cgp/ui-kit/components/multiple-selector', () => ({
+vi.mock('@cgp/ui-kit/components/multi-select', () => ({
   default: ({
     placeholder,
     onChange,
   }: {
     placeholder: string;
-    onChange?: (opts: { id: string; label: string }[]) => void;
+    onChange?: (opts: { value: string; label: string }[]) => void;
   }) => (
     <div>
       <input placeholder={placeholder} readOnly />
       <button
         type="button"
         data-testid="select-location"
-        onClick={() => onChange?.([{ id: 'loc-1', label: 'Colombo' }])}
+        onClick={() => onChange?.([{ value: 'loc-1', label: 'Colombo' }])}
       >
         Pick Location
       </button>
@@ -289,7 +289,7 @@ describe('AddAwardingBodyDialog', () => {
     );
     await waitFor(() => {
       expect(onAdded).toHaveBeenCalledWith({
-        id: 'awarding-body-1',
+        value: 'awarding-body-1',
         label: 'University of Moratuwa',
         source: 'PENDING',
       });

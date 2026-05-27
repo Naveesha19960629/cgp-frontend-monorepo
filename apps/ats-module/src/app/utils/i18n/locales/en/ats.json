@@ -123,6 +123,10 @@
     "errors": {
       "maxSelections": "Exceeded maximum of 10 selections."
     },
+    "search": {
+      "loading": "Loading...",
+      "noData": "No results found"
+    },
     "confirmDisableDialog": {
       "title": "Are you sure?",
       "message": "Are you sure you want to disable this section? Disabling this section will permanently remove all added data. This action cannot be undone",
@@ -186,6 +190,10 @@
     },
     "errors": {
       "maxSelections": "Exceeded maximum of 10 selections."
+    },
+    "search": {
+      "loading": "Loading...",
+      "noData": "No results found"
     },
     "confirmDisableDialog": {
       "title": "Are you sure?",

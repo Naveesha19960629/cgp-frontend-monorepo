@@ -8,13 +8,13 @@ import { z } from 'zod';
 import type { TertiaryEducation } from '@/views/vacancies/types';
 
 const selectionItemSchema = z.object({
-  id: z.string().optional(),
+  value: z.string(),
   label: z.string(),
   source: z.string(),
 });
 
 const locationItemSchema = z.object({
-  id: z.string(),
+  value: z.string(),
   label: z.string(),
 });
 
@@ -76,57 +76,57 @@ function buildDefaultValues(
     entry: firstEntry
       ? {
           qualificationName: firstEntry.qualificationName.map(r => ({
-            id: r.id,
+            value: r.id,
             label: r.name ?? r.id,
             source: r.source,
           })),
           tertiaryAwardingBody: firstEntry.tertiaryAwardingBody.map(r => ({
-            id: r.id,
+            value: r.id,
             label: r.name ?? r.id,
             source: r.source,
           })),
           tertiaryAwardingBodyLocations:
             firstEntry.tertiaryAwardingBodyLocations.map(r => ({
-              id: r.id,
+              value: r.id,
               label: r.name ?? r.id,
             })),
           levelOfQualification: firstEntry.levelOfQualification.map(r => ({
-            id: r.id,
+            value: r.id,
             label: r.name ?? r.id,
             source: r.source,
           })),
           specialization: firstEntry.specialization.map(r => ({
-            id: r.id,
+            value: r.id,
             label: r.name ?? r.id,
             source: r.source,
           })),
           studyMode: firstEntry.studyMode.map(r => ({
-            id: r.id,
+            value: r.id,
             label: r.name ?? r.id,
             source: r.source,
           })),
           studyPattern: firstEntry.studyPattern.map(r => ({
-            id: r.id,
+            value: r.id,
             label: r.name ?? r.id,
             source: r.source,
           })),
           deliverySchedule: firstEntry.deliverySchedule.map(r => ({
-            id: r.id,
+            value: r.id,
             label: r.name ?? r.id,
             source: r.source,
           })),
           batch: firstEntry.batch.map(r => ({
-            id: r.id,
+            value: r.id,
             label: r.name ?? r.id,
             source: r.source,
           })),
           department: firstEntry.department.map(r => ({
-            id: r.id,
+            value: r.id,
             label: r.name ?? r.id,
             source: r.source,
           })),
           faculty: firstEntry.faculty.map(r => ({
-            id: r.id,
+            value: r.id,
             label: r.name ?? r.id,
             source: r.source,
           })),

@@ -21,7 +21,7 @@ const useSchoolLocationsSearch = () => {
         queryFn: () => secondaryEducationService.getSchoolLocations(search),
       });
       return data.data.items.content.map(item => ({
-        id: item.id,
+        value: item.id,
         label: item.label,
       }));
     },
