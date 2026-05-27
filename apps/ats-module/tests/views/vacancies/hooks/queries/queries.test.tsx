@@ -125,14 +125,14 @@ describe('useSchoolsQuery', () => {
 // -- useSchoolsSearch -------------------------------------------------------
 
 describe('useSchoolsSearch', () => {
-  it('maps fetchQuery result to { id, label, source } options', async () => {
+  it('maps fetchQuery result to { value, label, source } options', async () => {
     mockFetchQuery.mockResolvedValue(
       apiResponse([{ id: 'school-1', label: 'Oxford High', source: 'MASTER' }])
     );
     const { result } = renderHook(() => useSchoolsSearch());
     const items = await result.current('oxford');
     expect(items).toEqual([
-      { id: 'school-1', label: 'Oxford High', source: 'MASTER' },
+      { value: 'school-1', label: 'Oxford High', source: 'MASTER' },
     ]);
   });
 
@@ -172,13 +172,13 @@ describe('useSchoolLocationsQuery', () => {
 // -- useSchoolLocationsSearch -----------------------------------------------
 
 describe('useSchoolLocationsSearch', () => {
-  it('maps fetchQuery result to { id, label } options (no source field)', async () => {
+  it('maps fetchQuery result to { value, label } options (no source field)', async () => {
     mockFetchQuery.mockResolvedValue(
       apiResponse([{ id: 'loc-1', label: 'London', countryCode: 'GB' }])
     );
     const { result } = renderHook(() => useSchoolLocationsSearch());
     const items = await result.current('london');
-    expect(items).toEqual([{ id: 'loc-1', label: 'London' }]);
+    expect(items).toEqual([{ value: 'loc-1', label: 'London' }]);
     expect(items[0]).not.toHaveProperty('source');
   });
 });
@@ -214,14 +214,14 @@ describe('useExaminationsQuery', () => {
 // -- useExaminationsSearch --------------------------------------------------
 
 describe('useExaminationsSearch', () => {
-  it('maps fetchQuery result to { id, label, source } options', async () => {
+  it('maps fetchQuery result to { value, label, source } options', async () => {
     mockFetchQuery.mockResolvedValue(
       apiResponse([{ id: 'exam-1', label: 'A-Levels', source: 'MASTER' }])
     );
     const { result } = renderHook(() => useExaminationsSearch());
     const items = await result.current('a-level');
     expect(items).toEqual([
-      { id: 'exam-1', label: 'A-Levels', source: 'MASTER' },
+      { value: 'exam-1', label: 'A-Levels', source: 'MASTER' },
     ]);
   });
 });
@@ -252,13 +252,13 @@ describe('useSecondaryAwardingBodiesQuery', () => {
 // -- useAwardingBodiesSearch ------------------------------------------------
 
 describe('useAwardingBodiesSearch', () => {
-  it('maps fetchQuery result to { id, label, source } options', async () => {
+  it('maps fetchQuery result to { value, label, source } options', async () => {
     mockFetchQuery.mockResolvedValue(
       apiResponse([{ id: 'ab-1', label: 'AQA', source: 'MASTER' }])
     );
     const { result } = renderHook(() => useAwardingBodiesSearch());
     const items = await result.current('aqa');
-    expect(items).toEqual([{ id: 'ab-1', label: 'AQA', source: 'MASTER' }]);
+    expect(items).toEqual([{ value: 'ab-1', label: 'AQA', source: 'MASTER' }]);
   });
 });
 
@@ -286,14 +286,14 @@ describe('useFieldsOfStudyQuery', () => {
 // -- useFieldsOfStudySearch -------------------------------------------------
 
 describe('useFieldsOfStudySearch', () => {
-  it('maps fetchQuery result to { id, label, source } options', async () => {
+  it('maps fetchQuery result to { value, label, source } options', async () => {
     mockFetchQuery.mockResolvedValue(
       apiResponse([{ id: 'fos-1', label: 'Mathematics', source: 'PENDING' }])
     );
     const { result } = renderHook(() => useFieldsOfStudySearch());
     const items = await result.current('maths');
     expect(items).toEqual([
-      { id: 'fos-1', label: 'Mathematics', source: 'PENDING' },
+      { value: 'fos-1', label: 'Mathematics', source: 'PENDING' },
     ]);
   });
 });

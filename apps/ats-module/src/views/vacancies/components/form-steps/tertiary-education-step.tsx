@@ -1,12 +1,15 @@
-import { ChevronLeftIcon, ChevronUpIcon } from 'lucide-react';
+﻿import { ChevronUpIcon, Plus } from 'lucide-react';
+
+import { ArrowLeft2 } from 'iconsax-reactjs';
 
 import * as SwitchPrimitive from '@radix-ui/react-switch';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import type { RefObject } from 'react';
 import { Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
-import MessageBox from '@/app/components/message-box';
+import MessageBox from '@/components/message-box';
 import { AddAwardingBodyDialog } from '@/views/vacancies/components/form-steps/add-awarding-body-dialog';
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import {
@@ -32,10 +35,11 @@ import {
 import type { StepProps } from '@/views/vacancies/types';
 import { toTertiaryEducationPayload } from '@/views/vacancies/utils';
 
+import deleteConfirmAvatar from '@cgp/ui-kit/assets/images/delete-confirm-avator.svg';
 import { CharacterCount } from '@cgp/ui-kit/components/character-count';
 import { ErrorToast } from '@cgp/ui-kit/components/custom-toast';
-import MultipleSelector from '@cgp/ui-kit/components/multiple-selector';
-import type { Option } from '@cgp/ui-kit/components/multiple-selector';
+import MultipleSelector from '@cgp/ui-kit/components/multi-select';
+import type { MultipleSelectorRef } from '@cgp/ui-kit/components/multi-select';
 import { Button } from '@cgp/ui-kit/components/ui/button';
 import { Checkbox } from '@cgp/ui-kit/components/ui/checkbox';
 import {
@@ -124,6 +128,14 @@ export default function TertiaryEducationStep({
   const [departmentInput, setDepartmentInput] = useState('');
   const [facultyInput, setFacultyInput] = useState('');
 
+  // ── Refs for creatable selectors (used to commit pending input on Next) ──
+  const qualificationRef = useRef<MultipleSelectorRef>(null);
+  const levelRef = useRef<MultipleSelectorRef>(null);
+  const specializationRef = useRef<MultipleSelectorRef>(null);
+  const batchRef = useRef<MultipleSelectorRef>(null);
+  const departmentRef = useRef<MultipleSelectorRef>(null);
+  const facultyRef = useRef<MultipleSelectorRef>(null);
+
   // ── Max-selection tracking ───────────────────────────────────────────────
   const [maxReachedFields, setMaxReachedFields] = useState<Set<string>>(
     new Set()
@@ -151,76 +163,124 @@ export default function TertiaryEducationStep({
   const searchFaculties = useFacultiesSearch();
 
   // ── Add-Now handler ──────────────────────────────────────────────────────
-  const handleCreatableChange = async (
-    options: Option[],
-    onFieldChange: (val: Option[]) => void,
+  type CreatableField =
+    | 'entry.qualificationName'
+    | 'entry.levelOfQualification'
+    | 'entry.specialization'
+    | 'entry.batch'
+    | 'entry.department'
+    | 'entry.faculty';
+
+  const resolveItem = async (
+    label: string,
     addMutation: (label: string) => Promise<{ data: { pendingId: string } }>
-  ) => {
-    const newItem = options.find(o => !o.id);
-    if (newItem) {
-      try {
-        const result = await addMutation(newItem.label);
-        const updated = options.map(o =>
-          !o.id && o.label === newItem.label
-            ? { ...o, id: result.data.pendingId, source: 'PENDING' }
-            : o
-        );
-        onFieldChange(updated);
-      } catch (error) {
-        onFieldChange(options.filter(o => o.id));
-        ErrorToast({
-          title: t(
-            error instanceof TypeError
-              ? 'notifications.networkError.title'
-              : 'notifications.apiError.save.title'
-          ),
-          description: t(
-            error instanceof TypeError
-              ? 'notifications.networkError.message'
-              : 'notifications.apiError.save.message'
-          ),
-        });
-      }
-    } else {
-      onFieldChange(options);
+  ): Promise<{ value: string; label: string; source: string } | null> => {
+    try {
+      const result = await addMutation(label);
+      return { value: result.data.pendingId, label, source: 'PENDING' };
+    } catch (error) {
+      ErrorToast({
+        title: t(
+          error instanceof TypeError
+            ? 'notifications.networkError.title'
+            : 'notifications.apiError.save.title'
+        ),
+        description: t(
+          error instanceof TypeError
+            ? 'notifications.networkError.message'
+            : 'notifications.apiError.save.message'
+        ),
+      });
+      return null;
     }
   };
 
+  const resolveAndCommitField = async (
+    ref: RefObject<MultipleSelectorRef | null>,
+    fieldName: CreatableField,
+    addMutation: (label: string) => Promise<{ data: { pendingId: string } }>
+  ) => {
+    const input = ref.current?.input.value.trim();
+    let current = getValues(fieldName);
+    if (input) {
+      current = [...current, { value: input, label: input, source: '' }];
+    }
+    const resolved: { value: string; label: string; source: string }[] = [];
+    for (const item of current) {
+      if (item.value === item.label) {
+        const created = await resolveItem(item.label, addMutation);
+        if (created) resolved.push(created);
+      } else {
+        resolved.push(item);
+      }
+    }
+    setValue(fieldName, resolved);
+  };
+
   // ── Submit ───────────────────────────────────────────────────────────────
-  const handleNext = handleSubmit(values => {
-    onNext({ tertiaryEducation: toTertiaryEducationPayload(values) });
-  });
+  const handleNext = async () => {
+    await resolveAndCommitField(
+      qualificationRef,
+      'entry.qualificationName',
+      label => addQualificationMutation.mutateAsync(label)
+    );
+    await resolveAndCommitField(levelRef, 'entry.levelOfQualification', label =>
+      addLevelOfQualificationMutation.mutateAsync(label)
+    );
+    await resolveAndCommitField(
+      specializationRef,
+      'entry.specialization',
+      label => addSpecializationMutation.mutateAsync(label)
+    );
+    await resolveAndCommitField(batchRef, 'entry.batch', label =>
+      addBatchMutation.mutateAsync(label)
+    );
+    await resolveAndCommitField(departmentRef, 'entry.department', label =>
+      addDepartmentMutation.mutateAsync(label)
+    );
+    await resolveAndCommitField(facultyRef, 'entry.faculty', label =>
+      addFacultyMutation.mutateAsync(label)
+    );
+    void handleSubmit(values => {
+      onNext({ tertiaryEducation: toTertiaryEducationPayload(values) });
+    })();
+  };
 
   return (
-    <div className="flex flex-col gap-4 pb-6">
+    <div className="flex flex-col">
       {/* ── Informational Banner ────────────────────────────────────────── */}
-      <div className="px-6">
-        <MessageBox
-          title={t('tertiaryEducation.bannerTitle')}
-          message={
-            <>
-              <span className="text-brand-primary-500 font-bold">
-                {t('tertiaryEducation.bannerMessageHighlight')}
-              </span>{' '}
-              {t('tertiaryEducation.bannerMessageRest')}
-            </>
-          }
-        />
-      </div>
+      <MessageBox
+        fields={[
+          t('tertiaryEducation.qualificationName'),
+          t('tertiaryEducation.tertiaryAwardingBody'),
+          t('tertiaryEducation.tertiaryAwardingBodyLocations'),
+          t('tertiaryEducation.levelOfQualification'),
+          t('tertiaryEducation.specialization'),
+          t('tertiaryEducation.studyMode'),
+          t('tertiaryEducation.studyPattern'),
+          t('tertiaryEducation.deliverySchedule'),
+          t('tertiaryEducation.batch'),
+          t('tertiaryEducation.department'),
+          t('tertiaryEducation.faculty'),
+          t('tertiaryEducation.grade'),
+        ]}
+      />
 
-      {/* ── Section Header ──────────────────────────────────────────────── */}
-      <div className="flex items-center gap-2 px-6">
-        <button
-          type="button"
-          aria-label={t('tertiaryEducation.back')}
-          className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-slate-100"
-          onClick={onBack}
-        >
-          <ChevronLeftIcon className="h-5 w-5 text-slate-600" />
-        </button>
-        <h2 className="flex-1 text-xl font-bold text-slate-900">
-          {t('tertiaryEducation.title')}
-        </h2>
+      {/* ── Section Header ──────────────────────────────────────────── */}
+      <div className="flex items-center justify-between px-7 py-8">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            aria-label={t('tertiaryEducation.back')}
+            className="text-slate-700 transition-colors hover:text-slate-900"
+            onClick={onBack}
+          >
+            <ArrowLeft2 size={24} />
+          </button>
+          <h2 className="text-xl font-bold tracking-tight text-slate-900">
+            {t('tertiaryEducation.title')}
+          </h2>
+        </div>
         <Controller
           control={control}
           name="isEnabled"
@@ -235,14 +295,14 @@ export default function TertiaryEducationStep({
                 }
               }}
               className={cn(
-                'focus-visible:ring-ring/50 inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent shadow-xs transition-colors outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50',
+                'focus-visible:ring-ring/50 inline-flex h-6 w-12 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent shadow-xs transition-colors outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50',
                 field.value ? 'bg-brand-primary-500' : 'bg-slate-300'
               )}
             >
               <SwitchPrimitive.Thumb
                 className={cn(
                   'pointer-events-none block h-5 w-5 rounded-full bg-white shadow-lg ring-0 transition-transform',
-                  field.value ? 'translate-x-5' : 'translate-x-0'
+                  field.value ? 'translate-x-6' : 'translate-x-0'
                 )}
               />
             </SwitchPrimitive.Root>
@@ -279,9 +339,9 @@ export default function TertiaryEducationStep({
         </div>
 
         {/* ── Education Card ──────────────────────────────────────────── */}
-        <div className="rounded-lg border border-slate-200 bg-white">
+        <div className="rounded-xl border border-neutral-300 bg-white shadow-[0px_4px_90px_0px_rgba(0,0,0,0.07)]">
           {/* Card header */}
-          <div className="flex items-center justify-between px-6 py-4">
+          <div className="flex items-center justify-between px-5 py-5">
             <h3 className="text-sm font-semibold text-slate-900">
               {t('tertiaryEducation.sectionTitle')} 01
             </h3>
@@ -291,7 +351,7 @@ export default function TertiaryEducationStep({
           {/* Card body */}
           <div
             className={cn(
-              'flex flex-col gap-5 border-t border-slate-200 px-6 py-5',
+              'flex flex-col gap-5 px-6 py-5',
               fieldsDisabled && 'pointer-events-none opacity-60'
             )}
           >
@@ -310,17 +370,14 @@ export default function TertiaryEducationStep({
                   name="entry.qualificationName"
                   render={({ field }) => (
                     <MultipleSelector
+                      ref={qualificationRef}
                       value={field.value}
                       onSearch={searchQualifications}
                       onChange={options => {
                         if (options.length < MAX_SELECTIONS)
                           clearMax('qualificationName');
                         setQualificationInput('');
-                        void handleCreatableChange(
-                          options,
-                          field.onChange,
-                          label => addQualificationMutation.mutateAsync(label)
-                        );
+                        field.onChange(options);
                       }}
                       maxSelected={MAX_SELECTIONS}
                       onMaxSelected={() => setMax('qualificationName')}
@@ -330,7 +387,18 @@ export default function TertiaryEducationStep({
                           : undefined
                       }
                       creatable
+                      hideClearAllButton
                       triggerSearchOnFocus
+                      loadingIndicator={
+                        <p className="px-3 pb-3 text-left text-sm text-slate-500">
+                          {t('tertiaryEducation.search.loading')}
+                        </p>
+                      }
+                      emptyIndicator={
+                        <p className="px-3 pb-3 text-left text-sm text-slate-500">
+                          {t('tertiaryEducation.search.noData')}
+                        </p>
+                      }
                       inputProps={{
                         maxLength: 200,
                         onValueChange: val => setQualificationInput(val),
@@ -400,6 +468,16 @@ export default function TertiaryEducationStep({
                           : undefined
                       }
                       triggerSearchOnFocus
+                      loadingIndicator={
+                        <p className="px-3 pb-3 text-left text-sm text-slate-500">
+                          {t('tertiaryEducation.search.loading')}
+                        </p>
+                      }
+                      emptyIndicator={
+                        <p className="px-3 pb-3 text-left text-sm text-slate-500">
+                          {t('tertiaryEducation.search.noData')}
+                        </p>
+                      }
                       placeholder={t(
                         'tertiaryEducation.placeholders.awardingBodyLocation'
                       )}
@@ -421,16 +499,13 @@ export default function TertiaryEducationStep({
                   name="entry.batch"
                   render={({ field }) => (
                     <MultipleSelector
+                      ref={batchRef}
                       value={field.value}
                       onSearch={searchBatches}
                       onChange={options => {
                         if (options.length < MAX_SELECTIONS) clearMax('batch');
                         setBatchInput('');
-                        void handleCreatableChange(
-                          options,
-                          field.onChange,
-                          label => addBatchMutation.mutateAsync(label)
-                        );
+                        field.onChange(options);
                       }}
                       maxSelected={MAX_SELECTIONS}
                       onMaxSelected={() => setMax('batch')}
@@ -440,7 +515,18 @@ export default function TertiaryEducationStep({
                           : undefined
                       }
                       creatable
+                      hideClearAllButton
                       triggerSearchOnFocus
+                      loadingIndicator={
+                        <p className="px-3 pb-3 text-left text-sm text-slate-500">
+                          {t('tertiaryEducation.search.loading')}
+                        </p>
+                      }
+                      emptyIndicator={
+                        <p className="px-3 pb-3 text-left text-sm text-slate-500">
+                          {t('tertiaryEducation.search.noData')}
+                        </p>
+                      }
                       inputProps={{
                         maxLength: 100,
                         onValueChange: val => setBatchInput(val),
@@ -468,7 +554,7 @@ export default function TertiaryEducationStep({
                       onChange={options => {
                         if (options.length < MAX_SELECTIONS)
                           clearMax('awardingBody');
-                        const newItem = options.find(o => !o.id);
+                        const newItem = options.find(o => o.value === o.label);
                         if (newItem) {
                           setPendingAwardingBodyLabel(newItem.label);
                           setAddAwardingBodyDialogOpen(true);
@@ -484,7 +570,18 @@ export default function TertiaryEducationStep({
                           : undefined
                       }
                       creatable
+                      hideClearAllButton
                       triggerSearchOnFocus
+                      loadingIndicator={
+                        <p className="px-3 pb-3 text-left text-sm text-slate-500">
+                          {t('tertiaryEducation.search.loading')}
+                        </p>
+                      }
+                      emptyIndicator={
+                        <p className="px-3 pb-3 text-left text-sm text-slate-500">
+                          {t('tertiaryEducation.search.noData')}
+                        </p>
+                      }
                       placeholder={t(
                         'tertiaryEducation.placeholders.awardingBody'
                       )}
@@ -506,18 +603,14 @@ export default function TertiaryEducationStep({
                   name="entry.levelOfQualification"
                   render={({ field }) => (
                     <MultipleSelector
+                      ref={levelRef}
                       value={field.value}
                       onSearch={searchLevels}
                       onChange={options => {
                         if (options.length < MAX_SELECTIONS)
                           clearMax('levelOfQualification');
                         setLevelInput('');
-                        void handleCreatableChange(
-                          options,
-                          field.onChange,
-                          label =>
-                            addLevelOfQualificationMutation.mutateAsync(label)
-                        );
+                        field.onChange(options);
                       }}
                       maxSelected={MAX_SELECTIONS}
                       onMaxSelected={() => setMax('levelOfQualification')}
@@ -527,7 +620,18 @@ export default function TertiaryEducationStep({
                           : undefined
                       }
                       creatable
+                      hideClearAllButton
                       triggerSearchOnFocus
+                      loadingIndicator={
+                        <p className="px-3 pb-3 text-left text-sm text-slate-500">
+                          {t('tertiaryEducation.search.loading')}
+                        </p>
+                      }
+                      emptyIndicator={
+                        <p className="px-3 pb-3 text-left text-sm text-slate-500">
+                          {t('tertiaryEducation.search.noData')}
+                        </p>
+                      }
                       inputProps={{
                         maxLength: 100,
                         onValueChange: val => setLevelInput(val),
@@ -556,17 +660,14 @@ export default function TertiaryEducationStep({
                   name="entry.specialization"
                   render={({ field }) => (
                     <MultipleSelector
+                      ref={specializationRef}
                       value={field.value}
                       onSearch={searchSpecializations}
                       onChange={options => {
                         if (options.length < MAX_SELECTIONS)
                           clearMax('specialization');
                         setSpecializationInput('');
-                        void handleCreatableChange(
-                          options,
-                          field.onChange,
-                          label => addSpecializationMutation.mutateAsync(label)
-                        );
+                        field.onChange(options);
                       }}
                       maxSelected={MAX_SELECTIONS}
                       onMaxSelected={() => setMax('specialization')}
@@ -576,7 +677,18 @@ export default function TertiaryEducationStep({
                           : undefined
                       }
                       creatable
+                      hideClearAllButton
                       triggerSearchOnFocus
+                      loadingIndicator={
+                        <p className="px-3 pb-3 text-left text-sm text-slate-500">
+                          {t('tertiaryEducation.search.loading')}
+                        </p>
+                      }
+                      emptyIndicator={
+                        <p className="px-3 pb-3 text-left text-sm text-slate-500">
+                          {t('tertiaryEducation.search.noData')}
+                        </p>
+                      }
                       inputProps={{
                         maxLength: 100,
                         onValueChange: val => setSpecializationInput(val),
@@ -613,6 +725,16 @@ export default function TertiaryEducationStep({
                           : undefined
                       }
                       triggerSearchOnFocus
+                      loadingIndicator={
+                        <p className="px-3 pb-3 text-left text-sm text-slate-500">
+                          {t('tertiaryEducation.search.loading')}
+                        </p>
+                      }
+                      emptyIndicator={
+                        <p className="px-3 pb-3 text-left text-sm text-slate-500">
+                          {t('tertiaryEducation.search.noData')}
+                        </p>
+                      }
                       placeholder={t(
                         'tertiaryEducation.placeholders.studyMode'
                       )}
@@ -646,6 +768,16 @@ export default function TertiaryEducationStep({
                           : undefined
                       }
                       triggerSearchOnFocus
+                      loadingIndicator={
+                        <p className="px-3 pb-3 text-left text-sm text-slate-500">
+                          {t('tertiaryEducation.search.loading')}
+                        </p>
+                      }
+                      emptyIndicator={
+                        <p className="px-3 pb-3 text-left text-sm text-slate-500">
+                          {t('tertiaryEducation.search.noData')}
+                        </p>
+                      }
                       placeholder={t(
                         'tertiaryEducation.placeholders.studyPattern'
                       )}
@@ -676,6 +808,16 @@ export default function TertiaryEducationStep({
                           : undefined
                       }
                       triggerSearchOnFocus
+                      loadingIndicator={
+                        <p className="px-3 pb-3 text-left text-sm text-slate-500">
+                          {t('tertiaryEducation.search.loading')}
+                        </p>
+                      }
+                      emptyIndicator={
+                        <p className="px-3 pb-3 text-left text-sm text-slate-500">
+                          {t('tertiaryEducation.search.noData')}
+                        </p>
+                      }
                       placeholder={t(
                         'tertiaryEducation.placeholders.deliverySchedule'
                       )}
@@ -700,17 +842,14 @@ export default function TertiaryEducationStep({
                   name="entry.department"
                   render={({ field }) => (
                     <MultipleSelector
+                      ref={departmentRef}
                       value={field.value}
                       onSearch={searchDepartments}
                       onChange={options => {
                         if (options.length < MAX_SELECTIONS)
                           clearMax('department');
                         setDepartmentInput('');
-                        void handleCreatableChange(
-                          options,
-                          field.onChange,
-                          label => addDepartmentMutation.mutateAsync(label)
-                        );
+                        field.onChange(options);
                       }}
                       maxSelected={MAX_SELECTIONS}
                       onMaxSelected={() => setMax('department')}
@@ -720,7 +859,18 @@ export default function TertiaryEducationStep({
                           : undefined
                       }
                       creatable
+                      hideClearAllButton
                       triggerSearchOnFocus
+                      loadingIndicator={
+                        <p className="px-3 pb-3 text-left text-sm text-slate-500">
+                          {t('tertiaryEducation.search.loading')}
+                        </p>
+                      }
+                      emptyIndicator={
+                        <p className="px-3 pb-3 text-left text-sm text-slate-500">
+                          {t('tertiaryEducation.search.noData')}
+                        </p>
+                      }
                       inputProps={{
                         maxLength: 100,
                         onValueChange: val => setDepartmentInput(val),
@@ -746,17 +896,14 @@ export default function TertiaryEducationStep({
                   name="entry.faculty"
                   render={({ field }) => (
                     <MultipleSelector
+                      ref={facultyRef}
                       value={field.value}
                       onSearch={searchFaculties}
                       onChange={options => {
                         if (options.length < MAX_SELECTIONS)
                           clearMax('faculty');
                         setFacultyInput('');
-                        void handleCreatableChange(
-                          options,
-                          field.onChange,
-                          label => addFacultyMutation.mutateAsync(label)
-                        );
+                        field.onChange(options);
                       }}
                       maxSelected={MAX_SELECTIONS}
                       onMaxSelected={() => setMax('faculty')}
@@ -766,7 +913,18 @@ export default function TertiaryEducationStep({
                           : undefined
                       }
                       creatable
+                      hideClearAllButton
                       triggerSearchOnFocus
+                      loadingIndicator={
+                        <p className="px-3 pb-3 text-left text-sm text-slate-500">
+                          {t('tertiaryEducation.search.loading')}
+                        </p>
+                      }
+                      emptyIndicator={
+                        <p className="px-3 pb-3 text-left text-sm text-slate-500">
+                          {t('tertiaryEducation.search.noData')}
+                        </p>
+                      }
                       inputProps={{
                         maxLength: 100,
                         onValueChange: val => setFacultyInput(val),
@@ -783,12 +941,16 @@ export default function TertiaryEducationStep({
         {/* ── Add Entry button (outside card, bottom-right) ─────────── */}
         <div
           className={cn(
-            'flex justify-end',
+            'flex justify-end py-4',
             !isEnabled && 'pointer-events-none opacity-60'
           )}
         >
-          <Button variant="outline" size="sm" disabled>
-            + {t('tertiaryEducation.addEntry')}
+          <Button
+            type="button"
+            variant="secondary"
+            className="size-11 rounded-lg bg-gray-200 px-3 text-sm"
+          >
+            <Plus className="size-4 text-neutral-600!" />
           </Button>
         </div>
       </div>
@@ -816,65 +978,62 @@ export default function TertiaryEducationStep({
       >
         <DialogContent
           showCloseButton
-          className="max-w-sm overflow-hidden rounded-2xl border-0 p-7 text-center"
+          className="max-w-99 overflow-hidden rounded-2xl border-0 p-7"
           style={{
             background:
               'linear-gradient(90deg, rgb(254,244,238) 2%, rgb(248,242,236) 34%, rgb(233,244,240) 66%, rgb(238,247,245) 100%)',
           }}
         >
-          {/* Avatar */}
-          <div className="relative mx-auto mb-3 h-25 w-25 overflow-hidden rounded-full">
-            <img
-              src="http://localhost:3845/assets/4fdefbb8a24d33ab390e947b7da2b8d191829c0f.png"
-              className="absolute top-0 -left-px h-17.75 w-17.75"
-              alt=""
-            />
-            <img
-              src="http://localhost:3845/assets/89bb1e1f996dd3362419d659b94b6022af9ca06d.png"
-              className="absolute top-0 left-0 h-24.75 w-24.75"
-              alt=""
-            />
-          </div>
+          <div className="flex flex-col items-center gap-7">
+            {/* Avatar + text */}
+            <div className="flex w-full flex-col items-center gap-3">
+              <div className="h-25 w-25 overflow-hidden rounded-full">
+                <img
+                  src={deleteConfirmAvatar}
+                  className="h-full w-full object-cover"
+                  alt=""
+                />
+              </div>
+              <div className="flex w-full flex-col items-center gap-2">
+                <DialogTitle className="text-center text-xl font-bold text-slate-900">
+                  {t('tertiaryEducation.confirmDisableDialog.title')}
+                </DialogTitle>
+                <p className="text-center text-sm text-slate-900">
+                  {t('tertiaryEducation.confirmDisableDialog.message')}
+                </p>
+              </div>
+            </div>
 
-          {/* Title */}
-          <DialogTitle className="mb-2 text-center text-xl font-bold text-slate-900">
-            {t('tertiaryEducation.confirmDisableDialog.title')}
-          </DialogTitle>
-
-          {/* Message */}
-          <p className="mb-7 text-center text-sm text-slate-900">
-            {t('tertiaryEducation.confirmDisableDialog.message')}
-          </p>
-
-          {/* Buttons */}
-          <div className="flex gap-3">
-            <Button
-              className="h-12 flex-1 rounded-lg bg-[#e5e5e5] font-bold text-[#525252] hover:bg-[#d4d4d4]"
-              onClick={() => setConfirmDisableOpen(false)}
-            >
-              {t('tertiaryEducation.confirmDisableDialog.cancel')}
-            </Button>
-            <Button
-              className="h-12 flex-1 rounded-lg bg-[#be123c] font-bold text-white hover:bg-[#9f1239]"
-              onClick={() => {
-                clearEntryData();
-                setValue('dataTakenFromCandidate', false);
-                setValue('isEnabled', false);
-                setConfirmDisableOpen(false);
-              }}
-            >
-              {t('tertiaryEducation.confirmDisableDialog.disable')}
-            </Button>
+            {/* Buttons */}
+            <div className="flex w-full gap-3">
+              <Button
+                className="h-12 flex-1 rounded-lg bg-[#e5e5e5] font-bold text-[#525252] hover:bg-[#d4d4d4]"
+                onClick={() => setConfirmDisableOpen(false)}
+              >
+                {t('tertiaryEducation.confirmDisableDialog.cancel')}
+              </Button>
+              <Button
+                className="h-12 flex-1 rounded-lg bg-[#be123c] font-bold text-white hover:bg-[#9f1239]"
+                onClick={() => {
+                  clearEntryData();
+                  setValue('dataTakenFromCandidate', false);
+                  setValue('isEnabled', false);
+                  setConfirmDisableOpen(false);
+                }}
+              >
+                {t('tertiaryEducation.confirmDisableDialog.disable')}
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
 
       {/* ── Step footer ──────────────────────────────────────────────────── */}
-      <div className="mt-auto flex justify-end gap-4 border-t border-slate-200 px-6 pt-4">
-        <Button variant="secondary" className="h-12 w-44" onClick={onBack}>
+      <div className="sticky bottom-0 flex items-center justify-end gap-4 bg-white px-6 py-7 shadow-[0px_-8px_6.8px_0px_rgba(0,0,0,0.04)]">
+        <Button variant="secondary" className="h-12 w-48" onClick={onBack}>
           {t('tertiaryEducation.cancel')}
         </Button>
-        <Button className="h-12 w-44" onClick={() => void handleNext()}>
+        <Button className="h-12 w-48" onClick={() => void handleNext()}>
           {t('tertiaryEducation.next')}
         </Button>
       </div>

@@ -47,26 +47,34 @@ describe('toTertiaryEducationPayload', () => {
       entry: {
         ...EMPTY_ENTRY,
         qualificationName: [
-          { id: 'q-uuid', label: 'BSc Computer Science', source: 'MASTER' },
+          { value: 'q-uuid', label: 'BSc Computer Science', source: 'MASTER' },
         ],
         tertiaryAwardingBody: [
-          { id: 'ab-uuid', label: 'University of Moratuwa', source: 'MASTER' },
+          {
+            value: 'ab-uuid',
+            label: 'University of Moratuwa',
+            source: 'MASTER',
+          },
         ],
         levelOfQualification: [
-          { id: 'l-uuid', label: "Bachelor's", source: 'MASTER' },
+          { value: 'l-uuid', label: "Bachelor's", source: 'MASTER' },
         ],
         specialization: [
-          { id: 's-uuid', label: 'Data Science', source: 'PENDING' },
+          { value: 's-uuid', label: 'Data Science', source: 'PENDING' },
         ],
         tertiaryAwardingBodyLocations: [
-          { id: 'loc-uuid', label: 'Colombo, Western Province, Sri Lanka' },
+          { value: 'loc-uuid', label: 'Colombo, Western Province, Sri Lanka' },
         ],
-        batch: [{ id: 'b-uuid', label: 'Batch 2020', source: 'MASTER' }],
+        batch: [{ value: 'b-uuid', label: 'Batch 2020', source: 'MASTER' }],
         department: [
-          { id: 'd-uuid', label: 'IT Department', source: 'MASTER' },
+          { value: 'd-uuid', label: 'IT Department', source: 'MASTER' },
         ],
         faculty: [
-          { id: 'f-uuid', label: 'Faculty of Engineering', source: 'PENDING' },
+          {
+            value: 'f-uuid',
+            label: 'Faculty of Engineering',
+            source: 'PENDING',
+          },
         ],
       },
     });
@@ -115,15 +123,19 @@ describe('toTertiaryEducationPayload', () => {
     });
   });
 
-  it('filters out items that have no id (pending creatable items not yet resolved)', () => {
+  it('filters out items whose value equals their label (pending creatable items not yet resolved)', () => {
     const result = toTertiaryEducationPayload({
       isEnabled: true,
       dataTakenFromCandidate: false,
       entry: {
         ...EMPTY_ENTRY,
         qualificationName: [
-          { id: 'q-uuid', label: 'MBA', source: 'MASTER' },
-          { id: undefined, label: 'Custom Qualification', source: 'PENDING' },
+          { value: 'q-uuid', label: 'MBA', source: 'MASTER' },
+          {
+            value: 'Custom Qualification',
+            label: 'Custom Qualification',
+            source: 'PENDING',
+          },
         ],
       },
     });
@@ -148,10 +160,12 @@ describe('toTertiaryEducationPayload', () => {
       dataTakenFromCandidate: false,
       entry: {
         ...EMPTY_ENTRY,
-        studyMode: [{ id: 'sm-uuid', label: 'Online', source: 'MASTER' }],
-        studyPattern: [{ id: 'sp-uuid', label: 'Full-Time', source: 'MASTER' }],
+        studyMode: [{ value: 'sm-uuid', label: 'Online', source: 'MASTER' }],
+        studyPattern: [
+          { value: 'sp-uuid', label: 'Full-Time', source: 'MASTER' },
+        ],
         deliverySchedule: [
-          { id: 'ds-uuid', label: 'Weekday', source: 'MASTER' },
+          { value: 'ds-uuid', label: 'Weekday', source: 'MASTER' },
         ],
       },
     });

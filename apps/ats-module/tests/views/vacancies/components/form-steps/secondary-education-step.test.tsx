@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+﻿import type { ReactNode } from 'react';
 
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -25,6 +25,16 @@ vi.mock('@/views/vacancies/context/vacancy-form-context', () => ({
 
 // ── Mock hooks barrel — keep real useSecondaryEducationForm ─────────────────
 
+const {
+  mockExaminationMutate,
+  mockAwardingBodyMutate,
+  mockFieldOfStudyMutate,
+} = vi.hoisted(() => ({
+  mockExaminationMutate: vi.fn(),
+  mockAwardingBodyMutate: vi.fn(),
+  mockFieldOfStudyMutate: vi.fn(),
+}));
+
 vi.mock('@/views/vacancies/hooks', async importOriginal => {
   const actual =
     await importOriginal<typeof import('@/views/vacancies/hooks')>();
@@ -35,15 +45,9 @@ vi.mock('@/views/vacancies/hooks', async importOriginal => {
     useExaminationsSearch: () => vi.fn(() => Promise.resolve([])),
     useAwardingBodiesSearch: () => vi.fn(() => Promise.resolve([])),
     useFieldsOfStudySearch: () => vi.fn(() => Promise.resolve([])),
-    useAddExaminationMutation: () => ({
-      mutateAsync: vi.fn().mockResolvedValue({ data: { pendingId: 'new-id' } }),
-    }),
-    useAddAwardingBodyMutation: () => ({
-      mutateAsync: vi.fn().mockResolvedValue({ data: { pendingId: 'new-id' } }),
-    }),
-    useAddFieldOfStudyMutation: () => ({
-      mutateAsync: vi.fn().mockResolvedValue({ data: { pendingId: 'new-id' } }),
-    }),
+    useAddExaminationMutation: () => ({ mutateAsync: mockExaminationMutate }),
+    useAddAwardingBodyMutation: () => ({ mutateAsync: mockAwardingBodyMutate }),
+    useAddFieldOfStudyMutation: () => ({ mutateAsync: mockFieldOfStudyMutate }),
   };
 });
 
@@ -61,18 +65,31 @@ vi.mock('@/app/components/message-box', () => ({
 
 // ── Mock MultipleSelector ───────────────────────────────────────────────────
 
-vi.mock('@cgp/ui-kit/components/multiple-selector', () => ({
+vi.mock('@cgp/ui-kit/components/multi-select', () => ({
   default: ({
     placeholder,
     onMaxSelected,
     errorMessage,
+    onChange,
+    loadingIndicator,
+    emptyIndicator,
   }: {
     placeholder: string;
     onMaxSelected?: () => void;
     errorMessage?: string;
+    onChange?: (options: { value: string; label: string }[]) => void;
+    loadingIndicator?: ReactNode;
+    emptyIndicator?: ReactNode;
   }) => (
     <>
       <input placeholder={placeholder} readOnly />
+      {onChange && (
+        <button
+          type="button"
+          data-testid={`add-new-${placeholder}`}
+          onClick={() => onChange([{ value: 'new-val', label: 'new-val' }])}
+        />
+      )}
       {onMaxSelected && (
         <button
           type="button"
@@ -81,6 +98,8 @@ vi.mock('@cgp/ui-kit/components/multiple-selector', () => ({
         />
       )}
       {errorMessage && <p>{errorMessage}</p>}
+      {loadingIndicator}
+      {emptyIndicator}
     </>
   ),
 }));
@@ -204,11 +223,12 @@ function renderStep() {
   return { onNext, onBack, onSubmit };
 }
 
+/** Enable the section by toggling the switch on */
 async function enableSection(user: ReturnType<typeof userEvent.setup>) {
   await user.click(screen.getByRole('switch'));
 }
 
-/** Enable toggle, check dataTakenFromCandidate so checkHasFilledData()=true, then toggle off */
+/** Enable section, check dataTakenFromCandidate so checkHasFilledData()=true, then toggle off */
 async function openConfirmDialog() {
   const user = userEvent.setup();
   renderStep();
@@ -226,6 +246,11 @@ async function openConfirmDialog() {
 describe('SecondaryEducationStep', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockExaminationMutate.mockResolvedValue({ data: { pendingId: 'exam-id' } });
+    mockAwardingBodyMutate.mockResolvedValue({
+      data: { pendingId: 'body-id' },
+    });
+    mockFieldOfStudyMutate.mockResolvedValue({ data: { pendingId: 'fos-id' } });
   });
 
   describe('rendering', () => {
@@ -310,16 +335,31 @@ describe('SecondaryEducationStep', () => {
         screen.getByLabelText('secondaryEducation.acceptsHomeSchooling')
       ).toBeInTheDocument();
     });
+
+    it('passes loading indicator to all search selectors', () => {
+      renderStep();
+      expect(
+        screen.getAllByText('secondaryEducation.search.loading')
+      ).toHaveLength(5);
+    });
+
+    it('passes empty indicator to all search selectors', () => {
+      renderStep();
+      expect(
+        screen.getAllByText('secondaryEducation.search.noData')
+      ).toHaveLength(5);
+    });
   });
 
   describe('enable/disable toggle', () => {
-    it('enables the section when clicked while off', async () => {
+    it('disables the section when toggled on then off', async () => {
       const user = userEvent.setup();
       renderStep();
       await enableSection(user);
+      await user.click(screen.getByRole('switch'));
       expect(screen.getByRole('switch')).toHaveAttribute(
         'aria-checked',
-        'true'
+        'false'
       );
     });
 
@@ -341,7 +381,6 @@ describe('SecondaryEducationStep', () => {
     it('shows confirmation dialog when toggling off after "collect from candidates" is checked', async () => {
       const user = userEvent.setup();
       renderStep();
-
       await enableSection(user);
       await user.click(
         screen.getByLabelText('secondaryEducation.collectFromCandidates')
@@ -415,7 +454,6 @@ describe('SecondaryEducationStep', () => {
     it('checks when clicked', async () => {
       const user = userEvent.setup();
       renderStep();
-      await enableSection(user);
 
       const checkbox = screen.getByLabelText(
         'secondaryEducation.collectFromCandidates'
@@ -428,7 +466,6 @@ describe('SecondaryEducationStep', () => {
     it('clears the grade field when checked', async () => {
       const user = userEvent.setup();
       renderStep();
-      await enableSection(user);
 
       const gradeInput = screen.getByPlaceholderText(
         'secondaryEducation.placeholders.grade'
@@ -460,7 +497,6 @@ describe('SecondaryEducationStep', () => {
     it('shows error message when max selections is reached on the school name field', async () => {
       const user = userEvent.setup();
       renderStep();
-      await enableSection(user);
 
       await user.click(
         screen.getByTestId('max-trigger-secondaryEducation.placeholders.school')
@@ -474,7 +510,6 @@ describe('SecondaryEducationStep', () => {
     it('shows error message when max selections is reached on the examination field', async () => {
       const user = userEvent.setup();
       renderStep();
-      await enableSection(user);
 
       await user.click(
         screen.getByTestId(
@@ -490,7 +525,6 @@ describe('SecondaryEducationStep', () => {
     it('shows error message when max selections is reached on the school location field', async () => {
       const user = userEvent.setup();
       renderStep();
-      await enableSection(user);
 
       await user.click(
         screen.getByTestId(
@@ -506,7 +540,6 @@ describe('SecondaryEducationStep', () => {
     it('shows error message when max selections is reached on the awarding body field', async () => {
       const user = userEvent.setup();
       renderStep();
-      await enableSection(user);
 
       await user.click(
         screen.getByTestId(
@@ -522,7 +555,6 @@ describe('SecondaryEducationStep', () => {
     it('shows error message when max selections is reached on the field of study', async () => {
       const user = userEvent.setup();
       renderStep();
-      await enableSection(user);
 
       await user.click(
         screen.getByTestId(
@@ -554,6 +586,95 @@ describe('SecondaryEducationStep', () => {
       await user.click(checkbox);
 
       expect(checkbox).toBeChecked();
+    });
+  });
+
+  describe('creatable field items deferred to Next', () => {
+    it('does not call addExaminationMutation when a new item is added', async () => {
+      const user = userEvent.setup();
+      renderStep();
+
+      await user.click(
+        screen.getByTestId(
+          'add-new-secondaryEducation.placeholders.examination'
+        )
+      );
+
+      expect(mockExaminationMutate).not.toHaveBeenCalled();
+    });
+
+    it('calls addExaminationMutation with the new label when Next is clicked', async () => {
+      const user = userEvent.setup();
+      renderStep();
+
+      await user.click(
+        screen.getByTestId(
+          'add-new-secondaryEducation.placeholders.examination'
+        )
+      );
+      await user.click(screen.getByText('secondaryEducation.next'));
+
+      await waitFor(() => {
+        expect(mockExaminationMutate).toHaveBeenCalledWith('new-val');
+      });
+    });
+
+    it('does not call addAwardingBodyMutation when a new item is added', async () => {
+      const user = userEvent.setup();
+      renderStep();
+
+      await user.click(
+        screen.getByTestId(
+          'add-new-secondaryEducation.placeholders.awardingBody'
+        )
+      );
+
+      expect(mockAwardingBodyMutate).not.toHaveBeenCalled();
+    });
+
+    it('calls addAwardingBodyMutation with the new label when Next is clicked', async () => {
+      const user = userEvent.setup();
+      renderStep();
+
+      await user.click(
+        screen.getByTestId(
+          'add-new-secondaryEducation.placeholders.awardingBody'
+        )
+      );
+      await user.click(screen.getByText('secondaryEducation.next'));
+
+      await waitFor(() => {
+        expect(mockAwardingBodyMutate).toHaveBeenCalledWith('new-val');
+      });
+    });
+
+    it('does not call addFieldOfStudyMutation when a new item is added', async () => {
+      const user = userEvent.setup();
+      renderStep();
+
+      await user.click(
+        screen.getByTestId(
+          'add-new-secondaryEducation.placeholders.fieldOfStudy'
+        )
+      );
+
+      expect(mockFieldOfStudyMutate).not.toHaveBeenCalled();
+    });
+
+    it('calls addFieldOfStudyMutation with the new label when Next is clicked', async () => {
+      const user = userEvent.setup();
+      renderStep();
+
+      await user.click(
+        screen.getByTestId(
+          'add-new-secondaryEducation.placeholders.fieldOfStudy'
+        )
+      );
+      await user.click(screen.getByText('secondaryEducation.next'));
+
+      await waitFor(() => {
+        expect(mockFieldOfStudyMutate).toHaveBeenCalledWith('new-val');
+      });
     });
   });
 });

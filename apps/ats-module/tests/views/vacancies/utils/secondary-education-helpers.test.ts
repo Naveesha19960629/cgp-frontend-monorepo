@@ -48,14 +48,16 @@ describe('toSecondaryEducationPayload', () => {
       entry: {
         ...EMPTY_ENTRY,
         schools: [
-          { id: 'school-uuid', label: 'Oxford High', source: 'MASTER' },
+          { value: 'school-uuid', label: 'Oxford High', source: 'MASTER' },
         ],
         examinations: [
-          { id: 'exam-uuid', label: 'O-Levels', source: 'MASTER' },
+          { value: 'exam-uuid', label: 'O-Levels', source: 'MASTER' },
         ],
-        awardingBodies: [{ id: 'ab-uuid', label: 'AQA', source: 'PENDING' }],
-        fieldsOfStudy: [{ id: 'fos-uuid', label: 'Science', source: 'MASTER' }],
-        schoolLocations: [{ id: 'loc-uuid', label: 'London' }],
+        awardingBodies: [{ value: 'ab-uuid', label: 'AQA', source: 'PENDING' }],
+        fieldsOfStudy: [
+          { value: 'fos-uuid', label: 'Science', source: 'MASTER' },
+        ],
+        schoolLocations: [{ value: 'loc-uuid', label: 'London' }],
       },
     });
 
@@ -88,15 +90,15 @@ describe('toSecondaryEducationPayload', () => {
     });
   });
 
-  it('filters out items that have no id (pending creatable items not yet resolved)', () => {
+  it('filters out items whose value equals their label (pending creatable items not yet resolved)', () => {
     const result = toSecondaryEducationPayload({
       isEnabled: true,
       dataTakenFromCandidate: false,
       entry: {
         ...EMPTY_ENTRY,
         examinations: [
-          { id: 'exam-uuid', label: 'A-Levels', source: 'MASTER' },
-          { id: undefined, label: 'Custom Exam', source: 'PENDING' },
+          { value: 'exam-uuid', label: 'A-Levels', source: 'MASTER' },
+          { value: 'Custom Exam', label: 'Custom Exam', source: 'PENDING' },
         ],
       },
     });

@@ -137,13 +137,15 @@ describe('useQualificationsQuery', () => {
 // -- useQualificationsSearch -----------------------------------------------
 
 describe('useQualificationsSearch', () => {
-  it('maps fetchQuery result to { id, label, source } options', async () => {
+  it('maps fetchQuery result to { value, label, source } options', async () => {
     mockFetchQuery.mockResolvedValue(
       apiResponse([{ id: 'q-1', label: 'BSc CS', source: 'MASTER' }])
     );
     const { result } = renderHook(() => useQualificationsSearch());
     const items = await result.current('bsc');
-    expect(items).toEqual([{ id: 'q-1', label: 'BSc CS', source: 'MASTER' }]);
+    expect(items).toEqual([
+      { value: 'q-1', label: 'BSc CS', source: 'MASTER' },
+    ]);
   });
 
   it('passes the search string to getQualifications via fetchQuery', async () => {
@@ -184,7 +186,7 @@ describe('useTertiaryAwardingBodiesQuery', () => {
 // -- useTertiaryAwardingBodiesSearch ---------------------------------------
 
 describe('useTertiaryAwardingBodiesSearch', () => {
-  it('maps fetchQuery result to { id, label, source } options', async () => {
+  it('maps fetchQuery result to { value, label, source } options', async () => {
     mockFetchQuery.mockResolvedValue(
       apiResponse([
         { id: 'ab-1', label: 'University of Moratuwa', source: 'MASTER' },
@@ -193,7 +195,7 @@ describe('useTertiaryAwardingBodiesSearch', () => {
     const { result } = renderHook(() => useTertiaryAwardingBodiesSearch());
     const items = await result.current('moratuwa');
     expect(items).toEqual([
-      { id: 'ab-1', label: 'University of Moratuwa', source: 'MASTER' },
+      { value: 'ab-1', label: 'University of Moratuwa', source: 'MASTER' },
     ]);
   });
 });
@@ -224,7 +226,7 @@ describe('useTertiaryAwardingBodyLocationsQuery', () => {
 // -- useTertiaryAwardingBodyLocationsSearch --------------------------------
 
 describe('useTertiaryAwardingBodyLocationsSearch', () => {
-  it('maps fetchQuery result to { id, label } options (no source field)', async () => {
+  it('maps fetchQuery result to { value, label } options (no source field)', async () => {
     mockFetchQuery.mockResolvedValue(
       apiResponse([{ id: 'loc-1', label: 'Colombo', countryCode: 'LK' }])
     );
@@ -232,7 +234,7 @@ describe('useTertiaryAwardingBodyLocationsSearch', () => {
       useTertiaryAwardingBodyLocationsSearch()
     );
     const items = await result.current('colombo');
-    expect(items).toEqual([{ id: 'loc-1', label: 'Colombo' }]);
+    expect(items).toEqual([{ value: 'loc-1', label: 'Colombo' }]);
     expect(items[0]).not.toHaveProperty('source');
   });
 });
@@ -263,14 +265,14 @@ describe('useLevelOfQualificationsQuery', () => {
 // -- useLevelOfQualificationsSearch ---------------------------------------
 
 describe('useLevelOfQualificationsSearch', () => {
-  it('maps fetchQuery result to { id, label, source } options', async () => {
+  it('maps fetchQuery result to { value, label, source } options', async () => {
     mockFetchQuery.mockResolvedValue(
       apiResponse([{ id: 'l-1', label: "Bachelor's", source: 'MASTER' }])
     );
     const { result } = renderHook(() => useLevelOfQualificationsSearch());
     const items = await result.current('bachelor');
     expect(items).toEqual([
-      { id: 'l-1', label: "Bachelor's", source: 'MASTER' },
+      { value: 'l-1', label: "Bachelor's", source: 'MASTER' },
     ]);
   });
 });
@@ -299,14 +301,14 @@ describe('useSpecializationsQuery', () => {
 // -- useSpecializationsSearch ---------------------------------------------
 
 describe('useSpecializationsSearch', () => {
-  it('maps fetchQuery result to { id, label, source } options', async () => {
+  it('maps fetchQuery result to { value, label, source } options', async () => {
     mockFetchQuery.mockResolvedValue(
       apiResponse([{ id: 's-1', label: 'Data Science', source: 'PENDING' }])
     );
     const { result } = renderHook(() => useSpecializationsSearch());
     const items = await result.current('data');
     expect(items).toEqual([
-      { id: 's-1', label: 'Data Science', source: 'PENDING' },
+      { value: 's-1', label: 'Data Science', source: 'PENDING' },
     ]);
   });
 });
@@ -335,13 +337,15 @@ describe('useStudyModesQuery', () => {
 // -- useStudyModesSearch --------------------------------------------------
 
 describe('useStudyModesSearch', () => {
-  it('maps fetchQuery result to { id, label, source } options', async () => {
+  it('maps fetchQuery result to { value, label, source } options', async () => {
     mockFetchQuery.mockResolvedValue(
       apiResponse([{ id: 'sm-1', label: 'Online', source: 'MASTER' }])
     );
     const { result } = renderHook(() => useStudyModesSearch());
     const items = await result.current('online');
-    expect(items).toEqual([{ id: 'sm-1', label: 'Online', source: 'MASTER' }]);
+    expect(items).toEqual([
+      { value: 'sm-1', label: 'Online', source: 'MASTER' },
+    ]);
   });
 });
 
@@ -369,14 +373,14 @@ describe('useStudyPatternsQuery', () => {
 // -- useStudyPatternsSearch -----------------------------------------------
 
 describe('useStudyPatternsSearch', () => {
-  it('maps fetchQuery result to { id, label, source } options', async () => {
+  it('maps fetchQuery result to { value, label, source } options', async () => {
     mockFetchQuery.mockResolvedValue(
       apiResponse([{ id: 'sp-1', label: 'Full-Time', source: 'MASTER' }])
     );
     const { result } = renderHook(() => useStudyPatternsSearch());
     const items = await result.current('full');
     expect(items).toEqual([
-      { id: 'sp-1', label: 'Full-Time', source: 'MASTER' },
+      { value: 'sp-1', label: 'Full-Time', source: 'MASTER' },
     ]);
   });
 });
@@ -405,13 +409,15 @@ describe('useDeliverySchedulesQuery', () => {
 // -- useDeliverySchedulesSearch -------------------------------------------
 
 describe('useDeliverySchedulesSearch', () => {
-  it('maps fetchQuery result to { id, label, source } options', async () => {
+  it('maps fetchQuery result to { value, label, source } options', async () => {
     mockFetchQuery.mockResolvedValue(
       apiResponse([{ id: 'ds-1', label: 'Weekday', source: 'MASTER' }])
     );
     const { result } = renderHook(() => useDeliverySchedulesSearch());
     const items = await result.current('week');
-    expect(items).toEqual([{ id: 'ds-1', label: 'Weekday', source: 'MASTER' }]);
+    expect(items).toEqual([
+      { value: 'ds-1', label: 'Weekday', source: 'MASTER' },
+    ]);
   });
 });
 
@@ -439,14 +445,14 @@ describe('useBatchesQuery', () => {
 // -- useBatchesSearch -----------------------------------------------------
 
 describe('useBatchesSearch', () => {
-  it('maps fetchQuery result to { id, label, source } options', async () => {
+  it('maps fetchQuery result to { value, label, source } options', async () => {
     mockFetchQuery.mockResolvedValue(
       apiResponse([{ id: 'b-1', label: 'Batch 2024', source: 'MASTER' }])
     );
     const { result } = renderHook(() => useBatchesSearch());
     const items = await result.current('2024');
     expect(items).toEqual([
-      { id: 'b-1', label: 'Batch 2024', source: 'MASTER' },
+      { value: 'b-1', label: 'Batch 2024', source: 'MASTER' },
     ]);
   });
 });
@@ -475,14 +481,14 @@ describe('useDepartmentsQuery', () => {
 // -- useDepartmentsSearch -------------------------------------------------
 
 describe('useDepartmentsSearch', () => {
-  it('maps fetchQuery result to { id, label, source } options', async () => {
+  it('maps fetchQuery result to { value, label, source } options', async () => {
     mockFetchQuery.mockResolvedValue(
       apiResponse([{ id: 'd-1', label: 'IT Department', source: 'MASTER' }])
     );
     const { result } = renderHook(() => useDepartmentsSearch());
     const items = await result.current('it');
     expect(items).toEqual([
-      { id: 'd-1', label: 'IT Department', source: 'MASTER' },
+      { value: 'd-1', label: 'IT Department', source: 'MASTER' },
     ]);
   });
 });
@@ -511,7 +517,7 @@ describe('useFacultiesQuery', () => {
 // -- useFacultiesSearch ---------------------------------------------------
 
 describe('useFacultiesSearch', () => {
-  it('maps fetchQuery result to { id, label, source } options', async () => {
+  it('maps fetchQuery result to { value, label, source } options', async () => {
     mockFetchQuery.mockResolvedValue(
       apiResponse([
         { id: 'f-1', label: 'Faculty of Engineering', source: 'PENDING' },
@@ -520,7 +526,7 @@ describe('useFacultiesSearch', () => {
     const { result } = renderHook(() => useFacultiesSearch());
     const items = await result.current('engineering');
     expect(items).toEqual([
-      { id: 'f-1', label: 'Faculty of Engineering', source: 'PENDING' },
+      { value: 'f-1', label: 'Faculty of Engineering', source: 'PENDING' },
     ]);
   });
 });

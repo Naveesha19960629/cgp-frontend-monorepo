@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+﻿import type { ReactNode } from 'react';
 
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -34,6 +34,22 @@ vi.mock('@/views/vacancies/context/vacancy-form-context', () => ({
 
 // ── Mock hooks barrel — keep real useTertiaryEducationForm ─────────────────
 
+const {
+  mockQualificationMutate,
+  mockLevelMutate,
+  mockSpecializationMutate,
+  mockBatchMutate,
+  mockDepartmentMutate,
+  mockFacultyMutate,
+} = vi.hoisted(() => ({
+  mockQualificationMutate: vi.fn(),
+  mockLevelMutate: vi.fn(),
+  mockSpecializationMutate: vi.fn(),
+  mockBatchMutate: vi.fn(),
+  mockDepartmentMutate: vi.fn(),
+  mockFacultyMutate: vi.fn(),
+}));
+
 vi.mock('@/views/vacancies/hooks', async importOriginal => {
   const actual =
     await importOriginal<typeof import('@/views/vacancies/hooks')>();
@@ -52,23 +68,17 @@ vi.mock('@/views/vacancies/hooks', async importOriginal => {
     useDepartmentsSearch: () => vi.fn(() => Promise.resolve([])),
     useFacultiesSearch: () => vi.fn(() => Promise.resolve([])),
     useAddQualificationMutation: () => ({
-      mutateAsync: vi.fn().mockResolvedValue({ data: { pendingId: 'new-id' } }),
+      mutateAsync: mockQualificationMutate,
     }),
     useAddLevelOfQualificationMutation: () => ({
-      mutateAsync: vi.fn().mockResolvedValue({ data: { pendingId: 'new-id' } }),
+      mutateAsync: mockLevelMutate,
     }),
     useAddSpecializationMutation: () => ({
-      mutateAsync: vi.fn().mockResolvedValue({ data: { pendingId: 'new-id' } }),
+      mutateAsync: mockSpecializationMutate,
     }),
-    useAddBatchMutation: () => ({
-      mutateAsync: vi.fn().mockResolvedValue({ data: { pendingId: 'new-id' } }),
-    }),
-    useAddDepartmentMutation: () => ({
-      mutateAsync: vi.fn().mockResolvedValue({ data: { pendingId: 'new-id' } }),
-    }),
-    useAddFacultyMutation: () => ({
-      mutateAsync: vi.fn().mockResolvedValue({ data: { pendingId: 'new-id' } }),
-    }),
+    useAddBatchMutation: () => ({ mutateAsync: mockBatchMutate }),
+    useAddDepartmentMutation: () => ({ mutateAsync: mockDepartmentMutate }),
+    useAddFacultyMutation: () => ({ mutateAsync: mockFacultyMutate }),
   };
 });
 
@@ -80,18 +90,31 @@ vi.mock('@/app/components/message-box', () => ({
 
 // ── Mock MultipleSelector ───────────────────────────────────────────────────
 
-vi.mock('@cgp/ui-kit/components/multiple-selector', () => ({
+vi.mock('@cgp/ui-kit/components/multi-select', () => ({
   default: ({
     placeholder,
     onMaxSelected,
     errorMessage,
+    onChange,
+    loadingIndicator,
+    emptyIndicator,
   }: {
     placeholder: string;
     onMaxSelected?: () => void;
     errorMessage?: string;
+    onChange?: (options: { value: string; label: string }[]) => void;
+    loadingIndicator?: ReactNode;
+    emptyIndicator?: ReactNode;
   }) => (
     <>
       <input placeholder={placeholder} readOnly />
+      {onChange && (
+        <button
+          type="button"
+          data-testid={`add-new-${placeholder}`}
+          onClick={() => onChange([{ value: 'new-val', label: 'new-val' }])}
+        />
+      )}
       {onMaxSelected && (
         <button
           type="button"
@@ -100,6 +123,8 @@ vi.mock('@cgp/ui-kit/components/multiple-selector', () => ({
         />
       )}
       {errorMessage && <p>{errorMessage}</p>}
+      {loadingIndicator}
+      {emptyIndicator}
     </>
   ),
 }));
@@ -213,11 +238,12 @@ function renderStep() {
   return { onNext, onBack, onSubmit };
 }
 
+/** Enable the section by toggling the switch on */
 async function enableSection(user: ReturnType<typeof userEvent.setup>) {
   await user.click(screen.getByRole('switch'));
 }
 
-/** Enable toggle, check dataTakenFromCandidate so checkHasFilledData()=true, then toggle off */
+/** Enable section, check dataTakenFromCandidate so checkHasFilledData()=true, then toggle off */
 async function openConfirmDialog() {
   const user = userEvent.setup();
   renderStep();
@@ -235,6 +261,16 @@ async function openConfirmDialog() {
 describe('TertiaryEducationStep', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockQualificationMutate.mockResolvedValue({
+      data: { pendingId: 'qual-id' },
+    });
+    mockLevelMutate.mockResolvedValue({ data: { pendingId: 'level-id' } });
+    mockSpecializationMutate.mockResolvedValue({
+      data: { pendingId: 'spec-id' },
+    });
+    mockBatchMutate.mockResolvedValue({ data: { pendingId: 'batch-id' } });
+    mockDepartmentMutate.mockResolvedValue({ data: { pendingId: 'dept-id' } });
+    mockFacultyMutate.mockResolvedValue({ data: { pendingId: 'faculty-id' } });
   });
 
   describe('rendering', () => {
@@ -355,16 +391,31 @@ describe('TertiaryEducationStep', () => {
         screen.getByPlaceholderText('tertiaryEducation.placeholders.faculty')
       ).toBeInTheDocument();
     });
+
+    it('passes loading indicator to all search selectors', () => {
+      renderStep();
+      expect(
+        screen.getAllByText('tertiaryEducation.search.loading')
+      ).toHaveLength(11);
+    });
+
+    it('passes empty indicator to all search selectors', () => {
+      renderStep();
+      expect(
+        screen.getAllByText('tertiaryEducation.search.noData')
+      ).toHaveLength(11);
+    });
   });
 
   describe('enable/disable toggle', () => {
-    it('enables the section when clicked while off', async () => {
+    it('disables the section when toggled on then off', async () => {
       const user = userEvent.setup();
       renderStep();
       await enableSection(user);
+      await user.click(screen.getByRole('switch'));
       expect(screen.getByRole('switch')).toHaveAttribute(
         'aria-checked',
-        'true'
+        'false'
       );
     });
 
@@ -386,7 +437,6 @@ describe('TertiaryEducationStep', () => {
     it('shows confirmation dialog when toggling off after "collect from candidates" is checked', async () => {
       const user = userEvent.setup();
       renderStep();
-
       await enableSection(user);
       await user.click(
         screen.getByLabelText('tertiaryEducation.collectFromCandidates')
@@ -469,7 +519,6 @@ describe('TertiaryEducationStep', () => {
     it('checks when clicked', async () => {
       const user = userEvent.setup();
       renderStep();
-      await enableSection(user);
 
       const checkbox = screen.getByLabelText(
         'tertiaryEducation.collectFromCandidates'
@@ -482,7 +531,6 @@ describe('TertiaryEducationStep', () => {
     it('clears the grade field when checked', async () => {
       const user = userEvent.setup();
       renderStep();
-      await enableSection(user);
 
       const gradeInput = screen.getByPlaceholderText(
         'tertiaryEducation.placeholders.grade'
@@ -514,7 +562,6 @@ describe('TertiaryEducationStep', () => {
     it('shows error message when max selections is reached on the qualification name field', async () => {
       const user = userEvent.setup();
       renderStep();
-      await enableSection(user);
 
       await user.click(
         screen.getByTestId(
@@ -530,7 +577,6 @@ describe('TertiaryEducationStep', () => {
     it('shows error message when max selections is reached on the level of qualification field', async () => {
       const user = userEvent.setup();
       renderStep();
-      await enableSection(user);
 
       await user.click(
         screen.getByTestId(
@@ -546,7 +592,6 @@ describe('TertiaryEducationStep', () => {
     it('shows error message when max selections is reached on the batch field', async () => {
       const user = userEvent.setup();
       renderStep();
-      await enableSection(user);
 
       await user.click(
         screen.getByTestId('max-trigger-tertiaryEducation.placeholders.batch')
@@ -560,7 +605,6 @@ describe('TertiaryEducationStep', () => {
     it('shows error message when max selections is reached on the specialization field', async () => {
       const user = userEvent.setup();
       renderStep();
-      await enableSection(user);
 
       await user.click(
         screen.getByTestId(
@@ -576,7 +620,6 @@ describe('TertiaryEducationStep', () => {
     it('shows error message when max selections is reached on the department field', async () => {
       const user = userEvent.setup();
       renderStep();
-      await enableSection(user);
 
       await user.click(
         screen.getByTestId(
@@ -592,7 +635,6 @@ describe('TertiaryEducationStep', () => {
     it('shows error message when max selections is reached on the faculty field', async () => {
       const user = userEvent.setup();
       renderStep();
-      await enableSection(user);
 
       await user.click(
         screen.getByTestId('max-trigger-tertiaryEducation.placeholders.faculty')
@@ -601,6 +643,170 @@ describe('TertiaryEducationStep', () => {
       expect(
         screen.getByText('tertiaryEducation.errors.maxSelections')
       ).toBeInTheDocument();
+    });
+  });
+
+  describe('creatable field items deferred to Next', () => {
+    it('does not call addQualificationMutation when a new qualification item is added', async () => {
+      const user = userEvent.setup();
+      renderStep();
+
+      await user.click(
+        screen.getByTestId(
+          'add-new-tertiaryEducation.placeholders.qualificationName'
+        )
+      );
+
+      expect(mockQualificationMutate).not.toHaveBeenCalled();
+    });
+
+    it('calls addQualificationMutation with the new label when Next is clicked', async () => {
+      const user = userEvent.setup();
+      renderStep();
+
+      await user.click(
+        screen.getByTestId(
+          'add-new-tertiaryEducation.placeholders.qualificationName'
+        )
+      );
+      await user.click(screen.getByText('tertiaryEducation.next'));
+
+      await waitFor(() => {
+        expect(mockQualificationMutate).toHaveBeenCalledWith('new-val');
+      });
+    });
+
+    it('does not call addBatchMutation when a new batch item is added', async () => {
+      const user = userEvent.setup();
+      renderStep();
+
+      await user.click(
+        screen.getByTestId('add-new-tertiaryEducation.placeholders.batch')
+      );
+
+      expect(mockBatchMutate).not.toHaveBeenCalled();
+    });
+
+    it('calls addBatchMutation with the new label when Next is clicked', async () => {
+      const user = userEvent.setup();
+      renderStep();
+
+      await user.click(
+        screen.getByTestId('add-new-tertiaryEducation.placeholders.batch')
+      );
+      await user.click(screen.getByText('tertiaryEducation.next'));
+
+      await waitFor(() => {
+        expect(mockBatchMutate).toHaveBeenCalledWith('new-val');
+      });
+    });
+
+    it('does not call addLevelOfQualificationMutation when a new level item is added', async () => {
+      const user = userEvent.setup();
+      renderStep();
+
+      await user.click(
+        screen.getByTestId(
+          'add-new-tertiaryEducation.placeholders.levelOfQualification'
+        )
+      );
+
+      expect(mockLevelMutate).not.toHaveBeenCalled();
+    });
+
+    it('calls addLevelOfQualificationMutation with the new label when Next is clicked', async () => {
+      const user = userEvent.setup();
+      renderStep();
+
+      await user.click(
+        screen.getByTestId(
+          'add-new-tertiaryEducation.placeholders.levelOfQualification'
+        )
+      );
+      await user.click(screen.getByText('tertiaryEducation.next'));
+
+      await waitFor(() => {
+        expect(mockLevelMutate).toHaveBeenCalledWith('new-val');
+      });
+    });
+
+    it('does not call addSpecializationMutation when a new specialization item is added', async () => {
+      const user = userEvent.setup();
+      renderStep();
+
+      await user.click(
+        screen.getByTestId(
+          'add-new-tertiaryEducation.placeholders.specialization'
+        )
+      );
+
+      expect(mockSpecializationMutate).not.toHaveBeenCalled();
+    });
+
+    it('calls addSpecializationMutation with the new label when Next is clicked', async () => {
+      const user = userEvent.setup();
+      renderStep();
+
+      await user.click(
+        screen.getByTestId(
+          'add-new-tertiaryEducation.placeholders.specialization'
+        )
+      );
+      await user.click(screen.getByText('tertiaryEducation.next'));
+
+      await waitFor(() => {
+        expect(mockSpecializationMutate).toHaveBeenCalledWith('new-val');
+      });
+    });
+
+    it('does not call addDepartmentMutation when a new department item is added', async () => {
+      const user = userEvent.setup();
+      renderStep();
+
+      await user.click(
+        screen.getByTestId('add-new-tertiaryEducation.placeholders.department')
+      );
+
+      expect(mockDepartmentMutate).not.toHaveBeenCalled();
+    });
+
+    it('calls addDepartmentMutation with the new label when Next is clicked', async () => {
+      const user = userEvent.setup();
+      renderStep();
+
+      await user.click(
+        screen.getByTestId('add-new-tertiaryEducation.placeholders.department')
+      );
+      await user.click(screen.getByText('tertiaryEducation.next'));
+
+      await waitFor(() => {
+        expect(mockDepartmentMutate).toHaveBeenCalledWith('new-val');
+      });
+    });
+
+    it('does not call addFacultyMutation when a new faculty item is added', async () => {
+      const user = userEvent.setup();
+      renderStep();
+
+      await user.click(
+        screen.getByTestId('add-new-tertiaryEducation.placeholders.faculty')
+      );
+
+      expect(mockFacultyMutate).not.toHaveBeenCalled();
+    });
+
+    it('calls addFacultyMutation with the new label when Next is clicked', async () => {
+      const user = userEvent.setup();
+      renderStep();
+
+      await user.click(
+        screen.getByTestId('add-new-tertiaryEducation.placeholders.faculty')
+      );
+      await user.click(screen.getByText('tertiaryEducation.next'));
+
+      await waitFor(() => {
+        expect(mockFacultyMutate).toHaveBeenCalledWith('new-val');
+      });
     });
   });
 });
