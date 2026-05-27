@@ -2,7 +2,6 @@ import { useTranslation } from 'react-i18next';
 
 import type { StepDisableDialogProps } from '@/views/vacancies/types';
 
-import disableConfirmAvatar from '@cgp/ui-kit/assets/images/delete-confirm-avator.svg';
 import bgImage from '@cgp/ui-kit/assets/images/form-dialog-background.svg';
 import { Button } from '@cgp/ui-kit/components/ui/button';
 import {
@@ -13,6 +12,11 @@ import {
 } from '@cgp/ui-kit/components/ui/dialog';
 import { applyTypography } from '@cgp/ui-kit/lib/typography';
 import { cn } from '@cgp/ui-kit/lib/utils';
+
+const disableConfirmAvatar = new URL(
+  '../../../assets/images/delete-confirm-avator.svg',
+  import.meta.url
+).href;
 
 export default function StepDisableDialog({
   open,

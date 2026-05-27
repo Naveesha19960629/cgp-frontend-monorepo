@@ -487,6 +487,13 @@ interface PublicationResponse<T> {
   data: T;
 }
 
+interface VacancyCancelDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onDiscard: () => void;
+  onSaveAsDraft: () => void;
+}
+
 export type {
   AddOrSelectOption,
   SelectOption,
@@ -551,4 +558,5 @@ export type {
   Publication,
   PublicationApiData,
   PublicationResponse,
+  VacancyCancelDialogProps,
 };

@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 
-import cancelAvatar from '@cgp/ui-kit/assets/images/delete-confirm-avator.svg';
+import type { VacancyCancelDialogProps } from '@/views/vacancies/types';
+
 import bgImage from '@cgp/ui-kit/assets/images/form-dialog-background.svg';
 import { Button } from '@cgp/ui-kit/components/ui/button';
 import {
@@ -12,12 +13,10 @@ import {
 import { applyTypography } from '@cgp/ui-kit/lib/typography';
 import { cn } from '@cgp/ui-kit/lib/utils';
 
-interface VacancyCancelDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onDiscard: () => void;
-  onSaveAsDraft: () => void;
-}
+const cancelAvatar = new URL(
+  '../../../assets/images/delete-confirm-avator.svg',
+  import.meta.url
+).href;
 
 export default function VacancyCancelDialog({
   open,
