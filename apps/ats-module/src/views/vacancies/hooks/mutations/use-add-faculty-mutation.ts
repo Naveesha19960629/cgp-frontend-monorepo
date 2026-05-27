@@ -1,6 +1,6 @@
-import { tertiaryEducationService } from '@/views/vacancies/services';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { useMutation, useQueryClient } from '@cgp/data-access';
+import { tertiaryEducationService } from '@/views/vacancies/services';
 
 const useAddFacultyMutation = () => {
   const queryClient = useQueryClient();

@@ -307,7 +307,7 @@ interface DisableDialogProps {
 interface StepFooterProps {
   onNext: () => void;
   onCancel: () => void;
-}// ─── Project ──────────────────────────────────────────────────────────────────
+} // ─── Project ──────────────────────────────────────────────────────────────────
 
 interface ProjectRef {
   source: 'MASTER' | 'PENDING';

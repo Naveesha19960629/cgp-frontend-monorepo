@@ -10,12 +10,12 @@ type MockMutation<TArg = unknown> = {
   onSuccess: () => void | Promise<void>;
 };
 
-// -- Mock @cgp/data-access --------------------------------------------------
+// -- Mock @tanstack/react-query -------------------------------------------
 
 const mockUseMutation = vi.fn();
 const mockInvalidateQueries = vi.fn();
 
-vi.mock('@cgp/data-access', () => ({
+vi.mock('@tanstack/react-query', () => ({
   useMutation: (options: unknown) => mockUseMutation(options) as unknown,
   useQueryClient: () => ({ invalidateQueries: mockInvalidateQueries }),
 }));

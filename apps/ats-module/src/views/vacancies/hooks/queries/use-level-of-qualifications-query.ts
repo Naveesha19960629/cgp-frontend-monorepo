@@ -1,8 +1,8 @@
 import { useCallback } from 'react';
 
-import { tertiaryEducationService } from '@/views/vacancies/services';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { useQuery, useQueryClient } from '@cgp/data-access';
+import { tertiaryEducationService } from '@/views/vacancies/services';
 
 const LEVEL_OF_QUALIFICATIONS_QUERY_KEY = ['level-of-qualifications'] as const;
 

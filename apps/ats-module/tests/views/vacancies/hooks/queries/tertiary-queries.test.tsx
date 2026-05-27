@@ -45,12 +45,12 @@ import {
   useTertiaryAwardingBodyLocationsSearch,
 } from '@/views/vacancies/hooks/queries/use-tertiary-awarding-body-locations-query';
 
-// -- Mock @cgp/data-access --------------------------------------------------
+// -- Mock @tanstack/react-query -------------------------------------------
 
 const mockUseQuery = vi.fn();
 const mockFetchQuery = vi.fn();
 
-vi.mock('@cgp/data-access', () => ({
+vi.mock('@tanstack/react-query', () => ({
   useQuery: (options: unknown) => mockUseQuery(options) as unknown,
   useQueryClient: () => ({ fetchQuery: mockFetchQuery }),
 }));

@@ -1,8 +1,8 @@
 import { useCallback } from 'react';
 
-import { secondaryEducationService } from '@/views/vacancies/services';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { useQuery, useQueryClient } from '@cgp/data-access';
+import { secondaryEducationService } from '@/views/vacancies/services';
 
 const SCHOOL_LOCATIONS_QUERY_KEY = ['school-locations'] as const;
 

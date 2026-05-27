@@ -1,6 +1,6 @@
-import { careerPathService } from '@/views/vacancies';
+import { useQuery } from '@tanstack/react-query';
 
-import { useQuery } from '@cgp/data-access';
+import { careerPathService } from '@/views/vacancies';
 
 const CAREER_PATHS_QUERY_KEY = (search: string) =>
   ['career-paths', search] as const;

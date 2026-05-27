@@ -1,6 +1,6 @@
-import { causeService } from '@/views/vacancies';
+import { useQuery } from '@tanstack/react-query';
 
-import { useQuery } from '@cgp/data-access';
+import { causeService } from '@/views/vacancies';
 
 const CAUSES_QUERY_KEY = (search: string) => ['causes', search] as const;
 
