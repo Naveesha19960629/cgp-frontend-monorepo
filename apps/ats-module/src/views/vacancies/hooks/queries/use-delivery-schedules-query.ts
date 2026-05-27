@@ -1,8 +1,8 @@
 import { useCallback } from 'react';
 
-import { tertiaryEducationService } from '@/views/vacancies/services';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { useQuery, useQueryClient } from '@cgp/data-access';
+import { tertiaryEducationService } from '@/views/vacancies/services';
 
 const DELIVERY_SCHEDULES_QUERY_KEY = ['delivery-schedules'] as const;
 

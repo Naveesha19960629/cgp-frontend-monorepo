@@ -1,6 +1,6 @@
-import { hobbyService } from '@/views/vacancies';
+import { useQuery } from '@tanstack/react-query';
 
-import { useQuery } from '@cgp/data-access';
+import { hobbyService } from '@/views/vacancies';
 
 const HOBBIES_QUERY_KEY = (search: string) => ['hobbies', search] as const;
 

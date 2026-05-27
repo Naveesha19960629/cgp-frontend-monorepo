@@ -1,6 +1,6 @@
-import { secondaryEducationService } from '@/views/vacancies/services';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { useMutation, useQueryClient } from '@cgp/data-access';
+import { secondaryEducationService } from '@/views/vacancies/services';
 
 const useAddSchoolMutation = () => {
   const queryClient = useQueryClient();

@@ -1,6 +1,6 @@
-import { languageService } from '@/views/vacancies';
+import { useQuery } from '@tanstack/react-query';
 
-import { useQuery } from '@cgp/data-access';
+import { languageService } from '@/views/vacancies';
 
 const LANGUAGES_QUERY_KEY = (search: string) => ['languages', search] as const;
 

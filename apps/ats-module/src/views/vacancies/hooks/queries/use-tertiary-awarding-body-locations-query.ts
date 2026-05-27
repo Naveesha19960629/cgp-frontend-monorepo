@@ -1,8 +1,8 @@
 import { useCallback } from 'react';
 
-import { tertiaryEducationService } from '@/views/vacancies/services';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { useQuery, useQueryClient } from '@cgp/data-access';
+import { tertiaryEducationService } from '@/views/vacancies/services';
 
 const TERTIARY_AWARDING_BODY_LOCATIONS_QUERY_KEY = [
   'tertiary-awarding-body-locations',
