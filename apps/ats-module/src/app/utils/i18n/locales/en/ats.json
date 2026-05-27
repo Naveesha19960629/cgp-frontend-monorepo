@@ -361,5 +361,53 @@
         "message": "Preferred Hobbies have been successfully disabled."
       }
     }
+  },
+  "projectsRequirements": {
+    "title": "Preferred Projects",
+    "sectionTitle": "Preferred Projects",
+    "dataTakenFromCandidate": "If selected, no manual input is required, and data will be taken from the candidate profile",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "relatedIndustry": "Related Industry",
+    "organizationLocation": "Organization Location",
+    "organizationName": "Organization Name",
+    "projectCard": "Project {{number}}",
+    "bannerTitle": "Build the Application Form",
+    "bannerMessageHighlight": "Certain fields",
+    "bannerMessageRest": "in this section are always collected from candidates to support consistent candidate profiles. Any fields you don't select won't be collected",
+    "addEntry": "Add",
+    "back": "Back",
+    "cancel": "Cancel",
+    "next": "Next",
+    "placeholders": {
+      "startDate": "Select start date",
+      "endDate": "Select end date",
+      "relatedIndustry": "Select or add related industry",
+      "organizationLocation": "Select location",
+      "organizationName": "Select or add organization name",
+      "searchLocation": "Search location",
+      "searchOrganization": "Search organization"
+    },
+    "organizationSearch": {
+      "noDataTitle": "No organizations found",
+      "noDataDescription": "Try searching with a different keyword or add a new organization"
+    },
+    "locationSearch": {
+      "noDataTitle": "No locations found",
+      "noDataDescription": "Try searching with a different keyword"
+    },
+    "industrySearch": {
+      "noDataTitle": "No industries found",
+      "noDataDescription": "Try searching with a different keyword or add a new industry"
+    },
+    "errors": {
+      "maxIndustries": "Exceeded maximum of 10 selections."
+    },
+    "confirmDisableDialog": {
+      "title": "Are you sure?",
+      "message": "Are you sure you want to disable this section? Disabling this section will permanently remove all added data. This action cannot be undone",
+      "cancel": "Cancel",
+      "disable": "Disable"
+    }
   }
 }

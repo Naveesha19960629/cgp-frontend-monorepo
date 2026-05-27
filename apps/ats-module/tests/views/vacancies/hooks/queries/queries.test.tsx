@@ -21,6 +21,7 @@ import {
   useAwardingBodiesSearch,
   useSecondaryAwardingBodiesQuery,
 } from '@/views/vacancies/hooks/queries/use-secondary-awarding-bodies-query';
+import { useSocietiesQuery } from '@/views/vacancies/hooks/queries/use-societies-query';
 
 // -- Mock @tanstack/react-query -------------------------------------------
 
@@ -40,6 +41,7 @@ const mockGetSchoolLocations = vi.fn();
 const mockGetExaminations = vi.fn();
 const mockGetAwardingBodies = vi.fn();
 const mockGetFieldsOfStudy = vi.fn();
+const mockGetSocieties = vi.fn();
 
 vi.mock('@/views/vacancies/services/gender.service', () => ({
   genderService: {
@@ -58,6 +60,12 @@ vi.mock('@/views/vacancies/services/secondary-education.service', () => ({
       mockGetAwardingBodies(...args) as unknown,
     getFieldsOfStudy: (...args: unknown[]) =>
       mockGetFieldsOfStudy(...args) as unknown,
+  },
+}));
+
+vi.mock('@/views/vacancies/services/society.service', () => ({
+  societyService: {
+    getSocieties: (...args: unknown[]) => mockGetSocieties(...args) as unknown,
   },
 }));
 
@@ -295,5 +303,47 @@ describe('useFieldsOfStudySearch', () => {
     expect(items).toEqual([
       { id: 'fos-1', label: 'Mathematics', source: 'PENDING' },
     ]);
+  });
+});
+
+// -- useSocietiesQuery ------------------------------------------------------
+
+describe('useSocietiesQuery', () => {
+  it('passes correct queryKey with search term', () => {
+    useSocietiesQuery('rotaract');
+    expect(mockUseQuery).toHaveBeenCalledWith(
+      expect.objectContaining({ queryKey: ['societies', 'rotaract'] })
+    );
+  });
+
+  it('defaults search to empty string', () => {
+    useSocietiesQuery('', true);
+    expect(mockUseQuery).toHaveBeenCalledWith(
+      expect.objectContaining({ queryKey: ['societies', ''] })
+    );
+  });
+
+  it('queryFn calls societyService.getSocieties with the search string', async () => {
+    mockGetSocieties.mockResolvedValue(apiResponse([]));
+    useSocietiesQuery('club');
+    const { queryFn } = mockUseQuery.mock.calls[0][0] as {
+      queryFn: () => Promise<unknown>;
+    };
+    await queryFn();
+    expect(mockGetSocieties).toHaveBeenCalledWith('club');
+  });
+
+  it('respects enabled parameter', () => {
+    useSocietiesQuery('test', false);
+    expect(mockUseQuery).toHaveBeenCalledWith(
+      expect.objectContaining({ enabled: false })
+    );
+  });
+
+  it('defaults enabled to true', () => {
+    useSocietiesQuery('test');
+    expect(mockUseQuery).toHaveBeenCalledWith(
+      expect.objectContaining({ enabled: true })
+    );
   });
 });

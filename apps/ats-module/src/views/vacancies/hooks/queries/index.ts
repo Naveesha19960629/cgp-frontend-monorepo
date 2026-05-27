@@ -1,10 +1,15 @@
 export { useGendersQuery } from '@/views/vacancies/hooks/queries/use-gender-query';
 export { useIndustriesQuery } from '@/views/vacancies/hooks/queries/use-industries-query';
+export { useSocietiesQuery } from '@/views/vacancies/hooks/queries/use-societies-query';
 export { useSkillsQuery } from '@/views/vacancies/hooks/queries/use-skills-query';
 export { useCareerPathsQuery } from '@/views/vacancies/hooks/queries/use-career-paths-query';
 export { useLanguagesQuery } from '@/views/vacancies/hooks/queries/use-languages-query';
 export { useCausesQuery } from '@/views/vacancies/hooks/queries/use-causes-query';
 export { useHobbiesQuery } from '@/views/vacancies/hooks/queries/use-hobbies-query';
+export {
+  useOrganizationsQuery,
+  useOrganizationsSearch,
+} from '@/views/vacancies/hooks/queries/use-organizations-query';
 export {
   useSchoolsQuery,
   useSchoolsSearch,

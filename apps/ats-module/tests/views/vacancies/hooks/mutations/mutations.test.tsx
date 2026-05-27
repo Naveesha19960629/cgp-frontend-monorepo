@@ -2,6 +2,7 @@ import { useAddAwardingBodyMutation } from '@/views/vacancies/hooks/mutations/us
 import { useAddExaminationMutation } from '@/views/vacancies/hooks/mutations/use-add-examination-mutation';
 import { useAddFieldOfStudyMutation } from '@/views/vacancies/hooks/mutations/use-add-field-of-study-mutation';
 import { useAddSchoolMutation } from '@/views/vacancies/hooks/mutations/use-add-school-mutation';
+import { useCreateSocietyMutation } from '@/views/vacancies/hooks/mutations/use-create-society-mutation';
 
 // -- Types ------------------------------------------------------------------
 
@@ -26,6 +27,7 @@ const mockAddExamination = vi.fn();
 const mockAddAwardingBody = vi.fn();
 const mockAddFieldOfStudy = vi.fn();
 const mockAddSchool = vi.fn();
+const mockCreateSociety = vi.fn();
 
 vi.mock('@/views/vacancies/services', () => ({
   secondaryEducationService: {
@@ -36,6 +38,10 @@ vi.mock('@/views/vacancies/services', () => ({
     addFieldOfStudy: (...args: unknown[]) =>
       mockAddFieldOfStudy(...args) as unknown,
     addSchool: (...args: unknown[]) => mockAddSchool(...args) as unknown,
+  },
+  societyService: {
+    createSociety: (...args: unknown[]) =>
+      mockCreateSociety(...args) as unknown,
   },
 }));
 
@@ -49,6 +55,11 @@ beforeEach(() => {
   mockAddAwardingBody.mockResolvedValue({ data: { pendingId: 'new-id' } });
   mockAddFieldOfStudy.mockResolvedValue({ data: { pendingId: 'new-id' } });
   mockAddSchool.mockResolvedValue({ data: { pendingId: 'new-id' } });
+  mockCreateSociety.mockResolvedValue({
+    id: 'soc-id',
+    name: 'Test Society',
+    source: 'PENDING',
+  });
 });
 
 // -- useAddExaminationMutation ----------------------------------------------
@@ -159,5 +170,43 @@ describe('useAddSchoolMutation', () => {
     expect(mockInvalidateQueries).toHaveBeenCalledWith({
       queryKey: ['schools'],
     });
+  });
+});
+
+// -- useCreateSocietyMutation -----------------------------------------------
+
+describe('useCreateSocietyMutation', () => {
+  it('mutationFn calls societyService.createSociety with the display value', async () => {
+    const mutation =
+      useCreateSocietyMutation() as unknown as MockMutation<string>;
+    await mutation.mutationFn('Rotaract Club');
+    expect(mockCreateSociety).toHaveBeenCalledWith('Rotaract Club');
+  });
+
+  it('mutationFn returns the API response', async () => {
+    const mutation =
+      useCreateSocietyMutation() as unknown as MockMutation<string>;
+    const result = await mutation.mutationFn('Swimming Team');
+    expect(result).toEqual({
+      id: 'soc-id',
+      name: 'Test Society',
+      source: 'PENDING',
+    });
+  });
+
+  it("onSuccess invalidates the ['societies'] query cache", async () => {
+    const mutation =
+      useCreateSocietyMutation() as unknown as MockMutation<string>;
+    await mutation.onSuccess();
+    expect(mockInvalidateQueries).toHaveBeenCalledWith({
+      queryKey: ['societies'],
+    });
+  });
+
+  it('handles society names with special characters', async () => {
+    const mutation =
+      useCreateSocietyMutation() as unknown as MockMutation<string>;
+    await mutation.mutationFn('Society & Club - 2024');
+    expect(mockCreateSociety).toHaveBeenCalledWith('Society & Club - 2024');
   });
 });
