@@ -1,6 +1,6 @@
-import { industryService } from '@/views/vacancies/services';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-import { useMutation, useQueryClient } from '@cgp/data-access';
+import { industryService } from '@/views/vacancies/services';
 
 const useCreateIndustryMutation = () => {
   const queryClient = useQueryClient();

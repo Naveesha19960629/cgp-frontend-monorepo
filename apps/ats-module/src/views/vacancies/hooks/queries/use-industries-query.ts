@@ -1,6 +1,6 @@
-import { industryService } from '@/views/vacancies/services';
+import { useQuery } from '@tanstack/react-query';
 
-import { useQuery } from '@cgp/data-access';
+import { industryService } from '@/views/vacancies/services';
 
 const INDUSTRIES_QUERY_KEY = (search: string) =>
   ['industries', search] as const;
