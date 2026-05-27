@@ -14,6 +14,17 @@ const mockIndustriesQuery = vi.hoisted(() =>
 const mockCreateIndustryMutation = vi.hoisted(() =>
   vi.fn(() => ({ mutateAsync: vi.fn() }))
 );
+const mockUseVacancyForm = vi.hoisted(() =>
+  vi.fn(() => ({
+    form: {
+      patents: {
+        isEnabled: false,
+        dataTakenFromCandidate: false,
+        patents: [],
+      },
+    },
+  }))
+);
 
 // ── Module mocks ──────────────────────────────────────────────────────────────
 
@@ -36,6 +47,20 @@ vi.mock('@/views/vacancies', async importOriginal => {
     StepDisableDialog: () => null,
   };
 });
+
+vi.mock(
+  '@/views/vacancies/context/vacancy-form-context',
+  async importOriginal => {
+    const actual =
+      await importOriginal<
+        typeof import('@/views/vacancies/context/vacancy-form-context')
+      >();
+    return {
+      ...actual,
+      useVacancyForm: mockUseVacancyForm,
+    };
+  }
+);
 
 vi.mock('@/views/vacancies/hooks', async () => {
   const actual = await vi.importActual<
