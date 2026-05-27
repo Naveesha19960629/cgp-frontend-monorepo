@@ -18,8 +18,18 @@ export default function StepDisableDialog({
   open,
   onOpenChange,
   onConfirm,
+  title,
+  description,
+  confirmLabel,
 }: StepDisableDialogProps) {
   const { t } = useTranslation('ats');
+
+  const resolvedTitle: string =
+    title ?? t('preferredPatents.disableDialog.title');
+  const resolvedDescription =
+    description ?? t('preferredPatents.disableDialog.description');
+  const resolvedConfirmLabel =
+    confirmLabel ?? t('preferredPatents.disableDialog.confirmButton');
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -47,10 +57,10 @@ export default function StepDisableDialog({
               'mt-3.5 text-center text-slate-900'
             )}
           >
-            {t('preferredPatents.disableDialog.title')}
+            {resolvedTitle}
           </h2>
-          <p className="mt-2 w-85 text-center text-sm/5 font-normal whitespace-pre-line text-slate-900">
-            {t('preferredPatents.disableDialog.description')}
+          <p className="mt-2 w-81 text-center text-sm/5 font-normal whitespace-pre-line text-slate-900">
+            {resolvedDescription}
           </p>
         </div>
         <div className="flex w-full gap-3">
@@ -73,7 +83,7 @@ export default function StepDisableDialog({
               applyTypography('h5')
             )}
           >
-            {t('preferredPatents.disableDialog.confirmButton')}
+            {resolvedConfirmLabel}
           </Button>
         </div>
       </DialogContent>

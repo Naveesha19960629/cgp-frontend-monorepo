@@ -4,6 +4,8 @@ import { useFieldArray, useForm } from 'react-hook-form';
 
 import { z } from 'zod';
 
+import type { preferredPatentsSchema as PreferredPatentsContext } from '@/views/vacancies/types';
+
 const patentIndustrySchema = z.object({
   value: z.string(),
   label: z.string(),
@@ -31,22 +33,32 @@ const preferredPatentsSchema = z.object({
 
 type PreferredPatentsFormValues = z.infer<typeof preferredPatentsSchema>;
 
-export function usePreferredPatentsForm() {
+const DEFAULT_PATENT_ENTRY = {
+  relatedIndustries: [] as never[],
+  statuses: [] as never[],
+  fromDate: undefined as Date | undefined,
+  toDate: undefined as Date | undefined,
+  isOpen: true,
+};
+
+export function usePreferredPatentsForm(
+  initialValues?: PreferredPatentsContext
+) {
   const form = useForm<PreferredPatentsFormValues>({
     resolver: zodResolver(preferredPatentsSchema),
-    defaultValues: {
-      isEnabled: false,
-      dataTakenFromCandidate: false,
-      patents: [
-        {
-          relatedIndustries: [],
-          statuses: [],
-          fromDate: undefined,
-          toDate: undefined,
-          isOpen: true,
+    defaultValues: initialValues
+      ? {
+          ...initialValues,
+          patents:
+            initialValues.patents.length > 0
+              ? initialValues.patents
+              : [{ ...DEFAULT_PATENT_ENTRY }],
+        }
+      : {
+          isEnabled: false,
+          dataTakenFromCandidate: false,
+          patents: [{ ...DEFAULT_PATENT_ENTRY }],
         },
-      ],
-    },
   });
 
   const { fields, append, remove, replace } = useFieldArray({

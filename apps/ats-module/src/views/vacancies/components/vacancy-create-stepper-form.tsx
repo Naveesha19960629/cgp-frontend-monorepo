@@ -140,7 +140,7 @@ export default function VacancyCreateStepperForm() {
                 <TabsContent
                   key={step.key + index}
                   value={step.key}
-                  className="m-0"
+                  className="m-0 min-h-full"
                 >
                   <StepComponent
                     onNext={onNext}

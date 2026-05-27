@@ -1,11 +1,11 @@
 import type {
-  IndustryCreateResponse,
+  CreatePendingItemResponse,
   PatentEntrySchemaType,
 } from '@/views/vacancies/types';
 
 async function resolveUserCreatedIndustries(
   patents: PatentEntrySchemaType[],
-  createFn: (label: string) => Promise<IndustryCreateResponse>
+  createFn: (label: string) => Promise<CreatePendingItemResponse>
 ): Promise<PatentEntrySchemaType[]> {
   const allUserCreated = patents
     .flatMap(p => p.relatedIndustries)
@@ -28,9 +28,9 @@ async function resolveUserCreatedIndustries(
         const result = resultMap.get(industry.label);
         if (result) {
           return {
-            value: result.id,
-            label: result.label,
-            source: result.source,
+            value: result.pendingId,
+            label: result.value,
+            source: result.status,
           };
         }
       }

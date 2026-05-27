@@ -133,6 +133,11 @@ const DEFAULT_FORM: VacancyForm = {
   tertiaryEducation: [
     { isEnabled: false, dataTakenFromCandidate: false, content: [] },
   ],
+  patents: {
+    isEnabled: false,
+    dataTakenFromCandidate: false,
+    patents: [],
+  },
 };
 
 interface VacancyFormContextValue {
@@ -162,6 +167,7 @@ function VacancyFormProvider({ children }: { children: React.ReactNode }) {
   };
 
   const onNext = (data?: Partial<VacancyForm>) => {
+    console.log(data);
     if (data) {
       setForm(prev => ({ ...prev, ...data }));
     }

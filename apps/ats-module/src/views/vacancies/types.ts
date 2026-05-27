@@ -26,6 +26,9 @@ interface StepDisableDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: () => void;
+  title?: string;
+  description?: string;
+  confirmLabel?: string;
 }
 
 interface Address {
@@ -140,6 +143,7 @@ interface VacancyForm {
   preferredLanguages?: PreferredLanguages;
   preferredCauses?: PreferredCauses;
   preferredHobbies?: PreferredHobbies;
+  patents?: preferredPatentsSchema;
 }
 interface VacancyStep {
   readonly key: string;

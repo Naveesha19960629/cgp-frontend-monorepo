@@ -69,6 +69,12 @@
       "description": "Are you sure you want to disable this section? Disabling this section will permanently remove all added data. This action cannot be undone",
       "cancelButton": "Cancel",
       "confirmButton": "Disable"
+    },
+    "emptyDisableDialog": {
+      "title": "Are you sure?",
+      "message": "You've enabled this section but haven't filled any fields. This section will be disabled for this vacancy and no data will be collected from candidates",
+      "cancel": "Cancel",
+      "disable": "Disable"
     }
   },
   "secondaryEducation": {

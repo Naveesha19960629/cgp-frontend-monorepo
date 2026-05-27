@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 
 import MessageBox from '@/components/message-box';
 import { StepDisableDialog } from '@/views/vacancies';
+import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import {
   useCreateIndustryMutation,
   useIndustriesQuery,
@@ -83,7 +84,8 @@ function PatentCard({
 
   return (
     <Collapsible
-      open={isOpen}
+      // release with hardcoded "true" with isOpen when multiple entry allowed
+      open={true}
       onOpenChange={open => form.setValue(`patents.${index}.isOpen`, open)}
     >
       <div className="rounded-xl border border-neutral-300 bg-white shadow-[0px_4px_90px_0px_rgba(0,0,0,0.07)]">
@@ -98,7 +100,9 @@ function PatentCard({
             <button
               type="button"
               onClick={onRemove}
-              className="text-slate-400 transition-colors hover:text-red-500"
+              // remove disabled = true and hidden from UI when multiple entry allowed
+              disabled={true}
+              className="hidden text-slate-400 transition-colors hover:text-red-500"
               aria-label={t('preferredPatents.removePatent')}
             >
               <Trash2 className="size-5" />
@@ -432,9 +436,13 @@ export default function PreferredPatentsStep({ onNext, onBack }: StepProps) {
   const { t } = useTranslation('ats');
   const navigate = useNavigate();
 
-  const { form, fields, append, remove, replace } = usePreferredPatentsForm();
+  const { form: contextForm } = useVacancyForm();
+  const { form, fields, append, remove, replace } = usePreferredPatentsForm(
+    contextForm.patents
+  );
 
   const [showDisableConfirm, setShowDisableConfirm] = useState(false);
+  const [showEmptyConfirm, setShowEmptyConfirm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { mutateAsync } = useCreateIndustryMutation();
@@ -453,7 +461,40 @@ export default function PreferredPatentsStep({ onNext, onBack }: StepProps) {
     setShowDisableConfirm(false);
   };
 
+  const handleConfirmEmptyData = () => {
+    replace([
+      {
+        relatedIndustries: [],
+        statuses: [],
+        fromDate: undefined,
+        toDate: undefined,
+        isOpen: true,
+      },
+    ]);
+    setShowEmptyConfirm(false);
+    onNext({
+      patents: {
+        isEnabled: false,
+        dataTakenFromCandidate: form.getValues('dataTakenFromCandidate'),
+        patents: [],
+      },
+    });
+  };
+
   const handleSubmit = async (data: preferredPatentsSchema) => {
+    if (data.isEnabled && !data.dataTakenFromCandidate) {
+      const hasData = data.patents.some(
+        p =>
+          p.relatedIndustries.length > 0 ||
+          p.statuses.length > 0 ||
+          p.fromDate != null ||
+          p.toDate != null
+      );
+      if (!hasData) {
+        setShowEmptyConfirm(true);
+        return;
+      }
+    }
     const hasUserCreated = data.patents
       .flatMap(p => p.relatedIndustries)
       .some(i => i.source === 'USER_CREATED');
@@ -466,12 +507,26 @@ export default function PreferredPatentsStep({ onNext, onBack }: StepProps) {
           mutateAsync
         );
         form.setValue('patents', updatedPatents);
+        onNext({
+          patents: {
+            isEnabled: data.isEnabled,
+            dataTakenFromCandidate: data.dataTakenFromCandidate,
+            patents: updatedPatents,
+          },
+        });
+        return;
       } finally {
         setIsSubmitting(false);
       }
     }
 
-    onNext();
+    onNext({
+      patents: {
+        isEnabled: data.isEnabled,
+        dataTakenFromCandidate: data.dataTakenFromCandidate,
+        patents: data.patents,
+      },
+    });
   };
 
   const handleCancel = () => {
@@ -485,7 +540,7 @@ export default function PreferredPatentsStep({ onNext, onBack }: StepProps) {
           onSubmit={e => {
             void form.handleSubmit(handleSubmit)(e);
           }}
-          className="flex flex-col"
+          className="flex min-h-full flex-col"
         >
           <MessageBox
             fields={[
@@ -523,6 +578,7 @@ export default function PreferredPatentsStep({ onNext, onBack }: StepProps) {
               render={({ field }) => (
                 <Switch
                   checked={field.value}
+                  size="lg"
                   onCheckedChange={checked => {
                     if (!checked) {
                       const patents = form.getValues('patents');
@@ -587,6 +643,7 @@ export default function PreferredPatentsStep({ onNext, onBack }: StepProps) {
             <Button
               type="button"
               variant="secondary"
+              disabled
               className="size-11 rounded-lg bg-gray-200 px-3 text-sm"
               onClick={() =>
                 append({
@@ -603,7 +660,7 @@ export default function PreferredPatentsStep({ onNext, onBack }: StepProps) {
           </div>
 
           {/* Footer: Cancel + Next */}
-          <div className="sticky bottom-0 flex items-center justify-end gap-4 bg-white px-6 py-7 shadow-[0px_-8px_6.8px_0px_rgba(0,0,0,0.04)]">
+          <div className="sticky bottom-0 mt-auto flex items-center justify-end gap-4 bg-white px-6 py-7 shadow-[0px_-8px_6.8px_0px_rgba(0,0,0,0.04)]">
             <Button
               type="button"
               variant="secondary"
@@ -627,6 +684,15 @@ export default function PreferredPatentsStep({ onNext, onBack }: StepProps) {
         open={showDisableConfirm}
         onOpenChange={setShowDisableConfirm}
         onConfirm={handleConfirmDisable}
+      />
+
+      <StepDisableDialog
+        open={showEmptyConfirm}
+        onOpenChange={setShowEmptyConfirm}
+        onConfirm={handleConfirmEmptyData}
+        title={t('preferredPatents.emptyDisableDialog.title')}
+        description={t('preferredPatents.emptyDisableDialog.message')}
+        confirmLabel={t('preferredPatents.emptyDisableDialog.disable')}
       />
     </>
   );
