@@ -22,10 +22,12 @@ vi.mock('react-router-dom', async importOriginal => {
 });
 
 vi.mock('@/app/contexts/user-context', () => ({
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
   useUser: () => useUserMock(),
 }));
 
 vi.mock('@/views/vacancies', () => ({
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
   useGendersQuery: () => useGendersQueryMock(),
 }));
 
@@ -70,8 +72,10 @@ describe('VacanciesPage', () => {
 
     render(<VacanciesPage />);
 
-    expect(screen.getByText('Loading genders...')).toBeInTheDocument();
-    expect(screen.getByText('Failed to load genders.')).toBeInTheDocument();
+    expect(screen.getByText('notifications.loading.title')).toBeInTheDocument();
+    expect(
+      screen.getByText('notifications.loading.message')
+    ).toBeInTheDocument();
   });
 
   it('renders welcome message and gender labels when data exists', () => {
