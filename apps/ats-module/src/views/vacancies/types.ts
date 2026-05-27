@@ -211,6 +211,19 @@ interface IndustryCreateResponse {
   source: string;
 }
 
+interface SocietyItem {
+  id: string;
+  name: string;
+  source: string;
+}
+
+interface SocietyCreateResponse {
+  id: string;
+  pendingId?: string;
+  name: string;
+  source: string;
+}
+
 type PatentStatus = 'PATENT_PENDING' | 'PATENT_ISSUED';
 
 interface PatentIndustryOption {
@@ -484,6 +497,8 @@ export type {
   SingleApiResponse,
   IndustryItem,
   IndustryCreateResponse,
+  SocietyItem,
+  SocietyCreateResponse,
   PatentStatus,
   PatentIndustryOption,
   PatentStatusOption,

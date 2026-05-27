@@ -212,6 +212,7 @@ vi.mock('lucide-react', () => ({
 
 vi.mock('iconsax-reactjs', () => ({
   Calendar: () => <span data-testid="calendar-icon" />,
+  ArrowLeft2: () => <span data-testid="arrow-left-icon" />,
 }));
 
 vi.mock('@/views/vacancies/utils', () => ({
@@ -305,7 +306,6 @@ describe('PreferredPublicationsStep', () => {
       renderStep();
       const addButton = screen.getByLabelText('Add entry');
       expect(addButton).toBeInTheDocument();
-      expect(addButton).toBeDisabled();
     });
 
     it('renders Cancel and Next buttons', () => {

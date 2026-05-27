@@ -1,6 +1,6 @@
-import { ChevronLeftIcon, ChevronUpIcon, PlusIcon } from 'lucide-react';
+import { ChevronUpIcon, PlusIcon } from 'lucide-react';
 
-import { Calendar as CalendarIcon } from 'iconsax-reactjs';
+import { ArrowLeft2, Calendar as CalendarIcon } from 'iconsax-reactjs';
 
 import * as SwitchPrimitive from '@radix-ui/react-switch';
 
@@ -15,6 +15,11 @@ import { SuccessToast } from '@cgp/ui-kit/components/custom-toast';
 import { Button } from '@cgp/ui-kit/components/ui/button';
 import { Calendar } from '@cgp/ui-kit/components/ui/calendar';
 import { Checkbox } from '@cgp/ui-kit/components/ui/checkbox';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@cgp/ui-kit/components/ui/collapsible';
 import { Input } from '@cgp/ui-kit/components/ui/input';
 import { Label } from '@cgp/ui-kit/components/ui/label';
 import {
@@ -28,6 +33,180 @@ import DisableDialog from './disable-dialog';
 
 const MAX_PUBLISHER_LENGTH = 250;
 
+interface PublicationEntry {
+  id: string;
+  isOpen: boolean;
+  acceptedPublisher: string;
+  publishedDateFrom?: string;
+  publishedDateTo?: string;
+}
+
+function PublicationCard({
+  index,
+  publication,
+  onUpdate,
+  fieldsDisabled,
+}: Readonly<{
+  index: number;
+  publication: PublicationEntry;
+  onUpdate: (index: number, updates: Partial<PublicationEntry>) => void;
+  fieldsDisabled: boolean;
+}>) {
+  return (
+    <Collapsible
+      open={publication.isOpen}
+      onOpenChange={open => onUpdate(index, { isOpen: open })}
+    >
+      <div className="rounded-xl border border-neutral-300 bg-white shadow-[0px_4px_90px_0px_rgba(0,0,0,0.07)]">
+        {/* Card header */}
+        <div className="flex items-center justify-between px-5 py-5">
+          <span className="text-base font-bold text-slate-900">
+            Publication {String(index + 1).padStart(2, '0')}
+          </span>
+          <CollapsibleTrigger asChild>
+            <button
+              type="button"
+              className="text-slate-400 transition-colors hover:text-slate-600"
+              aria-label={publication.isOpen ? 'Collapse' : 'Expand'}
+            >
+              <ChevronUpIcon
+                className={cn(
+                  'size-5 transition-transform',
+                  !publication.isOpen && 'rotate-180'
+                )}
+              />
+            </button>
+          </CollapsibleTrigger>
+        </div>
+
+        {/* Collapsible body */}
+        <CollapsibleContent>
+          <div
+            className={cn(
+              'flex flex-col gap-5 border-t border-slate-200 px-6 py-5',
+              fieldsDisabled && 'pointer-events-none opacity-60'
+            )}
+          >
+            {/* Row 1: Accepted Publisher | Published Date From | Published Date To */}
+            <div className="grid grid-cols-3 gap-4">
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center justify-between">
+                  <Label>Accepted Publisher</Label>
+                  <CharacterCount
+                    currentLength={publication.acceptedPublisher.length}
+                    maxLength={MAX_PUBLISHER_LENGTH}
+                  />
+                </div>
+                <Input
+                  value={publication.acceptedPublisher}
+                  onChange={e =>
+                    onUpdate(index, { acceptedPublisher: e.target.value })
+                  }
+                  maxLength={MAX_PUBLISHER_LENGTH}
+                  placeholder="Enter accepted publisher"
+                  className="h-11"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <div className="flex h-5 items-center">
+                  <Label>Published Date From</Label>
+                </div>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        'h-11 w-full justify-between text-left font-normal',
+                        !publication.publishedDateFrom && 'text-slate-500'
+                      )}
+                    >
+                      {publication.publishedDateFrom
+                        ? formatDate(publication.publishedDateFrom)
+                        : 'Select published date from'}
+                      <CalendarIcon
+                        variant="Linear"
+                        size={20}
+                        className="text-slate-400"
+                      />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={
+                        publication.publishedDateFrom
+                          ? new Date(publication.publishedDateFrom)
+                          : undefined
+                      }
+                      onSelect={date =>
+                        onUpdate(index, {
+                          publishedDateFrom: date
+                            ? date.toISOString()
+                            : undefined,
+                        })
+                      }
+                      disabled={date => date > new Date()}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <div className="flex h-5 items-center">
+                  <Label>Published Date To</Label>
+                </div>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        'h-11 w-full justify-between text-left font-normal',
+                        !publication.publishedDateTo && 'text-slate-500'
+                      )}
+                    >
+                      {publication.publishedDateTo
+                        ? formatDate(publication.publishedDateTo)
+                        : 'Select published date to'}
+                      <CalendarIcon
+                        variant="Linear"
+                        size={20}
+                        className="text-slate-400"
+                      />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={
+                        publication.publishedDateTo
+                          ? new Date(publication.publishedDateTo)
+                          : undefined
+                      }
+                      onSelect={date =>
+                        onUpdate(index, {
+                          publishedDateTo: date
+                            ? date.toISOString()
+                            : undefined,
+                        })
+                      }
+                      disabled={date =>
+                        publication.publishedDateFrom
+                          ? date <= new Date(publication.publishedDateFrom)
+                          : false
+                      }
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+          </div>
+        </CollapsibleContent>
+      </div>
+    </Collapsible>
+  );
+}
+
 export default function PreferredPublicationsStep({
   onNext,
   onBack,
@@ -36,13 +215,15 @@ export default function PreferredPublicationsStep({
   const [dataTakenFromCandidate, setDataTakenFromCandidate] = useState(false);
   const [confirmDisableOpen, setConfirmDisableOpen] = useState(false);
 
-  const [acceptedPublisher, setAcceptedPublisher] = useState('');
-  const [publishedDateFrom, setPublishedDateFrom] = useState<
-    string | undefined
-  >(undefined);
-  const [publishedDateTo, setPublishedDateTo] = useState<string | undefined>(
-    undefined
-  );
+  const [publications, setPublications] = useState<PublicationEntry[]>([
+    {
+      id: '1',
+      isOpen: true,
+      acceptedPublisher: '',
+      publishedDateFrom: undefined,
+      publishedDateTo: undefined,
+    },
+  ]);
 
   const fieldsDisabled = !isEnabled || dataTakenFromCandidate;
 
@@ -54,10 +235,39 @@ export default function PreferredPublicationsStep({
     }
   };
 
+  const updatePublication = (
+    index: number,
+    updates: Partial<PublicationEntry>
+  ) => {
+    setPublications(prev =>
+      prev.map((p, i) => (i === index ? { ...p, ...updates } : p))
+    );
+  };
+
+  const addPublication = () => {
+    const newId = String(Date.now());
+    setPublications(prev => [
+      ...prev,
+      {
+        id: newId,
+        isOpen: true,
+        acceptedPublisher: '',
+        publishedDateFrom: undefined,
+        publishedDateTo: undefined,
+      },
+    ]);
+  };
+
   const handleDisable = () => {
-    setAcceptedPublisher('');
-    setPublishedDateFrom(undefined);
-    setPublishedDateTo(undefined);
+    setPublications([
+      {
+        id: '1',
+        isOpen: true,
+        acceptedPublisher: '',
+        publishedDateFrom: undefined,
+        publishedDateTo: undefined,
+      },
+    ]);
     setDataTakenFromCandidate(false);
     setIsEnabled(false);
     setConfirmDisableOpen(false);
@@ -92,10 +302,10 @@ export default function PreferredPublicationsStep({
         <button
           type="button"
           aria-label="Back"
-          className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-slate-100"
+          className="flex h-8 w-8 items-center justify-center"
           onClick={onBack}
         >
-          <ChevronLeftIcon className="h-5 w-5 text-slate-600" />
+          <ArrowLeft2 size={24} />
         </button>
         <h2 className="flex-1 text-xl font-bold text-slate-900">
           Preferred Publications
@@ -137,130 +347,16 @@ export default function PreferredPublicationsStep({
           </div>
         </div>
 
-        {/* ── Publication Card ──────────────────────────────────────────── */}
-        <div className="rounded-lg border border-slate-200 bg-white">
-          {/* Card header */}
-          <div className="flex items-center justify-between px-6 py-4">
-            <h3 className="text-sm font-semibold text-slate-900">
-              Publication 01
-            </h3>
-            <ChevronUpIcon className="h-5 w-5 text-slate-300" />
-          </div>
-
-          {/* Card body */}
-          <div
-            className={cn(
-              'flex flex-col gap-5 border-t border-slate-200 px-6 py-5',
-              fieldsDisabled && 'pointer-events-none opacity-60'
-            )}
-          >
-            {/* Row 1: Accepted Publisher | Published Date From | Published Date To */}
-            <div className="grid grid-cols-3 gap-4">
-              <div className="flex flex-col gap-1">
-                <div className="flex items-center justify-between">
-                  <Label>Accepted Publisher</Label>
-                  <CharacterCount
-                    currentLength={acceptedPublisher.length}
-                    maxLength={MAX_PUBLISHER_LENGTH}
-                  />
-                </div>
-                <Input
-                  value={acceptedPublisher}
-                  onChange={e => setAcceptedPublisher(e.target.value)}
-                  maxLength={MAX_PUBLISHER_LENGTH}
-                  placeholder="Enter accepted publisher"
-                  className="h-11"
-                />
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <div className="flex h-5 items-center">
-                  <Label>Published Date From</Label>
-                </div>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        'h-11 w-full justify-between text-left font-normal',
-                        !publishedDateFrom && 'text-slate-500'
-                      )}
-                    >
-                      {publishedDateFrom
-                        ? formatDate(publishedDateFrom)
-                        : 'Select published date from'}
-                      <CalendarIcon
-                        variant="Linear"
-                        size={20}
-                        className="text-slate-400"
-                      />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={
-                        publishedDateFrom
-                          ? new Date(publishedDateFrom)
-                          : undefined
-                      }
-                      onSelect={date =>
-                        setPublishedDateFrom(
-                          date ? date.toISOString() : undefined
-                        )
-                      }
-                      disabled={date => date > new Date()}
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <div className="flex h-5 items-center">
-                  <Label>Published Date To</Label>
-                </div>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        'h-11 w-full justify-between text-left font-normal',
-                        !publishedDateTo && 'text-slate-500'
-                      )}
-                    >
-                      {publishedDateTo
-                        ? formatDate(publishedDateTo)
-                        : 'Select published date to'}
-                      <CalendarIcon
-                        variant="Linear"
-                        size={20}
-                        className="text-slate-400"
-                      />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={
-                        publishedDateTo ? new Date(publishedDateTo) : undefined
-                      }
-                      onSelect={date =>
-                        setPublishedDateTo(
-                          date ? date.toISOString() : undefined
-                        )
-                      }
-                      disabled={date =>
-                        publishedDateFrom
-                          ? date <= new Date(publishedDateFrom)
-                          : false
-                      }
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-            </div>
-          </div>
-        </div>
+        {/* ── Publication Cards ──────────────────────────────────────────── */}
+        {publications.map((publication, index) => (
+          <PublicationCard
+            key={publication.id}
+            index={index}
+            publication={publication}
+            onUpdate={updatePublication}
+            fieldsDisabled={fieldsDisabled}
+          />
+        ))}
 
         {/* ── Add Entry button (outside card, bottom-right) ─────────── */}
         <div
@@ -270,13 +366,13 @@ export default function PreferredPublicationsStep({
           )}
         >
           <Button
-            variant="outline"
+            variant="secondary"
             size="icon"
             aria-label="Add entry"
-            className="h-9 w-9 rounded-md text-slate-400"
-            disabled
+            className="size-11 rounded-lg bg-gray-200 px-3 text-sm"
+            onClick={addPublication}
           >
-            <PlusIcon className="h-4 w-4" />
+            <PlusIcon className="size-4 text-neutral-600!" />
           </Button>
         </div>
       </div>
