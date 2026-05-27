@@ -2,7 +2,11 @@
   "common": {
     "back": "Back",
     "cancel": "Cancel",
-    "next": "Next"
+    "next": "Next",
+    "loading": "Searching...",
+    "noData": "No results found",
+    "noDataTitle": "No Data Found",
+    "noDataDescription": "We couldn't find any matching data. Try adjusting your search data"
   },
   "vacancies": {
     "title": "Vacancies",

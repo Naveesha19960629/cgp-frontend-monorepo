@@ -15,6 +15,7 @@ import {
   useIndustriesQuery,
   usePreferredPatentsForm,
 } from '@/views/vacancies/hooks';
+import { industryService } from '@/views/vacancies/services';
 import type {
   PatentStatus,
   StepProps,
@@ -53,6 +54,11 @@ import { format } from 'date-fns';
 
 const HUNDRED_YEARS_AGO = new Date(new Date().getFullYear() - 100, 0, 1);
 const HUNDRED_YEARS_FROM_NOW = new Date(new Date().getFullYear() + 100, 11, 31);
+
+const multiSelectInfoAvatar = new URL(
+  '../../../../assets/images/multi-select-info-avatar.svg',
+  import.meta.url
+).href;
 
 function PatentCard({
   index,
@@ -200,14 +206,27 @@ function PatentCard({
                           'preferredPatents.relatedIndustryPlaceholder'
                         )}
                         loadingIndicator={
-                          <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                            {t('preferredPatents.industries.loading')}
+                          <p className="px-3 pb-3 text-left">
+                            {t('common.loading')}
                           </p>
                         }
                         emptyIndicator={
-                          <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                            {t('preferredPatents.industries.noData')}
-                          </p>
+                          <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
+                            <div className="flex flex-col items-start">
+                              <img
+                                src={multiSelectInfoAvatar}
+                                alt={t('common.noData')}
+                              />
+                              <div className="mt-3 w-61 text-left">
+                                <p className="font-bold text-slate-900">
+                                  {t('common.noDataTitle')}
+                                </p>
+                                <p className="text-sm font-semibold text-slate-700">
+                                  {t('common.noDataDescription')}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
                         }
                       />
                     </FormControl>
@@ -248,10 +267,28 @@ function PatentCard({
                       keepSelectedInList
                       disabled={!isEnabled}
                       placeholder={t('preferredPatents.statusPlaceholder')}
-                      emptyIndicator={
-                        <p className="px-3 pb-3 text-sm text-slate-500">
-                          {t('preferredPatents.industries.noData')}
+                      loadingIndicator={
+                        <p className="px-3 pb-3 text-left">
+                          {t('common.loading')}
                         </p>
+                      }
+                      emptyIndicator={
+                        <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
+                          <div className="flex flex-col items-start">
+                            <img
+                              src={multiSelectInfoAvatar}
+                              alt={t('common.noData')}
+                            />
+                            <div className="mt-3 w-61 text-left">
+                              <p className="font-bold text-slate-900">
+                                {t('common.noDataTitle')}
+                              </p>
+                              <p className="text-sm font-semibold text-slate-700">
+                                {t('common.noDataDescription')}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
                       }
                     />
                   </FormControl>
@@ -506,7 +543,8 @@ export default function PreferredPatentsStep({ onNext, onBack }: StepProps) {
       try {
         const updatedPatents = await resolveUserCreatedIndustries(
           data.patents,
-          mutateAsync
+          mutateAsync,
+          industryService.getIndustries
         );
         form.setValue('patents', updatedPatents);
         onNext({
