@@ -1,1 +1,1 @@
-export { httpClient, setTokenGetter } from './http-client';
+export { httpClient, setTokenGetter, isAxiosError } from './http-client';

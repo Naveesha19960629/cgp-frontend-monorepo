@@ -7,6 +7,7 @@ import { type UseFormReturn } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
+import { getApiErrorMessage } from '@/app/utils/api-error';
 import MessageBox from '@/components/message-box';
 import { StepDisableDialog } from '@/views/vacancies';
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
@@ -24,6 +25,7 @@ import type {
 import { resolveUserCreatedIndustries } from '@/views/vacancies/utils';
 
 import { CharacterCount } from '@cgp/ui-kit/components/character-count';
+import { ErrorToast } from '@cgp/ui-kit/components/custom-toast';
 import MultipleSelector from '@cgp/ui-kit/components/multi-select';
 import type { Option } from '@cgp/ui-kit/components/multi-select';
 import { Button } from '@cgp/ui-kit/components/ui/button';
@@ -555,6 +557,11 @@ export default function PreferredPatentsStep({ onNext, onBack }: StepProps) {
           },
         });
         return;
+      } catch (err) {
+        ErrorToast({
+          title: t('common.error'),
+          description: getApiErrorMessage(err),
+        });
       } finally {
         setIsSubmitting(false);
       }

@@ -1,4 +1,7 @@
 {
+  "error": {
+    "apiDefaultMessage": "An unexpected error occurred. Please try again."
+  },
   "common": {
     "back": "Back",
     "cancel": "Cancel",
@@ -6,7 +9,8 @@
     "loading": "Searching...",
     "noData": "No results found",
     "noDataTitle": "No Data Found",
-    "noDataDescription": "We couldn't find any matching data. Try adjusting your search data"
+    "noDataDescription": "We couldn't find any matching data. Try adjusting your search data",
+    "errorTitle": "Try Again"
   },
   "vacancies": {
     "title": "Vacancies",
