@@ -3,6 +3,12 @@ import userEvent from '@testing-library/user-event';
 
 import VacancyCreateStepperForm from '@/views/vacancies/components/vacancy-create-stepper-form';
 
+const mockNavigate = vi.fn();
+
+vi.mock('react-router-dom', () => ({
+  useNavigate: () => mockNavigate,
+}));
+
 const setCurrentStepIndex = vi.fn();
 const onNext = vi.fn();
 const onBack = vi.fn();
@@ -105,6 +111,9 @@ vi.mock('@/views/vacancies/context/vacancy-form-context', () => {
       onNext,
       onBack,
       onSubmit,
+      showCancelDialog: false,
+      setShowCancelDialog: vi.fn(),
+      OnSaveAsDraft: vi.fn(),
     }),
   };
 });

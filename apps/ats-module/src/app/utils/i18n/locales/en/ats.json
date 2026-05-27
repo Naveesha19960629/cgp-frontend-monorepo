@@ -31,6 +31,13 @@
     "title": "Find Candidate"
   },
 
+  "vacancyCancelDialog": {
+    "title": "Are you sure?",
+    "description": "Are you sure you want to exit the vacancy creation workflow? Any unsaved changes will be lost",
+    "discardButton": "Discard and Exit",
+    "saveAsDraftButton": "Save as a Draft"
+  },
+
   "preferredPatents": {
     "title": "Preferred Patents",
     "back": "Back",

@@ -5,7 +5,6 @@ import { ArrowLeft2, Calendar as CalenderIcon } from 'iconsax-reactjs';
 import { useState } from 'react';
 import { type UseFormReturn } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
 
 import { getApiErrorMessage } from '@/app/utils/api-error';
 import MessageBox from '@/components/message-box';
@@ -474,9 +473,8 @@ function PatentCard({
 
 export default function PreferredPatentsStep({ onNext, onBack }: StepProps) {
   const { t } = useTranslation('ats');
-  const navigate = useNavigate();
 
-  const { form: contextForm } = useVacancyForm();
+  const { form: contextForm, onCancel } = useVacancyForm();
   const { form, fields, append, remove, replace } = usePreferredPatentsForm(
     contextForm.patents
   );
@@ -577,7 +575,7 @@ export default function PreferredPatentsStep({ onNext, onBack }: StepProps) {
   };
 
   const handleCancel = () => {
-    void navigate('/dashboard/ats/vacancies');
+    onCancel();
   };
 
   return (

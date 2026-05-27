@@ -151,6 +151,9 @@ interface VacancyFormContextValue {
   onBack: () => void;
   onCancel: () => void;
   onSubmit: () => void;
+  OnSaveAsDraft: () => void;
+  showCancelDialog: boolean;
+  setShowCancelDialog: (open: boolean) => void;
 }
 
 const VacancyFormContext = createContext<VacancyFormContextValue | null>(null);
@@ -160,6 +163,7 @@ function VacancyFormProvider({ children }: { children: React.ReactNode }) {
   const [currentStepIndex, _setCurrentStepIndex] = useState(0);
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
   const [isInitialStep, setIsInitialStep] = useState(true);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
 
   const setCurrentStepIndex = (index: number) => {
     _setCurrentStepIndex(index);
@@ -190,11 +194,15 @@ function VacancyFormProvider({ children }: { children: React.ReactNode }) {
   };
 
   const onCancel = () => {
-    // TODO: save as draft and navigate away
+    setShowCancelDialog(true);
   };
 
   const onSubmit = () => {
     // TODO: submit form
+  };
+
+  const OnSaveAsDraft = () => {
+    // Implement the payload convertion
   };
 
   return (
@@ -210,6 +218,9 @@ function VacancyFormProvider({ children }: { children: React.ReactNode }) {
         onBack,
         onCancel,
         onSubmit,
+        OnSaveAsDraft,
+        showCancelDialog,
+        setShowCancelDialog,
       }}
     >
       {children}
