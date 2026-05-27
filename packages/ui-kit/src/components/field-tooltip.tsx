@@ -1,11 +1,12 @@
 import { InfoCircle } from 'iconsax-reactjs';
 
+import * as PopoverPrimitive from '@radix-ui/react-popover';
+
 import type { ReactNode } from 'react';
 import { useRef, useState } from 'react';
 
 import { Popover, PopoverTrigger } from '@cgp/ui-kit/components/ui/popover';
 import { cn } from '@cgp/ui-kit/lib/utils';
-import { Popover as PopoverPrimitive } from 'radix-ui';
 
 interface FieldTooltipProps {
   title?: string;

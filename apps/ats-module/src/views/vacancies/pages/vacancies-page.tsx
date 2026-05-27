@@ -1,5 +1,6 @@
 import { Add } from 'iconsax-reactjs';
 
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
@@ -7,6 +8,7 @@ import { useUser } from '@/app/contexts/user-context';
 import { useGendersQuery } from '@/views/vacancies';
 import type { GenderItem } from '@/views/vacancies';
 
+import { ErrorToast } from '@cgp/ui-kit/components/custom-toast';
 import { Button } from '@cgp/ui-kit/components/ui/button';
 
 export default function VacanciesPage() {
@@ -14,6 +16,15 @@ export default function VacanciesPage() {
   const { t } = useTranslation('ats');
   const navigate = useNavigate();
   const { data, isLoading, isError } = useGendersQuery();
+
+  useEffect(() => {
+    if (isError) {
+      ErrorToast({
+        title: t('notifications.apiError.fetch.title'),
+        description: t('notifications.apiError.fetch.message'),
+      });
+    }
+  }, [isError, t]);
 
   return (
     <section className="px-7 py-5">
@@ -36,8 +47,16 @@ export default function VacanciesPage() {
       </div>
 
       <div className="mt-4">
-        {isLoading && <p>Loading genders...</p>}
-        {isError && <p>Failed to load genders.</p>}
+        {isLoading && (
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <p className="text-lg font-bold text-slate-900">
+              {t('notifications.loading.title')}
+            </p>
+            <p className="mt-2 max-w-md text-sm text-slate-600">
+              {t('notifications.loading.message')}
+            </p>
+          </div>
+        )}
         {user && <p>Welcome, {user.firstName}!</p>}
         {data?.data.items.content.map((gender: GenderItem) => (
           <p key={gender.id}>{gender.label}</p>

@@ -1,11 +1,11 @@
 import { RouterProvider } from 'react-router-dom';
 
 import { UserProvider } from '@/app/contexts/user-context';
+import { QueryProvider } from '@/app/providers/query-provider';
 import { ThemeProvider } from '@/app/providers/theme-provider';
 import router from '@/app/router';
 import KeycloakInstance, { keycloakInitOptions } from '@/app/services/keycloak';
 
-import { QueryClientProvider, queryClient } from '@cgp/data-access';
 import { LandscapeBlocker } from '@cgp/ui-kit/components/landscape-blocker';
 import { Toaster } from '@cgp/ui-kit/components/ui/sonner';
 import { TooltipProvider } from '@cgp/ui-kit/components/ui/tooltip';
@@ -18,7 +18,7 @@ export default function App() {
       initOptions={keycloakInitOptions}
     >
       <UserProvider>
-        <QueryClientProvider client={queryClient}>
+        <QueryProvider>
           <ThemeProvider defaultTheme="light" storageKey="ui-theme">
             <LandscapeBlocker />
             <TooltipProvider>
@@ -26,7 +26,7 @@ export default function App() {
             </TooltipProvider>
           </ThemeProvider>
           <Toaster position="bottom-right" />
-        </QueryClientProvider>
+        </QueryProvider>
       </UserProvider>
     </ReactKeycloakProvider>
   );

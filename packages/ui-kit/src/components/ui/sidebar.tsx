@@ -4,6 +4,8 @@ import { type VariantProps, cva } from 'class-variance-authority';
 
 import { SidebarLeft, SidebarRight } from 'iconsax-reactjs';
 
+import { Slot } from '@radix-ui/react-slot';
+
 import * as React from 'react';
 
 import { Button } from '@cgp/ui-kit/components/ui/button';
@@ -24,7 +26,6 @@ import {
 } from '@cgp/ui-kit/components/ui/tooltip';
 import { useIsMobile } from '@cgp/ui-kit/hooks/use-mobile';
 import { cn } from '@cgp/ui-kit/lib/utils';
-import { Slot } from 'radix-ui';
 
 const SIDEBAR_COOKIE_NAME = 'sidebar_state';
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
@@ -400,7 +401,7 @@ function SidebarGroupLabel({
   asChild = false,
   ...props
 }: React.ComponentProps<'div'> & { asChild?: boolean }) {
-  const Comp = asChild ? Slot.Root : 'div';
+  const Comp = asChild ? Slot : 'div';
 
   return (
     <Comp
@@ -420,7 +421,7 @@ function SidebarGroupAction({
   asChild = false,
   ...props
 }: React.ComponentProps<'button'> & { asChild?: boolean }) {
-  const Comp = asChild ? Slot.Root : 'button';
+  const Comp = asChild ? Slot : 'button';
 
   return (
     <Comp
@@ -506,7 +507,7 @@ function SidebarMenuButton({
   isActive?: boolean;
   tooltip?: string | React.ComponentProps<typeof TooltipContent>;
 } & VariantProps<typeof sidebarMenuButtonVariants>) {
-  const Comp = asChild ? Slot.Root : 'button';
+  const Comp = asChild ? Slot : 'button';
   const { isMobile, state } = useSidebar();
 
   const button = (
@@ -552,7 +553,7 @@ function SidebarMenuAction({
   asChild?: boolean;
   showOnHover?: boolean;
 }) {
-  const Comp = asChild ? Slot.Root : 'button';
+  const Comp = asChild ? Slot : 'button';
 
   return (
     <Comp
@@ -663,7 +664,7 @@ function SidebarMenuSubButton({
   size?: 'sm' | 'md';
   isActive?: boolean;
 }) {
-  const Comp = asChild ? Slot.Root : 'a';
+  const Comp = asChild ? Slot : 'a';
 
   return (
     <Comp
