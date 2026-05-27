@@ -29,9 +29,13 @@ vi.mock('@/components/message-box', () => ({
   default: () => null,
 }));
 
-vi.mock('@/views/vacancies', () => ({
-  StepDisableDialog: () => null,
-}));
+vi.mock('@/views/vacancies', async importOriginal => {
+  const actual = await importOriginal<typeof import('@/views/vacancies')>();
+  return {
+    ...actual,
+    StepDisableDialog: () => null,
+  };
+});
 
 vi.mock('@/views/vacancies/hooks', async () => {
   const actual = await vi.importActual<

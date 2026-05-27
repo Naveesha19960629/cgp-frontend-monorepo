@@ -2,14 +2,20 @@ import { Ranking } from 'iconsax-reactjs';
 
 import { useTranslation } from 'react-i18next';
 
-import messageBoxAvatar from '@/assets/images/message-box-avatar.svg';
-import messageBoxBackground from '@/assets/images/message-box-background.svg';
-
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from '@cgp/ui-kit/components/ui/tooltip';
+
+const messageBoxAvatar = new URL(
+  '../assets/images/message-box-avatar.svg',
+  import.meta.url
+).href;
+const messageBoxBackground = new URL(
+  '../assets/images/message-box-background.svg',
+  import.meta.url
+).href;
 
 type MessageBoxProps = {
   fields: string[];

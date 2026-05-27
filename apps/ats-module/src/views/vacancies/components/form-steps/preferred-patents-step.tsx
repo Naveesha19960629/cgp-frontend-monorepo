@@ -450,6 +450,7 @@ export default function PreferredPatentsStep({ onNext, onBack }: StepProps) {
 
   const handleConfirmDisable = () => {
     form.setValue('isEnabled', false);
+    form.setValue('dataTakenFromCandidate', false);
     replace([
       {
         relatedIndustries: [],
@@ -541,7 +542,7 @@ export default function PreferredPatentsStep({ onNext, onBack }: StepProps) {
           onSubmit={e => {
             void form.handleSubmit(handleSubmit)(e);
           }}
-          className="flex min-h-full flex-col"
+          className="flex flex-1 flex-col"
         >
           <MessageBox
             fields={[
@@ -582,6 +583,9 @@ export default function PreferredPatentsStep({ onNext, onBack }: StepProps) {
                   size="lg"
                   onCheckedChange={checked => {
                     if (!checked) {
+                      const hasChecked = form.getValues(
+                        'dataTakenFromCandidate'
+                      );
                       const patents = form.getValues('patents');
                       const hasData = patents.some(
                         p =>
@@ -590,7 +594,7 @@ export default function PreferredPatentsStep({ onNext, onBack }: StepProps) {
                           p.fromDate != null ||
                           p.toDate != null
                       );
-                      if (hasData) {
+                      if (hasData || hasChecked) {
                         setShowDisableConfirm(true);
                       } else {
                         field.onChange(false);
@@ -614,6 +618,7 @@ export default function PreferredPatentsStep({ onNext, onBack }: StepProps) {
                   <Checkbox
                     id="data-from-candidate"
                     checked={field.value}
+                    disabled={!form.watch('isEnabled')}
                     onCheckedChange={field.onChange}
                   />
                   <label

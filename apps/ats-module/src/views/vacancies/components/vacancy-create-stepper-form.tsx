@@ -132,15 +132,15 @@ export default function VacancyCreateStepperForm() {
         </div>
 
         {/* Right — content */}
-        <div className="flex h-full flex-1 flex-col overflow-hidden">
-          <div className="flex-1 overflow-y-auto">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
             {VACANCY_STEPS.map((step, index) => {
               const StepComponent = step.component;
               return (
                 <TabsContent
                   key={step.key + index}
                   value={step.key}
-                  className="m-0 min-h-full"
+                  className="m-0 flex min-h-full flex-col"
                 >
                   <StepComponent
                     onNext={onNext}
