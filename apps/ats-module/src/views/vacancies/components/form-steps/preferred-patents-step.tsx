@@ -234,6 +234,7 @@ function PatentCard({
                           label: s.label,
                         })) ?? []
                       }
+                      showArrow
                       onChange={options => {
                         field.onChange(
                           options.map(opt => ({
