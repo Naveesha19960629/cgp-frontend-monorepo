@@ -215,6 +215,19 @@ interface IndustryCreateResponse {
   source: string;
 }
 
+interface SocietyItem {
+  id: string;
+  name: string;
+  source: string;
+}
+
+interface SocietyCreateResponse {
+  id: string;
+  pendingId?: string;
+  name: string;
+  source: string;
+}
+
 type PatentStatus = 'PATENT_PENDING' | 'PATENT_ISSUED';
 
 interface PatentIndustryOption {
@@ -342,14 +355,14 @@ interface AddSchoolDialogProps {
   open: boolean;
   initialName: string;
   onClose: () => void;
-  onAdded: (option: AddOrSelectOption) => void;
+  onAdded: (option: { value: string; label: string; source: string }) => void;
 }
 
 interface AddAwardingBodyDialogProps {
   open: boolean;
   initialName: string;
   onClose: () => void;
-  onAdded: (option: AddOrSelectOption) => void;
+  onAdded: (option: { value: string; label: string; source: string }) => void;
 }
 
 interface StepHeaderProps {
@@ -425,6 +438,55 @@ interface ProjectResponse<T> {
   data: T;
 }
 
+// ─── Publication ──────────────────────────────────────────────────────────────
+
+interface PublicationRef {
+  source: 'MASTER' | 'PENDING';
+  id: string;
+}
+
+interface PublicationEntry {
+  acceptedPublisher: string;
+  publishedDateFrom: string;
+  publishedDateTo: string;
+}
+
+interface PublicationRequirement {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  content: PublicationEntry[];
+}
+
+interface Publication {
+  id: string;
+  title: string;
+  publisher: string;
+  publicationDate: string;
+  publicationDateLabel: string;
+  coAuthors: string[];
+  publicationUrl: string;
+  description: string;
+  skills: {
+    visibleToEveryone: string[];
+    hiddenFromPublic: string[];
+  };
+}
+
+interface PublicationApiData {
+  title: string;
+  publisher: string;
+  publicationDate: string;
+  coAuthors: string[];
+  publicationUrl: string;
+  description: string;
+}
+
+interface PublicationResponse<T> {
+  message: string[];
+  statusCode: number;
+  data: T;
+}
+
 export type {
   AddOrSelectOption,
   SelectOption,
@@ -439,6 +501,8 @@ export type {
   SingleApiResponse,
   IndustryItem,
   IndustryCreateResponse,
+  SocietyItem,
+  SocietyCreateResponse,
   PatentStatus,
   PatentIndustryOption,
   PatentStatusOption,
@@ -481,4 +545,10 @@ export type {
   Project,
   ProjectApiData,
   ProjectResponse,
+  PublicationRef,
+  PublicationEntry,
+  PublicationRequirement,
+  Publication,
+  PublicationApiData,
+  PublicationResponse,
 };

@@ -4,6 +4,7 @@ export { usePreferredPatentsForm } from '@/views/vacancies/hooks/use-preferred-p
 export { useOrganizationForm } from '@/views/vacancies/hooks/use-organization-form';
 export { useLocationsQuery } from '@/views/vacancies/hooks/use-locations-query';
 export type { LocationOption } from '@/views/vacancies/services/location.service';
+export type { OrganizationOption } from '@/views/vacancies/services/organization.service';
 export {
   useSecondaryEducationForm,
   type SecondaryEducationFormValues,

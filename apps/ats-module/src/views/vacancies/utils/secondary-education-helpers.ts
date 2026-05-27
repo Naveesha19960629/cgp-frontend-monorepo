@@ -26,30 +26,30 @@ const toSecondaryEducationPayload = (
   const { entry } = values;
 
   const toRef = (item: {
-    id?: string;
+    value?: string;
     label: string;
     source: string;
   }): SecondaryEducationRef | null => {
-    if (!item.id) return null;
+    if (!item.value || item.value === item.label) return null;
     return {
       source: item.source as 'MASTER' | 'PENDING',
-      id: item.id,
+      id: item.value,
       name: item.label,
     };
   };
 
-  const toRefs = (items: { id?: string; label: string; source: string }[]) =>
+  const toRefs = (items: { value?: string; label: string; source: string }[]) =>
     items.flatMap(i => {
       const ref = toRef(i);
       return ref ? [ref] : [];
     });
 
   const toLocationRef = (item: {
-    id: string;
+    value: string;
     label: string;
   }): SecondaryEducationRef => ({
     source: 'MASTER',
-    id: item.id,
+    id: item.value,
     name: item.label,
   });
 

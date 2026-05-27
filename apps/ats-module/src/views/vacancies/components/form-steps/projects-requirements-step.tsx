@@ -1,24 +1,35 @@
-import { ChevronLeftIcon, ChevronUpIcon, PlusIcon } from 'lucide-react';
+import { ChevronUpIcon, Loader2, PlusIcon } from 'lucide-react';
 
-import { Calendar as CalendarIcon } from 'iconsax-reactjs';
+import { ArrowLeft2, Calendar as CalendarIcon } from 'iconsax-reactjs';
 
 import * as SwitchPrimitive from '@radix-ui/react-switch';
 
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import MessageBox from '@/app/components/message-box';
 import { AddOrganizationFormDialog } from '@/views/vacancies/components/dialogs';
-import { useLocationsQuery } from '@/views/vacancies/hooks';
+import {
+  useCreateIndustryMutation,
+  useIndustriesQuery,
+  useLocationsQuery,
+  useOrganizationsQuery,
+} from '@/views/vacancies/hooks';
 import type { StepProps } from '@/views/vacancies/types';
 import { formatDate } from '@/views/vacancies/utils';
 
 import { CharacterCount } from '@cgp/ui-kit/components/character-count';
 import { Combobox } from '@cgp/ui-kit/components/combobox';
-import MultipleSelector from '@cgp/ui-kit/components/multiple-selector';
-import type { Option } from '@cgp/ui-kit/components/multiple-selector';
+import { SuccessToast } from '@cgp/ui-kit/components/custom-toast';
+import MultipleSelector from '@cgp/ui-kit/components/multi-select';
 import { Button } from '@cgp/ui-kit/components/ui/button';
 import { Calendar } from '@cgp/ui-kit/components/ui/calendar';
 import { Checkbox } from '@cgp/ui-kit/components/ui/checkbox';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@cgp/ui-kit/components/ui/collapsible';
 import { Label } from '@cgp/ui-kit/components/ui/label';
 import {
   Popover,
@@ -26,6 +37,8 @@ import {
   PopoverTrigger,
 } from '@cgp/ui-kit/components/ui/popover';
 import { cn } from '@cgp/ui-kit/lib/utils';
+
+import DisableDialog from './disable-dialog';
 
 const MAX_SELECTIONS = 10;
 
@@ -37,40 +50,424 @@ interface OrganizationValue {
   source?: 'MASTER' | 'PENDING' | 'USER_CREATED';
 }
 
+interface ProjectEntry {
+  id: string;
+  isOpen: boolean;
+  startDate?: string;
+  endDate?: string;
+  relatedIndustry: Array<{ value: string; label: string; source: string }>;
+  organizationLocation?: { id: string; label: string };
+  organization?: OrganizationValue;
+}
+
+function ProjectCard({
+  index,
+  project,
+  onUpdate,
+  fieldsDisabled,
+  industries,
+  isIndustriesLoading,
+  locationOptions,
+  isLocationsLoading,
+  organizationOptions,
+  isOrganizationsLoading,
+  locationsData,
+  organizationsData,
+  onOpenAddOrganizationDialog,
+}: Readonly<{
+  index: number;
+  project: ProjectEntry;
+  onUpdate: (index: number, updates: Partial<ProjectEntry>) => void;
+  fieldsDisabled: boolean;
+  industries: Array<{ id: string; label: string; source: string }>;
+  isIndustriesLoading: boolean;
+  locationOptions: Array<{ value: string; label: string }>;
+  isLocationsLoading: boolean;
+  organizationOptions: Array<{ value: string; label: string }>;
+  isOrganizationsLoading: boolean;
+  locationsData: any[];
+  organizationsData: any[];
+  onOpenAddOrganizationDialog: (name: string, projectIndex: number) => void;
+}>) {
+  const { t } = useTranslation('ats');
+  const [hasMaxError, setHasMaxError] = useState(false);
+  const [industriesSearch, setIndustriesSearch] = useState('');
+
+  return (
+    <Collapsible
+      open={project.isOpen}
+      onOpenChange={open => onUpdate(index, { isOpen: open })}
+    >
+      <div className="rounded-xl border border-neutral-300 bg-white shadow-[0px_4px_90px_0px_rgba(0,0,0,0.07)]">
+        {/* Card header */}
+        <div className="flex items-center justify-between px-5 py-5">
+          <span className="text-base font-bold text-slate-900">
+            {t('projectsRequirements.projectCard', {
+              number: String(index + 1).padStart(2, '0'),
+            })}
+          </span>
+          <div className="flex items-center gap-3">
+            {/* <button
+              type="button"
+              onClick={onRemove}
+              className="text-slate-400 transition-colors hover:text-red-500"
+              aria-label="Remove project"
+            >
+              <Trash2 className="size-5" />
+            </button> */}
+            <CollapsibleTrigger asChild>
+              <button
+                type="button"
+                className="text-slate-400 transition-colors hover:text-slate-600"
+                aria-label={project.isOpen ? 'Collapse' : 'Expand'}
+              >
+                <ChevronUpIcon
+                  className={cn(
+                    'size-5 transition-transform',
+                    !project.isOpen && 'rotate-180'
+                  )}
+                />
+              </button>
+            </CollapsibleTrigger>
+          </div>
+        </div>
+
+        {/* Collapsible body */}
+        <CollapsibleContent>
+          <div
+            className={cn(
+              'flex flex-col gap-5 border-t border-slate-200 px-6 py-5',
+              fieldsDisabled && 'pointer-events-none opacity-60'
+            )}
+          >
+            {/* Row 1: Start Date | End Date | Related Industry */}
+            <div className="grid grid-cols-[1fr_1fr_2fr] gap-4">
+              <div className="flex flex-col gap-1">
+                <div className="flex h-5 items-center">
+                  <Label>{t('projectsRequirements.startDate')}</Label>
+                </div>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        'h-11 w-full justify-between text-left font-normal',
+                        !project.startDate && 'text-slate-500'
+                      )}
+                    >
+                      {project.startDate
+                        ? formatDate(project.startDate)
+                        : t('projectsRequirements.placeholders.startDate')}
+                      <CalendarIcon
+                        variant="Linear"
+                        size={20}
+                        className="text-slate-400"
+                      />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={
+                        project.startDate
+                          ? new Date(project.startDate)
+                          : undefined
+                      }
+                      onSelect={date =>
+                        onUpdate(index, {
+                          startDate: date ? date.toISOString() : undefined,
+                        })
+                      }
+                      disabled={date => date > new Date()}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <div className="flex h-5 items-center">
+                  <Label>{t('projectsRequirements.endDate')}</Label>
+                </div>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        'h-11 w-full justify-between text-left font-normal',
+                        !project.endDate && 'text-slate-500'
+                      )}
+                    >
+                      {project.endDate
+                        ? formatDate(project.endDate)
+                        : t('projectsRequirements.placeholders.endDate')}
+                      <CalendarIcon
+                        variant="Linear"
+                        size={20}
+                        className="text-slate-400"
+                      />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={
+                        project.endDate ? new Date(project.endDate) : undefined
+                      }
+                      onSelect={date =>
+                        onUpdate(index, {
+                          endDate: date ? date.toISOString() : undefined,
+                        })
+                      }
+                      disabled={date =>
+                        project.startDate
+                          ? date <= new Date(project.startDate)
+                          : false
+                      }
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center justify-between">
+                  <Label
+                    className={hasMaxError ? 'text-destructive' : undefined}
+                  >
+                    {t('projectsRequirements.relatedIndustry')}
+                  </Label>
+                  <CharacterCount
+                    currentLength={industriesSearch.length}
+                    maxLength={100}
+                  />
+                </div>
+                <MultipleSelector
+                  value={project.relatedIndustry.map(i => ({
+                    value: i.value,
+                    label: i.label,
+                    source: i.source,
+                  }))}
+                  errorMessage={t('projectsRequirements.errors.maxIndustries')}
+                  onErrorStateChange={setHasMaxError}
+                  onChange={options => {
+                    onUpdate(index, {
+                      relatedIndustry: options
+                        .filter(
+                          opt =>
+                            typeof opt.value === 'string' &&
+                            opt.value.length > 0
+                        )
+                        .map(opt => ({
+                          value: opt.value,
+                          label: opt.label,
+                          source: (opt.source as string) ?? 'USER_CREATED',
+                        })),
+                    });
+                  }}
+                  options={industries.map(i => ({
+                    value: i.id,
+                    label: i.label,
+                    source: i.source,
+                  }))}
+                  onSearchSync={value => {
+                    setIndustriesSearch(value);
+                    return industries.map(i => ({
+                      value: i.id,
+                      label: i.label,
+                      source: i.source,
+                    }));
+                  }}
+                  keepSelectedInList
+                  creatable
+                  triggerSearchOnFocus
+                  hideClearAllButton
+                  maxSelected={MAX_SELECTIONS}
+                  disabled={fieldsDisabled}
+                  inputProps={{
+                    maxLength: 100,
+                  }}
+                  loading={isIndustriesLoading}
+                  placeholder={t(
+                    'projectsRequirements.placeholders.relatedIndustry'
+                  )}
+                  loadingIndicator={
+                    <p className="px-3 pb-3 text-left text-sm text-slate-500">
+                      {t('projectsRequirements.industrySearch.loading', {
+                        defaultValue: 'Searching...',
+                      })}
+                    </p>
+                  }
+                  emptyIndicator={
+                    <p className="px-3 pb-3 text-left text-sm text-slate-500">
+                      {t(
+                        'projectsRequirements.industrySearch.noDataDescription'
+                      )}
+                    </p>
+                  }
+                />
+              </div>
+            </div>
+
+            {/* Row 2: Organization Location | Organization Name */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex flex-col gap-1">
+                <div className="flex h-5 items-center">
+                  <Label>
+                    {t('projectsRequirements.organizationLocation')}
+                  </Label>
+                </div>
+                <Combobox
+                  options={locationOptions}
+                  value={project.organizationLocation?.id ?? ''}
+                  onValueChange={value => {
+                    const found = locationsData.find(l => l.id === value);
+                    if (found) {
+                      onUpdate(index, {
+                        organizationLocation: {
+                          id: found.id,
+                          label: found.label,
+                        },
+                      });
+                    }
+                  }}
+                  onSearchChange={() => {}}
+                  loading={isLocationsLoading}
+                  placeholder={t(
+                    'projectsRequirements.placeholders.organizationLocation'
+                  )}
+                  searchPlaceholder={t(
+                    'projectsRequirements.placeholders.searchLocation'
+                  )}
+                  hideAddNew
+                />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <div className="flex h-5 items-center">
+                  <Label>{t('projectsRequirements.organizationName')}</Label>
+                </div>
+                <Combobox
+                  options={organizationOptions}
+                  value={project.organization?.id ?? ''}
+                  onValueChange={value => {
+                    const found = organizationsData.find(o => o.id === value);
+                    if (found) {
+                      onUpdate(index, {
+                        organization: {
+                          id: found.id,
+                          name: found.name || found.label || '',
+                          location: found.location,
+                          organizationWebSite: found.organizationWebSite,
+                          source: found.source,
+                        },
+                      });
+                      const locationId = found.location;
+                      if (locationId) {
+                        const matchingLocation = locationsData.find(
+                          l => l.id === locationId
+                        );
+                        if (matchingLocation) {
+                          onUpdate(index, {
+                            organizationLocation: {
+                              id: matchingLocation.id,
+                              label: matchingLocation.label,
+                            },
+                          });
+                        }
+                      }
+                    }
+                  }}
+                  onSearchChange={() => {}}
+                  loading={isOrganizationsLoading}
+                  onAddNew={value => {
+                    const existing = organizationsData.find(
+                      o =>
+                        (o.name || o.label || '').toLowerCase() ===
+                        value.toLowerCase()
+                    );
+                    if (existing) {
+                      onUpdate(index, {
+                        organization: {
+                          id: existing.id,
+                          name: existing.name || existing.label || '',
+                          location: existing.location,
+                          organizationWebSite: existing.organizationWebSite,
+                          source: existing.source,
+                        },
+                      });
+                      return;
+                    }
+                    onOpenAddOrganizationDialog(value, index);
+                  }}
+                  placeholder={t(
+                    'projectsRequirements.placeholders.organizationName'
+                  )}
+                  searchPlaceholder={t(
+                    'projectsRequirements.placeholders.searchOrganization'
+                  )}
+                />
+              </div>
+            </div>
+          </div>
+        </CollapsibleContent>
+      </div>
+    </Collapsible>
+  );
+}
+
 export default function ProjectsRequirementsStep({
   onNext,
   onBack,
 }: Readonly<StepProps>) {
+  const { t } = useTranslation('ats');
+
   const [isEnabled, setIsEnabled] = useState(false);
   const [dataTakenFromCandidate, setDataTakenFromCandidate] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [confirmDisableOpen, setConfirmDisableOpen] = useState(false);
 
-  const [startDate, setStartDate] = useState<string | undefined>(undefined);
-  const [endDate, setEndDate] = useState<string | undefined>(undefined);
-  const [relatedIndustry, setRelatedIndustry] = useState<Option[]>([]);
-  const [organizationLocation, setOrganizationLocation] = useState<
-    { id: string; label: string } | undefined
-  >(undefined);
-  const [organization, setOrganization] = useState<
-    OrganizationValue | undefined
-  >(undefined);
+  const [projects, setProjects] = useState<ProjectEntry[]>([
+    {
+      id: '1',
+      isOpen: true,
+      startDate: undefined,
+      endDate: undefined,
+      relatedIndustry: [],
+      organizationLocation: undefined,
+      organization: undefined,
+    },
+  ]);
 
-  const [industryInput, setIndustryInput] = useState('');
+  // Industry search (searchable, backed by industries API)
+  const { data: industriesData, isLoading: isIndustriesLoading } =
+    useIndustriesQuery('');
+  const { mutateAsync: createIndustry } = useCreateIndustryMutation();
 
   // Organization Location combobox (searchable, backed by locations API)
-  const [locationsSearch, setLocationsSearch] = useState('');
   const { data: locationsData, isLoading: isLocationsLoading } =
-    useLocationsQuery(locationsSearch, isEnabled && !dataTakenFromCandidate);
+    useLocationsQuery('', isEnabled && !dataTakenFromCandidate);
 
   // Organization Name combobox (searchable + add-new opens dialog)
-  const [organizationsSearch, setOrganizationsSearch] = useState('');
-  const [userCreatedOrganizations, setUserCreatedOrganizations] = useState<
-    OrganizationValue[]
-  >([]);
+  const { data: organizationsData, isLoading: isOrganizationsLoading } =
+    useOrganizationsQuery('', isEnabled && !dataTakenFromCandidate);
   const [showAddOrganizationDialog, setShowAddOrganizationDialog] =
     useState(false);
   const [pendingOrganizationName, setPendingOrganizationName] = useState('');
+  const [pendingProjectIndex, setPendingProjectIndex] = useState<number>(0);
 
   const fieldsDisabled = !isEnabled || dataTakenFromCandidate;
+
+  const handleToggle = () => {
+    if (isEnabled) {
+      setConfirmDisableOpen(true);
+    } else {
+      setIsEnabled(true);
+    }
+  };
+
+  const industries = useMemo(
+    () => industriesData?.data?.items?.content ?? [],
+    [industriesData]
+  );
 
   const locationOptions = useMemo(
     () =>
@@ -80,34 +477,123 @@ export default function ProjectsRequirementsStep({
 
   const organizationOptions = useMemo(
     () =>
-      userCreatedOrganizations
-        .filter(o =>
-          organizationsSearch.trim()
-            ? o.name
-                .toLowerCase()
-                .includes(organizationsSearch.trim().toLowerCase())
-            : true
-        )
-        .map(o => ({ value: o.id, label: o.name })),
-    [userCreatedOrganizations, organizationsSearch]
+      (organizationsData ?? []).map(o => ({
+        value: o.id,
+        label: o.name || o.label || '',
+      })),
+    [organizationsData]
   );
 
-  const noopSearch = async (): Promise<Option[]> => [];
+  const updateProject = (index: number, updates: Partial<ProjectEntry>) => {
+    setProjects(prev =>
+      prev.map((p, i) => (i === index ? { ...p, ...updates } : p))
+    );
+  };
+
+  const addProject = () => {
+    const newId = String(Date.now());
+    setProjects(prev => [
+      ...prev,
+      {
+        id: newId,
+        isOpen: true,
+        startDate: undefined,
+        endDate: undefined,
+        relatedIndustry: [],
+        organizationLocation: undefined,
+        organization: undefined,
+      },
+    ]);
+  };
+
+  const handleDisable = () => {
+    setProjects([
+      {
+        id: '1',
+        isOpen: true,
+        startDate: undefined,
+        endDate: undefined,
+        relatedIndustry: [],
+        organizationLocation: undefined,
+        organization: undefined,
+      },
+    ]);
+    setDataTakenFromCandidate(false);
+    setIsEnabled(false);
+    setConfirmDisableOpen(false);
+    SuccessToast({
+      title: 'Section Disabled',
+      description:
+        'Projects Requirements section has been disabled successfully.',
+    });
+  };
+
+  const handleNext = async () => {
+    // Check if any industries in any project are user-created
+    const allIndustries = projects.flatMap(p => p.relatedIndustry);
+    const hasUserCreated = allIndustries.some(i => i.source === 'USER_CREATED');
+
+    if (hasUserCreated) {
+      setIsSubmitting(true);
+      try {
+        // Get unique user-created industries
+        const uniqueUserCreated = Array.from(
+          new Map(
+            allIndustries
+              .filter(i => i.source === 'USER_CREATED')
+              .map(i => [i.label, i])
+          ).values()
+        );
+
+        // Create all user-created industries
+        const results = await Promise.all(
+          uniqueUserCreated.map(i => createIndustry(i.label))
+        );
+
+        // Create a map of label -> result
+        const resultMap = new Map(
+          uniqueUserCreated.map((i, idx) => [i.label, results[idx]])
+        );
+
+        // Update all projects with the resolved industry IDs
+        setProjects(prevProjects =>
+          prevProjects.map(project => ({
+            ...project,
+            relatedIndustry: project.relatedIndustry.map(industry => {
+              if (industry.source === 'USER_CREATED') {
+                const result = resultMap.get(industry.label);
+                if (result) {
+                  return {
+                    value: result.id,
+                    label: result.label,
+                    source: result.source,
+                  };
+                }
+              }
+              return industry;
+            }),
+          }))
+        );
+      } finally {
+        setIsSubmitting(false);
+      }
+    }
+
+    onNext();
+  };
 
   return (
     <div className="flex flex-col gap-4 pb-6">
       {/* ── Informational Banner ────────────────────────────────────────── */}
       <div className="px-6">
         <MessageBox
-          title="Build the Application Form"
+          title={t('projectsRequirements.bannerTitle')}
           message={
             <>
               <span className="text-brand-primary-500 font-bold">
-                Certain fields
+                {t('projectsRequirements.bannerMessageHighlight')}
               </span>{' '}
-              in this section are always collected from candidates to support
-              consistent candidate profiles. Any fields you don&apos;t select
-              won&apos;t be collected
+              {t('projectsRequirements.bannerMessageRest')}
             </>
           }
         />
@@ -118,17 +604,17 @@ export default function ProjectsRequirementsStep({
         <button
           type="button"
           aria-label="Back"
-          className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-slate-100"
+          className="flex h-8 w-8 items-center justify-center"
           onClick={onBack}
         >
-          <ChevronLeftIcon className="h-5 w-5 text-slate-600" />
+          <ArrowLeft2 size={24} />
         </button>
         <h2 className="flex-1 text-xl font-bold text-slate-900">
-          Preferred Projects
+          {t('projectsRequirements.title')}
         </h2>
         <SwitchPrimitive.Root
           checked={isEnabled}
-          onCheckedChange={setIsEnabled}
+          onCheckedChange={handleToggle}
           className={cn(
             'focus-visible:ring-ring/50 inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent shadow-xs transition-colors outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50',
             isEnabled ? 'bg-brand-primary-500' : 'bg-slate-300'
@@ -157,200 +643,34 @@ export default function ProjectsRequirementsStep({
               htmlFor="projectsDataTakenFromCandidate"
               className="cursor-pointer leading-snug"
             >
-              If selected, no manual input is required, and data will be taken
-              from the candidate profile
+              {t('projectsRequirements.dataTakenFromCandidate')}
             </Label>
           </div>
         </div>
 
-        {/* ── Project Card ──────────────────────────────────────────── */}
-        <div className="rounded-lg border border-slate-200 bg-white">
-          {/* Card header */}
-          <div className="flex items-center justify-between px-6 py-4">
-            <h3 className="text-sm font-semibold text-slate-900">Project 01</h3>
-            <ChevronUpIcon className="h-5 w-5 text-slate-300" />
-          </div>
-
-          {/* Card body */}
-          <div
-            className={cn(
-              'flex flex-col gap-5 border-t border-slate-200 px-6 py-5',
-              fieldsDisabled && 'pointer-events-none opacity-60'
-            )}
-          >
-            {/* Row 1: Start Date | End Date | Related Industry */}
-            <div className="grid grid-cols-3 gap-4">
-              <div className="flex flex-col gap-1">
-                <div className="flex h-5 items-center">
-                  <Label>Start Date</Label>
-                </div>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        'h-11 w-full justify-between text-left font-normal',
-                        !startDate && 'text-slate-500'
-                      )}
-                    >
-                      {startDate ? formatDate(startDate) : 'Select start date'}
-                      <CalendarIcon
-                        variant="Linear"
-                        size={20}
-                        className="text-slate-400"
-                      />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={startDate ? new Date(startDate) : undefined}
-                      onSelect={date =>
-                        setStartDate(date ? date.toISOString() : undefined)
-                      }
-                      disabled={date => date > new Date()}
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <div className="flex h-5 items-center">
-                  <Label>End Date</Label>
-                </div>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        'h-11 w-full justify-between text-left font-normal',
-                        !endDate && 'text-slate-500'
-                      )}
-                    >
-                      {endDate ? formatDate(endDate) : 'Select end date'}
-                      <CalendarIcon
-                        variant="Linear"
-                        size={20}
-                        className="text-slate-400"
-                      />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={endDate ? new Date(endDate) : undefined}
-                      onSelect={date =>
-                        setEndDate(date ? date.toISOString() : undefined)
-                      }
-                      disabled={date =>
-                        startDate ? date <= new Date(startDate) : false
-                      }
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <div className="flex items-center justify-between">
-                  <Label>Related Industry</Label>
-                  <CharacterCount
-                    currentLength={industryInput.length}
-                    maxLength={100}
-                  />
-                </div>
-                <MultipleSelector
-                  value={relatedIndustry}
-                  onSearch={noopSearch}
-                  onChange={options => {
-                    setIndustryInput('');
-                    setRelatedIndustry(options);
-                  }}
-                  maxSelected={MAX_SELECTIONS}
-                  creatable
-                  triggerSearchOnFocus
-                  inputProps={{
-                    maxLength: 100,
-                    onValueChange: val => setIndustryInput(val),
-                  }}
-                  placeholder="Select or add related industry"
-                />
-              </div>
-            </div>
-
-            {/* Row 2: Organization Location | Organization Name */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex flex-col gap-1">
-                <div className="flex h-5 items-center">
-                  <Label>Organization Location</Label>
-                </div>
-                <Combobox
-                  options={locationOptions}
-                  value={organizationLocation?.id ?? ''}
-                  onValueChange={value => {
-                    const found = (locationsData ?? []).find(
-                      l => l.id === value
-                    );
-                    if (found) {
-                      setOrganizationLocation({
-                        id: found.id,
-                        label: found.label,
-                      });
-                    }
-                  }}
-                  onSearchChange={setLocationsSearch}
-                  loading={isLocationsLoading}
-                  placeholder="Select location"
-                  searchPlaceholder="Search location"
-                  hideAddNew
-                />
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <div className="flex h-5 items-center">
-                  <Label>Organization Name</Label>
-                </div>
-                <Combobox
-                  options={organizationOptions}
-                  value={organization?.id ?? ''}
-                  onValueChange={value => {
-                    const found = userCreatedOrganizations.find(
-                      o => o.id === value
-                    );
-                    if (found) {
-                      setOrganization(found);
-                      const locationId = found.location;
-                      if (locationId) {
-                        const matchingLocation = (locationsData ?? []).find(
-                          l => l.id === locationId
-                        );
-                        if (matchingLocation) {
-                          setOrganizationLocation({
-                            id: matchingLocation.id,
-                            label: matchingLocation.label,
-                          });
-                        }
-                      }
-                    }
-                  }}
-                  onSearchChange={setOrganizationsSearch}
-                  onAddNew={value => {
-                    const existing = userCreatedOrganizations.find(
-                      o => o.name.toLowerCase() === value.toLowerCase()
-                    );
-                    if (existing) {
-                      setOrganization(existing);
-                      return;
-                    }
-                    setPendingOrganizationName(value);
-                    setShowAddOrganizationDialog(true);
-                  }}
-                  placeholder="Select or add organization name"
-                  searchPlaceholder="Search organization"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
+        {/* ── Project Cards ──────────────────────────────────────────── */}
+        {projects.map((project, index) => (
+          <ProjectCard
+            key={project.id}
+            index={index}
+            project={project}
+            onUpdate={updateProject}
+            fieldsDisabled={fieldsDisabled}
+            industries={industries}
+            isIndustriesLoading={isIndustriesLoading}
+            locationOptions={locationOptions}
+            isLocationsLoading={isLocationsLoading}
+            organizationOptions={organizationOptions}
+            isOrganizationsLoading={isOrganizationsLoading}
+            locationsData={locationsData ?? []}
+            organizationsData={organizationsData ?? []}
+            onOpenAddOrganizationDialog={(name, projectIdx) => {
+              setPendingOrganizationName(name);
+              setPendingProjectIndex(projectIdx);
+              setShowAddOrganizationDialog(true);
+            }}
+          />
+        ))}
 
         {/* ── Add Entry button (outside card, bottom-right) ─────────── */}
         <div
@@ -360,13 +680,13 @@ export default function ProjectsRequirementsStep({
           )}
         >
           <Button
-            variant="outline"
+            variant="secondary"
             size="icon"
             aria-label="Add entry"
-            className="h-9 w-9 rounded-md text-slate-400"
-            disabled
+            className="size-11 rounded-lg bg-gray-200 px-3 text-sm"
+            onClick={addProject}
           >
-            <PlusIcon className="h-4 w-4" />
+            <PlusIcon className="size-4 text-neutral-600!" />
           </Button>
         </div>
       </div>
@@ -377,28 +697,53 @@ export default function ProjectsRequirementsStep({
         onOpenChange={setShowAddOrganizationDialog}
         organizationName={pendingOrganizationName}
         onOrganizationAdded={org => {
-          setUserCreatedOrganizations(prev => [...prev, org]);
-          setOrganization(org);
+          updateProject(pendingProjectIndex, {
+            organization: org,
+          });
           const matchingLocation = (locationsData ?? []).find(
             l => l.id === org.location
           );
           if (matchingLocation) {
-            setOrganizationLocation({
-              id: matchingLocation.id,
-              label: matchingLocation.label,
+            updateProject(pendingProjectIndex, {
+              organizationLocation: {
+                id: matchingLocation.id,
+                label: matchingLocation.label,
+              },
             });
           }
           setShowAddOrganizationDialog(false);
         }}
       />
 
+      {/* ── Disable Confirmation Dialog ───────────────────────────────────── */}
+      <DisableDialog
+        open={confirmDisableOpen}
+        onOpenChange={open => {
+          if (!open) setConfirmDisableOpen(false);
+        }}
+        title="Are you sure?"
+        message="Are you sure you want to disable this section? Disabling this section will permanently remove all added data. This action cannot be undone"
+        cancelLabel="Cancel"
+        disableLabel="Disable"
+        onCancel={() => setConfirmDisableOpen(false)}
+        onDisable={handleDisable}
+      />
+
       {/* ── Step footer ──────────────────────────────────────────────────── */}
       <div className="mt-auto flex justify-end gap-4 border-t border-slate-200 px-6 pt-4">
         <Button variant="secondary" className="h-12 w-44" onClick={onBack}>
-          Cancel
+          {t('projectsRequirements.cancel')}
         </Button>
-        <Button className="h-12 w-44" onClick={() => onNext()}>
-          Next
+        <Button
+          className="h-12 w-44"
+          onClick={handleNext}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? (
+            <Loader2 className="size-4 animate-spin" />
+          ) : (
+            t('projectsRequirements.next')
+          )}
         </Button>
       </div>
     </div>
