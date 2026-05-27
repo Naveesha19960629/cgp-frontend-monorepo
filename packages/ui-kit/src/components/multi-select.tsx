@@ -674,12 +674,15 @@ const MultipleSelector = React.forwardRef<
                   )}
                 />
                 {showArrow && (
-                  <ArrowDown2 size={20} className="shrink-0 text-slate-500" />
+                  <ArrowDown2
+                    size={20}
+                    className="size-5 shrink-0 text-slate-500"
+                  />
                 )}
               </div>
             </PopoverAnchor>
             <PopoverContent
-              className="mt-1 max-w-[376px] border-none p-0 shadow-none"
+              className="mt-1 max-w-94 border-none p-0 shadow-none"
               align="start"
               style={{ width: dropdownWidth }}
               onOpenAutoFocus={e => e.preventDefault()}
