@@ -34,7 +34,7 @@ export default function MessageBox({ fields }: MessageBoxProps) {
           {t('preferredPatents.bannerTitle')}
         </p>
       </div>
-      <p className="mt-2 max-w-169 text-sm font-semibold whitespace-pre-line text-slate-700">
+      <p className="mt-2 mr-20 max-w-169 text-sm font-semibold whitespace-pre-line text-slate-700">
         <Tooltip>
           <TooltipTrigger className="cursor-pointer">
             <span className="text-brand-primary-500 font-bold">
