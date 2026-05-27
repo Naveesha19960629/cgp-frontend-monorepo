@@ -1,3 +1,4 @@
+export { useCreateIndustryMutation } from '@/views/vacancies/hooks/mutations/use-create-industry-mutation';
 export { useAddSchoolMutation } from '@/views/vacancies/hooks/mutations/use-add-school-mutation';
 export { useAddExaminationMutation } from '@/views/vacancies/hooks/mutations/use-add-examination-mutation';
 export { useAddAwardingBodyMutation } from '@/views/vacancies/hooks/mutations/use-add-awarding-body-mutation';

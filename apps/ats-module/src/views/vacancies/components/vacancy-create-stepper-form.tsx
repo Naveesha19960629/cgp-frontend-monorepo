@@ -7,6 +7,7 @@ import {
   useVacancyForm,
 } from '@/views/vacancies/context/vacancy-form-context';
 
+import { ScrollArea } from '@cgp/ui-kit/components/ui/scroll-area';
 import {
   Tabs,
   TabsContent,
@@ -70,7 +71,7 @@ export default function VacancyCreateStepperForm() {
   const currentStepKey = VACANCY_STEPS[currentStepIndex].key;
 
   return (
-    <div className="flex flex-1 overflow-hidden">
+    <div className="flex min-h-0 flex-1 overflow-hidden">
       <Tabs
         value={currentStepKey}
         onValueChange={value => {
@@ -78,46 +79,60 @@ export default function VacancyCreateStepperForm() {
           if (index !== -1) setCurrentStepIndex(index);
         }}
         orientation="vertical"
-        className="flex flex-1 gap-0"
+        className="flex min-h-0 flex-1 gap-0"
       >
         {/* Left sidebar — step list */}
-        <TabsList
-          variant="line"
-          className="w-76.75 shrink-0 flex-col items-start justify-start overflow-y-auto rounded-none border-r border-slate-200 bg-white px-4 py-7"
-        >
-          <p className="mb-9 text-2xl/8 font-bold text-slate-900">
-            {t('vacancies.createVacancyButton')}
-          </p>
-          {VACANCY_STEPS.map((step, index) => (
-            <div key={step.key} className="flex w-full flex-col">
-              <TabsTrigger
-                value={step.key}
-                className="h-auto w-full cursor-pointer items-center justify-start gap-3 rounded-none border-none border-transparent p-0 text-[16px]/6 font-bold [&::after]:hidden"
-              >
-                <StepIndicator
-                  index={index}
-                  currentStepIndex={currentStepIndex}
-                  completedSteps={completedSteps}
-                />
-                <span
-                  className={cn(
-                    'text-slate-700',
-                    index === currentStepIndex &&
-                      'text-brand-primary-500 font-bold'
+        <div className="flex min-h-0 w-76.75 shrink-0 flex-col border-r border-slate-200 bg-white">
+          <div className="px-4 pt-7">
+            <p className="mb-9 text-2xl/8 font-bold text-slate-900">
+              {t('vacancies.createVacancyButton')}
+            </p>
+          </div>
+
+          <ScrollArea className="min-h-0 flex-1 px-4 pb-7">
+            <TabsList
+              variant="line"
+              className="flex w-full flex-col items-start justify-start rounded-none border-none bg-transparent p-0"
+            >
+              {VACANCY_STEPS.map((step, index) => (
+                <div key={step.key} className="flex w-full flex-col">
+                  <TabsTrigger
+                    value={step.key}
+                    className="h-auto w-full cursor-pointer items-center justify-start gap-3 rounded-none border-none border-transparent p-0 text-[16px]/6 font-bold [&::after]:hidden"
+                  >
+                    <StepIndicator
+                      index={index}
+                      currentStepIndex={currentStepIndex}
+                      completedSteps={completedSteps}
+                    />
+                    <span
+                      className={cn(
+                        'text-slate-700',
+                        index === currentStepIndex &&
+                          'text-brand-primary-500 font-bold'
+                      )}
+                    >
+                      {step.label}
+                    </span>
+                  </TabsTrigger>
+                  {index < VACANCY_STEPS.length - 1 && (
+                    <div
+                      className={cn(
+                        'my-2 ml-2.5 h-4 w-px',
+                        completedSteps.has(index)
+                          ? 'bg-brand-primary-400'
+                          : 'bg-slate-400'
+                      )}
+                    />
                   )}
-                >
-                  {step.label}
-                </span>
-              </TabsTrigger>
-              {index < VACANCY_STEPS.length - 1 && (
-                <div className="my-2 ml-2.5 h-4 w-px bg-slate-400" />
-              )}
-            </div>
-          ))}
-        </TabsList>
+                </div>
+              ))}
+            </TabsList>
+          </ScrollArea>
+        </div>
 
         {/* Right — content */}
-        <div className="flex flex-1 flex-col overflow-hidden">
+        <div className="flex h-full flex-1 flex-col overflow-hidden">
           <div className="flex-1 overflow-y-auto">
             {VACANCY_STEPS.map((step, index) => {
               const StepComponent = step.component;

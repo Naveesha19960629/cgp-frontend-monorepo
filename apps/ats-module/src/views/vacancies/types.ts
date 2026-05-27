@@ -22,6 +22,12 @@ interface JobRequirement {
   engagementModel: AddOrSelectOption[];
 }
 
+interface StepDisableDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onConfirm: () => void;
+}
+
 interface Address {
   cityRefId: string;
   stateRefId: string;
@@ -185,6 +191,62 @@ interface ApiResponse<T> {
       sort: Sort;
     };
   };
+}
+interface IndustryItem {
+  id: string;
+  label: string;
+  source: string;
+}
+
+interface SingleApiResponse<T> {
+  requestId: string;
+  success: boolean;
+  message: string;
+  data: T;
+}
+
+interface IndustryCreateResponse {
+  id: string;
+  label: string;
+  source: string;
+}
+
+type PatentStatus = 'PATENT_PENDING' | 'PATENT_ISSUED';
+
+interface PatentIndustryOption {
+  value: string;
+  label: string;
+  source: string;
+}
+
+interface PatentStatusOption {
+  value: PatentStatus;
+  label: string;
+}
+
+interface PatentIndustrySchemaType {
+  value: string;
+  label: string;
+  source: string;
+}
+
+interface PatentStatusSchemaType {
+  value: 'PATENT_PENDING' | 'PATENT_ISSUED';
+  label: string;
+}
+
+interface PatentEntrySchemaType {
+  relatedIndustries: PatentIndustrySchemaType[];
+  statuses: PatentStatusSchemaType[];
+  fromDate?: Date | undefined;
+  toDate?: Date | undefined;
+  isOpen: boolean;
+}
+
+interface preferredPatentsSchema {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  patents: PatentEntrySchemaType[];
 }
 
 // ─── Preferred Skills ────────────────────────────────────────────────────────
@@ -370,6 +432,17 @@ export type {
   VacancyStep,
   GenderItem,
   ApiResponse,
+  SingleApiResponse,
+  IndustryItem,
+  IndustryCreateResponse,
+  PatentStatus,
+  PatentIndustryOption,
+  PatentStatusOption,
+  StepDisableDialogProps,
+  preferredPatentsSchema,
+  PatentEntrySchemaType,
+  PatentIndustrySchemaType,
+  PatentStatusSchemaType,
   LookupItem,
   LocationLookupItem,
   SecondaryEducationRef,

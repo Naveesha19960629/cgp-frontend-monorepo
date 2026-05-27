@@ -7,10 +7,69 @@
   "vacancies": {
     "title": "Vacancies",
     "createVacancyButton": "Create Vacancy",
-    "editVacancy": "Edit Vacancy"
+    "editVacancy": "Edit Vacancy",
+    "createVacancy": {
+      "heading": "Create Vacancy",
+      "formTitle": "Lets Begin with the Vacancy Title",
+      "fieldTitle": "Title",
+      "titlePlaceholder": "Enter title",
+      "titleRequired": "Title is required",
+      "cancelButton": "Cancel",
+      "nextButton": "Next"
+    }
   },
+
   "findCandidate": {
     "title": "Find Candidate"
+  },
+
+  "preferredPatents": {
+    "title": "Preferred Patents",
+    "back": "Back",
+    "bannerTitle": "Build the Application Form",
+    "bannerCertainFields": "Certain fields",
+    "bannerDescription": " in this section are always collected from candidates to support consistent candidate profiles. Any fields you don't select won't be collected",
+    "dataTakenFromCandidate": "If selected, no manual input is required, and data will be taken from the candidate profile",
+    "patentTitle": "Patent {{number}}",
+    "relatedIndustry": "Related Industry",
+    "relatedIndustryPlaceholder": "Select or add related industry",
+    "status": "Status",
+    "statusPlaceholder": "Select status",
+    "from": "From",
+    "fromPlaceholder": "Select start date",
+    "to": "To",
+    "toPlaceholder": "Select end date",
+    "addPatent": "Add patent",
+    "removePatent": "Remove patent",
+    "collapse": "Collapse",
+    "expand": "Expand",
+    "cancelButton": "Cancel",
+    "nextButton": "Next",
+    "statusPending": "Patent Pending",
+    "statusIssued": "Patent Issued",
+    "industries": {
+      "loading": "Loading...",
+      "noData": "No results found"
+    },
+    "fieldList": {
+      "patentTitle": "Patent Title",
+      "patentApplicationNumber": "Patent/ Application Number",
+      "relatedIndustry": "Industry",
+      "status": "Status",
+      "issueDate": "Issue Date",
+      "fillingDate": "Filling Date",
+      "otherInventors": "Other Inventors",
+      "patentURL": "Patent URL"
+    },
+    "validation": {
+      "maxExceeded": "Exceeded maximum of {{max}} sections"
+    },
+    "disableDialog": {
+      "title": "Are you sure?",
+      "description": "Are you sure you want to disable this section? Disabling this section will permanently remove all added data. This action cannot be undone",
+      "cancelButton": "Cancel",
+      "confirmButton": "Disable"
+    }
   },
   "secondaryEducation": {
     "title": "Secondary Educational Requirements",

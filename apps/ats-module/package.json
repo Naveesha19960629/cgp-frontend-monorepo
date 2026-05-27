@@ -41,8 +41,7 @@
     "react-router": "^7.15.0",
     "react-router-dom": "^7.15.0",
     "sonner": "^2.0.7",
-    "zod": "^3.25.76",
-    "@radix-ui/react-switch": "^1.1.2"
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@cgp/eslint-config": "workspace:*",

@@ -6,6 +6,7 @@ import { createStandaloneRouter } from '@/app/router';
 import atsKeycloak, { atsKeycloakInitOptions } from '@/app/services/keycloak';
 
 import { Toaster } from '@cgp/ui-kit/components/ui/sonner';
+import { TooltipProvider } from '@cgp/ui-kit/components/ui/tooltip';
 import { ReactKeycloakProvider } from '@react-keycloak/web';
 
 /**
@@ -21,7 +22,9 @@ export default function App() {
         initOptions={atsKeycloakInitOptions}
       >
         <UserProvider>
-          <RouterProvider router={createStandaloneRouter()} />
+          <TooltipProvider>
+            <RouterProvider router={createStandaloneRouter()} />
+          </TooltipProvider>
         </UserProvider>
       </ReactKeycloakProvider>
       <Toaster position="bottom-right" />

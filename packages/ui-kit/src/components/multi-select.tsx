@@ -401,7 +401,7 @@ const MultipleSelector = React.forwardRef<
         ]) ||
         selected.find(s => s.value === inputValue.trim()) ||
         selected.find(
-          s => s.label.toLowerCase() === inputValue.trim().toLowerCase()
+          s => s.label?.toLowerCase() === inputValue.trim().toLowerCase()
         )
       ) {
         return undefined;
@@ -590,6 +590,8 @@ const MultipleSelector = React.forwardRef<
                   {
                     'cursor-text': !disabled && selected.length !== 0,
                     'border-destructive': showMaxError && !!errorMessage,
+                    'pointer-events-none cursor-not-allowed opacity-50':
+                      disabled,
                   },
                   className
                 )}
@@ -629,7 +631,7 @@ const MultipleSelector = React.forwardRef<
                         : placeholder
                     }
                     className={cn(
-                      'placeholder:text-muted-foreground flex-1 self-baseline bg-transparent outline-none',
+                      'flex-1 self-baseline bg-transparent font-medium outline-none placeholder:text-slate-500',
                       {
                         'w-full': hidePlaceholderWhenSelected,
                         'ml-0': selected.length !== 0,
