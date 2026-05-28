@@ -2,14 +2,20 @@ import { Ranking } from 'iconsax-reactjs';
 
 import { useTranslation } from 'react-i18next';
 
-import messageBoxAvatar from '@/assets/images/message-box-avatar.svg';
-import messageBoxBackground from '@/assets/images/message-box-background.svg';
-
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from '@cgp/ui-kit/components/ui/tooltip';
+
+const messageBoxAvatar = new URL(
+  '../assets/images/message-box-avatar.svg',
+  import.meta.url
+).href;
+const messageBoxBackground = new URL(
+  '../assets/images/message-box-background.svg',
+  import.meta.url
+).href;
 
 type MessageBoxProps = {
   fields: string[];
@@ -28,7 +34,7 @@ export default function MessageBox({ fields }: MessageBoxProps) {
           {t('preferredPatents.bannerTitle')}
         </p>
       </div>
-      <p className="mt-2 max-w-169 text-sm font-semibold whitespace-pre-line text-slate-700">
+      <p className="mt-2 mr-20 max-w-169 text-sm font-semibold whitespace-pre-line text-slate-700">
         <Tooltip>
           <TooltipTrigger className="cursor-pointer">
             <span className="text-brand-primary-500 font-bold">

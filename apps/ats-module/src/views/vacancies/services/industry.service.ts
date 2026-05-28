@@ -1,8 +1,8 @@
 import type {
   ApiResponse,
-  IndustryCreateResponse,
+  CreatePendingApiResponse,
+  CreatePendingItemResponse,
   IndustryItem,
-  SingleApiResponse,
 } from '@/views/vacancies/types';
 
 import { httpClient } from '@cgp/data-access';
@@ -19,10 +19,11 @@ export const industryService = {
     return response.data;
   },
 
-  createIndustry: async (label: string): Promise<IndustryCreateResponse> => {
-    const response = await httpClient.post<
-      SingleApiResponse<IndustryCreateResponse>
-    >(`/industries`, { type: 'INDUSTRY', displayValue: label });
+  createIndustry: async (label: string): Promise<CreatePendingItemResponse> => {
+    const response = await httpClient.post<CreatePendingApiResponse>(
+      `/industries`,
+      { type: 'INDUSTRY', displayValue: label }
+    );
     return response.data.data;
   },
 };

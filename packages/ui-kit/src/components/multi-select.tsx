@@ -2,7 +2,7 @@
 
 import { Check, ChevronDownIcon, Plus, X } from 'lucide-react';
 
-import { Edit2, ImportCurve } from 'iconsax-reactjs';
+import { ArrowDown2, Edit2, ImportCurve } from 'iconsax-reactjs';
 
 import * as React from 'react';
 import { forwardRef, useEffect } from 'react';
@@ -113,6 +113,8 @@ interface MultipleSelectorProps {
   errorMessage?: string;
   /** Callback fired when the internal max-selected error state changes. */
   onErrorStateChange?: (hasError: boolean) => void;
+  /** Show a vuesax/linear arrow-down icon on the right of the input. */
+  showArrow?: boolean;
 }
 
 export interface MultipleSelectorRef {
@@ -252,6 +254,7 @@ const MultipleSelector = React.forwardRef<
       keepSelectedInList = false,
       errorMessage,
       onErrorStateChange,
+      showArrow = false,
     }: MultipleSelectorProps,
     ref: React.Ref<MultipleSelectorRef>
   ) => {
@@ -670,10 +673,16 @@ const MultipleSelector = React.forwardRef<
                       'hidden'
                   )}
                 />
+                {showArrow && (
+                  <ArrowDown2
+                    size={20}
+                    className="size-5 shrink-0 text-slate-500"
+                  />
+                )}
               </div>
             </PopoverAnchor>
             <PopoverContent
-              className="mt-1 max-w-[376px] border-none p-0 shadow-none"
+              className="mt-1 max-w-94 border-none p-0 shadow-none"
               align="start"
               style={{ width: dropdownWidth }}
               onOpenAutoFocus={e => e.preventDefault()}

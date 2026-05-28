@@ -5,15 +5,17 @@ import { ArrowLeft2, Calendar as CalenderIcon } from 'iconsax-reactjs';
 import { useState } from 'react';
 import { type UseFormReturn } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
 
+import { getApiErrorMessage } from '@/app/utils/api-error';
 import MessageBox from '@/components/message-box';
 import { StepDisableDialog } from '@/views/vacancies';
+import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import {
   useCreateIndustryMutation,
   useIndustriesQuery,
   usePreferredPatentsForm,
 } from '@/views/vacancies/hooks';
+import { industryService } from '@/views/vacancies/services';
 import type {
   PatentStatus,
   StepProps,
@@ -22,6 +24,7 @@ import type {
 import { resolveUserCreatedIndustries } from '@/views/vacancies/utils';
 
 import { CharacterCount } from '@cgp/ui-kit/components/character-count';
+import { ErrorToast } from '@cgp/ui-kit/components/custom-toast';
 import MultipleSelector from '@cgp/ui-kit/components/multi-select';
 import type { Option } from '@cgp/ui-kit/components/multi-select';
 import { Button } from '@cgp/ui-kit/components/ui/button';
@@ -53,6 +56,11 @@ import { format } from 'date-fns';
 const HUNDRED_YEARS_AGO = new Date(new Date().getFullYear() - 100, 0, 1);
 const HUNDRED_YEARS_FROM_NOW = new Date(new Date().getFullYear() + 100, 11, 31);
 
+const multiSelectInfoAvatar = new URL(
+  '../../../../assets/images/multi-select-info-avatar.svg',
+  import.meta.url
+).href;
+
 function PatentCard({
   index,
   form,
@@ -83,7 +91,8 @@ function PatentCard({
 
   return (
     <Collapsible
-      open={isOpen}
+      // release with hardcoded "true" with isOpen when multiple entry allowed
+      open={true}
       onOpenChange={open => form.setValue(`patents.${index}.isOpen`, open)}
     >
       <div className="rounded-xl border border-neutral-300 bg-white shadow-[0px_4px_90px_0px_rgba(0,0,0,0.07)]">
@@ -98,7 +107,9 @@ function PatentCard({
             <button
               type="button"
               onClick={onRemove}
-              className="text-slate-400 transition-colors hover:text-red-500"
+              // remove disabled = true and hidden from UI when multiple entry allowed
+              disabled={true}
+              className="hidden text-slate-400 transition-colors hover:text-red-500"
               aria-label={t('preferredPatents.removePatent')}
             >
               <Trash2 className="size-5" />
@@ -196,14 +207,27 @@ function PatentCard({
                           'preferredPatents.relatedIndustryPlaceholder'
                         )}
                         loadingIndicator={
-                          <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                            {t('preferredPatents.industries.loading')}
+                          <p className="px-3 pb-3 text-left">
+                            {t('common.loading')}
                           </p>
                         }
                         emptyIndicator={
-                          <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                            {t('preferredPatents.industries.noData')}
-                          </p>
+                          <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
+                            <div className="flex flex-col items-start">
+                              <img
+                                src={multiSelectInfoAvatar}
+                                alt={t('common.noData')}
+                              />
+                              <div className="mt-3 w-61 text-left">
+                                <p className="font-bold text-slate-900">
+                                  {t('common.noDataTitle')}
+                                </p>
+                                <p className="text-sm font-semibold text-slate-700">
+                                  {t('common.noDataDescription')}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
                         }
                       />
                     </FormControl>
@@ -230,6 +254,7 @@ function PatentCard({
                           label: s.label,
                         })) ?? []
                       }
+                      showArrow
                       onChange={options => {
                         field.onChange(
                           options.map(opt => ({
@@ -243,10 +268,28 @@ function PatentCard({
                       keepSelectedInList
                       disabled={!isEnabled}
                       placeholder={t('preferredPatents.statusPlaceholder')}
-                      emptyIndicator={
-                        <p className="px-3 pb-3 text-sm text-slate-500">
-                          {t('preferredPatents.industries.noData')}
+                      loadingIndicator={
+                        <p className="px-3 pb-3 text-left">
+                          {t('common.loading')}
                         </p>
+                      }
+                      emptyIndicator={
+                        <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
+                          <div className="flex flex-col items-start">
+                            <img
+                              src={multiSelectInfoAvatar}
+                              alt={t('common.noData')}
+                            />
+                            <div className="mt-3 w-61 text-left">
+                              <p className="font-bold text-slate-900">
+                                {t('common.noDataTitle')}
+                              </p>
+                              <p className="text-sm font-semibold text-slate-700">
+                                {t('common.noDataDescription')}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
                       }
                     />
                   </FormControl>
@@ -430,17 +473,21 @@ function PatentCard({
 
 export default function PreferredPatentsStep({ onNext, onBack }: StepProps) {
   const { t } = useTranslation('ats');
-  const navigate = useNavigate();
 
-  const { form, fields, append, remove, replace } = usePreferredPatentsForm();
+  const { form: contextForm, onCancel } = useVacancyForm();
+  const { form, fields, append, remove, replace } = usePreferredPatentsForm(
+    contextForm.patents
+  );
 
   const [showDisableConfirm, setShowDisableConfirm] = useState(false);
+  const [showEmptyConfirm, setShowEmptyConfirm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { mutateAsync } = useCreateIndustryMutation();
 
   const handleConfirmDisable = () => {
     form.setValue('isEnabled', false);
+    form.setValue('dataTakenFromCandidate', false);
     replace([
       {
         relatedIndustries: [],
@@ -453,7 +500,40 @@ export default function PreferredPatentsStep({ onNext, onBack }: StepProps) {
     setShowDisableConfirm(false);
   };
 
+  const handleConfirmEmptyData = () => {
+    replace([
+      {
+        relatedIndustries: [],
+        statuses: [],
+        fromDate: undefined,
+        toDate: undefined,
+        isOpen: true,
+      },
+    ]);
+    setShowEmptyConfirm(false);
+    onNext({
+      patents: {
+        isEnabled: false,
+        dataTakenFromCandidate: form.getValues('dataTakenFromCandidate'),
+        patents: [],
+      },
+    });
+  };
+
   const handleSubmit = async (data: preferredPatentsSchema) => {
+    if (data.isEnabled && !data.dataTakenFromCandidate) {
+      const hasData = data.patents.some(
+        p =>
+          p.relatedIndustries.length > 0 ||
+          p.statuses.length > 0 ||
+          p.fromDate != null ||
+          p.toDate != null
+      );
+      if (!hasData) {
+        setShowEmptyConfirm(true);
+        return;
+      }
+    }
     const hasUserCreated = data.patents
       .flatMap(p => p.relatedIndustries)
       .some(i => i.source === 'USER_CREATED');
@@ -463,19 +543,39 @@ export default function PreferredPatentsStep({ onNext, onBack }: StepProps) {
       try {
         const updatedPatents = await resolveUserCreatedIndustries(
           data.patents,
-          mutateAsync
+          mutateAsync,
+          industryService.getIndustries
         );
         form.setValue('patents', updatedPatents);
+        onNext({
+          patents: {
+            isEnabled: data.isEnabled,
+            dataTakenFromCandidate: data.dataTakenFromCandidate,
+            patents: updatedPatents,
+          },
+        });
+        return;
+      } catch (err) {
+        ErrorToast({
+          title: t('common.error'),
+          description: getApiErrorMessage(err),
+        });
       } finally {
         setIsSubmitting(false);
       }
     }
 
-    onNext();
+    onNext({
+      patents: {
+        isEnabled: data.isEnabled,
+        dataTakenFromCandidate: data.dataTakenFromCandidate,
+        patents: data.patents,
+      },
+    });
   };
 
   const handleCancel = () => {
-    void navigate('/dashboard/ats/vacancies');
+    onCancel();
   };
 
   return (
@@ -485,7 +585,7 @@ export default function PreferredPatentsStep({ onNext, onBack }: StepProps) {
           onSubmit={e => {
             void form.handleSubmit(handleSubmit)(e);
           }}
-          className="flex flex-col"
+          className="flex flex-1 flex-col"
         >
           <MessageBox
             fields={[
@@ -523,8 +623,12 @@ export default function PreferredPatentsStep({ onNext, onBack }: StepProps) {
               render={({ field }) => (
                 <Switch
                   checked={field.value}
+                  size="lg"
                   onCheckedChange={checked => {
                     if (!checked) {
+                      const hasChecked = form.getValues(
+                        'dataTakenFromCandidate'
+                      );
                       const patents = form.getValues('patents');
                       const hasData = patents.some(
                         p =>
@@ -533,7 +637,7 @@ export default function PreferredPatentsStep({ onNext, onBack }: StepProps) {
                           p.fromDate != null ||
                           p.toDate != null
                       );
-                      if (hasData) {
+                      if (hasData || hasChecked) {
                         setShowDisableConfirm(true);
                       } else {
                         field.onChange(false);
@@ -557,6 +661,7 @@ export default function PreferredPatentsStep({ onNext, onBack }: StepProps) {
                   <Checkbox
                     id="data-from-candidate"
                     checked={field.value}
+                    disabled={!form.watch('isEnabled')}
                     onCheckedChange={field.onChange}
                   />
                   <label
@@ -587,6 +692,7 @@ export default function PreferredPatentsStep({ onNext, onBack }: StepProps) {
             <Button
               type="button"
               variant="secondary"
+              disabled
               className="size-11 rounded-lg bg-gray-200 px-3 text-sm"
               onClick={() =>
                 append({
@@ -603,7 +709,7 @@ export default function PreferredPatentsStep({ onNext, onBack }: StepProps) {
           </div>
 
           {/* Footer: Cancel + Next */}
-          <div className="sticky bottom-0 flex items-center justify-end gap-4 bg-white px-6 py-7 shadow-[0px_-8px_6.8px_0px_rgba(0,0,0,0.04)]">
+          <div className="sticky bottom-0 mt-auto flex items-center justify-end gap-4 bg-white px-6 py-7 shadow-[0px_-8px_6.8px_0px_rgba(0,0,0,0.04)]">
             <Button
               type="button"
               variant="secondary"
@@ -627,6 +733,15 @@ export default function PreferredPatentsStep({ onNext, onBack }: StepProps) {
         open={showDisableConfirm}
         onOpenChange={setShowDisableConfirm}
         onConfirm={handleConfirmDisable}
+      />
+
+      <StepDisableDialog
+        open={showEmptyConfirm}
+        onOpenChange={setShowEmptyConfirm}
+        onConfirm={handleConfirmEmptyData}
+        title={t('preferredPatents.emptyDisableDialog.title')}
+        description={t('preferredPatents.emptyDisableDialog.message')}
+        confirmLabel={t('preferredPatents.emptyDisableDialog.disable')}
       />
     </>
   );

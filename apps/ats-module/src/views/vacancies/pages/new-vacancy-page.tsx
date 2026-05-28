@@ -113,7 +113,7 @@ function NewVacancyContent() {
 export default function NewVacancyPage() {
   return (
     <VacancyFormProvider>
-      <section className="flex h-screen min-h-0 flex-col overflow-hidden">
+      <section className="flex min-h-0 flex-1 flex-col overflow-hidden">
         <NewVacancyContent />
       </section>
     </VacancyFormProvider>

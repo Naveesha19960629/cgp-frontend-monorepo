@@ -26,6 +26,9 @@ interface StepDisableDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: () => void;
+  title?: string;
+  description?: string;
+  confirmLabel?: string;
 }
 
 interface Address {
@@ -140,6 +143,7 @@ interface VacancyForm {
   preferredLanguages?: PreferredLanguages;
   preferredCauses?: PreferredCauses;
   preferredHobbies?: PreferredHobbies;
+  patents?: preferredPatentsSchema;
 }
 interface VacancyStep {
   readonly key: string;
@@ -483,6 +487,13 @@ interface PublicationResponse<T> {
   data: T;
 }
 
+interface VacancyCancelDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onDiscard: () => void;
+  onSaveAsDraft: () => void;
+}
+
 export type {
   AddOrSelectOption,
   SelectOption,
@@ -547,4 +558,5 @@ export type {
   Publication,
   PublicationApiData,
   PublicationResponse,
+  VacancyCancelDialogProps,
 };
