@@ -110,7 +110,6 @@ vi.mock('@/views/vacancies/utils', () => ({
 describe('PreferredClubSocietiesStep', () => {
   const mockOnNext = vi.fn();
   const mockOnBack = vi.fn();
-  const mockOnSubmit = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -121,7 +120,7 @@ describe('PreferredClubSocietiesStep', () => {
       <PreferredClubSocietiesStep
         onNext={mockOnNext}
         onBack={mockOnBack}
-        onSubmit={mockOnSubmit}
+        onSubmit={vi.fn()}
       />
     );
     expect(
@@ -134,7 +133,7 @@ describe('PreferredClubSocietiesStep', () => {
       <PreferredClubSocietiesStep
         onNext={mockOnNext}
         onBack={mockOnBack}
-        onSubmit={mockOnSubmit}
+        onSubmit={vi.fn()}
       />
     );
     expect(screen.getByText('Build the Application Form')).toBeInTheDocument();
@@ -145,7 +144,7 @@ describe('PreferredClubSocietiesStep', () => {
       <PreferredClubSocietiesStep
         onNext={mockOnNext}
         onBack={mockOnBack}
-        onSubmit={mockOnSubmit}
+        onSubmit={vi.fn()}
       />
     );
     expect(screen.getByText('Clubs and societies 01')).toBeInTheDocument();
@@ -156,7 +155,7 @@ describe('PreferredClubSocietiesStep', () => {
       <PreferredClubSocietiesStep
         onNext={mockOnNext}
         onBack={mockOnBack}
-        onSubmit={mockOnSubmit}
+        onSubmit={vi.fn()}
       />
     );
     expect(screen.getByText('Club / Society')).toBeInTheDocument();
@@ -173,7 +172,7 @@ describe('PreferredClubSocietiesStep', () => {
       <PreferredClubSocietiesStep
         onNext={mockOnNext}
         onBack={mockOnBack}
-        onSubmit={mockOnSubmit}
+        onSubmit={vi.fn()}
       />
     );
     const cancelButton = screen.getByRole('button', { name: /cancel/i });
@@ -187,7 +186,7 @@ describe('PreferredClubSocietiesStep', () => {
       <PreferredClubSocietiesStep
         onNext={mockOnNext}
         onBack={mockOnBack}
-        onSubmit={mockOnSubmit}
+        onSubmit={vi.fn()}
       />
     );
     const nextButton = screen.getByRole('button', { name: /next/i });
@@ -200,7 +199,7 @@ describe('PreferredClubSocietiesStep', () => {
       <PreferredClubSocietiesStep
         onNext={mockOnNext}
         onBack={mockOnBack}
-        onSubmit={mockOnSubmit}
+        onSubmit={vi.fn()}
       />
     );
     const addButton = screen.getByRole('button', { name: /add entry/i });
@@ -212,7 +211,7 @@ describe('PreferredClubSocietiesStep', () => {
       <PreferredClubSocietiesStep
         onNext={mockOnNext}
         onBack={mockOnBack}
-        onSubmit={mockOnSubmit}
+        onSubmit={vi.fn()}
       />
     );
     expect(
@@ -228,7 +227,7 @@ describe('PreferredClubSocietiesStep', () => {
       <PreferredClubSocietiesStep
         onNext={mockOnNext}
         onBack={mockOnBack}
-        onSubmit={mockOnSubmit}
+        onSubmit={vi.fn()}
       />
     );
 
