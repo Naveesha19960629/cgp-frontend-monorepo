@@ -18,10 +18,10 @@ const mockDelete = vi.fn();
 
 vi.mock('@cgp/data-access', () => ({
   httpClient: {
-    get: (...args: unknown[]) => mockGet(...args),
-    post: (...args: unknown[]) => mockPost(...args),
-    put: (...args: unknown[]) => mockPut(...args),
-    delete: (...args: unknown[]) => mockDelete(...args),
+    get: mockGet,
+    post: mockPost,
+    put: mockPut,
+    delete: mockDelete,
   },
 }));
 
@@ -503,7 +503,7 @@ describe('projectService.deleteProject', () => {
     const mockResponse: ProjectResponse<void> = {
       message: ['Project deleted successfully'],
       statusCode: 200,
-      data: undefined as unknown as void,
+      data: undefined,
     };
 
     mockDelete.mockResolvedValue({ data: mockResponse });

@@ -14,8 +14,8 @@ const mockPost = vi.fn();
 
 vi.mock('@cgp/data-access', () => ({
   httpClient: {
-    get: (...args: unknown[]) => mockGet(...args),
-    post: (...args: unknown[]) => mockPost(...args),
+    get: mockGet,
+    post: mockPost,
   },
 }));
 

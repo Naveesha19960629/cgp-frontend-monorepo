@@ -103,7 +103,7 @@ export const publicationService = {
 
     const mapped: Publication[] = Array.isArray(backendItems)
       ? backendItems.map(item => {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unnecessary-type-assertion
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const anyItem = item as any;
           return {
             id: anyItem.publicationId ?? anyItem.id,

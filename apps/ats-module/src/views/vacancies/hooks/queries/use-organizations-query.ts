@@ -1,7 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 
-import { organizationService } from '@/views/vacancies/services';
-import type { OrganizationOption } from '@/views/vacancies/services/organization.service';
+import {
+  type OrganizationOption,
+  organizationService,
+} from '@/views/vacancies/services';
 
 const ORGANIZATIONS_QUERY_KEY = (search: string) =>
   ['organizations', search] as const;
