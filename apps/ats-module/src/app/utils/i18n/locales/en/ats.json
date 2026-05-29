@@ -35,7 +35,13 @@
     "title": "Are you sure?",
     "description": "Are you sure you want to exit the vacancy creation workflow? Any unsaved changes will be lost",
     "discardButton": "Discard and Exit",
-    "saveAsDraftButton": "Save as a Draft"
+    "saveAsDraftButton": "Save as a Draft",
+    "notifications": {
+      "discard": {
+        "title": "Successfully Discarded",
+        "message": "Vacancy creation discarded successfully."
+      }
+    }
   },
 
   "preferredPatents": {
@@ -90,6 +96,12 @@
       "message": "You've enabled this section but haven't filled any fields. This section will be disabled for this vacancy and no data will be collected from candidates",
       "cancel": "Cancel",
       "disable": "Disable"
+    },
+    "notifications": {
+      "disable": {
+        "title": "Successfully Disabled",
+        "message": "Patents have been successfully disabled."
+      }
     }
   },
   "secondaryEducation": {

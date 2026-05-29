@@ -38,7 +38,10 @@ function Toast({
       onMouseDown={e => e.stopPropagation()}
       onKeyDown={e => e.stopPropagation()}
     >
-      <div className="relative z-9999 rounded-2xl bg-white">
+      <div
+        className="relative z-9999 rounded-2xl bg-white"
+        style={{ fontFamily: 'Plus Jakarta Sans Variable, sans-serif' }}
+      >
         <div className="flex w-99.5 items-center justify-between gap-3 p-6 sm:w-102.25">
           <div className="flex items-center justify-center gap-3">
             {type === 'error' && (

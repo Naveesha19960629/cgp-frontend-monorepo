@@ -24,7 +24,7 @@ import type {
 import { resolveUserCreatedIndustries } from '@/views/vacancies/utils';
 
 import { CharacterCount } from '@cgp/ui-kit/components/character-count';
-import { ErrorToast } from '@cgp/ui-kit/components/custom-toast';
+import { ErrorToast, SuccessToast } from '@cgp/ui-kit/components/custom-toast';
 import MultipleSelector from '@cgp/ui-kit/components/multi-select';
 import type { Option } from '@cgp/ui-kit/components/multi-select';
 import { Button } from '@cgp/ui-kit/components/ui/button';
@@ -498,6 +498,10 @@ export default function PreferredPatentsStep({ onNext, onBack }: StepProps) {
       },
     ]);
     setShowDisableConfirm(false);
+    SuccessToast({
+      title: t('preferredPatents.notifications.disable.title'),
+      description: t('preferredPatents.notifications.disable.message'),
+    });
   };
 
   const handleConfirmEmptyData = () => {
