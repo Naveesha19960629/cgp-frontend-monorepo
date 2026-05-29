@@ -110,6 +110,7 @@ vi.mock('@/views/vacancies/utils', () => ({
 describe('PreferredClubSocietiesStep', () => {
   const mockOnNext = vi.fn();
   const mockOnBack = vi.fn();
+  const mockOnSubmit = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
