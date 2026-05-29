@@ -1,4 +1,4 @@
-import { ChevronUp, Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 
 import { ArrowLeft2 } from 'iconsax-reactjs';
 
@@ -23,13 +23,9 @@ import type { StepProps } from '@/views/vacancies/types';
 import { CharacterCount } from '@cgp/ui-kit/components/character-count';
 import { Combobox } from '@cgp/ui-kit/components/combobox';
 import type { ComboboxOption } from '@cgp/ui-kit/components/combobox';
+import { ErrorToast } from '@cgp/ui-kit/components/custom-toast';
 import { Button } from '@cgp/ui-kit/components/ui/button';
 import { Checkbox } from '@cgp/ui-kit/components/ui/checkbox';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@cgp/ui-kit/components/ui/collapsible';
 import {
   Form,
   FormControl,
@@ -49,13 +45,39 @@ import {
 import { Switch } from '@cgp/ui-kit/components/ui/switch';
 import { cn } from '@cgp/ui-kit/lib/utils';
 
+const MAX_ADDRESS_ENTRIES = 5;
+
+function isDuplicateAddress(
+  addresses: ProfileRequirementsFormValues['addresses'],
+  newIndex: number
+): boolean {
+  const target = addresses[newIndex];
+  if (!target) return false;
+  const hasValue =
+    target.city.id ||
+    target.stateProvince.id ||
+    target.country.id ||
+    target.postalCode.trim();
+  if (!hasValue) return false;
+  return addresses.some(
+    (addr, i) =>
+      i !== newIndex &&
+      addr.city.id === target.city.id &&
+      addr.stateProvince.id === target.stateProvince.id &&
+      addr.country.id === target.country.id &&
+      addr.postalCode.trim() === target.postalCode.trim()
+  );
+}
+
 function AddressCard({
   index,
+  displayNumber,
   form,
   onRemove,
   canRemove,
 }: {
   index: number;
+  displayNumber: number;
   form: UseFormReturn<ProfileRequirementsFormValues>;
   onRemove: () => void;
   canRemove: boolean;
@@ -66,10 +88,22 @@ function AddressCard({
   const [stateSearch, setStateSearch] = useState('');
   const [countrySearch, setCountrySearch] = useState('');
 
-  const isOpen = form.watch(`addresses.${index}.isOpen`);
   const isEnabled = form.watch('isEnabled');
   const dataTakenFromCandidate = form.watch('dataTakenFromCandidate');
   const isDisabled = !isEnabled || dataTakenFromCandidate;
+
+  const checkDuplicate = () => {
+    const addresses = form.getValues('addresses');
+    if (isDuplicateAddress(addresses, index)) {
+      ErrorToast({
+        title: t('common.error', 'Error'),
+        description: t(
+          'profileRequirements.errors.duplicateEntry',
+          'This entry already exists.'
+        ),
+      });
+    }
+  };
 
   const { data: cityData = [], isFetching: isCityLoading } =
     usePlacesCityQuery(citySearch);
@@ -127,6 +161,8 @@ function AddressCard({
       { id: r.country.id, label: r.country.label },
       { shouldValidate: true }
     );
+    // Real-time duplicate check after all fields are set
+    setTimeout(() => checkDuplicate(), 0);
   };
 
   const handleStateSelect = (val: string) => {
@@ -142,6 +178,7 @@ function AddressCard({
       { id: r.country.id, label: r.country.label },
       { shouldValidate: true }
     );
+    setTimeout(() => checkDuplicate(), 0);
   };
 
   const handleCountrySelect = (val: string) => {
@@ -152,176 +189,154 @@ function AddressCard({
       { id: r.country.id, label: r.country.label },
       { shouldValidate: true }
     );
+    setTimeout(() => checkDuplicate(), 0);
   };
 
   return (
-    <Collapsible
-      open={true}
-      onOpenChange={open => form.setValue(`addresses.${index}.isOpen`, open)}
-    >
-      <div className="rounded-xl border border-neutral-300 bg-white shadow-[0px_4px_90px_0px_rgba(0,0,0,0.07)]">
-        {/* Card header */}
-        <div className="flex items-center justify-between px-5 py-5">
-          <span className="text-base font-bold text-slate-900">
-            {t('profileRequirements.addressTitle', {
-              number: String(index + 1).padStart(2, '0'),
-            })}
-          </span>
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={onRemove}
-              disabled={!canRemove || isDisabled}
-              className={cn(
-                'text-slate-400 transition-colors hover:text-red-500',
-                (!canRemove || isDisabled) && 'hidden'
-              )}
-              aria-label={t('profileRequirements.removeAddress')}
-            >
-              <Trash2 className="size-5" />
-            </button>
-            <CollapsibleTrigger asChild>
-              <button
-                type="button"
-                className="text-slate-400 transition-colors hover:text-slate-600"
-                aria-label={
-                  isOpen
-                    ? t('profileRequirements.collapse')
-                    : t('profileRequirements.expand')
-                }
-              >
-                <ChevronUp
-                  className={cn(
-                    'size-5 transition-transform',
-                    !isOpen && 'rotate-180'
-                  )}
-                />
-              </button>
-            </CollapsibleTrigger>
-          </div>
+    <div className="rounded-xl border border-neutral-300 bg-white shadow-[0px_4px_90px_0px_rgba(0,0,0,0.07)]">
+      {/* Card header */}
+      <div className="flex items-center justify-between px-5 py-5">
+        <span className="text-base font-bold text-slate-900">
+          {t('profileRequirements.addressTitle', {
+            number: String(displayNumber).padStart(2, '0'),
+          })}
+        </span>
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={onRemove}
+            disabled={!canRemove || isDisabled}
+            className={cn(
+              'text-slate-400 transition-colors hover:text-red-500',
+              (!canRemove || isDisabled) && 'hidden'
+            )}
+            aria-label={t('profileRequirements.removeAddress')}
+          >
+            <Trash2 className="size-5" />
+          </button>
         </div>
-
-        {/* Collapsible body */}
-        <CollapsibleContent>
-          <div className="grid grid-cols-4 gap-5 px-5 pb-5">
-            {/* City */}
-            <FormField
-              control={form.control}
-              name={`addresses.${index}.city`}
-              render={({ field, fieldState }) => (
-                <FormItem className="flex flex-col gap-1.5 space-y-0">
-                  <FormLabel className="text-sm font-semibold text-slate-900">
-                    {t('profileRequirements.city')}
-                  </FormLabel>
-                  <FormControl>
-                    <Combobox
-                      options={cityOptions}
-                      value={field.value?.id ?? ''}
-                      onValueChange={handleCitySelect}
-                      onSearchChange={setCitySearch}
-                      loading={isCityLoading}
-                      disabled={isDisabled}
-                      placeholder={t('profileRequirements.cityPlaceholder')}
-                      addable={false}
-                      isError={!!fieldState.error}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* State / Province / Region */}
-            <FormField
-              control={form.control}
-              name={`addresses.${index}.stateProvince`}
-              render={({ field, fieldState }) => (
-                <FormItem className="flex flex-col gap-1.5 space-y-0">
-                  <FormLabel className="text-sm font-semibold text-slate-900">
-                    {t('profileRequirements.stateProvince')}
-                  </FormLabel>
-                  <FormControl>
-                    <Combobox
-                      options={stateOptions}
-                      value={field.value?.id ?? ''}
-                      onValueChange={handleStateSelect}
-                      onSearchChange={setStateSearch}
-                      loading={isStateLoading}
-                      disabled={isDisabled}
-                      placeholder={t(
-                        'profileRequirements.stateProvincePlaceholder'
-                      )}
-                      addable={false}
-                      isError={!!fieldState.error}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Country */}
-            <FormField
-              control={form.control}
-              name={`addresses.${index}.country`}
-              render={({ field, fieldState }) => (
-                <FormItem className="flex flex-col gap-1.5 space-y-0">
-                  <FormLabel className="text-sm font-semibold text-slate-900">
-                    {t('profileRequirements.country')}
-                  </FormLabel>
-                  <FormControl>
-                    <Combobox
-                      options={countryOptions}
-                      value={field.value?.id ?? ''}
-                      onValueChange={handleCountrySelect}
-                      onSearchChange={setCountrySearch}
-                      loading={isCountryLoading}
-                      disabled={isDisabled}
-                      placeholder={t('profileRequirements.countryPlaceholder')}
-                      addable={false}
-                      isError={!!fieldState.error}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Postal Code / Zip */}
-            <FormField
-              control={form.control}
-              name={`addresses.${index}.postalCode`}
-              render={({ field }) => (
-                <FormItem className="flex flex-col gap-1.5 space-y-0">
-                  <FormLabel className="flex justify-between text-sm font-semibold text-slate-900">
-                    <span>{t('profileRequirements.postalCode')}</span>
-                    <CharacterCount
-                      maxLength={20}
-                      currentLength={field.value?.length ?? 0}
-                    />
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder={t(
-                        'profileRequirements.postalCodePlaceholder'
-                      )}
-                      maxLength={20}
-                      disabled={isDisabled}
-                      className="h-9 shadow-none"
-                      {...field}
-                      onChange={e => {
-                        field.onChange(e.target.value.trimStart());
-                      }}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-        </CollapsibleContent>
       </div>
-    </Collapsible>
+
+      {/* Card body */}
+      <div className="grid grid-cols-4 gap-5 px-5 pb-5">
+        {/* City */}
+        <FormField
+          control={form.control}
+          name={`addresses.${index}.city`}
+          render={({ field, fieldState }) => (
+            <FormItem className="flex flex-col gap-1.5 space-y-0">
+              <FormLabel className="text-sm font-semibold text-slate-900">
+                {t('profileRequirements.city')}
+              </FormLabel>
+              <FormControl>
+                <Combobox
+                  options={cityOptions}
+                  value={field.value?.id ?? ''}
+                  onValueChange={handleCitySelect}
+                  onSearchChange={setCitySearch}
+                  loading={isCityLoading}
+                  disabled={isDisabled}
+                  placeholder={t('profileRequirements.cityPlaceholder')}
+                  addable={false}
+                  isError={!!fieldState.error}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {/* State / Province / Region */}
+        <FormField
+          control={form.control}
+          name={`addresses.${index}.stateProvince`}
+          render={({ field, fieldState }) => (
+            <FormItem className="flex flex-col gap-1.5 space-y-0">
+              <FormLabel className="text-sm font-semibold text-slate-900">
+                {t('profileRequirements.stateProvince')}
+              </FormLabel>
+              <FormControl>
+                <Combobox
+                  options={stateOptions}
+                  value={field.value?.id ?? ''}
+                  onValueChange={handleStateSelect}
+                  onSearchChange={setStateSearch}
+                  loading={isStateLoading}
+                  disabled={isDisabled}
+                  placeholder={t(
+                    'profileRequirements.stateProvincePlaceholder'
+                  )}
+                  addable={false}
+                  isError={!!fieldState.error}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {/* Country */}
+        <FormField
+          control={form.control}
+          name={`addresses.${index}.country`}
+          render={({ field, fieldState }) => (
+            <FormItem className="flex flex-col gap-1.5 space-y-0">
+              <FormLabel className="text-sm font-semibold text-slate-900">
+                {t('profileRequirements.country')}
+              </FormLabel>
+              <FormControl>
+                <Combobox
+                  options={countryOptions}
+                  value={field.value?.id ?? ''}
+                  onValueChange={handleCountrySelect}
+                  onSearchChange={setCountrySearch}
+                  loading={isCountryLoading}
+                  disabled={isDisabled}
+                  placeholder={t('profileRequirements.countryPlaceholder')}
+                  addable={false}
+                  isError={!!fieldState.error}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {/* Postal Code / Zip */}
+        <FormField
+          control={form.control}
+          name={`addresses.${index}.postalCode`}
+          render={({ field }) => (
+            <FormItem className="flex flex-col gap-1.5 space-y-0">
+              <FormLabel className="flex justify-between text-sm font-semibold text-slate-900">
+                <span>{t('profileRequirements.postalCode')}</span>
+                <CharacterCount
+                  maxLength={20}
+                  currentLength={field.value?.length ?? 0}
+                />
+              </FormLabel>
+              <FormControl>
+                <Input
+                  placeholder={t('profileRequirements.postalCodePlaceholder')}
+                  maxLength={20}
+                  disabled={isDisabled}
+                  className="h-9 shadow-none"
+                  {...field}
+                  onChange={e => {
+                    field.onChange(e.target.value.trimStart());
+                  }}
+                  onBlur={() => {
+                    field.onBlur();
+                    checkDuplicate();
+                  }}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
+    </div>
   );
 }
 
@@ -403,6 +418,20 @@ export default function ProfileRequirementsStep({ onNext, onBack }: StepProps) {
         setShowEmptyConfirm(true);
         return;
       }
+
+      // Check for duplicate address entries on submit too
+      for (let i = 0; i < data.addresses.length; i++) {
+        if (isDuplicateAddress(data.addresses, i)) {
+          ErrorToast({
+            title: t('common.error', 'Error'),
+            description: t(
+              'profileRequirements.errors.duplicateEntry',
+              'This entry already exists.'
+            ),
+          });
+          return;
+        }
+      }
     }
 
     onNext({
@@ -448,9 +477,14 @@ export default function ProfileRequirementsStep({ onNext, onBack }: StepProps) {
         >
           <MessageBox
             fields={[
-              t('profileRequirements.fieldList.gender'),
-              t('profileRequirements.fieldList.maritalStatus'),
-              t('profileRequirements.fieldList.addresses'),
+              t('profileRequirements.fieldList.title'),
+              t('profileRequirements.fieldList.firstName'),
+              t('profileRequirements.fieldList.lastName'),
+              t('profileRequirements.fieldList.email'),
+              t('profileRequirements.fieldList.numberType'),
+              t('profileRequirements.fieldList.primaryPhoneNumber'),
+              t('profileRequirements.fieldList.permanentAddressDetails'),
+              t('profileRequirements.fieldList.currentAddressDetails'),
             ]}
           />
 
@@ -630,7 +664,7 @@ export default function ProfileRequirementsStep({ onNext, onBack }: StepProps) {
           </div>
 
           {/* Addresses section header */}
-          <div className="border-t border-slate-200 px-7 pt-6 pb-2">
+          <div className="px-7 pt-6 pb-2">
             <h3 className="text-base font-bold text-slate-900">
               {t('profileRequirements.addressesTitle')}
             </h3>
@@ -639,17 +673,21 @@ export default function ProfileRequirementsStep({ onNext, onBack }: StepProps) {
             </p>
           </div>
 
-          {/* Address cards */}
+          {/* Address cards - reverse chronological order (newest first) */}
           <div className="flex flex-col gap-4 px-6 pt-4">
-            {fields.map((field, index) => (
-              <AddressCard
-                key={field.id}
-                index={index}
-                form={form}
-                onRemove={() => remove(index)}
-                canRemove={fields.length > 1}
-              />
-            ))}
+            {[...fields]
+              .map((field, originalIndex) => ({ field, originalIndex }))
+              .reverse()
+              .map(({ field, originalIndex }) => (
+                <AddressCard
+                  key={field.id}
+                  index={originalIndex}
+                  displayNumber={originalIndex + 1}
+                  form={form}
+                  onRemove={() => remove(originalIndex)}
+                  canRemove={fields.length > 1}
+                />
+              ))}
           </div>
 
           {/* Add address button */}
@@ -659,15 +697,27 @@ export default function ProfileRequirementsStep({ onNext, onBack }: StepProps) {
               variant="secondary"
               disabled={isFieldsDisabled}
               className="size-11 rounded-lg bg-gray-200 px-3 text-sm"
-              onClick={() =>
+              onClick={() => {
+                if (fields.length >= MAX_ADDRESS_ENTRIES) {
+                  ErrorToast({
+                    title: t('common.error', 'Error'),
+                    description: t(
+                      'profileRequirements.errors.maxEntries',
+                      'Exceeded maximum of {{max}} entries allowed.',
+                      { max: MAX_ADDRESS_ENTRIES }
+                    ),
+                  });
+                  return;
+                }
+
                 append({
                   city: { id: '', label: '' },
                   stateProvince: { id: '', label: '' },
                   country: { id: '', label: '' },
                   postalCode: '',
                   isOpen: true,
-                })
-              }
+                });
+              }}
             >
               <Plus className="size-4 text-neutral-600!" />
             </Button>

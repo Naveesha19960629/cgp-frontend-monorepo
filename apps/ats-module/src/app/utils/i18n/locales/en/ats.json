@@ -120,10 +120,19 @@
     "expand": "Expand",
     "cancelButton": "Cancel",
     "nextButton": "Next",
+    "errors": {
+      "duplicateEntry": "This entry already exists.",
+      "maxEntries": "Exceeded maximum of {{max}} entries allowed."
+    },
     "fieldList": {
-      "gender": "Gender",
-      "maritalStatus": "Marital Status",
-      "addresses": "Addresses"
+      "title": "Title",
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "email": "Email",
+      "numberType": "Number Type",
+      "primaryPhoneNumber": "Primary Phone Number",
+      "permanentAddressDetails": "Permanent Address Details",
+      "currentAddressDetails": "Current Address Details"
     },
     "disableDialog": {
       "title": "Are you sure?",
