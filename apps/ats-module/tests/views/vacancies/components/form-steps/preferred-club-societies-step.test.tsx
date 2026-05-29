@@ -110,6 +110,7 @@ vi.mock('@/views/vacancies/utils', () => ({
 describe('PreferredClubSocietiesStep', () => {
   const mockOnNext = vi.fn();
   const mockOnBack = vi.fn();
+  const mockOnSubmit = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -117,7 +118,11 @@ describe('PreferredClubSocietiesStep', () => {
 
   it('renders the step title', () => {
     render(
-      <PreferredClubSocietiesStep onNext={mockOnNext} onBack={mockOnBack} />
+      <PreferredClubSocietiesStep
+        onNext={mockOnNext}
+        onBack={mockOnBack}
+        onSubmit={mockOnSubmit}
+      />
     );
     expect(
       screen.getByText('Preferred Clubs and Societies')
@@ -126,21 +131,33 @@ describe('PreferredClubSocietiesStep', () => {
 
   it('renders the informational banner', () => {
     render(
-      <PreferredClubSocietiesStep onNext={mockOnNext} onBack={mockOnBack} />
+      <PreferredClubSocietiesStep
+        onNext={mockOnNext}
+        onBack={mockOnBack}
+        onSubmit={mockOnSubmit}
+      />
     );
     expect(screen.getByText('Build the Application Form')).toBeInTheDocument();
   });
 
   it('renders the first club/society card by default', () => {
     render(
-      <PreferredClubSocietiesStep onNext={mockOnNext} onBack={mockOnBack} />
+      <PreferredClubSocietiesStep
+        onNext={mockOnNext}
+        onBack={mockOnBack}
+        onSubmit={mockOnSubmit}
+      />
     );
     expect(screen.getByText('Clubs and societies 01')).toBeInTheDocument();
   });
 
   it('renders all form fields', () => {
     render(
-      <PreferredClubSocietiesStep onNext={mockOnNext} onBack={mockOnBack} />
+      <PreferredClubSocietiesStep
+        onNext={mockOnNext}
+        onBack={mockOnBack}
+        onSubmit={mockOnSubmit}
+      />
     );
     expect(screen.getByText('Club / Society')).toBeInTheDocument();
     expect(screen.getByText('Start Date')).toBeInTheDocument();
@@ -153,7 +170,11 @@ describe('PreferredClubSocietiesStep', () => {
   it('calls onBack when Cancel button is clicked', async () => {
     const user = userEvent.setup();
     render(
-      <PreferredClubSocietiesStep onNext={mockOnNext} onBack={mockOnBack} />
+      <PreferredClubSocietiesStep
+        onNext={mockOnNext}
+        onBack={mockOnBack}
+        onSubmit={mockOnSubmit}
+      />
     );
     const cancelButton = screen.getByRole('button', { name: /cancel/i });
     await user.click(cancelButton);
@@ -163,7 +184,11 @@ describe('PreferredClubSocietiesStep', () => {
   it('calls onNext when Next button is clicked', async () => {
     const user = userEvent.setup();
     render(
-      <PreferredClubSocietiesStep onNext={mockOnNext} onBack={mockOnBack} />
+      <PreferredClubSocietiesStep
+        onNext={mockOnNext}
+        onBack={mockOnBack}
+        onSubmit={mockOnSubmit}
+      />
     );
     const nextButton = screen.getByRole('button', { name: /next/i });
     await user.click(nextButton);
@@ -172,7 +197,11 @@ describe('PreferredClubSocietiesStep', () => {
 
   it('renders the add entry button', () => {
     render(
-      <PreferredClubSocietiesStep onNext={mockOnNext} onBack={mockOnBack} />
+      <PreferredClubSocietiesStep
+        onNext={mockOnNext}
+        onBack={mockOnBack}
+        onSubmit={mockOnSubmit}
+      />
     );
     const addButton = screen.getByRole('button', { name: /add entry/i });
     expect(addButton).toBeInTheDocument();
@@ -180,7 +209,11 @@ describe('PreferredClubSocietiesStep', () => {
 
   it('renders the data taken from candidate checkbox', () => {
     render(
-      <PreferredClubSocietiesStep onNext={mockOnNext} onBack={mockOnBack} />
+      <PreferredClubSocietiesStep
+        onNext={mockOnNext}
+        onBack={mockOnBack}
+        onSubmit={mockOnSubmit}
+      />
     );
     expect(
       screen.getByLabelText(
@@ -192,7 +225,11 @@ describe('PreferredClubSocietiesStep', () => {
   it('adds a new entry when add button is clicked', async () => {
     const user = userEvent.setup();
     render(
-      <PreferredClubSocietiesStep onNext={mockOnNext} onBack={mockOnBack} />
+      <PreferredClubSocietiesStep
+        onNext={mockOnNext}
+        onBack={mockOnBack}
+        onSubmit={mockOnSubmit}
+      />
     );
 
     // Initially only one card
