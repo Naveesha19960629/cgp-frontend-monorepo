@@ -564,9 +564,10 @@ export default function ProjectsRequirementsStep({
                 const result = resultMap.get(industry.label);
                 if (result) {
                   return {
-                    value: result.id,
-                    label: result.label,
-                    source: result.source,
+                    // fix the build failure
+                    value: result.pendingId,
+                    label: result.value,
+                    source: result.status,
                   };
                 }
               }
