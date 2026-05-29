@@ -18,10 +18,10 @@ const mockDelete = vi.fn();
 
 vi.mock('@cgp/data-access', () => ({
   httpClient: {
-    get: (...args: unknown[]) => mockGet(...args),
-    post: (...args: unknown[]) => mockPost(...args),
-    put: (...args: unknown[]) => mockPut(...args),
-    delete: (...args: unknown[]) => mockDelete(...args),
+    get: mockGet,
+    post: mockPost,
+    put: mockPut,
+    delete: mockDelete,
   },
 }));
 

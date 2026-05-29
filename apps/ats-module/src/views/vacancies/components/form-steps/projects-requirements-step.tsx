@@ -737,7 +737,9 @@ export default function ProjectsRequirementsStep({
         </Button>
         <Button
           className="h-12 w-44"
-          onClick={handleNext}
+          onClick={() => {
+            void handleNext();
+          }}
           disabled={isSubmitting}
         >
           {isSubmitting ? (

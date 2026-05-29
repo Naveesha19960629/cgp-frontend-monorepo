@@ -55,7 +55,7 @@ export default function AddOrganizationFormDialog({
   organizationName,
 }: Readonly<AddOrganizationFormDialogProps>) {
   const { t } = useTranslation('ats');
-  const [wasNameTruncated, setWasNameTruncated] = useState(false);
+  const wasNameTruncated = removeEmoji(organizationName).length > 200;
   const [openTruncationTooltip, setOpenTruncationTooltip] = useState(false);
   const truncationCloseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -102,9 +102,6 @@ export default function AddOrganizationFormDialog({
       const cleaned = removeEmoji(organizationName);
       const truncated = cleaned.slice(0, 200);
       form.setValue('name', truncated);
-      setWasNameTruncated(cleaned.length > 200);
-    } else if (!open) {
-      setWasNameTruncated(false);
     }
   }, [open, organizationName, form]);
 
