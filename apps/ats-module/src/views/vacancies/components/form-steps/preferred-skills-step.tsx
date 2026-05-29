@@ -19,11 +19,13 @@ import type {
 } from '@/views/vacancies/types';
 
 import { CharacterCount } from '@cgp/ui-kit/components/character-count';
+import { Combobox } from '@cgp/ui-kit/components/combobox';
 import MultipleSelector from '@cgp/ui-kit/components/multi-select';
 import type {
   MultipleSelectorRef,
   Option,
 } from '@cgp/ui-kit/components/multi-select';
+import { Badge } from '@cgp/ui-kit/components/ui/badge';
 import { Button } from '@cgp/ui-kit/components/ui/button';
 import { Checkbox } from '@cgp/ui-kit/components/ui/checkbox';
 import { cn } from '@cgp/ui-kit/lib/utils';
@@ -68,10 +70,9 @@ export default function PreferredSkillsStep({
   const [pendingSkillName, setPendingSkillName] = useState('');
   const [pendingSkillId, setPendingSkillId] = useState('');
   const [careerPathSearch, setCareerPathSearch] = useState('');
+  const [careerPathApiSearch, setCareerPathApiSearch] = useState('');
   const [careerPathError, setCareerPathError] = useState('');
   const [isCareerPathPopoverOpen, setIsCareerPathPopoverOpen] = useState(false);
-  const [isCareerPathDropdownOpen, setIsCareerPathDropdownOpen] =
-    useState(false);
   // Accumulates user-typed career paths within the current panel session
   const [userEnteredCareerPaths, setUserEnteredCareerPaths] = useState<
     CareerPathItem[]
@@ -81,7 +82,7 @@ export default function PreferredSkillsStep({
   const { data: skillsData, isLoading: isSkillsLoading } =
     useSkillsQuery(skillSearch);
   const { data: careerPathsData, isLoading: isCareerPathsLoading } =
-    useCareerPathsQuery(careerPathSearch);
+    useCareerPathsQuery(careerPathApiSearch);
 
   const apiSkills = skillsData?.data?.items?.content ?? [];
   const apiCareerPaths: CareerPathItem[] =
@@ -176,20 +177,20 @@ export default function PreferredSkillsStep({
 
     setSelectedSkills(prev => [...prev, entry]);
     setIsCareerPathPopoverOpen(false);
-    setIsCareerPathDropdownOpen(false);
     setPendingSkillName('');
     setPendingSkillId('');
     setCareerPathSearch('');
+    setCareerPathApiSearch('');
     setCareerPathError('');
     setUserEnteredCareerPaths([]);
   };
 
   const handleCancelCareerPath = () => {
     setIsCareerPathPopoverOpen(false);
-    setIsCareerPathDropdownOpen(false);
     setPendingSkillName('');
     setPendingSkillId('');
     setCareerPathSearch('');
+    setCareerPathApiSearch('');
     setCareerPathError('');
     setUserEnteredCareerPaths([]);
   };
@@ -400,139 +401,109 @@ export default function PreferredSkillsStep({
                 </div>
               }
             />
+
+            {/* Pending skill chip — shown while career path popover is open */}
+            {pendingSkillName && isCareerPathPopoverOpen && (
+              <div className="mt-2 flex flex-wrap gap-2">
+                <Badge
+                  variant="chip"
+                  className="animate-fadeIn flex cursor-default items-center gap-2 pe-2 text-sm font-semibold text-slate-600 shadow-sm"
+                  style={{ borderColor: '#f59e0b', borderWidth: '1px' }}
+                >
+                  <span className="min-w-0 break-all capitalize">
+                    {pendingSkillName}
+                  </span>
+                </Badge>
+              </div>
+            )}
           </div>
 
           {/* Career Path Panel — inline in content flow, appears after the skill chips */}
           {isCareerPathPopoverOpen && (
             <div
-              className="mt-4 max-w-128.5 rounded-lg border border-slate-300 p-4 shadow-xl"
+              className="mt-4 max-w-128.5 overflow-hidden rounded-2xl border border-slate-200 p-4 pb-5 shadow-2xl"
               style={{
                 backgroundImage:
                   'linear-gradient(90deg, rgb(254,244,238) 24.671%, rgb(248,242,236) 37.979%, rgb(233,244,240) 99.173%, rgb(238,247,245) 166.77%)',
               }}
             >
               {/* Header row: title + close */}
-              <div className="mb-3 flex items-start justify-between">
-                <div className="flex-1 pr-6">
-                  <p className="text-base font-bold text-slate-900">
+              <div className="mb-4 flex items-start justify-between">
+                <div className="flex flex-col gap-1.5 pr-8">
+                  <h4 className="text-base font-semibold text-slate-900">
                     {t('preferredSkills.careerPath.title')}
-                  </p>
-                  <p className="mt-1 text-sm leading-snug font-semibold text-slate-700">
+                  </h4>
+                  <p className="text-sm leading-snug text-slate-600">
                     {t('preferredSkills.careerPath.description')}
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={handleCancelCareerPath}
-                  className="flex size-6 items-center justify-center rounded text-slate-900 hover:bg-black/5"
+                  className="flex size-8 items-center justify-center rounded text-slate-900 hover:bg-black/5"
                 >
-                  <X className="size-5" />
+                  <X className="size-5 rotate-0" />
                 </button>
               </div>
 
-              {/* White card with input */}
-              <div className="mb-4 rounded-lg bg-white p-3 shadow-md">
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-bold text-slate-900">
-                    {t('preferredSkills.careerPath.label')}
+              {/* White card with Combobox */}
+              <div className="mb-3 w-full rounded-xl bg-white p-3">
+                <div className="flex items-center justify-between gap-1">
+                  <label className="text-sm font-semibold text-slate-700">
+                    {t('preferredSkills.careerPath.label')}{' '}
+                    <span className="text-rose-500">*</span>
                   </label>
-                  <span className="text-sm font-semibold">
-                    <span className="text-slate-900">
-                      {careerPathSearch.length}
-                    </span>
-                    <span className="text-slate-500">
-                      /{MAX_CAREER_PATH_CHARS}
-                    </span>
-                  </span>
+                  <CharacterCount
+                    currentLength={
+                      careerPathApiSearch.length || careerPathSearch.length || 0
+                    }
+                    maxLength={MAX_CAREER_PATH_CHARS}
+                  />
                 </div>
 
-                <div className="relative mt-1">
-                  <input
-                    type="text"
+                <div className="mt-1">
+                  <Combobox
+                    modal={false}
+                    options={careerPaths.map(cp => ({
+                      label: cp.label,
+                      value: cp.label,
+                    }))}
                     value={careerPathSearch}
-                    onChange={e => {
-                      if (e.target.value.length <= MAX_CAREER_PATH_CHARS) {
-                        setCareerPathSearch(e.target.value);
-                        setCareerPathError('');
-                        setIsCareerPathDropdownOpen(true);
-                      }
+                    onValueChange={(value: string) => {
+                      setCareerPathSearch(value);
+                      setCareerPathError('');
                     }}
-                    onFocus={() => setIsCareerPathDropdownOpen(true)}
-                    onBlur={() =>
-                      setTimeout(() => setIsCareerPathDropdownOpen(false), 150)
-                    }
+                    onSearchChange={setCareerPathApiSearch}
+                    loading={isCareerPathsLoading}
+                    onAddNew={(value: string) => {
+                      const trimmedValue = value.trim();
+                      const existing = careerPaths.find(
+                        cp =>
+                          cp.label.toLowerCase() === trimmedValue.toLowerCase()
+                      );
+                      if (existing) {
+                        setCareerPathSearch(existing.label);
+                        setCareerPathError('');
+                        return;
+                      }
+                      const newCareerPath = {
+                        id: crypto.randomUUID(),
+                        label: trimmedValue,
+                      };
+                      setUserEnteredCareerPaths(prev => [
+                        ...prev,
+                        newCareerPath,
+                      ]);
+                      setCareerPathSearch(trimmedValue);
+                      setCareerPathError('');
+                    }}
                     placeholder={t(
                       'preferredSkills.careerPath.input.placeholder'
                     )}
-                    className={cn(
-                      'w-full rounded-lg border bg-white px-4 py-2.5 text-sm text-slate-900 shadow-sm placeholder:text-slate-500 focus:ring-1 focus:outline-none',
-                      careerPathError
-                        ? 'border-red-400 focus:border-red-400 focus:ring-red-400'
-                        : 'border-slate-300 focus:border-teal-600 focus:ring-teal-600'
-                    )}
+                    className="h-11 border-slate-200 bg-white text-sm"
+                    maxLength={MAX_CAREER_PATH_CHARS}
+                    isError={!!careerPathError}
                   />
-
-                  {/* Career path dropdown */}
-                  {isCareerPathDropdownOpen && (
-                    <div className="absolute z-30 mt-1 max-h-48 w-full overflow-y-auto rounded-md border border-slate-200 bg-white shadow-md">
-                      {isCareerPathsLoading ? (
-                        <p className="px-3 py-2 text-sm text-slate-400">
-                          {t('preferredSkills.input.typeToSearch')}
-                        </p>
-                      ) : (
-                        <>
-                          {careerPathSearch.trim() && (
-                            <button
-                              type="button"
-                              onMouseDown={e => e.preventDefault()}
-                              onClick={() => {
-                                const trimmed = careerPathSearch.trim();
-                                const alreadyExists = careerPaths.some(
-                                  cp =>
-                                    cp.label.toLowerCase() ===
-                                    trimmed.toLowerCase()
-                                );
-                                if (!alreadyExists) {
-                                  setUserEnteredCareerPaths(prev => [
-                                    { id: crypto.randomUUID(), label: trimmed },
-                                    ...prev,
-                                  ]);
-                                }
-                                setCareerPathSearch(trimmed);
-                                setIsCareerPathDropdownOpen(false);
-                              }}
-                              className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-teal-700 hover:bg-slate-50"
-                            >
-                              <Plus className="size-4" />
-                              {t('preferredSkills.input.addNew', {
-                                value: careerPathSearch.trim(),
-                              })}
-                            </button>
-                          )}
-                          {careerPaths.map(cp => (
-                            <button
-                              key={cp.id}
-                              type="button"
-                              onMouseDown={e => e.preventDefault()}
-                              onClick={() => {
-                                setCareerPathSearch(cp.label);
-                                setIsCareerPathDropdownOpen(false);
-                              }}
-                              className="w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
-                            >
-                              {cp.label}
-                            </button>
-                          ))}
-                          {careerPaths.length === 0 &&
-                            !careerPathSearch.trim() && (
-                              <p className="px-3 py-2 text-sm text-slate-400">
-                                {t('preferredSkills.input.typeToSearch')}
-                              </p>
-                            )}
-                        </>
-                      )}
-                    </div>
-                  )}
                 </div>
 
                 {careerPathError && (
@@ -543,9 +514,9 @@ export default function PreferredSkillsStep({
               <div className="flex justify-end">
                 <Button
                   onClick={handleAddCareerPath}
-                  className="h-9 gap-1.5 bg-[#075056] px-8 text-sm font-bold hover:bg-teal-800"
+                  className="h-auto w-37.75 gap-1 rounded-lg bg-teal-800 px-8 py-2 text-sm font-medium text-white shadow-sm hover:bg-teal-900"
                 >
-                  <Plus className="size-5" />
+                  <Plus className="size-5 stroke-2" />
                   {t('preferredSkills.careerPath.addButton')}
                 </Button>
               </div>
