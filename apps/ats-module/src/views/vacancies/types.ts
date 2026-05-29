@@ -324,6 +324,7 @@ interface SkillCareerPathEntry {
   careerPathId?: string;
   careerPathName: string;
   displayValue: string;
+  source?: string;
 }
 
 interface PreferredSkills {
@@ -343,6 +344,7 @@ interface LanguageItem {
 interface LanguageEntry {
   id: string;
   label: string;
+  source?: string;
 }
 
 interface PreferredLanguages {
@@ -362,6 +364,7 @@ interface CauseItem {
 interface CauseEntry {
   id: string;
   label: string;
+  source?: string;
 }
 
 interface PreferredCauses {
@@ -381,6 +384,7 @@ interface HobbyItem {
 interface HobbyEntry {
   id: string;
   label: string;
+  source?: string;
 }
 
 interface PreferredHobbies {

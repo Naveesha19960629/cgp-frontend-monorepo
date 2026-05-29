@@ -5,14 +5,17 @@ import { useTranslation } from 'react-i18next';
 
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import {
+  useCreateLanguageMutation,
   useDisableSuccessToast,
   useLanguagesQuery,
 } from '@/views/vacancies/hooks';
+import { languageService } from '@/views/vacancies/services';
 import type {
   LanguageEntry,
   LanguageItem,
   StepProps,
 } from '@/views/vacancies/types';
+import { resolveUserCreatedEntries } from '@/views/vacancies/utils';
 
 import { Badge } from '@cgp/ui-kit/components/ui/badge';
 import { Checkbox } from '@cgp/ui-kit/components/ui/checkbox';
@@ -34,7 +37,7 @@ export default function PreferredLanguagesStep({
   const { form } = useVacancyForm();
 
   const [isEnabled, setIsEnabled] = useState(
-    form.preferredLanguages?.isEnabled ?? true
+    form.preferredLanguages?.isEnabled ?? false
   );
   const [dataTakenFromCandidate, setDataTakenFromCandidate] = useState(
     form.preferredLanguages?.dataTakenFromCandidate ?? false
@@ -84,7 +87,7 @@ export default function PreferredLanguagesStep({
         setShowMaxError(true);
         return;
       }
-      setSelectedLanguages(prev => [...prev, { id, label }]);
+      setSelectedLanguages(prev => [...prev, { id, label, source: 'MASTER' }]);
     }
   };
 
@@ -115,7 +118,10 @@ export default function PreferredLanguagesStep({
       setUserEnteredLanguages(prev => [{ id: newId, label: trimmed }, ...prev]);
     }
 
-    setSelectedLanguages(prev => [...prev, { id: newId, label: trimmed }]);
+    setSelectedLanguages(prev => [
+      ...prev,
+      { id: newId, label: trimmed, source: 'USER_CREATED' },
+    ]);
     setLangSearch('');
   };
 
@@ -129,7 +135,9 @@ export default function PreferredLanguagesStep({
     }
   };
 
-  const handleNext = () => {
+  const { mutateAsync: createLanguage } = useCreateLanguageMutation();
+
+  const handleNext = async () => {
     if (
       isEnabled &&
       selectedLanguages.length === 0 &&
@@ -138,11 +146,25 @@ export default function PreferredLanguagesStep({
       setEmptyDisableOpen(true);
       return;
     }
+
+    let resolvedLanguages: LanguageEntry[] = selectedLanguages;
+    const hasUserCreated = selectedLanguages.some(
+      l => l.source === 'USER_CREATED'
+    );
+    if (hasUserCreated) {
+      resolvedLanguages = await resolveUserCreatedEntries(
+        selectedLanguages,
+        createLanguage,
+        (search: string) => languageService.getAllLanguages(search)
+      );
+      setSelectedLanguages(resolvedLanguages);
+    }
+
     onNext({
       preferredLanguages: {
         isEnabled,
         dataTakenFromCandidate,
-        languages: selectedLanguages,
+        languages: resolvedLanguages,
       },
     });
   };
@@ -155,7 +177,11 @@ export default function PreferredLanguagesStep({
         onBack={onBack}
         onToggle={() => {
           if (isEnabled) {
-            setConfirmDisableOpen(true);
+            if (selectedLanguages.length > 0 || dataTakenFromCandidate) {
+              setConfirmDisableOpen(true);
+            } else {
+              setIsEnabled(false);
+            }
           } else {
             setIsEnabled(true);
           }
@@ -364,7 +390,7 @@ export default function PreferredLanguagesStep({
         }}
       />
 
-      <StepFooter onNext={handleNext} onCancel={onBack} />
+      <StepFooter onNext={() => void handleNext()} onCancel={onBack} />
     </div>
   );
 }

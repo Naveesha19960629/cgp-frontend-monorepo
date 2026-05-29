@@ -6,9 +6,12 @@ import { useTranslation } from 'react-i18next';
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import {
   useCareerPathsQuery,
+  useCreateCareerPathMutation,
+  useCreateSkillCareerPathMutation,
   useDisableSuccessToast,
   useSkillsQuery,
 } from '@/views/vacancies/hooks';
+import { careerPathService, skillService } from '@/views/vacancies/services';
 import type {
   CareerPathItem,
   SkillCareerPathEntry,
@@ -38,7 +41,7 @@ export default function PreferredSkillsStep({
   const { form } = useVacancyForm();
 
   const [isEnabled, setIsEnabled] = useState(
-    form.preferredSkills?.isEnabled ?? true
+    form.preferredSkills?.isEnabled ?? false
   );
   const [dataTakenFromCandidate, setDataTakenFromCandidate] = useState(
     form.preferredSkills?.dataTakenFromCandidate ?? false
@@ -72,6 +75,9 @@ export default function PreferredSkillsStep({
   const skills: SkillItem[] = skillsData?.data?.items?.content ?? [];
   const apiCareerPaths: CareerPathItem[] =
     careerPathsData?.data?.items?.content ?? [];
+  const { mutateAsync: createSkillCareerPath } =
+    useCreateSkillCareerPathMutation();
+  const { mutateAsync: createCareerPath } = useCreateCareerPathMutation();
   // Merge user-entered (first, so they appear at top) with API results, deduped
   const careerPaths: CareerPathItem[] = [
     ...userEnteredCareerPaths,
@@ -159,7 +165,8 @@ export default function PreferredSkillsStep({
       return;
     }
 
-    const matchedCareerPath = careerPaths.find(
+    // Match only against API career paths (not user-entered ones with fake UUIDs)
+    const matchedCareerPath = apiCareerPaths.find(
       cp => cp.label.toLowerCase() === careerPathSearch.trim().toLowerCase()
     );
 
@@ -169,6 +176,7 @@ export default function PreferredSkillsStep({
       careerPathId: matchedCareerPath?.id,
       careerPathName: careerPathSearch.trim(),
       displayValue: `${pendingSkillName} - ${careerPathSearch.trim()}`,
+      source: 'USER_CREATED',
     };
 
     setSelectedSkills(prev => [...prev, entry]);
@@ -200,16 +208,95 @@ export default function PreferredSkillsStep({
 
   // ── Submit ────────────────────────────────────────────────────────────────
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (isEnabled && selectedSkills.length === 0 && !dataTakenFromCandidate) {
       setEmptyDisableOpen(true);
       return;
     }
+
+    const hasUserCreated = selectedSkills.some(
+      s => s.source === 'USER_CREATED'
+    );
+
+    let resolvedSkills = selectedSkills;
+    if (hasUserCreated) {
+      resolvedSkills = await Promise.all(
+        selectedSkills.map(async entry => {
+          if (entry.source !== 'USER_CREATED') return entry;
+
+          try {
+            // Step 1: If career path is new (no ID), POST it first
+            let resolvedCareerPathId = entry.careerPathId;
+            if (!resolvedCareerPathId && entry.careerPathName) {
+              try {
+                const cpResult = await createCareerPath(entry.careerPathName);
+                resolvedCareerPathId = cpResult.pendingId;
+              } catch (cpErr) {
+                const cpAxiosErr = cpErr as {
+                  response?: { data?: { code?: string } };
+                };
+                if (cpAxiosErr.response?.data?.code === 'MST-403') {
+                  const cpSearch = await careerPathService.getAllCareerPaths(
+                    entry.careerPathName
+                  );
+                  const existingCp = cpSearch.data.items.content.find(
+                    item =>
+                      item.label.toLowerCase() ===
+                      entry.careerPathName.toLowerCase()
+                  );
+                  if (existingCp) {
+                    resolvedCareerPathId = existingCp.id;
+                  }
+                } else {
+                  throw cpErr;
+                }
+              }
+            }
+
+            // Step 2: POST the skill-career-path combination
+            const result = await createSkillCareerPath({
+              skillName: entry.skillName,
+              careerPathName: entry.careerPathName,
+            });
+            return {
+              ...entry,
+              skillId: result.pendingId,
+              careerPathId: resolvedCareerPathId,
+              displayValue: result.value || entry.displayValue,
+              source: 'PENDING',
+            };
+          } catch (err) {
+            const axiosErr = err as {
+              response?: { data?: { code?: string } };
+            };
+            if (axiosErr.response?.data?.code === 'MST-403') {
+              const searchResult = await skillService.getAllSkills(
+                entry.displayValue
+              );
+              const existing = searchResult.data.items.content.find(
+                item =>
+                  item.label.toLowerCase() === entry.displayValue.toLowerCase()
+              );
+              if (existing) {
+                return {
+                  ...entry,
+                  skillId: existing.id,
+                  source: 'MASTER',
+                };
+              }
+            }
+            throw err;
+          }
+        })
+      );
+      setSelectedSkills(resolvedSkills);
+    }
+
     onNext({
       preferredSkills: {
         isEnabled,
         dataTakenFromCandidate,
-        skills: selectedSkills,
+        skills: resolvedSkills,
       },
     });
   };
@@ -223,7 +310,11 @@ export default function PreferredSkillsStep({
         onBack={onBack}
         onToggle={() => {
           if (isEnabled) {
-            setConfirmDisableOpen(true);
+            if (selectedSkills.length > 0 || dataTakenFromCandidate) {
+              setConfirmDisableOpen(true);
+            } else {
+              setIsEnabled(false);
+            }
           } else {
             setIsEnabled(true);
           }
@@ -597,7 +688,7 @@ export default function PreferredSkillsStep({
       />
 
       {/* Footer — sticky at bottom of the parent scroll container */}
-      <StepFooter onNext={handleNext} onCancel={onBack} />
+      <StepFooter onNext={() => void handleNext()} onCancel={onBack} />
     </div>
   );
 }

@@ -6,9 +6,12 @@ import { useTranslation } from 'react-i18next';
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import {
   useCausesQuery,
+  useCreateCauseMutation,
   useDisableSuccessToast,
 } from '@/views/vacancies/hooks';
+import { causeService } from '@/views/vacancies/services';
 import type { CauseEntry, CauseItem, StepProps } from '@/views/vacancies/types';
+import { resolveUserCreatedEntries } from '@/views/vacancies/utils';
 
 import { Badge } from '@cgp/ui-kit/components/ui/badge';
 import { Checkbox } from '@cgp/ui-kit/components/ui/checkbox';
@@ -30,7 +33,7 @@ export default function PreferredCausesStep({
   const { form } = useVacancyForm();
 
   const [isEnabled, setIsEnabled] = useState(
-    form.preferredCauses?.isEnabled ?? true
+    form.preferredCauses?.isEnabled ?? false
   );
   const [dataTakenFromCandidate, setDataTakenFromCandidate] = useState(
     form.preferredCauses?.dataTakenFromCandidate ?? false
@@ -77,7 +80,7 @@ export default function PreferredCausesStep({
         setShowMaxError(true);
         return;
       }
-      setSelectedCauses(prev => [...prev, { id, label }]);
+      setSelectedCauses(prev => [...prev, { id, label, source: 'MASTER' }]);
     }
   };
 
@@ -107,7 +110,10 @@ export default function PreferredCausesStep({
       setUserEnteredCauses(prev => [{ id: newId, label: trimmed }, ...prev]);
     }
 
-    setSelectedCauses(prev => [...prev, { id: newId, label: trimmed }]);
+    setSelectedCauses(prev => [
+      ...prev,
+      { id: newId, label: trimmed, source: 'USER_CREATED' },
+    ]);
     setCauseSearch('');
   };
 
@@ -121,16 +127,32 @@ export default function PreferredCausesStep({
     }
   };
 
-  const handleNext = () => {
+  const { mutateAsync: createCause } = useCreateCauseMutation();
+
+  const handleNext = async () => {
     if (isEnabled && selectedCauses.length === 0 && !dataTakenFromCandidate) {
       setEmptyDisableOpen(true);
       return;
     }
+
+    let resolvedCauses: CauseEntry[] = selectedCauses;
+    const hasUserCreated = selectedCauses.some(
+      c => c.source === 'USER_CREATED'
+    );
+    if (hasUserCreated) {
+      resolvedCauses = await resolveUserCreatedEntries(
+        selectedCauses,
+        createCause,
+        (search: string) => causeService.getAllCauses(search)
+      );
+      setSelectedCauses(resolvedCauses);
+    }
+
     onNext({
       preferredCauses: {
         isEnabled,
         dataTakenFromCandidate,
-        causes: selectedCauses,
+        causes: resolvedCauses,
       },
     });
   };
@@ -143,7 +165,11 @@ export default function PreferredCausesStep({
         onBack={onBack}
         onToggle={() => {
           if (isEnabled) {
-            setConfirmDisableOpen(true);
+            if (selectedCauses.length > 0 || dataTakenFromCandidate) {
+              setConfirmDisableOpen(true);
+            } else {
+              setIsEnabled(false);
+            }
           } else {
             setIsEnabled(true);
           }
@@ -350,7 +376,7 @@ export default function PreferredCausesStep({
         }}
       />
 
-      <StepFooter onNext={handleNext} onCancel={onBack} />
+      <StepFooter onNext={() => void handleNext()} onCancel={onBack} />
     </div>
   );
 }

@@ -5,10 +5,13 @@ import { useTranslation } from 'react-i18next';
 
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import {
+  useCreateHobbyMutation,
   useDisableSuccessToast,
   useHobbiesQuery,
 } from '@/views/vacancies/hooks';
+import { hobbyService } from '@/views/vacancies/services';
 import type { HobbyEntry, HobbyItem, StepProps } from '@/views/vacancies/types';
+import { resolveUserCreatedEntries } from '@/views/vacancies/utils';
 
 import { Badge } from '@cgp/ui-kit/components/ui/badge';
 import { Checkbox } from '@cgp/ui-kit/components/ui/checkbox';
@@ -30,7 +33,7 @@ export default function PreferredHobbiesStep({
   const { form } = useVacancyForm();
 
   const [isEnabled, setIsEnabled] = useState(
-    form.preferredHobbies?.isEnabled ?? true
+    form.preferredHobbies?.isEnabled ?? false
   );
   const [dataTakenFromCandidate, setDataTakenFromCandidate] = useState(
     form.preferredHobbies?.dataTakenFromCandidate ?? false
@@ -77,7 +80,7 @@ export default function PreferredHobbiesStep({
         setShowMaxError(true);
         return;
       }
-      setSelectedHobbies(prev => [...prev, { id, label }]);
+      setSelectedHobbies(prev => [...prev, { id, label, source: 'MASTER' }]);
     }
   };
 
@@ -107,7 +110,10 @@ export default function PreferredHobbiesStep({
       setUserEnteredHobbies(prev => [{ id: newId, label: trimmed }, ...prev]);
     }
 
-    setSelectedHobbies(prev => [...prev, { id: newId, label: trimmed }]);
+    setSelectedHobbies(prev => [
+      ...prev,
+      { id: newId, label: trimmed, source: 'USER_CREATED' },
+    ]);
     setHobbySearch('');
   };
 
@@ -121,16 +127,32 @@ export default function PreferredHobbiesStep({
     }
   };
 
-  const handleNext = () => {
+  const { mutateAsync: createHobby } = useCreateHobbyMutation();
+
+  const handleNext = async () => {
     if (isEnabled && selectedHobbies.length === 0 && !dataTakenFromCandidate) {
       setEmptyDisableOpen(true);
       return;
     }
+
+    let resolvedHobbies: HobbyEntry[] = selectedHobbies;
+    const hasUserCreated = selectedHobbies.some(
+      h => h.source === 'USER_CREATED'
+    );
+    if (hasUserCreated) {
+      resolvedHobbies = await resolveUserCreatedEntries(
+        selectedHobbies,
+        createHobby,
+        (search: string) => hobbyService.getAllHobbies(search)
+      );
+      setSelectedHobbies(resolvedHobbies);
+    }
+
     onNext({
       preferredHobbies: {
         isEnabled,
         dataTakenFromCandidate,
-        hobbies: selectedHobbies,
+        hobbies: resolvedHobbies,
       },
     });
   };
@@ -143,7 +165,11 @@ export default function PreferredHobbiesStep({
         onBack={onBack}
         onToggle={() => {
           if (isEnabled) {
-            setConfirmDisableOpen(true);
+            if (selectedHobbies.length > 0 || dataTakenFromCandidate) {
+              setConfirmDisableOpen(true);
+            } else {
+              setIsEnabled(false);
+            }
           } else {
             setIsEnabled(true);
           }
@@ -350,7 +376,7 @@ export default function PreferredHobbiesStep({
         }}
       />
 
-      <StepFooter onNext={handleNext} onCancel={onBack} />
+      <StepFooter onNext={() => void handleNext()} onCancel={onBack} />
     </div>
   );
 }
