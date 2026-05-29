@@ -50,9 +50,11 @@ import {
   PopoverTrigger,
 } from '@cgp/ui-kit/components/ui/popover';
 import { Textarea } from '@cgp/ui-kit/components/ui/textarea';
+import { applyTypography } from '@cgp/ui-kit/lib/typography';
 import { cn } from '@cgp/ui-kit/lib/utils';
 
 const MAX_SELECTIONS = 10;
+const HUNDRED_YEARS_AGO = new Date(new Date().getFullYear() - 100, 0, 1);
 
 export default function SecondaryEducationStep({
   onNext,
@@ -67,10 +69,12 @@ export default function SecondaryEducationStep({
   const isEnabled = watch('isEnabled');
   const dataTakenFromCandidate = watch('dataTakenFromCandidate');
   const startDateValue = watch('entry.startDate');
+  const endDateValue = watch('entry.endDate');
   const schoolsValue = watch('entry.schools');
 
-  // ── Form field helpers ───────────────────────────────────────────────────
+  // ── Form field helpers ───────────────────────────────────────
   const fieldsDisabled = !isEnabled || dataTakenFromCandidate;
+  const endDateDefaultMonth = new Date(endDateValue ?? startDateValue ?? 0);
 
   const clearEntryData = () => {
     setValue('entry.schools', []);
@@ -113,6 +117,9 @@ export default function SecondaryEducationStep({
 
   // ── Disable confirmation dialog state ───────────────────────────────
   const [confirmDisableOpen, setConfirmDisableOpen] = useState(false);
+  const [openDatePopover, setOpenDatePopover] = useState<
+    'startDate' | 'endDate' | null
+  >(null);
 
   // ── Creatable input tracking (for character count) ────────────────────────
   const [examinationInput, setExaminationInput] = useState('');
@@ -368,6 +375,7 @@ export default function SecondaryEducationStep({
                       creatable
                       hideClearAllButton
                       triggerSearchOnFocus
+                      keepSelectedInList
                       loadingIndicator={
                         <p className="px-3 pb-3 text-left text-sm text-slate-500">
                           {t('secondaryEducation.search.loading')}
@@ -406,6 +414,7 @@ export default function SecondaryEducationStep({
                           : undefined
                       }
                       triggerSearchOnFocus
+                      keepSelectedInList
                       loadingIndicator={
                         <p className="px-3 pb-3 text-left text-sm text-slate-500">
                           {t('secondaryEducation.search.loading')}
@@ -463,22 +472,42 @@ export default function SecondaryEducationStep({
                   control={control}
                   name="entry.startDate"
                   render={({ field }) => (
-                    <Popover>
+                    <Popover
+                      modal
+                      open={openDatePopover === 'startDate'}
+                      onOpenChange={open =>
+                        setOpenDatePopover(
+                          !fieldsDisabled && open ? 'startDate' : null
+                        )
+                      }
+                    >
                       <PopoverTrigger asChild>
                         <Button
+                          type="button"
                           variant="outline"
+                          disabled={fieldsDisabled}
                           className={cn(
-                            'h-11 w-full justify-between text-left font-normal',
-                            !field.value && 'text-slate-500'
+                            'border-input flex h-11 w-full items-center justify-between rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
+                            !field.value && 'text-slate-500',
+                            field.value && 'text-zinc-800',
+                            'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
+                            'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
+                            'dark:bg-input/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
+                            applyTypography('body-medium'),
+                            'shadow-none!'
                           )}
                         >
-                          {field.value
-                            ? formatDate(field.value)
-                            : t('secondaryEducation.placeholders.startDate')}
+                          {field.value ? (
+                            formatDate(field.value)
+                          ) : (
+                            <span>
+                              {t('secondaryEducation.placeholders.startDate')}
+                            </span>
+                          )}
                           <CalendarIcon
                             variant="Linear"
                             size={20}
-                            className="text-slate-400"
+                            className="text-zinc-800"
                           />
                         </Button>
                       </PopoverTrigger>
@@ -488,12 +517,26 @@ export default function SecondaryEducationStep({
                           selected={
                             field.value ? new Date(field.value) : undefined
                           }
+                          defaultMonth={
+                            field.value ? new Date(field.value) : new Date()
+                          }
                           onSelect={date => {
                             field.onChange(
                               date ? date.toISOString() : undefined
                             );
+                            setOpenDatePopover(null);
+                            const endDate = getValues('entry.endDate');
+                            if (endDate && date && new Date(endDate) <= date) {
+                              resetField('entry.endDate', {
+                                defaultValue: undefined,
+                              });
+                            }
                           }}
-                          disabled={date => date > new Date()}
+                          disabled={date =>
+                            date > new Date() || date < HUNDRED_YEARS_AGO
+                          }
+                          captionLayout="dropdown"
+                          startMonth={HUNDRED_YEARS_AGO}
                         />
                       </PopoverContent>
                     </Popover>
@@ -509,22 +552,42 @@ export default function SecondaryEducationStep({
                   control={control}
                   name="entry.endDate"
                   render={({ field }) => (
-                    <Popover>
+                    <Popover
+                      modal
+                      open={openDatePopover === 'endDate'}
+                      onOpenChange={open =>
+                        setOpenDatePopover(
+                          !fieldsDisabled && open ? 'endDate' : null
+                        )
+                      }
+                    >
                       <PopoverTrigger asChild>
                         <Button
+                          type="button"
                           variant="outline"
+                          disabled={fieldsDisabled}
                           className={cn(
-                            'h-11 w-full justify-between text-left font-normal',
-                            !field.value && 'text-slate-500'
+                            'border-input flex h-11 w-full items-center justify-between rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
+                            !field.value && 'text-slate-500',
+                            field.value && 'text-zinc-800',
+                            'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
+                            'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
+                            'dark:bg-input/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
+                            applyTypography('body-medium'),
+                            'shadow-none!'
                           )}
                         >
-                          {field.value
-                            ? formatDate(field.value)
-                            : t('secondaryEducation.placeholders.endDate')}
+                          {field.value ? (
+                            formatDate(field.value)
+                          ) : (
+                            <span>
+                              {t('secondaryEducation.placeholders.endDate')}
+                            </span>
+                          )}
                           <CalendarIcon
                             variant="Linear"
                             size={20}
-                            className="text-slate-400"
+                            className="text-zinc-800"
                           />
                         </Button>
                       </PopoverTrigger>
@@ -534,16 +597,21 @@ export default function SecondaryEducationStep({
                           selected={
                             field.value ? new Date(field.value) : undefined
                           }
+                          defaultMonth={endDateDefaultMonth}
                           onSelect={date => {
                             field.onChange(
                               date ? date.toISOString() : undefined
                             );
+                            setOpenDatePopover(null);
                           }}
                           disabled={date =>
-                            startDateValue
+                            date < HUNDRED_YEARS_AGO ||
+                            (startDateValue
                               ? date <= new Date(startDateValue)
-                              : false
+                              : false)
                           }
+                          captionLayout="dropdown"
+                          startMonth={HUNDRED_YEARS_AGO}
                         />
                       </PopoverContent>
                     </Popover>
@@ -586,6 +654,7 @@ export default function SecondaryEducationStep({
                       creatable
                       hideClearAllButton
                       triggerSearchOnFocus
+                      keepSelectedInList
                       loadingIndicator={
                         <p className="px-3 pb-3 text-left text-sm text-slate-500">
                           {t('secondaryEducation.search.loading')}
@@ -640,6 +709,7 @@ export default function SecondaryEducationStep({
                       creatable
                       hideClearAllButton
                       triggerSearchOnFocus
+                      keepSelectedInList
                       loadingIndicator={
                         <p className="px-3 pb-3 text-left text-sm text-slate-500">
                           {t('secondaryEducation.search.loading')}
@@ -697,6 +767,7 @@ export default function SecondaryEducationStep({
                       creatable
                       hideClearAllButton
                       triggerSearchOnFocus
+                      keepSelectedInList
                       loadingIndicator={
                         <p className="px-3 pb-3 text-left text-sm text-slate-500">
                           {t('secondaryEducation.search.loading')}
