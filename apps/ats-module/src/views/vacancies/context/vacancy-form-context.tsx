@@ -126,7 +126,13 @@ const DEFAULT_FORM: VacancyForm = {
   status: 'draft',
   lastActiveStep: VACANCY_STEPS[0].key,
   jobRequirements: [],
-  profileRequirements: [],
+  profileRequirements: {
+    isEnabled: false,
+    dataTakenFromCandidate: false,
+    gender: { id: '', label: '' },
+    maritalStatus: { id: '', label: '' },
+    addresses: [],
+  },
   secondaryEducation: [
     { isEnabled: false, dataTakenFromCandidate: false, content: [] },
   ],

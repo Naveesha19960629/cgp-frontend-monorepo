@@ -92,6 +92,52 @@
       "disable": "Disable"
     }
   },
+  "profileRequirements": {
+    "title": "Profile Requirements",
+    "back": "Back",
+    "bannerTitle": "Build the Application Form",
+    "bannerCertainFields": "Certain fields",
+    "bannerDescription": " in this section are always collected from candidates to support consistent candidate profiles. Any fields you don't select won't be collected",
+    "dataTakenFromCandidate": "If selected, no manual input is required, and data will be taken from the candidate profile",
+    "gender": "Gender",
+    "genderPlaceholder": "Select gender",
+    "maritalStatus": "Marital Status",
+    "maritalStatusPlaceholder": "Select marital status",
+    "addressesTitle": "Addresses",
+    "addressesDescription": "Please provide addresses",
+    "addressTitle": "Address {{number}}",
+    "city": "City",
+    "cityPlaceholder": "Select city",
+    "stateProvince": "State / Province / Region",
+    "stateProvincePlaceholder": "Select state/province/region",
+    "country": "Country",
+    "countryPlaceholder": "Select country",
+    "postalCode": "Postal Code / Zip",
+    "postalCodePlaceholder": "Enter portal code/zip",
+    "addAddress": "Add address",
+    "removeAddress": "Remove address",
+    "collapse": "Collapse",
+    "expand": "Expand",
+    "cancelButton": "Cancel",
+    "nextButton": "Next",
+    "fieldList": {
+      "gender": "Gender",
+      "maritalStatus": "Marital Status",
+      "addresses": "Addresses"
+    },
+    "disableDialog": {
+      "title": "Are you sure?",
+      "description": "Are you sure you want to disable this section? Disabling this section will permanently remove all added data. This action cannot be undone",
+      "cancelButton": "Cancel",
+      "confirmButton": "Disable"
+    },
+    "emptyDisableDialog": {
+      "title": "Are you sure?",
+      "message": "You've enabled this section but haven't filled any fields. This section will be disabled for this vacancy and no data will be collected from candidates",
+      "cancel": "Cancel",
+      "disable": "Disable"
+    }
+  },
   "secondaryEducation": {
     "title": "Secondary Educational Requirements",
     "sectionTitle": "Secondary Education",

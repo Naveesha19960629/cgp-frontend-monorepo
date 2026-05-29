@@ -1,5 +1,11 @@
 export { useGendersQuery } from '@/views/vacancies/hooks/queries/use-gender-query';
 export { useIndustriesQuery } from '@/views/vacancies/hooks/queries/use-industries-query';
+export { useMaritalStatusesQuery } from '@/views/vacancies/hooks/queries/use-marital-statuses-query';
+export {
+  usePlacesCityQuery,
+  usePlacesStateQuery,
+  usePlacesCountryQuery,
+} from '@/views/vacancies/hooks/queries/use-places-query';
 export { useSocietiesQuery } from '@/views/vacancies/hooks/queries/use-societies-query';
 export { useSkillsQuery } from '@/views/vacancies/hooks/queries/use-skills-query';
 export { useCareerPathsQuery } from '@/views/vacancies/hooks/queries/use-career-paths-query';
