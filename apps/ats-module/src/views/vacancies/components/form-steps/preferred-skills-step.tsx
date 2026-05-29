@@ -1,6 +1,6 @@
 import { Plus, X } from 'lucide-react';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
@@ -15,11 +15,15 @@ import { careerPathService, skillService } from '@/views/vacancies/services';
 import type {
   CareerPathItem,
   SkillCareerPathEntry,
-  SkillItem,
   StepProps,
 } from '@/views/vacancies/types';
 
-import { Badge } from '@cgp/ui-kit/components/ui/badge';
+import { CharacterCount } from '@cgp/ui-kit/components/character-count';
+import MultipleSelector from '@cgp/ui-kit/components/multi-select';
+import type {
+  MultipleSelectorRef,
+  Option,
+} from '@cgp/ui-kit/components/multi-select';
 import { Button } from '@cgp/ui-kit/components/ui/button';
 import { Checkbox } from '@cgp/ui-kit/components/ui/checkbox';
 import { cn } from '@cgp/ui-kit/lib/utils';
@@ -31,6 +35,11 @@ import StepHeader from './step-header';
 const MAX_SKILLS = 10;
 const MAX_SKILL_CHARS = 100;
 const MAX_CAREER_PATH_CHARS = 100;
+
+const multiSelectInfoAvatar = new URL(
+  '../../../../assets/images/multi-select-info-avatar.svg',
+  import.meta.url
+).href;
 
 export default function PreferredSkillsStep({
   onNext,
@@ -50,9 +59,10 @@ export default function PreferredSkillsStep({
     form.preferredSkills?.skills ?? []
   );
 
-  // Skill search / dropdown
+  // Skill search state for the query
   const [skillSearch, setSkillSearch] = useState('');
-  const [isSkillDropdownOpen, setIsSkillDropdownOpen] = useState(false);
+  const [hasMaxError, setHasMaxError] = useState(false);
+  const skillSelectorRef = useRef<MultipleSelectorRef>(null);
 
   // Career path popover
   const [pendingSkillName, setPendingSkillName] = useState('');
@@ -68,11 +78,12 @@ export default function PreferredSkillsStep({
   >([]);
 
   // Queries
-  const { data: skillsData } = useSkillsQuery(skillSearch);
+  const { data: skillsData, isLoading: isSkillsLoading } =
+    useSkillsQuery(skillSearch);
   const { data: careerPathsData, isLoading: isCareerPathsLoading } =
     useCareerPathsQuery(careerPathSearch);
 
-  const skills: SkillItem[] = skillsData?.data?.items?.content ?? [];
+  const apiSkills = skillsData?.data?.items?.content ?? [];
   const apiCareerPaths: CareerPathItem[] =
     careerPathsData?.data?.items?.content ?? [];
   const { mutateAsync: createSkillCareerPath } =
@@ -89,72 +100,56 @@ export default function PreferredSkillsStep({
     ),
   ];
 
-  const atMax = selectedSkills.length >= MAX_SKILLS;
-  const [showMaxError, setShowMaxError] = useState(false);
   const [confirmDisableOpen, setConfirmDisableOpen] = useState(false);
   const [emptyDisableOpen, setEmptyDisableOpen] = useState(false);
 
-  // ── Skill selection ───────────────────────────────────────────────────────
+  // ── Skill selection via MultipleSelector ──────────────────────────────────
 
-  const handleSelectSkill = (id: string, name: string) => {
-    setSkillSearch('');
-    if (id) {
-      // Toggle: if already selected, remove it; otherwise add it.
-      const alreadyAdded = selectedSkills.some(s => s.skillId === id);
-      if (alreadyAdded) {
-        setSelectedSkills(prev => prev.filter(s => s.skillId !== id));
-        setShowMaxError(false);
-        return;
-      }
+  const handleSkillsChange = (options: Option[]) => {
+    // Find newly added option (present in options but not in selectedSkills)
+    const existingValues = new Set(
+      selectedSkills.map(s => s.skillId || s.skillName)
+    );
+    const newOption = options.find(
+      opt => !existingValues.has(opt.value) && !existingValues.has(opt.label)
+    );
 
-      if (atMax) {
-        setShowMaxError(true);
-        return;
-      }
-
-      const sepMatch = /\s[\u2013\u2014-]\s/.exec(name);
-      const skillName = sepMatch ? name.slice(0, sepMatch.index) : name;
-      const careerPathName = sepMatch
-        ? name.slice(sepMatch.index + sepMatch[0].length)
-        : '';
-      setSelectedSkills(prev => [
-        ...prev,
-        {
-          skillId: id,
-          skillName,
-          careerPathId: undefined,
-          careerPathName,
-          displayValue: name,
-        },
-      ]);
-      // Dropdown stays open so the user can select more skills
-    } else {
-      // Custom typed skill — prevent duplicate by skill name (case-insensitive)
-      const alreadyAdded = selectedSkills.some(
-        s => s.skillName.toLowerCase() === name.toLowerCase()
-      );
-      if (alreadyAdded) return;
-      if (atMax) {
-        setShowMaxError(true);
-        return;
-      }
-
-      // Close the skill dropdown and open career path panel
-      setIsSkillDropdownOpen(false);
+    if (newOption && !newOption.source) {
+      // User-created skill — open career path panel instead of adding directly
       setPendingSkillId('');
-      setPendingSkillName(name);
+      setPendingSkillName(newOption.label);
       setCareerPathSearch('');
       setCareerPathError('');
       setIsCareerPathPopoverOpen(true);
+      // Don't add to selectedSkills yet; it will be added via handleAddCareerPath
+      return;
     }
-  };
 
-  const handleSkillInputKeyDown = (
-    e: React.KeyboardEvent<HTMLInputElement>
-  ) => {
-    if (e.key === 'Escape') {
-      setIsSkillDropdownOpen(false);
-    }
+    // For removals or API-sourced additions, sync back to selectedSkills
+    const updatedSkills: SkillCareerPathEntry[] = options.map(opt => {
+      // Check if already exists in selectedSkills
+      const existing = selectedSkills.find(
+        s => s.skillId === opt.value || s.skillName === opt.label
+      );
+      if (existing) return existing;
+
+      // New API selection
+      const sepMatch = /\s[\u2013\u2014-]\s/.exec(opt.label);
+      const skillName = sepMatch
+        ? opt.label.slice(0, sepMatch.index)
+        : opt.label;
+      const careerPathName = sepMatch
+        ? opt.label.slice(sepMatch.index + sepMatch[0].length)
+        : '';
+      return {
+        skillId: opt.value,
+        skillName,
+        careerPathId: undefined,
+        careerPathName,
+        displayValue: opt.label,
+      };
+    });
+    setSelectedSkills(updatedSkills);
   };
 
   // ── Career path ───────────────────────────────────────────────────────────
@@ -197,13 +192,6 @@ export default function PreferredSkillsStep({
     setCareerPathSearch('');
     setCareerPathError('');
     setUserEnteredCareerPaths([]);
-  };
-
-  // ── Chip removal ──────────────────────────────────────────────────────────
-
-  const handleRemoveSkill = (index: number) => {
-    setSelectedSkills(prev => prev.filter((_, i) => i !== index));
-    setShowMaxError(false);
   };
 
   // ── Submit ────────────────────────────────────────────────────────────────
@@ -345,148 +333,73 @@ export default function PreferredSkillsStep({
           {/* Section: Tools, Technologies, Skills and Frameworks */}
           <div>
             <div className="mb-2 flex items-center justify-between">
-              <span className="text-sm font-semibold text-slate-700">
+              <span
+                className={cn(
+                  'text-sm font-semibold text-slate-700',
+                  hasMaxError && 'text-destructive'
+                )}
+              >
                 {t('preferredSkills.sectionLabel')}
               </span>
-              <span className="text-sm font-semibold">
-                <span className="text-slate-900">{skillSearch.length}</span>
-                <span className="text-slate-400">/{MAX_SKILL_CHARS}</span>
-              </span>
-            </div>
-
-            {/* Skill search input */}
-            <div className="relative">
-              <input
-                type="text"
-                value={skillSearch}
-                onChange={e => {
-                  if (e.target.value.length <= MAX_SKILL_CHARS) {
-                    setSkillSearch(e.target.value);
-                    setIsSkillDropdownOpen(true);
-                  }
-                }}
-                onFocus={() => setIsSkillDropdownOpen(true)}
-                onClick={() => setIsSkillDropdownOpen(true)}
-                onKeyDown={handleSkillInputKeyDown}
-                onBlur={() =>
-                  setTimeout(() => setIsSkillDropdownOpen(false), 150)
-                }
-                disabled={dataTakenFromCandidate}
-                placeholder={t('preferredSkills.input.placeholder')}
-                className="w-full rounded-md border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:ring-1 focus:ring-teal-600 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+              <CharacterCount
+                maxLength={MAX_SKILL_CHARS}
+                currentLength={skillSearch.length}
               />
-
-              {/* Dropdown */}
-              {isSkillDropdownOpen && !dataTakenFromCandidate && (
-                <div className="absolute z-30 mt-1 max-h-56 w-full overflow-y-auto rounded-md border border-slate-200 bg-white shadow-md">
-                  {skillSearch.trim() && (
-                    <button
-                      type="button"
-                      onMouseDown={e => e.preventDefault()}
-                      onClick={() => handleSelectSkill('', skillSearch.trim())}
-                      className="m-3 flex w-[calc(100%-24px)] cursor-pointer items-center gap-1 overflow-hidden rounded bg-neutral-200 px-2 py-2.5 text-left text-sm font-medium text-slate-900 hover:bg-neutral-300"
-                    >
-                      <Plus className="size-4 shrink-0" />
-                      {t('preferredSkills.input.addNew', {
-                        value: skillSearch.trim(),
-                      })}
-                    </button>
-                  )}
-                  {skills.map(skill => {
-                    const isChecked = selectedSkills.some(
-                      s => s.skillId === skill.id
-                    );
-                    return (
-                      <button
-                        key={skill.id}
-                        type="button"
-                        aria-pressed={isChecked}
-                        onMouseDown={e => e.preventDefault()}
-                        onClick={() => handleSelectSkill(skill.id, skill.label)}
-                        className={cn(
-                          'flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50',
-                          isChecked && 'bg-slate-50'
-                        )}
-                      >
-                        <Checkbox
-                          checked={isChecked}
-                          className="pointer-events-none"
-                        />
-                        {skill.label}
-                      </button>
-                    );
-                  })}
-                  {skills.length === 0 && !skillSearch.trim() && (
-                    <p className="px-3 py-2 text-sm text-slate-400">
-                      {t('preferredSkills.input.typeToSearch')}
-                    </p>
-                  )}
-                </div>
-              )}
             </div>
 
-            {/* Exceeded max error */}
-            {showMaxError && (
-              <p className="mt-1.5 text-xs text-red-500">
-                {t('preferredSkills.validation.maxSkills', {
-                  max: MAX_SKILLS,
-                })}
-              </p>
-            )}
-
-            {/* Selected skill chips */}
-            {(selectedSkills.length > 0 || isCareerPathPopoverOpen) && (
-              <div className="mt-3 flex flex-wrap gap-3">
-                {/* Pending chip — visible while the career path panel is open */}
-                {isCareerPathPopoverOpen && pendingSkillName && (
-                  <Badge
-                    key="pending-skill"
-                    variant="chip"
-                    className="animate-fadeIn flex cursor-default items-center justify-between gap-2 pe-2 shadow-sm"
-                    style={{ borderColor: '#f59e0b', borderWidth: '1px' }}
-                  >
-                    <span className="capitalize">{pendingSkillName}</span>
-                  </Badge>
-                )}
-                {selectedSkills.map((entry, index) => (
-                  <Badge
-                    key={`${entry.skillId || entry.skillName}-${entry.careerPathName}-${index}`}
-                    variant="chip"
-                    className="animate-fadeIn flex max-w-full cursor-default items-center gap-2"
-                  >
-                    <span className="min-w-0 wrap-break-word">
-                      {entry.careerPathName ? (
-                        <>
-                          <span className="font-semibold text-slate-600">
-                            {entry.skillName} -
-                          </span>{' '}
-                          <span
-                            className="font-bold"
-                            style={{ color: '#075056' }}
-                          >
-                            {entry.careerPathName}
-                          </span>
-                        </>
-                      ) : (
-                        <span className="font-semibold text-slate-600">
-                          {entry.skillName}
-                        </span>
-                      )}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveSkill(index)}
-                      className="flex size-4 shrink-0 items-center justify-center text-slate-400 hover:text-slate-600"
-                      aria-label={t('preferredSkills.chip.remove', {
-                        name: entry.displayValue,
-                      })}
-                    >
-                      <X size={16} aria-hidden="true" />
-                    </button>
-                  </Badge>
-                ))}
-              </div>
-            )}
+            <MultipleSelector
+              ref={skillSelectorRef}
+              value={selectedSkills.map(s => ({
+                value: s.skillId || s.skillName,
+                label: s.displayValue,
+                source: s.source,
+              }))}
+              errorMessage={t('preferredSkills.validation.maxSkills', {
+                max: MAX_SKILLS,
+              })}
+              onErrorStateChange={setHasMaxError}
+              onChange={handleSkillsChange}
+              options={apiSkills.map(s => ({
+                value: s.id,
+                label: s.label,
+                source: 'MASTER',
+              }))}
+              onSearchSync={value => {
+                setSkillSearch(value);
+                return apiSkills.map(s => ({
+                  value: s.id,
+                  label: s.label,
+                  source: 'MASTER',
+                }));
+              }}
+              keepSelectedInList
+              creatable
+              triggerSearchOnFocus
+              hideClearAllButton
+              maxSelected={MAX_SKILLS}
+              disabled={!isEnabled || dataTakenFromCandidate}
+              inputProps={{ maxLength: MAX_SKILL_CHARS }}
+              loading={isSkillsLoading}
+              placeholder={t('preferredSkills.input.placeholder')}
+              loadingIndicator={
+                <p className="px-3 pb-3 text-left">{t('common.loading')}</p>
+              }
+              emptyIndicator={
+                <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
+                  <div className="flex flex-col items-start">
+                    <img src={multiSelectInfoAvatar} alt={t('common.noData')} />
+                    <div className="mt-3 w-61 text-left">
+                      <p className="font-bold text-slate-900">
+                        {t('common.noDataTitle')}
+                      </p>
+                      <p className="text-sm font-semibold text-slate-700">
+                        {t('common.noDataDescription')}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              }
+            />
           </div>
 
           {/* Career Path Panel — inline in content flow, appears after the skill chips */}

@@ -1,5 +1,3 @@
-import { Plus, X } from 'lucide-react';
-
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -10,10 +8,11 @@ import {
   useHobbiesQuery,
 } from '@/views/vacancies/hooks';
 import { hobbyService } from '@/views/vacancies/services';
-import type { HobbyEntry, HobbyItem, StepProps } from '@/views/vacancies/types';
+import type { HobbyEntry, StepProps } from '@/views/vacancies/types';
 import { resolveUserCreatedEntries } from '@/views/vacancies/utils';
 
-import { Badge } from '@cgp/ui-kit/components/ui/badge';
+import { CharacterCount } from '@cgp/ui-kit/components/character-count';
+import MultipleSelector from '@cgp/ui-kit/components/multi-select';
 import { Checkbox } from '@cgp/ui-kit/components/ui/checkbox';
 import { cn } from '@cgp/ui-kit/lib/utils';
 
@@ -23,6 +22,11 @@ import StepHeader from './step-header';
 
 const MAX_HOBBIES = 10;
 const MAX_HOBBY_CHARS = 100;
+
+const multiSelectInfoAvatar = new URL(
+  '../../../../assets/images/multi-select-info-avatar.svg',
+  import.meta.url
+).href;
 
 export default function PreferredHobbiesStep({
   onNext,
@@ -42,90 +46,20 @@ export default function PreferredHobbiesStep({
     form.preferredHobbies?.hobbies ?? []
   );
 
-  // Hobby search / dropdown
+  // Hobby search state for the query
   const [hobbySearch, setHobbySearch] = useState('');
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  // Accumulates user-typed hobbies for the current session
-  const [userEnteredHobbies, setUserEnteredHobbies] = useState<HobbyItem[]>([]);
+  const [hasMaxError, setHasMaxError] = useState(false);
 
   // Query
-  const { data: hobbiesData } = useHobbiesQuery(hobbySearch);
+  const { data: hobbiesData, isLoading: isHobbiesLoading } =
+    useHobbiesQuery(hobbySearch);
 
-  const apiHobbies: HobbyItem[] = hobbiesData?.data?.items?.content ?? [];
-  // Merge user-entered (at top) with API results, deduped
-  const hobbies: HobbyItem[] = [
-    ...userEnteredHobbies,
-    ...apiHobbies.filter(
-      api =>
-        !userEnteredHobbies.some(
-          u => u.label.toLowerCase() === api.label.toLowerCase()
-        )
-    ),
-  ];
+  const apiHobbies = hobbiesData?.data?.items?.content ?? [];
 
-  const atMax = selectedHobbies.length >= MAX_HOBBIES;
-  const [showMaxError, setShowMaxError] = useState(false);
   const [confirmDisableOpen, setConfirmDisableOpen] = useState(false);
   const [emptyDisableOpen, setEmptyDisableOpen] = useState(false);
 
   // ── Handlers ─────────────────────────────────────────────────────────────
-
-  const handleToggleHobby = (id: string, label: string) => {
-    const alreadySelected = selectedHobbies.some(h => h.id === id);
-    if (alreadySelected) {
-      setSelectedHobbies(prev => prev.filter(h => h.id !== id));
-      setShowMaxError(false);
-    } else {
-      if (atMax) {
-        setShowMaxError(true);
-        return;
-      }
-      setSelectedHobbies(prev => [...prev, { id, label, source: 'MASTER' }]);
-    }
-  };
-
-  const handleAddCustom = (name: string) => {
-    const trimmed = name.trim();
-    if (!trimmed) return;
-
-    // Prevent duplicate by label (case-insensitive)
-    const alreadySelected = selectedHobbies.some(
-      h => h.label.toLowerCase() === trimmed.toLowerCase()
-    );
-    if (alreadySelected) return;
-    if (atMax) {
-      setShowMaxError(true);
-      return;
-    }
-
-    const existsInList = hobbies.some(
-      h => h.label.toLowerCase() === trimmed.toLowerCase()
-    );
-    const newId = existsInList
-      ? (hobbies.find(h => h.label.toLowerCase() === trimmed.toLowerCase())
-          ?.id ?? crypto.randomUUID())
-      : crypto.randomUUID();
-
-    if (!existsInList) {
-      setUserEnteredHobbies(prev => [{ id: newId, label: trimmed }, ...prev]);
-    }
-
-    setSelectedHobbies(prev => [
-      ...prev,
-      { id: newId, label: trimmed, source: 'USER_CREATED' },
-    ]);
-    setHobbySearch('');
-  };
-
-  const handleRemoveHobby = (id: string) => {
-    setSelectedHobbies(prev => prev.filter(h => h.id !== id));
-  };
-
-  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Escape') {
-      setIsDropdownOpen(false);
-    }
-  };
 
   const { mutateAsync: createHobby } = useCreateHobbyMutation();
 
@@ -200,131 +134,79 @@ export default function PreferredHobbiesStep({
           {/* Section: Hobbies */}
           <div>
             <div className="mb-2 flex items-center justify-between">
-              <span className="text-sm font-semibold text-slate-700">
+              <span
+                className={cn(
+                  'text-sm font-semibold text-slate-700',
+                  hasMaxError && 'text-destructive'
+                )}
+              >
                 {t('preferredHobbies.sectionLabel')}
               </span>
-              <span className="text-sm font-semibold">
-                <span className="text-slate-900">{hobbySearch.length}</span>
-                <span className="text-slate-400">/{MAX_HOBBY_CHARS}</span>
-              </span>
-            </div>
-
-            {/* Hobby search input */}
-            <div className="relative">
-              <input
-                type="text"
-                value={hobbySearch}
-                onChange={e => {
-                  if (e.target.value.length <= MAX_HOBBY_CHARS) {
-                    setHobbySearch(e.target.value);
-                    setIsDropdownOpen(true);
-                  }
-                }}
-                onFocus={() => setIsDropdownOpen(true)}
-                onClick={() => setIsDropdownOpen(true)}
-                onKeyDown={handleInputKeyDown}
-                onBlur={() => setTimeout(() => setIsDropdownOpen(false), 150)}
-                disabled={dataTakenFromCandidate}
-                placeholder={t('preferredHobbies.input.placeholder')}
-                className="w-full rounded-md border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:ring-1 focus:ring-teal-600 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+              <CharacterCount
+                maxLength={MAX_HOBBY_CHARS}
+                currentLength={hobbySearch.length}
               />
-
-              {/* Dropdown */}
-              {isDropdownOpen && !dataTakenFromCandidate && (
-                <div className="absolute z-30 mt-1 max-h-56 w-full overflow-y-auto rounded-md border border-slate-200 bg-white shadow-md">
-                  {/* Add new (custom) option */}
-                  {hobbySearch.trim() &&
-                    !hobbies.some(
-                      h =>
-                        h.label.toLowerCase() ===
-                        hobbySearch.trim().toLowerCase()
-                    ) && (
-                      <button
-                        type="button"
-                        onMouseDown={e => e.preventDefault()}
-                        onClick={() => {
-                          handleAddCustom(hobbySearch.trim());
-                          setIsDropdownOpen(false);
-                        }}
-                        className="m-3 flex w-[calc(100%-24px)] cursor-pointer items-center gap-1 overflow-hidden rounded bg-neutral-200 px-2 py-2.5 text-left text-sm font-medium text-slate-900 hover:bg-neutral-300"
-                      >
-                        <Plus className="size-4 shrink-0" />
-                        {t('preferredHobbies.input.addNew', {
-                          value: hobbySearch.trim(),
-                        })}
-                      </button>
-                    )}
-
-                  {/* API + user-entered hobby list with checkboxes */}
-                  {hobbies.map(hobby => {
-                    const isChecked = selectedHobbies.some(
-                      h => h.id === hobby.id
-                    );
-                    return (
-                      <button
-                        key={hobby.id}
-                        type="button"
-                        aria-pressed={isChecked}
-                        onMouseDown={e => e.preventDefault()}
-                        onClick={() => handleToggleHobby(hobby.id, hobby.label)}
-                        className={cn(
-                          'flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50',
-                          isChecked && 'bg-slate-50'
-                        )}
-                      >
-                        <Checkbox
-                          checked={isChecked}
-                          className="pointer-events-none"
-                        />
-                        {hobby.label}
-                      </button>
-                    );
-                  })}
-
-                  {hobbies.length === 0 && !hobbySearch.trim() && (
-                    <p className="px-3 py-2 text-sm text-slate-400">
-                      {t('preferredHobbies.input.typeToSearch')}
-                    </p>
-                  )}
-                </div>
-              )}
             </div>
 
-            {/* Exceeded max error */}
-            {showMaxError && (
-              <p className="mt-1.5 text-xs text-red-500">
-                {t('preferredHobbies.validation.maxHobbies', {
-                  max: MAX_HOBBIES,
-                })}
-              </p>
-            )}
-
-            {/* Selected hobby chips */}
-            {selectedHobbies.length > 0 && (
-              <div className="mt-3 flex flex-wrap gap-3">
-                {selectedHobbies.map(entry => (
-                  <Badge
-                    key={entry.id}
-                    variant="chip"
-                    className="animate-fadeIn flex max-w-full cursor-default items-center gap-2"
-                  >
-                    <span className="min-w-0 font-semibold wrap-break-word text-slate-600">
-                      {entry.label}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveHobby(entry.id)}
-                      className="flex size-4 shrink-0 items-center justify-center text-slate-400 hover:text-slate-600"
-                      aria-label={t('preferredHobbies.chip.remove', {
-                        name: entry.label,
-                      })}
-                    >
-                      <X size={16} aria-hidden="true" />
-                    </button>
-                  </Badge>
-                ))}
-              </div>
-            )}
+            <MultipleSelector
+              value={selectedHobbies.map(h => ({
+                value: h.id,
+                label: h.label,
+                source: h.source,
+              }))}
+              errorMessage={t('preferredHobbies.validation.maxHobbies', {
+                max: MAX_HOBBIES,
+              })}
+              onErrorStateChange={setHasMaxError}
+              onChange={options => {
+                const entries: HobbyEntry[] = options.map(opt => ({
+                  id: opt.value,
+                  label: opt.label,
+                  source: (opt.source as string) ?? 'USER_CREATED',
+                }));
+                setSelectedHobbies(entries);
+              }}
+              options={apiHobbies.map(h => ({
+                value: h.id,
+                label: h.label,
+                source: 'MASTER',
+              }))}
+              onSearchSync={value => {
+                setHobbySearch(value);
+                return apiHobbies.map(h => ({
+                  value: h.id,
+                  label: h.label,
+                  source: 'MASTER',
+                }));
+              }}
+              keepSelectedInList
+              creatable
+              triggerSearchOnFocus
+              hideClearAllButton
+              maxSelected={MAX_HOBBIES}
+              disabled={!isEnabled || dataTakenFromCandidate}
+              inputProps={{ maxLength: MAX_HOBBY_CHARS }}
+              loading={isHobbiesLoading}
+              placeholder={t('preferredHobbies.input.placeholder')}
+              loadingIndicator={
+                <p className="px-3 pb-3 text-left">{t('common.loading')}</p>
+              }
+              emptyIndicator={
+                <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
+                  <div className="flex flex-col items-start">
+                    <img src={multiSelectInfoAvatar} alt={t('common.noData')} />
+                    <div className="mt-3 w-61 text-left">
+                      <p className="font-bold text-slate-900">
+                        {t('common.noDataTitle')}
+                      </p>
+                      <p className="text-sm font-semibold text-slate-700">
+                        {t('common.noDataDescription')}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              }
+            />
           </div>
 
           {/* Bottom padding so dropdowns are never clipped */}
@@ -344,7 +226,6 @@ export default function PreferredHobbiesStep({
         onCancel={() => setConfirmDisableOpen(false)}
         onDisable={() => {
           setSelectedHobbies([]);
-          setUserEnteredHobbies([]);
           setDataTakenFromCandidate(false);
           setIsEnabled(false);
           setConfirmDisableOpen(false);

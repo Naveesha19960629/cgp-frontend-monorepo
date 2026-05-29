@@ -1,5 +1,3 @@
-import { Plus, X } from 'lucide-react';
-
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -10,10 +8,11 @@ import {
   useDisableSuccessToast,
 } from '@/views/vacancies/hooks';
 import { causeService } from '@/views/vacancies/services';
-import type { CauseEntry, CauseItem, StepProps } from '@/views/vacancies/types';
+import type { CauseEntry, StepProps } from '@/views/vacancies/types';
 import { resolveUserCreatedEntries } from '@/views/vacancies/utils';
 
-import { Badge } from '@cgp/ui-kit/components/ui/badge';
+import { CharacterCount } from '@cgp/ui-kit/components/character-count';
+import MultipleSelector from '@cgp/ui-kit/components/multi-select';
 import { Checkbox } from '@cgp/ui-kit/components/ui/checkbox';
 import { cn } from '@cgp/ui-kit/lib/utils';
 
@@ -23,6 +22,11 @@ import StepHeader from './step-header';
 
 const MAX_CAUSES = 10;
 const MAX_CAUSE_CHARS = 100;
+
+const multiSelectInfoAvatar = new URL(
+  '../../../../assets/images/multi-select-info-avatar.svg',
+  import.meta.url
+).href;
 
 export default function PreferredCausesStep({
   onNext,
@@ -42,90 +46,20 @@ export default function PreferredCausesStep({
     form.preferredCauses?.causes ?? []
   );
 
-  // Cause search / dropdown
+  // Cause search state for the query
   const [causeSearch, setCauseSearch] = useState('');
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  // Accumulates user-typed causes for the current session
-  const [userEnteredCauses, setUserEnteredCauses] = useState<CauseItem[]>([]);
+  const [hasMaxError, setHasMaxError] = useState(false);
 
   // Query
-  const { data: causesData } = useCausesQuery(causeSearch);
+  const { data: causesData, isLoading: isCausesLoading } =
+    useCausesQuery(causeSearch);
 
-  const apiCauses: CauseItem[] = causesData?.data?.items?.content ?? [];
-  // Merge user-entered (at top) with API results, deduped
-  const causes: CauseItem[] = [
-    ...userEnteredCauses,
-    ...apiCauses.filter(
-      api =>
-        !userEnteredCauses.some(
-          u => u.label.toLowerCase() === api.label.toLowerCase()
-        )
-    ),
-  ];
+  const apiCauses = causesData?.data?.items?.content ?? [];
 
-  const atMax = selectedCauses.length >= MAX_CAUSES;
-  const [showMaxError, setShowMaxError] = useState(false);
   const [confirmDisableOpen, setConfirmDisableOpen] = useState(false);
   const [emptyDisableOpen, setEmptyDisableOpen] = useState(false);
 
   // ── Handlers ─────────────────────────────────────────────────────────────
-
-  const handleToggleCause = (id: string, label: string) => {
-    const alreadySelected = selectedCauses.some(c => c.id === id);
-    if (alreadySelected) {
-      setSelectedCauses(prev => prev.filter(c => c.id !== id));
-      setShowMaxError(false);
-    } else {
-      if (atMax) {
-        setShowMaxError(true);
-        return;
-      }
-      setSelectedCauses(prev => [...prev, { id, label, source: 'MASTER' }]);
-    }
-  };
-
-  const handleAddCustom = (name: string) => {
-    const trimmed = name.trim();
-    if (!trimmed) return;
-
-    // Prevent duplicate by label (case-insensitive)
-    const alreadySelected = selectedCauses.some(
-      c => c.label.toLowerCase() === trimmed.toLowerCase()
-    );
-    if (alreadySelected) return;
-    if (atMax) {
-      setShowMaxError(true);
-      return;
-    }
-
-    const existsInList = causes.some(
-      c => c.label.toLowerCase() === trimmed.toLowerCase()
-    );
-    const newId = existsInList
-      ? (causes.find(c => c.label.toLowerCase() === trimmed.toLowerCase())
-          ?.id ?? crypto.randomUUID())
-      : crypto.randomUUID();
-
-    if (!existsInList) {
-      setUserEnteredCauses(prev => [{ id: newId, label: trimmed }, ...prev]);
-    }
-
-    setSelectedCauses(prev => [
-      ...prev,
-      { id: newId, label: trimmed, source: 'USER_CREATED' },
-    ]);
-    setCauseSearch('');
-  };
-
-  const handleRemoveCause = (id: string) => {
-    setSelectedCauses(prev => prev.filter(c => c.id !== id));
-  };
-
-  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Escape') {
-      setIsDropdownOpen(false);
-    }
-  };
 
   const { mutateAsync: createCause } = useCreateCauseMutation();
 
@@ -200,131 +134,79 @@ export default function PreferredCausesStep({
           {/* Section: Causes */}
           <div>
             <div className="mb-2 flex items-center justify-between">
-              <span className="text-sm font-semibold text-slate-700">
+              <span
+                className={cn(
+                  'text-sm font-semibold text-slate-700',
+                  hasMaxError && 'text-destructive'
+                )}
+              >
                 {t('preferredCauses.sectionLabel')}
               </span>
-              <span className="text-sm font-semibold">
-                <span className="text-slate-900">{causeSearch.length}</span>
-                <span className="text-slate-400">/{MAX_CAUSE_CHARS}</span>
-              </span>
-            </div>
-
-            {/* Cause search input */}
-            <div className="relative">
-              <input
-                type="text"
-                value={causeSearch}
-                onChange={e => {
-                  if (e.target.value.length <= MAX_CAUSE_CHARS) {
-                    setCauseSearch(e.target.value);
-                    setIsDropdownOpen(true);
-                  }
-                }}
-                onFocus={() => setIsDropdownOpen(true)}
-                onClick={() => setIsDropdownOpen(true)}
-                onKeyDown={handleInputKeyDown}
-                onBlur={() => setTimeout(() => setIsDropdownOpen(false), 150)}
-                disabled={dataTakenFromCandidate}
-                placeholder={t('preferredCauses.input.placeholder')}
-                className="w-full rounded-md border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:ring-1 focus:ring-teal-600 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+              <CharacterCount
+                maxLength={MAX_CAUSE_CHARS}
+                currentLength={causeSearch.length}
               />
-
-              {/* Dropdown */}
-              {isDropdownOpen && !dataTakenFromCandidate && (
-                <div className="absolute z-30 mt-1 max-h-56 w-full overflow-y-auto rounded-md border border-slate-200 bg-white shadow-md">
-                  {/* Add new (custom) option */}
-                  {causeSearch.trim() &&
-                    !causes.some(
-                      c =>
-                        c.label.toLowerCase() ===
-                        causeSearch.trim().toLowerCase()
-                    ) && (
-                      <button
-                        type="button"
-                        onMouseDown={e => e.preventDefault()}
-                        onClick={() => {
-                          handleAddCustom(causeSearch.trim());
-                          setIsDropdownOpen(false);
-                        }}
-                        className="m-3 flex w-[calc(100%-24px)] cursor-pointer items-center gap-1 overflow-hidden rounded bg-neutral-200 px-2 py-2.5 text-left text-sm font-medium text-slate-900 hover:bg-neutral-300"
-                      >
-                        <Plus className="size-4 shrink-0" />
-                        {t('preferredCauses.input.addNew', {
-                          value: causeSearch.trim(),
-                        })}
-                      </button>
-                    )}
-
-                  {/* API + user-entered cause list with checkboxes */}
-                  {causes.map(cause => {
-                    const isChecked = selectedCauses.some(
-                      c => c.id === cause.id
-                    );
-                    return (
-                      <button
-                        key={cause.id}
-                        type="button"
-                        aria-pressed={isChecked}
-                        onMouseDown={e => e.preventDefault()}
-                        onClick={() => handleToggleCause(cause.id, cause.label)}
-                        className={cn(
-                          'flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50',
-                          isChecked && 'bg-slate-50'
-                        )}
-                      >
-                        <Checkbox
-                          checked={isChecked}
-                          className="pointer-events-none"
-                        />
-                        {cause.label}
-                      </button>
-                    );
-                  })}
-
-                  {causes.length === 0 && !causeSearch.trim() && (
-                    <p className="px-3 py-2 text-sm text-slate-400">
-                      {t('preferredCauses.input.typeToSearch')}
-                    </p>
-                  )}
-                </div>
-              )}
             </div>
 
-            {/* Exceeded max error */}
-            {showMaxError && (
-              <p className="mt-1.5 text-xs text-red-500">
-                {t('preferredCauses.validation.maxCauses', {
-                  max: MAX_CAUSES,
-                })}
-              </p>
-            )}
-
-            {/* Selected cause chips */}
-            {selectedCauses.length > 0 && (
-              <div className="mt-3 flex flex-wrap gap-3">
-                {selectedCauses.map(entry => (
-                  <Badge
-                    key={entry.id}
-                    variant="chip"
-                    className="animate-fadeIn flex max-w-full cursor-default items-center gap-2"
-                  >
-                    <span className="min-w-0 font-semibold wrap-break-word text-slate-600">
-                      {entry.label}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveCause(entry.id)}
-                      className="flex size-4 shrink-0 items-center justify-center text-slate-400 hover:text-slate-600"
-                      aria-label={t('preferredCauses.chip.remove', {
-                        name: entry.label,
-                      })}
-                    >
-                      <X size={16} aria-hidden="true" />
-                    </button>
-                  </Badge>
-                ))}
-              </div>
-            )}
+            <MultipleSelector
+              value={selectedCauses.map(c => ({
+                value: c.id,
+                label: c.label,
+                source: c.source,
+              }))}
+              errorMessage={t('preferredCauses.validation.maxCauses', {
+                max: MAX_CAUSES,
+              })}
+              onErrorStateChange={setHasMaxError}
+              onChange={options => {
+                const entries: CauseEntry[] = options.map(opt => ({
+                  id: opt.value,
+                  label: opt.label,
+                  source: (opt.source as string) ?? 'USER_CREATED',
+                }));
+                setSelectedCauses(entries);
+              }}
+              options={apiCauses.map(c => ({
+                value: c.id,
+                label: c.label,
+                source: 'MASTER',
+              }))}
+              onSearchSync={value => {
+                setCauseSearch(value);
+                return apiCauses.map(c => ({
+                  value: c.id,
+                  label: c.label,
+                  source: 'MASTER',
+                }));
+              }}
+              keepSelectedInList
+              creatable
+              triggerSearchOnFocus
+              hideClearAllButton
+              maxSelected={MAX_CAUSES}
+              disabled={!isEnabled || dataTakenFromCandidate}
+              inputProps={{ maxLength: MAX_CAUSE_CHARS }}
+              loading={isCausesLoading}
+              placeholder={t('preferredCauses.input.placeholder')}
+              loadingIndicator={
+                <p className="px-3 pb-3 text-left">{t('common.loading')}</p>
+              }
+              emptyIndicator={
+                <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
+                  <div className="flex flex-col items-start">
+                    <img src={multiSelectInfoAvatar} alt={t('common.noData')} />
+                    <div className="mt-3 w-61 text-left">
+                      <p className="font-bold text-slate-900">
+                        {t('common.noDataTitle')}
+                      </p>
+                      <p className="text-sm font-semibold text-slate-700">
+                        {t('common.noDataDescription')}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              }
+            />
           </div>
 
           {/* Bottom padding so dropdowns are never clipped */}
@@ -344,7 +226,6 @@ export default function PreferredCausesStep({
         onCancel={() => setConfirmDisableOpen(false)}
         onDisable={() => {
           setSelectedCauses([]);
-          setUserEnteredCauses([]);
           setDataTakenFromCandidate(false);
           setIsEnabled(false);
           setConfirmDisableOpen(false);
