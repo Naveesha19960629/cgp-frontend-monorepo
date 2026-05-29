@@ -80,6 +80,7 @@ vi.mock('@cgp/ui-kit/components/multi-select', () => ({
     onChange?: (options: { value: string; label: string }[]) => void;
     loadingIndicator?: ReactNode;
     emptyIndicator?: ReactNode;
+    keepSelectedInList?: boolean;
   }) => (
     <>
       <input placeholder={placeholder} readOnly />
@@ -348,6 +349,67 @@ describe('SecondaryEducationStep', () => {
       expect(
         screen.getAllByText('secondaryEducation.search.noData')
       ).toHaveLength(5);
+    });
+  });
+
+  describe('date picker buttons', () => {
+    it('start date button is disabled when section is not enabled', () => {
+      renderStep();
+      expect(
+        screen.getByRole('button', {
+          name: 'secondaryEducation.placeholders.startDate',
+        })
+      ).toBeDisabled();
+    });
+
+    it('end date button is disabled when section is not enabled', () => {
+      renderStep();
+      expect(
+        screen.getByRole('button', {
+          name: 'secondaryEducation.placeholders.endDate',
+        })
+      ).toBeDisabled();
+    });
+
+    it('start date button becomes enabled after enabling the section', async () => {
+      const user = userEvent.setup();
+      renderStep();
+      await enableSection(user);
+      expect(
+        screen.getByRole('button', {
+          name: 'secondaryEducation.placeholders.startDate',
+        })
+      ).not.toBeDisabled();
+    });
+
+    it('end date button becomes enabled after enabling the section', async () => {
+      const user = userEvent.setup();
+      renderStep();
+      await enableSection(user);
+      expect(
+        screen.getByRole('button', {
+          name: 'secondaryEducation.placeholders.endDate',
+        })
+      ).not.toBeDisabled();
+    });
+
+    it('date buttons become disabled when "collect from candidates" is checked', async () => {
+      const user = userEvent.setup();
+      renderStep();
+      await enableSection(user);
+      await user.click(
+        screen.getByLabelText('secondaryEducation.collectFromCandidates')
+      );
+      expect(
+        screen.getByRole('button', {
+          name: 'secondaryEducation.placeholders.startDate',
+        })
+      ).toBeDisabled();
+      expect(
+        screen.getByRole('button', {
+          name: 'secondaryEducation.placeholders.endDate',
+        })
+      ).toBeDisabled();
     });
   });
 

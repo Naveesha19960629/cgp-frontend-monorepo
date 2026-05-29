@@ -105,6 +105,7 @@ vi.mock('@cgp/ui-kit/components/multi-select', () => ({
     onChange?: (options: { value: string; label: string }[]) => void;
     loadingIndicator?: ReactNode;
     emptyIndicator?: ReactNode;
+    keepSelectedInList?: boolean;
   }) => (
     <>
       <input placeholder={placeholder} readOnly />

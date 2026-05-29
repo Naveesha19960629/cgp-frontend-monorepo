@@ -389,6 +389,7 @@ export default function TertiaryEducationStep({
                       creatable
                       hideClearAllButton
                       triggerSearchOnFocus
+                      keepSelectedInList
                       loadingIndicator={
                         <p className="px-3 pb-3 text-left text-sm text-slate-500">
                           {t('tertiaryEducation.search.loading')}
@@ -468,6 +469,7 @@ export default function TertiaryEducationStep({
                           : undefined
                       }
                       triggerSearchOnFocus
+                      keepSelectedInList
                       loadingIndicator={
                         <p className="px-3 pb-3 text-left text-sm text-slate-500">
                           {t('tertiaryEducation.search.loading')}
@@ -517,6 +519,7 @@ export default function TertiaryEducationStep({
                       creatable
                       hideClearAllButton
                       triggerSearchOnFocus
+                      keepSelectedInList
                       loadingIndicator={
                         <p className="px-3 pb-3 text-left text-sm text-slate-500">
                           {t('tertiaryEducation.search.loading')}
@@ -572,6 +575,7 @@ export default function TertiaryEducationStep({
                       creatable
                       hideClearAllButton
                       triggerSearchOnFocus
+                      keepSelectedInList
                       loadingIndicator={
                         <p className="px-3 pb-3 text-left text-sm text-slate-500">
                           {t('tertiaryEducation.search.loading')}
@@ -622,6 +626,7 @@ export default function TertiaryEducationStep({
                       creatable
                       hideClearAllButton
                       triggerSearchOnFocus
+                      keepSelectedInList
                       loadingIndicator={
                         <p className="px-3 pb-3 text-left text-sm text-slate-500">
                           {t('tertiaryEducation.search.loading')}
@@ -679,6 +684,7 @@ export default function TertiaryEducationStep({
                       creatable
                       hideClearAllButton
                       triggerSearchOnFocus
+                      keepSelectedInList
                       loadingIndicator={
                         <p className="px-3 pb-3 text-left text-sm text-slate-500">
                           {t('tertiaryEducation.search.loading')}
@@ -725,6 +731,7 @@ export default function TertiaryEducationStep({
                           : undefined
                       }
                       triggerSearchOnFocus
+                      keepSelectedInList
                       loadingIndicator={
                         <p className="px-3 pb-3 text-left text-sm text-slate-500">
                           {t('tertiaryEducation.search.loading')}
@@ -768,6 +775,7 @@ export default function TertiaryEducationStep({
                           : undefined
                       }
                       triggerSearchOnFocus
+                      keepSelectedInList
                       loadingIndicator={
                         <p className="px-3 pb-3 text-left text-sm text-slate-500">
                           {t('tertiaryEducation.search.loading')}
@@ -808,6 +816,7 @@ export default function TertiaryEducationStep({
                           : undefined
                       }
                       triggerSearchOnFocus
+                      keepSelectedInList
                       loadingIndicator={
                         <p className="px-3 pb-3 text-left text-sm text-slate-500">
                           {t('tertiaryEducation.search.loading')}
@@ -861,6 +870,7 @@ export default function TertiaryEducationStep({
                       creatable
                       hideClearAllButton
                       triggerSearchOnFocus
+                      keepSelectedInList
                       loadingIndicator={
                         <p className="px-3 pb-3 text-left text-sm text-slate-500">
                           {t('tertiaryEducation.search.loading')}
@@ -915,6 +925,7 @@ export default function TertiaryEducationStep({
                       creatable
                       hideClearAllButton
                       triggerSearchOnFocus
+                      keepSelectedInList
                       loadingIndicator={
                         <p className="px-3 pb-3 text-left text-sm text-slate-500">
                           {t('tertiaryEducation.search.loading')}
