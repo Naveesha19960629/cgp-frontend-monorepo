@@ -9,6 +9,7 @@ import {
   useVacancyForm,
 } from '@/views/vacancies/context/vacancy-form-context';
 
+import { SuccessToast } from '@cgp/ui-kit/components/custom-toast';
 import { ScrollArea } from '@cgp/ui-kit/components/ui/scroll-area';
 import {
   Tabs,
@@ -167,6 +168,10 @@ export default function VacancyCreateStepperForm() {
         onOpenChange={setShowCancelDialog}
         onDiscard={() => {
           setShowCancelDialog(false);
+          SuccessToast({
+            title: t('vacancyCancelDialog.notifications.discard.title'),
+            description: t('vacancyCancelDialog.notifications.discard.message'),
+          });
           void navigate('/dashboard/ats/vacancies');
         }}
         onSaveAsDraft={OnSaveAsDraft}
