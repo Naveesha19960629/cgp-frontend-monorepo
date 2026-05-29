@@ -320,14 +320,14 @@ export function Combobox({
                     <div className="flex flex-col items-start">
                       <img
                         src={multiSelectInfoAvatar}
-                        alt={t('hobby.fields.hobby.label')}
+                        alt={t('common.noData')}
                       />
                       <div className="mt-3 w-61 text-left">
                         <p className="font-bold text-slate-900">
-                          {t('hobby.search.noDataTitle')}
+                          {t('common.noDataTitle')}
                         </p>
                         <p className="text-sm font-semibold text-slate-700">
-                          {t('hobby.search.noDataDescription')}
+                          {t('common.noDataDescription')}
                         </p>
                       </div>
                     </div>
