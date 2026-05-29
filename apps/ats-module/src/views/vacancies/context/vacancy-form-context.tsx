@@ -144,6 +144,26 @@ const DEFAULT_FORM: VacancyForm = {
     dataTakenFromCandidate: false,
     patents: [],
   },
+  preferredSkills: {
+    isEnabled: false,
+    dataTakenFromCandidate: false,
+    skills: [],
+  },
+  preferredLanguages: {
+    isEnabled: false,
+    dataTakenFromCandidate: false,
+    languages: [],
+  },
+  preferredCauses: {
+    isEnabled: false,
+    dataTakenFromCandidate: false,
+    causes: [],
+  },
+  preferredHobbies: {
+    isEnabled: false,
+    dataTakenFromCandidate: false,
+    hobbies: [],
+  },
 };
 
 interface VacancyFormContextValue {
