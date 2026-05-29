@@ -11,10 +11,12 @@ import type {
 
 // -- Mock @cgp/data-access --------------------------------------------------
 
-const mockGet = vi.fn();
-const mockPost = vi.fn();
-const mockPut = vi.fn();
-const mockDelete = vi.fn();
+const { mockGet, mockPost, mockPut, mockDelete } = vi.hoisted(() => ({
+  mockGet: vi.fn(),
+  mockPost: vi.fn(),
+  mockPut: vi.fn(),
+  mockDelete: vi.fn(),
+}));
 
 vi.mock('@cgp/data-access', () => ({
   httpClient: {
