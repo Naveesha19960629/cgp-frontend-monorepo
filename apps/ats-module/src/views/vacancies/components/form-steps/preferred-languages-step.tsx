@@ -4,14 +4,16 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
-import { useLanguagesQuery } from '@/views/vacancies/hooks';
+import {
+  useDisableSuccessToast,
+  useLanguagesQuery,
+} from '@/views/vacancies/hooks';
 import type {
   LanguageEntry,
   LanguageItem,
   StepProps,
 } from '@/views/vacancies/types';
 
-import { SuccessToast } from '@cgp/ui-kit/components/custom-toast';
 import { Badge } from '@cgp/ui-kit/components/ui/badge';
 import { Checkbox } from '@cgp/ui-kit/components/ui/checkbox';
 import { cn } from '@cgp/ui-kit/lib/utils';
@@ -28,6 +30,7 @@ export default function PreferredLanguagesStep({
   onBack,
 }: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
+  const showDisableToast = useDisableSuccessToast();
   const { form } = useVacancyForm();
 
   const [isEnabled, setIsEnabled] = useState(
@@ -333,10 +336,7 @@ export default function PreferredLanguagesStep({
           setDataTakenFromCandidate(false);
           setIsEnabled(false);
           setConfirmDisableOpen(false);
-          SuccessToast({
-            title: t('preferredLanguages.notifications.disable.title'),
-            description: t('preferredLanguages.notifications.disable.message'),
-          });
+          showDisableToast(t('preferredLanguages.title'));
         }}
       />
 
@@ -353,10 +353,7 @@ export default function PreferredLanguagesStep({
         onDisable={() => {
           setIsEnabled(false);
           setEmptyDisableOpen(false);
-          SuccessToast({
-            title: t('preferredLanguages.notifications.disable.title'),
-            description: t('preferredLanguages.notifications.disable.message'),
-          });
+          showDisableToast(t('preferredLanguages.title'));
           onNext({
             preferredLanguages: {
               isEnabled: false,

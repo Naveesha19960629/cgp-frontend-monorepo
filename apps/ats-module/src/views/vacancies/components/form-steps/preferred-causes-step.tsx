@@ -4,10 +4,12 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
-import { useCausesQuery } from '@/views/vacancies/hooks';
+import {
+  useCausesQuery,
+  useDisableSuccessToast,
+} from '@/views/vacancies/hooks';
 import type { CauseEntry, CauseItem, StepProps } from '@/views/vacancies/types';
 
-import { SuccessToast } from '@cgp/ui-kit/components/custom-toast';
 import { Badge } from '@cgp/ui-kit/components/ui/badge';
 import { Checkbox } from '@cgp/ui-kit/components/ui/checkbox';
 import { cn } from '@cgp/ui-kit/lib/utils';
@@ -24,6 +26,7 @@ export default function PreferredCausesStep({
   onBack,
 }: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
+  const showDisableToast = useDisableSuccessToast();
   const { form } = useVacancyForm();
 
   const [isEnabled, setIsEnabled] = useState(
@@ -319,10 +322,7 @@ export default function PreferredCausesStep({
           setDataTakenFromCandidate(false);
           setIsEnabled(false);
           setConfirmDisableOpen(false);
-          SuccessToast({
-            title: t('preferredCauses.notifications.disable.title'),
-            description: t('preferredCauses.notifications.disable.message'),
-          });
+          showDisableToast(t('preferredCauses.title'));
         }}
       />
 
@@ -339,10 +339,7 @@ export default function PreferredCausesStep({
         onDisable={() => {
           setIsEnabled(false);
           setEmptyDisableOpen(false);
-          SuccessToast({
-            title: t('preferredCauses.notifications.disable.title'),
-            description: t('preferredCauses.notifications.disable.message'),
-          });
+          showDisableToast(t('preferredCauses.title'));
           onNext({
             preferredCauses: {
               isEnabled: false,

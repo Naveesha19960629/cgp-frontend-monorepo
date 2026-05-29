@@ -4,7 +4,11 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
-import { useCareerPathsQuery, useSkillsQuery } from '@/views/vacancies/hooks';
+import {
+  useCareerPathsQuery,
+  useDisableSuccessToast,
+  useSkillsQuery,
+} from '@/views/vacancies/hooks';
 import type {
   CareerPathItem,
   SkillCareerPathEntry,
@@ -12,7 +16,6 @@ import type {
   StepProps,
 } from '@/views/vacancies/types';
 
-import { SuccessToast } from '@cgp/ui-kit/components/custom-toast';
 import { Badge } from '@cgp/ui-kit/components/ui/badge';
 import { Button } from '@cgp/ui-kit/components/ui/button';
 import { Checkbox } from '@cgp/ui-kit/components/ui/checkbox';
@@ -31,6 +34,7 @@ export default function PreferredSkillsStep({
   onBack,
 }: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
+  const showDisableToast = useDisableSuccessToast();
   const { form } = useVacancyForm();
 
   const [isEnabled, setIsEnabled] = useState(
@@ -564,10 +568,7 @@ export default function PreferredSkillsStep({
           setDataTakenFromCandidate(false);
           setIsEnabled(false);
           setConfirmDisableOpen(false);
-          SuccessToast({
-            title: t('preferredSkills.notifications.disable.title'),
-            description: t('preferredSkills.notifications.disable.message'),
-          });
+          showDisableToast(t('preferredSkills.title'));
         }}
       />
 
@@ -584,10 +585,7 @@ export default function PreferredSkillsStep({
         onDisable={() => {
           setIsEnabled(false);
           setEmptyDisableOpen(false);
-          SuccessToast({
-            title: t('preferredSkills.notifications.disable.title'),
-            description: t('preferredSkills.notifications.disable.message'),
-          });
+          showDisableToast(t('preferredSkills.title'));
           onNext({
             preferredSkills: {
               isEnabled: false,

@@ -10,6 +10,7 @@ import MessageBox from '@/components/message-box';
 import { StepDisableDialog } from '@/views/vacancies';
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import {
+  useDisableSuccessToast,
   useGendersQuery,
   useMaritalStatusesQuery,
   usePlacesCityQuery,
@@ -342,6 +343,7 @@ function AddressCard({
 
 export default function ProfileRequirementsStep({ onNext, onBack }: StepProps) {
   const { t } = useTranslation('ats');
+  const showDisableToast = useDisableSuccessToast();
 
   const { form: contextForm, onCancel } = useVacancyForm();
   const { form, fields, append, remove, replace } = useProfileRequirementsForm(
@@ -376,6 +378,7 @@ export default function ProfileRequirementsStep({ onNext, onBack }: StepProps) {
       },
     ]);
     setShowDisableConfirm(false);
+    showDisableToast(t('profileRequirements.title'));
   };
 
   const handleConfirmEmptyData = () => {

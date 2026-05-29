@@ -15,3 +15,4 @@ export {
   useTertiaryEducationForm,
   type TertiaryEducationFormValues,
 } from '@/views/vacancies/hooks/use-tertiary-education-form';
+export { useDisableSuccessToast } from '@/views/vacancies/hooks/use-disable-success-toast';

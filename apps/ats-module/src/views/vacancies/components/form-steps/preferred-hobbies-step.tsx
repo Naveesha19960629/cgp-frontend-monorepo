@@ -4,10 +4,12 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
-import { useHobbiesQuery } from '@/views/vacancies/hooks';
+import {
+  useDisableSuccessToast,
+  useHobbiesQuery,
+} from '@/views/vacancies/hooks';
 import type { HobbyEntry, HobbyItem, StepProps } from '@/views/vacancies/types';
 
-import { SuccessToast } from '@cgp/ui-kit/components/custom-toast';
 import { Badge } from '@cgp/ui-kit/components/ui/badge';
 import { Checkbox } from '@cgp/ui-kit/components/ui/checkbox';
 import { cn } from '@cgp/ui-kit/lib/utils';
@@ -24,6 +26,7 @@ export default function PreferredHobbiesStep({
   onBack,
 }: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
+  const showDisableToast = useDisableSuccessToast();
   const { form } = useVacancyForm();
 
   const [isEnabled, setIsEnabled] = useState(
@@ -319,10 +322,7 @@ export default function PreferredHobbiesStep({
           setDataTakenFromCandidate(false);
           setIsEnabled(false);
           setConfirmDisableOpen(false);
-          SuccessToast({
-            title: t('preferredHobbies.notifications.disable.title'),
-            description: t('preferredHobbies.notifications.disable.message'),
-          });
+          showDisableToast(t('preferredHobbies.title'));
         }}
       />
 
@@ -339,10 +339,7 @@ export default function PreferredHobbiesStep({
         onDisable={() => {
           setIsEnabled(false);
           setEmptyDisableOpen(false);
-          SuccessToast({
-            title: t('preferredHobbies.notifications.disable.title'),
-            description: t('preferredHobbies.notifications.disable.message'),
-          });
+          showDisableToast(t('preferredHobbies.title'));
           onNext({
             preferredHobbies: {
               isEnabled: false,
