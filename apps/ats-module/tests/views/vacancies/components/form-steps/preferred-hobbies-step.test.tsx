@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { forwardRef, useState } from 'react';
 
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -31,7 +32,127 @@ vi.mock('@/views/vacancies/context/vacancy-form-context', () => ({
 
 vi.mock('@/views/vacancies/hooks', () => ({
   useHobbiesQuery: mockUseHobbiesQuery,
+  useDisableSuccessToast: () => mockSuccessToast,
+  useCreateHobbyMutation: () => ({ mutateAsync: vi.fn() }),
 }));
+
+vi.mock('@/views/vacancies/services', () => ({
+  hobbyService: { getAllHobbies: vi.fn() },
+}));
+
+vi.mock('@/views/vacancies/utils', () => ({
+  resolveUserCreatedEntries: vi.fn((entries: unknown[]) => entries),
+}));
+
+vi.mock('@cgp/ui-kit/components/character-count', () => ({
+  CharacterCount: () => null,
+}));
+
+vi.mock('@cgp/ui-kit/components/multi-select', () => {
+  type Option = { value: string; label: string; source?: string };
+
+  const MockMultipleSelector = forwardRef(function MockMultipleSelector(
+    {
+      value = [],
+      options = [],
+      onChange,
+      onSearchSync,
+      placeholder,
+      disabled,
+      creatable,
+      maxSelected,
+      errorMessage,
+      onErrorStateChange,
+    }: {
+      value?: Option[];
+      options?: Option[];
+      onChange?: (opts: Option[]) => void;
+      onSearchSync?: (v: string) => Option[];
+      placeholder?: string;
+      disabled?: boolean;
+      creatable?: boolean;
+      maxSelected?: number;
+      errorMessage?: string;
+      onErrorStateChange?: (v: boolean) => void;
+      [k: string]: unknown;
+    },
+    _ref: unknown
+  ) {
+    const [open, setOpen] = useState(false);
+    const [search, setSearch] = useState('');
+    const [maxError, setMaxError] = useState(false);
+
+    const displayOptions = onSearchSync ? onSearchSync(search) : options;
+    const filtered = displayOptions.filter(
+      o =>
+        o.label.toLowerCase().includes(search.toLowerCase()) &&
+        !value.some(v => v.value === o.value)
+    );
+    const showAddNew =
+      creatable &&
+      search.trim() &&
+      !displayOptions.some(o => o.label.toLowerCase() === search.toLowerCase());
+
+    return (
+      <div data-testid="multi-selector">
+        {value.map(v => (
+          <span key={v.value} data-testid="chip">
+            {v.label}
+            <button
+              aria-label="preferredHobbies.chip.remove"
+              onClick={() => onChange?.(value.filter(x => x.value !== v.value))}
+            />
+          </span>
+        ))}
+        <input
+          placeholder={placeholder}
+          disabled={disabled}
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          onFocus={() => setOpen(true)}
+        />
+        {maxError && <span>{errorMessage}</span>}
+        {open && (
+          <ul data-testid="multi-selector-options">
+            {filtered.map(o => (
+              <li
+                key={o.value}
+                onClick={() => {
+                  if (maxSelected && value.length >= maxSelected) {
+                    setMaxError(true);
+                    onErrorStateChange?.(true);
+                    return;
+                  }
+                  onChange?.([...value, o]);
+                  setSearch('');
+                }}
+              >
+                {o.label}
+              </li>
+            ))}
+            {showAddNew && (
+              <li
+                onClick={() => {
+                  if (maxSelected && value.length >= maxSelected) {
+                    setMaxError(true);
+                    onErrorStateChange?.(true);
+                    return;
+                  }
+                  onChange?.([...value, { value: search, label: search }]);
+                  setSearch('');
+                }}
+              >
+                preferredHobbies.input.addNew
+              </li>
+            )}
+          </ul>
+        )}
+      </div>
+    );
+  });
+
+  return { default: MockMultipleSelector };
+});
 
 vi.mock('@cgp/ui-kit/components/ui/button', () => ({
   Button: ({
@@ -189,9 +310,9 @@ describe('PreferredHobbiesStep', () => {
   });
 
   describe('toggle', () => {
-    it('opens confirmDisableDialog when toggle is clicked while enabled', async () => {
+    it('opens confirmDisableDialog when toggle is clicked while enabled and has data', async () => {
       const user = userEvent.setup();
-      renderStep();
+      renderStep({ hobbies: [{ id: 'hobby-1', label: 'Reading' }] });
 
       await user.click(screen.getByRole('switch'));
 
@@ -199,6 +320,20 @@ describe('PreferredHobbiesStep', () => {
         expect(
           screen.getByText('preferredHobbies.confirmDisableDialog.title')
         ).toBeInTheDocument();
+      });
+    });
+
+    it('disables directly when toggle is clicked with no data', async () => {
+      const user = userEvent.setup();
+      renderStep();
+
+      await user.click(screen.getByRole('switch'));
+
+      await waitFor(() => {
+        expect(screen.getByRole('switch')).toHaveAttribute(
+          'aria-checked',
+          'false'
+        );
       });
     });
 
@@ -218,7 +353,9 @@ describe('PreferredHobbiesStep', () => {
   describe('confirmDisableDialog', () => {
     async function openConfirmDialog() {
       const user = userEvent.setup();
-      const handlers = renderStep();
+      const handlers = renderStep({
+        hobbies: [{ id: 'hobby-1', label: 'Reading' }],
+      });
       await user.click(screen.getByRole('switch'));
       await screen.findByText('preferredHobbies.confirmDisableDialog.title');
       return { user, ...handlers };
@@ -262,10 +399,7 @@ describe('PreferredHobbiesStep', () => {
         screen.getByText('preferredHobbies.confirmDisableDialog.disable')
       );
 
-      expect(mockSuccessToast).toHaveBeenCalledWith({
-        title: 'preferredHobbies.notifications.disable.title',
-        description: 'preferredHobbies.notifications.disable.message',
-      });
+      expect(mockSuccessToast).toHaveBeenCalledWith('preferredHobbies.title');
     });
   });
 
@@ -342,10 +476,7 @@ describe('PreferredHobbiesStep', () => {
         screen.getByText('preferredHobbies.emptyDisableDialog.disable')
       );
 
-      expect(mockSuccessToast).toHaveBeenCalledWith({
-        title: 'preferredHobbies.notifications.disable.title',
-        description: 'preferredHobbies.notifications.disable.message',
-      });
+      expect(mockSuccessToast).toHaveBeenCalledWith('preferredHobbies.title');
     });
   });
 
@@ -522,7 +653,9 @@ describe('PreferredHobbiesStep', () => {
         preferredHobbies: {
           isEnabled: true,
           dataTakenFromCandidate: false,
-          hobbies: [{ id: 'hobby-1', label: 'Reading' }],
+          hobbies: [
+            expect.objectContaining({ id: 'hobby-1', label: 'Reading' }),
+          ],
         },
       });
     });
