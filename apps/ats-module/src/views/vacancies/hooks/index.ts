@@ -13,3 +13,4 @@ export {
   useTertiaryEducationForm,
   type TertiaryEducationFormValues,
 } from '@/views/vacancies/hooks/use-tertiary-education-form';
+export { useVacancyTableParams } from '@/views/vacancies/hooks/use-vacancy-table-params';

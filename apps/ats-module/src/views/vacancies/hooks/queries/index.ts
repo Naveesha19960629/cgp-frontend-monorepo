@@ -3,6 +3,7 @@ export { useIndustriesQuery } from '@/views/vacancies/hooks/queries/use-industri
 export { useSocietiesQuery } from '@/views/vacancies/hooks/queries/use-societies-query';
 export { useSkillsQuery } from '@/views/vacancies/hooks/queries/use-skills-query';
 export { useCareerPathsQuery } from '@/views/vacancies/hooks/queries/use-career-paths-query';
+export { useDisciplinesQuery } from '@/views/vacancies/hooks/queries/use-disciplines-query';
 export { useLanguagesQuery } from '@/views/vacancies/hooks/queries/use-languages-query';
 export { useCausesQuery } from '@/views/vacancies/hooks/queries/use-causes-query';
 export { useHobbiesQuery } from '@/views/vacancies/hooks/queries/use-hobbies-query';
@@ -74,3 +75,4 @@ export {
   useFacultiesQuery,
   useFacultiesSearch,
 } from '@/views/vacancies/hooks/queries/use-faculties-query';
+export { useVacanciesQuery } from '@/views/vacancies/hooks/queries/use-vacancies-query';

@@ -1,4 +1,5 @@
 export { genderService } from '@/views/vacancies/services/gender.service';
+export { disciplineService } from '@/views/vacancies/services/discipline.service';
 export { industryService } from '@/views/vacancies/services/industry.service';
 export { societyService } from '@/views/vacancies/services/society.service';
 export { skillService } from '@/views/vacancies/services/skill.service';
@@ -14,3 +15,4 @@ export { projectService } from '@/views/vacancies/services/project.service';
 export { publicationService } from '@/views/vacancies/services/publication.service';
 export { secondaryEducationService } from '@/views/vacancies/services/secondary-education.service';
 export { tertiaryEducationService } from '@/views/vacancies/services/tertiary-education.service';
+export { vacancyService } from '@/views/vacancies/services/vacancy.service';

@@ -280,6 +280,12 @@ interface CareerPathItem {
   source?: string;
 }
 
+interface DisciplineItem {
+  id: string;
+  label: string;
+  source?: string;
+}
+
 interface SkillCareerPathEntry {
   skillId: string;
   skillName: string;
@@ -494,6 +500,56 @@ interface VacancyCancelDialogProps {
   onSaveAsDraft: () => void;
 }
 
+interface VacancyTableColumn {
+  vacancyId: string;
+  title: string;
+  jobTitle: string;
+  discipline: string;
+  careerPath: string;
+  role: string;
+  createdAt: string;
+  createdAtLabel: string;
+  createdBy: string;
+  schedulePublishAt: string;
+  schedulePublishAtLabel: string;
+  expirationAt: string;
+  expirationAtLabel: string;
+  applicantCount: number;
+  updatedAt: string;
+  updatedAtLabel: string;
+  updatedBy: string;
+  version: number;
+  status: string;
+  availableActions: string[];
+}
+
+interface VacancyQueryParams {
+  page?: number;
+  size?: number;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+  search?: string;
+  careerPath?: string;
+  discipline?: string;
+  status?: string;
+}
+
+interface VacanciesPaginatedData {
+  content: VacancyTableColumn[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  last: boolean;
+}
+
+interface VacanciesApiResponse {
+  requestId: string;
+  success: boolean;
+  message: string;
+  data: VacanciesPaginatedData;
+}
+
 export type {
   AddOrSelectOption,
   SelectOption,
@@ -535,6 +591,7 @@ export type {
   StepFooterProps,
   SkillItem,
   CareerPathItem,
+  DisciplineItem,
   SkillCareerPathEntry,
   PreferredSkills,
   LanguageItem,
@@ -559,4 +616,8 @@ export type {
   PublicationApiData,
   PublicationResponse,
   VacancyCancelDialogProps,
+  VacancyTableColumn,
+  VacancyQueryParams,
+  VacanciesPaginatedData,
+  VacanciesApiResponse,
 };
