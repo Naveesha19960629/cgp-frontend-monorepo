@@ -42,13 +42,13 @@ function SortableHeader({
   return (
     <Button
       variant="ghost"
-      className="h-auto gap-1 p-0 font-medium hover:bg-transparent"
+      className="h-auto gap-1 p-0 font-bold text-slate-900 hover:bg-transparent"
       onClick={() => onSort(columnKey)}
     >
       {label}
       <span className="flex flex-col">
-        <ChevronUp className={`size-3 ${upClass}`} />
-        <ChevronDown className={`size-3 ${downClass}`} />
+        <ChevronUp className={`size-4! ${upClass}`} />
+        <ChevronDown className={`-mt-2 size-4! ${downClass}`} />
       </span>
     </Button>
   );
@@ -96,7 +96,7 @@ const createVacancyColumns = ({
     accessorKey: 'title',
     header: () => (
       <SortableHeader
-        label="Job Title"
+        label="Title"
         columnKey="title"
         currentSortBy={sortBy}
         currentSortOrder={sortOrder}
@@ -108,47 +108,7 @@ const createVacancyColumns = ({
         {row.original.title}
       </span>
     ),
-    size: 200,
-  },
-  {
-    accessorKey: 'discipline',
-    header: () => (
-      <SortableHeader
-        label="Discipline"
-        columnKey="discipline"
-        currentSortBy={sortBy}
-        currentSortOrder={sortOrder}
-        onSort={onSort}
-      />
-    ),
-    cell: ({ row }) => (
-      <span className="text-sm text-slate-600">{row.original.discipline}</span>
-    ),
-    size: 180,
-  },
-  {
-    accessorKey: 'careerPath',
-    header: 'Career Path',
-    cell: ({ row }) => (
-      <span className="text-sm text-slate-600">{row.original.careerPath}</span>
-    ),
-    size: 180,
-  },
-  {
-    accessorKey: 'role',
-    header: () => (
-      <SortableHeader
-        label="Role"
-        columnKey="role"
-        currentSortBy={sortBy}
-        currentSortOrder={sortOrder}
-        onSort={onSort}
-      />
-    ),
-    cell: ({ row }) => (
-      <span className="text-sm text-slate-600">{row.original.role}</span>
-    ),
-    size: 180,
+    size: 317,
   },
   {
     accessorKey: 'jobTitle',
@@ -164,15 +124,47 @@ const createVacancyColumns = ({
     cell: ({ row }) => (
       <span className="text-sm text-slate-600">{row.original.jobTitle}</span>
     ),
-    size: 180,
+    size: 211,
   },
   {
-    accessorKey: 'createdBy',
-    header: 'Created By',
-    cell: ({ row }) => (
-      <span className="text-sm text-slate-600">{row.original.createdBy}</span>
+    accessorKey: 'discipline',
+    header: () => (
+      <SortableHeader
+        label="Discipline"
+        columnKey="discipline"
+        currentSortBy={sortBy}
+        currentSortOrder={sortOrder}
+        onSort={onSort}
+      />
     ),
-    size: 140,
+    cell: ({ row }) => (
+      <span className="text-sm text-slate-600">{row.original.discipline}</span>
+    ),
+    size: 189,
+  },
+  {
+    accessorKey: 'careerPath',
+    header: 'Career Path',
+    cell: ({ row }) => (
+      <span className="text-sm text-slate-600">{row.original.careerPath}</span>
+    ),
+    size: 189,
+  },
+  {
+    accessorKey: 'role',
+    header: () => (
+      <SortableHeader
+        label="Role"
+        columnKey="role"
+        currentSortBy={sortBy}
+        currentSortOrder={sortOrder}
+        onSort={onSort}
+      />
+    ),
+    cell: ({ row }) => (
+      <span className="text-sm text-slate-600">{row.original.role}</span>
+    ),
+    size: 216,
   },
   {
     accessorKey: 'createdAt',
@@ -190,13 +182,21 @@ const createVacancyColumns = ({
         {row.original.createdAtLabel}
       </span>
     ),
-    size: 160,
+    size: 194,
+  },
+  {
+    accessorKey: 'createdBy',
+    header: 'Created By',
+    cell: ({ row }) => (
+      <span className="text-sm text-slate-600">{row.original.createdBy}</span>
+    ),
+    size: 203,
   },
   {
     accessorKey: 'schedulePublishAt',
     header: () => (
       <SortableHeader
-        label="Schedule Publish"
+        label="Schedule Publish Date & Time"
         columnKey="schedulePublishAt"
         currentSortBy={sortBy}
         currentSortOrder={sortOrder}
@@ -208,13 +208,13 @@ const createVacancyColumns = ({
         {row.original.schedulePublishAtLabel}
       </span>
     ),
-    size: 180,
+    size: 292,
   },
   {
     accessorKey: 'expirationAt',
     header: () => (
       <SortableHeader
-        label="Expiration"
+        label="Expire Publish Date & Time"
         columnKey="expirationAt"
         currentSortBy={sortBy}
         currentSortOrder={sortOrder}
@@ -226,7 +226,7 @@ const createVacancyColumns = ({
         {row.original.expirationAtLabel}
       </span>
     ),
-    size: 160,
+    size: 272,
   },
   {
     accessorKey: 'applicantCount',
@@ -244,25 +244,25 @@ const createVacancyColumns = ({
         {row.original.applicantCount}
       </span>
     ),
-    size: 120,
-  },
-  {
-    accessorKey: 'updatedBy',
-    header: 'Updated By',
-    cell: ({ row }) => (
-      <span className="text-sm text-slate-600">{row.original.updatedBy}</span>
-    ),
-    size: 140,
+    size: 153,
   },
   {
     accessorKey: 'updatedAt',
-    header: 'Updated At',
+    header: 'Last Updated Date',
     cell: ({ row }) => (
       <span className="text-sm text-slate-600">
         {row.original.updatedAtLabel}
       </span>
     ),
-    size: 160,
+    size: 213,
+  },
+  {
+    accessorKey: 'updatedBy',
+    header: 'Last Updated By',
+    cell: ({ row }) => (
+      <span className="text-sm text-slate-600">{row.original.updatedBy}</span>
+    ),
+    size: 203,
   },
   {
     accessorKey: 'version',

@@ -65,6 +65,7 @@ export default function VacancyDataTable<TData>({
             <TableRow key={headerGroup.id}>
               {headerGroup.headers.map(header => (
                 <TableHead
+                  className="text-base font-bold text-slate-900"
                   key={header.id}
                   style={getCellStyles(header.column, true)}
                 >
