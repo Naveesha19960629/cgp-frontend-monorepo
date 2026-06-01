@@ -1,5 +1,7 @@
 import * as React from 'react';
 
+import type { VacancyDataTableProps } from '@/views/vacancies/types';
+
 import { Skeleton } from '@cgp/ui-kit/components/ui/skeleton';
 import {
   Table,
@@ -9,12 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from '@cgp/ui-kit/components/ui/table';
-import { type Column, flexRender, useReactTable } from '@tanstack/react-table';
-
-interface VacancyDataTableProps<TData> {
-  table: ReturnType<typeof useReactTable<TData>>;
-  isLoading?: boolean;
-}
+import { type Column, flexRender } from '@tanstack/react-table';
 
 const SKELETON_ROWS = 12;
 

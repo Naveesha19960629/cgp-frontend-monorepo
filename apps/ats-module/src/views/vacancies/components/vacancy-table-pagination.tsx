@@ -1,13 +1,9 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
+import type { VacancyTablePaginationProps } from '@/views/vacancies/types';
+
 import { Button } from '@cgp/ui-kit/components/ui/button';
 import { cn } from '@cgp/ui-kit/lib/utils';
-
-interface VacancyTablePaginationProps {
-  currentPage: number;
-  totalPages: number;
-  onPageChange: (page: number) => void;
-}
 
 function getPageNumbers(
   currentPage: number,

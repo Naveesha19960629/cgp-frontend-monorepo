@@ -1,13 +1,16 @@
 import { ChevronDown, ChevronUp } from 'lucide-react';
 
-import type { VacancyTableColumn } from '@/views/vacancies/types';
+import { VacancyTableAction } from '@/views/vacancies';
+import type {
+  CreateColumnsOptions,
+  SortableHeaderProps,
+  VacancyTableColumn,
+} from '@/views/vacancies/types';
 
 import { Badge } from '@cgp/ui-kit/components/ui/badge';
 import { Button } from '@cgp/ui-kit/components/ui/button';
 import { Checkbox } from '@cgp/ui-kit/components/ui/checkbox';
 import { type ColumnDef } from '@tanstack/react-table';
-
-import VacancyTableAction from './vacancy-table-action';
 
 const STATUS_VARIANT_MAP: Record<string, string> = {
   Draft: 'bg-slate-100 text-slate-700',
@@ -18,14 +21,6 @@ const STATUS_VARIANT_MAP: Record<string, string> = {
   Onhold: 'bg-orange-100 text-orange-700',
   On_Hold: 'bg-orange-100 text-orange-700',
 };
-
-interface SortableHeaderProps {
-  label: string;
-  columnKey: string;
-  currentSortBy: string;
-  currentSortOrder: 'asc' | 'desc';
-  onSort: (columnKey: string) => void;
-}
 
 function SortableHeader({
   label,
@@ -57,12 +52,6 @@ function SortableHeader({
       </span>
     </Button>
   );
-}
-
-interface CreateColumnsOptions {
-  sortBy: string;
-  sortOrder: 'asc' | 'desc';
-  onSort: (columnKey: string) => void;
 }
 
 const createVacancyColumns = ({
@@ -310,4 +299,4 @@ const createVacancyColumns = ({
   },
 ];
 
-export { createVacancyColumns };
+export default createVacancyColumns;

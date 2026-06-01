@@ -6,6 +6,12 @@ import { useNavigate } from 'react-router-dom';
 
 import { useVacanciesQuery, useVacancyTableParams } from '@/views/vacancies';
 import type { VacancyQueryParams, VacancyTableColumn } from '@/views/vacancies';
+import {
+  VacancyDataTable,
+  VacancyFilteringSection,
+  VacancyTablePagination,
+  createVacancyColumns,
+} from '@/views/vacancies';
 
 import { Button } from '@cgp/ui-kit/components/ui/button';
 import {
@@ -13,11 +19,6 @@ import {
   getFilteredRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-
-import VacancyDataTable from '../components/vacancy-data-table';
-import VacancyFilteringSection from '../components/vacancy-filtering-section';
-import { createVacancyColumns } from '../components/vacancy-table-columns';
-import VacancyTablePagination from '../components/vacancy-table-pagination';
 
 export default function VacanciesPage() {
   const { t } = useTranslation('ats');

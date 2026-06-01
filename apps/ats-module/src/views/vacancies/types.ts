@@ -1,3 +1,5 @@
+import type { useReactTable } from '@tanstack/react-table';
+
 interface AddOrSelectOption {
   source: string;
   id: string;
@@ -575,7 +577,50 @@ interface DataTableFacetedFilterProps {
   hideSearch?: boolean;
 }
 
+interface VacancyDataTableProps<TData> {
+  table: ReturnType<typeof useReactTable<TData>>;
+  isLoading?: boolean;
+}
+
+interface VacancyTableActionProps {
+  vacancy: {
+    id: string;
+  };
+  onVersionHistory?: () => void;
+  onMatchCandidate?: () => void;
+  onCopyLink?: () => void;
+  onMakeACopy?: () => void;
+  onEdit?: () => void;
+  onEditJD?: () => void;
+  onDelete?: () => void;
+}
+
+interface SortableHeaderProps {
+  label: string;
+  columnKey: string;
+  currentSortBy: string;
+  currentSortOrder: 'asc' | 'desc';
+  onSort: (columnKey: string) => void;
+}
+
+interface VacancyTablePaginationProps {
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+}
+
+interface CreateColumnsOptions {
+  sortBy: string;
+  sortOrder: 'asc' | 'desc';
+  onSort: (columnKey: string) => void;
+}
+
 export type {
+  CreateColumnsOptions,
+  VacancyTablePaginationProps,
+  SortableHeaderProps,
+  VacancyTableActionProps,
+  VacancyDataTableProps,
   DataTableFacetedFilterProps,
   VacancyFilteringSectionProps,
   AddOrSelectOption,

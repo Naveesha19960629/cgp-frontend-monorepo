@@ -8,6 +8,8 @@ import {
   UserSearch,
 } from 'lucide-react';
 
+import type { VacancyTableActionProps } from '@/views/vacancies/types';
+
 import { Button } from '@cgp/ui-kit/components/ui/button';
 import {
   DropdownMenu,
@@ -16,19 +18,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@cgp/ui-kit/components/ui/dropdown-menu';
-
-interface VacancyTableActionProps {
-  vacancy: {
-    id: string;
-  };
-  onVersionHistory?: () => void;
-  onMatchCandidate?: () => void;
-  onCopyLink?: () => void;
-  onMakeACopy?: () => void;
-  onEdit?: () => void;
-  onEditJD?: () => void;
-  onDelete?: () => void;
-}
 
 export default function VacancyTableAction({
   vacancy: _vacancy,
