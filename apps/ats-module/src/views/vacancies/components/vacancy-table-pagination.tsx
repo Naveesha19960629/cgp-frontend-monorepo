@@ -51,16 +51,15 @@ export default function VacancyTablePagination({
   totalPages,
   onPageChange,
 }: VacancyTablePaginationProps) {
-  if (totalPages <= 1) return null;
-
-  const pageNumbers = getPageNumbers(currentPage, totalPages);
+  const effectiveTotal = Math.max(1, totalPages);
+  const pageNumbers = getPageNumbers(currentPage, effectiveTotal);
 
   return (
-    <div className="flex items-center justify-between py-4">
+    <div className="flex items-center justify-between border-t border-slate-200 py-4">
       <Button
         variant="outline"
         size="sm"
-        className="gap-1"
+        className="h-10 gap-1 px-4"
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 0}
       >
@@ -73,7 +72,7 @@ export default function VacancyTablePagination({
           page === '...' ? (
             <span
               key={`ellipsis-${idx}`}
-              className="px-2 text-sm text-slate-500"
+              className="flex size-9 items-center justify-center text-sm text-slate-400"
             >
               ...
             </span>
@@ -83,9 +82,9 @@ export default function VacancyTablePagination({
               variant="ghost"
               size="sm"
               className={cn(
-                'size-9 p-0 text-sm',
+                'size-9 rounded-lg p-0 text-sm',
                 currentPage === page
-                  ? 'bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground'
+                  ? 'bg-[#075056] text-white hover:bg-[#075056]/90 hover:text-white'
                   : 'text-slate-600 hover:bg-slate-100'
               )}
               onClick={() => onPageChange(page)}
@@ -99,9 +98,9 @@ export default function VacancyTablePagination({
       <Button
         variant="outline"
         size="sm"
-        className="gap-1"
+        className="h-10 gap-1 px-4"
         onClick={() => onPageChange(currentPage + 1)}
-        disabled={currentPage >= totalPages - 1}
+        disabled={currentPage >= effectiveTotal - 1}
       >
         Next
         <ChevronRight className="size-4" />

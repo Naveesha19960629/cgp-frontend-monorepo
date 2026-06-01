@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowUp, ChevronsUpDown } from 'lucide-react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 
 import type { VacancyTableColumn } from '@/views/vacancies/types';
 
@@ -35,6 +35,14 @@ function SortableHeader({
   onSort,
 }: SortableHeaderProps) {
   const isActive = currentSortBy === columnKey;
+  const upClass =
+    isActive && currentSortOrder === 'asc'
+      ? 'text-slate-900'
+      : 'text-slate-300';
+  const downClass =
+    isActive && currentSortOrder === 'desc'
+      ? 'text-slate-900'
+      : 'text-slate-300';
 
   return (
     <Button
@@ -43,13 +51,10 @@ function SortableHeader({
       onClick={() => onSort(columnKey)}
     >
       {label}
-      {isActive && currentSortOrder === 'asc' ? (
-        <ArrowUp className="size-3.5" />
-      ) : isActive && currentSortOrder === 'desc' ? (
-        <ArrowDown className="size-3.5" />
-      ) : (
-        <ChevronsUpDown className="size-3.5" />
-      )}
+      <span className="flex flex-col">
+        <ChevronUp className={`size-3 ${upClass}`} />
+        <ChevronDown className={`size-3 ${downClass}`} />
+      </span>
     </Button>
   );
 }
@@ -88,6 +93,7 @@ const createVacancyColumns = ({
     size: 40,
   },
   {
+    id: 'vacancyId',
     accessorKey: 'vacancyId',
     header: 'ID',
     cell: ({ row }) => {

@@ -29,6 +29,7 @@ interface DataTableFacetedFilterProps {
   onSelectionChange: (values: string[]) => void;
   searchValue?: string;
   onSearchChange?: (value: string) => void;
+  isLoading?: boolean;
 }
 
 export function DataTableFacetedFilter({
@@ -38,6 +39,7 @@ export function DataTableFacetedFilter({
   onSelectionChange,
   searchValue,
   onSearchChange,
+  isLoading,
 }: DataTableFacetedFilterProps) {
   const selectedSet = new Set(selectedValues);
 
@@ -47,7 +49,7 @@ export function DataTableFacetedFilter({
         <Button
           variant="outline"
           size="sm"
-          className="h-auto gap-2 rounded-lg border-slate-300 bg-white px-4 py-3 text-base font-medium text-slate-600 shadow-none hover:bg-white hover:text-slate-600"
+          className="h-12 gap-2 rounded-lg border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 shadow-none hover:bg-white hover:text-slate-700"
         >
           {title}
           <ChevronDown className="size-4 shrink-0" />
@@ -68,7 +70,9 @@ export function DataTableFacetedFilter({
               : {})}
           />
           <CommandList>
-            <CommandEmpty>No results found.</CommandEmpty>
+            <CommandEmpty>
+              {isLoading ? 'Loading...' : 'No results found.'}
+            </CommandEmpty>
             <CommandGroup className="p-0">
               {options.map(option => {
                 const isSelected = selectedSet.has(option.value);

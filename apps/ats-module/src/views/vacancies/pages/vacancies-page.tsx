@@ -4,7 +4,7 @@ import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
-import { useVacanciesQuery } from '@/views/vacancies/hooks/queries/use-vacancies-query';
+import { useVacanciesQuery } from '@/views/vacancies';
 import { useVacancyTableParams } from '@/views/vacancies/hooks/use-vacancy-table-params';
 import type {
   VacancyQueryParams,
@@ -86,7 +86,7 @@ export default function VacanciesPage() {
   });
 
   return (
-    <section className="px-7 py-5">
+    <section className="flex h-full flex-col overflow-hidden px-7 py-5">
       <div className="flex justify-between">
         <p className="text-2xl/8 font-bold text-slate-900">
           {t('vacancies.title')}
@@ -117,20 +117,14 @@ export default function VacanciesPage() {
           </Button>
         </div>
       </div>
-      {isLoading ? (
-        <div className="flex h-64 items-center justify-center">
-          <p className="text-sm text-slate-500">Loading vacancies...</p>
-        </div>
-      ) : (
-        <>
-          <VacancyDataTable table={table} />
-          <VacancyTablePagination
-            currentPage={params.page}
-            totalPages={totalPages}
-            onPageChange={page => void setParams({ page })}
-          />
-        </>
-      )}
+      <div className="min-h-0 flex-1 overflow-auto">
+        <VacancyDataTable table={table} isLoading={isLoading} />
+      </div>
+      <VacancyTablePagination
+        currentPage={params.page}
+        totalPages={totalPages}
+        onPageChange={page => void setParams({ page })}
+      />
     </section>
   );
 }

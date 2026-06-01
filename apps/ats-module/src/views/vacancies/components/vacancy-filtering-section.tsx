@@ -44,8 +44,10 @@ export default function VacancyFilteringSection({
   const [careerPathSearch, setCareerPathSearch] = React.useState('');
   const [disciplineSearch, setDisciplineSearch] = React.useState('');
 
-  const { data: careerPathsData } = useCareerPathsQuery(careerPathSearch);
-  const { data: disciplinesData } = useDisciplinesQuery(disciplineSearch);
+  const { data: careerPathsData, isLoading: isCareerPathsLoading } =
+    useCareerPathsQuery(careerPathSearch);
+  const { data: disciplinesData, isLoading: isDisciplinesLoading } =
+    useDisciplinesQuery(disciplineSearch);
 
   const careerPathOptions = React.useMemo(
     () =>
@@ -74,7 +76,7 @@ export default function VacancyFilteringSection({
   const selectedStatuses = statusFilter ? statusFilter.split(',') : [];
 
   return (
-    <div className="flex flex-wrap items-center gap-3">
+    <div className="flex flex-wrap items-center gap-2">
       <DataTableFacetedFilter
         title="Career Path"
         options={careerPathOptions}
@@ -82,6 +84,7 @@ export default function VacancyFilteringSection({
         onSelectionChange={values => onCareerPathChange(values.join(','))}
         searchValue={careerPathSearch}
         onSearchChange={setCareerPathSearch}
+        isLoading={isCareerPathsLoading}
       />
       <DataTableFacetedFilter
         title="Discipline"
@@ -90,6 +93,7 @@ export default function VacancyFilteringSection({
         onSelectionChange={values => onDisciplineChange(values.join(','))}
         searchValue={disciplineSearch}
         onSearchChange={setDisciplineSearch}
+        isLoading={isDisciplinesLoading}
       />
       <DataTableFacetedFilter
         title="Status"
@@ -103,7 +107,7 @@ export default function VacancyFilteringSection({
           placeholder="Search"
           value={search}
           onChange={e => onSearchChange(e.target.value)}
-          className="h-12 w-48 rounded-lg border-slate-300 pl-9"
+          className="h-12 w-48 rounded-lg border-slate-200 pl-9"
         />
       </div>
     </div>
