@@ -17,7 +17,6 @@ const STATUS_OPTIONS = [
   { value: 'Draft', label: 'Draft' },
   { value: 'Unpublished', label: 'Unpublished' },
   { value: 'Live', label: 'Live' },
-  { value: 'Active', label: 'Active' },
   { value: 'Expired', label: 'Expired' },
   { value: 'Onhold', label: 'On Hold' },
 ];

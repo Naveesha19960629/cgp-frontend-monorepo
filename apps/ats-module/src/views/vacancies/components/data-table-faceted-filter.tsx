@@ -43,7 +43,7 @@ export default function DataTableFacetedFilter({
         </Button>
       </PopoverTrigger>
       <PopoverContent
-        className="w-55.25 rounded-lg p-0 shadow-[0px_4px_30px_0px_rgba(0,0,0,0.16)]"
+        className="h-62 w-55.25 rounded-lg p-0 shadow-[0px_4px_30px_0px_rgba(0,0,0,0.16)]"
         align="start"
       >
         <Command
@@ -58,7 +58,7 @@ export default function DataTableFacetedFilter({
                 : {})}
             />
           )}
-          <CommandList>
+          <CommandList className="overflow-auto pt-3 pb-3 pl-3">
             <CommandEmpty>
               {isLoading ? 'Loading...' : 'No results found.'}
             </CommandEmpty>
@@ -87,7 +87,7 @@ export default function DataTableFacetedFilter({
                           : 'border-slate-300 bg-white'
                       )}
                     >
-                      {isSelected && <Check className="size-3" />}
+                      {isSelected && <Check className="size-3.5" />}
                     </div>
                     {option.icon && (
                       <option.icon className="text-muted-foreground size-4" />
