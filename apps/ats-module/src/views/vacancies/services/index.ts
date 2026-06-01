@@ -1,5 +1,7 @@
 export { genderService } from '@/views/vacancies/services/gender.service';
 export { industryService } from '@/views/vacancies/services/industry.service';
+export { maritalStatusService } from '@/views/vacancies/services/marital-status.service';
+export { placesService } from '@/views/vacancies/services/places.service';
 export { societyService } from '@/views/vacancies/services/society.service';
 export { skillService } from '@/views/vacancies/services/skill.service';
 export { careerPathService } from '@/views/vacancies/services/career-path.service';

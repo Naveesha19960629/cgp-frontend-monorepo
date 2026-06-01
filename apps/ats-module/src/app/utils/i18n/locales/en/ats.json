@@ -10,7 +10,13 @@
     "noData": "No results found",
     "noDataTitle": "No Data Found",
     "noDataDescription": "We couldn't find any matching data. Try adjusting your search data",
-    "errorTitle": "Try Again"
+    "errorTitle": "Try Again",
+    "notifications": {
+      "disable": {
+        "title": "Successfully Disabled",
+        "message": "{{sectionName}} has been successfully disabled."
+      }
+    }
   },
   "vacancies": {
     "title": "Vacancies",
@@ -102,6 +108,61 @@
         "title": "Successfully Disabled",
         "message": "Patents have been successfully disabled."
       }
+    }
+  },
+  "profileRequirements": {
+    "title": "Profile Requirements",
+    "back": "Back",
+    "bannerTitle": "Build the Application Form",
+    "bannerCertainFields": "Certain fields",
+    "bannerDescription": " in this section are always collected from candidates to support consistent candidate profiles. Any fields you don't select won't be collected",
+    "dataTakenFromCandidate": "If selected, no manual input is required, and data will be taken from the candidate profile",
+    "gender": "Gender",
+    "genderPlaceholder": "Select gender",
+    "maritalStatus": "Marital Status",
+    "maritalStatusPlaceholder": "Select marital status",
+    "addressesTitle": "Addresses",
+    "addressesDescription": "Please provide addresses",
+    "addressTitle": "Address {{number}}",
+    "city": "City",
+    "cityPlaceholder": "Select city",
+    "stateProvince": "State / Province / Region",
+    "stateProvincePlaceholder": "Select state/province/region",
+    "country": "Country",
+    "countryPlaceholder": "Select country",
+    "postalCode": "Postal Code / Zip",
+    "postalCodePlaceholder": "Enter portal code/zip",
+    "addAddress": "Add address",
+    "removeAddress": "Remove address",
+    "collapse": "Collapse",
+    "expand": "Expand",
+    "cancelButton": "Cancel",
+    "nextButton": "Next",
+    "errors": {
+      "duplicateEntry": "This entry already exists.",
+      "maxEntries": "Exceeded maximum of {{max}} entries allowed."
+    },
+    "fieldList": {
+      "title": "Title",
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "email": "Email",
+      "numberType": "Number Type",
+      "primaryPhoneNumber": "Primary Phone Number",
+      "permanentAddressDetails": "Permanent Address Details",
+      "currentAddressDetails": "Current Address Details"
+    },
+    "disableDialog": {
+      "title": "Are you sure?",
+      "description": "Are you sure you want to disable this section? Disabling this section will permanently remove all added data. This action cannot be undone",
+      "cancelButton": "Cancel",
+      "confirmButton": "Disable"
+    },
+    "emptyDisableDialog": {
+      "title": "Are you sure?",
+      "message": "You've enabled this section but haven't filled any fields. This section will be disabled for this vacancy and no data will be collected from candidates",
+      "cancel": "Cancel",
+      "disable": "Disable"
     }
   },
   "secondaryEducation": {
@@ -293,12 +354,6 @@
       "message": "You've enabled this section but haven't filled any fields. This section will be disabled for this vacancy and no data will be collected from candidates",
       "cancel": "Cancel",
       "disable": "Disable"
-    },
-    "notifications": {
-      "disable": {
-        "title": "Successfully Disabled",
-        "message": "Preferred Skills have been successfully disabled."
-      }
     }
   },
   "preferredLanguages": {
@@ -327,12 +382,6 @@
       "message": "You've enabled this section but haven't filled any fields. This section will be disabled for this vacancy and no data will be collected from candidates",
       "cancel": "Cancel",
       "disable": "Disable"
-    },
-    "notifications": {
-      "disable": {
-        "title": "Successfully Disabled",
-        "message": "Preferred Languages have been successfully disabled."
-      }
     }
   },
   "preferredCauses": {
@@ -361,12 +410,6 @@
       "message": "You've enabled this section but haven't filled any fields. This section will be disabled for this vacancy and no data will be collected from candidates",
       "cancel": "Cancel",
       "disable": "Disable"
-    },
-    "notifications": {
-      "disable": {
-        "title": "Successfully Disabled",
-        "message": "Preferred Causes have been successfully disabled."
-      }
     }
   },
   "preferredHobbies": {
@@ -395,12 +438,6 @@
       "message": "You've enabled this section but haven't filled any fields. This section will be disabled for this vacancy and no data will be collected from candidates",
       "cancel": "Cancel",
       "disable": "Disable"
-    },
-    "notifications": {
-      "disable": {
-        "title": "Successfully Disabled",
-        "message": "Preferred Hobbies have been successfully disabled."
-      }
     }
   },
   "projectsRequirements": {

@@ -32,18 +32,56 @@ interface StepDisableDialogProps {
 }
 
 interface Address {
-  cityRefId: string;
-  stateRefId: string;
-  countryRefId: string;
+  city: SelectOption;
+  stateProvince: SelectOption;
+  country: SelectOption;
   postalCode: string;
+  isOpen: boolean;
 }
 
 interface ProfileRequirements {
   isEnabled: boolean;
   dataTakenFromCandidate: boolean;
   gender: SelectOption;
-  materialStatus: SelectOption;
-  address: Address[];
+  maritalStatus: SelectOption;
+  addresses: Address[];
+}
+
+// ─── Marital Status ───────────────────────────────────────────────────────────
+
+interface MaritalStatusItem {
+  id: string;
+  label: string;
+  source: string;
+}
+
+// ─── Places ───────────────────────────────────────────────────────────────────
+
+interface PlaceItem {
+  id: string;
+  label: string;
+}
+
+interface PlaceCityResult {
+  city: PlaceItem;
+  state?: PlaceItem;
+  country: PlaceItem;
+}
+
+interface PlaceStateResult {
+  state: PlaceItem;
+  country: PlaceItem;
+}
+
+interface PlaceCountryResult {
+  country: PlaceItem;
+}
+
+interface PlacesApiResponse<T> {
+  requestId: string;
+  success: boolean;
+  message: string;
+  data: T[];
 }
 
 // ─── Secondary Education ──────────────────────────────────────────────────────
@@ -136,7 +174,7 @@ interface VacancyForm {
   status: string;
   lastActiveStep: string;
   jobRequirements: JobRequirement[];
-  profileRequirements: ProfileRequirements[];
+  profileRequirements: ProfileRequirements;
   secondaryEducation: SecondaryEducation[];
   tertiaryEducation: TertiaryEducation[];
   preferredSkills?: PreferredSkills;
@@ -286,6 +324,7 @@ interface SkillCareerPathEntry {
   careerPathId?: string;
   careerPathName: string;
   displayValue: string;
+  source?: string;
 }
 
 interface PreferredSkills {
@@ -305,6 +344,7 @@ interface LanguageItem {
 interface LanguageEntry {
   id: string;
   label: string;
+  source?: string;
 }
 
 interface PreferredLanguages {
@@ -324,6 +364,7 @@ interface CauseItem {
 interface CauseEntry {
   id: string;
   label: string;
+  source?: string;
 }
 
 interface PreferredCauses {
@@ -343,6 +384,7 @@ interface HobbyItem {
 interface HobbyEntry {
   id: string;
   label: string;
+  source?: string;
 }
 
 interface PreferredHobbies {
@@ -559,4 +601,10 @@ export type {
   PublicationApiData,
   PublicationResponse,
   VacancyCancelDialogProps,
+  MaritalStatusItem,
+  PlaceItem,
+  PlaceCityResult,
+  PlaceStateResult,
+  PlaceCountryResult,
+  PlacesApiResponse,
 };

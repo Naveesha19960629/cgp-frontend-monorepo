@@ -126,7 +126,13 @@ const DEFAULT_FORM: VacancyForm = {
   status: 'draft',
   lastActiveStep: VACANCY_STEPS[0].key,
   jobRequirements: [],
-  profileRequirements: [],
+  profileRequirements: {
+    isEnabled: false,
+    dataTakenFromCandidate: false,
+    gender: { id: '', label: '' },
+    maritalStatus: { id: '', label: '' },
+    addresses: [],
+  },
   secondaryEducation: [
     { isEnabled: false, dataTakenFromCandidate: false, content: [] },
   ],
@@ -137,6 +143,26 @@ const DEFAULT_FORM: VacancyForm = {
     isEnabled: false,
     dataTakenFromCandidate: false,
     patents: [],
+  },
+  preferredSkills: {
+    isEnabled: false,
+    dataTakenFromCandidate: false,
+    skills: [],
+  },
+  preferredLanguages: {
+    isEnabled: false,
+    dataTakenFromCandidate: false,
+    languages: [],
+  },
+  preferredCauses: {
+    isEnabled: false,
+    dataTakenFromCandidate: false,
+    causes: [],
+  },
+  preferredHobbies: {
+    isEnabled: false,
+    dataTakenFromCandidate: false,
+    hobbies: [],
   },
 };
 

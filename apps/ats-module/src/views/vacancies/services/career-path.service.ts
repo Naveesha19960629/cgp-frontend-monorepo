@@ -1,4 +1,9 @@
-import type { ApiResponse, CareerPathItem } from '@/views/vacancies/types';
+import type {
+  ApiResponse,
+  CareerPathItem,
+  CreatePendingApiResponse,
+  CreatePendingItemResponse,
+} from '@/views/vacancies/types';
 
 import { httpClient } from '@cgp/data-access';
 
@@ -11,5 +16,15 @@ export const careerPathService = {
       { params: { search } }
     );
     return response.data;
+  },
+
+  createCareerPath: async (
+    label: string
+  ): Promise<CreatePendingItemResponse> => {
+    const response = await httpClient.post<CreatePendingApiResponse>(
+      '/career-paths',
+      { type: 'CAREER_PATH', displayValue: label }
+    );
+    return response.data.data;
   },
 };
