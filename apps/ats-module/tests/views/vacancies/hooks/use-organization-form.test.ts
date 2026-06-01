@@ -1,3 +1,5 @@
+import type React from 'react';
+
 import { renderHook, waitFor } from '@testing-library/react';
 
 import { describe, expect, it, vi } from 'vitest';
@@ -110,7 +112,7 @@ describe('useOrganizationForm', () => {
     result.current.form.setValue('organizationWebSite', 'https://example.com');
 
     const event = new Event('submit', { bubbles: true });
-    await result.current.onSubmit(event as any);
+    await result.current.onSubmit(event as unknown as React.BaseSyntheticEvent);
 
     await waitFor(() => {
       expect(onSuccess).toHaveBeenCalledWith({
@@ -132,7 +134,7 @@ describe('useOrganizationForm', () => {
     result.current.form.setValue('organizationWebSite', 'https://example.com');
 
     const event = new Event('submit', { bubbles: true });
-    await result.current.onSubmit(event as any);
+    await result.current.onSubmit(event as unknown as React.BaseSyntheticEvent);
 
     expect(result.current.form.getValues('name')).toBe('');
     expect(result.current.form.getValues('location')).toEqual({

@@ -15,6 +15,10 @@ import {
   useLocationsQuery,
   useOrganizationsQuery,
 } from '@/views/vacancies/hooks';
+import type {
+  LocationOption,
+  OrganizationOption,
+} from '@/views/vacancies/services';
 import type { StepProps } from '@/views/vacancies/types';
 import { formatDate } from '@/views/vacancies/utils';
 
@@ -85,8 +89,8 @@ function ProjectCard({
   isLocationsLoading: boolean;
   organizationOptions: Array<{ value: string; label: string }>;
   isOrganizationsLoading: boolean;
-  locationsData: any[];
-  organizationsData: any[];
+  locationsData: LocationOption[];
+  organizationsData: OrganizationOption[];
   onOpenAddOrganizationDialog: (name: string, projectIndex: number) => void;
 }>) {
   const { t } = useTranslation('ats');
