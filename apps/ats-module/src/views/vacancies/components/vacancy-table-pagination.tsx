@@ -51,15 +51,15 @@ export default function VacancyTablePagination({
   const pageNumbers = getPageNumbers(currentPage, effectiveTotal);
 
   return (
-    <div className="flex items-center justify-between border-t border-slate-200 py-4">
+    <div className="flex items-center justify-between border-t border-slate-200 pt-5">
       <Button
         variant="outline"
         size="sm"
-        className="h-10 gap-1 px-4"
+        className="h-10 w-32 gap-1 border-slate-300 bg-slate-50 text-slate-900 hover:bg-slate-100"
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 0}
       >
-        <ChevronLeft className="size-4" />
+        <ChevronLeft className="size-5" />
         Back
       </Button>
 
@@ -94,7 +94,7 @@ export default function VacancyTablePagination({
       <Button
         variant="outline"
         size="sm"
-        className="h-10 gap-1 px-4"
+        className="h-10 w-32 gap-1 border-slate-300 bg-slate-50 text-slate-900 hover:bg-slate-100"
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage >= effectiveTotal - 1}
       >
