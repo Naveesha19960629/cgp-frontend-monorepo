@@ -1,6 +1,6 @@
 import { Check, ChevronDown } from 'lucide-react';
 
-import * as React from 'react';
+import type { DataTableFacetedFilterProps } from '@/views/vacancies/types';
 
 import { Button } from '@cgp/ui-kit/components/ui/button';
 import {
@@ -18,21 +18,7 @@ import {
 } from '@cgp/ui-kit/components/ui/popover';
 import { cn } from '@cgp/ui-kit/lib/utils';
 
-interface DataTableFacetedFilterProps {
-  title?: string;
-  options: {
-    label: string;
-    value: string;
-    icon?: React.ComponentType<{ className?: string }>;
-  }[];
-  selectedValues: string[];
-  onSelectionChange: (values: string[]) => void;
-  searchValue?: string;
-  onSearchChange?: (value: string) => void;
-  isLoading?: boolean;
-}
-
-export function DataTableFacetedFilter({
+export default function DataTableFacetedFilter({
   title,
   options,
   selectedValues,
@@ -40,6 +26,7 @@ export function DataTableFacetedFilter({
   searchValue,
   onSearchChange,
   isLoading,
+  hideSearch = false,
 }: DataTableFacetedFilterProps) {
   const selectedSet = new Set(selectedValues);
 
@@ -49,26 +36,28 @@ export function DataTableFacetedFilter({
         <Button
           variant="outline"
           size="sm"
-          className="h-12 gap-2 rounded-lg border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 shadow-none hover:bg-white hover:text-slate-700"
+          className="h-12 gap-2 rounded-lg border-slate-300 bg-white px-4! py-3 text-base font-medium text-slate-600 shadow-none hover:bg-white hover:text-slate-600"
         >
           {title}
-          <ChevronDown className="size-4 shrink-0" />
+          <ChevronDown className="size-4 shrink-0 text-shadow-zinc-800" />
         </Button>
       </PopoverTrigger>
       <PopoverContent
-        className="w-[221px] rounded-lg p-0 shadow-[0px_4px_30px_0px_rgba(0,0,0,0.16)]"
+        className="w-55.25 rounded-lg p-0 shadow-[0px_4px_30px_0px_rgba(0,0,0,0.16)]"
         align="start"
       >
         <Command
           shouldFilter={!onSearchChange}
           className="**:data-[slot=command-input-wrapper]:h-12"
         >
-          <CommandInput
-            placeholder={`Search ${title?.toLowerCase()}...`}
-            {...(onSearchChange
-              ? { value: searchValue, onValueChange: onSearchChange }
-              : {})}
-          />
+          {!hideSearch && (
+            <CommandInput
+              placeholder={`Search ${title?.toLowerCase()}...`}
+              {...(onSearchChange
+                ? { value: searchValue, onValueChange: onSearchChange }
+                : {})}
+            />
+          )}
           <CommandList>
             <CommandEmpty>
               {isLoading ? 'Loading...' : 'No results found.'}

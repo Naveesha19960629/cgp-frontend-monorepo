@@ -1,15 +1,17 @@
-import { Search } from 'lucide-react';
+import { SearchNormal1 } from 'iconsax-reactjs';
 
 import * as React from 'react';
 
+import {
+  DataTableFacetedFilter,
+  type VacancyFilteringSectionProps,
+} from '@/views/vacancies';
 import {
   useCareerPathsQuery,
   useDisciplinesQuery,
 } from '@/views/vacancies/hooks';
 
 import { Input } from '@cgp/ui-kit/components/ui/input';
-
-import { DataTableFacetedFilter } from './data-table-faceted-filter';
 
 const STATUS_OPTIONS = [
   { value: 'Draft', label: 'Draft' },
@@ -19,17 +21,6 @@ const STATUS_OPTIONS = [
   { value: 'Expired', label: 'Expired' },
   { value: 'Onhold', label: 'On Hold' },
 ];
-
-interface VacancyFilteringSectionProps {
-  search: string;
-  onSearchChange: (value: string) => void;
-  careerPathFilter: string;
-  onCareerPathChange: (value: string) => void;
-  disciplineFilter: string;
-  onDisciplineChange: (value: string) => void;
-  statusFilter: string;
-  onStatusChange: (value: string) => void;
-}
 
 export default function VacancyFilteringSection({
   search,
@@ -76,7 +67,7 @@ export default function VacancyFilteringSection({
   const selectedStatuses = statusFilter ? statusFilter.split(',') : [];
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="flex flex-wrap items-center gap-3">
       <DataTableFacetedFilter
         title="Career Path"
         options={careerPathOptions}
@@ -100,14 +91,15 @@ export default function VacancyFilteringSection({
         options={STATUS_OPTIONS}
         selectedValues={selectedStatuses}
         onSelectionChange={values => onStatusChange(values.join(','))}
+        hideSearch
       />
       <div className="relative">
-        <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-slate-400" />
+        <SearchNormal1 className="absolute top-1/2 left-4 size-6 -translate-y-1/2 text-slate-900" />
         <Input
           placeholder="Search"
           value={search}
           onChange={e => onSearchChange(e.target.value)}
-          className="h-12 w-48 rounded-lg border-slate-200 pl-9"
+          className="h-12 w-99.5 rounded-lg border-slate-300 bg-white pl-13 text-sm font-medium shadow-none placeholder:text-slate-400"
         />
       </div>
     </div>

@@ -20,4 +20,5 @@ export { default as TertiaryEducationStep } from '@/views/vacancies/components/f
 export { default as VacancyCreateStepperForm } from '@/views/vacancies/components/vacancy-create-stepper-form';
 export { default as StepDisableDialog } from '@/views/vacancies/components/step-disable-dialog';
 export { default as VacancyCancelDialog } from '@/views/vacancies/components/vacancy-cancel-dialog';
+export { default as DataTableFacetedFilter } from '@/views/vacancies/components/data-table-faceted-filter';
 export * from '@/views/vacancies/components/dialogs';

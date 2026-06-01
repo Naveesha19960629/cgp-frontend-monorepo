@@ -523,6 +523,17 @@ interface VacancyTableColumn {
   availableActions: string[];
 }
 
+interface VacancyFilteringSectionProps {
+  search: string;
+  onSearchChange: (value: string) => void;
+  careerPathFilter: string;
+  onCareerPathChange: (value: string) => void;
+  disciplineFilter: string;
+  onDisciplineChange: (value: string) => void;
+  statusFilter: string;
+  onStatusChange: (value: string) => void;
+}
+
 interface VacancyQueryParams {
   page?: number;
   size?: number;
@@ -549,8 +560,24 @@ interface VacanciesApiResponse {
   message: string;
   data: VacanciesPaginatedData;
 }
+interface DataTableFacetedFilterProps {
+  title?: string;
+  options: {
+    label: string;
+    value: string;
+    icon?: React.ComponentType<{ className?: string }>;
+  }[];
+  selectedValues: string[];
+  onSelectionChange: (values: string[]) => void;
+  searchValue?: string;
+  onSearchChange?: (value: string) => void;
+  isLoading?: boolean;
+  hideSearch?: boolean;
+}
 
 export type {
+  DataTableFacetedFilterProps,
+  VacancyFilteringSectionProps,
   AddOrSelectOption,
   SelectOption,
   Address,
