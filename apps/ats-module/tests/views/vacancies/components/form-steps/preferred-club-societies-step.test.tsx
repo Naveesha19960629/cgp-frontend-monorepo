@@ -116,7 +116,6 @@ describe('PreferredClubSocietiesStep', () => {
   });
 
   it('renders the step title', () => {
-    const mockOnSubmit = vi.fn();
     render(
       <PreferredClubSocietiesStep
         onNext={mockOnNext}
@@ -130,7 +129,6 @@ describe('PreferredClubSocietiesStep', () => {
   });
 
   it('renders the informational banner', () => {
-    const mockOnSubmit = vi.fn();
     render(
       <PreferredClubSocietiesStep
         onNext={mockOnNext}
@@ -142,7 +140,6 @@ describe('PreferredClubSocietiesStep', () => {
   });
 
   it('renders the first club/society card by default', () => {
-    const mockOnSubmit = vi.fn();
     render(
       <PreferredClubSocietiesStep
         onNext={mockOnNext}
@@ -154,7 +151,6 @@ describe('PreferredClubSocietiesStep', () => {
   });
 
   it('renders all form fields', () => {
-    const mockOnSubmit = vi.fn();
     render(
       <PreferredClubSocietiesStep
         onNext={mockOnNext}
@@ -172,7 +168,6 @@ describe('PreferredClubSocietiesStep', () => {
 
   it('calls onBack when Cancel button is clicked', async () => {
     const user = userEvent.setup();
-    const mockOnSubmit = vi.fn();
     render(
       <PreferredClubSocietiesStep
         onNext={mockOnNext}
@@ -187,7 +182,6 @@ describe('PreferredClubSocietiesStep', () => {
 
   it('calls onNext when Next button is clicked', async () => {
     const user = userEvent.setup();
-    const mockOnSubmit = vi.fn();
     render(
       <PreferredClubSocietiesStep
         onNext={mockOnNext}
@@ -201,7 +195,6 @@ describe('PreferredClubSocietiesStep', () => {
   });
 
   it('renders the add entry button', () => {
-    const mockOnSubmit = vi.fn();
     render(
       <PreferredClubSocietiesStep
         onNext={mockOnNext}
@@ -214,7 +207,6 @@ describe('PreferredClubSocietiesStep', () => {
   });
 
   it('renders the data taken from candidate checkbox', () => {
-    const mockOnSubmit = vi.fn();
     render(
       <PreferredClubSocietiesStep
         onNext={mockOnNext}
@@ -231,7 +223,6 @@ describe('PreferredClubSocietiesStep', () => {
 
   it('adds a new entry when add button is clicked', async () => {
     const user = userEvent.setup();
-    const mockOnSubmit = vi.fn();
     render(
       <PreferredClubSocietiesStep
         onNext={mockOnNext}

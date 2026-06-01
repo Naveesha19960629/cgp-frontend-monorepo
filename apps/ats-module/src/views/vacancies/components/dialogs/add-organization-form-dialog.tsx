@@ -5,6 +5,7 @@ import { Add, ArrowLeft2, Warning2 } from 'iconsax-reactjs';
 import * as PopoverPrimitive from '@radix-ui/react-popover';
 
 import { useEffect, useRef, useState } from 'react';
+import type { Control, FieldValues, UseFormReturn } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
 import {
@@ -147,7 +148,7 @@ export default function AddOrganizationFormDialog({
 
         <div className="w-full flex-1 overflow-hidden rounded-2xl bg-white">
           <ScrollAreaWithShadow className="h-full max-w-full p-3 sm:p-5">
-            <Form {...(form as any)}>
+            <Form {...(form as unknown as UseFormReturn<FieldValues>)}>
               <form
                 id="add-organization-form"
                 className="space-y-6"
@@ -157,7 +158,7 @@ export default function AddOrganizationFormDialog({
               >
                 <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2">
                   <FormField
-                    control={form.control as any}
+                    control={form.control as unknown as Control<FieldValues>}
                     name="name"
                     render={({ field, fieldState }) => (
                       <FormItem className="gap-1">
@@ -265,7 +266,7 @@ export default function AddOrganizationFormDialog({
                   />
 
                   <FormField
-                    control={form.control as any}
+                    control={form.control as unknown as Control<FieldValues>}
                     name="location"
                     render={({ field }) => (
                       <FormItem className="gap-1">
@@ -297,7 +298,7 @@ export default function AddOrganizationFormDialog({
                   />
 
                   <FormField
-                    control={form.control as any}
+                    control={form.control as unknown as Control<FieldValues>}
                     name="organizationWebSite"
                     render={({ field }) => (
                       <FormItem className="md:col-span-1">
