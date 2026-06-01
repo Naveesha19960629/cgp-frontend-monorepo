@@ -34,6 +34,7 @@ export default defineConfig({
         '@tanstack/react-query',
         'keycloak-js',
         '@react-keycloak/web',
+        'nuqs',
       ],
     }),
   ],
@@ -50,6 +51,7 @@ export default defineConfig({
       '@tanstack/react-query',
       'keycloak-js',
       '@react-keycloak/web',
+      'nuqs',
     ],
   },
   server: {

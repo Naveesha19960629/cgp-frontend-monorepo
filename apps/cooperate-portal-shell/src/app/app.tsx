@@ -25,7 +25,7 @@ export default function App() {
             <ThemeProvider defaultTheme="light" storageKey="ui-theme">
               <LandscapeBlocker />
               <TooltipProvider>
-                <RouterProvider router={router} />\{' '}
+                <RouterProvider router={router} />
               </TooltipProvider>
             </ThemeProvider>
             <Toaster position="bottom-right" />
