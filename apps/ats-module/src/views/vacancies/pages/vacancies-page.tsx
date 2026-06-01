@@ -4,12 +4,8 @@ import * as React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
-import { useVacanciesQuery } from '@/views/vacancies';
-import { useVacancyTableParams } from '@/views/vacancies/hooks/use-vacancy-table-params';
-import type {
-  VacancyQueryParams,
-  VacancyTableColumn,
-} from '@/views/vacancies/types';
+import { useVacanciesQuery, useVacancyTableParams } from '@/views/vacancies';
+import type { VacancyQueryParams, VacancyTableColumn } from '@/views/vacancies';
 
 import { Button } from '@cgp/ui-kit/components/ui/button';
 import {
@@ -87,7 +83,7 @@ export default function VacanciesPage() {
 
   return (
     <section className="flex h-full flex-col overflow-hidden px-7 py-5">
-      <div className="flex justify-between">
+      <div className="flex items-center justify-between pb-5.5">
         <p className="text-2xl/8 font-bold text-slate-900">
           {t('vacancies.title')}
         </p>
