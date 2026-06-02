@@ -245,6 +245,12 @@ export default function JobRequirementsStep({
                 source: resolvedCareerPath[0].source,
               }
             : undefined,
+          level: data.level[0]
+            ? {
+                id: data.level[0].value,
+                source: data.level[0].source,
+              }
+            : undefined,
         })
       );
 

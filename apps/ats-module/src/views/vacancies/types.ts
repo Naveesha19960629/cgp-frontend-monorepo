@@ -79,6 +79,7 @@ interface CreateCareerPathPayload {
 interface CreateRolePayload {
   displayValue: string;
   careerPath?: MasterRef;
+  level?: MasterRef;
 }
 
 interface JobRequirementFormOption {

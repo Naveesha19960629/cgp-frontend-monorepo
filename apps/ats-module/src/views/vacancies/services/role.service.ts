@@ -30,20 +30,23 @@ export const roleService = {
   addRole: async ({
     displayValue,
     careerPath,
+    level,
   }: CreateRolePayload): Promise<CreatePendingApiResponse> => {
+    const payload: Record<string, string> = {};
+    if (careerPath?.id) {
+      payload.careerPathRefId = careerPath.id;
+      payload.careerPathSource = careerPath.source;
+    }
+    if (level?.id) {
+      payload.levelRefId = level.id;
+    }
+
     const response = await httpClient.post<CreatePendingApiResponse>(
       '/job-roles',
       {
         type: 'JOB_ROLE',
         displayValue,
-        ...(careerPath?.id
-          ? {
-              payload: {
-                careerPathRefId: careerPath.id,
-                careerPathSource: careerPath.source,
-              },
-            }
-          : {}),
+        ...(Object.keys(payload).length > 0 ? { payload } : {}),
       }
     );
     return response.data;

@@ -275,6 +275,52 @@ describe('Job Requirements Services', () => {
           },
         });
       });
+
+      it('calls POST /job-roles with level payload when provided', async () => {
+        mockPost.mockResolvedValue({ data: pendingResponse });
+
+        await roleService.addRole({
+          displayValue: 'Assistant',
+          level: {
+            id: 'e984a9f6-5150-4225-9433-9b4540f7cdc4',
+            source: 'MASTER',
+          },
+        });
+
+        expect(mockPost).toHaveBeenCalledWith('/job-roles', {
+          type: 'JOB_ROLE',
+          displayValue: 'Assistant',
+          payload: {
+            levelRefId: 'e984a9f6-5150-4225-9433-9b4540f7cdc4',
+          },
+        });
+      });
+
+      it('calls POST /job-roles with both careerPath and level payload when provided', async () => {
+        mockPost.mockResolvedValue({ data: pendingResponse });
+
+        await roleService.addRole({
+          displayValue: 'Software Engineer',
+          careerPath: {
+            id: '10000000-0000-0000-0000-000000000001',
+            source: 'MASTER',
+          },
+          level: {
+            id: 'e984a9f6-5150-4225-9433-9b4540f7cdc4',
+            source: 'MASTER',
+          },
+        });
+
+        expect(mockPost).toHaveBeenCalledWith('/job-roles', {
+          type: 'JOB_ROLE',
+          displayValue: 'Software Engineer',
+          payload: {
+            careerPathRefId: '10000000-0000-0000-0000-000000000001',
+            careerPathSource: 'MASTER',
+            levelRefId: 'e984a9f6-5150-4225-9433-9b4540f7cdc4',
+          },
+        });
+      });
     });
   });
 
