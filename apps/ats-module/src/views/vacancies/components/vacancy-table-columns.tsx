@@ -248,7 +248,15 @@ const createVacancyColumns = ({
   },
   {
     accessorKey: 'updatedAt',
-    header: 'Last Updated Date',
+    header: () => (
+      <SortableHeader
+        label="Last Updated Date"
+        columnKey="updatedAt"
+        currentSortBy={sortBy}
+        currentSortOrder={sortOrder}
+        onSort={onSort}
+      />
+    ),
     cell: ({ row }) => (
       <span className="text-sm text-slate-600">
         {row.original.updatedAtLabel}
@@ -258,7 +266,15 @@ const createVacancyColumns = ({
   },
   {
     accessorKey: 'updatedBy',
-    header: 'Last Updated By',
+    header: () => (
+      <SortableHeader
+        label="Last Updated By"
+        columnKey="updatedBy"
+        currentSortBy={sortBy}
+        currentSortOrder={sortOrder}
+        onSort={onSort}
+      />
+    ),
     cell: ({ row }) => (
       <span className="text-sm text-slate-600">{row.original.updatedBy}</span>
     ),
@@ -266,11 +282,19 @@ const createVacancyColumns = ({
   },
   {
     accessorKey: 'version',
-    header: 'Version',
+    header: () => (
+      <SortableHeader
+        label="Version"
+        columnKey="version"
+        currentSortBy={sortBy}
+        currentSortOrder={sortOrder}
+        onSort={onSort}
+      />
+    ),
     cell: ({ row }) => (
       <span className="text-sm text-slate-600">{row.original.version}</span>
     ),
-    size: 80,
+    size: 100,
   },
   {
     accessorKey: 'status',
