@@ -397,14 +397,26 @@ interface AddSchoolDialogProps {
   open: boolean;
   initialName: string;
   onClose: () => void;
-  onAdded: (option: { value: string; label: string; source: string }) => void;
+  onAdded: (option: {
+    value: string;
+    label: string;
+    source: string;
+    locationId?: string;
+    url?: string;
+  }) => void;
 }
 
 interface AddAwardingBodyDialogProps {
   open: boolean;
   initialName: string;
   onClose: () => void;
-  onAdded: (option: { value: string; label: string; source: string }) => void;
+  onAdded: (option: {
+    value: string;
+    label: string;
+    source: string;
+    locationId?: string;
+    url?: string;
+  }) => void;
 }
 
 interface StepHeaderProps {

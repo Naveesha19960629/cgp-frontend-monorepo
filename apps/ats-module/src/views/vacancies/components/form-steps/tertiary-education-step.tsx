@@ -19,6 +19,7 @@ import {
   useAddLevelOfQualificationMutation,
   useAddQualificationMutation,
   useAddSpecializationMutation,
+  useAddTertiaryAwardingBodyMutation,
   useBatchesSearch,
   useDeliverySchedulesSearch,
   useDepartmentsSearch,
@@ -113,9 +114,17 @@ export default function TertiaryEducationStep({
 
   // ── Awarding body dialog state ───────────────────────────────────────────
   const awardingBodyValue = watch('entry.tertiaryAwardingBody');
+  const addTertiaryAwardingBodyMutation = useAddTertiaryAwardingBodyMutation();
+  const pendingAwardingBodiesDataRef = useRef<
+    Map<string, { displayValue: string; locationId?: string; url?: string }>
+  >(new Map());
+  const awardingBodiesSnapshotRef = useRef<
+    { value: string; label: string; source: string }[]
+  >([]);
   const [addAwardingBodyDialogOpen, setAddAwardingBodyDialogOpen] =
     useState(false);
   const [pendingAwardingBodyLabel, setPendingAwardingBodyLabel] = useState('');
+  const [awardingBodySelectorKey, setAwardingBodySelectorKey] = useState(0);
 
   // ── Disable confirmation dialog state ───────────────────────────────
   const [confirmDisableOpen, setConfirmDisableOpen] = useState(false);
@@ -217,8 +226,31 @@ export default function TertiaryEducationStep({
     setValue(fieldName, resolved);
   };
 
-  // ── Submit ───────────────────────────────────────────────────────────────
+  const resolveAndCommitTertiaryAwardingBodies = async () => {
+    const current = getValues('entry.tertiaryAwardingBody');
+    const resolved: { value: string; label: string; source: string }[] = [];
+    for (const body of current) {
+      if (body.source === 'PENDING_TEMP') {
+        const pendingData = pendingAwardingBodiesDataRef.current.get(
+          body.value
+        );
+        if (pendingData) {
+          const created = await resolveItem(body.label, () =>
+            addTertiaryAwardingBodyMutation.mutateAsync(pendingData)
+          );
+          if (created) {
+            resolved.push(created);
+            pendingAwardingBodiesDataRef.current.delete(body.value);
+          }
+        }
+      } else {
+        resolved.push(body);
+      }
+    }
+    setValue('entry.tertiaryAwardingBody', resolved);
+  };
   const handleNext = async () => {
+    await resolveAndCommitTertiaryAwardingBodies();
     await resolveAndCommitField(
       qualificationRef,
       'entry.qualificationName',
@@ -552,6 +584,7 @@ export default function TertiaryEducationStep({
                   name="entry.tertiaryAwardingBody"
                   render={({ field }) => (
                     <MultipleSelector
+                      key={awardingBodySelectorKey}
                       value={field.value}
                       onSearch={searchAwardingBodies}
                       onChange={options => {
@@ -559,6 +592,9 @@ export default function TertiaryEducationStep({
                           clearMax('awardingBody');
                         const newItem = options.find(o => o.value === o.label);
                         if (newItem) {
+                          awardingBodiesSnapshotRef.current = getValues(
+                            'entry.tertiaryAwardingBody'
+                          );
                           setPendingAwardingBodyLabel(newItem.label);
                           setAddAwardingBodyDialogOpen(true);
                         } else {
@@ -970,11 +1006,19 @@ export default function TertiaryEducationStep({
       <AddAwardingBodyDialog
         open={addAwardingBodyDialogOpen}
         initialName={pendingAwardingBodyLabel}
-        onClose={() => setAddAwardingBodyDialogOpen(false)}
+        onClose={() => {
+          setAwardingBodySelectorKey(k => k + 1);
+          setAddAwardingBodyDialogOpen(false);
+        }}
         onAdded={option => {
+          pendingAwardingBodiesDataRef.current.set(option.value, {
+            displayValue: option.label,
+            locationId: option.locationId,
+            url: option.url,
+          });
           setValue('entry.tertiaryAwardingBody', [
             ...awardingBodyValue,
-            option,
+            { value: option.value, label: option.label, source: option.source },
           ]);
           setAddAwardingBodyDialogOpen(false);
         }}

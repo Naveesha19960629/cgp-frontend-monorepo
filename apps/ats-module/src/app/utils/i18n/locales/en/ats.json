@@ -2,6 +2,11 @@
   "error": {
     "apiDefaultMessage": "An unexpected error occurred. Please try again."
   },
+  "autocompleteCombobox": {
+    "noDataTitle": "No Data Found",
+    "noDataDescription": "We couldn't find any matching data. Try adjusting your search.",
+    "noDataHint": "Try a different keyword or check your spelling."
+  },
   "common": {
     "back": "Back",
     "cancel": "Cancel",

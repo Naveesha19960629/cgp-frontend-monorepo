@@ -10,3 +10,7 @@ export {
   URL_PROTOCOL_HTTPS,
   DATE_DISPLAY_FORMAT,
 } from '@/views/vacancies/utils/constants';
+export {
+  isUrlProtocolValid,
+  isUrlFormatValid,
+} from '@/views/vacancies/utils/url-validation';

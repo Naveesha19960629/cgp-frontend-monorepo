@@ -1,39 +1,31 @@
-import type { ReactNode } from 'react';
+﻿import type { ReactNode } from 'react';
 
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import { AddSchoolDialog } from '@/views/vacancies/components/form-steps/add-school-dialog';
 
-// ── Mock react-i18next ─────────────────────────────────────────────────────
+// â”€â”€ Mock react-i18next â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
 }));
 
-// ── Mock hooks ─────────────────────────────────────────────────────────────
-
-const mockMutateAsync = vi.fn();
+// â”€â”€ Mock hooks â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 vi.mock('@/views/vacancies/hooks', () => ({
-  useAddSchoolMutation: () => ({
-    mutateAsync: mockMutateAsync,
-    isPending: false,
-  }),
-  useSchoolLocationsSearch: () => vi.fn(() => Promise.resolve([])),
+  useSchoolLocationsQuery: () => ({ data: undefined, isLoading: false }),
 }));
 
-// ── Mock toasts ────────────────────────────────────────────────────────────
+// â”€â”€ Mock toasts â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const mockSuccessToast = vi.fn();
-const mockErrorToast = vi.fn();
 
 vi.mock('@cgp/ui-kit/components/custom-toast', () => ({
   SuccessToast: (...args: unknown[]) => mockSuccessToast(...args) as unknown,
-  ErrorToast: (...args: unknown[]) => mockErrorToast(...args) as unknown,
 }));
 
-// ── Mock Dialog ────────────────────────────────────────────────────────────
+// â”€â”€ Mock Dialog â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 vi.mock('@cgp/ui-kit/components/ui/dialog', () => ({
   Dialog: ({ children, open }: { children: ReactNode; open: boolean }) =>
@@ -41,24 +33,57 @@ vi.mock('@cgp/ui-kit/components/ui/dialog', () => ({
   DialogContent: ({ children }: { children: ReactNode }) => (
     <div role="dialog">{children}</div>
   ),
+  DialogHeader: ({ children }: { children: ReactNode }) => (
+    <div>{children}</div>
+  ),
+  DialogTitle: ({ children }: { children: ReactNode }) => (
+    <span>{children}</span>
+  ),
+  DialogDescription: ({ children }: { children: ReactNode }) => (
+    <span>{children}</span>
+  ),
 }));
 
-// ── Mock MultipleSelector ─────────────────────────────────────────────────
+vi.mock('@cgp/ui-kit/components/scroll-area-with-shadow', () => ({
+  ScrollAreaWithShadow: ({ children }: { children: ReactNode }) => (
+    <div>{children}</div>
+  ),
+}));
 
-vi.mock('@cgp/ui-kit/components/multi-select', () => ({
-  default: ({
+vi.mock('@cgp/ui-kit/components/ui/popover', () => ({
+  Popover: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  PopoverTrigger: ({ children }: { children: ReactNode }) => (
+    <div>{children}</div>
+  ),
+}));
+
+vi.mock('@radix-ui/react-popover', () => ({
+  Portal: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  Content: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  Arrow: () => null,
+}));
+
+vi.mock('@cgp/ui-kit/lib/utils', () => ({
+  removeEmoji: (str: string) => str,
+  cn: (...args: unknown[]) => args.filter(Boolean).join(' '),
+}));
+
+// â”€â”€ Mock MultipleSelector â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+vi.mock('@cgp/ui-kit/components/autocomplete-combobox', () => ({
+  AutocompleteCombobox: ({
     placeholder,
-    onChange,
+    onSelect,
   }: {
-    placeholder: string;
-    onChange?: (opts: { value: string; label: string }[]) => void;
+    placeholder?: string;
+    onSelect?: (option: { value: string; label: string }) => void;
   }) => (
     <div>
       <input placeholder={placeholder} readOnly />
       <button
         type="button"
         data-testid="select-location"
-        onClick={() => onChange?.([{ value: 'loc-1', label: 'Colombo' }])}
+        onClick={() => onSelect?.({ value: 'loc-1', label: 'Colombo' })}
       >
         Pick Location
       </button>
@@ -66,7 +91,7 @@ vi.mock('@cgp/ui-kit/components/multi-select', () => ({
   ),
 }));
 
-// ── Mock Button ────────────────────────────────────────────────────────────
+// â”€â”€ Mock Button â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 vi.mock('@cgp/ui-kit/components/ui/button', () => ({
   Button: ({
@@ -90,23 +115,22 @@ vi.mock('@cgp/ui-kit/components/ui/button', () => ({
   ),
 }));
 
-// ── Mock CharacterCount ───────────────────────────────────────────────────
+// â”€â”€ Mock CharacterCount â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 vi.mock('@cgp/ui-kit/components/character-count', () => ({
   CharacterCount: () => null,
 }));
 
-// ── Shared callbacks ──────────────────────────────────────────────────────
+// â”€â”€ Shared callbacks â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const onClose = vi.fn();
 const onAdded = vi.fn();
 
-// ── Tests ──────────────────────────────────────────────────────────────────
+// â”€â”€ Tests â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 describe('AddSchoolDialog', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockMutateAsync.mockResolvedValue({ data: { pendingId: 'school-1' } });
   });
 
   it('does not render when closed', () => {
@@ -131,8 +155,8 @@ describe('AddSchoolDialog', () => {
       />
     );
     expect(
-      screen.getByText('secondaryEducation.addSchoolDialog.title')
-    ).toBeInTheDocument();
+      screen.getAllByText('secondaryEducation.addSchoolDialog.title').length
+    ).toBeGreaterThanOrEqual(1);
   });
 
   it('pre-fills the name input with initialName', () => {
@@ -266,7 +290,7 @@ describe('AddSchoolDialog', () => {
     ).toBeDisabled();
   });
 
-  it('calls onAdded, SuccessToast, and onClose on successful add', async () => {
+  it('calls onAdded and SuccessToast synchronously on Add Now click', async () => {
     const user = userEvent.setup();
     render(
       <AddSchoolDialog
@@ -282,85 +306,18 @@ describe('AddSchoolDialog', () => {
         name: 'secondaryEducation.addSchoolDialog.addNow',
       })
     );
-    await waitFor(() => {
-      expect(onAdded).toHaveBeenCalledWith({
-        value: 'school-1',
+    expect(onAdded).toHaveBeenCalledWith(
+      expect.objectContaining({
+        value: expect.stringMatching(/^__pending_school_/),
         label: 'Royal College',
-        source: 'PENDING',
-      });
-    });
+        source: 'PENDING_TEMP',
+        locationId: 'loc-1',
+      })
+    );
     expect(mockSuccessToast).toHaveBeenCalledWith({
       title: 'secondaryEducation.addSchoolDialog.success.title',
       description: 'secondaryEducation.addSchoolDialog.success.message',
     });
-    expect(onClose).toHaveBeenCalled();
-  });
-
-  it('calls ErrorToast with network error keys on TypeError', async () => {
-    const user = userEvent.setup();
-    mockMutateAsync.mockRejectedValue(new TypeError('Network failure'));
-    render(
-      <AddSchoolDialog
-        open={true}
-        initialName="Royal College"
-        onClose={onClose}
-        onAdded={onAdded}
-      />
-    );
-    await user.click(screen.getByTestId('select-location'));
-    await user.click(
-      screen.getByRole('button', {
-        name: 'secondaryEducation.addSchoolDialog.addNow',
-      })
-    );
-    await waitFor(() => {
-      expect(mockErrorToast).toHaveBeenCalledWith({
-        title: 'notifications.networkError.title',
-        description: 'notifications.networkError.message',
-      });
-    });
-  });
-
-  it('calls ErrorToast with API error keys on non-TypeError', async () => {
-    const user = userEvent.setup();
-    mockMutateAsync.mockRejectedValue(new Error('Server error'));
-    render(
-      <AddSchoolDialog
-        open={true}
-        initialName="Royal College"
-        onClose={onClose}
-        onAdded={onAdded}
-      />
-    );
-    await user.click(screen.getByTestId('select-location'));
-    await user.click(
-      screen.getByRole('button', {
-        name: 'secondaryEducation.addSchoolDialog.addNow',
-      })
-    );
-    await waitFor(() => {
-      expect(mockErrorToast).toHaveBeenCalledWith({
-        title: 'notifications.apiError.save.title',
-        description: 'notifications.apiError.save.message',
-      });
-    });
-  });
-
-  it('calls onClose when Cancel button is clicked', async () => {
-    const user = userEvent.setup();
-    render(
-      <AddSchoolDialog
-        open={true}
-        initialName="Royal College"
-        onClose={onClose}
-        onAdded={onAdded}
-      />
-    );
-    await user.click(
-      screen.getByRole('button', {
-        name: 'secondaryEducation.addSchoolDialog.cancel',
-      })
-    );
-    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(onClose).not.toHaveBeenCalled();
   });
 });
