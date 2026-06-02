@@ -1,4 +1,5 @@
 export { resolveUserCreatedIndustries } from '@/views/vacancies/utils/patent-form-helpers';
+export { resolveUserCreatedOrganizations } from '@/views/vacancies/utils/honours-form-helpers';
 export { resolveUserCreatedEntries } from '@/views/vacancies/utils/resolve-user-created-entries';
 export {
   toSecondaryEducationPayload,

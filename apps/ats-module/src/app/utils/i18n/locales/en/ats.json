@@ -110,6 +110,57 @@
       }
     }
   },
+  "preferredHonoursAwards": {
+    "title": "Preferred Honours and Awards",
+    "back": "Back",
+    "dataTakenFromCandidate": "If selected, no manual input is required, and data will be taken from the candidate profile",
+    "honourTitle": "Honours and awards {{number}}",
+    "titleOfHonourOrAward": "Title of the Honours or Award",
+    "titleOfHonourOrAwardPlaceholder": "Title of the Honours or Award",
+    "issuedBy": "Issued By",
+    "issuedByPlaceholder": "Enter issued by",
+    "issuedDateFrom": "Issued Date From",
+    "issuedDateFromPlaceholder": "Select issue date from",
+    "issuedDateTo": "Issued Date To",
+    "issuedDateToPlaceholder": "Select issue date to",
+    "associatedOrganization": "Associated Organization",
+    "associatedOrganizationPlaceholder": "Select or add associated organization",
+    "addOrganization": "Add Organization",
+    "organizationLocation": "Organization Location",
+    "organizationLocationPlaceholder": "Select location",
+    "addHonour": "Add honour and award",
+    "removeHonour": "Remove honour and award",
+    "collapse": "Collapse",
+    "expand": "Expand",
+    "cancelButton": "Cancel",
+    "nextButton": "Next",
+    "fieldList": {
+      "titleOfHonourOrAward": "Title of the Honours or Award",
+      "associatedOrganization": "Associated Organization",
+      "issuedDate": "Issued Date"
+    },
+    "validation": {
+      "maxExceeded": "Exceeded maximum of {{max}} selections."
+    },
+    "disableDialog": {
+      "title": "Are you sure?",
+      "description": "Are you sure you want to disable this section? Disabling this section will permanently remove all added data. This action cannot be undone",
+      "cancelButton": "Cancel",
+      "confirmButton": "Disable"
+    },
+    "emptyDisableDialog": {
+      "title": "Are you sure?",
+      "message": "You've enabled this section but haven't filled any fields. This section will be disabled for this vacancy and no data will be collected from candidates",
+      "cancel": "Cancel",
+      "disable": "Disable"
+    },
+    "notifications": {
+      "disable": {
+        "title": "Successfully Disabled",
+        "message": "Preferred Honours and Awards have been successfully disabled."
+      }
+    }
+  },
   "profileRequirements": {
     "title": "Profile Requirements",
     "back": "Back",
