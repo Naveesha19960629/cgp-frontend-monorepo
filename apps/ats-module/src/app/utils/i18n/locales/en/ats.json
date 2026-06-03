@@ -373,7 +373,7 @@
     "cancel": "Cancel",
     "next": "Next",
     "addAwardingBodyDialog": {
-      "title": "Add Awarding Body",
+      "title": "Add Awarding Body/Institute",
       "name": "Awarding Body/Institute Name",
       "location": "Awarding Body/Institute Location",
       "url": "Awarding Body/Institute URL",
