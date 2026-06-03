@@ -16,6 +16,10 @@ export {
   useTertiaryEducationForm,
   type TertiaryEducationFormValues,
 } from '@/views/vacancies/hooks/use-tertiary-education-form';
+export {
+  useLicenseCertificatesForm,
+  type LicenseCertificatesFormValues,
+} from '@/views/vacancies/hooks/use-license-certificates-form';
 export { useDisableSuccessToast } from '@/views/vacancies/hooks/use-disable-success-toast';
 export {
   useJobRequirementsForm,

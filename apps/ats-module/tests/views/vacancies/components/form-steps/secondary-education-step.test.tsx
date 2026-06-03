@@ -29,10 +29,12 @@ const {
   mockExaminationMutate,
   mockAwardingBodyMutate,
   mockFieldOfStudyMutate,
+  mockAddSchoolMutate,
 } = vi.hoisted(() => ({
   mockExaminationMutate: vi.fn(),
   mockAwardingBodyMutate: vi.fn(),
   mockFieldOfStudyMutate: vi.fn(),
+  mockAddSchoolMutate: vi.fn(),
 }));
 
 vi.mock('@/views/vacancies/hooks', async importOriginal => {
@@ -48,19 +50,67 @@ vi.mock('@/views/vacancies/hooks', async importOriginal => {
     useAddExaminationMutation: () => ({ mutateAsync: mockExaminationMutate }),
     useAddAwardingBodyMutation: () => ({ mutateAsync: mockAwardingBodyMutate }),
     useAddFieldOfStudyMutation: () => ({ mutateAsync: mockFieldOfStudyMutate }),
+    useAddSchoolMutation: () => ({ mutateAsync: mockAddSchoolMutate }),
   };
 });
 
 // ── Mock add school dialog ──────────────────────────────────────────────────
 
+const mockAddSchoolDialog = vi.fn();
 vi.mock('@/views/vacancies/components/form-steps/add-school-dialog', () => ({
-  AddSchoolDialog: () => null,
+  AddSchoolDialog: (props: {
+    open: boolean;
+    onClose: () => void;
+    onAdded: (opt: {
+      value: string;
+      label: string;
+      source: string;
+      locationId?: string;
+      url?: string;
+    }) => void;
+  }) => {
+    mockAddSchoolDialog(props);
+    if (!props.open) return null;
+    return (
+      <div data-testid="add-school-dialog">
+        <button
+          type="button"
+          data-testid="dialog-add-now"
+          onClick={() =>
+            props.onAdded({
+              value: '__pending_school_123',
+              label: 'New School',
+              source: 'PENDING_TEMP',
+              locationId: 'loc-1',
+            })
+          }
+        >
+          Add Now
+        </button>
+        <button
+          type="button"
+          data-testid="dialog-cancel"
+          onClick={() => props.onClose()}
+        >
+          Cancel
+        </button>
+      </div>
+    );
+  },
 }));
 
 // ── Mock message box ────────────────────────────────────────────────────────
 
 vi.mock('@/app/components/message-box', () => ({
   default: ({ title }: { title: string }) => <div>{title}</div>,
+}));
+
+// ── Mock AutocompleteCombobox ──────────────────────────────────────────────
+
+vi.mock('@cgp/ui-kit/components/autocomplete-combobox', () => ({
+  AutocompleteCombobox: ({ placeholder }: { placeholder?: string }) => (
+    <input placeholder={placeholder} readOnly />
+  ),
 }));
 
 // ── Mock MultipleSelector ───────────────────────────────────────────────────
@@ -252,6 +302,9 @@ describe('SecondaryEducationStep', () => {
       data: { pendingId: 'body-id' },
     });
     mockFieldOfStudyMutate.mockResolvedValue({ data: { pendingId: 'fos-id' } });
+    mockAddSchoolMutate.mockResolvedValue({
+      data: { pendingId: 'school-server-id' },
+    });
   });
 
   describe('rendering', () => {
@@ -339,16 +392,12 @@ describe('SecondaryEducationStep', () => {
 
     it('passes loading indicator to all search selectors', () => {
       renderStep();
-      expect(
-        screen.getAllByText('secondaryEducation.search.loading')
-      ).toHaveLength(5);
+      expect(screen.getAllByText('common.loading')).toHaveLength(5);
     });
 
     it('passes empty indicator to all search selectors', () => {
       renderStep();
-      expect(
-        screen.getAllByText('secondaryEducation.search.noData')
-      ).toHaveLength(5);
+      expect(screen.getAllByText('common.noDataTitle')).toHaveLength(5);
     });
   });
 
@@ -737,6 +786,53 @@ describe('SecondaryEducationStep', () => {
       await waitFor(() => {
         expect(mockFieldOfStudyMutate).toHaveBeenCalledWith('new-val');
       });
+    });
+
+    it('does not call addSchoolMutation immediately when school dialog Add Now is clicked', async () => {
+      const user = userEvent.setup();
+      renderStep();
+
+      await user.click(
+        screen.getByTestId('add-new-secondaryEducation.placeholders.school')
+      );
+      await user.click(screen.getByTestId('dialog-add-now'));
+
+      expect(mockAddSchoolMutate).not.toHaveBeenCalled();
+    });
+
+    it('calls addSchoolMutation with pending data when Next is clicked after school dialog add', async () => {
+      const user = userEvent.setup();
+      renderStep();
+
+      await user.click(
+        screen.getByTestId('add-new-secondaryEducation.placeholders.school')
+      );
+      await user.click(screen.getByTestId('dialog-add-now'));
+      await user.click(screen.getByText('secondaryEducation.next'));
+
+      await waitFor(() => {
+        expect(mockAddSchoolMutate).toHaveBeenCalledWith(
+          expect.objectContaining({
+            displayValue: 'New School',
+            locationId: 'loc-1',
+          })
+        );
+      });
+    });
+
+    it('does not add school to form values when dialog is cancelled', async () => {
+      const user = userEvent.setup();
+      renderStep();
+
+      await user.click(
+        screen.getByTestId('add-new-secondaryEducation.placeholders.school')
+      );
+      expect(screen.getByTestId('add-school-dialog')).toBeInTheDocument();
+
+      await user.click(screen.getByTestId('dialog-cancel'));
+
+      expect(screen.queryByTestId('add-school-dialog')).not.toBeInTheDocument();
+      expect(mockAddSchoolMutate).not.toHaveBeenCalled();
     });
   });
 });

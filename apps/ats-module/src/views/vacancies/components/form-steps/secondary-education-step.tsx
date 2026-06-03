@@ -16,6 +16,7 @@ import {
   useAddAwardingBodyMutation,
   useAddExaminationMutation,
   useAddFieldOfStudyMutation,
+  useAddSchoolMutation,
   useAwardingBodiesSearch,
   useExaminationsSearch,
   useFieldsOfStudySearch,
@@ -55,6 +56,11 @@ import { cn } from '@cgp/ui-kit/lib/utils';
 
 const MAX_SELECTIONS = 10;
 const HUNDRED_YEARS_AGO = new Date(new Date().getFullYear() - 100, 0, 1);
+
+const multiSelectInfoAvatar = new URL(
+  '../../../../assets/images/multi-select-info-avatar.svg',
+  import.meta.url
+).href;
 
 export default function SecondaryEducationStep({
   onNext,
@@ -112,8 +118,16 @@ export default function SecondaryEducationStep({
   const addFieldOfStudyMutation = useAddFieldOfStudyMutation();
 
   // ── Add School dialog state ──────────────────────────────────────────
+  const addSchoolMutation = useAddSchoolMutation();
+  const pendingSchoolsDataRef = useRef<
+    Map<string, { displayValue: string; locationId?: string; url?: string }>
+  >(new Map());
+  const schoolsSnapshotRef = useRef<
+    { value: string; label: string; source: string }[]
+  >([]);
   const [addSchoolDialogOpen, setAddSchoolDialogOpen] = useState(false);
   const [pendingSchoolLabel, setPendingSchoolLabel] = useState('');
+  const [schoolsSelectorKey, setSchoolsSelectorKey] = useState(0);
 
   // ── Disable confirmation dialog state ───────────────────────────────
   const [confirmDisableOpen, setConfirmDisableOpen] = useState(false);
@@ -201,8 +215,29 @@ export default function SecondaryEducationStep({
     setValue(fieldName, resolved);
   };
 
-  // ── Submit ───────────────────────────────────────────────────────────────
+  const resolveAndCommitSchools = async () => {
+    const current = getValues('entry.schools');
+    const resolved: { value: string; label: string; source: string }[] = [];
+    for (const school of current) {
+      if (school.source === 'PENDING_TEMP') {
+        const pendingData = pendingSchoolsDataRef.current.get(school.value);
+        if (pendingData) {
+          const created = await resolveItem(school.label, () =>
+            addSchoolMutation.mutateAsync(pendingData)
+          );
+          if (created) {
+            resolved.push(created);
+            pendingSchoolsDataRef.current.delete(school.value);
+          }
+        }
+      } else {
+        resolved.push(school);
+      }
+    }
+    setValue('entry.schools', resolved);
+  };
   const handleNext = async () => {
+    await resolveAndCommitSchools();
     await resolveAndCommitField(examinationRef, 'entry.examinations', label =>
       addExaminationMutation.mutateAsync(label)
     );
@@ -352,6 +387,7 @@ export default function SecondaryEducationStep({
                   name="entry.schools"
                   render={({ field }) => (
                     <MultipleSelector
+                      key={schoolsSelectorKey}
                       value={field.value}
                       onSearch={searchSchools}
                       onChange={options => {
@@ -359,6 +395,8 @@ export default function SecondaryEducationStep({
                           clearMax('schools');
                         const newItem = options.find(o => o.value === o.label);
                         if (newItem) {
+                          schoolsSnapshotRef.current =
+                            getValues('entry.schools');
                           setPendingSchoolLabel(newItem.label);
                           setAddSchoolDialogOpen(true);
                         } else {
@@ -377,14 +415,27 @@ export default function SecondaryEducationStep({
                       triggerSearchOnFocus
                       keepSelectedInList
                       loadingIndicator={
-                        <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                          {t('secondaryEducation.search.loading')}
+                        <p className="px-3 pb-3 text-left">
+                          {t('common.loading')}
                         </p>
                       }
                       emptyIndicator={
-                        <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                          {t('secondaryEducation.search.noData')}
-                        </p>
+                        <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
+                          <div className="flex flex-col items-start">
+                            <img
+                              src={multiSelectInfoAvatar}
+                              alt={t('common.noData')}
+                            />
+                            <div className="mt-3 w-61 text-left">
+                              <p className="font-bold text-slate-900">
+                                {t('common.noDataTitle')}
+                              </p>
+                              <p className="text-sm font-semibold text-slate-700">
+                                {t('common.noDataDescription')}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
                       }
                       placeholder={t('secondaryEducation.placeholders.school')}
                     />
@@ -416,14 +467,27 @@ export default function SecondaryEducationStep({
                       triggerSearchOnFocus
                       keepSelectedInList
                       loadingIndicator={
-                        <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                          {t('secondaryEducation.search.loading')}
+                        <p className="px-3 pb-3 text-left">
+                          {t('common.loading')}
                         </p>
                       }
                       emptyIndicator={
-                        <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                          {t('secondaryEducation.search.noData')}
-                        </p>
+                        <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
+                          <div className="flex flex-col items-start">
+                            <img
+                              src={multiSelectInfoAvatar}
+                              alt={t('common.noData')}
+                            />
+                            <div className="mt-3 w-61 text-left">
+                              <p className="font-bold text-slate-900">
+                                {t('common.noDataTitle')}
+                              </p>
+                              <p className="text-sm font-semibold text-slate-700">
+                                {t('common.noDataDescription')}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
                       }
                       placeholder={t(
                         'secondaryEducation.placeholders.schoolLocation'
@@ -656,14 +720,27 @@ export default function SecondaryEducationStep({
                       triggerSearchOnFocus
                       keepSelectedInList
                       loadingIndicator={
-                        <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                          {t('secondaryEducation.search.loading')}
+                        <p className="px-3 pb-3 text-left">
+                          {t('common.loading')}
                         </p>
                       }
                       emptyIndicator={
-                        <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                          {t('secondaryEducation.search.noData')}
-                        </p>
+                        <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
+                          <div className="flex flex-col items-start">
+                            <img
+                              src={multiSelectInfoAvatar}
+                              alt={t('common.noData')}
+                            />
+                            <div className="mt-3 w-61 text-left">
+                              <p className="font-bold text-slate-900">
+                                {t('common.noDataTitle')}
+                              </p>
+                              <p className="text-sm font-semibold text-slate-700">
+                                {t('common.noDataDescription')}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
                       }
                       inputProps={{
                         maxLength: 100,
@@ -711,14 +788,27 @@ export default function SecondaryEducationStep({
                       triggerSearchOnFocus
                       keepSelectedInList
                       loadingIndicator={
-                        <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                          {t('secondaryEducation.search.loading')}
+                        <p className="px-3 pb-3 text-left">
+                          {t('common.loading')}
                         </p>
                       }
                       emptyIndicator={
-                        <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                          {t('secondaryEducation.search.noData')}
-                        </p>
+                        <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
+                          <div className="flex flex-col items-start">
+                            <img
+                              src={multiSelectInfoAvatar}
+                              alt={t('common.noData')}
+                            />
+                            <div className="mt-3 w-61 text-left">
+                              <p className="font-bold text-slate-900">
+                                {t('common.noDataTitle')}
+                              </p>
+                              <p className="text-sm font-semibold text-slate-700">
+                                {t('common.noDataDescription')}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
                       }
                       inputProps={{
                         maxLength: 200,
@@ -769,14 +859,27 @@ export default function SecondaryEducationStep({
                       triggerSearchOnFocus
                       keepSelectedInList
                       loadingIndicator={
-                        <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                          {t('secondaryEducation.search.loading')}
+                        <p className="px-3 pb-3 text-left">
+                          {t('common.loading')}
                         </p>
                       }
                       emptyIndicator={
-                        <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                          {t('secondaryEducation.search.noData')}
-                        </p>
+                        <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
+                          <div className="flex flex-col items-start">
+                            <img
+                              src={multiSelectInfoAvatar}
+                              alt={t('common.noData')}
+                            />
+                            <div className="mt-3 w-61 text-left">
+                              <p className="font-bold text-slate-900">
+                                {t('common.noDataTitle')}
+                              </p>
+                              <p className="text-sm font-semibold text-slate-700">
+                                {t('common.noDataDescription')}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
                       }
                       inputProps={{
                         maxLength: 100,
@@ -841,9 +944,20 @@ export default function SecondaryEducationStep({
       <AddSchoolDialog
         open={addSchoolDialogOpen}
         initialName={pendingSchoolLabel}
-        onClose={() => setAddSchoolDialogOpen(false)}
+        onClose={() => {
+          setSchoolsSelectorKey(k => k + 1);
+          setAddSchoolDialogOpen(false);
+        }}
         onAdded={option => {
-          setValue('entry.schools', [...schoolsValue, option]);
+          pendingSchoolsDataRef.current.set(option.value, {
+            displayValue: option.label,
+            locationId: option.locationId,
+            url: option.url,
+          });
+          setValue('entry.schools', [
+            ...schoolsValue,
+            { value: option.value, label: option.label, source: option.source },
+          ]);
           setAddSchoolDialogOpen(false);
         }}
       />

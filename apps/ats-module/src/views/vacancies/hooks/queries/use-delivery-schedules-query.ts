@@ -15,16 +15,23 @@ const useDeliverySchedulesQuery = () =>
 const useDeliverySchedulesSearch = () => {
   const queryClient = useQueryClient();
   return useCallback(
-    async (_search: string) => {
+    async (search: string) => {
       const data = await queryClient.fetchQuery({
         queryKey: DELIVERY_SCHEDULES_QUERY_KEY,
         queryFn: () => tertiaryEducationService.getDeliverySchedules(),
       });
-      return data.data.items.content.map(item => ({
-        value: item.id,
-        label: item.label,
-        source: item.source,
-      }));
+      const normalizedSearch = search.trim().toLowerCase();
+      return data.data.items.content
+        .filter(
+          item =>
+            !normalizedSearch ||
+            item.label.toLowerCase().includes(normalizedSearch)
+        )
+        .map(item => ({
+          value: item.id,
+          label: item.label,
+          source: item.source,
+        }));
     },
     [queryClient]
   );

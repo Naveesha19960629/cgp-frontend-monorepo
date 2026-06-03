@@ -19,6 +19,7 @@ import {
   useAddLevelOfQualificationMutation,
   useAddQualificationMutation,
   useAddSpecializationMutation,
+  useAddTertiaryAwardingBodyMutation,
   useBatchesSearch,
   useDeliverySchedulesSearch,
   useDepartmentsSearch,
@@ -52,6 +53,11 @@ import { Label } from '@cgp/ui-kit/components/ui/label';
 import { cn } from '@cgp/ui-kit/lib/utils';
 
 const MAX_SELECTIONS = 10;
+
+const multiSelectInfoAvatar = new URL(
+  '../../../../assets/images/multi-select-info-avatar.svg',
+  import.meta.url
+).href;
 
 export default function TertiaryEducationStep({
   onNext,
@@ -113,9 +119,17 @@ export default function TertiaryEducationStep({
 
   // ── Awarding body dialog state ───────────────────────────────────────────
   const awardingBodyValue = watch('entry.tertiaryAwardingBody');
+  const addTertiaryAwardingBodyMutation = useAddTertiaryAwardingBodyMutation();
+  const pendingAwardingBodiesDataRef = useRef<
+    Map<string, { displayValue: string; locationId?: string; url?: string }>
+  >(new Map());
+  const awardingBodiesSnapshotRef = useRef<
+    { value: string; label: string; source: string }[]
+  >([]);
   const [addAwardingBodyDialogOpen, setAddAwardingBodyDialogOpen] =
     useState(false);
   const [pendingAwardingBodyLabel, setPendingAwardingBodyLabel] = useState('');
+  const [awardingBodySelectorKey, setAwardingBodySelectorKey] = useState(0);
 
   // ── Disable confirmation dialog state ───────────────────────────────
   const [confirmDisableOpen, setConfirmDisableOpen] = useState(false);
@@ -217,8 +231,31 @@ export default function TertiaryEducationStep({
     setValue(fieldName, resolved);
   };
 
-  // ── Submit ───────────────────────────────────────────────────────────────
+  const resolveAndCommitTertiaryAwardingBodies = async () => {
+    const current = getValues('entry.tertiaryAwardingBody');
+    const resolved: { value: string; label: string; source: string }[] = [];
+    for (const body of current) {
+      if (body.source === 'PENDING_TEMP') {
+        const pendingData = pendingAwardingBodiesDataRef.current.get(
+          body.value
+        );
+        if (pendingData) {
+          const created = await resolveItem(body.label, () =>
+            addTertiaryAwardingBodyMutation.mutateAsync(pendingData)
+          );
+          if (created) {
+            resolved.push(created);
+            pendingAwardingBodiesDataRef.current.delete(body.value);
+          }
+        }
+      } else {
+        resolved.push(body);
+      }
+    }
+    setValue('entry.tertiaryAwardingBody', resolved);
+  };
   const handleNext = async () => {
+    await resolveAndCommitTertiaryAwardingBodies();
     await resolveAndCommitField(
       qualificationRef,
       'entry.qualificationName',
@@ -391,14 +428,27 @@ export default function TertiaryEducationStep({
                       triggerSearchOnFocus
                       keepSelectedInList
                       loadingIndicator={
-                        <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                          {t('tertiaryEducation.search.loading')}
+                        <p className="px-3 pb-3 text-left">
+                          {t('common.loading')}
                         </p>
                       }
                       emptyIndicator={
-                        <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                          {t('tertiaryEducation.search.noData')}
-                        </p>
+                        <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
+                          <div className="flex flex-col items-start">
+                            <img
+                              src={multiSelectInfoAvatar}
+                              alt={t('common.noData')}
+                            />
+                            <div className="mt-3 w-61 text-left">
+                              <p className="font-bold text-slate-900">
+                                {t('common.noDataTitle')}
+                              </p>
+                              <p className="text-sm font-semibold text-slate-700">
+                                {t('common.noDataDescription')}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
                       }
                       inputProps={{
                         maxLength: 200,
@@ -471,14 +521,27 @@ export default function TertiaryEducationStep({
                       triggerSearchOnFocus
                       keepSelectedInList
                       loadingIndicator={
-                        <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                          {t('tertiaryEducation.search.loading')}
+                        <p className="px-3 pb-3 text-left">
+                          {t('common.loading')}
                         </p>
                       }
                       emptyIndicator={
-                        <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                          {t('tertiaryEducation.search.noData')}
-                        </p>
+                        <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
+                          <div className="flex flex-col items-start">
+                            <img
+                              src={multiSelectInfoAvatar}
+                              alt={t('common.noData')}
+                            />
+                            <div className="mt-3 w-61 text-left">
+                              <p className="font-bold text-slate-900">
+                                {t('common.noDataTitle')}
+                              </p>
+                              <p className="text-sm font-semibold text-slate-700">
+                                {t('common.noDataDescription')}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
                       }
                       placeholder={t(
                         'tertiaryEducation.placeholders.awardingBodyLocation'
@@ -521,14 +584,27 @@ export default function TertiaryEducationStep({
                       triggerSearchOnFocus
                       keepSelectedInList
                       loadingIndicator={
-                        <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                          {t('tertiaryEducation.search.loading')}
+                        <p className="px-3 pb-3 text-left">
+                          {t('common.loading')}
                         </p>
                       }
                       emptyIndicator={
-                        <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                          {t('tertiaryEducation.search.noData')}
-                        </p>
+                        <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
+                          <div className="flex flex-col items-start">
+                            <img
+                              src={multiSelectInfoAvatar}
+                              alt={t('common.noData')}
+                            />
+                            <div className="mt-3 w-61 text-left">
+                              <p className="font-bold text-slate-900">
+                                {t('common.noDataTitle')}
+                              </p>
+                              <p className="text-sm font-semibold text-slate-700">
+                                {t('common.noDataDescription')}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
                       }
                       inputProps={{
                         maxLength: 100,
@@ -552,6 +628,7 @@ export default function TertiaryEducationStep({
                   name="entry.tertiaryAwardingBody"
                   render={({ field }) => (
                     <MultipleSelector
+                      key={awardingBodySelectorKey}
                       value={field.value}
                       onSearch={searchAwardingBodies}
                       onChange={options => {
@@ -559,6 +636,9 @@ export default function TertiaryEducationStep({
                           clearMax('awardingBody');
                         const newItem = options.find(o => o.value === o.label);
                         if (newItem) {
+                          awardingBodiesSnapshotRef.current = getValues(
+                            'entry.tertiaryAwardingBody'
+                          );
                           setPendingAwardingBodyLabel(newItem.label);
                           setAddAwardingBodyDialogOpen(true);
                         } else {
@@ -577,14 +657,27 @@ export default function TertiaryEducationStep({
                       triggerSearchOnFocus
                       keepSelectedInList
                       loadingIndicator={
-                        <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                          {t('tertiaryEducation.search.loading')}
+                        <p className="px-3 pb-3 text-left">
+                          {t('common.loading')}
                         </p>
                       }
                       emptyIndicator={
-                        <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                          {t('tertiaryEducation.search.noData')}
-                        </p>
+                        <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
+                          <div className="flex flex-col items-start">
+                            <img
+                              src={multiSelectInfoAvatar}
+                              alt={t('common.noData')}
+                            />
+                            <div className="mt-3 w-61 text-left">
+                              <p className="font-bold text-slate-900">
+                                {t('common.noDataTitle')}
+                              </p>
+                              <p className="text-sm font-semibold text-slate-700">
+                                {t('common.noDataDescription')}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
                       }
                       placeholder={t(
                         'tertiaryEducation.placeholders.awardingBody'
@@ -628,14 +721,27 @@ export default function TertiaryEducationStep({
                       triggerSearchOnFocus
                       keepSelectedInList
                       loadingIndicator={
-                        <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                          {t('tertiaryEducation.search.loading')}
+                        <p className="px-3 pb-3 text-left">
+                          {t('common.loading')}
                         </p>
                       }
                       emptyIndicator={
-                        <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                          {t('tertiaryEducation.search.noData')}
-                        </p>
+                        <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
+                          <div className="flex flex-col items-start">
+                            <img
+                              src={multiSelectInfoAvatar}
+                              alt={t('common.noData')}
+                            />
+                            <div className="mt-3 w-61 text-left">
+                              <p className="font-bold text-slate-900">
+                                {t('common.noDataTitle')}
+                              </p>
+                              <p className="text-sm font-semibold text-slate-700">
+                                {t('common.noDataDescription')}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
                       }
                       inputProps={{
                         maxLength: 100,
@@ -686,14 +792,27 @@ export default function TertiaryEducationStep({
                       triggerSearchOnFocus
                       keepSelectedInList
                       loadingIndicator={
-                        <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                          {t('tertiaryEducation.search.loading')}
+                        <p className="px-3 pb-3 text-left">
+                          {t('common.loading')}
                         </p>
                       }
                       emptyIndicator={
-                        <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                          {t('tertiaryEducation.search.noData')}
-                        </p>
+                        <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
+                          <div className="flex flex-col items-start">
+                            <img
+                              src={multiSelectInfoAvatar}
+                              alt={t('common.noData')}
+                            />
+                            <div className="mt-3 w-61 text-left">
+                              <p className="font-bold text-slate-900">
+                                {t('common.noDataTitle')}
+                              </p>
+                              <p className="text-sm font-semibold text-slate-700">
+                                {t('common.noDataDescription')}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
                       }
                       inputProps={{
                         maxLength: 100,
@@ -733,14 +852,27 @@ export default function TertiaryEducationStep({
                       triggerSearchOnFocus
                       keepSelectedInList
                       loadingIndicator={
-                        <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                          {t('tertiaryEducation.search.loading')}
+                        <p className="px-3 pb-3 text-left">
+                          {t('common.loading')}
                         </p>
                       }
                       emptyIndicator={
-                        <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                          {t('tertiaryEducation.search.noData')}
-                        </p>
+                        <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
+                          <div className="flex flex-col items-start">
+                            <img
+                              src={multiSelectInfoAvatar}
+                              alt={t('common.noData')}
+                            />
+                            <div className="mt-3 w-61 text-left">
+                              <p className="font-bold text-slate-900">
+                                {t('common.noDataTitle')}
+                              </p>
+                              <p className="text-sm font-semibold text-slate-700">
+                                {t('common.noDataDescription')}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
                       }
                       placeholder={t(
                         'tertiaryEducation.placeholders.studyMode'
@@ -777,14 +909,27 @@ export default function TertiaryEducationStep({
                       triggerSearchOnFocus
                       keepSelectedInList
                       loadingIndicator={
-                        <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                          {t('tertiaryEducation.search.loading')}
+                        <p className="px-3 pb-3 text-left">
+                          {t('common.loading')}
                         </p>
                       }
                       emptyIndicator={
-                        <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                          {t('tertiaryEducation.search.noData')}
-                        </p>
+                        <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
+                          <div className="flex flex-col items-start">
+                            <img
+                              src={multiSelectInfoAvatar}
+                              alt={t('common.noData')}
+                            />
+                            <div className="mt-3 w-61 text-left">
+                              <p className="font-bold text-slate-900">
+                                {t('common.noDataTitle')}
+                              </p>
+                              <p className="text-sm font-semibold text-slate-700">
+                                {t('common.noDataDescription')}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
                       }
                       placeholder={t(
                         'tertiaryEducation.placeholders.studyPattern'
@@ -818,14 +963,27 @@ export default function TertiaryEducationStep({
                       triggerSearchOnFocus
                       keepSelectedInList
                       loadingIndicator={
-                        <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                          {t('tertiaryEducation.search.loading')}
+                        <p className="px-3 pb-3 text-left">
+                          {t('common.loading')}
                         </p>
                       }
                       emptyIndicator={
-                        <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                          {t('tertiaryEducation.search.noData')}
-                        </p>
+                        <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
+                          <div className="flex flex-col items-start">
+                            <img
+                              src={multiSelectInfoAvatar}
+                              alt={t('common.noData')}
+                            />
+                            <div className="mt-3 w-61 text-left">
+                              <p className="font-bold text-slate-900">
+                                {t('common.noDataTitle')}
+                              </p>
+                              <p className="text-sm font-semibold text-slate-700">
+                                {t('common.noDataDescription')}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
                       }
                       placeholder={t(
                         'tertiaryEducation.placeholders.deliverySchedule'
@@ -872,14 +1030,27 @@ export default function TertiaryEducationStep({
                       triggerSearchOnFocus
                       keepSelectedInList
                       loadingIndicator={
-                        <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                          {t('tertiaryEducation.search.loading')}
+                        <p className="px-3 pb-3 text-left">
+                          {t('common.loading')}
                         </p>
                       }
                       emptyIndicator={
-                        <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                          {t('tertiaryEducation.search.noData')}
-                        </p>
+                        <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
+                          <div className="flex flex-col items-start">
+                            <img
+                              src={multiSelectInfoAvatar}
+                              alt={t('common.noData')}
+                            />
+                            <div className="mt-3 w-61 text-left">
+                              <p className="font-bold text-slate-900">
+                                {t('common.noDataTitle')}
+                              </p>
+                              <p className="text-sm font-semibold text-slate-700">
+                                {t('common.noDataDescription')}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
                       }
                       inputProps={{
                         maxLength: 100,
@@ -927,14 +1098,27 @@ export default function TertiaryEducationStep({
                       triggerSearchOnFocus
                       keepSelectedInList
                       loadingIndicator={
-                        <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                          {t('tertiaryEducation.search.loading')}
+                        <p className="px-3 pb-3 text-left">
+                          {t('common.loading')}
                         </p>
                       }
                       emptyIndicator={
-                        <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                          {t('tertiaryEducation.search.noData')}
-                        </p>
+                        <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
+                          <div className="flex flex-col items-start">
+                            <img
+                              src={multiSelectInfoAvatar}
+                              alt={t('common.noData')}
+                            />
+                            <div className="mt-3 w-61 text-left">
+                              <p className="font-bold text-slate-900">
+                                {t('common.noDataTitle')}
+                              </p>
+                              <p className="text-sm font-semibold text-slate-700">
+                                {t('common.noDataDescription')}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
                       }
                       inputProps={{
                         maxLength: 100,
@@ -970,11 +1154,19 @@ export default function TertiaryEducationStep({
       <AddAwardingBodyDialog
         open={addAwardingBodyDialogOpen}
         initialName={pendingAwardingBodyLabel}
-        onClose={() => setAddAwardingBodyDialogOpen(false)}
+        onClose={() => {
+          setAwardingBodySelectorKey(k => k + 1);
+          setAddAwardingBodyDialogOpen(false);
+        }}
         onAdded={option => {
+          pendingAwardingBodiesDataRef.current.set(option.value, {
+            displayValue: option.label,
+            locationId: option.locationId,
+            url: option.url,
+          });
           setValue('entry.tertiaryAwardingBody', [
             ...awardingBodyValue,
-            option,
+            { value: option.value, label: option.label, source: option.source },
           ]);
           setAddAwardingBodyDialogOpen(false);
         }}

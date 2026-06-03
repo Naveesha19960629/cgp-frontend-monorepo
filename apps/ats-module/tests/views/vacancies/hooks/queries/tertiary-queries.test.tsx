@@ -347,6 +347,24 @@ describe('useStudyModesSearch', () => {
       { value: 'sm-1', label: 'Online', source: 'MASTER' },
     ]);
   });
+
+  it('filters by search term and returns empty array when there is no match', async () => {
+    mockFetchQuery.mockResolvedValue(
+      apiResponse([
+        { id: 'sm-1', label: 'Online', source: 'MASTER' },
+        { id: 'sm-2', label: 'Onsite', source: 'MASTER' },
+      ])
+    );
+    const { result } = renderHook(() => useStudyModesSearch());
+
+    const filtered = await result.current('line');
+    const noResult = await result.current('remote-only');
+
+    expect(filtered).toEqual([
+      { value: 'sm-1', label: 'Online', source: 'MASTER' },
+    ]);
+    expect(noResult).toEqual([]);
+  });
 });
 
 // -- useStudyPatternsQuery ------------------------------------------------
@@ -383,6 +401,24 @@ describe('useStudyPatternsSearch', () => {
       { value: 'sp-1', label: 'Full-Time', source: 'MASTER' },
     ]);
   });
+
+  it('filters by search term and returns empty array when there is no match', async () => {
+    mockFetchQuery.mockResolvedValue(
+      apiResponse([
+        { id: 'sp-1', label: 'Full-Time', source: 'MASTER' },
+        { id: 'sp-2', label: 'Part-Time', source: 'MASTER' },
+      ])
+    );
+    const { result } = renderHook(() => useStudyPatternsSearch());
+
+    const filtered = await result.current('part');
+    const noResult = await result.current('hybrid-pattern');
+
+    expect(filtered).toEqual([
+      { value: 'sp-2', label: 'Part-Time', source: 'MASTER' },
+    ]);
+    expect(noResult).toEqual([]);
+  });
 });
 
 // -- useDeliverySchedulesQuery --------------------------------------------
@@ -418,6 +454,24 @@ describe('useDeliverySchedulesSearch', () => {
     expect(items).toEqual([
       { value: 'ds-1', label: 'Weekday', source: 'MASTER' },
     ]);
+  });
+
+  it('filters by search term and returns empty array when there is no match', async () => {
+    mockFetchQuery.mockResolvedValue(
+      apiResponse([
+        { id: 'ds-1', label: 'Weekday', source: 'MASTER' },
+        { id: 'ds-2', label: 'Weekend', source: 'MASTER' },
+      ])
+    );
+    const { result } = renderHook(() => useDeliverySchedulesSearch());
+
+    const filtered = await result.current('end');
+    const noResult = await result.current('night-shift');
+
+    expect(filtered).toEqual([
+      { value: 'ds-2', label: 'Weekend', source: 'MASTER' },
+    ]);
+    expect(noResult).toEqual([]);
   });
 });
 
