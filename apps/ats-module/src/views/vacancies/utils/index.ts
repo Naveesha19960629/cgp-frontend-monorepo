@@ -10,3 +10,4 @@ export {
   URL_PROTOCOL_HTTPS,
   DATE_DISPLAY_FORMAT,
 } from '@/views/vacancies/utils/constants';
+export { resolveUserCreatedOptions } from '@/views/vacancies/utils/job-requirements-form-helpers';

@@ -12,6 +12,13 @@ export { useCareerPathsQuery } from '@/views/vacancies/hooks/queries/use-career-
 export { useLanguagesQuery } from '@/views/vacancies/hooks/queries/use-languages-query';
 export { useCausesQuery } from '@/views/vacancies/hooks/queries/use-causes-query';
 export { useHobbiesQuery } from '@/views/vacancies/hooks/queries/use-hobbies-query';
+export { useDisciplinesQuery } from '@/views/vacancies/hooks/queries/use-disciplines-query';
+export { useRolesQuery } from '@/views/vacancies/hooks/queries/use-roles-query';
+export { useJobTitlesQuery } from '@/views/vacancies/hooks/queries/use-job-titles-query';
+export { useEmploymentTypesQuery } from '@/views/vacancies/hooks/queries/use-employment-types-query';
+export { useWorkSchedulesQuery } from '@/views/vacancies/hooks/queries/use-work-schedules-query';
+export { useEngagementModelsQuery } from '@/views/vacancies/hooks/queries/use-engagement-models-query';
+export { useJobLevelsQuery } from '@/views/vacancies/hooks/queries/use-job-levels-query';
 export {
   useOrganizationsQuery,
   useOrganizationsSearch,

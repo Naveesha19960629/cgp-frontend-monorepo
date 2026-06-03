@@ -20,6 +20,72 @@ interface JobRequirement {
   employmentType: AddOrSelectOption[];
   workSchedule: AddOrSelectOption[];
   engagementModel: AddOrSelectOption[];
+  description?: string;
+}
+
+// ─── Job Requirement Lookup Items ─────────────────────────────────────────────
+
+interface DisciplineItem {
+  id: string;
+  label: string;
+  source: string;
+}
+
+interface RoleItem {
+  id: string;
+  label: string;
+  source: string;
+}
+
+interface JobTitleItem {
+  id: string;
+  label: string;
+  source: string;
+}
+
+interface EmploymentTypeItem {
+  id: string;
+  label: string;
+  source: string;
+}
+
+interface WorkScheduleItem {
+  id: string;
+  label: string;
+  source: string;
+}
+
+interface EngagementModelItem {
+  id: string;
+  label: string;
+  source: string;
+}
+
+interface JobLevelItem {
+  id: string;
+  name: string;
+}
+
+interface MasterRef {
+  id: string;
+  source: string;
+}
+
+interface CreateCareerPathPayload {
+  displayValue: string;
+  discipline?: MasterRef;
+}
+
+interface CreateRolePayload {
+  displayValue: string;
+  careerPath?: MasterRef;
+  level?: MasterRef;
+}
+
+interface JobRequirementFormOption {
+  value: string;
+  label: string;
+  source: string;
 }
 
 interface StepDisableDialogProps {
@@ -539,6 +605,17 @@ interface VacancyCancelDialogProps {
 export type {
   AddOrSelectOption,
   SelectOption,
+  DisciplineItem,
+  RoleItem,
+  JobTitleItem,
+  EmploymentTypeItem,
+  WorkScheduleItem,
+  EngagementModelItem,
+  JobLevelItem,
+  MasterRef,
+  CreateCareerPathPayload,
+  CreateRolePayload,
+  JobRequirementFormOption,
   Address,
   JobRequirement,
   ProfileRequirements,
