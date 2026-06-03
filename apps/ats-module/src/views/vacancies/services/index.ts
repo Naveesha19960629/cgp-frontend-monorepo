@@ -16,6 +16,8 @@ export { projectService } from '@/views/vacancies/services/project.service';
 export { publicationService } from '@/views/vacancies/services/publication.service';
 export { secondaryEducationService } from '@/views/vacancies/services/secondary-education.service';
 export { tertiaryEducationService } from '@/views/vacancies/services/tertiary-education.service';
+export { licenseCertificatesService } from '@/views/vacancies/services/license-certificates.service';
+export type { LicenseCertLookupItem } from '@/views/vacancies/services/license-certificates.service';
 export { disciplineService } from '@/views/vacancies/services/discipline.service';
 export { roleService } from '@/views/vacancies/services/role.service';
 export { jobTitleService } from '@/views/vacancies/services/job-title.service';

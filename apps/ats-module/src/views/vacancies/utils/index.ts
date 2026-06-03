@@ -6,6 +6,7 @@ export {
   formatDate,
 } from '@/views/vacancies/utils/secondary-education-helpers';
 export { toTertiaryEducationPayload } from '@/views/vacancies/utils/tertiary-education-helpers';
+export { toLicenseCertificatesPayload } from '@/views/vacancies/utils/license-certificates-helpers';
 export {
   URL_PROTOCOL_HTTP,
   URL_PROTOCOL_HTTPS,

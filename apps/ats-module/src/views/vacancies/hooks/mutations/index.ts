@@ -12,6 +12,7 @@ export { useAddSpecializationMutation } from '@/views/vacancies/hooks/mutations/
 export { useAddBatchMutation } from '@/views/vacancies/hooks/mutations/use-add-batch-mutation';
 export { useAddDepartmentMutation } from '@/views/vacancies/hooks/mutations/use-add-department-mutation';
 export { useAddFacultyMutation } from '@/views/vacancies/hooks/mutations/use-add-faculty-mutation';
+export { useAddLicenseCertificateMutation } from '@/views/vacancies/hooks/mutations/use-add-license-certificate-mutation';
 export { useCreateSkillCareerPathMutation } from '@/views/vacancies/hooks/mutations/use-create-skill-career-path-mutation';
 export { useCreateCareerPathMutation } from '@/views/vacancies/hooks/mutations/use-create-career-path-mutation';
 export { useCreateLanguageMutation } from '@/views/vacancies/hooks/mutations/use-create-language-mutation';

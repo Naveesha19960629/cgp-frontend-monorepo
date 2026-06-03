@@ -52,6 +52,10 @@ export {
   useTertiaryAwardingBodiesSearch,
 } from '@/views/vacancies/hooks/queries/use-tertiary-awarding-bodies-query';
 export {
+  useLicenseCertificatesQuery,
+  useLicenseCertificatesSearch,
+} from '@/views/vacancies/hooks/queries/use-license-certificates-query';
+export {
   useTertiaryAwardingBodyLocationsQuery,
   useTertiaryAwardingBodyLocationsSearch,
 } from '@/views/vacancies/hooks/queries/use-tertiary-awarding-body-locations-query';

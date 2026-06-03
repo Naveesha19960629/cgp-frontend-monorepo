@@ -233,6 +233,44 @@ interface CreatePendingApiResponse {
   data: CreatePendingItemResponse;
 }
 
+// ─── License and Certificates ─────────────────────────────────────────────────
+
+type LicenseCertType = 'LICENSE' | 'CERTIFICATION';
+
+interface LicenseCertRef {
+  source: 'MASTER' | 'PENDING';
+  id: string;
+  name?: string;
+  type?: LicenseCertType;
+}
+
+interface LicenseCertEntry {
+  nameOfLicenseCert: LicenseCertRef[];
+  issuingOrganization: LicenseCertRef[];
+  organizationLocations: LicenseCertRef[];
+  internationallyAccepted: boolean;
+  issueDate: string;
+  expirationDate: string;
+}
+
+interface LicenseCertificates {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  content: LicenseCertEntry[];
+}
+
+interface AddLicenseCertDialogProps {
+  open: boolean;
+  initialName: string;
+  onClose: () => void;
+  onAdded: (option: {
+    value: string;
+    label: string;
+    source: string;
+    certType: LicenseCertType;
+  }) => void;
+}
+
 // ─── Vacancy Form ─────────────────────────────────────────────────────────────
 
 interface VacancyForm {
@@ -249,6 +287,7 @@ interface VacancyForm {
   preferredHobbies?: PreferredHobbies;
   patents?: preferredPatentsSchema;
   preferredHonoursAwards?: preferredHonoursAwardsSchema;
+  licenseCertificates?: LicenseCertificates[];
 }
 interface VacancyStep {
   readonly key: string;
@@ -693,6 +732,11 @@ export type {
   TertiaryEducation,
   AddSchoolDialogProps,
   AddAwardingBodyDialogProps,
+  LicenseCertType,
+  LicenseCertRef,
+  LicenseCertEntry,
+  LicenseCertificates,
+  AddLicenseCertDialogProps,
   StepHeaderProps,
   DisableDialogProps,
   StepFooterProps,

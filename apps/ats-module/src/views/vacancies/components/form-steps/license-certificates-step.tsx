@@ -1,22 +1,802 @@
-import type { StepProps } from '@/views/vacancies/types';
+import { ChevronUpIcon, Plus } from 'lucide-react';
 
+import { ArrowLeft2, Calendar as CalendarIcon } from 'iconsax-reactjs';
+
+import * as SwitchPrimitive from '@radix-ui/react-switch';
+
+import { useMemo, useRef, useState } from 'react';
+import { Controller } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
+
+import MessageBox from '@/components/message-box';
+import { AddOrganizationFormDialog } from '@/views/vacancies/components/dialogs';
+import { AddLicenseCertDialog } from '@/views/vacancies/components/form-steps/add-license-certificate-dialog';
+import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
+import {
+  useAddLicenseCertificateMutation,
+  useLicenseCertificatesForm,
+  useLicenseCertificatesSearch,
+  useOrganizationsQuery,
+  useTertiaryAwardingBodyLocationsSearch,
+} from '@/views/vacancies/hooks';
+import type { LicenseCertType, StepProps } from '@/views/vacancies/types';
+import {
+  formatDate,
+  toLicenseCertificatesPayload,
+} from '@/views/vacancies/utils';
+
+import deleteConfirmAvatar from '@cgp/ui-kit/assets/images/delete-confirm-avator.svg';
+import { Combobox } from '@cgp/ui-kit/components/combobox';
+import { ErrorToast } from '@cgp/ui-kit/components/custom-toast';
+import MultipleSelector from '@cgp/ui-kit/components/multi-select';
 import { Button } from '@cgp/ui-kit/components/ui/button';
+import { Calendar } from '@cgp/ui-kit/components/ui/calendar';
+import { Checkbox } from '@cgp/ui-kit/components/ui/checkbox';
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+} from '@cgp/ui-kit/components/ui/dialog';
+import { Label } from '@cgp/ui-kit/components/ui/label';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@cgp/ui-kit/components/ui/popover';
+import { applyTypography } from '@cgp/ui-kit/lib/typography';
+import { cn } from '@cgp/ui-kit/lib/utils';
 
-export default function LicenseCertificatesStep({ onNext, onBack }: StepProps) {
+const MAX_SELECTIONS = 10;
+
+const multiSelectInfoAvatar = new URL(
+  '../../../../assets/images/multi-select-info-avatar.svg',
+  import.meta.url
+).href;
+
+export default function LicenseCertificatesStep({
+  onNext,
+  onBack,
+}: Readonly<StepProps>) {
+  const { t } = useTranslation('ats');
+  const { form: vacancyForm } = useVacancyForm();
+
+  const { control, watch, handleSubmit, setValue, getValues } =
+    useLicenseCertificatesForm(vacancyForm.licenseCertificates);
+
+  const isEnabled = watch('isEnabled');
+  const dataTakenFromCandidate = watch('dataTakenFromCandidate');
+  const fieldsDisabled = !isEnabled || dataTakenFromCandidate;
+
+  // ── Disable confirmation ─────────────────────────────────────────────────
+  const [confirmDisableOpen, setConfirmDisableOpen] = useState(false);
+
+  const clearEntryData = () => {
+    setValue('entry.nameOfLicenseCert', []);
+    setValue('entry.issuingOrganization', undefined);
+    setValue('entry.organizationLocations', []);
+    setValue('entry.internationallyAccepted', false);
+    setValue('entry.issueDate', undefined);
+    setValue('entry.expirationDate', undefined);
+  };
+
+  const checkHasFilledData = (): boolean => {
+    const e = getValues('entry');
+    return Boolean(
+      e.nameOfLicenseCert.length > 0 ||
+      e.issuingOrganization != null ||
+      e.organizationLocations.length > 0 ||
+      e.internationallyAccepted ||
+      e.issueDate ||
+      e.expirationDate ||
+      getValues('dataTakenFromCandidate')
+    );
+  };
+
+  // ── Add License/Cert dialog state ────────────────────────────────────────
+  const licenseCertValue = watch('entry.nameOfLicenseCert');
+  const addLicenseCertMutation = useAddLicenseCertificateMutation();
+  const pendingLicenseCertsDataRef = useRef<
+    Map<string, { displayValue: string; certType: LicenseCertType }>
+  >(new Map());
+  const licenseCertsSnapshotRef = useRef<
+    { value: string; label: string; source: string; certType?: string }[]
+  >([]);
+  const [addLicenseCertDialogOpen, setAddLicenseCertDialogOpen] =
+    useState(false);
+  const [pendingLicenseCertLabel, setPendingLicenseCertLabel] = useState('');
+  const [licenseCertSelectorKey, setLicenseCertSelectorKey] = useState(0);
+
+  // ── Date popover ─────────────────────────────────────────────────────────
+  const [openDatePopover, setOpenDatePopover] = useState<
+    'issueDate' | 'expirationDate' | null
+  >(null);
+
+  const issueDateValue = watch('entry.issueDate');
+
+  // ── Max-selection tracking ───────────────────────────────────────────────
+  const [maxReachedFields, setMaxReachedFields] = useState<Set<string>>(
+    new Set()
+  );
+  const setMax = (field: string) =>
+    setMaxReachedFields(prev => new Set([...prev, field]));
+  const clearMax = (field: string) =>
+    setMaxReachedFields(prev => {
+      const s = new Set(prev);
+      s.delete(field);
+      return s;
+    });
+
+  // ── Organization query (Combobox) ─────────────────────────────────────
+  const { data: organizationsData, isLoading: isOrganizationsLoading } =
+    useOrganizationsQuery('', isEnabled && !dataTakenFromCandidate);
+  const organizationOptions = useMemo(
+    () =>
+      organizationsData.map(o => ({
+        value: o.id,
+        label: o.name || o.label || '',
+      })),
+    [organizationsData]
+  );
+  const [showAddOrganizationDialog, setShowAddOrganizationDialog] =
+    useState(false);
+  const [pendingOrganizationName, setPendingOrganizationName] = useState('');
+
+  // ── Async search hooks ───────────────────────────────────────────────────
+  const searchLicenseCerts = useLicenseCertificatesSearch();
+  const searchLocations = useTertiaryAwardingBodyLocationsSearch();
+
+  // ── Resolve pending license/cert and advance ─────────────────────────────
+  const resolveAndCommitLicenseCerts = async () => {
+    const current = getValues('entry.nameOfLicenseCert');
+    const resolved: {
+      value: string;
+      label: string;
+      source: string;
+      certType?: string;
+    }[] = [];
+    for (const item of current) {
+      if (item.source === 'PENDING_TEMP') {
+        const pendingData = pendingLicenseCertsDataRef.current.get(item.value);
+        if (pendingData) {
+          try {
+            const result = await addLicenseCertMutation.mutateAsync({
+              type: pendingData.certType,
+              displayValue: pendingData.displayValue,
+            });
+            resolved.push({
+              value: result.data.pendingId,
+              label: item.label,
+              source: 'PENDING',
+              certType: pendingData.certType,
+            });
+            pendingLicenseCertsDataRef.current.delete(item.value);
+          } catch (error) {
+            ErrorToast({
+              title: t(
+                error instanceof TypeError
+                  ? 'notifications.networkError.title'
+                  : 'notifications.apiError.save.title'
+              ),
+              description: t(
+                error instanceof TypeError
+                  ? 'notifications.networkError.message'
+                  : 'notifications.apiError.save.message'
+              ),
+            });
+          }
+        }
+      } else {
+        resolved.push(item);
+      }
+    }
+    setValue('entry.nameOfLicenseCert', resolved);
+  };
+
+  const handleNext = async () => {
+    await resolveAndCommitLicenseCerts();
+    void handleSubmit(values => {
+      onNext({ licenseCertificates: toLicenseCertificatesPayload(values) });
+    })();
+  };
+
   return (
-    <div className="p-8">
-      <h2 className="text-xl font-bold text-slate-900">
-        License and Certificates
-      </h2>
-      <p className="mt-2 text-sm text-slate-500">
-        Form fields for License and Certificates will go here.
-      </p>
-      <div className="mt-8 flex justify-end gap-4">
-        <Button variant="secondary" className="h-12 w-44" onClick={onBack}>
-          Back
+    <div className="flex flex-col">
+      {/* ── Informational Banner ─────────────────────────────────────────── */}
+      <MessageBox
+        fields={[
+          t('licenseCertificates.nameOfLicenseCert'),
+          t('licenseCertificates.issuingOrganization'),
+          t('licenseCertificates.organizationLocations'),
+          t('licenseCertificates.issueDate'),
+          t('licenseCertificates.expirationDate'),
+          t('licenseCertificates.internationallyAccepted'),
+        ]}
+      />
+
+      {/* ── Section Header ───────────────────────────────────────────────── */}
+      <div className="flex items-center justify-between px-7 py-8">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            aria-label={t('licenseCertificates.back')}
+            className="text-slate-700 transition-colors hover:text-slate-900"
+            onClick={onBack}
+          >
+            <ArrowLeft2 size={24} />
+          </button>
+          <h2 className="text-xl font-bold tracking-tight text-slate-900">
+            {t('licenseCertificates.title')}
+          </h2>
+        </div>
+        <Controller
+          control={control}
+          name="isEnabled"
+          render={({ field }) => (
+            <SwitchPrimitive.Root
+              checked={field.value}
+              onCheckedChange={newValue => {
+                if (!newValue && checkHasFilledData()) {
+                  setConfirmDisableOpen(true);
+                } else {
+                  field.onChange(newValue);
+                }
+              }}
+              className={cn(
+                'focus-visible:ring-ring/50 inline-flex h-6 w-12 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent shadow-xs transition-colors outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50',
+                field.value ? 'bg-brand-primary-500' : 'bg-slate-300'
+              )}
+            >
+              <SwitchPrimitive.Thumb
+                className={cn(
+                  'pointer-events-none block h-5 w-5 rounded-full bg-white shadow-lg ring-0 transition-transform',
+                  field.value ? 'translate-x-6' : 'translate-x-0'
+                )}
+              />
+            </SwitchPrimitive.Root>
+          )}
+        />
+      </div>
+
+      <div className="flex flex-col gap-4 px-6">
+        {/* dataTakenFromCandidate */}
+        <div className={cn(!isEnabled && 'pointer-events-none opacity-60')}>
+          <div className="flex items-start gap-2">
+            <Controller
+              control={control}
+              name="dataTakenFromCandidate"
+              render={({ field }) => (
+                <Checkbox
+                  id="licenseCertDataTakenFromCandidate"
+                  checked={field.value}
+                  onCheckedChange={newValue => {
+                    if (newValue) clearEntryData();
+                    field.onChange(newValue);
+                  }}
+                  className="mt-0.5"
+                />
+              )}
+            />
+            <Label
+              htmlFor="licenseCertDataTakenFromCandidate"
+              className="cursor-pointer leading-snug"
+            >
+              {t('licenseCertificates.collectFromCandidates')}
+            </Label>
+          </div>
+        </div>
+
+        {/* ── License and Certificate Card ─────────────────────────────── */}
+        <div className="rounded-xl border border-neutral-300 bg-white shadow-[0px_4px_90px_0px_rgba(0,0,0,0.07)]">
+          {/* Card header */}
+          <div className="flex items-center justify-between px-5 py-5">
+            <h3 className="text-sm font-semibold text-slate-900">
+              {t('licenseCertificates.sectionTitle')} 01
+            </h3>
+            <ChevronUpIcon className="h-5 w-5 text-slate-300" />
+          </div>
+
+          {/* Card body */}
+          <div
+            className={cn(
+              'flex flex-col gap-5 px-6 py-5',
+              fieldsDisabled && 'pointer-events-none opacity-60'
+            )}
+          >
+            {/* Row 1: Name of License/Cert | Issuing Organization */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex flex-col gap-1">
+                <div className="flex h-5 items-center">
+                  <Label>{t('licenseCertificates.nameOfLicenseCert')}</Label>
+                </div>
+                <Controller
+                  control={control}
+                  name="entry.nameOfLicenseCert"
+                  render={({ field }) => (
+                    <MultipleSelector
+                      key={licenseCertSelectorKey}
+                      value={field.value}
+                      onSearch={searchLicenseCerts}
+                      onChange={options => {
+                        if (options.length < MAX_SELECTIONS)
+                          clearMax('nameOfLicenseCert');
+                        const newItem = options.find(o => o.value === o.label);
+                        if (newItem) {
+                          licenseCertsSnapshotRef.current = getValues(
+                            'entry.nameOfLicenseCert'
+                          );
+                          setPendingLicenseCertLabel(newItem.label);
+                          setAddLicenseCertDialogOpen(true);
+                        } else {
+                          field.onChange(options);
+                        }
+                      }}
+                      maxSelected={MAX_SELECTIONS}
+                      onMaxSelected={() => setMax('nameOfLicenseCert')}
+                      errorMessage={
+                        maxReachedFields.has('nameOfLicenseCert')
+                          ? t('licenseCertificates.errors.maxSelections')
+                          : undefined
+                      }
+                      creatable
+                      hideClearAllButton
+                      triggerSearchOnFocus
+                      keepSelectedInList
+                      loadingIndicator={
+                        <p className="px-3 pb-3 text-left">
+                          {t('common.loading')}
+                        </p>
+                      }
+                      emptyIndicator={
+                        <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
+                          <div className="flex flex-col items-start">
+                            <img
+                              src={multiSelectInfoAvatar}
+                              alt={t('common.noData')}
+                            />
+                            <div className="mt-3 w-61 text-left">
+                              <p className="font-bold text-slate-900">
+                                {t('common.noDataTitle')}
+                              </p>
+                              <p className="text-sm font-semibold text-slate-700">
+                                {t('common.noDataDescription')}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      }
+                      placeholder={t(
+                        'licenseCertificates.placeholders.nameOfLicenseCert'
+                      )}
+                    />
+                  )}
+                />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <div className="flex h-5 items-center">
+                  <Label>{t('licenseCertificates.issuingOrganization')}</Label>
+                </div>
+                <Controller
+                  control={control}
+                  name="entry.issuingOrganization"
+                  render={({ field }) => (
+                    <Combobox
+                      options={organizationOptions}
+                      value={field.value?.value ?? ''}
+                      onValueChange={value => {
+                        const found = organizationsData.find(
+                          o => o.id === value
+                        );
+                        if (found) {
+                          field.onChange({
+                            value: found.id,
+                            label: found.name || found.label || '',
+                            source: found.source ?? 'MASTER',
+                          });
+                        }
+                      }}
+                      onSearchChange={() => {}}
+                      loading={isOrganizationsLoading}
+                      onAddNew={name => {
+                        const existing = organizationsData.find(
+                          o =>
+                            (o.name || o.label || '').toLowerCase() ===
+                            name.toLowerCase()
+                        );
+                        if (existing) {
+                          field.onChange({
+                            value: existing.id,
+                            label: existing.name || existing.label || '',
+                            source: existing.source ?? 'MASTER',
+                          });
+                          return;
+                        }
+                        setPendingOrganizationName(name);
+                        setShowAddOrganizationDialog(true);
+                      }}
+                      placeholder={t(
+                        'licenseCertificates.placeholders.issuingOrganization'
+                      )}
+                      searchPlaceholder={t(
+                        'licenseCertificates.placeholders.searchOrganization'
+                      )}
+                    />
+                  )}
+                />
+              </div>
+            </div>
+
+            {/* Row 2: Organization Location | Issue Date | Expiration Date */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex flex-col gap-1">
+                <div className="flex h-5 items-center">
+                  <Label>
+                    {t('licenseCertificates.organizationLocations')}
+                  </Label>
+                </div>
+                <Controller
+                  control={control}
+                  name="entry.organizationLocations"
+                  render={({ field }) => (
+                    <MultipleSelector
+                      value={field.value}
+                      onSearch={searchLocations}
+                      onChange={options => {
+                        if (options.length < MAX_SELECTIONS)
+                          clearMax('organizationLocations');
+                        field.onChange(options);
+                      }}
+                      maxSelected={MAX_SELECTIONS}
+                      onMaxSelected={() => setMax('organizationLocations')}
+                      errorMessage={
+                        maxReachedFields.has('organizationLocations')
+                          ? t('licenseCertificates.errors.maxSelections')
+                          : undefined
+                      }
+                      triggerSearchOnFocus
+                      keepSelectedInList
+                      loadingIndicator={
+                        <p className="px-3 pb-3 text-left">
+                          {t('common.loading')}
+                        </p>
+                      }
+                      emptyIndicator={
+                        <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
+                          <div className="flex flex-col items-start">
+                            <img
+                              src={multiSelectInfoAvatar}
+                              alt={t('common.noData')}
+                            />
+                            <div className="mt-3 w-61 text-left">
+                              <p className="font-bold text-slate-900">
+                                {t('common.noDataTitle')}
+                              </p>
+                              <p className="text-sm font-semibold text-slate-700">
+                                {t('common.noDataDescription')}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      }
+                      placeholder={t(
+                        'licenseCertificates.placeholders.organizationLocations'
+                      )}
+                    />
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                {/* Issue Date */}
+                <div className="flex flex-col gap-1">
+                  <div className="flex h-5 items-center">
+                    <Label>{t('licenseCertificates.issueDate')}</Label>
+                  </div>
+                  <Controller
+                    control={control}
+                    name="entry.issueDate"
+                    render={({ field }) => (
+                      <Popover
+                        modal
+                        open={openDatePopover === 'issueDate'}
+                        onOpenChange={open =>
+                          setOpenDatePopover(
+                            !fieldsDisabled && open ? 'issueDate' : null
+                          )
+                        }
+                      >
+                        <PopoverTrigger asChild>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            disabled={fieldsDisabled}
+                            className={cn(
+                              'border-input flex h-11 w-full items-center justify-between rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
+                              !field.value && 'text-slate-500',
+                              field.value && 'text-zinc-800',
+                              'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
+                              'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
+                              'dark:bg-input/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
+                              applyTypography('body-medium'),
+                              'shadow-none!'
+                            )}
+                          >
+                            {field.value ? (
+                              formatDate(field.value)
+                            ) : (
+                              <span>
+                                {t(
+                                  'licenseCertificates.placeholders.issueDate'
+                                )}
+                              </span>
+                            )}
+                            <CalendarIcon
+                              variant="Linear"
+                              size={20}
+                              className="text-zinc-800"
+                            />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={
+                              field.value ? new Date(field.value) : undefined
+                            }
+                            defaultMonth={
+                              field.value ? new Date(field.value) : new Date()
+                            }
+                            onSelect={date => {
+                              field.onChange(
+                                date ? date.toISOString() : undefined
+                              );
+                              setOpenDatePopover(null);
+                              const expDate = getValues('entry.expirationDate');
+                              if (
+                                expDate &&
+                                date &&
+                                new Date(expDate) <= date
+                              ) {
+                                setValue('entry.expirationDate', undefined);
+                              }
+                            }}
+                            captionLayout="dropdown"
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    )}
+                  />
+                </div>
+
+                {/* Expiration Date */}
+                <div className="flex flex-col gap-1">
+                  <div className="flex h-5 items-center">
+                    <Label>{t('licenseCertificates.expirationDate')}</Label>
+                  </div>
+                  <Controller
+                    control={control}
+                    name="entry.expirationDate"
+                    render={({ field }) => (
+                      <Popover
+                        modal
+                        open={openDatePopover === 'expirationDate'}
+                        onOpenChange={open =>
+                          setOpenDatePopover(
+                            !fieldsDisabled && open ? 'expirationDate' : null
+                          )
+                        }
+                      >
+                        <PopoverTrigger asChild>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            disabled={fieldsDisabled}
+                            className={cn(
+                              'border-input flex h-11 w-full items-center justify-between rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
+                              !field.value && 'text-slate-500',
+                              field.value && 'text-zinc-800',
+                              'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
+                              'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
+                              'dark:bg-input/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
+                              applyTypography('body-medium'),
+                              'shadow-none!'
+                            )}
+                          >
+                            {field.value ? (
+                              formatDate(field.value)
+                            ) : (
+                              <span>
+                                {t(
+                                  'licenseCertificates.placeholders.expirationDate'
+                                )}
+                              </span>
+                            )}
+                            <CalendarIcon
+                              variant="Linear"
+                              size={20}
+                              className="text-zinc-800"
+                            />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={
+                              field.value ? new Date(field.value) : undefined
+                            }
+                            defaultMonth={
+                              field.value
+                                ? new Date(field.value)
+                                : issueDateValue
+                                  ? new Date(issueDateValue)
+                                  : new Date()
+                            }
+                            onSelect={date => {
+                              field.onChange(
+                                date ? date.toISOString() : undefined
+                              );
+                              setOpenDatePopover(null);
+                            }}
+                            disabled={date =>
+                              issueDateValue
+                                ? date <= new Date(issueDateValue)
+                                : false
+                            }
+                            captionLayout="dropdown"
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    )}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Row 3: Internationally accepted (full width) */}
+            <div className="flex items-start gap-2">
+              <Controller
+                control={control}
+                name="entry.internationallyAccepted"
+                render={({ field }) => (
+                  <Checkbox
+                    id="internationallyAccepted"
+                    checked={field.value}
+                    onCheckedChange={val => field.onChange(val)}
+                    className="mt-0.5"
+                  />
+                )}
+              />
+              <Label
+                htmlFor="internationallyAccepted"
+                className="cursor-pointer leading-snug"
+              >
+                {t('licenseCertificates.internationallyAccepted')}
+              </Label>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Add Entry button (disabled — Phase 1) ─────────────────────── */}
+        <div
+          className={cn(
+            'flex justify-end py-4',
+            !isEnabled && 'pointer-events-none opacity-60'
+          )}
+        >
+          <Button
+            type="button"
+            variant="secondary"
+            disabled
+            className="size-11 rounded-lg bg-gray-200 px-3 text-sm"
+          >
+            <Plus className="size-4 text-neutral-600!" />
+          </Button>
+        </div>
+      </div>
+
+      {/* ── Add Organization dialog ──────────────────────────────────────── */}
+      <AddOrganizationFormDialog
+        open={showAddOrganizationDialog}
+        onOpenChange={setShowAddOrganizationDialog}
+        organizationName={pendingOrganizationName}
+        onOrganizationAdded={org => {
+          setValue('entry.issuingOrganization', {
+            value: org.id,
+            label: org.name,
+            source: org.source,
+          });
+        }}
+      />
+
+      {/* ── Add License/Cert dialog ──────────────────────────────────────── */}
+      <AddLicenseCertDialog
+        open={addLicenseCertDialogOpen}
+        initialName={pendingLicenseCertLabel}
+        onClose={() => {
+          setLicenseCertSelectorKey(k => k + 1);
+          setAddLicenseCertDialogOpen(false);
+        }}
+        onAdded={option => {
+          pendingLicenseCertsDataRef.current.set(option.value, {
+            displayValue: option.label,
+            certType: option.certType,
+          });
+          setValue('entry.nameOfLicenseCert', [
+            ...licenseCertValue,
+            {
+              value: option.value,
+              label: option.label,
+              source: option.source,
+              certType: option.certType,
+            },
+          ]);
+          setAddLicenseCertDialogOpen(false);
+        }}
+      />
+
+      {/* ── Disable confirmation dialog ──────────────────────────────────── */}
+      <Dialog
+        open={confirmDisableOpen}
+        onOpenChange={open => {
+          if (!open) setConfirmDisableOpen(false);
+        }}
+      >
+        <DialogContent
+          showCloseButton
+          className="max-w-99 overflow-hidden rounded-2xl border-0 p-7"
+          style={{
+            background:
+              'linear-gradient(90deg, rgb(254,244,238) 2%, rgb(248,242,236) 34%, rgb(233,244,240) 66%, rgb(238,247,245) 100%)',
+          }}
+        >
+          <div className="flex flex-col items-center gap-7">
+            <div className="flex w-full flex-col items-center gap-3">
+              <div className="h-25 w-25 overflow-hidden rounded-full">
+                <img
+                  src={deleteConfirmAvatar}
+                  className="h-full w-full object-cover"
+                  alt=""
+                />
+              </div>
+              <div className="flex w-full flex-col items-center gap-2">
+                <DialogTitle className="text-center text-xl font-bold text-slate-900">
+                  {t('licenseCertificates.confirmDisableDialog.title')}
+                </DialogTitle>
+                <p className="text-center text-sm text-slate-900">
+                  {t('licenseCertificates.confirmDisableDialog.message')}
+                </p>
+              </div>
+            </div>
+            <div className="flex w-full gap-3">
+              <Button
+                className="h-12 flex-1 rounded-lg bg-[#e5e5e5] font-bold text-[#525252] hover:bg-[#d4d4d4]"
+                onClick={() => setConfirmDisableOpen(false)}
+              >
+                {t('licenseCertificates.confirmDisableDialog.cancel')}
+              </Button>
+              <Button
+                className="h-12 flex-1 rounded-lg bg-[#be123c] font-bold text-white hover:bg-[#9f1239]"
+                onClick={() => {
+                  clearEntryData();
+                  setValue('dataTakenFromCandidate', false);
+                  setValue('isEnabled', false);
+                  setConfirmDisableOpen(false);
+                }}
+              >
+                {t('licenseCertificates.confirmDisableDialog.disable')}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Step footer ───────────────────────────────────────────────────── */}
+      <div className="sticky bottom-0 flex items-center justify-end gap-4 bg-white px-6 py-7 shadow-[0px_-8px_6.8px_0px_rgba(0,0,0,0.04)]">
+        <Button variant="secondary" className="h-12 w-48" onClick={onBack}>
+          {t('licenseCertificates.cancel')}
         </Button>
-        <Button className="h-12 w-44" onClick={() => onNext()}>
-          Next
+        <Button className="h-12 w-48" onClick={() => void handleNext()}>
+          {t('licenseCertificates.next')}
         </Button>
       </div>
     </div>

@@ -419,6 +419,59 @@
       "disable": "Disable"
     }
   },
+  "licenseCertificates": {
+    "title": "Preferred License and Certificate",
+    "sectionTitle": "License and Certificate",
+    "collectFromCandidates": "If selected, no manual input is required, and data will be taken from the candidate profile",
+    "nameOfLicenseCert": "Name of the License/Certification",
+    "issuingOrganization": "Issuing Organization",
+    "organizationLocations": "Organization Location",
+    "internationallyAccepted": "Internationally accepted license/certification",
+    "issueDate": "Issue Date",
+    "expirationDate": "Expiration Date",
+    "bannerTitle": "Build the Application Form",
+    "bannerMessageHighlight": "Certain fields",
+    "bannerMessageRest": "in this section are always collected from candidates to support consistent candidate profiles. Any fields you don't select won't be collected",
+    "back": "Back",
+    "cancel": "Cancel",
+    "next": "Next",
+    "addLicenseCertDialog": {
+      "title": "Add License/Certification",
+      "type": "Type",
+      "typePlaceholder": "Select license or certification",
+      "nameLicense": "Name of the License",
+      "nameCertification": "Name of the Certification",
+      "nameDefault": "Name of the expected License/Certification",
+      "namePlaceholder": "Enter name",
+      "typeRequired": "Type is required.",
+      "nameRequired": "Name of the expected license/certification is required.",
+      "cancel": "Cancel",
+      "addNow": "Add Now",
+      "licenseLabel": "License",
+      "certificationLabel": "Certification",
+      "success": {
+        "title": "Successfully Added",
+        "message": "New License/Certification has been successfully added."
+      }
+    },
+    "placeholders": {
+      "nameOfLicenseCert": "Select or add license/certification",
+      "issuingOrganization": "Select or add issuing organization",
+      "searchOrganization": "Search organization",
+      "organizationLocations": "Select location",
+      "issueDate": "Select issue date",
+      "expirationDate": "Select expiration date"
+    },
+    "errors": {
+      "maxSelections": "Exceeded maximum of 10 selections."
+    },
+    "confirmDisableDialog": {
+      "title": "Are you sure?",
+      "message": "Are you sure you want to disable this section? Disabling this section will permanently remove all added data. This action cannot be undone",
+      "cancel": "Cancel",
+      "disable": "Disable"
+    }
+  },
   "notifications": {
     "loading": {
       "title": "We are loading your vacancy content..",
