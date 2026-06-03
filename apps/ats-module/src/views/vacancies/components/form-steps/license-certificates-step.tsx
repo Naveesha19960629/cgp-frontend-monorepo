@@ -780,6 +780,7 @@ export default function LicenseCertificatesStep({
                   clearEntryData();
                   setValue('dataTakenFromCandidate', false);
                   setValue('isEnabled', false);
+                  setLicenseCertSelectorKey(k => k + 1);
                   setConfirmDisableOpen(false);
                 }}
               >
