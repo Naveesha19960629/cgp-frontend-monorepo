@@ -28,10 +28,12 @@ export const licenseCertificatesService = {
     type: LicenseCertType;
     displayValue: string;
   }): Promise<CreatePendingApiResponse> => {
-    const response = await httpClient.post<CreatePendingApiResponse>(
-      '/licenses-and-certificates',
-      params
-    );
+    const endpoint = params.type === 'LICENSE' ? '/licenses' : '/certificates';
+    const apiType = params.type === 'LICENSE' ? 'LICENSE' : 'CERTIFICATE';
+    const response = await httpClient.post<CreatePendingApiResponse>(endpoint, {
+      type: apiType,
+      displayValue: params.displayValue,
+    });
     return response.data;
   },
 };
