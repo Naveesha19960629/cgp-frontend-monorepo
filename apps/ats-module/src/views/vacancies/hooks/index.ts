@@ -1,5 +1,6 @@
 export * from '@/views/vacancies/hooks/queries';
 export * from '@/views/vacancies/hooks/mutations';
+export { usePreferredHonoursAwardsForm } from '@/views/vacancies/hooks/use-preferred-honours-awards-form';
 export { usePreferredPatentsForm } from '@/views/vacancies/hooks/use-preferred-patents-form';
 export { useProfileRequirementsForm } from '@/views/vacancies/hooks/use-profile-requirements-form';
 export type { ProfileRequirementsFormValues } from '@/views/vacancies/hooks/use-profile-requirements-form';
@@ -16,3 +17,7 @@ export {
   type TertiaryEducationFormValues,
 } from '@/views/vacancies/hooks/use-tertiary-education-form';
 export { useDisableSuccessToast } from '@/views/vacancies/hooks/use-disable-success-toast';
+export {
+  useJobRequirementsForm,
+  type JobRequirementsFormValues,
+} from '@/views/vacancies/hooks/use-job-requirements-form';

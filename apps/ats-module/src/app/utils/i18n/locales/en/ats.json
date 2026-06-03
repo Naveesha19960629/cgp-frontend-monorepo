@@ -23,6 +23,69 @@
       }
     }
   },
+  "jobRequirements": {
+    "sectionTitle": "Job Requirements",
+    "bannerTitle": "Build the Application Form",
+    "bannerCertainFields": "Certain fields",
+    "bannerDescription": " in this section are always collected from candidates to support consistent candidate profiles. Any fields you don't select won't be collected",
+    "discipline": "Discipline",
+    "disciplinePlaceholder": "Select or add discipline",
+    "careerPath": "Career Path",
+    "careerPathPlaceholder": "Select or add career path",
+    "level": "Level",
+    "levelPlaceholder": "Select level",
+    "role": "Role",
+    "rolePlaceholder": "Select or add roles",
+    "jobTitle": "Job Title",
+    "jobTitlePlaceholder": "Select or add job title",
+    "employmentType": "Employment Type",
+    "employmentTypePlaceholder": "Select employment type",
+    "workSchedule": "Work Schedule",
+    "workSchedulePlaceholder": "Select work schedule",
+    "engagementModel": "Engagement Model",
+    "engagementModelPlaceholder": "Select engagement model",
+    "description": "Description",
+    "descriptionPlaceholder": "Enter description",
+    "loading": "Loading...",
+    "noData": "No results found",
+    "noAssociatedCareerPaths": "No associated career paths with the selected discipline. Add a career path to continue.",
+    "noAssociatedRoles": "No associated roles with the selected career path. Add a role to continue.",
+    "errors": {
+      "maxSelections": "Exceeded maximum of {{max}} selections.",
+      "required": {
+        "discipline": "Discipline is required",
+        "careerPath": "Career Path is required",
+        "level": "Level is required",
+        "role": "Role is required",
+        "jobTitle": "Job Title is required"
+      }
+    },
+    "dependencyHints": {
+      "careerPathNeedDiscipline": "Please select or add a discipline first",
+      "roleNeedCareerPath": "Please select or add a career path first",
+      "roleNeedLevel": "Please select a level first",
+      "roleNeedCareerPathAndLevel": "Please select or add a career path and select a level first"
+    },
+    "dataTakenFromCandidate": "If selected, no manual input is required, and data will be taken from the candidate profile",
+    "alwaysCollectedFields": {
+      "organization": "Organization",
+      "discipline": "Discipline",
+      "careerPath": "Career Path",
+      "role": "Role",
+      "jobTitle": "Job Title",
+      "employmentType": "Employment Type",
+      "workSchedule": "Work Schedule",
+      "engagementModel": "Engagement Model",
+      "startDate": "Start Date",
+      "endDate": "End Date"
+    },
+    "confirmDisableDialog": {
+      "title": "Are you sure?",
+      "message": "Are you sure you want to disable this section? Disabling this section will permanently remove all added data. This action cannot be undone",
+      "cancel": "Cancel",
+      "disable": "Disable"
+    }
+  },
   "vacancies": {
     "title": "Vacancies",
     "createVacancyButton": "Create Vacancy",
@@ -112,6 +175,57 @@
       "disable": {
         "title": "Successfully Disabled",
         "message": "Patents have been successfully disabled."
+      }
+    }
+  },
+  "preferredHonoursAwards": {
+    "title": "Preferred Honours and Awards",
+    "back": "Back",
+    "dataTakenFromCandidate": "If selected, no manual input is required, and data will be taken from the candidate profile",
+    "honourTitle": "Honours and awards {{number}}",
+    "titleOfHonourOrAward": "Title of the Honours or Award",
+    "titleOfHonourOrAwardPlaceholder": "Title of the Honours or Award",
+    "issuedBy": "Issued By",
+    "issuedByPlaceholder": "Enter issued by",
+    "issuedDateFrom": "Issued Date From",
+    "issuedDateFromPlaceholder": "Select issue date from",
+    "issuedDateTo": "Issued Date To",
+    "issuedDateToPlaceholder": "Select issue date to",
+    "associatedOrganization": "Associated Organization",
+    "associatedOrganizationPlaceholder": "Select or add associated organization",
+    "addOrganization": "Add Organization",
+    "organizationLocation": "Organization Location",
+    "organizationLocationPlaceholder": "Select location",
+    "addHonour": "Add honour and award",
+    "removeHonour": "Remove honour and award",
+    "collapse": "Collapse",
+    "expand": "Expand",
+    "cancelButton": "Cancel",
+    "nextButton": "Next",
+    "fieldList": {
+      "titleOfHonourOrAward": "Title of the Honours or Award",
+      "associatedOrganization": "Associated Organization",
+      "issuedDate": "Issued Date"
+    },
+    "validation": {
+      "maxExceeded": "Exceeded maximum of {{max}} selections."
+    },
+    "disableDialog": {
+      "title": "Are you sure?",
+      "description": "Are you sure you want to disable this section? Disabling this section will permanently remove all added data. This action cannot be undone",
+      "cancelButton": "Cancel",
+      "confirmButton": "Disable"
+    },
+    "emptyDisableDialog": {
+      "title": "Are you sure?",
+      "message": "You've enabled this section but haven't filled any fields. This section will be disabled for this vacancy and no data will be collected from candidates",
+      "cancel": "Cancel",
+      "disable": "Disable"
+    },
+    "notifications": {
+      "disable": {
+        "title": "Successfully Disabled",
+        "message": "Preferred Honours and Awards have been successfully disabled."
       }
     }
   },

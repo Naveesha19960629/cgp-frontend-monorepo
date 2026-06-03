@@ -125,7 +125,21 @@ const DEFAULT_FORM: VacancyForm = {
   title: '',
   status: 'draft',
   lastActiveStep: VACANCY_STEPS[0].key,
-  jobRequirements: [],
+  jobRequirements: [
+    {
+      isEnabled: true,
+      dataTakenFromCandidate: false,
+      discipline: [],
+      careerPath: [],
+      level: [],
+      role: [],
+      jobTitle: [],
+      employmentType: [],
+      workSchedule: [],
+      engagementModel: [],
+      description: '',
+    },
+  ],
   profileRequirements: {
     isEnabled: false,
     dataTakenFromCandidate: false,
@@ -143,6 +157,11 @@ const DEFAULT_FORM: VacancyForm = {
     isEnabled: false,
     dataTakenFromCandidate: false,
     patents: [],
+  },
+  preferredHonoursAwards: {
+    isEnabled: false,
+    dataTakenFromCandidate: false,
+    honoursAndAwards: [],
   },
   preferredSkills: {
     isEnabled: false,
