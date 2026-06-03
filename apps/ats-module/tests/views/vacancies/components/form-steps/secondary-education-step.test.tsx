@@ -392,16 +392,12 @@ describe('SecondaryEducationStep', () => {
 
     it('passes loading indicator to all search selectors', () => {
       renderStep();
-      expect(
-        screen.getAllByText('secondaryEducation.search.loading')
-      ).toHaveLength(5);
+      expect(screen.getAllByText('common.loading')).toHaveLength(5);
     });
 
     it('passes empty indicator to all search selectors', () => {
       renderStep();
-      expect(
-        screen.getAllByText('secondaryEducation.search.noData')
-      ).toHaveLength(5);
+      expect(screen.getAllByText('common.noDataTitle')).toHaveLength(5);
     });
   });
 

@@ -201,6 +201,8 @@
       "schoolUrlPlaceholder": "Enter your school URL",
       "cancel": "Cancel",
       "addNow": "Add Now",
+      "nameRequired": "School name is required",
+      "locationRequired": "School location is required",
       "schoolUrlInvalid": "School URL must start with http:// or https://.",
       "schoolUrlFormat": "School URL must be a valid format.",
       "success": {
@@ -257,7 +259,7 @@
     "cancel": "Cancel",
     "next": "Next",
     "addAwardingBodyDialog": {
-      "title": "Add Awarding Body/Institute",
+      "title": "Add Awarding Body",
       "name": "Awarding Body/Institute Name",
       "location": "Awarding Body/Institute Location",
       "url": "Awarding Body/Institute URL",
@@ -266,6 +268,8 @@
       "urlPlaceholder": "Enter awarding body/institute URL",
       "cancel": "Cancel",
       "addNow": "Add Now",
+      "nameRequired": "Awarding body/institute name is required",
+      "locationRequired": "Awarding body/institute location is required",
       "urlInvalid": "Awarding Body/Institute URL must start with http:// or https://.",
       "urlFormat": "Awarding Body/Institute URL must be a valid format.",
       "success": {

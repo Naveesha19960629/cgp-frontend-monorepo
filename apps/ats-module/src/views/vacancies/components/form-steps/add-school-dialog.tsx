@@ -11,9 +11,9 @@ import { useSchoolLocationsQuery } from '@/views/vacancies/hooks';
 import type { AddSchoolDialogProps } from '@/views/vacancies/types';
 import { isUrlFormatValid, isUrlProtocolValid } from '@/views/vacancies/utils';
 
-import { AutocompleteCombobox } from '@cgp/ui-kit/components/autocomplete-combobox';
 import { CharacterCount } from '@cgp/ui-kit/components/character-count';
 import { SuccessToast } from '@cgp/ui-kit/components/custom-toast';
+import { LocationAutocomplete } from '@cgp/ui-kit/components/location-autocomplete';
 import { ScrollAreaWithShadow } from '@cgp/ui-kit/components/scroll-area-with-shadow';
 import { Button } from '@cgp/ui-kit/components/ui/button';
 import {
@@ -27,6 +27,11 @@ import { Input } from '@cgp/ui-kit/components/ui/input';
 import { Label } from '@cgp/ui-kit/components/ui/label';
 import { Popover, PopoverTrigger } from '@cgp/ui-kit/components/ui/popover';
 import { removeEmoji } from '@cgp/ui-kit/lib/utils';
+
+const multiSelectInfoAvatar = new URL(
+  '../../../../assets/images/multi-select-info-avatar.svg',
+  import.meta.url
+).href;
 
 function validateUrl(
   url: string,
@@ -53,11 +58,13 @@ export function AddSchoolDialog({
   const [name, setName] = useState('');
   const [locationSearch, setLocationSearch] = useState('');
   const [selectedLocation, setSelectedLocation] = useState<{
-    value: string;
+    id: string;
     label: string;
-  } | null>(null);
+  }>({ id: '', label: '' });
   const [url, setUrl] = useState('');
   const [urlError, setUrlError] = useState<string | undefined>();
+  const [nameError, setNameError] = useState<string | undefined>();
+  const [locationError, setLocationError] = useState<string | undefined>();
   const [wasNameTruncated, setWasNameTruncated] = useState(false);
   const [openTruncationTooltip, setOpenTruncationTooltip] = useState(false);
   const truncationCloseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -85,10 +92,12 @@ export function AddSchoolDialog({
     const truncated = cleaned.slice(0, 200);
     setName(truncated);
     setWasNameTruncated(cleaned.length > 200);
-    setSelectedLocation(null);
+    setSelectedLocation({ id: '', label: '' });
     setLocationSearch('');
     setUrl('');
     setUrlError(undefined);
+    setNameError(undefined);
+    setLocationError(undefined);
     setPrevOpen(true);
   } else if (!open && prevOpen) {
     setWasNameTruncated(false);
@@ -97,7 +106,11 @@ export function AddSchoolDialog({
 
   const { data: locationsResponse, isLoading: isLocationLoading } =
     useSchoolLocationsQuery(locationSearch);
-  const locationData = locationsResponse?.data.items.content ?? [];
+  const locationData = (locationsResponse?.data.items.content ?? []).filter(
+    item =>
+      !locationSearch.trim() ||
+      item.label.toLowerCase().includes(locationSearch.trim().toLowerCase())
+  );
 
   const handleUrlChange = (value: string) => {
     setUrl(value);
@@ -109,17 +122,34 @@ export function AddSchoolDialog({
   };
 
   const handleAdd = () => {
+    let hasError = false;
+
+    if (!name.trim()) {
+      setNameError(t('secondaryEducation.addSchoolDialog.nameRequired'));
+      hasError = true;
+    }
+
+    if (!selectedLocation.id) {
+      setLocationError(
+        t('secondaryEducation.addSchoolDialog.locationRequired')
+      );
+      hasError = true;
+    }
+
     const urlValidation = validateUrl(url, t);
     if (urlValidation) {
       setUrlError(urlValidation);
-      return;
+      hasError = true;
     }
+
+    if (hasError) return;
+
     const tempId = `__pending_school_${Date.now()}`;
     onAdded({
       value: tempId,
       label: name,
       source: 'PENDING_TEMP',
-      locationId: selectedLocation?.value,
+      locationId: selectedLocation.id || undefined,
       url: url || undefined,
     });
     SuccessToast({
@@ -170,13 +200,13 @@ export function AddSchoolDialog({
             <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2">
               {/* School Name */}
               <div className="flex flex-col gap-1">
-                <div className="flex w-full items-center justify-between">
-                  <Label className="flex items-center gap-1">
+                <Label className="flex w-full items-center justify-between">
+                  <span className="flex items-center gap-1">
                     {t('secondaryEducation.addSchoolDialog.schoolName')}
                     <span className="text-rose-600">*</span>
-                  </Label>
+                  </span>
                   <CharacterCount currentLength={name.length} maxLength={200} />
-                </div>
+                </Label>
                 <Popover
                   open={openTruncationTooltip}
                   onOpenChange={setOpenTruncationTooltip}
@@ -193,7 +223,11 @@ export function AddSchoolDialog({
                       className="min-w-0 flex-1 bg-transparent text-sm font-medium outline-none placeholder:text-slate-500 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
                       maxLength={200}
                       value={name}
-                      onChange={e => setName(removeEmoji(e.target.value))}
+                      onChange={e => {
+                        const val = removeEmoji(e.target.value);
+                        setName(val);
+                        if (val.trim()) setNameError(undefined);
+                      }}
                     />
                     {wasNameTruncated && (
                       <PopoverTrigger
@@ -259,41 +293,68 @@ export function AddSchoolDialog({
                     </PopoverPrimitive.Portal>
                   )}
                 </Popover>
+                {nameError && (
+                  <p className="text-xs text-red-500">{nameError}</p>
+                )}
               </div>
 
               {/* School Location */}
               <div className="flex flex-col gap-1">
-                <Label className="flex items-center gap-1">
-                  {t('secondaryEducation.addSchoolDialog.schoolLocation')}
-                  <span className="text-rose-600">*</span>
+                <Label className="flex w-full items-center justify-between leading-5">
+                  <span className="flex items-center gap-1">
+                    {t('secondaryEducation.addSchoolDialog.schoolLocation')}
+                    <span className="text-rose-600">*</span>
+                  </span>
                 </Label>
-                <AutocompleteCombobox
+                <LocationAutocomplete
                   options={locationData.map(l => ({
-                    value: l.id,
+                    id: l.id,
                     label: l.label,
                   }))}
-                  value={selectedLocation?.label ?? ''}
-                  selectedValue={selectedLocation?.value}
-                  onInputChange={v => {
-                    if (!v) setSelectedLocation(null);
+                  value={selectedLocation}
+                  onSearchChange={value =>
+                    setLocationSearch(removeEmoji(value))
+                  }
+                  onSelect={option => {
+                    setSelectedLocation(option);
+                    if (option.id) setLocationError(undefined);
                   }}
-                  onSearchChange={setLocationSearch}
-                  onSelect={option => setSelectedLocation(option)}
                   loading={isLocationLoading}
                   placeholder={t(
                     'secondaryEducation.addSchoolDialog.schoolLocationPlaceholder'
                   )}
+                  EmptyIndicator={
+                    <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
+                      <div className="flex flex-col items-start">
+                        <img
+                          src={multiSelectInfoAvatar}
+                          alt={t('common.noData')}
+                        />
+                        <div className="mt-3 w-61 text-left">
+                          <p className="font-bold text-slate-900">
+                            {t('common.noDataTitle')}
+                          </p>
+                          <p className="text-sm font-semibold text-slate-700">
+                            {t('common.noDataDescription')}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  }
                 />
+                {locationError && (
+                  <p className="text-xs text-red-500">{locationError}</p>
+                )}
               </div>
 
               {/* School URL */}
               <div className="flex flex-col gap-1">
-                <div className="flex w-full items-center justify-between">
-                  <Label>
+                <Label className="flex w-full items-center justify-between">
+                  <span>
                     {t('secondaryEducation.addSchoolDialog.schoolUrl')}
-                  </Label>
+                  </span>
                   <CharacterCount currentLength={url.length} maxLength={200} />
-                </div>
+                </Label>
                 <Input
                   value={url}
                   onChange={e => handleUrlChange(removeEmoji(e.target.value))}
@@ -321,8 +382,8 @@ export function AddSchoolDialog({
           <Button
             className="flex-1 sm:max-w-48.25"
             type="button"
+            disabled={!name.trim() || !selectedLocation.id}
             onClick={handleAdd}
-            disabled={!name.trim() || !selectedLocation || !!urlError}
           >
             {t('secondaryEducation.addSchoolDialog.addNow')}
           </Button>

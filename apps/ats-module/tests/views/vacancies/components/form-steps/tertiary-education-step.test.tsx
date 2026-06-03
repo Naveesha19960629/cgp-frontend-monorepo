@@ -177,8 +177,12 @@ vi.mock('@cgp/ui-kit/components/multi-select', () => ({
         />
       )}
       {errorMessage && <p>{errorMessage}</p>}
-      {loadingIndicator}
-      {emptyIndicator}
+      {loadingIndicator && (
+        <div data-testid={`loading-${placeholder}`}>{loadingIndicator}</div>
+      )}
+      {emptyIndicator && (
+        <div data-testid={`empty-${placeholder}`}>{emptyIndicator}</div>
+      )}
     </>
   ),
 }));
@@ -451,16 +455,42 @@ describe('TertiaryEducationStep', () => {
 
     it('passes loading indicator to all search selectors', () => {
       renderStep();
-      expect(
-        screen.getAllByText('tertiaryEducation.search.loading')
-      ).toHaveLength(11);
+      expect(screen.getAllByText('common.loading')).toHaveLength(11);
     });
 
     it('passes empty indicator to all search selectors', () => {
       renderStep();
+      expect(screen.getAllByText('common.noDataTitle')).toHaveLength(11);
+    });
+
+    it('uses common searching and no-data pattern for study mode, pattern, and delivery schedule', () => {
+      renderStep();
+
       expect(
-        screen.getAllByText('tertiaryEducation.search.noData')
-      ).toHaveLength(11);
+        screen.getByTestId('loading-tertiaryEducation.placeholders.studyMode')
+      ).toHaveTextContent('common.loading');
+      expect(
+        screen.getByTestId(
+          'loading-tertiaryEducation.placeholders.studyPattern'
+        )
+      ).toHaveTextContent('common.loading');
+      expect(
+        screen.getByTestId(
+          'loading-tertiaryEducation.placeholders.deliverySchedule'
+        )
+      ).toHaveTextContent('common.loading');
+
+      expect(
+        screen.getByTestId('empty-tertiaryEducation.placeholders.studyMode')
+      ).toHaveTextContent('common.noDataTitle');
+      expect(
+        screen.getByTestId('empty-tertiaryEducation.placeholders.studyPattern')
+      ).toHaveTextContent('common.noDataTitle');
+      expect(
+        screen.getByTestId(
+          'empty-tertiaryEducation.placeholders.deliverySchedule'
+        )
+      ).toHaveTextContent('common.noDataTitle');
     });
   });
 
