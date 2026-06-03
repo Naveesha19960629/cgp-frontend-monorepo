@@ -158,6 +158,11 @@ const DEFAULT_FORM: VacancyForm = {
     dataTakenFromCandidate: false,
     patents: [],
   },
+  preferredHonoursAwards: {
+    isEnabled: false,
+    dataTakenFromCandidate: false,
+    honoursAndAwards: [],
+  },
   preferredSkills: {
     isEnabled: false,
     dataTakenFromCandidate: false,

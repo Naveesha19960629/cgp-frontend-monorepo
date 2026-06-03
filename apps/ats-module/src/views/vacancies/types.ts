@@ -248,6 +248,7 @@ interface VacancyForm {
   preferredCauses?: PreferredCauses;
   preferredHobbies?: PreferredHobbies;
   patents?: preferredPatentsSchema;
+  preferredHonoursAwards?: preferredHonoursAwardsSchema;
 }
 interface VacancyStep {
   readonly key: string;
@@ -368,6 +369,33 @@ interface preferredPatentsSchema {
   isEnabled: boolean;
   dataTakenFromCandidate: boolean;
   patents: PatentEntrySchemaType[];
+}
+
+interface HonourOrganizationSchemaType {
+  value: string;
+  label: string;
+  source: string;
+}
+
+interface HonourLocationSchemaType {
+  value: string;
+  label: string;
+}
+
+interface HonourEntrySchemaType {
+  title: string;
+  issuedBy: string;
+  issuedDateFrom?: Date | undefined;
+  issuedDateTo?: Date | undefined;
+  associatedOrganizations: HonourOrganizationSchemaType[];
+  organizationLocations: HonourLocationSchemaType[];
+  isOpen: boolean;
+}
+
+interface preferredHonoursAwardsSchema {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  honoursAndAwards: HonourEntrySchemaType[];
 }
 
 // ─── Preferred Skills ────────────────────────────────────────────────────────
@@ -637,6 +665,10 @@ export type {
   PatentEntrySchemaType,
   PatentIndustrySchemaType,
   PatentStatusSchemaType,
+  preferredHonoursAwardsSchema,
+  HonourEntrySchemaType,
+  HonourOrganizationSchemaType,
+  HonourLocationSchemaType,
   LookupItem,
   LocationLookupItem,
   SecondaryEducationRef,
