@@ -5,9 +5,8 @@ import { useTranslation } from 'react-i18next';
 
 import type { StepProps } from '@/views/vacancies/types';
 
+import { Button } from '@cgp/ui-kit/components/ui/button';
 import { Switch } from '@cgp/ui-kit/components/ui/switch';
-
-import StepFooter from './step-footer';
 
 export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
   const { t } = useTranslation('ats');
@@ -48,7 +47,7 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
             placeholder={t('customizableForm.sectionTitlePlaceholder')}
             value={sectionTitle}
             onChange={e => setSectionTitle(e.target.value)}
-            className="w-full border-0 border-b border-slate-200 bg-transparent px-0 pb-3 text-[24px] leading-[32px] font-bold tracking-[-0.144px] text-slate-900 placeholder:text-slate-300 focus:border-slate-300 focus:ring-0 focus:outline-none"
+            className="w-full border-0 border-b border-slate-200 bg-transparent px-0 pb-3 text-[24px] leading-8 font-bold tracking-[-0.144px] text-slate-900 placeholder:text-slate-300 focus:border-slate-300 focus:ring-0 focus:outline-none"
           />
           {isSectionTitleError && (
             <p className="mt-3 text-[13px] text-[#FF4A55]">
@@ -104,7 +103,7 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
               placeholder={t('customizableForm.formTitlePlaceholder')}
               value={formTitle}
               onChange={e => setFormTitle(e.target.value)}
-              className="w-full border-0 border-b border-slate-200 bg-transparent px-0 pb-3 text-[24px] leading-[32px] font-bold tracking-[-0.144px] text-slate-900 placeholder:text-slate-300 focus:border-slate-300 focus:ring-0 focus:outline-none"
+              className="w-full border-0 border-b border-slate-200 bg-transparent px-0 pb-3 text-[24px] leading-8 font-bold tracking-[-0.144px] text-slate-900 placeholder:text-slate-300 focus:border-slate-300 focus:ring-0 focus:outline-none"
             />
             {isFormTitleError && (
               <p className="mt-3 text-[13px] text-[#FF4A55]">
@@ -115,7 +114,14 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
         </div>
       </div>
 
-      <StepFooter onNext={onNext} onCancel={onBack} />
+      <div className="sticky bottom-0 mt-auto flex items-center justify-end gap-4 bg-white px-6 py-7 shadow-[0px_-8px_6.8px_0px_rgba(0,0,0,0.04)]">
+        <Button variant="secondary" className="h-12 w-48" onClick={onBack}>
+          {t('common.cancel')}
+        </Button>
+        <Button className="h-12 w-48" onClick={() => onNext()}>
+          {t('common.next')}
+        </Button>
+      </div>
     </div>
   );
 }
