@@ -1,4 +1,4 @@
-import { Plus } from 'lucide-react';
+import { Plus, X } from 'lucide-react';
 
 import { ArrowLeft2, ArrowUp2, Simcard2, Trash } from 'iconsax-reactjs';
 
@@ -7,29 +7,376 @@ import { useTranslation } from 'react-i18next';
 
 import type { StepProps } from '@/views/vacancies/types';
 
+import { CharacterCount } from '@cgp/ui-kit/components/character-count';
 import { Button } from '@cgp/ui-kit/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@cgp/ui-kit/components/ui/select';
 import { Switch } from '@cgp/ui-kit/components/ui/switch';
+
+// ── UI-only state types (not API types) ──────────────────────────────────────
+
+type QuestionType = 'LINEAR_SCALE' | 'DROP_DOWN';
+
+interface QuestionOption {
+  id: number;
+  value: string;
+}
+
+interface Question {
+  id: number;
+  text: string;
+  type: QuestionType | '';
+  required: boolean;
+  options: QuestionOption[];
+  from: number;
+  to: number;
+  startLabel: string;
+  endLabel: string;
+}
 
 interface FormCard {
   id: number;
   title: string;
   isOpen: boolean;
+  questions: Question[];
+  nextQuestionId: number;
+  nextOptionId: number;
 }
 
-const createForm = (id: number): FormCard => ({ id, title: '', isOpen: true });
+// ── Factories ────────────────────────────────────────────────────────────────
+
+const createQuestion = (id: number): Question => ({
+  id,
+  text: '',
+  type: '',
+  required: false,
+  options: [{ id: 1, value: '' }],
+  from: 1,
+  to: 5,
+  startLabel: '',
+  endLabel: '',
+});
+
+const createForm = (id: number): FormCard => ({
+  id,
+  title: '',
+  isOpen: true,
+  questions: [],
+  nextQuestionId: 1,
+  nextOptionId: 2,
+});
+
+// ── Linear scale range options ───────────────────────────────────────────────
+const SCALE_RANGE = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+
+const QUESTION_MAX = 150;
+const OPTION_MAX = 80;
+const START_END_MAX = 80;
+
+// ── QuestionCard ─────────────────────────────────────────────────────────────
+
+interface QuestionCardProps {
+  question: Question;
+  index: number;
+  nextOptionId: number;
+  onUpdate: (updated: Question) => void;
+  onDuplicate: () => void;
+  onRemove: () => void;
+  onNextOptionId: (n: number) => void;
+}
+
+function QuestionCard({
+  question,
+  index,
+  nextOptionId,
+  onUpdate,
+  onDuplicate,
+  onRemove,
+  onNextOptionId,
+}: Readonly<QuestionCardProps>) {
+  const { t } = useTranslation('ats');
+
+  const set = (patch: Partial<Question>) => onUpdate({ ...question, ...patch });
+
+  const addOption = () => {
+    onUpdate({
+      ...question,
+      options: [...question.options, { id: nextOptionId, value: '' }],
+    });
+    onNextOptionId(nextOptionId + 1);
+  };
+
+  const removeOption = (optId: number) => {
+    onUpdate({
+      ...question,
+      options: question.options.filter(o => o.id !== optId),
+    });
+  };
+
+  const updateOption = (optId: number, value: string) => {
+    onUpdate({
+      ...question,
+      options: question.options.map(o =>
+        o.id === optId ? { ...o, value } : o
+      ),
+    });
+  };
+
+  const questionLabel = `Question ${String(index + 1).padStart(2, '0')}`;
+
+  return (
+    <div className="mt-4 rounded-xl border border-neutral-200 bg-neutral-50 p-5">
+      {/* Question header */}
+      <p className="mb-4 text-sm font-bold text-slate-900">{questionLabel}</p>
+
+      {/* Question + Type row */}
+      <div className="grid grid-cols-2 gap-4">
+        {/* Question text */}
+        <div className="flex flex-col gap-1.5">
+          <div className="flex items-center justify-between">
+            <label className="text-sm font-semibold text-slate-900">
+              {t('customizableForm.question.questionLabel')}
+              <span className="ml-0.5 text-red-500">*</span>
+            </label>
+            <CharacterCount
+              maxLength={QUESTION_MAX}
+              currentLength={question.text.length}
+            />
+          </div>
+          <input
+            type="text"
+            maxLength={QUESTION_MAX}
+            value={question.text}
+            placeholder={t('customizableForm.question.questionPlaceholder')}
+            onChange={e => set({ text: e.target.value })}
+            className="h-11 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:ring-0 focus:outline-none"
+          />
+        </div>
+
+        {/* Type */}
+        <div className="flex flex-col gap-1.5">
+          <label className="text-sm font-semibold text-slate-900">
+            {t('customizableForm.question.typeLabel')}
+            <span className="ml-0.5 text-red-500">*</span>
+          </label>
+          <Select
+            value={question.type}
+            onValueChange={val => set({ type: val as QuestionType })}
+          >
+            <SelectTrigger className="h-11 w-full shadow-none">
+              <SelectValue
+                placeholder={t('customizableForm.question.typePlaceholder')}
+              />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="LINEAR_SCALE">
+                {t('customizableForm.question.types.linearScale')}
+              </SelectItem>
+              <SelectItem value="DROP_DOWN">
+                {t('customizableForm.question.types.dropDown')}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* Drop Down options */}
+      {question.type === 'DROP_DOWN' && (
+        <div className="mt-4 rounded-lg border border-neutral-200 bg-white p-4">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+            {question.options.map((opt, optIdx) => (
+              <div key={opt.id} className="flex flex-col gap-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-slate-700">
+                    {`Option ${String(optIdx + 1).padStart(2, '0')}`}
+                  </span>
+                  <CharacterCount
+                    maxLength={OPTION_MAX}
+                    currentLength={opt.value.length}
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    maxLength={OPTION_MAX}
+                    value={opt.value}
+                    onChange={e => updateOption(opt.id, e.target.value)}
+                    className="h-9 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:ring-0 focus:outline-none"
+                  />
+                  {question.options.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeOption(opt.id)}
+                      className="shrink-0 text-slate-400 transition-colors hover:text-red-500"
+                      aria-label="Remove option"
+                    >
+                      <X className="size-4" />
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-4 flex justify-end">
+            <Button
+              type="button"
+              variant="secondary"
+              className="h-9 gap-1.5 rounded-lg bg-gray-100 px-4 text-sm font-semibold text-slate-700 hover:bg-gray-200"
+              onClick={addOption}
+            >
+              <Plus className="size-4" />
+              {t('customizableForm.question.addOption')}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Linear Scale fields */}
+      {question.type === 'LINEAR_SCALE' && (
+        <div className="mt-4 space-y-4">
+          {/* From / To */}
+          <div className="flex items-end gap-6">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-semibold text-slate-900">
+                {t('customizableForm.question.from')}
+              </label>
+              <Select
+                value={String(question.from)}
+                onValueChange={val => set({ from: Number(val) })}
+              >
+                <SelectTrigger className="h-9 w-28 shadow-none">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {SCALE_RANGE.map(n => (
+                    <SelectItem key={n} value={String(n)}>
+                      {n}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-semibold text-slate-900">
+                {t('customizableForm.question.to')}
+              </label>
+              <Select
+                value={String(question.to)}
+                onValueChange={val => set({ to: Number(val) })}
+              >
+                <SelectTrigger className="h-9 w-28 shadow-none">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {SCALE_RANGE.map(n => (
+                    <SelectItem key={n} value={String(n)}>
+                      {n}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Start Label / End Label */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-col gap-1.5">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-semibold text-slate-900">
+                  {t('customizableForm.question.startLabel')}
+                </label>
+                <CharacterCount
+                  maxLength={START_END_MAX}
+                  currentLength={question.startLabel.length}
+                />
+              </div>
+              <input
+                type="text"
+                maxLength={START_END_MAX}
+                value={question.startLabel}
+                onChange={e => set({ startLabel: e.target.value })}
+                className="h-11 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:ring-0 focus:outline-none"
+              />
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-semibold text-slate-900">
+                  {t('customizableForm.question.endLabel')}
+                </label>
+                <CharacterCount
+                  maxLength={START_END_MAX}
+                  currentLength={question.endLabel.length}
+                />
+              </div>
+              <input
+                type="text"
+                maxLength={START_END_MAX}
+                value={question.endLabel}
+                onChange={e => set({ endLabel: e.target.value })}
+                className="h-11 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:ring-0 focus:outline-none"
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Question footer: copy, delete, required */}
+      <div className="mt-5 flex items-center justify-end gap-4">
+        <button
+          type="button"
+          aria-label="Duplicate question"
+          className="text-slate-400 transition-colors hover:text-slate-700"
+          onClick={onDuplicate}
+        >
+          <Simcard2 size={20} />
+        </button>
+        <button
+          type="button"
+          aria-label="Delete question"
+          className="text-slate-400 transition-colors hover:text-red-500"
+          onClick={onRemove}
+        >
+          <Trash size={20} />
+        </button>
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-semibold text-slate-700">
+            {t('customizableForm.question.required')}
+          </span>
+          <Switch
+            checked={question.required}
+            onCheckedChange={val => set({ required: val })}
+            size="sm"
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Main step ────────────────────────────────────────────────────────────────
 
 export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
   const { t } = useTranslation('ats');
   const [isEnabled, setIsEnabled] = useState(true);
   const [sectionTitle, setSectionTitle] = useState('');
   const [forms, setForms] = useState<FormCard[]>([createForm(1)]);
-  const [nextId, setNextId] = useState(2);
+  const [nextFormId, setNextFormId] = useState(2);
 
   const isSectionTitleError = sectionTitle.length > 200;
 
+  // ── Form-level actions ──────────────────────────────────────────────────
+
   const addForm = () => {
-    setForms(prev => [...prev, createForm(nextId)]);
-    setNextId(id => id + 1);
+    setForms(prev => [...prev, createForm(nextFormId)]);
+    setNextFormId(id => id + 1);
   };
 
   const removeForm = (id: number) => {
@@ -39,10 +386,10 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
   const duplicateForm = (id: number) => {
     const source = forms.find(f => f.id === id);
     if (!source) return;
-    const copy: FormCard = { ...source, id: nextId };
+    const copy: FormCard = { ...source, id: nextFormId };
     const idx = forms.findIndex(f => f.id === id);
     setForms(prev => [...prev.slice(0, idx + 1), copy, ...prev.slice(idx + 1)]);
-    setNextId(n => n + 1);
+    setNextFormId(n => n + 1);
   };
 
   const toggleOpen = (id: number) => {
@@ -51,9 +398,77 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
     );
   };
 
-  const updateTitle = (id: number, value: string) => {
+  const updateFormTitle = (id: number, value: string) => {
     setForms(prev => prev.map(f => (f.id === id ? { ...f, title: value } : f)));
   };
+
+  // ── Question-level actions ──────────────────────────────────────────────
+
+  const addQuestion = (formId: number) => {
+    setForms(prev =>
+      prev.map(f => {
+        if (f.id !== formId) return f;
+        return {
+          ...f,
+          questions: [...f.questions, createQuestion(f.nextQuestionId)],
+          nextQuestionId: f.nextQuestionId + 1,
+        };
+      })
+    );
+  };
+
+  const updateQuestion = (formId: number, updated: Question) => {
+    setForms(prev =>
+      prev.map(f => {
+        if (f.id !== formId) return f;
+        return {
+          ...f,
+          questions: f.questions.map(q => (q.id === updated.id ? updated : q)),
+        };
+      })
+    );
+  };
+
+  const removeQuestion = (formId: number, questionId: number) => {
+    setForms(prev =>
+      prev.map(f => {
+        if (f.id !== formId) return f;
+        return {
+          ...f,
+          questions: f.questions.filter(q => q.id !== questionId),
+        };
+      })
+    );
+  };
+
+  const duplicateQuestion = (formId: number, questionId: number) => {
+    setForms(prev =>
+      prev.map(f => {
+        if (f.id !== formId) return f;
+        const source = f.questions.find(q => q.id === questionId);
+        if (!source) return f;
+        const copy: Question = { ...source, id: f.nextQuestionId };
+        const idx = f.questions.findIndex(q => q.id === questionId);
+        return {
+          ...f,
+          questions: [
+            ...f.questions.slice(0, idx + 1),
+            copy,
+            ...f.questions.slice(idx + 1),
+          ],
+          nextQuestionId: f.nextQuestionId + 1,
+        };
+      })
+    );
+  };
+
+  const setNextOptionId = (formId: number, n: number) => {
+    setForms(prev =>
+      prev.map(f => (f.id === formId ? { ...f, nextOptionId: n } : f))
+    );
+  };
+
+  // ── Render ──────────────────────────────────────────────────────────────
 
   return (
     <div>
@@ -144,24 +559,55 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
                   </div>
                 </div>
 
-                {/* Form Title (collapsible) */}
                 {form.isOpen && (
-                  <div className="mt-8">
-                    <input
-                      type="text"
-                      placeholder={t('customizableForm.formTitlePlaceholder')}
-                      value={form.title}
-                      onChange={e => updateTitle(form.id, e.target.value)}
-                      className="w-full border-0 border-b border-slate-200 bg-transparent px-0 pb-3 text-[24px] leading-8 font-bold tracking-[-0.144px] text-slate-900 placeholder:text-slate-300 focus:border-slate-300 focus:ring-0 focus:outline-none"
-                    />
-                    {isFormTitleError && (
-                      <p className="mt-3 text-[13px] text-[#FF4A55]">
-                        {t('customizableForm.errors.maxLengthExceeded', {
-                          max: 150,
-                        })}
-                      </p>
-                    )}
-                  </div>
+                  <>
+                    {/* Form Title */}
+                    <div className="mt-4">
+                      <input
+                        type="text"
+                        placeholder={t('customizableForm.formTitlePlaceholder')}
+                        value={form.title}
+                        onChange={e => updateFormTitle(form.id, e.target.value)}
+                        className="w-full border-0 border-b border-slate-200 bg-transparent px-0 pb-3 text-[24px] leading-8 font-bold tracking-[-0.144px] text-slate-900 placeholder:text-slate-300 focus:border-slate-300 focus:ring-0 focus:outline-none"
+                      />
+                      {isFormTitleError && (
+                        <p className="mt-3 text-[13px] text-[#FF4A55]">
+                          {t('customizableForm.errors.maxLengthExceeded', {
+                            max: 150,
+                          })}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Questions */}
+                    {form.questions.map((question, qIdx) => (
+                      <QuestionCard
+                        key={question.id}
+                        question={question}
+                        index={qIdx}
+                        nextOptionId={form.nextOptionId}
+                        onUpdate={updated => updateQuestion(form.id, updated)}
+                        onDuplicate={() =>
+                          duplicateQuestion(form.id, question.id)
+                        }
+                        onRemove={() => removeQuestion(form.id, question.id)}
+                        onNextOptionId={n => setNextOptionId(form.id, n)}
+                      />
+                    ))}
+
+                    {/* Create Question button */}
+                    <div className="mt-5 flex justify-end">
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        className="h-10 gap-2 rounded-lg bg-gray-100 px-4 text-sm font-semibold text-slate-700 hover:bg-gray-200"
+                        onClick={() => addQuestion(form.id)}
+                      >
+                        <Plus className="size-4" />
+                        {t('customizableForm.createQuestion')}
+                      </Button>
+                    </div>
+                  </>
                 )}
               </div>
             );

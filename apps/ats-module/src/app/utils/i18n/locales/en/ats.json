@@ -105,8 +105,26 @@
     "sectionTitlePlaceholder": "Section Title",
     "formBuilderTitle": "Form Builder",
     "formTitlePlaceholder": "Form Title",
+    "addForm": "Add another form",
+    "createQuestion": "Create Question",
     "errors": {
       "maxLengthExceeded": "Exceeded maximum character length of {{max}}"
+    },
+    "question": {
+      "questionLabel": "Question",
+      "questionPlaceholder": "Enter your question",
+      "typeLabel": "Type",
+      "typePlaceholder": "Select type",
+      "types": {
+        "linearScale": "Linear Scale",
+        "dropDown": "Drop Down"
+      },
+      "from": "From",
+      "to": "To",
+      "startLabel": "Start Label",
+      "endLabel": "End Label",
+      "addOption": "Add Option",
+      "required": "Required"
     }
   },
 
