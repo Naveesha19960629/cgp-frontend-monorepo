@@ -2,9 +2,9 @@ import * as React from 'react';
 
 import type { VacancyDataTableProps } from '@/views/vacancies/types';
 
+import { ScrollArea } from '@cgp/ui-kit/components/ui/scroll-area';
 import { Skeleton } from '@cgp/ui-kit/components/ui/skeleton';
 import {
-  Table,
   TableBody,
   TableCell,
   TableHead,
@@ -34,6 +34,18 @@ export default function VacancyDataTable<TData>({
       maxWidth: `${size}px`,
     };
 
+    // Non-pinned header cells: sticky to top only.
+    // z-index 3 keeps them above body content on vertical scroll.
+    if (isHeader && !isPinned) {
+      return {
+        ...base,
+        position: 'sticky',
+        top: 0,
+        zIndex: 3,
+        backgroundColor: '#fff',
+      };
+    }
+
     if (!isPinned) return base;
 
     const isLastLeftPinned =
@@ -45,9 +57,12 @@ export default function VacancyDataTable<TData>({
     return {
       ...base,
       position: 'sticky',
+      // Pinned header cells must stick to both axes; body cells only horizontally.
+      top: isHeader ? 0 : undefined,
       left: isPinned === 'left' ? `${column.getStart('left')}px` : undefined,
       right: isPinned === 'right' ? `${column.getAfter('right')}px` : undefined,
-      zIndex: isHeader ? 2 : 1,
+      // z-index 4: pinned header corners sit above non-pinned headers (3) and pinned body (1).
+      zIndex: isHeader ? 4 : 1,
       backgroundColor: '#fff',
       boxShadow: isLastLeftPinned
         ? '4px 0 8px -4px rgba(0,0,0,0.12)'
@@ -58,8 +73,12 @@ export default function VacancyDataTable<TData>({
   };
 
   return (
-    <div className="rounded-md border">
-      <Table style={{ width: table.getTotalSize(), tableLayout: 'fixed' }}>
+    <ScrollArea className="h-full rounded-md border" type="auto">
+      <table
+        data-slot="table"
+        className="w-full caption-bottom text-sm"
+        style={{ width: table.getTotalSize(), tableLayout: 'fixed' }}
+      >
         <TableHeader>
           {table.getHeaderGroups().map(headerGroup => (
             <TableRow key={headerGroup.id}>
@@ -111,7 +130,7 @@ export default function VacancyDataTable<TData>({
                 </TableRow>
               ))}
         </TableBody>
-      </Table>
-    </div>
+      </table>
+    </ScrollArea>
   );
 }
