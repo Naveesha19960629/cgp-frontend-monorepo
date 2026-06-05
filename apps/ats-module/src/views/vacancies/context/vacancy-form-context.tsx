@@ -186,6 +186,12 @@ const DEFAULT_FORM: VacancyForm = {
     dataTakenFromCandidate: false,
     hobbies: [],
   },
+  preferredIndustries: {
+    isEnabled: false,
+    dataTakenFromCandidate: false,
+    industries: [],
+  },
+  schedule: undefined,
 };
 
 interface VacancyFormContextValue {
@@ -219,7 +225,12 @@ function VacancyFormProvider({ children }: { children: React.ReactNode }) {
   };
 
   const onNext = (data?: Partial<VacancyForm>) => {
-    console.log(data);
+    const stepKey =
+      VACANCY_STEPS[currentStepIndex]?.key ?? `step-${currentStepIndex}`;
+    console.group(`[Vacancy Wizard] Step payload — ${stepKey}`);
+    console.log('Step data:', data);
+    console.log('Full form after merge:', data ? { ...form, ...data } : form);
+    console.groupEnd();
     if (data) {
       setForm(prev => ({ ...prev, ...data }));
     }

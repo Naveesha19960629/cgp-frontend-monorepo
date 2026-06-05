@@ -25,3 +25,8 @@ export {
   useJobRequirementsForm,
   type JobRequirementsFormValues,
 } from '@/views/vacancies/hooks/use-job-requirements-form';
+export {
+  useScheduleVacancyForm,
+  toScheduleVacancyPayload,
+  type ScheduleVacancyFormValues,
+} from '@/views/vacancies/hooks/use-schedule-vacancy-form';
