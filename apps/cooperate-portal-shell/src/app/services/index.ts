@@ -1,3 +1,3 @@
 // Services
-export * from './organization.service';
-export * from './location.service';
+export { organizationService } from './organization.service';
+export { locationService } from './location.service';

@@ -3,6 +3,7 @@ export { industryService } from '@/views/vacancies/services/industry.service';
 export { maritalStatusService } from '@/views/vacancies/services/marital-status.service';
 export { placesService } from '@/views/vacancies/services/places.service';
 export { societyService } from '@/views/vacancies/services/society.service';
+export { sportService } from '@/views/vacancies/services/sport.service';
 export { skillService } from '@/views/vacancies/services/skill.service';
 export { careerPathService } from '@/views/vacancies/services/career-path.service';
 export { languageService } from '@/views/vacancies/services/language.service';
