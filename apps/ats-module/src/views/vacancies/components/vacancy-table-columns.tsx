@@ -10,16 +10,15 @@ import type {
 import { Badge } from '@cgp/ui-kit/components/ui/badge';
 import { Button } from '@cgp/ui-kit/components/ui/button';
 import { Checkbox } from '@cgp/ui-kit/components/ui/checkbox';
+import { cn } from '@cgp/ui-kit/lib/utils';
 import { type ColumnDef } from '@tanstack/react-table';
 
 const STATUS_VARIANT_MAP: Record<string, string> = {
-  Draft: 'bg-slate-100 text-slate-700',
-  Unpublished: 'bg-amber-100 text-amber-700',
-  Live: 'bg-emerald-100 text-emerald-700',
-  Active: 'bg-emerald-100 text-emerald-700',
-  Expired: 'bg-red-100 text-red-700',
-  Onhold: 'bg-orange-100 text-orange-700',
-  On_Hold: 'bg-orange-100 text-orange-700',
+  draft: 'bg-slate-100 text-slate-600 border-slate-300',
+  unpublished: 'bg-yellow-100 text-yellow-600 border-yellow-200',
+  live: 'bg-emerald-100 border-emerald-300 text-emerald-600',
+  expired: 'bg-[#33260317] text-[#492503] border-[#38230021]',
+  on_hold: 'bg-blue-100 border-blue-200 text-blue-500',
 };
 
 function SortableHeader({
@@ -302,10 +301,14 @@ const createVacancyColumns = ({
     cell: ({ row }) => {
       const status = row.original.status;
       const variantClass =
-        STATUS_VARIANT_MAP[status] ?? 'bg-slate-100 text-slate-700';
+        STATUS_VARIANT_MAP[status.toLowerCase()] ??
+        'bg-slate-100 text-slate-700';
       return (
         <Badge
-          className={`border-none px-3 py-1 text-xs font-medium ${variantClass}`}
+          className={cn(
+            `border-none px-3 py-1 text-xs font-medium`,
+            variantClass
+          )}
         >
           {status}
         </Badge>
