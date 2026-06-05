@@ -540,9 +540,20 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
   };
 
   const duplicateForm = (id: number) => {
+    if (forms.length >= MAX_FORMS) {
+      ErrorToast({
+        title: t('common.errorTitle'),
+        description: t('customizableForm.errors.maxFormsExceeded'),
+      });
+      return;
+    }
+
     const source = forms.find(f => f.id === id);
     if (!source) return;
-    const copy: FormCard = { ...source, id: nextFormId };
+    const copiedTitle = String(
+      t('customizableForm.copyOfTitle', { title: source.title })
+    ).trim();
+    const copy: FormCard = { ...source, id: nextFormId, title: copiedTitle };
     const idx = forms.findIndex(f => f.id === id);
     setForms(prev => [...prev.slice(0, idx + 1), copy, ...prev.slice(idx + 1)]);
     setNextFormId(n => n + 1);

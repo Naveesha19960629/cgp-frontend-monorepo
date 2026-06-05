@@ -105,6 +105,7 @@
     "sectionTitlePlaceholder": "Section Title",
     "formBuilderTitle": "Form Builder",
     "formTitlePlaceholder": "Form Title",
+    "copyOfTitle": "Copy of {{title}}",
     "addForm": "Add another form",
     "createQuestion": "Create Question",
     "errors": {
