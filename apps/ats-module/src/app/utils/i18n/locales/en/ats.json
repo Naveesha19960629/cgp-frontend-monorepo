@@ -108,16 +108,27 @@
     "addForm": "Add another form",
     "createQuestion": "Create Question",
     "errors": {
-      "maxLengthExceeded": "Exceeded maximum character length of {{max}}"
+      "maxLengthExceeded": "Exceeded maximum character length of {{max}}",
+      "maxFormsExceeded": "Exceeded maximum of 5 forms allowed",
+      "maxQuestionsExceeded": "Exceeded maximum of 10 questions allowed per form",
+      "maxOptionsExceeded": "Exceeded maximum of 5 options allowed"
     },
     "question": {
       "questionLabel": "Question",
       "questionPlaceholder": "Enter your question",
       "typeLabel": "Type",
       "typePlaceholder": "Select type",
+      "responsePreview": "Response Preview",
+      "shortAnswerPlaceholder": "Candidate response will appear here",
+      "paragraphPlaceholder": "Candidate response will appear here",
+      "enterOption": "Enter option",
       "types": {
-        "linearScale": "Linear Scale",
-        "dropDown": "Drop Down"
+        "shortAnswer": "Short Answer",
+        "paragraph": "Paragraph",
+        "multipleChoice": "Multiple Choice",
+        "checkboxes": "Checkboxes",
+        "dropDown": "Drop Down",
+        "linearScale": "Linear Scale"
       },
       "from": "From",
       "to": "To",
