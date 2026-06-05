@@ -105,6 +105,46 @@
     "title": "Find Candidate"
   },
 
+  "customizableForm": {
+    "title": "Customizable Form",
+    "sectionTitlePlaceholder": "Section Title",
+    "formBuilderTitle": "Form Builder",
+    "formTitlePlaceholder": "Form Title",
+    "copyOfTitle": "Copy of {{title}}",
+    "addForm": "Add another form",
+    "createQuestion": "Create Question",
+    "errors": {
+      "maxLengthExceeded": "Exceeded maximum character length of {{max}}",
+      "maxFormsExceeded": "Exceeded maximum of 5 forms allowed",
+      "maxQuestionsExceeded": "Exceeded maximum of 10 questions allowed per form",
+      "maxOptionsExceeded": "Exceeded maximum of 5 options allowed"
+    },
+    "question": {
+      "questionLabel": "Question",
+      "questionPlaceholder": "Enter your question",
+      "typeLabel": "Type",
+      "typePlaceholder": "Select type",
+      "responsePreview": "Response Preview",
+      "shortAnswerPlaceholder": "Candidate response will appear here",
+      "paragraphPlaceholder": "Candidate response will appear here",
+      "enterOption": "Enter option",
+      "types": {
+        "shortAnswer": "Short Answer",
+        "paragraph": "Paragraph",
+        "multipleChoice": "Multiple Choice",
+        "checkboxes": "Checkboxes",
+        "dropDown": "Drop Down",
+        "linearScale": "Linear Scale"
+      },
+      "from": "From",
+      "to": "To",
+      "startLabel": "Start Label",
+      "endLabel": "End Label",
+      "addOption": "Add Option",
+      "required": "Required"
+    }
+  },
+
   "vacancyCancelDialog": {
     "title": "Are you sure?",
     "description": "Are you sure you want to exit the vacancy creation workflow? Any unsaved changes will be lost",
