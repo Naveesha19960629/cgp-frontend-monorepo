@@ -88,6 +88,10 @@
           "expired": "Expired",
           "onHold": "On Hold"
         }
+      },
+      "statusOptions": {
+        "active": "Active",
+        "inactive": "Inactive"
       }
     }
   },

@@ -26,4 +26,6 @@ export { default as createVacancyColumns } from '@/views/vacancies/components/va
 export { default as VacancyTablePagination } from '@/views/vacancies/components/vacancy-table-pagination';
 export { default as VacancyDataTable } from '@/views/vacancies/components/vacancy-data-table';
 export { default as VacancyFilteringSection } from '@/views/vacancies/components/vacancy-filtering-section';
+export { default as VacancyStatusBadge } from '@/views/vacancies/components/vacancy-status-badge';
+export { default as VacancyActiveToggle } from '@/views/vacancies/components/vacancy-active-toggle';
 export * from '@/views/vacancies/components/dialogs';

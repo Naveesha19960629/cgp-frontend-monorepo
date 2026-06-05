@@ -1,25 +1,17 @@
 import { ChevronDown, ChevronUp } from 'lucide-react';
 
 import { VacancyTableAction } from '@/views/vacancies';
+import VacancyActiveToggle from '@/views/vacancies/components/vacancy-active-toggle';
+import VacancyStatusBadge from '@/views/vacancies/components/vacancy-status-badge';
 import type {
   CreateColumnsOptions,
   SortableHeaderProps,
   VacancyTableColumn,
 } from '@/views/vacancies/types';
 
-import { Badge } from '@cgp/ui-kit/components/ui/badge';
 import { Button } from '@cgp/ui-kit/components/ui/button';
 import { Checkbox } from '@cgp/ui-kit/components/ui/checkbox';
-import { cn } from '@cgp/ui-kit/lib/utils';
 import { type ColumnDef } from '@tanstack/react-table';
-
-const STATUS_VARIANT_MAP: Record<string, string> = {
-  draft: 'bg-slate-100 text-slate-600 border-slate-300',
-  unpublished: 'bg-yellow-100 text-yellow-600 border-yellow-200',
-  live: 'bg-emerald-100 border-emerald-300 text-emerald-600',
-  expired: 'bg-[#33260317] text-[#492503] border-[#38230021]',
-  on_hold: 'bg-blue-100 border-blue-200 text-blue-500',
-};
 
 function SortableHeader({
   label,
@@ -300,22 +292,15 @@ const createVacancyColumns = ({
     accessorKey: 'status',
     header: t('vacancies.table.columns.status'),
     cell: ({ row }) => {
-      const status = row.original.status;
-      const variantClass =
-        STATUS_VARIANT_MAP[status.toLowerCase()] ??
-        'bg-slate-100 text-slate-700';
+      const { status } = row.original;
       return (
-        <Badge
-          className={cn(
-            `border-none px-3 py-1 text-xs font-medium`,
-            variantClass
-          )}
-        >
-          {status}
-        </Badge>
+        <div className="flex w-full items-center justify-between gap-2">
+          <VacancyStatusBadge status={status} />
+          <VacancyActiveToggle isActive={status.toLowerCase() === 'live'} />
+        </div>
       );
     },
-    size: 120,
+    size: 240,
   },
   {
     id: 'actions',
