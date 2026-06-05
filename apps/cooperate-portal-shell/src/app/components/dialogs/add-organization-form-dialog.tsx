@@ -57,7 +57,6 @@ export default function AddOrganizationFormDialog({
   organizationName,
 }: Readonly<AddOrganizationFormDialogProps>) {
   const { t } = useTranslation();
-  const [wasNameTruncated, setWasNameTruncated] = useState(false);
   const [openTruncationTooltip, setOpenTruncationTooltip] = useState(false);
   const truncationCloseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -80,6 +79,12 @@ export default function AddOrganizationFormDialog({
     useLocationsQuery(locationsSearch);
 
   const locationOptions: LocationOption[] = locationsData ?? [];
+
+  // Derived during render — avoids syncing this flag back into state inside an effect.
+  const wasNameTruncated =
+    open && organizationName
+      ? removeEmoji(organizationName).length > 200
+      : false;
 
   const { form, onSubmit } = useOrganizationForm(data => {
     setLocationsSearch('');
@@ -109,12 +114,8 @@ export default function AddOrganizationFormDialog({
 
   useEffect(() => {
     if (open && organizationName) {
-      const cleaned = removeEmoji(organizationName);
-      const truncated = cleaned.slice(0, 200);
+      const truncated = removeEmoji(organizationName).slice(0, 200);
       form.setValue('name', truncated);
-      setWasNameTruncated(cleaned.length > 200);
-    } else if (!open) {
-      setWasNameTruncated(false);
     }
   }, [open, organizationName, form]);
 
@@ -168,7 +169,7 @@ export default function AddOrganizationFormDialog({
               <form
                 id="add-organization-form"
                 className="space-y-6"
-                onSubmit={onSubmit}
+                onSubmit={e => void onSubmit(e)}
               >
                 <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2">
                   <FormField

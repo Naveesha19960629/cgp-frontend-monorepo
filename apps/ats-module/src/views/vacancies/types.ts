@@ -372,6 +372,12 @@ interface SocietyCreateResponse {
   source: string;
 }
 
+interface SportItem {
+  id: string;
+  name: string;
+  source: string;
+}
+
 type PatentStatus = 'PATENT_PENDING' | 'PATENT_ISSUED';
 
 interface PatentIndustryOption {
@@ -708,6 +714,7 @@ export type {
   IndustryCreateResponse,
   SocietyItem,
   SocietyCreateResponse,
+  SportItem,
   PatentStatus,
   PatentIndustryOption,
   PatentStatusOption,
