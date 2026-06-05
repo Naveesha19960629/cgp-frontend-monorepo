@@ -70,6 +70,15 @@ export function AddLicenseCertDialog({
         ? t('licenseCertificates.addLicenseCertDialog.nameCertification')
         : t('licenseCertificates.addLicenseCertDialog.nameDefault');
 
+  const namePlaceholder =
+    certType === 'LICENSE'
+      ? t('licenseCertificates.addLicenseCertDialog.namePlaceholderLicense')
+      : certType === 'CERTIFICATION'
+        ? t(
+            'licenseCertificates.addLicenseCertDialog.namePlaceholderCertification'
+          )
+        : t('licenseCertificates.addLicenseCertDialog.namePlaceholderDefault');
+
   const handleAdd = () => {
     let hasError = false;
 
@@ -192,9 +201,7 @@ export function AddLicenseCertDialog({
                 <Input
                   className="h-11 shadow-none"
                   maxLength={200}
-                  placeholder={t(
-                    'licenseCertificates.addLicenseCertDialog.namePlaceholder'
-                  )}
+                  placeholder={namePlaceholder}
                   value={name}
                   onChange={e => {
                     const val = removeEmoji(e.target.value);

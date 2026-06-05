@@ -18,6 +18,7 @@ export { useCreateCareerPathMutation } from '@/views/vacancies/hooks/mutations/u
 export { useCreateLanguageMutation } from '@/views/vacancies/hooks/mutations/use-create-language-mutation';
 export { useCreateCauseMutation } from '@/views/vacancies/hooks/mutations/use-create-cause-mutation';
 export { useCreateHobbyMutation } from '@/views/vacancies/hooks/mutations/use-create-hobby-mutation';
+export { useCreateVacancyMutation } from '@/views/vacancies/hooks/mutations/use-create-vacancy-mutation';
 export { useAddDisciplineMutation } from '@/views/vacancies/hooks/mutations/use-add-discipline-mutation';
 export { useAddCareerPathMutation } from '@/views/vacancies/hooks/mutations/use-add-career-path-mutation';
 export { useAddRoleMutation } from '@/views/vacancies/hooks/mutations/use-add-role-mutation';

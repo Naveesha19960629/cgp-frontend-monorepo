@@ -1,5 +1,8 @@
 export { useGendersQuery } from '@/views/vacancies/hooks/queries/use-gender-query';
-export { useIndustriesQuery } from '@/views/vacancies/hooks/queries/use-industries-query';
+export {
+  useIndustriesQuery,
+  useIndustriesSearch,
+} from '@/views/vacancies/hooks/queries/use-industries-query';
 export { useMaritalStatusesQuery } from '@/views/vacancies/hooks/queries/use-marital-statuses-query';
 export {
   usePlacesCityQuery,

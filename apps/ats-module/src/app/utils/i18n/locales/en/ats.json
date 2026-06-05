@@ -442,7 +442,9 @@
       "nameLicense": "Name of the License",
       "nameCertification": "Name of the Certification",
       "nameDefault": "Name of the expected License/Certification",
-      "namePlaceholder": "Enter name",
+      "namePlaceholderDefault": "Enter name of the expected license/certification",
+      "namePlaceholderLicense": "Enter name of the expected license",
+      "namePlaceholderCertification": "Enter name of the expected certification",
       "typeRequired": "Type is required.",
       "nameRequired": "Name of the expected license/certification is required.",
       "cancel": "Cancel",
@@ -614,6 +616,58 @@
       "message": "You've enabled this section but haven't filled any fields. This section will be disabled for this vacancy and no data will be collected from candidates",
       "cancel": "Cancel",
       "disable": "Disable"
+    }
+  },
+  "preferredIndustries": {
+    "title": "Preferred Industries",
+    "dataTakenFromCandidate": "If selected, no manual input is required, and data will be taken from the candidate profile",
+    "sectionLabel": "Industries",
+    "input": {
+      "placeholder": "Select or add industries",
+      "addNew": "Add \"{{value}}\"",
+      "typeToSearch": "Type to search industries…"
+    },
+    "validation": {
+      "maxIndustries": "Exceeded maximum of {{max}} industries"
+    },
+    "chip": {
+      "remove": "Remove {{name}}"
+    },
+    "confirmDisableDialog": {
+      "title": "Are you sure?",
+      "message": "Are you sure you want to disable this section? Disabling this section will permanently remove all added data. This action cannot be undone",
+      "cancel": "Cancel",
+      "disable": "Disable"
+    },
+    "emptyDisableDialog": {
+      "title": "Are you sure?",
+      "message": "You've enabled this section but haven't filled any fields. This section will be disabled for this vacancy and no data will be collected from candidates",
+      "cancel": "Cancel",
+      "disable": "Disable"
+    }
+  },
+  "scheduleVacancy": {
+    "title": "Schedule Vacancy",
+    "publishDateLabel": "Scheduled Publish Date & Time",
+    "publishDatePlaceholder": "Select schedule publish date & time",
+    "expirationDateLabel": "Expiration Date & Time",
+    "expirationDatePlaceholder": "Expiration date & time",
+    "timeLabel": "Schedule Time",
+    "timePlaceholder": "hh:mm:ss AM/PM",
+    "create": "Create",
+    "cancel": "Cancel",
+    "validation": {
+      "publishDateRequired": "Scheduled Publish Date & Time is required.",
+      "expirationDateRequired": "Expiration Date & Time is required.",
+      "expirationAfterPublish": "Expiration Date & Time must be after Scheduled Publish Date & Time."
+    },
+    "notifications": {
+      "successTitle": "Successfully Created",
+      "successMessage": "Vacancy has been successfully created.",
+      "apiErrorTitle": "Try Again",
+      "apiErrorMessage": "Some changes could not be saved. Please try again.",
+      "networkErrorTitle": "Try Again",
+      "networkErrorMessage": "Some changes could not be saved. Please retry."
     }
   },
   "projectsRequirements": {

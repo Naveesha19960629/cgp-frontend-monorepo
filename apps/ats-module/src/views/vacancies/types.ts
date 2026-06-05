@@ -271,6 +271,18 @@ interface AddLicenseCertDialogProps {
   }) => void;
 }
 
+// ─── Schedule Vacancy ───────────────────────────────────────────────────────
+
+interface ScheduleVacancy {
+  schedulePublishAt: string; // ISO date string
+  expirationAt: string; // ISO date string
+}
+
+interface ScheduleVacancyPayload {
+  schedulePublishAt: string;
+  expirationAt: string;
+}
+
 // ─── Vacancy Form ─────────────────────────────────────────────────────────────
 
 interface VacancyForm {
@@ -285,9 +297,11 @@ interface VacancyForm {
   preferredLanguages?: PreferredLanguages;
   preferredCauses?: PreferredCauses;
   preferredHobbies?: PreferredHobbies;
+  preferredIndustries?: PreferredIndustries;
   patents?: preferredPatentsSchema;
   preferredHonoursAwards?: preferredHonoursAwardsSchema;
   licenseCertificates?: LicenseCertificates[];
+  schedule?: ScheduleVacancy;
 }
 interface VacancyStep {
   readonly key: string;
@@ -526,6 +540,20 @@ interface PreferredHobbies {
   hobbies: HobbyEntry[];
 }
 
+// ─── Preferred Industries ─────────────────────────────────────────────────────
+
+interface IndustryEntry {
+  id: string;
+  label: string;
+  source?: string;
+}
+
+interface PreferredIndustries {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  industries: IndustryEntry[];
+}
+
 interface AddSchoolDialogProps {
   open: boolean;
   initialName: string;
@@ -753,6 +781,8 @@ export type {
   HobbyItem,
   HobbyEntry,
   PreferredHobbies,
+  IndustryEntry,
+  PreferredIndustries,
   ProjectRef,
   ProjectEntry,
   ProjectRequirement,
@@ -767,6 +797,8 @@ export type {
   PublicationResponse,
   VacancyCancelDialogProps,
   MaritalStatusItem,
+  ScheduleVacancy,
+  ScheduleVacancyPayload,
   PlaceItem,
   PlaceCityResult,
   PlaceStateResult,

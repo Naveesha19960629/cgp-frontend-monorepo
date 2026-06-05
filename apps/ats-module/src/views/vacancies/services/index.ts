@@ -8,6 +8,7 @@ export { careerPathService } from '@/views/vacancies/services/career-path.servic
 export { languageService } from '@/views/vacancies/services/language.service';
 export { causeService } from '@/views/vacancies/services/cause.service';
 export { hobbyService } from '@/views/vacancies/services/hobby.service';
+export { vacancyService } from '@/views/vacancies/services/vacancy.service';
 export { locationService } from '@/views/vacancies/services/location.service';
 export type { LocationOption } from '@/views/vacancies/services/location.service';
 export { organizationService } from '@/views/vacancies/services/organization.service';
