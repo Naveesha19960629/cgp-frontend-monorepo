@@ -62,8 +62,9 @@ export default function VacanciesPage() {
         sortBy: params.sortBy,
         sortOrder: params.sortOrder,
         onSort: handleSort,
+        t,
       }),
-    [params.sortBy, params.sortOrder, handleSort]
+    [params.sortBy, params.sortOrder, handleSort, t]
   );
 
   const table = useReactTable<VacancyTableColumn>({

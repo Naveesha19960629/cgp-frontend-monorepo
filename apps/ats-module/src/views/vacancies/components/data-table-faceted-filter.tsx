@@ -1,5 +1,7 @@
 import { Check, ChevronDown } from 'lucide-react';
 
+import { useTranslation } from 'react-i18next';
+
 import type { DataTableFacetedFilterProps } from '@/views/vacancies/types';
 
 import { Button } from '@cgp/ui-kit/components/ui/button';
@@ -28,6 +30,7 @@ export default function DataTableFacetedFilter({
   isLoading,
   hideSearch = false,
 }: DataTableFacetedFilterProps) {
+  const { t } = useTranslation('ats');
   const selectedSet = new Set(selectedValues);
 
   return (
@@ -52,7 +55,9 @@ export default function DataTableFacetedFilter({
         >
           {!hideSearch && (
             <CommandInput
-              placeholder={`Search ${title?.toLowerCase()}...`}
+              placeholder={t('vacancies.table.filter.filterSearchPlaceholder', {
+                title: title?.toLowerCase(),
+              })}
               {...(onSearchChange
                 ? { value: searchValue, onValueChange: onSearchChange }
                 : {})}
@@ -60,7 +65,9 @@ export default function DataTableFacetedFilter({
           )}
           <CommandList className="overflow-auto pt-3 pb-3 pl-3">
             <CommandEmpty>
-              {isLoading ? 'Loading...' : 'No results found.'}
+              {isLoading
+                ? t('vacancies.table.filter.loading')
+                : t('vacancies.table.filter.noResults')}
             </CommandEmpty>
             <CommandGroup className="p-0">
               {options.map(option => {

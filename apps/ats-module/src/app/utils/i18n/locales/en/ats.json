@@ -6,11 +6,25 @@
     "back": "Back",
     "cancel": "Cancel",
     "next": "Next",
+    "submit": "Submit",
+    "addEntry": "Add entry",
     "loading": "Searching...",
     "noData": "No results found",
     "noDataTitle": "No Data Found",
     "noDataDescription": "We couldn't find any matching data. Try adjusting your search data",
     "errorTitle": "Try Again"
+  },
+  "organization": {
+    "addOrganizationTitle": "Add Organization",
+    "addOrganizationDescription": "Add a new organization",
+    "nameLabel": "Organization Name",
+    "namePlaceholder": "Enter your organization name",
+    "nameTruncatedMessage": "The organization name you entered exceeds the 200 character limit. Only the first 200 characters are displayed, and the remaining characters have been removed.",
+    "nameTruncationWarning": "Name truncation warning",
+    "locationLabel": "Organization Location",
+    "locationPlaceholder": "Select organization location",
+    "urlLabel": "Organization URL",
+    "urlPlaceholder": "Enter your organization URL"
   },
   "vacancies": {
     "title": "Vacancies",
@@ -24,6 +38,57 @@
       "titleRequired": "Title is required",
       "cancelButton": "Cancel",
       "nextButton": "Next"
+    },
+    "table": {
+      "selectAll": "Select all",
+      "selectRow": "Select row",
+      "columns": {
+        "id": "ID",
+        "title": "Title",
+        "jobTitle": "Job Title",
+        "discipline": "Discipline",
+        "careerPath": "Career Path",
+        "role": "Role",
+        "createdAt": "Created At",
+        "createdBy": "Created By",
+        "schedulePublishAt": "Schedule Publish Date & Time",
+        "expirationAt": "Expire Publish Date & Time",
+        "applicants": "Applicants",
+        "updatedAt": "Last Updated Date",
+        "updatedBy": "Last Updated By",
+        "version": "Version",
+        "status": "Status"
+      },
+      "actions": {
+        "openMenu": "Open menu",
+        "versionHistory": "Version History",
+        "matchCandidate": "Match Candidate",
+        "copyLink": "Copy Link",
+        "makeACopy": "Make a Copy",
+        "edit": "Edit",
+        "editJD": "Edit JD",
+        "delete": "Delete"
+      },
+      "pagination": {
+        "back": "Back",
+        "next": "Next"
+      },
+      "filter": {
+        "careerPath": "Career Path",
+        "discipline": "Discipline",
+        "status": "Status",
+        "searchPlaceholder": "Search",
+        "filterSearchPlaceholder": "Search {{title}}...",
+        "loading": "Loading...",
+        "noResults": "No results found.",
+        "statusOptions": {
+          "draft": "Draft",
+          "unpublished": "Unpublished",
+          "live": "Live",
+          "expired": "Expired",
+          "onHold": "On Hold"
+        }
+      }
     }
   },
 

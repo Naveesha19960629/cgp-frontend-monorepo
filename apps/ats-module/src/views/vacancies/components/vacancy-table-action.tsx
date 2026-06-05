@@ -8,6 +8,8 @@ import {
   UserSearch,
 } from 'lucide-react';
 
+import { useTranslation } from 'react-i18next';
+
 import type { VacancyTableActionProps } from '@/views/vacancies/types';
 
 import { Button } from '@cgp/ui-kit/components/ui/button';
@@ -29,11 +31,15 @@ export default function VacancyTableAction({
   onEditJD,
   onDelete,
 }: VacancyTableActionProps) {
+  const { t } = useTranslation('ats');
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="size-8 p-0">
-          <span className="sr-only">Open menu</span>
+          <span className="sr-only">
+            {t('vacancies.table.actions.openMenu')}
+          </span>
           <MoreVertical className="size-4" />
         </Button>
       </DropdownMenuTrigger>
@@ -46,21 +52,21 @@ export default function VacancyTableAction({
           onClick={onVersionHistory}
         >
           <History className="size-4 shrink-0" />
-          Version History
+          {t('vacancies.table.actions.versionHistory')}
         </DropdownMenuItem>
         <DropdownMenuItem
           className="gap-2 px-6 py-3 text-sm font-medium text-slate-500"
           onClick={onMatchCandidate}
         >
           <UserSearch className="size-4 shrink-0" />
-          Match Candidate
+          {t('vacancies.table.actions.matchCandidate')}
         </DropdownMenuItem>
         <DropdownMenuItem
           className="gap-2 px-6 py-3 text-sm font-medium text-slate-500"
           onClick={onCopyLink}
         >
           <Link2 className="size-4 shrink-0" />
-          Copy Link
+          {t('vacancies.table.actions.copyLink')}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
@@ -68,28 +74,28 @@ export default function VacancyTableAction({
           onClick={onMakeACopy}
         >
           <Copy className="size-4 shrink-0" />
-          Make a Copy
+          {t('vacancies.table.actions.makeACopy')}
         </DropdownMenuItem>
         <DropdownMenuItem
           className="gap-2 px-6 py-3 text-sm font-medium text-slate-500"
           onClick={onEdit}
         >
           <Edit2 className="size-4 shrink-0" />
-          Edit
+          {t('vacancies.table.actions.edit')}
         </DropdownMenuItem>
         <DropdownMenuItem
           className="gap-2 px-6 py-3 text-sm font-medium text-slate-500"
           onClick={onEditJD}
         >
           <Edit2 className="size-4 shrink-0" />
-          Edit JD
+          {t('vacancies.table.actions.editJD')}
         </DropdownMenuItem>
         <DropdownMenuItem
           className="gap-2 px-6 py-3 text-sm font-medium text-[#e11d48] focus:text-[#e11d48]"
           onClick={onDelete}
         >
           <Trash2 className="size-4 shrink-0" />
-          Delete
+          {t('vacancies.table.actions.delete')}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

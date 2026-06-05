@@ -1,5 +1,7 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
+import { useTranslation } from 'react-i18next';
+
 import type { VacancyTablePaginationProps } from '@/views/vacancies/types';
 
 import { Button } from '@cgp/ui-kit/components/ui/button';
@@ -47,6 +49,7 @@ export default function VacancyTablePagination({
   totalPages,
   onPageChange,
 }: VacancyTablePaginationProps) {
+  const { t } = useTranslation('ats');
   const effectiveTotal = Math.max(1, totalPages);
   const pageNumbers = getPageNumbers(currentPage, effectiveTotal);
 
@@ -60,7 +63,7 @@ export default function VacancyTablePagination({
         disabled={currentPage === 0}
       >
         <ChevronLeft className="size-5" />
-        Back
+        {t('vacancies.table.pagination.back')}
       </Button>
 
       <div className="flex items-center gap-1">
@@ -98,7 +101,7 @@ export default function VacancyTablePagination({
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage >= effectiveTotal - 1}
       >
-        Next
+        {t('vacancies.table.pagination.next')}
         <ChevronRight className="size-4" />
       </Button>
     </div>

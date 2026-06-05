@@ -57,6 +57,7 @@ const createVacancyColumns = ({
   sortBy,
   sortOrder,
   onSort,
+  t,
 }: CreateColumnsOptions): ColumnDef<VacancyTableColumn>[] => [
   {
     id: 'select',
@@ -67,14 +68,14 @@ const createVacancyColumns = ({
           (table.getIsSomePageRowsSelected() && 'indeterminate')
         }
         onCheckedChange={value => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
+        aria-label={t('vacancies.table.selectAll')}
       />
     ),
     cell: ({ row }) => (
       <Checkbox
         checked={row.getIsSelected()}
         onCheckedChange={value => row.toggleSelected(!!value)}
-        aria-label="Select row"
+        aria-label={t('vacancies.table.selectRow')}
       />
     ),
     enableSorting: false,
@@ -83,7 +84,7 @@ const createVacancyColumns = ({
   {
     id: 'vacancyId',
     accessorKey: 'vacancyId',
-    header: 'ID',
+    header: t('vacancies.table.columns.id'),
     cell: ({ row }) => {
       const id = row.original.vacancyId;
       const shortId = id.slice(0, 4).toUpperCase();
@@ -95,7 +96,7 @@ const createVacancyColumns = ({
     accessorKey: 'title',
     header: () => (
       <SortableHeader
-        label="Title"
+        label={t('vacancies.table.columns.title')}
         columnKey="title"
         currentSortBy={sortBy}
         currentSortOrder={sortOrder}
@@ -113,7 +114,7 @@ const createVacancyColumns = ({
     accessorKey: 'jobTitle',
     header: () => (
       <SortableHeader
-        label="Job Title"
+        label={t('vacancies.table.columns.jobTitle')}
         columnKey="jobTitle"
         currentSortBy={sortBy}
         currentSortOrder={sortOrder}
@@ -129,7 +130,7 @@ const createVacancyColumns = ({
     accessorKey: 'discipline',
     header: () => (
       <SortableHeader
-        label="Discipline"
+        label={t('vacancies.table.columns.discipline')}
         columnKey="discipline"
         currentSortBy={sortBy}
         currentSortOrder={sortOrder}
@@ -143,7 +144,7 @@ const createVacancyColumns = ({
   },
   {
     accessorKey: 'careerPath',
-    header: 'Career Path',
+    header: t('vacancies.table.columns.careerPath'),
     cell: ({ row }) => (
       <span className="text-sm text-slate-600">{row.original.careerPath}</span>
     ),
@@ -153,7 +154,7 @@ const createVacancyColumns = ({
     accessorKey: 'role',
     header: () => (
       <SortableHeader
-        label="Role"
+        label={t('vacancies.table.columns.role')}
         columnKey="role"
         currentSortBy={sortBy}
         currentSortOrder={sortOrder}
@@ -169,7 +170,7 @@ const createVacancyColumns = ({
     accessorKey: 'createdAt',
     header: () => (
       <SortableHeader
-        label="Created At"
+        label={t('vacancies.table.columns.createdAt')}
         columnKey="createdAt"
         currentSortBy={sortBy}
         currentSortOrder={sortOrder}
@@ -185,7 +186,7 @@ const createVacancyColumns = ({
   },
   {
     accessorKey: 'createdBy',
-    header: 'Created By',
+    header: t('vacancies.table.columns.createdBy'),
     cell: ({ row }) => (
       <span className="text-sm text-slate-600">{row.original.createdBy}</span>
     ),
@@ -195,7 +196,7 @@ const createVacancyColumns = ({
     accessorKey: 'schedulePublishAt',
     header: () => (
       <SortableHeader
-        label="Schedule Publish Date & Time"
+        label={t('vacancies.table.columns.schedulePublishAt')}
         columnKey="schedulePublishAt"
         currentSortBy={sortBy}
         currentSortOrder={sortOrder}
@@ -213,7 +214,7 @@ const createVacancyColumns = ({
     accessorKey: 'expirationAt',
     header: () => (
       <SortableHeader
-        label="Expire Publish Date & Time"
+        label={t('vacancies.table.columns.expirationAt')}
         columnKey="expirationAt"
         currentSortBy={sortBy}
         currentSortOrder={sortOrder}
@@ -231,7 +232,7 @@ const createVacancyColumns = ({
     accessorKey: 'applicantCount',
     header: () => (
       <SortableHeader
-        label="Applicants"
+        label={t('vacancies.table.columns.applicants')}
         columnKey="applicantCount"
         currentSortBy={sortBy}
         currentSortOrder={sortOrder}
@@ -249,7 +250,7 @@ const createVacancyColumns = ({
     accessorKey: 'updatedAt',
     header: () => (
       <SortableHeader
-        label="Last Updated Date"
+        label={t('vacancies.table.columns.updatedAt')}
         columnKey="updatedAt"
         currentSortBy={sortBy}
         currentSortOrder={sortOrder}
@@ -267,7 +268,7 @@ const createVacancyColumns = ({
     accessorKey: 'updatedBy',
     header: () => (
       <SortableHeader
-        label="Last Updated By"
+        label={t('vacancies.table.columns.updatedBy')}
         columnKey="updatedBy"
         currentSortBy={sortBy}
         currentSortOrder={sortOrder}
@@ -283,7 +284,7 @@ const createVacancyColumns = ({
     accessorKey: 'version',
     header: () => (
       <SortableHeader
-        label="Version"
+        label={t('vacancies.table.columns.version')}
         columnKey="version"
         currentSortBy={sortBy}
         currentSortOrder={sortOrder}
@@ -297,7 +298,7 @@ const createVacancyColumns = ({
   },
   {
     accessorKey: 'status',
-    header: 'Status',
+    header: t('vacancies.table.columns.status'),
     cell: ({ row }) => {
       const status = row.original.status;
       const variantClass =

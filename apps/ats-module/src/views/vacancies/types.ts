@@ -613,6 +613,7 @@ interface CreateColumnsOptions {
   sortBy: string;
   sortOrder: 'asc' | 'desc';
   onSort: (columnKey: string) => void;
+  t: (key: string) => string;
 }
 
 export type {
