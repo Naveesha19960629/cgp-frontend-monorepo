@@ -106,7 +106,7 @@ export default function VacancyDataTable<TData>({
   };
 
   return (
-    <div ref={scrollRootRef}>
+    <div ref={scrollRootRef} className="h-full">
       <ScrollArea className="pd-4 h-full rounded-md border" type="auto">
         <table
           data-slot="table"
@@ -153,6 +153,7 @@ export default function VacancyDataTable<TData>({
                   <TableRow
                     key={row.id}
                     data-state={row.getIsSelected() && 'selected'}
+                    className="hover:bg-transparent"
                   >
                     {row.getVisibleCells().map(cell => (
                       <TableCell

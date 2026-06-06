@@ -48,21 +48,21 @@ export default function VacancyTableAction({
         className="w-47 rounded-lg p-0 shadow-[0px_4px_30px_0px_rgba(0,0,0,0.16)]"
       >
         <DropdownMenuItem
-          className="gap-2 px-6 py-3 text-sm font-medium text-slate-500"
+          className="gap-2 px-3 py-3 text-sm font-medium text-slate-500"
           onClick={onVersionHistory}
         >
           <History className="size-4 shrink-0" />
           {t('vacancies.table.actions.versionHistory')}
         </DropdownMenuItem>
         <DropdownMenuItem
-          className="gap-2 px-6 py-3 text-sm font-medium text-slate-500"
+          className="gap-2 px-3 py-3 text-sm font-medium text-slate-500"
           onClick={onMatchCandidate}
         >
           <UserSearch className="size-4 shrink-0" />
           {t('vacancies.table.actions.matchCandidate')}
         </DropdownMenuItem>
         <DropdownMenuItem
-          className="gap-2 px-6 py-3 text-sm font-medium text-slate-500"
+          className="gap-2 px-3 py-3 text-sm font-medium text-slate-500"
           onClick={onCopyLink}
         >
           <Link2 className="size-4 shrink-0" />
@@ -70,28 +70,28 @@ export default function VacancyTableAction({
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
-          className="gap-2 px-6 py-3 text-sm font-medium text-slate-500"
+          className="gap-2 px-3 py-3 text-sm font-medium text-slate-500"
           onClick={onMakeACopy}
         >
           <Copy className="size-4 shrink-0" />
           {t('vacancies.table.actions.makeACopy')}
         </DropdownMenuItem>
         <DropdownMenuItem
-          className="gap-2 px-6 py-3 text-sm font-medium text-slate-500"
+          className="gap-2 px-3 py-3 text-sm font-medium text-slate-500"
           onClick={onEdit}
         >
           <Edit2 className="size-4 shrink-0" />
           {t('vacancies.table.actions.edit')}
         </DropdownMenuItem>
         <DropdownMenuItem
-          className="gap-2 px-6 py-3 text-sm font-medium text-slate-500"
+          className="gap-2 px-3 py-3 text-sm font-medium text-slate-500"
           onClick={onEditJD}
         >
           <Edit2 className="size-4 shrink-0" />
           {t('vacancies.table.actions.editJD')}
         </DropdownMenuItem>
         <DropdownMenuItem
-          className="gap-2 px-6 py-3 text-sm font-medium text-[#e11d48] focus:text-[#e11d48]"
+          className="gap-2 px-3 py-3 text-sm font-medium text-[#e11d48] focus:text-[#e11d48]"
           onClick={onDelete}
         >
           <Trash2 className="size-4 shrink-0" />
