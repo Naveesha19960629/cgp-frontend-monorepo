@@ -11,6 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from '@cgp/ui-kit/components/ui/table';
+import { cn } from '@cgp/ui-kit/lib/utils';
 import { type Column, flexRender } from '@tanstack/react-table';
 
 const SKELETON_ROWS = 12;
@@ -58,6 +59,25 @@ export default function VacancyDataTable<TData>({
     const isPinned = column.getIsPinned();
     const size = column.getSize();
 
+    // Title column is flex: it expands to fill available space on wide viewports
+    // while keeping 317 px as its minimum (matching its defined size).
+    if (column.id === 'title') {
+      const base: React.CSSProperties = {
+        minWidth: `${size}px`,
+        width: 'auto',
+      };
+      if (isHeader) {
+        return {
+          ...base,
+          position: 'sticky',
+          top: 0,
+          zIndex: 3,
+          backgroundColor: '#F1F5F9',
+        };
+      }
+      return base;
+    }
+
     // Always enforce explicit width so column.getStart() / column.getAfter()
     // offsets match the actual rendered widths (prevents sticky gaps).
     const base: React.CSSProperties = {
@@ -74,7 +94,7 @@ export default function VacancyDataTable<TData>({
         position: 'sticky',
         top: 0,
         zIndex: 3,
-        backgroundColor: '#fff',
+        backgroundColor: '#F1F5F9',
       };
     }
 
@@ -95,7 +115,7 @@ export default function VacancyDataTable<TData>({
       right: isPinned === 'right' ? `${column.getAfter('right')}px` : undefined,
       // z-index 4: pinned header corners sit above non-pinned headers (3) and pinned body (1).
       zIndex: isHeader ? 4 : 1,
-      backgroundColor: '#fff',
+      backgroundColor: isHeader ? '#F1F5F9' : '#fff',
       boxShadow:
         isLastLeftPinned && canScrollLeft
           ? '6px 0 6px rgba(0,0,0,0.03)'
@@ -107,71 +127,84 @@ export default function VacancyDataTable<TData>({
 
   return (
     <div ref={scrollRootRef} className="h-full">
-      <ScrollArea className="pd-4 h-full rounded-md border" type="auto">
-        <table
-          data-slot="table"
-          className="w-full caption-bottom text-sm"
-          style={{
-            width: table.getTotalSize(),
-            tableLayout: 'fixed',
-            borderCollapse: 'separate',
-            borderSpacing: 0,
-          }}
-        >
-          <TableHeader>
-            {table.getHeaderGroups().map(headerGroup => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map(header => (
-                  <TableHead
-                    className="text-base font-bold text-slate-900"
-                    key={header.id}
-                    style={getCellStyles(header.column, true)}
-                  >
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                  </TableHead>
-                ))}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {isLoading || !table.getRowModel().rows?.length
-              ? Array.from({ length: SKELETON_ROWS }).map((_, i) => (
-                  <TableRow key={i}>
-                    {table.getAllColumns().map(column => (
-                      <TableCell key={column.id} style={getCellStyles(column)}>
-                        <Skeleton className="h-4 w-full rounded" />
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              : table.getRowModel().rows.map(row => (
-                  <TableRow
-                    key={row.id}
-                    data-state={row.getIsSelected() && 'selected'}
-                    className="hover:bg-transparent"
-                  >
-                    {row.getVisibleCells().map(cell => (
-                      <TableCell
-                        key={cell.id}
-                        style={getCellStyles(cell.column)}
-                        className="overflow-hidden text-ellipsis whitespace-nowrap"
-                      >
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))}
-          </TableBody>
-        </table>
-      </ScrollArea>
+      <div className="h-full overflow-hidden rounded-md border border-slate-200">
+        <ScrollArea className="h-full" type="auto">
+          <table
+            data-slot="table"
+            className="w-full caption-bottom text-sm"
+            style={{
+              width: '100%',
+              minWidth: table.getTotalSize(),
+              tableLayout: 'fixed',
+              borderCollapse: 'separate',
+              borderSpacing: 0,
+            }}
+          >
+            <TableHeader>
+              {table.getHeaderGroups().map(headerGroup => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map(header => (
+                    <TableHead
+                      className="h-11 border-b bg-slate-300 text-base font-bold text-slate-900"
+                      key={header.id}
+                      style={getCellStyles(header.column, true)}
+                    >
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                    </TableHead>
+                  ))}
+                </TableRow>
+              ))}
+            </TableHeader>
+            <TableBody>
+              {isLoading || !table.getRowModel().rows?.length
+                ? Array.from({ length: SKELETON_ROWS }).map((_, i) => (
+                    <TableRow key={i} className="h-18">
+                      {table.getAllColumns().map(column => (
+                        <TableCell
+                          key={column.id}
+                          style={getCellStyles(column)}
+                          className={cn(
+                            i < SKELETON_ROWS - 1 && 'border-b border-slate-200'
+                          )}
+                        >
+                          <Skeleton className="h-4 w-full rounded" />
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))
+                : table.getRowModel().rows.map((row, rowIndex, rows) => (
+                    <TableRow
+                      key={row.id}
+                      data-state={row.getIsSelected() && 'selected'}
+                      className="h-18 hover:bg-transparent"
+                    >
+                      {row.getVisibleCells().map(cell => (
+                        <TableCell
+                          key={cell.id}
+                          style={getCellStyles(cell.column)}
+                          className={cn(
+                            'overflow-hidden text-ellipsis whitespace-nowrap',
+                            rowIndex < rows.length - 1 &&
+                              'border-b border-slate-200'
+                          )}
+                        >
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          )}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))}
+            </TableBody>
+          </table>
+        </ScrollArea>
+      </div>
     </div>
   );
 }

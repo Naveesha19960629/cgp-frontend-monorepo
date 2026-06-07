@@ -54,7 +54,7 @@ export default function VacancyTablePagination({
   const pageNumbers = getPageNumbers(currentPage, effectiveTotal);
 
   return (
-    <div className="flex items-center justify-between border-t border-slate-200 pt-5">
+    <div className="flex items-center justify-between pt-5">
       <Button
         variant="outline"
         size="sm"

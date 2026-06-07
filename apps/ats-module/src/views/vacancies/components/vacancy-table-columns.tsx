@@ -60,6 +60,7 @@ const createVacancyColumns = ({
           (table.getIsSomePageRowsSelected() && 'indeterminate')
         }
         onCheckedChange={value => table.toggleAllPageRowsSelected(!!value)}
+        className="bg-white"
         aria-label={t('vacancies.table.selectAll')}
       />
     ),
@@ -71,7 +72,7 @@ const createVacancyColumns = ({
       />
     ),
     enableSorting: false,
-    size: 40,
+    size: 30,
   },
   {
     id: 'vacancyId',
@@ -290,17 +291,21 @@ const createVacancyColumns = ({
   },
   {
     accessorKey: 'status',
-    header: t('vacancies.table.columns.status'),
+    header: () => (
+      <div className="px-6">{t('vacancies.table.columns.status')}</div>
+    ),
     cell: ({ row }) => {
       const { status } = row.original;
       return (
-        <div className="flex w-full items-center justify-between gap-2">
-          <VacancyStatusBadge status={status} />
+        <div className="flex items-center gap-3 px-6">
+          <div className="min-w-30">
+            <VacancyStatusBadge status={status} />
+          </div>
           <VacancyActiveToggle isActive={status.toLowerCase() === 'live'} />
         </div>
       );
     },
-    size: 240,
+    size: 270,
   },
   {
     id: 'actions',
