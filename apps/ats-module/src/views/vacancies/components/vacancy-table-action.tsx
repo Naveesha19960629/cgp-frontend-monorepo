@@ -1,12 +1,6 @@
-import {
-  Copy,
-  Edit2,
-  History,
-  Link2,
-  MoreVertical,
-  Trash2,
-  UserSearch,
-} from 'lucide-react';
+import { History, MoreVertical, UserSearch } from 'lucide-react';
+
+import { Edit2, Link21, Simcard2, Trash } from 'iconsax-reactjs';
 
 import { useTranslation } from 'react-i18next';
 
@@ -17,7 +11,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@cgp/ui-kit/components/ui/dropdown-menu';
 
@@ -45,7 +38,7 @@ export default function VacancyTableAction({
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="end"
-        className="w-47 rounded-lg p-0 shadow-[0px_4px_30px_0px_rgba(0,0,0,0.16)]"
+        className="w-47.5 rounded-lg p-3 shadow-[0px_4px_30px_0px_rgba(0,0,0,0.16)]"
       >
         <DropdownMenuItem
           className="gap-2 px-3 py-3 text-sm font-medium text-slate-500"
@@ -65,15 +58,14 @@ export default function VacancyTableAction({
           className="gap-2 px-3 py-3 text-sm font-medium text-slate-500"
           onClick={onCopyLink}
         >
-          <Link2 className="size-4 shrink-0" />
+          <Link21 className="size-4 shrink-0" />
           {t('vacancies.table.actions.copyLink')}
         </DropdownMenuItem>
-        <DropdownMenuSeparator />
         <DropdownMenuItem
           className="gap-2 px-3 py-3 text-sm font-medium text-slate-500"
           onClick={onMakeACopy}
         >
-          <Copy className="size-4 shrink-0" />
+          <Simcard2 className="size-4 shrink-0" />
           {t('vacancies.table.actions.makeACopy')}
         </DropdownMenuItem>
         <DropdownMenuItem
@@ -94,7 +86,7 @@ export default function VacancyTableAction({
           className="gap-2 px-3 py-3 text-sm font-medium text-[#e11d48] focus:text-[#e11d48]"
           onClick={onDelete}
         >
-          <Trash2 className="size-4 shrink-0" />
+          <Trash className="size-4 shrink-0 text-[#e11d48]" />
           {t('vacancies.table.actions.delete')}
         </DropdownMenuItem>
       </DropdownMenuContent>
