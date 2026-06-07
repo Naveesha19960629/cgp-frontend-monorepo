@@ -38,8 +38,8 @@ function SortableHeader({
     >
       {label}
       <span className="flex flex-col">
-        <ChevronUp className={`size-4! ${upClass}`} />
-        <ChevronDown className={`-mt-2 size-4! ${downClass}`} />
+        <ChevronUp className={`size-4! ${upClass} text-slate-500`} />
+        <ChevronDown className={`-mt-2 size-4! ${downClass} text-slate-500`} />
       </span>
     </Button>
   );

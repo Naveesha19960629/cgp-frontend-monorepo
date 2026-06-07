@@ -63,7 +63,12 @@ export default function DataTableFacetedFilter({
                 : {})}
             />
           )}
-          <CommandList className="overflow-auto pt-3 pb-3 pl-3">
+          <CommandList
+            className={cn(
+              'overflow-auto pt-3 pb-3',
+              !isLoading && options.length > 0 && 'pl-3'
+            )}
+          >
             <CommandEmpty>
               {isLoading
                 ? t('vacancies.table.filter.loading')
