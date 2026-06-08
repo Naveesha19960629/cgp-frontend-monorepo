@@ -13,7 +13,6 @@ export { useSocietiesQuery } from '@/views/vacancies/hooks/queries/use-societies
 export { useSportsQuery } from '@/views/vacancies/hooks/queries/use-sports-query';
 export { useSkillsQuery } from '@/views/vacancies/hooks/queries/use-skills-query';
 export { useCareerPathsQuery } from '@/views/vacancies/hooks/queries/use-career-paths-query';
-export { useDisciplinesQuery } from '@/views/vacancies/hooks/queries/use-disciplines-query';
 export { useLanguagesQuery } from '@/views/vacancies/hooks/queries/use-languages-query';
 export { useCausesQuery } from '@/views/vacancies/hooks/queries/use-causes-query';
 export { useHobbiesQuery } from '@/views/vacancies/hooks/queries/use-hobbies-query';
