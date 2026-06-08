@@ -29,6 +29,10 @@
   "vacancies": {
     "title": "Vacancies",
     "createVacancyButton": "Create Vacancy",
+    "emptyState": {
+      "title": "No Vacancies Available",
+      "description": "There's nothing here yet. Once vacancy is added, it will appear in this section"
+    },
     "editVacancy": "Edit Vacancy",
     "createVacancy": {
       "heading": "Create Vacancy",

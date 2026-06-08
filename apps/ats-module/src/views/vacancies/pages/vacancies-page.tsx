@@ -9,6 +9,7 @@ import type { VacancyQueryParams, VacancyTableColumn } from '@/views/vacancies';
 import {
   VacancyDataTable,
   VacancyFilteringSection,
+  VacancyTableEmptyState,
   VacancyTablePagination,
   createVacancyColumns,
 } from '@/views/vacancies';
@@ -116,13 +117,19 @@ export default function VacanciesPage() {
         </div>
       </div>
       <div className="min-h-0 flex-1 overflow-hidden">
-        <VacancyDataTable table={table} isLoading={isLoading} />
+        {!isLoading && data.length === 0 ? (
+          <VacancyTableEmptyState />
+        ) : (
+          <VacancyDataTable table={table} isLoading={isLoading} />
+        )}
       </div>
-      <VacancyTablePagination
-        currentPage={params.page}
-        totalPages={totalPages}
-        onPageChange={page => void setParams({ page })}
-      />
+      {!isLoading && data.length > 0 && (
+        <VacancyTablePagination
+          currentPage={params.page}
+          totalPages={totalPages}
+          onPageChange={page => void setParams({ page })}
+        />
+      )}
     </section>
   );
 }

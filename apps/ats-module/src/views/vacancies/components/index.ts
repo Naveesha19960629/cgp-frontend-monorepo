@@ -28,4 +28,5 @@ export { default as VacancyDataTable } from '@/views/vacancies/components/vacanc
 export { default as VacancyFilteringSection } from '@/views/vacancies/components/vacancy-filtering-section';
 export { default as VacancyStatusBadge } from '@/views/vacancies/components/vacancy-status-badge';
 export { default as VacancyActiveToggle } from '@/views/vacancies/components/vacancy-active-toggle';
+export { default as VacancyTableEmptyState } from '@/views/vacancies/components/vacancy-table-empty-state';
 export * from '@/views/vacancies/components/dialogs';
