@@ -1,6 +1,5 @@
-import { ArrowLeft2, Calendar as CalendarIcon } from 'iconsax-reactjs';
+import { ArrowLeft2 } from 'iconsax-reactjs';
 
-import { useState } from 'react';
 import { Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
@@ -12,23 +11,13 @@ import {
   useScheduleVacancyForm,
 } from '@/views/vacancies/hooks';
 import type { StepProps } from '@/views/vacancies/types';
-import { formatDate } from '@/views/vacancies/utils';
+import { formatDisplayDateTime } from '@/views/vacancies/utils';
 
 import { ErrorToast, SuccessToast } from '@cgp/ui-kit/components/custom-toast';
 import { Button } from '@cgp/ui-kit/components/ui/button';
-import { Calendar } from '@cgp/ui-kit/components/ui/calendar';
-import { Input } from '@cgp/ui-kit/components/ui/input';
+import { CalendarWithTime } from '@cgp/ui-kit/components/ui/calendar-with-time';
 import { Label } from '@cgp/ui-kit/components/ui/label';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@cgp/ui-kit/components/ui/popover';
-import { applyTypography } from '@cgp/ui-kit/lib/typography';
-import { cn } from '@cgp/ui-kit/lib/utils';
-import { format, startOfToday } from 'date-fns';
-
-type DateField = 'publishDate' | 'expirationDate';
+import { startOfToday } from 'date-fns';
 
 export default function ScheduleVacancyStep({
   onBack,
@@ -36,13 +25,12 @@ export default function ScheduleVacancyStep({
 }: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
   const { form } = useVacancyForm();
-  const [openPopover, setOpenPopover] = useState<DateField | null>(null);
 
   const {
     control,
     handleSubmit,
     watch,
-    formState: { errors },
+    formState: { errors, isValid },
   } = useScheduleVacancyForm(form.schedule);
 
   const publishDate = watch('schedulePublishDate');
@@ -84,9 +72,9 @@ export default function ScheduleVacancyStep({
 
       {/* ── Body ────────────────────────────────────────────────────── */}
       <div className="flex-1 px-7 pb-6">
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        <div className="flex flex-wrap gap-4">
           {/* ── Scheduled Publish Date & Time ── */}
-          <div className="flex flex-col gap-1">
+          <div className="flex w-[304px] flex-col gap-1">
             <Label className="text-sm font-semibold text-slate-700">
               {t('scheduleVacancy.publishDateLabel')}{' '}
               <span className="text-destructive">*</span>
@@ -94,92 +82,51 @@ export default function ScheduleVacancyStep({
             <Controller
               control={control}
               name="schedulePublishDate"
-              render={({ field }) => (
-                <Popover
-                  modal
-                  open={openPopover === 'publishDate'}
-                  onOpenChange={open =>
-                    setOpenPopover(open ? 'publishDate' : null)
-                  }
-                >
-                  <PopoverTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className={cn(
-                        'border-input flex h-11 w-full items-center justify-between rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
-                        !field.value && 'text-slate-500',
-                        field.value && 'text-zinc-800',
-                        'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
-                        'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
-                        'dark:bg-input/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
-                        applyTypography('body-medium'),
-                        'shadow-none!'
+              render={({ field: dateField }) => (
+                <Controller
+                  control={control}
+                  name="schedulePublishTime"
+                  render={({ field: timeField }) => (
+                    <CalendarWithTime
+                      dateValue={dateField.value}
+                      onDateChange={dateField.onChange}
+                      timeValue={timeField.value}
+                      onTimeChange={timeField.onChange}
+                      timeLabel={t('scheduleVacancy.timeLabel')}
+                      dateButtonPlaceholder={t(
+                        'scheduleVacancy.publishDatePlaceholder'
                       )}
-                    >
-                      {field.value ? (
-                        formatDate(field.value)
-                      ) : (
-                        <span>
-                          {t('scheduleVacancy.publishDatePlaceholder')}
-                        </span>
+                      timeInputPlaceholder={t(
+                        'scheduleVacancy.timePlaceholder'
                       )}
-                      <CalendarIcon
-                        variant="Linear"
-                        size={20}
-                        className="text-zinc-800"
-                      />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={field.value ? new Date(field.value) : undefined}
-                      defaultMonth={
-                        field.value ? new Date(field.value) : new Date()
+                      disabledDates={date => date < startOfToday()}
+                      formattedDateDisplay={
+                        dateField.value
+                          ? formatDisplayDateTime(
+                              dateField.value,
+                              timeField.value
+                            )
+                          : undefined
                       }
-                      onSelect={date => {
-                        field.onChange(date ? format(date, 'yyyy-MM-dd') : '');
-                        setOpenPopover(null);
-                      }}
-                      disabled={date => date < startOfToday()}
-                      captionLayout="dropdown"
-                      startMonth={new Date()}
-                      endMonth={new Date(new Date().getFullYear() + 100, 11)}
+                      error={
+                        errors.schedulePublishDate?.message ||
+                        errors.schedulePublishTime?.message
+                          ? t(
+                              errors.schedulePublishDate?.message ||
+                                errors.schedulePublishTime?.message ||
+                                ''
+                            )
+                          : undefined
+                      }
                     />
-                    <div className="border-t px-3 py-3">
-                      <Label className="mb-1 block text-xs text-slate-600">
-                        {t('scheduleVacancy.timeLabel')}
-                      </Label>
-                      <Controller
-                        control={control}
-                        name="schedulePublishTime"
-                        render={({ field: timeField }) => (
-                          <Input
-                            {...timeField}
-                            placeholder={t('scheduleVacancy.timePlaceholder')}
-                            className="h-9 text-sm"
-                          />
-                        )}
-                      />
-                    </div>
-                  </PopoverContent>
-                </Popover>
+                  )}
+                />
               )}
             />
-            {(errors.schedulePublishDate ?? errors.schedulePublishTime) && (
-              <p className="text-destructive mt-1 text-sm">
-                {t(
-                  errors.schedulePublishDate?.message ??
-                    errors.schedulePublishTime?.message ??
-                    ''
-                )}
-              </p>
-            )}
           </div>
 
           {/* ── Expiration Date & Time ── */}
-          <div className="flex flex-col gap-1">
+          <div className="flex w-[304px] flex-col gap-1">
             <Label className="text-sm font-semibold text-slate-700">
               {t('scheduleVacancy.expirationDateLabel')}{' '}
               <span className="text-destructive">*</span>
@@ -187,91 +134,50 @@ export default function ScheduleVacancyStep({
             <Controller
               control={control}
               name="expirationDate"
-              render={({ field }) => (
-                <Popover
-                  modal
-                  open={openPopover === 'expirationDate'}
-                  onOpenChange={open =>
-                    setOpenPopover(open ? 'expirationDate' : null)
-                  }
-                >
-                  <PopoverTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className={cn(
-                        'border-input flex h-11 w-full items-center justify-between rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
-                        !field.value && 'text-slate-500',
-                        field.value && 'text-zinc-800',
-                        'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
-                        'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
-                        'dark:bg-input/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
-                        applyTypography('body-medium'),
-                        'shadow-none!'
+              render={({ field: dateField }) => (
+                <Controller
+                  control={control}
+                  name="expirationTime"
+                  render={({ field: timeField }) => (
+                    <CalendarWithTime
+                      dateValue={dateField.value}
+                      onDateChange={dateField.onChange}
+                      timeValue={timeField.value}
+                      onTimeChange={timeField.onChange}
+                      timeLabel="Expiration Time"
+                      dateButtonPlaceholder={t(
+                        'scheduleVacancy.expirationDatePlaceholder'
                       )}
-                    >
-                      {field.value ? (
-                        formatDate(field.value)
-                      ) : (
-                        <span>
-                          {t('scheduleVacancy.expirationDatePlaceholder')}
-                        </span>
+                      timeInputPlaceholder={t(
+                        'scheduleVacancy.timePlaceholder'
                       )}
-                      <CalendarIcon
-                        variant="Linear"
-                        size={20}
-                        className="text-zinc-800"
-                      />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={field.value ? new Date(field.value) : undefined}
-                      defaultMonth={
-                        field.value ? new Date(field.value) : new Date()
-                      }
-                      onSelect={date => {
-                        field.onChange(date ? format(date, 'yyyy-MM-dd') : '');
-                        setOpenPopover(null);
-                      }}
-                      disabled={date =>
+                      disabledDates={date =>
                         date < startOfToday() ||
                         (publishDate ? date < new Date(publishDate) : false)
                       }
-                      captionLayout="dropdown"
-                      startMonth={new Date()}
-                      endMonth={new Date(new Date().getFullYear() + 100, 11)}
+                      formattedDateDisplay={
+                        dateField.value
+                          ? formatDisplayDateTime(
+                              dateField.value,
+                              timeField.value
+                            )
+                          : undefined
+                      }
+                      error={
+                        errors.expirationDate?.message ||
+                        errors.expirationTime?.message
+                          ? t(
+                              errors.expirationDate?.message ||
+                                errors.expirationTime?.message ||
+                                ''
+                            )
+                          : undefined
+                      }
                     />
-                    <div className="border-t px-3 py-3">
-                      <Label className="mb-1 block text-xs text-slate-600">
-                        {t('scheduleVacancy.timeLabel')}
-                      </Label>
-                      <Controller
-                        control={control}
-                        name="expirationTime"
-                        render={({ field: timeField }) => (
-                          <Input
-                            {...timeField}
-                            placeholder={t('scheduleVacancy.timePlaceholder')}
-                            className="h-9 text-sm"
-                          />
-                        )}
-                      />
-                    </div>
-                  </PopoverContent>
-                </Popover>
+                  )}
+                />
               )}
             />
-            {(errors.expirationDate ?? errors.expirationTime) && (
-              <p className="text-destructive mt-1 text-sm">
-                {t(
-                  errors.expirationDate?.message ??
-                    errors.expirationTime?.message ??
-                    ''
-                )}
-              </p>
-            )}
           </div>
         </div>
       </div>
@@ -289,7 +195,7 @@ export default function ScheduleVacancyStep({
         <Button
           className="h-12 w-48"
           type="button"
-          disabled={isPending}
+          disabled={isPending || !isValid}
           onClick={() => {
             handleSubmit(onValid)().catch(() => {});
           }}

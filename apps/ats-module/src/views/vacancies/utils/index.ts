@@ -11,9 +11,12 @@ export {
   URL_PROTOCOL_HTTP,
   URL_PROTOCOL_HTTPS,
   DATE_DISPLAY_FORMAT,
+  TWELVE_HOUR_TIME_REGEX,
+  TWENTY_FOUR_HOUR_TIME_REGEX,
 } from '@/views/vacancies/utils/constants';
 export {
   isUrlProtocolValid,
   isUrlFormatValid,
 } from '@/views/vacancies/utils/url-validation';
 export { resolveUserCreatedOptions } from '@/views/vacancies/utils/job-requirements-form-helpers';
+export { formatDisplayDateTime } from '@/views/vacancies/utils/schedule-display-date-time';

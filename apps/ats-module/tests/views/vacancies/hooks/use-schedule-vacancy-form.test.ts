@@ -48,9 +48,9 @@ describe('use-schedule-vacancy-form helpers', () => {
     it('combines date and time with T separator', () => {
       const values = {
         schedulePublishDate: '2026-06-25',
-        schedulePublishTime: '10:30:00 AM',
+        schedulePublishTime: '10:30:00',
         expirationDate: '2026-06-30',
-        expirationTime: '05:27:10 PM',
+        expirationTime: '17:27:10',
       };
       const result = toScheduleVacancyPayload(values);
       expect(result).toEqual({
@@ -62,9 +62,9 @@ describe('use-schedule-vacancy-form helpers', () => {
     it('trims whitespace from time strings', () => {
       const values = {
         schedulePublishDate: '2026-06-25',
-        schedulePublishTime: '  10:30:00 AM  ',
+        schedulePublishTime: '  10:30:00  ',
         expirationDate: '2026-06-30',
-        expirationTime: '  05:27:10 PM  ',
+        expirationTime: '  17:27:10  ',
       };
       const result = toScheduleVacancyPayload(values);
       expect(result.schedulePublishAt).toBe('2026-06-25T10:30:00 AM');
@@ -74,14 +74,28 @@ describe('use-schedule-vacancy-form helpers', () => {
     it('handles short time format without seconds', () => {
       const values = {
         schedulePublishDate: '2026-06-25',
-        schedulePublishTime: '10:30 AM',
+        schedulePublishTime: '10:30',
+        expirationDate: '2026-06-30',
+        expirationTime: '17:27',
+      };
+      const result = toScheduleVacancyPayload(values);
+      expect(result).toEqual({
+        schedulePublishAt: '2026-06-25T10:30:00 AM',
+        expirationAt: '2026-06-30T05:27:00 PM',
+      });
+    });
+
+    it('normalizes AM/PM format without seconds', () => {
+      const values = {
+        schedulePublishDate: '2026-06-25',
+        schedulePublishTime: '12:30 AM',
         expirationDate: '2026-06-30',
         expirationTime: '05:27 PM',
       };
       const result = toScheduleVacancyPayload(values);
       expect(result).toEqual({
-        schedulePublishAt: '2026-06-25T10:30 AM',
-        expirationAt: '2026-06-30T05:27 PM',
+        schedulePublishAt: '2026-06-25T12:30:00 AM',
+        expirationAt: '2026-06-30T05:27:00 PM',
       });
     });
   });
