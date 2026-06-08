@@ -107,6 +107,11 @@
       "title": "No Vacancies Available",
       "description": "There's nothing here yet. Once vacancy is added, it will appear in this section"
     },
+    "searchEmptyState": {
+      "title": "No Search Results Found",
+      "descriptionLine1": "No matching vacancies found.",
+      "descriptionLine2": "Try adjusting your keywords or using broader search terms"
+    },
     "editVacancy": "Edit Vacancy",
     "createVacancy": {
       "heading": "Create Vacancy",
