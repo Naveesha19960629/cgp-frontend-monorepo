@@ -135,7 +135,7 @@ export default function VacancyTableEmptyState() {
               </p>
             </div>
             <Button
-              className="h-10 w-fit gap-1"
+              className="h-10 w-49.25 gap-1 text-sm font-bold"
               onClick={() => void navigate('/dashboard/ats/vacancies/new')}
             >
               <Add className="size-5" />
