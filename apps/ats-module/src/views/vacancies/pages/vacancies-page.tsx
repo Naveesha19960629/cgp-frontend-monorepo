@@ -90,11 +90,11 @@ export default function VacanciesPage() {
 
   return (
     <section className="flex h-full flex-col overflow-hidden px-7 py-5">
-      <div className="flex items-center justify-between pb-5.5">
-        <p className="text-2xl/8 font-bold text-slate-900">
+      <div className="flex items-center gap-4 pb-5.5">
+        <p className="shrink-0 text-2xl/8 font-bold text-slate-900">
           {t('vacancies.title')}
         </p>
-        <div className="flex items-center gap-4">
+        <div className="flex min-w-0 flex-1 items-center justify-end gap-4">
           <VacancyFilteringSection
             search={params.search}
             onSearchChange={value => void setParams({ search: value, page: 0 })}
@@ -110,7 +110,7 @@ export default function VacanciesPage() {
             onStatusChange={value => void setParams({ status: value, page: 0 })}
           />
           <Button
-            className="h-12 w-45 gap-1"
+            className="h-12 w-45 shrink-0 gap-1"
             onClick={() => {
               void navigate('/dashboard/ats/vacancies/new');
             }}
