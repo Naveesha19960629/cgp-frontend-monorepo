@@ -125,8 +125,28 @@ const DEFAULT_FORM: VacancyForm = {
   title: '',
   status: 'draft',
   lastActiveStep: VACANCY_STEPS[0].key,
-  jobRequirements: [],
-  profileRequirements: [],
+  jobRequirements: [
+    {
+      isEnabled: true,
+      dataTakenFromCandidate: false,
+      discipline: [],
+      careerPath: [],
+      level: [],
+      role: [],
+      jobTitle: [],
+      employmentType: [],
+      workSchedule: [],
+      engagementModel: [],
+      description: '',
+    },
+  ],
+  profileRequirements: {
+    isEnabled: false,
+    dataTakenFromCandidate: false,
+    gender: { id: '', label: '' },
+    maritalStatus: { id: '', label: '' },
+    addresses: [],
+  },
   secondaryEducation: [
     { isEnabled: false, dataTakenFromCandidate: false, content: [] },
   ],
@@ -138,6 +158,40 @@ const DEFAULT_FORM: VacancyForm = {
     dataTakenFromCandidate: false,
     patents: [],
   },
+  preferredHonoursAwards: {
+    isEnabled: false,
+    dataTakenFromCandidate: false,
+    honoursAndAwards: [],
+  },
+  licenseCertificates: [
+    { isEnabled: false, dataTakenFromCandidate: false, content: [] },
+  ],
+  preferredSkills: {
+    isEnabled: false,
+    dataTakenFromCandidate: false,
+    skills: [],
+  },
+  preferredLanguages: {
+    isEnabled: false,
+    dataTakenFromCandidate: false,
+    languages: [],
+  },
+  preferredCauses: {
+    isEnabled: false,
+    dataTakenFromCandidate: false,
+    causes: [],
+  },
+  preferredHobbies: {
+    isEnabled: false,
+    dataTakenFromCandidate: false,
+    hobbies: [],
+  },
+  preferredIndustries: {
+    isEnabled: false,
+    dataTakenFromCandidate: false,
+    industries: [],
+  },
+  schedule: undefined,
 };
 
 interface VacancyFormContextValue {
@@ -171,7 +225,12 @@ function VacancyFormProvider({ children }: { children: React.ReactNode }) {
   };
 
   const onNext = (data?: Partial<VacancyForm>) => {
-    console.log(data);
+    const stepKey =
+      VACANCY_STEPS[currentStepIndex]?.key ?? `step-${currentStepIndex}`;
+    console.group(`[Vacancy Wizard] Step payload — ${stepKey}`);
+    console.log('Step data:', data);
+    console.log('Full form after merge:', data ? { ...form, ...data } : form);
+    console.groupEnd();
     if (data) {
       setForm(prev => ({ ...prev, ...data }));
     }

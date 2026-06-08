@@ -22,6 +22,72 @@ interface JobRequirement {
   employmentType: AddOrSelectOption[];
   workSchedule: AddOrSelectOption[];
   engagementModel: AddOrSelectOption[];
+  description?: string;
+}
+
+// ─── Job Requirement Lookup Items ─────────────────────────────────────────────
+
+interface DisciplineItem {
+  id: string;
+  label: string;
+  source: string;
+}
+
+interface RoleItem {
+  id: string;
+  label: string;
+  source: string;
+}
+
+interface JobTitleItem {
+  id: string;
+  label: string;
+  source: string;
+}
+
+interface EmploymentTypeItem {
+  id: string;
+  label: string;
+  source: string;
+}
+
+interface WorkScheduleItem {
+  id: string;
+  label: string;
+  source: string;
+}
+
+interface EngagementModelItem {
+  id: string;
+  label: string;
+  source: string;
+}
+
+interface JobLevelItem {
+  id: string;
+  name: string;
+}
+
+interface MasterRef {
+  id: string;
+  source: string;
+}
+
+interface CreateCareerPathPayload {
+  displayValue: string;
+  discipline?: MasterRef;
+}
+
+interface CreateRolePayload {
+  displayValue: string;
+  careerPath?: MasterRef;
+  level?: MasterRef;
+}
+
+interface JobRequirementFormOption {
+  value: string;
+  label: string;
+  source: string;
 }
 
 interface StepDisableDialogProps {
@@ -34,18 +100,56 @@ interface StepDisableDialogProps {
 }
 
 interface Address {
-  cityRefId: string;
-  stateRefId: string;
-  countryRefId: string;
+  city: SelectOption;
+  stateProvince: SelectOption;
+  country: SelectOption;
   postalCode: string;
+  isOpen: boolean;
 }
 
 interface ProfileRequirements {
   isEnabled: boolean;
   dataTakenFromCandidate: boolean;
   gender: SelectOption;
-  materialStatus: SelectOption;
-  address: Address[];
+  maritalStatus: SelectOption;
+  addresses: Address[];
+}
+
+// ─── Marital Status ───────────────────────────────────────────────────────────
+
+interface MaritalStatusItem {
+  id: string;
+  label: string;
+  source: string;
+}
+
+// ─── Places ───────────────────────────────────────────────────────────────────
+
+interface PlaceItem {
+  id: string;
+  label: string;
+}
+
+interface PlaceCityResult {
+  city: PlaceItem;
+  state?: PlaceItem;
+  country: PlaceItem;
+}
+
+interface PlaceStateResult {
+  state: PlaceItem;
+  country: PlaceItem;
+}
+
+interface PlaceCountryResult {
+  country: PlaceItem;
+}
+
+interface PlacesApiResponse<T> {
+  requestId: string;
+  success: boolean;
+  message: string;
+  data: T[];
 }
 
 // ─── Secondary Education ──────────────────────────────────────────────────────
@@ -131,6 +235,56 @@ interface CreatePendingApiResponse {
   data: CreatePendingItemResponse;
 }
 
+// ─── License and Certificates ─────────────────────────────────────────────────
+
+type LicenseCertType = 'LICENSE' | 'CERTIFICATION';
+
+interface LicenseCertRef {
+  source: 'MASTER' | 'PENDING';
+  id: string;
+  name?: string;
+  type?: LicenseCertType;
+}
+
+interface LicenseCertEntry {
+  nameOfLicenseCert: LicenseCertRef[];
+  issuingOrganization: LicenseCertRef[];
+  organizationLocations: LicenseCertRef[];
+  internationallyAccepted: boolean;
+  issueDate: string;
+  expirationDate: string;
+}
+
+interface LicenseCertificates {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  content: LicenseCertEntry[];
+}
+
+interface AddLicenseCertDialogProps {
+  open: boolean;
+  initialName: string;
+  onClose: () => void;
+  onAdded: (option: {
+    value: string;
+    label: string;
+    source: string;
+    certType: LicenseCertType;
+  }) => void;
+}
+
+// ─── Schedule Vacancy ───────────────────────────────────────────────────────
+
+interface ScheduleVacancy {
+  schedulePublishAt: string; // ISO date string
+  expirationAt: string; // ISO date string
+}
+
+interface ScheduleVacancyPayload {
+  schedulePublishAt: string;
+  expirationAt: string;
+}
+
 // ─── Vacancy Form ─────────────────────────────────────────────────────────────
 
 interface VacancyForm {
@@ -138,14 +292,18 @@ interface VacancyForm {
   status: string;
   lastActiveStep: string;
   jobRequirements: JobRequirement[];
-  profileRequirements: ProfileRequirements[];
+  profileRequirements: ProfileRequirements;
   secondaryEducation: SecondaryEducation[];
   tertiaryEducation: TertiaryEducation[];
   preferredSkills?: PreferredSkills;
   preferredLanguages?: PreferredLanguages;
   preferredCauses?: PreferredCauses;
   preferredHobbies?: PreferredHobbies;
+  preferredIndustries?: PreferredIndustries;
   patents?: preferredPatentsSchema;
+  preferredHonoursAwards?: preferredHonoursAwardsSchema;
+  licenseCertificates?: LicenseCertificates[];
+  schedule?: ScheduleVacancy;
 }
 interface VacancyStep {
   readonly key: string;
@@ -230,6 +388,12 @@ interface SocietyCreateResponse {
   source: string;
 }
 
+interface SportItem {
+  id: string;
+  name: string;
+  source: string;
+}
+
 type PatentStatus = 'PATENT_PENDING' | 'PATENT_ISSUED';
 
 interface PatentIndustryOption {
@@ -268,6 +432,33 @@ interface preferredPatentsSchema {
   patents: PatentEntrySchemaType[];
 }
 
+interface HonourOrganizationSchemaType {
+  value: string;
+  label: string;
+  source: string;
+}
+
+interface HonourLocationSchemaType {
+  value: string;
+  label: string;
+}
+
+interface HonourEntrySchemaType {
+  title: string;
+  issuedBy: string;
+  issuedDateFrom?: Date | undefined;
+  issuedDateTo?: Date | undefined;
+  associatedOrganizations: HonourOrganizationSchemaType[];
+  organizationLocations: HonourLocationSchemaType[];
+  isOpen: boolean;
+}
+
+interface preferredHonoursAwardsSchema {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  honoursAndAwards: HonourEntrySchemaType[];
+}
+
 // ─── Preferred Skills ────────────────────────────────────────────────────────
 
 interface SkillItem {
@@ -282,18 +473,13 @@ interface CareerPathItem {
   source?: string;
 }
 
-interface DisciplineItem {
-  id: string;
-  label: string;
-  source?: string;
-}
-
 interface SkillCareerPathEntry {
   skillId: string;
   skillName: string;
   careerPathId?: string;
   careerPathName: string;
   displayValue: string;
+  source?: string;
 }
 
 interface PreferredSkills {
@@ -313,6 +499,7 @@ interface LanguageItem {
 interface LanguageEntry {
   id: string;
   label: string;
+  source?: string;
 }
 
 interface PreferredLanguages {
@@ -332,6 +519,7 @@ interface CauseItem {
 interface CauseEntry {
   id: string;
   label: string;
+  source?: string;
 }
 
 interface PreferredCauses {
@@ -351,6 +539,7 @@ interface HobbyItem {
 interface HobbyEntry {
   id: string;
   label: string;
+  source?: string;
 }
 
 interface PreferredHobbies {
@@ -359,18 +548,44 @@ interface PreferredHobbies {
   hobbies: HobbyEntry[];
 }
 
+// ─── Preferred Industries ─────────────────────────────────────────────────────
+
+interface IndustryEntry {
+  id: string;
+  label: string;
+  source?: string;
+}
+
+interface PreferredIndustries {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  industries: IndustryEntry[];
+}
+
 interface AddSchoolDialogProps {
   open: boolean;
   initialName: string;
   onClose: () => void;
-  onAdded: (option: { value: string; label: string; source: string }) => void;
+  onAdded: (option: {
+    value: string;
+    label: string;
+    source: string;
+    locationId?: string;
+    url?: string;
+  }) => void;
 }
 
 interface AddAwardingBodyDialogProps {
   open: boolean;
   initialName: string;
   onClose: () => void;
-  onAdded: (option: { value: string; label: string; source: string }) => void;
+  onAdded: (option: {
+    value: string;
+    label: string;
+    source: string;
+    locationId?: string;
+    url?: string;
+  }) => void;
 }
 
 interface StepHeaderProps {
@@ -626,6 +841,16 @@ export type {
   VacancyFilteringSectionProps,
   AddOrSelectOption,
   SelectOption,
+  RoleItem,
+  JobTitleItem,
+  EmploymentTypeItem,
+  WorkScheduleItem,
+  EngagementModelItem,
+  JobLevelItem,
+  MasterRef,
+  CreateCareerPathPayload,
+  CreateRolePayload,
+  JobRequirementFormOption,
   Address,
   JobRequirement,
   ProfileRequirements,
@@ -639,6 +864,7 @@ export type {
   IndustryCreateResponse,
   SocietyItem,
   SocietyCreateResponse,
+  SportItem,
   PatentStatus,
   PatentIndustryOption,
   PatentStatusOption,
@@ -647,6 +873,10 @@ export type {
   PatentEntrySchemaType,
   PatentIndustrySchemaType,
   PatentStatusSchemaType,
+  preferredHonoursAwardsSchema,
+  HonourEntrySchemaType,
+  HonourOrganizationSchemaType,
+  HonourLocationSchemaType,
   LookupItem,
   LocationLookupItem,
   SecondaryEducationRef,
@@ -659,6 +889,11 @@ export type {
   TertiaryEducation,
   AddSchoolDialogProps,
   AddAwardingBodyDialogProps,
+  LicenseCertType,
+  LicenseCertRef,
+  LicenseCertEntry,
+  LicenseCertificates,
+  AddLicenseCertDialogProps,
   StepHeaderProps,
   DisableDialogProps,
   StepFooterProps,
@@ -676,6 +911,8 @@ export type {
   HobbyItem,
   HobbyEntry,
   PreferredHobbies,
+  IndustryEntry,
+  PreferredIndustries,
   ProjectRef,
   ProjectEntry,
   ProjectRequirement,
@@ -693,4 +930,12 @@ export type {
   VacancyQueryParams,
   VacanciesPaginatedData,
   VacanciesApiResponse,
+  MaritalStatusItem,
+  ScheduleVacancy,
+  ScheduleVacancyPayload,
+  PlaceItem,
+  PlaceCityResult,
+  PlaceStateResult,
+  PlaceCountryResult,
+  PlacesApiResponse,
 };

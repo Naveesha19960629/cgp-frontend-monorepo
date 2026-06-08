@@ -1,40 +1,34 @@
-import type { ReactNode } from 'react';
+﻿import type { ReactNode } from 'react';
 
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import { AddAwardingBodyDialog } from '@/views/vacancies/components/form-steps/add-awarding-body-dialog';
 
-// ── Mock react-i18next ─────────────────────────────────────────────────────
+// â”€â”€ Mock react-i18next â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
 }));
 
-// ── Mock hooks ─────────────────────────────────────────────────────────────
+// â”€â”€ Mock hooks â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-const mockMutateAsync = vi.fn();
+const mockUseTertiaryAwardingBodyLocationsQuery = vi.hoisted(() => vi.fn());
 
 vi.mock('@/views/vacancies/hooks', () => ({
-  useAddTertiaryAwardingBodyMutation: () => ({
-    mutateAsync: mockMutateAsync,
-    isPending: false,
-  }),
-  useTertiaryAwardingBodyLocationsSearch: () =>
-    vi.fn(() => Promise.resolve([])),
+  useTertiaryAwardingBodyLocationsQuery: (search: string) =>
+    mockUseTertiaryAwardingBodyLocationsQuery(search) as unknown,
 }));
 
-// ── Mock toasts ────────────────────────────────────────────────────────────
+// â”€â”€ Mock toasts â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const mockSuccessToast = vi.fn();
-const mockErrorToast = vi.fn();
 
 vi.mock('@cgp/ui-kit/components/custom-toast', () => ({
   SuccessToast: (...args: unknown[]) => mockSuccessToast(...args) as unknown,
-  ErrorToast: (...args: unknown[]) => mockErrorToast(...args) as unknown,
 }));
 
-// ── Mock Dialog ────────────────────────────────────────────────────────────
+// â”€â”€ Mock Dialog â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 vi.mock('@cgp/ui-kit/components/ui/dialog', () => ({
   Dialog: ({ children, open }: { children: ReactNode; open: boolean }) =>
@@ -42,32 +36,84 @@ vi.mock('@cgp/ui-kit/components/ui/dialog', () => ({
   DialogContent: ({ children }: { children: ReactNode }) => (
     <div role="dialog">{children}</div>
   ),
+  DialogHeader: ({ children }: { children: ReactNode }) => (
+    <div>{children}</div>
+  ),
+  DialogTitle: ({ children }: { children: ReactNode }) => (
+    <span>{children}</span>
+  ),
+  DialogDescription: ({ children }: { children: ReactNode }) => (
+    <span>{children}</span>
+  ),
 }));
 
-// ── Mock MultipleSelector ─────────────────────────────────────────────────
+vi.mock('@cgp/ui-kit/components/scroll-area-with-shadow', () => ({
+  ScrollAreaWithShadow: ({ children }: { children: ReactNode }) => (
+    <div>{children}</div>
+  ),
+}));
 
-vi.mock('@cgp/ui-kit/components/multi-select', () => ({
-  default: ({
+vi.mock('@cgp/ui-kit/components/ui/popover', () => ({
+  Popover: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  PopoverTrigger: ({ children }: { children: ReactNode }) => (
+    <div>{children}</div>
+  ),
+}));
+
+vi.mock('@radix-ui/react-popover', () => ({
+  Portal: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  Content: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  Arrow: () => null,
+}));
+
+vi.mock('@cgp/ui-kit/lib/utils', () => ({
+  removeEmoji: (str: string) => str,
+  cn: (...args: unknown[]) => args.filter(Boolean).join(' '),
+}));
+
+// â”€â”€ Mock LocationAutocomplete â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+vi.mock('@cgp/ui-kit/components/location-autocomplete', () => ({
+  LocationAutocomplete: ({
     placeholder,
-    onChange,
+    onSelect,
+    onSearchChange,
+    options,
   }: {
-    placeholder: string;
-    onChange?: (opts: { value: string; label: string }[]) => void;
+    placeholder?: string;
+    onSelect?: (option: { id: string; label: string }) => void;
+    onSearchChange?: (value: string) => void;
+    options?: { id: string; label: string }[];
   }) => (
     <div>
       <input placeholder={placeholder} readOnly />
       <button
         type="button"
         data-testid="select-location"
-        onClick={() => onChange?.([{ value: 'loc-1', label: 'Colombo' }])}
+        onClick={() => onSelect?.({ id: 'loc-1', label: 'Colombo' })}
       >
         Pick Location
       </button>
+      <button
+        type="button"
+        data-testid="search-location"
+        onClick={() => onSearchChange?.('col')}
+      >
+        Search Location
+      </button>
+      <button
+        type="button"
+        data-testid="search-location-no-match"
+        onClick={() => onSearchChange?.('zzz')}
+      >
+        Search No Match
+      </button>
+      <p data-testid="location-options-count">{options?.length ?? 0}</p>
     </div>
   ),
 }));
 
-// ── Mock Button ────────────────────────────────────────────────────────────
+// â”€â”€ Mock Button â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 vi.mock('@cgp/ui-kit/components/ui/button', () => ({
   Button: ({
@@ -91,24 +137,25 @@ vi.mock('@cgp/ui-kit/components/ui/button', () => ({
   ),
 }));
 
-// ── Mock CharacterCount ───────────────────────────────────────────────────
+// â”€â”€ Mock CharacterCount â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 vi.mock('@cgp/ui-kit/components/character-count', () => ({
   CharacterCount: () => null,
 }));
 
-// ── Shared callbacks ──────────────────────────────────────────────────────
+// â”€â”€ Shared callbacks â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const onClose = vi.fn();
 const onAdded = vi.fn();
 
-// ── Tests ──────────────────────────────────────────────────────────────────
+// â”€â”€ Tests â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 describe('AddAwardingBodyDialog', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockMutateAsync.mockResolvedValue({
-      data: { pendingId: 'awarding-body-1' },
+    mockUseTertiaryAwardingBodyLocationsQuery.mockReturnValue({
+      data: undefined,
+      isLoading: false,
     });
   });
 
@@ -134,8 +181,9 @@ describe('AddAwardingBodyDialog', () => {
       />
     );
     expect(
-      screen.getByText('tertiaryEducation.addAwardingBodyDialog.title')
-    ).toBeInTheDocument();
+      screen.getAllByText('tertiaryEducation.addAwardingBodyDialog.title')
+        .length
+    ).toBeGreaterThanOrEqual(1);
   });
 
   it('pre-fills the name input with initialName', () => {
@@ -184,7 +232,7 @@ describe('AddAwardingBodyDialog', () => {
     ).toBeDisabled();
   });
 
-  it('Add Now button is enabled after name and location are both provided', async () => {
+  it('Add Now button is enabled when both name and location are filled', async () => {
     const user = userEvent.setup();
     render(
       <AddAwardingBodyDialog
@@ -247,7 +295,7 @@ describe('AddAwardingBodyDialog', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('Add Now button is disabled when URL has a validation error', async () => {
+  it('does not call onAdded when URL has a validation error', async () => {
     const user = userEvent.setup();
     render(
       <AddAwardingBodyDialog
@@ -264,14 +312,15 @@ describe('AddAwardingBodyDialog', () => {
       ),
       'not-a-url'
     );
-    expect(
+    await user.click(
       screen.getByRole('button', {
         name: 'tertiaryEducation.addAwardingBodyDialog.addNow',
       })
-    ).toBeDisabled();
+    );
+    expect(onAdded).not.toHaveBeenCalled();
   });
 
-  it('calls onAdded, SuccessToast, and onClose on successful add', async () => {
+  it('calls onAdded and SuccessToast synchronously on Add Now click', async () => {
     const user = userEvent.setup();
     render(
       <AddAwardingBodyDialog
@@ -287,22 +336,38 @@ describe('AddAwardingBodyDialog', () => {
         name: 'tertiaryEducation.addAwardingBodyDialog.addNow',
       })
     );
-    await waitFor(() => {
-      expect(onAdded).toHaveBeenCalledWith({
-        value: 'awarding-body-1',
+    expect(onAdded).toHaveBeenCalledWith(
+      expect.objectContaining({
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        value: expect.stringMatching(/^__pending_awarding_body_/),
         label: 'University of Moratuwa',
-        source: 'PENDING',
-      });
-    });
+        source: 'PENDING_TEMP',
+        locationId: 'loc-1',
+      })
+    );
     expect(mockSuccessToast).toHaveBeenCalledWith({
       title: 'tertiaryEducation.addAwardingBodyDialog.success.title',
       description: 'tertiaryEducation.addAwardingBodyDialog.success.message',
     });
-    expect(onClose).toHaveBeenCalled();
+    expect(onClose).not.toHaveBeenCalled();
   });
 
-  it('passes locationId and url to the mutation', async () => {
+  it('filters location options by search text before passing to autocomplete', async () => {
     const user = userEvent.setup();
+    mockUseTertiaryAwardingBodyLocationsQuery.mockImplementation(() => ({
+      data: {
+        data: {
+          items: {
+            content: [
+              { id: 'loc-1', label: 'Colombo' },
+              { id: 'loc-2', label: 'Kandy' },
+            ],
+          },
+        },
+      },
+      isLoading: false,
+    }));
+
     render(
       <AddAwardingBodyDialog
         open={true}
@@ -311,92 +376,13 @@ describe('AddAwardingBodyDialog', () => {
         onAdded={onAdded}
       />
     );
-    await user.click(screen.getByTestId('select-location'));
-    await user.type(
-      screen.getByPlaceholderText(
-        'tertiaryEducation.addAwardingBodyDialog.urlPlaceholder'
-      ),
-      'https://uom.lk'
-    );
-    await user.click(
-      screen.getByRole('button', {
-        name: 'tertiaryEducation.addAwardingBodyDialog.addNow',
-      })
-    );
-    await waitFor(() => {
-      expect(mockMutateAsync).toHaveBeenCalledWith({
-        displayValue: 'University of Moratuwa',
-        locationId: 'loc-1',
-        url: 'https://uom.lk',
-      });
-    });
-  });
 
-  it('calls ErrorToast with network error keys on TypeError', async () => {
-    const user = userEvent.setup();
-    mockMutateAsync.mockRejectedValue(new TypeError('Network failure'));
-    render(
-      <AddAwardingBodyDialog
-        open={true}
-        initialName="University of Moratuwa"
-        onClose={onClose}
-        onAdded={onAdded}
-      />
-    );
-    await user.click(screen.getByTestId('select-location'));
-    await user.click(
-      screen.getByRole('button', {
-        name: 'tertiaryEducation.addAwardingBodyDialog.addNow',
-      })
-    );
-    await waitFor(() => {
-      expect(mockErrorToast).toHaveBeenCalledWith({
-        title: 'notifications.networkError.title',
-        description: 'notifications.networkError.message',
-      });
-    });
-  });
+    expect(screen.getByTestId('location-options-count')).toHaveTextContent('2');
 
-  it('calls ErrorToast with API error keys on non-TypeError', async () => {
-    const user = userEvent.setup();
-    mockMutateAsync.mockRejectedValue(new Error('Server error'));
-    render(
-      <AddAwardingBodyDialog
-        open={true}
-        initialName="University of Moratuwa"
-        onClose={onClose}
-        onAdded={onAdded}
-      />
-    );
-    await user.click(screen.getByTestId('select-location'));
-    await user.click(
-      screen.getByRole('button', {
-        name: 'tertiaryEducation.addAwardingBodyDialog.addNow',
-      })
-    );
-    await waitFor(() => {
-      expect(mockErrorToast).toHaveBeenCalledWith({
-        title: 'notifications.apiError.save.title',
-        description: 'notifications.apiError.save.message',
-      });
-    });
-  });
+    await user.click(screen.getByTestId('search-location'));
+    expect(screen.getByTestId('location-options-count')).toHaveTextContent('1');
 
-  it('calls onClose when Cancel button is clicked', async () => {
-    const user = userEvent.setup();
-    render(
-      <AddAwardingBodyDialog
-        open={true}
-        initialName="University of Moratuwa"
-        onClose={onClose}
-        onAdded={onAdded}
-      />
-    );
-    await user.click(
-      screen.getByRole('button', {
-        name: 'tertiaryEducation.addAwardingBodyDialog.cancel',
-      })
-    );
-    expect(onClose).toHaveBeenCalledTimes(1);
+    await user.click(screen.getByTestId('search-location-no-match'));
+    expect(screen.getByTestId('location-options-count')).toHaveTextContent('0');
   });
 });

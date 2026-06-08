@@ -1,4 +1,9 @@
-import type { ApiResponse, LanguageItem } from '@/views/vacancies/types';
+import type {
+  ApiResponse,
+  CreatePendingApiResponse,
+  CreatePendingItemResponse,
+  LanguageItem,
+} from '@/views/vacancies/types';
 
 import { httpClient } from '@cgp/data-access';
 
@@ -11,5 +16,13 @@ export const languageService = {
       { params: { search } }
     );
     return response.data;
+  },
+
+  createLanguage: async (label: string): Promise<CreatePendingItemResponse> => {
+    const response = await httpClient.post<CreatePendingApiResponse>(
+      '/languages',
+      { type: 'LANGUAGE', displayValue: label }
+    );
+    return response.data.data;
   },
 };

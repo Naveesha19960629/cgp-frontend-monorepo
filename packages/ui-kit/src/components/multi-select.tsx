@@ -520,13 +520,19 @@ const MultipleSelector = React.forwardRef<
     }, [keepSelectedInList, allOptionsWithCreated, selected]);
 
     const hasSelectableOptions = React.useMemo(() => {
+      if (onSearch || onSearchSync) {
+        // Server-managed mode: cmdk renders all items in selectables (shouldFilter=false).
+        // Don't apply client-side label filtering — the server already filters.
+        // Show empty indicator only when selectables is truly empty.
+        return Object.values(selectables).some(items => items.length > 0);
+      }
       const searchTerm = inputValue.trim().toLowerCase();
       return Object.values(selectables).some(items =>
         items.some(
           item => !searchTerm || item.label.toLowerCase().includes(searchTerm)
         )
       );
-    }, [selectables, inputValue]);
+    }, [onSearch, onSearchSync, selectables, inputValue]);
 
     const EmptyItem = React.useCallback(() => {
       if (!emptyIndicator || showLoading) return undefined;
@@ -582,8 +588,8 @@ const MultipleSelector = React.forwardRef<
             shouldFilter={
               commandProps?.shouldFilter !== undefined
                 ? commandProps.shouldFilter
-                : !onSearch
-            } // When onSearch is provided, we don't want to filter the options. You can still override it.
+                : !onSearch && !onSearchSync
+            } // When onSearch/onSearchSync is provided, we don't want to filter the options. You can still override it.
             filter={commandFilter()}
           >
             <PopoverAnchor asChild>

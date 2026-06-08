@@ -12,6 +12,7 @@ import {
   useOrganizationsQuery,
   useSocietiesQuery,
 } from '@/views/vacancies/hooks';
+import type { LocationOption } from '@/views/vacancies/services';
 import type { StepProps } from '@/views/vacancies/types';
 import { formatDate } from '@/views/vacancies/utils';
 
@@ -84,7 +85,7 @@ function ClubSocietyCard({
   isOrganizationsLoading: boolean;
   locationOptions: Array<{ value: string; label: string }>;
   isLocationsLoading: boolean;
-  locationsData: any[];
+  locationsData: LocationOption[];
 }>) {
   return (
     <Collapsible

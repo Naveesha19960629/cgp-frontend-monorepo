@@ -1,12 +1,29 @@
 export { useGendersQuery } from '@/views/vacancies/hooks/queries/use-gender-query';
-export { useIndustriesQuery } from '@/views/vacancies/hooks/queries/use-industries-query';
+export {
+  useIndustriesQuery,
+  useIndustriesSearch,
+} from '@/views/vacancies/hooks/queries/use-industries-query';
+export { useMaritalStatusesQuery } from '@/views/vacancies/hooks/queries/use-marital-statuses-query';
+export {
+  usePlacesCityQuery,
+  usePlacesStateQuery,
+  usePlacesCountryQuery,
+} from '@/views/vacancies/hooks/queries/use-places-query';
 export { useSocietiesQuery } from '@/views/vacancies/hooks/queries/use-societies-query';
+export { useSportsQuery } from '@/views/vacancies/hooks/queries/use-sports-query';
 export { useSkillsQuery } from '@/views/vacancies/hooks/queries/use-skills-query';
 export { useCareerPathsQuery } from '@/views/vacancies/hooks/queries/use-career-paths-query';
 export { useDisciplinesQuery } from '@/views/vacancies/hooks/queries/use-disciplines-query';
 export { useLanguagesQuery } from '@/views/vacancies/hooks/queries/use-languages-query';
 export { useCausesQuery } from '@/views/vacancies/hooks/queries/use-causes-query';
 export { useHobbiesQuery } from '@/views/vacancies/hooks/queries/use-hobbies-query';
+export { useDisciplinesQuery } from '@/views/vacancies/hooks/queries/use-disciplines-query';
+export { useRolesQuery } from '@/views/vacancies/hooks/queries/use-roles-query';
+export { useJobTitlesQuery } from '@/views/vacancies/hooks/queries/use-job-titles-query';
+export { useEmploymentTypesQuery } from '@/views/vacancies/hooks/queries/use-employment-types-query';
+export { useWorkSchedulesQuery } from '@/views/vacancies/hooks/queries/use-work-schedules-query';
+export { useEngagementModelsQuery } from '@/views/vacancies/hooks/queries/use-engagement-models-query';
+export { useJobLevelsQuery } from '@/views/vacancies/hooks/queries/use-job-levels-query';
 export {
   useOrganizationsQuery,
   useOrganizationsSearch,
@@ -39,6 +56,10 @@ export {
   useTertiaryAwardingBodiesQuery,
   useTertiaryAwardingBodiesSearch,
 } from '@/views/vacancies/hooks/queries/use-tertiary-awarding-bodies-query';
+export {
+  useLicenseCertificatesQuery,
+  useLicenseCertificatesSearch,
+} from '@/views/vacancies/hooks/queries/use-license-certificates-query';
 export {
   useTertiaryAwardingBodyLocationsQuery,
   useTertiaryAwardingBodyLocationsSearch,

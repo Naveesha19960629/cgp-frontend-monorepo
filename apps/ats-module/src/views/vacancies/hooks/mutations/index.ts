@@ -1,4 +1,5 @@
 export { useCreateIndustryMutation } from '@/views/vacancies/hooks/mutations/use-create-industry-mutation';
+export { useCreateOrganizationMutation } from '@/views/vacancies/hooks/mutations/use-create-organization-mutation';
 export { useCreateSocietyMutation } from '@/views/vacancies/hooks/mutations/use-create-society-mutation';
 export { useAddSchoolMutation } from '@/views/vacancies/hooks/mutations/use-add-school-mutation';
 export { useAddExaminationMutation } from '@/views/vacancies/hooks/mutations/use-add-examination-mutation';
@@ -11,3 +12,14 @@ export { useAddSpecializationMutation } from '@/views/vacancies/hooks/mutations/
 export { useAddBatchMutation } from '@/views/vacancies/hooks/mutations/use-add-batch-mutation';
 export { useAddDepartmentMutation } from '@/views/vacancies/hooks/mutations/use-add-department-mutation';
 export { useAddFacultyMutation } from '@/views/vacancies/hooks/mutations/use-add-faculty-mutation';
+export { useAddLicenseCertificateMutation } from '@/views/vacancies/hooks/mutations/use-add-license-certificate-mutation';
+export { useCreateSkillCareerPathMutation } from '@/views/vacancies/hooks/mutations/use-create-skill-career-path-mutation';
+export { useCreateCareerPathMutation } from '@/views/vacancies/hooks/mutations/use-create-career-path-mutation';
+export { useCreateLanguageMutation } from '@/views/vacancies/hooks/mutations/use-create-language-mutation';
+export { useCreateCauseMutation } from '@/views/vacancies/hooks/mutations/use-create-cause-mutation';
+export { useCreateHobbyMutation } from '@/views/vacancies/hooks/mutations/use-create-hobby-mutation';
+export { useCreateVacancyMutation } from '@/views/vacancies/hooks/mutations/use-create-vacancy-mutation';
+export { useAddDisciplineMutation } from '@/views/vacancies/hooks/mutations/use-add-discipline-mutation';
+export { useAddCareerPathMutation } from '@/views/vacancies/hooks/mutations/use-add-career-path-mutation';
+export { useAddRoleMutation } from '@/views/vacancies/hooks/mutations/use-add-role-mutation';
+export { useAddJobTitleMutation } from '@/views/vacancies/hooks/mutations/use-add-job-title-mutation';

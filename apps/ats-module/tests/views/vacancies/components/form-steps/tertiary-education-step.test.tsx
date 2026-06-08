@@ -7,10 +7,49 @@ import TertiaryEducationStep from '@/views/vacancies/components/form-steps/terti
 
 // ── Mock AddAwardingBodyDialog ─────────────────────────────────────────────
 
+const mockAddAwardingBodyDialogFn = vi.fn();
 vi.mock(
   '@/views/vacancies/components/form-steps/add-awarding-body-dialog',
   () => ({
-    AddAwardingBodyDialog: () => null,
+    AddAwardingBodyDialog: (props: {
+      open: boolean;
+      onClose: () => void;
+      onAdded: (opt: {
+        value: string;
+        label: string;
+        source: string;
+        locationId?: string;
+        url?: string;
+      }) => void;
+    }) => {
+      mockAddAwardingBodyDialogFn(props);
+      if (!props.open) return null;
+      return (
+        <div data-testid="add-awarding-body-dialog">
+          <button
+            type="button"
+            data-testid="dialog-ab-add-now"
+            onClick={() =>
+              props.onAdded({
+                value: '__pending_awarding_body_123',
+                label: 'New Institute',
+                source: 'PENDING_TEMP',
+                locationId: 'loc-1',
+              })
+            }
+          >
+            Add Now
+          </button>
+          <button
+            type="button"
+            data-testid="dialog-ab-cancel"
+            onClick={() => props.onClose()}
+          >
+            Cancel
+          </button>
+        </div>
+      );
+    },
   })
 );
 
@@ -49,6 +88,9 @@ const {
   mockDepartmentMutate: vi.fn(),
   mockFacultyMutate: vi.fn(),
 }));
+const { mockAddAwardingBodyMutate } = vi.hoisted(() => ({
+  mockAddAwardingBodyMutate: vi.fn(),
+}));
 
 vi.mock('@/views/vacancies/hooks', async importOriginal => {
   const actual =
@@ -79,6 +121,9 @@ vi.mock('@/views/vacancies/hooks', async importOriginal => {
     useAddBatchMutation: () => ({ mutateAsync: mockBatchMutate }),
     useAddDepartmentMutation: () => ({ mutateAsync: mockDepartmentMutate }),
     useAddFacultyMutation: () => ({ mutateAsync: mockFacultyMutate }),
+    useAddTertiaryAwardingBodyMutation: () => ({
+      mutateAsync: mockAddAwardingBodyMutate,
+    }),
   };
 });
 
@@ -86,6 +131,14 @@ vi.mock('@/views/vacancies/hooks', async importOriginal => {
 
 vi.mock('@/app/components/message-box', () => ({
   default: ({ title }: { title: string }) => <div>{title}</div>,
+}));
+
+// ── Mock AutocompleteCombobox ──────────────────────────────────────────────
+
+vi.mock('@cgp/ui-kit/components/autocomplete-combobox', () => ({
+  AutocompleteCombobox: ({ placeholder }: { placeholder?: string }) => (
+    <input placeholder={placeholder} readOnly />
+  ),
 }));
 
 // ── Mock MultipleSelector ───────────────────────────────────────────────────
@@ -124,8 +177,12 @@ vi.mock('@cgp/ui-kit/components/multi-select', () => ({
         />
       )}
       {errorMessage && <p>{errorMessage}</p>}
-      {loadingIndicator}
-      {emptyIndicator}
+      {loadingIndicator && (
+        <div data-testid={`loading-${placeholder}`}>{loadingIndicator}</div>
+      )}
+      {emptyIndicator && (
+        <div data-testid={`empty-${placeholder}`}>{emptyIndicator}</div>
+      )}
     </>
   ),
 }));
@@ -272,6 +329,9 @@ describe('TertiaryEducationStep', () => {
     mockBatchMutate.mockResolvedValue({ data: { pendingId: 'batch-id' } });
     mockDepartmentMutate.mockResolvedValue({ data: { pendingId: 'dept-id' } });
     mockFacultyMutate.mockResolvedValue({ data: { pendingId: 'faculty-id' } });
+    mockAddAwardingBodyMutate.mockResolvedValue({
+      data: { pendingId: 'ab-server-id' },
+    });
   });
 
   describe('rendering', () => {
@@ -395,16 +455,42 @@ describe('TertiaryEducationStep', () => {
 
     it('passes loading indicator to all search selectors', () => {
       renderStep();
-      expect(
-        screen.getAllByText('tertiaryEducation.search.loading')
-      ).toHaveLength(11);
+      expect(screen.getAllByText('common.loading')).toHaveLength(11);
     });
 
     it('passes empty indicator to all search selectors', () => {
       renderStep();
+      expect(screen.getAllByText('common.noDataTitle')).toHaveLength(11);
+    });
+
+    it('uses common searching and no-data pattern for study mode, pattern, and delivery schedule', () => {
+      renderStep();
+
       expect(
-        screen.getAllByText('tertiaryEducation.search.noData')
-      ).toHaveLength(11);
+        screen.getByTestId('loading-tertiaryEducation.placeholders.studyMode')
+      ).toHaveTextContent('common.loading');
+      expect(
+        screen.getByTestId(
+          'loading-tertiaryEducation.placeholders.studyPattern'
+        )
+      ).toHaveTextContent('common.loading');
+      expect(
+        screen.getByTestId(
+          'loading-tertiaryEducation.placeholders.deliverySchedule'
+        )
+      ).toHaveTextContent('common.loading');
+
+      expect(
+        screen.getByTestId('empty-tertiaryEducation.placeholders.studyMode')
+      ).toHaveTextContent('common.noDataTitle');
+      expect(
+        screen.getByTestId('empty-tertiaryEducation.placeholders.studyPattern')
+      ).toHaveTextContent('common.noDataTitle');
+      expect(
+        screen.getByTestId(
+          'empty-tertiaryEducation.placeholders.deliverySchedule'
+        )
+      ).toHaveTextContent('common.noDataTitle');
     });
   });
 
@@ -808,6 +894,63 @@ describe('TertiaryEducationStep', () => {
       await waitFor(() => {
         expect(mockFacultyMutate).toHaveBeenCalledWith('new-val');
       });
+    });
+
+    it('does not call addTertiaryAwardingBodyMutation immediately when awarding body dialog Add Now is clicked', async () => {
+      const user = userEvent.setup();
+      renderStep();
+
+      await user.click(
+        screen.getByTestId(
+          'add-new-tertiaryEducation.placeholders.awardingBody'
+        )
+      );
+      await user.click(screen.getByTestId('dialog-ab-add-now'));
+
+      expect(mockAddAwardingBodyMutate).not.toHaveBeenCalled();
+    });
+
+    it('calls addTertiaryAwardingBodyMutation with pending data when Next is clicked after dialog add', async () => {
+      const user = userEvent.setup();
+      renderStep();
+
+      await user.click(
+        screen.getByTestId(
+          'add-new-tertiaryEducation.placeholders.awardingBody'
+        )
+      );
+      await user.click(screen.getByTestId('dialog-ab-add-now'));
+      await user.click(screen.getByText('tertiaryEducation.next'));
+
+      await waitFor(() => {
+        expect(mockAddAwardingBodyMutate).toHaveBeenCalledWith(
+          expect.objectContaining({
+            displayValue: 'New Institute',
+            locationId: 'loc-1',
+          })
+        );
+      });
+    });
+
+    it('does not add awarding body to form values when dialog is cancelled', async () => {
+      const user = userEvent.setup();
+      renderStep();
+
+      await user.click(
+        screen.getByTestId(
+          'add-new-tertiaryEducation.placeholders.awardingBody'
+        )
+      );
+      expect(
+        screen.getByTestId('add-awarding-body-dialog')
+      ).toBeInTheDocument();
+
+      await user.click(screen.getByTestId('dialog-ab-cancel'));
+
+      expect(
+        screen.queryByTestId('add-awarding-body-dialog')
+      ).not.toBeInTheDocument();
+      expect(mockAddAwardingBodyMutate).not.toHaveBeenCalled();
     });
   });
 });
