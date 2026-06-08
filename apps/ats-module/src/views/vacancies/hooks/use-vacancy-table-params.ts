@@ -12,7 +12,7 @@ const useVacancyTableParams = () =>
     page: parseAsInteger.withDefault(0),
     size: parseAsInteger.withDefault(12),
     sortBy: parseAsString.withDefault(''),
-    sortOrder: parseAsStringLiteral(sortOrderOptions).withDefault('asc'),
+    sortOrder: parseAsStringLiteral(sortOrderOptions),
     search: parseAsString.withDefault(''),
     careerPath: parseAsString.withDefault(''),
     discipline: parseAsString.withDefault(''),

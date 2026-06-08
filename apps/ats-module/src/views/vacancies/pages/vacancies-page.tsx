@@ -31,7 +31,7 @@ export default function VacanciesPage() {
       page: params.page,
       size: params.size,
       ...(params.sortBy && { sortBy: params.sortBy }),
-      ...(params.sortBy && { sortOrder: params.sortOrder }),
+      ...(params.sortBy && { sortOrder: params.sortOrder ?? 'asc' }),
       ...(params.search && { search: params.search }),
       ...(params.careerPath && { careerPath: params.careerPath }),
       ...(params.discipline && { discipline: params.discipline }),
@@ -47,11 +47,15 @@ export default function VacanciesPage() {
 
   const handleSort = React.useCallback(
     (columnKey: string) => {
-      if (params.sortBy === columnKey) {
-        const newOrder = params.sortOrder === 'asc' ? 'desc' : 'asc';
-        void setParams({ sortBy: columnKey, sortOrder: newOrder, page: 0 });
-      } else {
+      if (params.sortBy !== columnKey) {
+        // New column: start ascending
         void setParams({ sortBy: columnKey, sortOrder: 'asc', page: 0 });
+      } else if (params.sortOrder === 'asc') {
+        // Same column, ascending → descending
+        void setParams({ sortOrder: 'desc', page: 0 });
+      } else {
+        // Same column, descending → clear sort (back to backend default: most recently created)
+        void setParams({ sortBy: '', sortOrder: null, page: 0 });
       }
     },
     [params.sortBy, params.sortOrder, setParams]

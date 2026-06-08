@@ -599,7 +599,7 @@ interface SortableHeaderProps {
   label: string;
   columnKey: string;
   currentSortBy: string;
-  currentSortOrder: 'asc' | 'desc';
+  currentSortOrder: 'asc' | 'desc' | null;
   onSort: (columnKey: string) => void;
 }
 
@@ -611,7 +611,7 @@ interface VacancyTablePaginationProps {
 
 interface CreateColumnsOptions {
   sortBy: string;
-  sortOrder: 'asc' | 'desc';
+  sortOrder: 'asc' | 'desc' | null;
   onSort: (columnKey: string) => void;
   t: (key: string) => string;
 }

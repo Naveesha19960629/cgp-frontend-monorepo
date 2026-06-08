@@ -13,6 +13,9 @@ import {
 } from '@/views/vacancies/hooks';
 
 import { Input } from '@cgp/ui-kit/components/ui/input';
+import { removeEmoji } from '@cgp/ui-kit/lib/utils';
+
+const DEBOUNCE_MS = 400;
 
 const STATUS_VALUES = [
   { value: 'Draft', labelKey: 'vacancies.table.filter.statusOptions.draft' },
@@ -28,6 +31,9 @@ const STATUS_VALUES = [
   { value: 'Onhold', labelKey: 'vacancies.table.filter.statusOptions.onHold' },
 ];
 
+const sanitize = (value: string) =>
+  removeEmoji(value).trimStart().replace(/ {2,}/g, ' ');
+
 export default function VacancyFilteringSection({
   search,
   onSearchChange,
@@ -39,8 +45,65 @@ export default function VacancyFilteringSection({
   onStatusChange,
 }: VacancyFilteringSectionProps) {
   const { t } = useTranslation('ats');
+
+  // Main search — local input state keeps the field responsive while the
+  // API call is debounced. We use the render-time derived-state pattern
+  // (React docs recommendation) instead of useEffect to avoid cascading renders.
+  // Because clearTimeout cancels every pending timer on each keystroke, only the
+  // final typed value is ever sent upstream, so the prop echo always matches
+  // localSearch and setLocalSearch becomes a no-op in that case.
+  const [localSearch, setLocalSearch] = React.useState(search);
+  const [prevPropSearch, setPrevPropSearch] = React.useState(search);
+  const searchTimerRef = React.useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  if (search !== prevPropSearch) {
+    setPrevPropSearch(search);
+    setLocalSearch(search);
+  }
+
+  const handleSearchChange = (value: string) => {
+    const clean = sanitize(value);
+    setLocalSearch(clean);
+    clearTimeout(searchTimerRef.current);
+    searchTimerRef.current = setTimeout(
+      () => onSearchChange(clean),
+      DEBOUNCE_MS
+    );
+  };
+
+  const handleSearchBlur = () => {
+    const trimmed = localSearch.trim();
+    clearTimeout(searchTimerRef.current);
+    setLocalSearch(trimmed);
+    onSearchChange(trimmed);
+  };
+
+  React.useEffect(() => () => clearTimeout(searchTimerRef.current), []);
+
+  // Career path filter search — separate display vs query state so the
+  // CommandInput stays responsive while the API call is debounced.
+  const [careerPathInput, setCareerPathInput] = React.useState('');
   const [careerPathSearch, setCareerPathSearch] = React.useState('');
+
+  React.useEffect(() => {
+    const timer = setTimeout(
+      () => setCareerPathSearch(careerPathInput),
+      DEBOUNCE_MS
+    );
+    return () => clearTimeout(timer);
+  }, [careerPathInput]);
+
+  // Discipline filter search — same pattern.
+  const [disciplineInput, setDisciplineInput] = React.useState('');
   const [disciplineSearch, setDisciplineSearch] = React.useState('');
+
+  React.useEffect(() => {
+    const timer = setTimeout(
+      () => setDisciplineSearch(disciplineInput),
+      DEBOUNCE_MS
+    );
+    return () => clearTimeout(timer);
+  }, [disciplineInput]);
 
   const { data: careerPathsData, isLoading: isCareerPathsLoading } =
     useCareerPathsQuery(careerPathSearch);
@@ -85,8 +148,8 @@ export default function VacancyFilteringSection({
         options={careerPathOptions}
         selectedValues={selectedCareerPaths}
         onSelectionChange={values => onCareerPathChange(values.join(','))}
-        searchValue={careerPathSearch}
-        onSearchChange={setCareerPathSearch}
+        searchValue={careerPathInput}
+        onSearchChange={value => setCareerPathInput(sanitize(value))}
         isLoading={isCareerPathsLoading}
       />
       <DataTableFacetedFilter
@@ -94,8 +157,8 @@ export default function VacancyFilteringSection({
         options={disciplineOptions}
         selectedValues={selectedDisciplines}
         onSelectionChange={values => onDisciplineChange(values.join(','))}
-        searchValue={disciplineSearch}
-        onSearchChange={setDisciplineSearch}
+        searchValue={disciplineInput}
+        onSearchChange={value => setDisciplineInput(sanitize(value))}
         isLoading={isDisciplinesLoading}
       />
       <DataTableFacetedFilter
@@ -109,8 +172,9 @@ export default function VacancyFilteringSection({
         <SearchNormal1 className="absolute top-1/2 left-4 size-6 -translate-y-1/2 text-slate-900" />
         <Input
           placeholder={t('vacancies.table.filter.searchPlaceholder')}
-          value={search}
-          onChange={e => onSearchChange(e.target.value)}
+          value={localSearch}
+          onChange={e => handleSearchChange(e.target.value)}
+          onBlur={handleSearchBlur}
           className="h-12 w-99.5 rounded-lg border-slate-300 bg-white pl-13 text-sm font-medium shadow-none placeholder:text-slate-400"
         />
       </div>
