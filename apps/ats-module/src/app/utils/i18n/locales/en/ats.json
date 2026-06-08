@@ -113,6 +113,17 @@
     "copyOfTitle": "Copy of {{title}}",
     "addForm": "Add another form",
     "createQuestion": "Create Question",
+    "confirmDisableDialog": {
+      "title": "Are you sure?",
+      "message": "Are you sure you want to disable this section? Disabling this section will permanently remove all added data. This action cannot be undone",
+      "cancel": "Cancel",
+      "disable": "Disable"
+    },
+    "validationModal": {
+      "title": "Try Again",
+      "message": "Please add a section title and at least one form with one question before proceeding.",
+      "action": "Okay"
+    },
     "errors": {
       "maxLengthExceeded": "Exceeded maximum character length of {{max}}",
       "maxFormsExceeded": "Exceeded maximum of 5 forms allowed",

@@ -11,6 +11,12 @@ import { CharacterCount } from '@cgp/ui-kit/components/character-count';
 import { ErrorToast } from '@cgp/ui-kit/components/custom-toast';
 import { Button } from '@cgp/ui-kit/components/ui/button';
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from '@cgp/ui-kit/components/ui/dialog';
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -18,6 +24,9 @@ import {
   SelectValue,
 } from '@cgp/ui-kit/components/ui/select';
 import { Switch } from '@cgp/ui-kit/components/ui/switch';
+import { removeEmoji } from '@cgp/ui-kit/lib/utils';
+
+import DisableDialog from './disable-dialog';
 
 // ── UI-only state types (not API types) ──────────────────────────────────────
 
@@ -63,7 +72,7 @@ const createQuestion = (id: number): Question => ({
   type: '',
   required: false,
   options: [{ id: 1, value: '' }],
-  from: 1,
+  from: 0,
   to: 2,
   startLabel: '',
   endLabel: '',
@@ -175,7 +184,7 @@ function QuestionCard({
             maxLength={QUESTION_MAX}
             value={question.text}
             placeholder={t('customizableForm.question.questionPlaceholder')}
-            onChange={e => set({ text: e.target.value })}
+            onChange={e => set({ text: removeEmoji(e.target.value) })}
             className="h-11 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:ring-0 focus:outline-none"
           />
         </div>
@@ -239,7 +248,9 @@ function QuestionCard({
                     type="text"
                     maxLength={OPTION_MAX}
                     value={opt.value}
-                    onChange={e => updateOption(opt.id, e.target.value)}
+                    onChange={e =>
+                      updateOption(opt.id, removeEmoji(e.target.value))
+                    }
                     placeholder={t('customizableForm.question.enterOption')}
                     className="h-11 flex-1 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:ring-0 focus:outline-none"
                   />
@@ -291,7 +302,9 @@ function QuestionCard({
                     type="text"
                     maxLength={OPTION_MAX}
                     value={opt.value}
-                    onChange={e => updateOption(opt.id, e.target.value)}
+                    onChange={e =>
+                      updateOption(opt.id, removeEmoji(e.target.value))
+                    }
                     placeholder={t('customizableForm.question.enterOption')}
                     className="h-11 flex-1 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:ring-0 focus:outline-none"
                   />
@@ -343,7 +356,9 @@ function QuestionCard({
                     type="text"
                     maxLength={OPTION_MAX}
                     value={opt.value}
-                    onChange={e => updateOption(opt.id, e.target.value)}
+                    onChange={e =>
+                      updateOption(opt.id, removeEmoji(e.target.value))
+                    }
                     placeholder={t('customizableForm.question.enterOption')}
                     className="h-11 flex-1 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:ring-0 focus:outline-none"
                   />
@@ -396,7 +411,7 @@ function QuestionCard({
                     <SelectContent>
                       {SCALE_RANGE_START.map(n => (
                         <SelectItem key={n} value={String(n)}>
-                          {n}
+                          {String(n)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -417,7 +432,7 @@ function QuestionCard({
                     <SelectContent>
                       {SCALE_RANGE_END.map(n => (
                         <SelectItem key={n} value={String(n)}>
-                          {n}
+                          {String(n)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -445,7 +460,7 @@ function QuestionCard({
                 type="text"
                 maxLength={START_END_MAX}
                 value={question.startLabel}
-                onChange={e => set({ startLabel: e.target.value })}
+                onChange={e => set({ startLabel: removeEmoji(e.target.value) })}
                 className="h-11 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:ring-0 focus:outline-none"
               />
             </div>
@@ -464,7 +479,7 @@ function QuestionCard({
                 type="text"
                 maxLength={START_END_MAX}
                 value={question.endLabel}
-                onChange={e => set({ endLabel: e.target.value })}
+                onChange={e => set({ endLabel: removeEmoji(e.target.value) })}
                 className="h-11 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:ring-0 focus:outline-none"
               />
             </div>
@@ -510,14 +525,30 @@ function QuestionCard({
 
 export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
   const { t } = useTranslation('ats');
-  const [isEnabled, setIsEnabled] = useState(true);
+  const [isEnabled, setIsEnabled] = useState(false);
   const [sectionTitle, setSectionTitle] = useState('');
   const [forms, setForms] = useState<FormCard[]>([createForm(1)]);
   const [nextFormId, setNextFormId] = useState(2);
+  const [showDisableConfirm, setShowDisableConfirm] = useState(false);
+  const [showValidationModal, setShowValidationModal] = useState(false);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, []);
+
+  const hasAtLeastOneQuestion = forms.some(form => form.questions.length > 0);
+  const hasFormData =
+    sectionTitle.trim().length > 0 ||
+    forms.some(
+      form =>
+        form.title.trim().length > 0 ||
+        form.questions.length > 0 ||
+        form.questions.some(
+          q =>
+            q.text.trim().length > 0 ||
+            q.options.some(o => o.value.trim().length > 0)
+        )
+    );
 
   const isSectionTitleError = sectionTitle.length > 200;
 
@@ -617,6 +648,15 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
   };
 
   const duplicateQuestion = (formId: number, questionId: number) => {
+    const form = forms.find(f => f.id === formId);
+    if (form && form.questions.length >= MAX_QUESTIONS) {
+      ErrorToast({
+        title: t('common.errorTitle'),
+        description: t('customizableForm.errors.maxQuestionsExceeded'),
+      });
+      return;
+    }
+
     setForms(prev =>
       prev.map(f => {
         if (f.id !== formId) return f;
@@ -643,6 +683,34 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
     );
   };
 
+  const handleToggleEnabled = (enabled: boolean) => {
+    if (!enabled) {
+      if (hasFormData) {
+        setShowDisableConfirm(true);
+      } else {
+        setIsEnabled(false);
+      }
+      return;
+    }
+
+    setIsEnabled(true);
+  };
+
+  const handleNext = () => {
+    if (isEnabled) {
+      const missingSectionTitle = sectionTitle.trim().length === 0;
+      const missingRequiredFormData =
+        forms.length === 0 || !hasAtLeastOneQuestion;
+
+      if (missingSectionTitle || missingRequiredFormData) {
+        setShowValidationModal(true);
+        return;
+      }
+    }
+
+    onNext();
+  };
+
   // ── Render ──────────────────────────────────────────────────────────────
 
   return (
@@ -663,18 +731,26 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
           </h2>
         </div>
 
-        <Switch checked={isEnabled} onCheckedChange={setIsEnabled} size="lg" />
+        <Switch
+          checked={isEnabled}
+          onCheckedChange={handleToggleEnabled}
+          size="lg"
+        />
       </div>
 
       {/* Content area */}
-      <div className="px-7 pb-6">
+      <div
+        className={
+          isEnabled ? 'px-7 pb-6' : 'pointer-events-none px-7 pb-6 opacity-60'
+        }
+      >
         {/* Section Title */}
         <div className="mt-2">
           <input
             type="text"
             placeholder={t('customizableForm.sectionTitlePlaceholder')}
             value={sectionTitle}
-            onChange={e => setSectionTitle(e.target.value)}
+            onChange={e => setSectionTitle(removeEmoji(e.target.value))}
             className="w-full border-0 border-b border-slate-200 bg-transparent px-0 pb-3 text-[24px] leading-8 font-bold tracking-[-0.144px] text-slate-900 placeholder:text-slate-300 focus:border-slate-300 focus:ring-0 focus:outline-none"
           />
           {isSectionTitleError && (
@@ -742,7 +818,9 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
                         type="text"
                         placeholder={t('customizableForm.formTitlePlaceholder')}
                         value={form.title}
-                        onChange={e => updateFormTitle(form.id, e.target.value)}
+                        onChange={e =>
+                          updateFormTitle(form.id, removeEmoji(e.target.value))
+                        }
                         className="w-full border-0 border-b border-slate-200 bg-transparent px-0 pb-3 text-[24px] leading-8 font-bold tracking-[-0.144px] text-slate-900 placeholder:text-slate-300 focus:border-slate-300 focus:ring-0 focus:outline-none"
                       />
                       {isFormTitleError && (
@@ -802,11 +880,48 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
         </div>
       </div>
 
+      <DisableDialog
+        open={showDisableConfirm}
+        onOpenChange={setShowDisableConfirm}
+        title={t('customizableForm.confirmDisableDialog.title')}
+        message={t('customizableForm.confirmDisableDialog.message')}
+        cancelLabel={t('customizableForm.confirmDisableDialog.cancel')}
+        disableLabel={t('customizableForm.confirmDisableDialog.disable')}
+        onCancel={() => setShowDisableConfirm(false)}
+        onDisable={() => {
+          setSectionTitle('');
+          setForms([createForm(1)]);
+          setNextFormId(2);
+          setShowDisableConfirm(false);
+          setIsEnabled(false);
+        }}
+      />
+
+      <Dialog open={showValidationModal} onOpenChange={setShowValidationModal}>
+        <DialogContent className="w-99 rounded-2xl p-7">
+          <DialogTitle className="text-xl font-bold text-slate-900">
+            {t('customizableForm.validationModal.title')}
+          </DialogTitle>
+          <DialogDescription className="mt-2 text-sm text-slate-900">
+            {t('customizableForm.validationModal.message')}
+          </DialogDescription>
+          <div className="mt-6 flex justify-end">
+            <Button
+              type="button"
+              className="h-10 min-w-24"
+              onClick={() => setShowValidationModal(false)}
+            >
+              {t('customizableForm.validationModal.action')}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <div className="sticky bottom-0 mt-auto flex items-center justify-end gap-4 bg-white px-6 py-7 shadow-[0px_-8px_6.8px_0px_rgba(0,0,0,0.04)]">
         <Button variant="secondary" className="h-12 w-48" onClick={onBack}>
           {t('common.cancel')}
         </Button>
-        <Button className="h-12 w-48" onClick={() => onNext()}>
+        <Button className="h-12 w-48" onClick={handleNext}>
           {t('common.next')}
         </Button>
       </div>
