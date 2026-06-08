@@ -48,6 +48,7 @@ export default function VacanciesPage() {
   const hasActiveFilters = Boolean(
     params.search || params.careerPath || params.discipline || params.status
   );
+  const showHeaderControls = isLoading || data.length > 0 || hasActiveFilters;
 
   const handleSort = React.useCallback(
     (columnKey: string) => {
@@ -98,8 +99,8 @@ export default function VacanciesPage() {
         <p className="shrink-0 text-2xl/8 font-bold text-slate-900">
           {t('vacancies.title')}
         </p>
-        <div className="flex min-w-0 flex-1 items-center justify-end gap-4">
-          {!isLoading && data.length !== 0 && (
+        {showHeaderControls && (
+          <div className="flex min-w-0 flex-1 items-center justify-end gap-4">
             <VacancyFilteringSection
               search={params.search}
               onSearchChange={value =>
@@ -118,8 +119,6 @@ export default function VacanciesPage() {
                 void setParams({ status: value, page: 0 })
               }
             />
-          )}
-          {!isLoading && data.length !== 0 && (
             <Button
               className="h-12 w-45 shrink-0 gap-1"
               onClick={() => {
@@ -129,8 +128,8 @@ export default function VacanciesPage() {
               <Add className="size-5 stroke-2" />
               {t('vacancies.createVacancyButton')}
             </Button>
-          )}
-        </div>
+          </div>
+        )}
       </div>
       <div className="min-h-0 flex-1 overflow-hidden">
         {!isLoading && data.length === 0 ? (

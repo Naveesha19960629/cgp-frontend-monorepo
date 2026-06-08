@@ -113,7 +113,7 @@ export default function VacancyTableEmptyState() {
         </tbody>
       </table>
 
-      <div className="absolute inset-0 flex items-center justify-center">
+      <div className="absolute inset-0 top-11 flex items-center justify-center bg-[rgba(255,255,255,0.1)] backdrop-blur-[5px]">
         <div className="flex items-center gap-6">
           {/* Illustration */}
           <div className="relative size-32.75 shrink-0 overflow-hidden rounded-full">

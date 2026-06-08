@@ -142,7 +142,7 @@ export default function VacancyFilteringSection({
   const selectedStatuses = statusFilter ? statusFilter.split(',') : [];
 
   return (
-    <div className="flex min-w-0 flex-1 items-center gap-3">
+    <div className="flex items-center gap-3">
       <DataTableFacetedFilter
         title={t('vacancies.table.filter.careerPath')}
         options={careerPathOptions}
@@ -168,7 +168,7 @@ export default function VacancyFilteringSection({
         onSelectionChange={values => onStatusChange(values.join(','))}
         hideSearch
       />
-      <div className="relative min-w-40 flex-1">
+      <div className="relative w-80">
         <SearchNormal1 className="absolute top-1/2 left-4 size-6 -translate-y-1/2 text-slate-900" />
         <Input
           placeholder={t('vacancies.table.filter.searchPlaceholder')}
