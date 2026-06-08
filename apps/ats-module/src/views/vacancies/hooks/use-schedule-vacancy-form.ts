@@ -50,10 +50,19 @@ const scheduleVacancySchema = z
   });
 
 /**
- * Convert "hh:mm[:ss] AM/PM" → "HH:mm:ss" (24-hour) for internal Date comparison.
- * Accepts both with and without seconds (format 4: "05:27 PM").
+ * Convert "HH:mm:ss" (24-hour) to "HH:mm:ss" (passthrough for 24-hour format).
+ * Also handles "hh:mm[:ss] AM/PM" to "HH:mm:ss" for backward compatibility.
  */
 function to24Hour(time: string): string {
+  // Already in 24-hour format (HH:mm:ss)
+  if (/^\d{2}:\d{2}:\d{2}$/.test(time.trim())) {
+    return time;
+  }
+  // Also handle HH:mm format
+  if (/^\d{2}:\d{2}$/.test(time.trim())) {
+    return `${time}:00`;
+  }
+  // Handle AM/PM format for backward compatibility
   const match = /^(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)$/i.exec(time.trim());
   if (!match) return time; // unrecognised — pass through
   let hours = Number.parseInt(match[1], 10);
@@ -70,10 +79,10 @@ function to24Hour(time: string): string {
  * display strings so the form can be pre-populated from saved data.
  *
  * Accepted inputs:
- *   "2026-06-25T05:27:10.819 PM"  → { date: "2026-06-25", time: "05:27:10 PM" }
- *   "2026-06-25T05:27:10 PM"      → { date: "2026-06-25", time: "05:27:10 PM" }
- *   "2026-06-25 05:27:10 PM"      → { date: "2026-06-25", time: "05:27:10 PM" }
- *   "2026-06-25 05:27 PM"         → { date: "2026-06-25", time: "05:27 PM"    }
+ *   "2026-06-25T05:27:10.819 PM"  (date-time ISO with ms)
+ *   "2026-06-25T05:27:10 PM"      (date-time ISO)
+ *   "2026-06-25 05:27:10 PM"      (date-time space)
+ *   "2026-06-25 05:27 PM"         (date-time space no seconds)
  */
 function parseBackendDatetime(value: string): { date: string; time: string } {
   const match =
@@ -93,6 +102,31 @@ function parseBackendDatetime(value: string): { date: string; time: string } {
 type ScheduleVacancyFormValues = z.infer<typeof scheduleVacancySchema>;
 
 /**
+ * Convert "HH:mm:ss" (24-hour) to "hh:mm:ss AM/PM" (12-hour) for backend API.
+ * If already in AM/PM format, normalize to always include seconds.
+ */
+function from24Hour(time: string): string {
+  if (!time) return '';
+  const trimmedTime = time.trim();
+
+  // Already in AM/PM format - normalize and ensure seconds are included
+  const twelveHourMatch = /^(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)$/i.exec(
+    trimmedTime
+  );
+  if (twelveHourMatch) {
+    const [, hours, minutes, seconds = '00', period] = twelveHourMatch;
+    return `${String(Number.parseInt(hours, 10)).padStart(2, '0')}:${minutes}:${seconds} ${period.toUpperCase()}`;
+  }
+
+  const [hours, minutes, seconds = '00'] = trimmedTime.split(':');
+  let hour24 = Number.parseInt(hours, 10);
+  const period = hour24 >= 12 ? 'PM' : 'AM';
+  let hour12 = hour24 % 12;
+  if (hour12 === 0) hour12 = 12;
+  return `${String(hour12).padStart(2, '0')}:${minutes}:${seconds} ${period}`;
+}
+
+/**
  * Build the API payload strings in the format the backend expects.
  * Uses the T-separator + seconds variant: "2026-06-25T05:27:10 PM".
  * If the user omits seconds (types "05:27 PM"), that shorter form is sent
@@ -102,8 +136,8 @@ function toScheduleVacancyPayload(
   values: ScheduleVacancyFormValues
 ): ScheduleVacancy {
   return {
-    schedulePublishAt: `${values.schedulePublishDate}T${values.schedulePublishTime.trim()}`,
-    expirationAt: `${values.expirationDate}T${values.expirationTime.trim()}`,
+    schedulePublishAt: `${values.schedulePublishDate}T${from24Hour(values.schedulePublishTime.trim())}`,
+    expirationAt: `${values.expirationDate}T${from24Hour(values.expirationTime.trim())}`,
   };
 }
 
@@ -117,6 +151,7 @@ function useScheduleVacancyForm(defaults?: Partial<ScheduleVacancy>) {
 
   return useForm<ScheduleVacancyFormValues>({
     resolver: zodResolver(scheduleVacancySchema),
+    mode: 'onChange',
     defaultValues: {
       schedulePublishDate: publish?.date ?? '',
       schedulePublishTime: publish?.time ?? '',

@@ -17,3 +17,4 @@ export {
   isUrlFormatValid,
 } from '@/views/vacancies/utils/url-validation';
 export { resolveUserCreatedOptions } from '@/views/vacancies/utils/job-requirements-form-helpers';
+export { formatDisplayDateTime } from '@/views/vacancies/utils/schedule-display-date-time';
