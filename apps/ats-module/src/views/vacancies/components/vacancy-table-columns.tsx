@@ -296,12 +296,13 @@ const createVacancyColumns = ({
     ),
     cell: ({ row }) => {
       const { status } = row.original;
+      const normalizedStatus = status.toLowerCase();
       return (
         <div className="flex items-center gap-3 px-6">
           <div className="min-w-30">
             <VacancyStatusBadge status={status} />
           </div>
-          <VacancyActiveToggle isActive={status.toLowerCase() === 'live'} />
+          <VacancyActiveToggle isActive={normalizedStatus === 'live'} />
         </div>
       );
     },
@@ -311,7 +312,13 @@ const createVacancyColumns = ({
     id: 'actions',
     header: '',
     cell: ({ row }) => (
-      <VacancyTableAction vacancy={{ id: row.original.vacancyId }} />
+      <VacancyTableAction
+        vacancy={{
+          id: row.original.vacancyId,
+          status: row.original.status,
+          applicantCount: row.original.applicantCount,
+        }}
+      />
     ),
     size: 50,
   },

@@ -127,7 +127,7 @@
         "discipline": "Discipline",
         "careerPath": "Career Path",
         "role": "Role",
-        "createdAt": "Created At",
+        "createdAt": "Created Date",
         "createdBy": "Created By",
         "schedulePublishAt": "Schedule Publish Date & Time",
         "expirationAt": "Expire Publish Date & Time",
@@ -144,7 +144,6 @@
         "copyLink": "Copy Link",
         "makeACopy": "Make a Copy",
         "edit": "Edit",
-        "editJD": "Edit JD",
         "delete": "Delete"
       },
       "pagination": {

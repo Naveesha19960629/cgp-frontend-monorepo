@@ -15,16 +15,35 @@ import {
 } from '@cgp/ui-kit/components/ui/dropdown-menu';
 
 export default function VacancyTableAction({
-  vacancy: _vacancy,
+  vacancy,
   onVersionHistory,
   onMatchCandidate,
   onCopyLink,
   onMakeACopy,
   onEdit,
-  onEditJD,
   onDelete,
 }: VacancyTableActionProps) {
   const { t } = useTranslation('ats');
+
+  const { status, applicantCount } = vacancy;
+  const hasApplicants = applicantCount > 0;
+  const normalizedStatus = status.toLowerCase();
+
+  const isDraft = normalizedStatus === 'draft';
+  const isUnpublished = normalizedStatus === 'unpublished';
+  const isLive = normalizedStatus === 'live';
+  const isExpired = normalizedStatus === 'expired';
+  const isOnHold = normalizedStatus === 'on_hold';
+
+  const showDuplicate = isUnpublished || isLive || isExpired || isOnHold;
+  const showVersionHistory = isUnpublished || isLive || isExpired || isOnHold;
+  const showCopyLink = isUnpublished || isLive || isExpired || isOnHold;
+  const showMatchCandidates =
+    (isLive || isExpired || isOnHold) && hasApplicants;
+  const showDelete =
+    isDraft ||
+    isUnpublished ||
+    ((isLive || isExpired || isOnHold) && !hasApplicants);
 
   return (
     <DropdownMenu>
@@ -42,53 +61,57 @@ export default function VacancyTableAction({
       >
         <DropdownMenuItem
           className="gap-2 px-3 py-3 text-sm font-medium text-slate-500"
-          onClick={onVersionHistory}
-        >
-          <History className="size-4 shrink-0" />
-          {t('vacancies.table.actions.versionHistory')}
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          className="gap-2 px-3 py-3 text-sm font-medium text-slate-500"
-          onClick={onMatchCandidate}
-        >
-          <UserSearch className="size-4 shrink-0" />
-          {t('vacancies.table.actions.matchCandidate')}
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          className="gap-2 px-3 py-3 text-sm font-medium text-slate-500"
-          onClick={onCopyLink}
-        >
-          <Link21 className="size-4 shrink-0" />
-          {t('vacancies.table.actions.copyLink')}
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          className="gap-2 px-3 py-3 text-sm font-medium text-slate-500"
-          onClick={onMakeACopy}
-        >
-          <Simcard2 className="size-4 shrink-0" />
-          {t('vacancies.table.actions.makeACopy')}
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          className="gap-2 px-3 py-3 text-sm font-medium text-slate-500"
           onClick={onEdit}
         >
           <Edit2 className="size-4 shrink-0" />
           {t('vacancies.table.actions.edit')}
         </DropdownMenuItem>
-        <DropdownMenuItem
-          className="gap-2 px-3 py-3 text-sm font-medium text-slate-500"
-          onClick={onEditJD}
-        >
-          <Edit2 className="size-4 shrink-0" />
-          {t('vacancies.table.actions.editJD')}
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          className="gap-2 px-3 py-3 text-sm font-medium text-[#e11d48] focus:text-[#e11d48]"
-          onClick={onDelete}
-        >
-          <Trash className="size-4 shrink-0 text-[#e11d48]" />
-          {t('vacancies.table.actions.delete')}
-        </DropdownMenuItem>
+
+        {showDuplicate && (
+          <DropdownMenuItem
+            className="gap-2 px-3 py-3 text-sm font-medium text-slate-500"
+            onClick={onMakeACopy}
+          >
+            <Simcard2 className="size-4 shrink-0" />
+            {t('vacancies.table.actions.makeACopy')}
+          </DropdownMenuItem>
+        )}
+        {showMatchCandidates && (
+          <DropdownMenuItem
+            className="gap-2 px-3 py-3 text-sm font-medium text-slate-500"
+            onClick={onMatchCandidate}
+          >
+            <UserSearch className="size-4 shrink-0" />
+            {t('vacancies.table.actions.matchCandidate')}
+          </DropdownMenuItem>
+        )}
+        {showVersionHistory && (
+          <DropdownMenuItem
+            className="gap-2 px-3 py-3 text-sm font-medium text-slate-500"
+            onClick={onVersionHistory}
+          >
+            <History className="size-4 shrink-0" />
+            {t('vacancies.table.actions.versionHistory')}
+          </DropdownMenuItem>
+        )}
+        {showCopyLink && (
+          <DropdownMenuItem
+            className="gap-2 px-3 py-3 text-sm font-medium text-slate-500"
+            onClick={onCopyLink}
+          >
+            <Link21 className="size-4 shrink-0" />
+            {t('vacancies.table.actions.copyLink')}
+          </DropdownMenuItem>
+        )}
+        {showDelete && (
+          <DropdownMenuItem
+            className="gap-2 px-3 py-3 text-sm font-medium text-[#e11d48] focus:text-[#e11d48]"
+            onClick={onDelete}
+          >
+            <Trash className="size-4 shrink-0 text-[#e11d48]" />
+            {t('vacancies.table.actions.delete')}
+          </DropdownMenuItem>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );

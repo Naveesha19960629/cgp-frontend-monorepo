@@ -800,13 +800,14 @@ interface VacancyDataTableProps<TData> {
 interface VacancyTableActionProps {
   vacancy: {
     id: string;
+    status: string;
+    applicantCount: number;
   };
   onVersionHistory?: () => void;
   onMatchCandidate?: () => void;
   onCopyLink?: () => void;
   onMakeACopy?: () => void;
   onEdit?: () => void;
-  onEditJD?: () => void;
   onDelete?: () => void;
 }
 
