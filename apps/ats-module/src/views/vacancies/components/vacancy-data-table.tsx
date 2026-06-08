@@ -116,9 +116,8 @@ export default function VacancyDataTable<TData>({
       // z-index 4: pinned header corners sit above non-pinned headers (3) and pinned body (1).
       zIndex: isHeader ? 4 : 1,
       backgroundColor: isHeader ? '#F1F5F9' : '#fff',
-      boxShadow: isHeader
-        ? undefined
-        : isLastLeftPinned && canScrollLeft
+      boxShadow:
+        isLastLeftPinned && canScrollLeft
           ? '10px 0 6px -3px rgba(0,0,0,0.06)'
           : isFirstRightPinned && canScrollRight
             ? '-10px 0 6px -3px rgba(0,0,0,0.06)'
