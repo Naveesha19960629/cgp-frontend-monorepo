@@ -297,12 +297,16 @@ const createVacancyColumns = ({
     cell: ({ row }) => {
       const { status } = row.original;
       const normalizedStatus = status.toLowerCase();
+      const showToggle =
+        normalizedStatus === 'live' || normalizedStatus === 'on_hold';
       return (
         <div className="flex items-center gap-3 px-6">
           <div className="min-w-30">
             <VacancyStatusBadge status={status} />
           </div>
-          <VacancyActiveToggle isActive={normalizedStatus === 'live'} />
+          {showToggle && (
+            <VacancyActiveToggle isActive={normalizedStatus === 'live'} />
+          )}
         </div>
       );
     },
