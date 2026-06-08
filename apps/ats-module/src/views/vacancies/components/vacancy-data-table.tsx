@@ -22,7 +22,7 @@ export default function VacancyDataTable<TData>({
 }: VacancyDataTableProps<TData>) {
   const scrollRootRef = React.useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = React.useState(false);
-  const [canScrollRight, setCanScrollRight] = React.useState(true);
+  const [canScrollRight, setCanScrollRight] = React.useState(false);
 
   React.useEffect(() => {
     const root = scrollRootRef.current;
@@ -116,11 +116,12 @@ export default function VacancyDataTable<TData>({
       // z-index 4: pinned header corners sit above non-pinned headers (3) and pinned body (1).
       zIndex: isHeader ? 4 : 1,
       backgroundColor: isHeader ? '#F1F5F9' : '#fff',
-      boxShadow:
-        isLastLeftPinned && canScrollLeft
-          ? '6px 0 6px rgba(0,0,0,0.03)'
+      boxShadow: isHeader
+        ? undefined
+        : isLastLeftPinned && canScrollLeft
+          ? '7px 0 6px -6px rgba(0,0,0,0.06)'
           : isFirstRightPinned && canScrollRight
-            ? '-7px 0 6px rgba(0,0,0,0.03)'
+            ? '-7px 0 6px -6px rgba(0,0,0,0.08)'
             : undefined,
     };
   };
