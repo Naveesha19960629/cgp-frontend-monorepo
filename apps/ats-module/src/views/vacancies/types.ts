@@ -831,7 +831,21 @@ interface CreateColumnsOptions {
   t: (key: string) => string;
 }
 
+interface VacancyActiveToggleProps {
+  isActive: boolean;
+  onToggle?: (isActive: boolean) => void;
+}
+
+interface StatusConfig {
+  bg: string;
+  border: string;
+  text: string;
+  labelKey: string;
+}
+
 export type {
+  StatusConfig,
+  VacancyActiveToggleProps,
   CreateColumnsOptions,
   VacancyTablePaginationProps,
   SortableHeaderProps,

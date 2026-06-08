@@ -1,15 +1,10 @@
 import { useTranslation } from 'react-i18next';
 
+import type { StatusConfig } from '@/views/vacancies';
+
 import { cn } from '@cgp/ui-kit/lib/utils';
 
 type VacancyStatus = 'draft' | 'unpublished' | 'live' | 'expired' | 'on_hold';
-
-interface StatusConfig {
-  bg: string;
-  border: string;
-  text: string;
-  labelKey: string;
-}
 
 const STATUS_CONFIG: Record<VacancyStatus, StatusConfig> = {
   draft: {
