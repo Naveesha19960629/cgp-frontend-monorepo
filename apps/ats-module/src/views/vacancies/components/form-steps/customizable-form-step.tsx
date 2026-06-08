@@ -5,7 +5,8 @@ import { ArrowDown2, ArrowLeft2, Simcard2, Trash } from 'iconsax-reactjs';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import type { StepProps } from '@/views/vacancies/types';
+import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
+import type { StepProps, VacancyForm } from '@/views/vacancies/types';
 
 import { CharacterCount } from '@cgp/ui-kit/components/character-count';
 import { ErrorToast } from '@cgp/ui-kit/components/custom-toast';
@@ -525,6 +526,7 @@ function QuestionCard({
 
 export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
   const { t } = useTranslation('ats');
+  const { form } = useVacancyForm();
   const [isEnabled, setIsEnabled] = useState(false);
   const [sectionTitle, setSectionTitle] = useState('');
   const [forms, setForms] = useState<FormCard[]>([createForm(1)]);
@@ -535,6 +537,50 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, []);
+
+  // Load saved customizable form data from context
+  useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
+    const customForm = (form as any).customizableForm;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    if (customForm?.forms && customForm.forms.length > 0) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+      const restoredForms: FormCard[] = customForm.forms.map(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (f: any) => {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-call
+          const maxQuestionId = Math.max(
+            ...(f.questions?.map((q: { id: number }) => q.id) ?? [0]),
+            0
+          );
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-call
+          const maxOptionId = Math.max(
+            ...(f.questions?.flatMap(
+              (q: { options?: Array<{ id: number }> }) =>
+                q.options?.map(o => o.id) ?? []
+            ) ?? [0]),
+            0
+          );
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+          return {
+            id: f.id,
+            title: f.title,
+            isOpen: true,
+            questions: f.questions,
+            nextQuestionId: maxQuestionId + 1,
+            nextOptionId: maxOptionId + 1,
+          };
+        }
+      );
+
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
+      setIsEnabled(customForm.isEnabled);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
+      setSectionTitle(customForm.sectionTitle);
+      setForms(restoredForms);
+      setNextFormId(Math.max(...restoredForms.map(f => f.id), 0) + 1);
+    }
+  }, [form]);
 
   const hasAtLeastOneQuestion = forms.some(form => form.questions.length > 0);
   const hasFormData =
@@ -708,7 +754,20 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
       }
     }
 
-    onNext();
+    // Build the payload for persistence
+    const payload: Partial<VacancyForm> = {
+      customizableForm: {
+        isEnabled,
+        sectionTitle,
+        forms: forms.map(form => ({
+          id: form.id,
+          title: form.title,
+          questions: form.questions,
+        })),
+      },
+    };
+
+    onNext(payload);
   };
 
   // ── Render ──────────────────────────────────────────────────────────────
