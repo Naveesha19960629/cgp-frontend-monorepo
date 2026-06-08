@@ -50,6 +50,33 @@ export default function VacanciesPage() {
   );
   const showHeaderControls = isLoading || data.length > 0 || hasActiveFilters;
 
+  React.useEffect(() => {
+    // Detect reload: beforeunload sets this key; a shared-link open (new tab/session)
+    // has an empty sessionStorage and never finds it.
+    const wasHere = sessionStorage.getItem('vacancies_page_loaded');
+    sessionStorage.removeItem('vacancies_page_loaded');
+
+    if (wasHere) {
+      void setParams({
+        page: 0,
+        size: 12,
+        sortBy: '',
+        sortOrder: null,
+        search: '',
+        careerPath: '',
+        discipline: '',
+        status: '',
+      });
+    }
+
+    const markUnload = () =>
+      sessionStorage.setItem('vacancies_page_loaded', '1');
+    window.addEventListener('beforeunload', markUnload);
+    return () => window.removeEventListener('beforeunload', markUnload);
+    // setParams is stable; this must only run once on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleSort = React.useCallback(
     (columnKey: string) => {
       if (params.sortBy !== columnKey) {
