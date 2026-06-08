@@ -139,12 +139,14 @@ describe('createVacancyColumns', () => {
 
   it('renders vacancyId as first 4 chars uppercase with # prefix', () => {
     render(<TableWrapper data={[sampleRow]} />);
-    expect(screen.getByText('#ABCD')).toBeInTheDocument();
+    expect(screen.getByText('#F4E3')).toBeInTheDocument();
   });
 
   it('renders the title cell content', () => {
     render(<TableWrapper data={[sampleRow]} />);
-    expect(screen.getByText('Software Engineer')).toBeInTheDocument();
+    expect(
+      screen.getByText('DevOps Engineer - AWS/Kubernetes')
+    ).toBeInTheDocument();
   });
 
   it('renders the status badge and active toggle in the status cell', () => {
