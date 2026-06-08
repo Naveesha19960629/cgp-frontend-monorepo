@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 import type { ScheduleVacancy } from '@/views/vacancies/types';
+import { TWELVE_HOUR_TIME_REGEX } from '@/views/vacancies/utils/constants';
 
 const scheduleVacancySchema = z
   .object({
@@ -63,7 +64,7 @@ function to24Hour(time: string): string {
     return `${time}:00`;
   }
   // Handle AM/PM format for backward compatibility
-  const match = /^(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)$/i.exec(time.trim());
+  const match = TWELVE_HOUR_TIME_REGEX.exec(time.trim());
   if (!match) return time; // unrecognised — pass through
   let hours = Number.parseInt(match[1], 10);
   const minutes = match[2];
@@ -110,16 +111,14 @@ function from24Hour(time: string): string {
   const trimmedTime = time.trim();
 
   // Already in AM/PM format - normalize and ensure seconds are included
-  const twelveHourMatch = /^(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)$/i.exec(
-    trimmedTime
-  );
+  const twelveHourMatch = TWELVE_HOUR_TIME_REGEX.exec(trimmedTime);
   if (twelveHourMatch) {
     const [, hours, minutes, seconds = '00', period] = twelveHourMatch;
     return `${String(Number.parseInt(hours, 10)).padStart(2, '0')}:${minutes}:${seconds} ${period.toUpperCase()}`;
   }
 
   const [hours, minutes, seconds = '00'] = trimmedTime.split(':');
-  let hour24 = Number.parseInt(hours, 10);
+  const hour24 = Number.parseInt(hours, 10);
   const period = hour24 >= 12 ? 'PM' : 'AM';
   let hour12 = hour24 % 12;
   if (hour12 === 0) hour12 = 12;
