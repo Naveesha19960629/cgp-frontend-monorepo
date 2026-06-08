@@ -1,5 +1,3 @@
-import * as React from 'react';
-
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
@@ -40,22 +38,26 @@ const t = (key: string) => key;
 const onSort = vi.fn();
 
 const sampleRow: VacancyTableColumn = {
-  vacancyId: 'abcd-efgh-ijkl',
-  title: 'Software Engineer',
-  jobTitle: 'Senior Developer',
-  discipline: 'Engineering',
-  careerPath: 'Technology',
-  role: 'Developer',
-  createdAtLabel: '2024-01-01',
-  createdBy: 'John',
-  schedulePublishAtLabel: '2024-02-01',
-  expirationAtLabel: '2024-12-31',
-  applicantCount: 5,
-  updatedAtLabel: '2024-01-15',
-  updatedBy: 'Jane',
+  vacancyId: 'f4e3d2c1-b0a9-8f7e-6d5c-4b3a2f1e0d9c',
+  title: 'DevOps Engineer - AWS/Kubernetes',
+  jobTitle: 'DevOps Engineer',
+  discipline: 'Infrastructure',
+  careerPath: 'Technical',
+  role: 'Individual Contributor',
+  createdAt: '2026-05-29T11:15:00.000Z',
+  createdAtLabel: 'May 29, 2026',
+  createdBy: 'Cloud Operations',
+  schedulePublishAt: '2026-05-29T12:00:00.000Z',
+  schedulePublishAtLabel: 'May 29, 2026',
+  expirationAt: '2026-06-29T23:59:59.000Z',
+  expirationAtLabel: 'June 29, 2026',
+  applicantCount: 8,
+  updatedAt: '2026-05-29T11:15:00.000Z',
+  updatedAtLabel: 'May 29, 2026',
+  updatedBy: 'Cloud Operations',
   version: 1,
-  status: 'Live',
-  availableActions: [],
+  status: 'ON_HOLD',
+  availableActions: ['VIEW', 'EDIT', 'CLOSE'],
 };
 
 function TableWrapper({

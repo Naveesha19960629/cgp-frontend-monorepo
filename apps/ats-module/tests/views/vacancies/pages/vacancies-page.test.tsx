@@ -64,7 +64,12 @@ describe('VacanciesPage', () => {
     useVacancyTableParamsMock.mockReturnValue([defaultParams, vi.fn()]);
   });
 
-  it('renders page heading and create vacancy button', () => {
+  it('renders page heading and create vacancy button when data exists', () => {
+    useVacanciesQueryMock.mockReturnValue({
+      isLoading: false,
+      data: { data: { content: [{ id: '1' }], totalPages: 1 } },
+    });
+
     render(<VacanciesPage />);
 
     expect(screen.getByText('vacancies.title')).toBeInTheDocument();
@@ -73,8 +78,25 @@ describe('VacanciesPage', () => {
     ).toBeInTheDocument();
   });
 
+  it('hides create vacancy button and filters when no data and no active filters', () => {
+    render(<VacanciesPage />);
+
+    expect(screen.getByText('vacancies.title')).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'vacancies.createVacancyButton' })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId('vacancy-filtering-section')
+    ).not.toBeInTheDocument();
+  });
+
   it('navigates to create vacancy route when create button is clicked', async () => {
     const user = userEvent.setup();
+
+    useVacanciesQueryMock.mockReturnValue({
+      isLoading: false,
+      data: { data: { content: [{ id: '1' }], totalPages: 1 } },
+    });
 
     render(<VacanciesPage />);
 

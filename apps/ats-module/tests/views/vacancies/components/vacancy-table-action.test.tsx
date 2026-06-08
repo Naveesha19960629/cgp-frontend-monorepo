@@ -13,17 +13,20 @@ describe('VacancyTableAction', () => {
   const onCopyLink = vi.fn();
   const onMakeACopy = vi.fn();
   const onEdit = vi.fn();
-  const onEditJD = vi.fn();
   const onDelete = vi.fn();
 
+  // unpublished + no applicants: Edit, Duplicate, Version History, Copy Link, Delete
   const defaultProps = {
-    vacancy: { id: 'test-vacancy-id' },
+    vacancy: {
+      id: 'test-vacancy-id',
+      status: 'unpublished',
+      applicantCount: 0,
+    },
     onVersionHistory,
     onMatchCandidate,
     onCopyLink,
     onMakeACopy,
     onEdit,
-    onEditJD,
     onDelete,
   };
 
@@ -36,32 +39,78 @@ describe('VacancyTableAction', () => {
     ).toBeInTheDocument();
   });
 
-  it('shows all action menu items when opened', async () => {
+  it('shows correct action items for unpublished vacancy when opened', async () => {
     const user = userEvent.setup();
     render(<VacancyTableAction {...defaultProps} />);
     await user.click(screen.getByRole('button'));
 
     expect(
-      screen.getByText('vacancies.table.actions.versionHistory')
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText('vacancies.table.actions.matchCandidate')
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText('vacancies.table.actions.copyLink')
+      screen.getByText('vacancies.table.actions.edit')
     ).toBeInTheDocument();
     expect(
       screen.getByText('vacancies.table.actions.makeACopy')
     ).toBeInTheDocument();
     expect(
-      screen.getByText('vacancies.table.actions.edit')
+      screen.getByText('vacancies.table.actions.versionHistory')
     ).toBeInTheDocument();
     expect(
-      screen.getByText('vacancies.table.actions.editJD')
+      screen.getByText('vacancies.table.actions.copyLink')
     ).toBeInTheDocument();
     expect(
       screen.getByText('vacancies.table.actions.delete')
     ).toBeInTheDocument();
+    // Match candidates not shown for unpublished
+    expect(
+      screen.queryByText('vacancies.table.actions.matchCandidate')
+    ).not.toBeInTheDocument();
+  });
+
+  it('shows match candidates and hides delete for live vacancy with applicants', async () => {
+    const user = userEvent.setup();
+    render(
+      <VacancyTableAction
+        {...defaultProps}
+        vacancy={{ id: 'test', status: 'live', applicantCount: 3 }}
+      />
+    );
+    await user.click(screen.getByRole('button'));
+
+    expect(
+      screen.getByText('vacancies.table.actions.matchCandidate')
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText('vacancies.table.actions.delete')
+    ).not.toBeInTheDocument();
+  });
+
+  it('hides duplicate, version history, copy link, and match candidates for draft vacancy', async () => {
+    const user = userEvent.setup();
+    render(
+      <VacancyTableAction
+        {...defaultProps}
+        vacancy={{ id: 'test', status: 'draft', applicantCount: 0 }}
+      />
+    );
+    await user.click(screen.getByRole('button'));
+
+    expect(
+      screen.getByText('vacancies.table.actions.edit')
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('vacancies.table.actions.delete')
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText('vacancies.table.actions.makeACopy')
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('vacancies.table.actions.versionHistory')
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('vacancies.table.actions.copyLink')
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('vacancies.table.actions.matchCandidate')
+    ).not.toBeInTheDocument();
   });
 
   it.each([
@@ -70,15 +119,9 @@ describe('VacancyTableAction', () => {
       'vacancies.table.actions.versionHistory',
       onVersionHistory,
     ],
-    [
-      'onMatchCandidate',
-      'vacancies.table.actions.matchCandidate',
-      onMatchCandidate,
-    ],
     ['onCopyLink', 'vacancies.table.actions.copyLink', onCopyLink],
     ['onMakeACopy', 'vacancies.table.actions.makeACopy', onMakeACopy],
     ['onEdit', 'vacancies.table.actions.edit', onEdit],
-    ['onEditJD', 'vacancies.table.actions.editJD', onEditJD],
     ['onDelete', 'vacancies.table.actions.delete', onDelete],
   ])(
     'calls %s callback when its menu item is clicked',
@@ -90,4 +133,19 @@ describe('VacancyTableAction', () => {
       expect(callback).toHaveBeenCalledTimes(1);
     }
   );
+
+  it('calls onMatchCandidate callback when its menu item is clicked', async () => {
+    const user = userEvent.setup();
+    render(
+      <VacancyTableAction
+        {...defaultProps}
+        vacancy={{ id: 'test', status: 'live', applicantCount: 1 }}
+      />
+    );
+    await user.click(screen.getByRole('button'));
+    await user.click(
+      screen.getByText('vacancies.table.actions.matchCandidate')
+    );
+    expect(onMatchCandidate).toHaveBeenCalledTimes(1);
+  });
 });

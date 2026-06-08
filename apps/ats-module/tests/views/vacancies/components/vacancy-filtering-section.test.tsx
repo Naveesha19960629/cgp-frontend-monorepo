@@ -31,7 +31,9 @@ const { mockCareerPaths, mockDisciplines } = vi.hoisted(() => ({
 }));
 
 vi.mock('@/views/vacancies/hooks', () => ({
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
   useCareerPathsQuery: (...args: unknown[]) => mockCareerPaths(...args),
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
   useDisciplinesQuery: (...args: unknown[]) => mockDisciplines(...args),
 }));
 
