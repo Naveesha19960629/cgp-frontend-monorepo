@@ -119,9 +119,9 @@ export default function VacancyDataTable<TData>({
       boxShadow: isHeader
         ? undefined
         : isLastLeftPinned && canScrollLeft
-          ? '7px 0 6px -6px rgba(0,0,0,0.06)'
+          ? '10px 0 6px -3px rgba(0,0,0,0.06)'
           : isFirstRightPinned && canScrollRight
-            ? '-7px 0 6px -6px rgba(0,0,0,0.08)'
+            ? '-10px 0 6px -3px rgba(0,0,0,0.06)'
             : undefined,
     };
   };
