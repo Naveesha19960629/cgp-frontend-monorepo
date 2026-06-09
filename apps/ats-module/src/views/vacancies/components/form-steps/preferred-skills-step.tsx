@@ -1,5 +1,9 @@
 import { Plus, X } from 'lucide-react';
 
+import { ArrowLeft2 } from 'iconsax-reactjs';
+
+import * as SwitchPrimitive from '@radix-ui/react-switch';
+
 import { useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -31,8 +35,6 @@ import { Checkbox } from '@cgp/ui-kit/components/ui/checkbox';
 import { cn } from '@cgp/ui-kit/lib/utils';
 
 import DisableDialog from './disable-dialog';
-import StepFooter from './step-footer';
-import StepHeader from './step-header';
 
 const MAX_SKILLS = 10;
 const MAX_SKILL_CHARS = 100;
@@ -332,26 +334,50 @@ export default function PreferredSkillsStep({
 
   return (
     <div>
-      {/* Header — sticky within the parent scroll container */}
-      <StepHeader
-        title={t('preferredSkills.title')}
-        isEnabled={isEnabled}
-        onBack={onBack}
-        onToggle={() => {
-          if (isEnabled) {
-            if (selectedSkills.length > 0 || dataTakenFromCandidate) {
-              setConfirmDisableOpen(true);
+      {/* ── Section Header ──────────────────────────────────────────── */}
+      <div className="flex items-center justify-between px-7 py-8">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            aria-label={t('common.back')}
+            className="text-slate-700 transition-colors hover:text-slate-900"
+            onClick={onBack}
+          >
+            <ArrowLeft2 size={24} />
+          </button>
+          <h2 className="text-xl font-bold tracking-tight text-slate-900">
+            {t('preferredSkills.title')}
+          </h2>
+        </div>
+        <SwitchPrimitive.Root
+          checked={isEnabled}
+          onCheckedChange={newValue => {
+            if (!newValue) {
+              if (selectedSkills.length > 0 || dataTakenFromCandidate) {
+                setConfirmDisableOpen(true);
+              } else {
+                setIsEnabled(false);
+              }
             } else {
-              setIsEnabled(false);
+              setIsEnabled(true);
             }
-          } else {
-            setIsEnabled(true);
-          }
-        }}
-      />
+          }}
+          className={cn(
+            'focus-visible:ring-ring/50 inline-flex h-6 w-12 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent shadow-xs transition-colors outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50',
+            isEnabled ? 'bg-brand-primary-500' : 'bg-slate-300'
+          )}
+        >
+          <SwitchPrimitive.Thumb
+            className={cn(
+              'pointer-events-none block h-5 w-5 rounded-full bg-white shadow-lg ring-0 transition-transform',
+              isEnabled ? 'translate-x-6' : 'translate-x-0'
+            )}
+          />
+        </SwitchPrimitive.Root>
+      </div>
 
-      {/* Body — no overflow-y-auto; parent scroll container handles scrolling */}
-      <div className="px-8 py-6">
+      {/* Body */}
+      <div className="flex flex-col gap-4 px-6">
         <div className={cn(!isEnabled && 'pointer-events-none opacity-60')}>
           {/* Checkbox */}
           <div className="mb-6 flex items-start gap-2">
@@ -604,7 +630,15 @@ export default function PreferredSkillsStep({
       />
 
       {/* Footer — sticky at bottom of the parent scroll container */}
-      <StepFooter onNext={() => void handleNext()} onCancel={onBack} />
+      {/* ── Step footer ──────────────────────────────────────────────────── */}
+      <div className="sticky bottom-0 flex items-center justify-end gap-4 bg-white px-6 py-7 shadow-[0px_-8px_6.8px_0px_rgba(0,0,0,0.04)]">
+        <Button variant="secondary" className="h-12 w-48" onClick={onBack}>
+          {t('common.cancel')}
+        </Button>
+        <Button className="h-12 w-48" onClick={() => void handleNext()}>
+          {t('common.next')}
+        </Button>
+      </div>
     </div>
   );
 }
