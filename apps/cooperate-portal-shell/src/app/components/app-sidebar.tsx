@@ -35,7 +35,7 @@ export function AppSidebar() {
     <Sidebar className="bg-slate-50">
       <SidebarHeader className="mt-7 ml-6 items-start p-0">
         <img
-          src={import.meta.env.VITE_PORTAL_LOGO as string}
+          src={import.meta.env.VITE_PORTAL_LOGO || '/oxo_careers_logo.svg'}
           alt="Company Logo"
           className="h-5.5 w-auto"
         />
