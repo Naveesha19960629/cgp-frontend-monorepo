@@ -16,9 +16,12 @@ export {
   VACANCY_STATUS_CONFIG,
   VACANCY_STATUS_FALLBACK_CONFIG,
   EMPTY_STATE_ROW_WIDTHS,
+  TWELVE_HOUR_TIME_REGEX,
+  TWENTY_FOUR_HOUR_TIME_REGEX,
 } from '@/views/vacancies/utils/constants';
 export {
   isUrlProtocolValid,
   isUrlFormatValid,
 } from '@/views/vacancies/utils/url-validation';
 export { resolveUserCreatedOptions } from '@/views/vacancies/utils/job-requirements-form-helpers';
+export { formatDisplayDateTime } from '@/views/vacancies/utils/schedule-display-date-time';

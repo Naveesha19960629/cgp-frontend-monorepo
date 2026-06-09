@@ -63,6 +63,8 @@ const EMPTY_STATE_ROW_WIDTHS = [
   { first: 'w-[269px]', rest: 'w-[141px]' },
   { first: 'w-[210px]', rest: 'w-[141px]' },
 ];
+const TWELVE_HOUR_TIME_REGEX = /^(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)$/i;
+const TWENTY_FOUR_HOUR_TIME_REGEX = /^(\d{2}):(\d{2})(?::(\d{2}))?$/;
 
 export {
   URL_PROTOCOL_HTTP,
@@ -73,4 +75,6 @@ export {
   VACANCY_STATUS_CONFIG,
   VACANCY_STATUS_FALLBACK_CONFIG,
   EMPTY_STATE_ROW_WIDTHS,
+  TWELVE_HOUR_TIME_REGEX,
+  TWENTY_FOUR_HOUR_TIME_REGEX,
 };
