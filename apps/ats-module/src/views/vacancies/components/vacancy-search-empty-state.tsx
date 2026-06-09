@@ -1,6 +1,9 @@
 import { useTranslation } from 'react-i18next';
 
-import { TABLE_PAGE_SIZE } from '@/views/vacancies/utils';
+import {
+  EMPTY_STATE_ROW_WIDTHS,
+  TABLE_PAGE_SIZE,
+} from '@/views/vacancies/utils';
 
 import { cn } from '@cgp/ui-kit/lib/utils';
 
@@ -8,21 +11,6 @@ const tableEmptyStateAvatar = new URL(
   '../../../assets/images/table-empty-state-avatar.svg',
   import.meta.url
 ).href;
-
-const rowWidths = [
-  { first: 'w-[269px]', rest: 'w-[141px]' },
-  { first: 'w-[220px]', rest: 'w-[141px]' },
-  { first: 'w-[269px]', rest: 'w-[141px]' },
-  { first: 'w-[250px]', rest: 'w-[141px]' },
-  { first: 'w-[269px]', rest: 'w-[141px]' },
-  { first: 'w-[200px]', rest: 'w-[141px]' },
-  { first: 'w-[269px]', rest: 'w-[141px]' },
-  { first: 'w-[240px]', rest: 'w-[141px]' },
-  { first: 'w-[269px]', rest: 'w-[141px]' },
-  { first: 'w-[230px]', rest: 'w-[141px]' },
-  { first: 'w-[269px]', rest: 'w-[141px]' },
-  { first: 'w-[210px]', rest: 'w-[141px]' },
-];
 
 export default function VacancySearchEmptyState() {
   const { t } = useTranslation('ats');
@@ -82,7 +70,7 @@ export default function VacancySearchEmptyState() {
                 <div
                   className={cn(
                     'h-5 rounded bg-slate-100',
-                    rowWidths[rowIndex]?.first ?? 'w-67.25'
+                    EMPTY_STATE_ROW_WIDTHS[rowIndex]?.first ?? 'w-67.25'
                   )}
                 />
               </td>
@@ -99,7 +87,7 @@ export default function VacancySearchEmptyState() {
                   <div
                     className={cn(
                       'h-5 rounded bg-slate-100',
-                      rowWidths[rowIndex]?.rest ?? 'w-35.25'
+                      EMPTY_STATE_ROW_WIDTHS[rowIndex]?.rest ?? 'w-35.25'
                     )}
                   />
                 </td>
