@@ -7,6 +7,13 @@ export const httpClient = axios.create({
   },
 });
 
+export const temporaryHttpClient = axios.create({
+  baseURL: 'http://localhost:9999/api/',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
 export function isAxiosError<T = unknown>(
   error: unknown
 ): error is AxiosError<T> {

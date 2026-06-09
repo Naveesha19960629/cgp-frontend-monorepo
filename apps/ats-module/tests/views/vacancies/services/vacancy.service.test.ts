@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { vacancyService } from '@/views/vacancies/services/vacancy.service';
 
@@ -13,6 +13,10 @@ vi.mock('@cgp/data-access', () => ({
 }));
 
 describe('vacancyService', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   describe('createVacancy', () => {
     it('sends POST request to /vacancies endpoint', async () => {
       const mockResponse = {

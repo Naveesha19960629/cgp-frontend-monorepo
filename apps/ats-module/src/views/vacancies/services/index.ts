@@ -1,4 +1,5 @@
 export { genderService } from '@/views/vacancies/services/gender.service';
+export { disciplineService } from '@/views/vacancies/services/discipline.service';
 export { industryService } from '@/views/vacancies/services/industry.service';
 export { maritalStatusService } from '@/views/vacancies/services/marital-status.service';
 export { placesService } from '@/views/vacancies/services/places.service';
@@ -9,7 +10,6 @@ export { careerPathService } from '@/views/vacancies/services/career-path.servic
 export { languageService } from '@/views/vacancies/services/language.service';
 export { causeService } from '@/views/vacancies/services/cause.service';
 export { hobbyService } from '@/views/vacancies/services/hobby.service';
-export { vacancyService } from '@/views/vacancies/services/vacancy.service';
 export { locationService } from '@/views/vacancies/services/location.service';
 export type { LocationOption } from '@/views/vacancies/services/location.service';
 export { organizationService } from '@/views/vacancies/services/organization.service';
@@ -18,9 +18,9 @@ export { projectService } from '@/views/vacancies/services/project.service';
 export { publicationService } from '@/views/vacancies/services/publication.service';
 export { secondaryEducationService } from '@/views/vacancies/services/secondary-education.service';
 export { tertiaryEducationService } from '@/views/vacancies/services/tertiary-education.service';
+export { vacancyService } from '@/views/vacancies/services/vacancy.service';
 export { licenseCertificatesService } from '@/views/vacancies/services/license-certificates.service';
 export type { LicenseCertLookupItem } from '@/views/vacancies/services/license-certificates.service';
-export { disciplineService } from '@/views/vacancies/services/discipline.service';
 export { roleService } from '@/views/vacancies/services/role.service';
 export { jobTitleService } from '@/views/vacancies/services/job-title.service';
 export { employmentTypeService } from '@/views/vacancies/services/employment-type.service';
