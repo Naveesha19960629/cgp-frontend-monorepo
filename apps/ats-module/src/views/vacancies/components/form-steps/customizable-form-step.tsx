@@ -523,7 +523,6 @@ function QuestionCard({
 }
 
 // ── Main step ────────────────────────────────────────────────────────────────
-
 export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
   const { t } = useTranslation('ats');
   const { form } = useVacancyForm();
@@ -573,11 +572,13 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
         }
       );
 
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
+      // eslint-disable-next-line react-hooks/set-state-in-effect, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
       setIsEnabled(customForm.isEnabled);
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
+      // eslint-disable-next-line react-hooks/set-state-in-effect, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
       setSectionTitle(customForm.sectionTitle);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setForms(restoredForms);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setNextFormId(Math.max(...restoredForms.map(f => f.id), 0) + 1);
     }
   }, [form]);

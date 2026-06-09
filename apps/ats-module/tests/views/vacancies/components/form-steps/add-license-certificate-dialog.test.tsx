@@ -248,7 +248,7 @@ describe('AddLicenseCertDialog', () => {
 
     // Select License
     await user.click(screen.getByTestId('select-license'));
-    let input = screen.getByPlaceholderText(
+    const input = screen.getByPlaceholderText(
       'licenseCertificates.addLicenseCertDialog.namePlaceholderLicense'
     );
     expect(input).toBeInTheDocument();

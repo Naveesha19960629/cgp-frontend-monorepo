@@ -10,6 +10,9 @@ vi.mock('@cgp/data-access', () => ({
   },
 }));
 
+// eslint-disable-next-line @typescript-eslint/unbound-method
+const postMock = vi.mocked(dataAccess.httpClient.post);
+
 describe('vacancyService', () => {
   describe('createVacancy', () => {
     it('sends POST request to /vacancies endpoint', async () => {
@@ -20,7 +23,7 @@ describe('vacancyService', () => {
           message: 'Vacancy created successfully',
         },
       };
-      vi.mocked(dataAccess.httpClient.post).mockResolvedValue(mockResponse);
+      postMock.mockResolvedValue(mockResponse);
 
       const payload = {
         schedule: {
@@ -31,10 +34,7 @@ describe('vacancyService', () => {
 
       const result = await vacancyService.createVacancy(payload);
 
-      expect(dataAccess.httpClient.post).toHaveBeenCalledWith(
-        '/vacancies',
-        payload
-      );
+      expect(postMock).toHaveBeenCalledWith('/vacancies', payload);
       expect(result).toEqual(mockResponse.data);
     });
 
@@ -46,7 +46,7 @@ describe('vacancyService', () => {
           message: 'OK',
         },
       };
-      vi.mocked(dataAccess.httpClient.post).mockResolvedValue(mockResponse);
+      postMock.mockResolvedValue(mockResponse);
 
       const result = await vacancyService.createVacancy({
         schedule: {
@@ -62,7 +62,7 @@ describe('vacancyService', () => {
 
     it('throws error when HTTP request fails', async () => {
       const mockError = new Error('Network error');
-      vi.mocked(dataAccess.httpClient.post).mockRejectedValue(mockError);
+      postMock.mockRejectedValue(mockError);
 
       await expect(
         vacancyService.createVacancy({
@@ -82,7 +82,7 @@ describe('vacancyService', () => {
           message: 'Created',
         },
       };
-      vi.mocked(dataAccess.httpClient.post).mockResolvedValue(mockResponse);
+      postMock.mockResolvedValue(mockResponse);
 
       const payload = {
         schedule: {
@@ -93,7 +93,7 @@ describe('vacancyService', () => {
 
       await vacancyService.createVacancy(payload);
 
-      expect(dataAccess.httpClient.post).toHaveBeenCalledWith(
+      expect(postMock).toHaveBeenCalledWith(
         '/vacancies',
         expect.objectContaining({
           schedule: {
