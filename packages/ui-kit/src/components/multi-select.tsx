@@ -442,7 +442,7 @@ const MultipleSelector = React.forwardRef<
               const newOptions = [...selected, existingOption];
               setSelected(newOptions);
               onChange?.(newOptions);
-              if (newOptions.length >= maxSelected) {
+              if (newOptions.length > maxSelected) {
                 setShowMaxError(true);
               }
               return;
@@ -453,7 +453,7 @@ const MultipleSelector = React.forwardRef<
             const newOptions = [...selected, newOption];
             setSelected(newOptions);
             onChange?.(newOptions);
-            if (newOptions.length >= maxSelected) {
+            if (newOptions.length > maxSelected) {
               setShowMaxError(true);
             }
           }}
@@ -786,7 +786,7 @@ const MultipleSelector = React.forwardRef<
                                       const newOptions = [...selected, option];
                                       setSelected(newOptions);
                                       onChange?.(newOptions);
-                                      if (newOptions.length >= maxSelected) {
+                                      if (newOptions.length > maxSelected) {
                                         setShowMaxError(true);
                                       }
                                     }}
