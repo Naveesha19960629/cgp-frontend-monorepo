@@ -26,6 +26,13 @@ vi.mock('@/app/contexts/user-context', () => ({
   useUser: () => useUserMock(),
 }));
 
+vi.mock('@react-keycloak/web', () => ({
+  useKeycloak: () => ({
+    keycloak: { authenticated: true },
+    initialized: true,
+  }),
+}));
+
 vi.mock('@/views/vacancies', () => ({
   // eslint-disable-next-line @typescript-eslint/no-unsafe-return
   useGendersQuery: () => useGendersQueryMock(),

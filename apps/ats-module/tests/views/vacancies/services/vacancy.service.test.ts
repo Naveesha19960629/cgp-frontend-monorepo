@@ -2,11 +2,13 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { vacancyService } from '@/views/vacancies/services/vacancy.service';
 
-import * as dataAccess from '@cgp/data-access';
+const { mockPost } = vi.hoisted(() => ({
+  mockPost: vi.fn(),
+}));
 
 vi.mock('@cgp/data-access', () => ({
   httpClient: {
-    post: vi.fn(),
+    post: mockPost,
   },
 }));
 
@@ -20,7 +22,7 @@ describe('vacancyService', () => {
           message: 'Vacancy created successfully',
         },
       };
-      vi.mocked(dataAccess.httpClient.post).mockResolvedValue(mockResponse);
+      mockPost.mockResolvedValue(mockResponse);
 
       const payload = {
         schedule: {
@@ -31,10 +33,7 @@ describe('vacancyService', () => {
 
       const result = await vacancyService.createVacancy(payload);
 
-      expect(dataAccess.httpClient.post).toHaveBeenCalledWith(
-        '/vacancies',
-        payload
-      );
+      expect(mockPost).toHaveBeenCalledWith('/vacancies', payload);
       expect(result).toEqual(mockResponse.data);
     });
 
@@ -46,7 +45,7 @@ describe('vacancyService', () => {
           message: 'OK',
         },
       };
-      vi.mocked(dataAccess.httpClient.post).mockResolvedValue(mockResponse);
+      mockPost.mockResolvedValue(mockResponse);
 
       const result = await vacancyService.createVacancy({
         schedule: {
@@ -62,7 +61,7 @@ describe('vacancyService', () => {
 
     it('throws error when HTTP request fails', async () => {
       const mockError = new Error('Network error');
-      vi.mocked(dataAccess.httpClient.post).mockRejectedValue(mockError);
+      mockPost.mockRejectedValue(mockError);
 
       await expect(
         vacancyService.createVacancy({
@@ -82,7 +81,7 @@ describe('vacancyService', () => {
           message: 'Created',
         },
       };
-      vi.mocked(dataAccess.httpClient.post).mockResolvedValue(mockResponse);
+      mockPost.mockResolvedValue(mockResponse);
 
       const payload = {
         schedule: {
@@ -93,7 +92,7 @@ describe('vacancyService', () => {
 
       await vacancyService.createVacancy(payload);
 
-      expect(dataAccess.httpClient.post).toHaveBeenCalledWith(
+      expect(mockPost).toHaveBeenCalledWith(
         '/vacancies',
         expect.objectContaining({
           schedule: {

@@ -10,12 +10,16 @@ import type { GenderItem } from '@/views/vacancies';
 
 import { ErrorToast } from '@cgp/ui-kit/components/custom-toast';
 import { Button } from '@cgp/ui-kit/components/ui/button';
+import { useKeycloak } from '@react-keycloak/web';
 
 export default function VacanciesPage() {
   const { user } = useUser();
   const { t } = useTranslation('ats');
   const navigate = useNavigate();
-  const { data, isLoading, isError } = useGendersQuery();
+  const { keycloak, initialized } = useKeycloak();
+  const { data, isLoading, isError } = useGendersQuery({
+    enabled: initialized && !!keycloak.authenticated,
+  });
 
   useEffect(() => {
     if (isError) {
@@ -58,7 +62,7 @@ export default function VacanciesPage() {
           </div>
         )}
         {user && <p>Welcome, {user.firstName}!</p>}
-        {data?.data.items.content.map((gender: GenderItem) => (
+        {data?.data?.items?.content?.map((gender: GenderItem) => (
           <p key={gender.id}>{gender.label}</p>
         ))}
       </div>
