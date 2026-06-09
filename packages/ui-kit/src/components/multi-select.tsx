@@ -501,19 +501,26 @@ const MultipleSelector = React.forwardRef<
 
     const selectables = React.useMemo<GroupOption>(() => {
       if (keepSelectedInList) {
-        // Ensure all currently selected options are visible in the dropdown,
-        // including user-created / PENDING options loaded from saved form data
-        // that may not yet be present in the API options or userCreatedOptions.
+        // Keep selected options authoritative for the same value so label/source
+        // stay consistent after user-created flows (e.g. skill + career path).
+        const selectedByValue = new Map(selected.map(s => [s.value, s]));
+        const normalizedOptions = Object.fromEntries(
+          Object.entries(allOptionsWithCreated).map(([groupKey, items]) => [
+            groupKey,
+            items.map(item => selectedByValue.get(item.value) ?? item),
+          ])
+        ) as GroupOption;
+
         const allValues = new Set(
-          Object.values(allOptionsWithCreated)
+          Object.values(normalizedOptions)
             .flat()
             .map(o => o.value)
         );
         const missing = selected.filter(s => !allValues.has(s.value));
-        if (missing.length === 0) return allOptionsWithCreated;
+        if (missing.length === 0) return normalizedOptions;
         return {
-          ...allOptionsWithCreated,
-          '': [...(allOptionsWithCreated[''] ?? []), ...missing],
+          ...normalizedOptions,
+          '': [...(normalizedOptions[''] ?? []), ...missing],
         };
       }
       return removePickedOption(allOptionsWithCreated, selected);

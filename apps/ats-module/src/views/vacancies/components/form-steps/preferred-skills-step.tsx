@@ -1,6 +1,6 @@
 import { Plus, X } from 'lucide-react';
 
-import { useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
@@ -60,6 +60,17 @@ export default function PreferredSkillsStep({
   const [selectedSkills, setSelectedSkills] = useState<SkillCareerPathEntry[]>(
     form.preferredSkills?.skills ?? []
   );
+  const [userCreatedSkillOptions, setUserCreatedSkillOptions] = useState<
+    Option[]
+  >(() =>
+    (form.preferredSkills?.skills ?? [])
+      .filter(s => s.source === 'USER_CREATED' || s.source === 'PENDING')
+      .map(s => ({
+        value: s.skillId || s.skillName,
+        label: s.displayValue,
+        source: s.source,
+      }))
+  );
 
   // Skill search state for the query
   const [skillSearch, setSkillSearch] = useState('');
@@ -85,6 +96,21 @@ export default function PreferredSkillsStep({
     useCareerPathsQuery(careerPathApiSearch);
 
   const apiSkills = skillsData?.data?.items?.content ?? [];
+  const skillOptions = useMemo(() => {
+    const apiOptions: Option[] = apiSkills.map(s => ({
+      value: s.id,
+      label: s.label,
+      source: 'MASTER',
+    }));
+
+    const optionsByValue = new Map<string, Option>();
+    apiOptions.forEach(option => optionsByValue.set(option.value, option));
+    userCreatedSkillOptions.forEach(option =>
+      optionsByValue.set(option.value, option)
+    );
+
+    return Array.from(optionsByValue.values());
+  }, [apiSkills, userCreatedSkillOptions]);
   const apiCareerPaths: CareerPathItem[] =
     careerPathsData?.data?.items?.content ?? [];
   const { mutateAsync: createSkillCareerPath } =
@@ -130,7 +156,10 @@ export default function PreferredSkillsStep({
     const updatedSkills: SkillCareerPathEntry[] = options.map(opt => {
       // Check if already exists in selectedSkills
       const existing = selectedSkills.find(
-        s => s.skillId === opt.value || s.skillName === opt.label
+        s =>
+          s.skillId === opt.value ||
+          s.skillName === opt.value ||
+          s.displayValue === opt.label
       );
       if (existing) return existing;
 
@@ -143,11 +172,13 @@ export default function PreferredSkillsStep({
         ? opt.label.slice(sepMatch.index + sepMatch[0].length)
         : '';
       return {
-        skillId: opt.value,
+        skillId:
+          opt.source === 'MASTER' || opt.source === 'PENDING' ? opt.value : '',
         skillName,
         careerPathId: undefined,
         careerPathName,
         displayValue: opt.label,
+        source: typeof opt.source === 'string' ? opt.source : undefined,
       };
     });
     setSelectedSkills(updatedSkills);
@@ -175,6 +206,15 @@ export default function PreferredSkillsStep({
       source: 'USER_CREATED',
     };
 
+    setUserCreatedSkillOptions(prev => {
+      const value = entry.skillId || entry.skillName;
+      const nextOption: Option = {
+        value,
+        label: entry.displayValue,
+        source: entry.source,
+      };
+      return [...prev.filter(option => option.value !== value), nextOption];
+    });
     setSelectedSkills(prev => [...prev, entry]);
     setIsCareerPathPopoverOpen(false);
     setPendingSkillName('');
@@ -360,18 +400,10 @@ export default function PreferredSkillsStep({
               })}
               onErrorStateChange={setHasMaxError}
               onChange={handleSkillsChange}
-              options={apiSkills.map(s => ({
-                value: s.id,
-                label: s.label,
-                source: 'MASTER',
-              }))}
+              options={skillOptions}
               onSearchSync={value => {
                 setSkillSearch(value);
-                return apiSkills.map(s => ({
-                  value: s.id,
-                  label: s.label,
-                  source: 'MASTER',
-                }));
+                return skillOptions;
               }}
               keepSelectedInList
               creatable
