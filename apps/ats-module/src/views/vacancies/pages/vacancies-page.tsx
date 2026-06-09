@@ -9,6 +9,7 @@ import type { VacancyQueryParams, VacancyTableColumn } from '@/views/vacancies';
 import {
   VacancyDataTable,
   VacancyFilteringSection,
+  VacancyLoadingState,
   VacancySearchEmptyState,
   VacancyTableEmptyState,
   VacancyTablePagination,
@@ -131,9 +132,11 @@ export default function VacanciesPage() {
   return (
     <section className="flex h-full flex-col overflow-hidden px-7 py-5">
       <div className="flex items-center gap-4 pb-5.5">
-        <p className="shrink-0 text-2xl/8 font-bold text-slate-900">
-          {t('vacancies.title')}
-        </p>
+        {!isLoading && (
+          <p className="shrink-0 text-2xl/8 font-bold text-slate-900">
+            {t('vacancies.title')}
+          </p>
+        )}
         {showHeaderControls && (
           <div className="flex min-w-0 flex-1 items-center justify-end gap-4">
             {!isLoading && (
@@ -171,14 +174,16 @@ export default function VacanciesPage() {
         )}
       </div>
       <div className="min-h-0 flex-1 overflow-hidden">
-        {!isLoading && data.length === 0 ? (
+        {isLoading ? (
+          <VacancyLoadingState />
+        ) : data.length === 0 ? (
           hasActiveFilters ? (
             <VacancySearchEmptyState />
           ) : (
             <VacancyTableEmptyState />
           )
         ) : (
-          <VacancyDataTable table={table} isLoading={isLoading} />
+          <VacancyDataTable table={table} isLoading={false} />
         )}
       </div>
       {!isLoading && data.length > 0 && (
