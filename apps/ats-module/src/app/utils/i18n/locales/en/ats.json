@@ -1,10 +1,761 @@
 {
+  "error": {
+    "apiDefaultMessage": "An unexpected error occurred. Please try again."
+  },
+  "autocompleteCombobox": {
+    "noDataTitle": "No Data Found",
+    "noDataDescription": "We couldn't find any matching data. Try adjusting your search.",
+    "noDataHint": "Try a different keyword or check your spelling."
+  },
+  "common": {
+    "back": "Back",
+    "cancel": "Cancel",
+    "next": "Next",
+    "loading": "Searching...",
+    "noData": "No results found",
+    "noDataTitle": "No Data Found",
+    "noDataDescription": "We couldn't find any matching data. Try adjusting your search data",
+    "errorTitle": "Try Again",
+    "notifications": {
+      "disable": {
+        "title": "Successfully Disabled",
+        "message": "{{sectionName}} has been successfully disabled."
+      }
+    }
+  },
+  "jobRequirements": {
+    "sectionTitle": "Job Requirements",
+    "bannerTitle": "Build the Application Form",
+    "bannerCertainFields": "Certain fields",
+    "bannerDescription": " in this section are always collected from candidates to support consistent candidate profiles. Any fields you don't select won't be collected",
+    "discipline": "Discipline",
+    "disciplinePlaceholder": "Select or add discipline",
+    "careerPath": "Career Path",
+    "careerPathPlaceholder": "Select or add career path",
+    "level": "Level",
+    "levelPlaceholder": "Select level",
+    "role": "Role",
+    "rolePlaceholder": "Select or add roles",
+    "jobTitle": "Job Title",
+    "jobTitlePlaceholder": "Select or add job title",
+    "employmentType": "Employment Type",
+    "employmentTypePlaceholder": "Select employment type",
+    "workSchedule": "Work Schedule",
+    "workSchedulePlaceholder": "Select work schedule",
+    "engagementModel": "Engagement Model",
+    "engagementModelPlaceholder": "Select engagement model",
+    "description": "Description",
+    "descriptionPlaceholder": "Enter description",
+    "loading": "Loading...",
+    "noData": "No results found",
+    "noAssociatedCareerPaths": "No associated career paths with the selected discipline. Add a career path to continue.",
+    "noAssociatedRoles": "No associated roles with the selected career path. Add a role to continue.",
+    "errors": {
+      "maxSelections": "Exceeded maximum of {{max}} selections.",
+      "required": {
+        "discipline": "Discipline is required",
+        "careerPath": "Career Path is required",
+        "level": "Level is required",
+        "role": "Role is required",
+        "jobTitle": "Job Title is required"
+      }
+    },
+    "dependencyHints": {
+      "careerPathNeedDiscipline": "Please select or add a discipline first",
+      "roleNeedCareerPath": "Please select or add a career path first",
+      "roleNeedLevel": "Please select a level first",
+      "roleNeedCareerPathAndLevel": "Please select or add a career path and select a level first"
+    },
+    "dataTakenFromCandidate": "If selected, no manual input is required, and data will be taken from the candidate profile",
+    "alwaysCollectedFields": {
+      "organization": "Organization",
+      "discipline": "Discipline",
+      "careerPath": "Career Path",
+      "role": "Role",
+      "jobTitle": "Job Title",
+      "employmentType": "Employment Type",
+      "workSchedule": "Work Schedule",
+      "engagementModel": "Engagement Model",
+      "startDate": "Start Date",
+      "endDate": "End Date"
+    },
+    "confirmDisableDialog": {
+      "title": "Are you sure?",
+      "message": "Are you sure you want to disable this section? Disabling this section will permanently remove all added data. This action cannot be undone",
+      "cancel": "Cancel",
+      "disable": "Disable"
+    }
+  },
   "vacancies": {
     "title": "Vacancies",
     "createVacancyButton": "Create Vacancy",
-    "editVacancy": "Edit Vacancy"
+    "editVacancy": "Edit Vacancy",
+    "createVacancy": {
+      "heading": "Create Vacancy",
+      "formTitle": "Lets Begin with the Vacancy Title",
+      "fieldTitle": "Title",
+      "titlePlaceholder": "Enter title",
+      "titleRequired": "Title is required",
+      "cancelButton": "Cancel",
+      "nextButton": "Next"
+    }
   },
+
   "findCandidate": {
     "title": "Find Candidate"
+  },
+
+  "customizableForm": {
+    "title": "Customizable Form",
+    "sectionTitlePlaceholder": "Section Title",
+    "formBuilderTitle": "Form Builder",
+    "formTitlePlaceholder": "Form Title",
+    "copyOfTitle": "Copy of {{title}}",
+    "addForm": "Add another form",
+    "createQuestion": "Create Question",
+    "errors": {
+      "maxLengthExceeded": "Exceeded maximum character length of {{max}}",
+      "maxFormsExceeded": "Exceeded maximum of 5 forms allowed",
+      "maxQuestionsExceeded": "Exceeded maximum of 10 questions allowed per form",
+      "maxOptionsExceeded": "Exceeded maximum of 5 options allowed"
+    },
+    "question": {
+      "questionLabel": "Question",
+      "questionPlaceholder": "Enter your question",
+      "typeLabel": "Type",
+      "typePlaceholder": "Select type",
+      "responsePreview": "Response Preview",
+      "shortAnswerPlaceholder": "Candidate response will appear here",
+      "paragraphPlaceholder": "Candidate response will appear here",
+      "enterOption": "Enter option",
+      "types": {
+        "shortAnswer": "Short Answer",
+        "paragraph": "Paragraph",
+        "multipleChoice": "Multiple Choice",
+        "checkboxes": "Checkboxes",
+        "dropDown": "Drop Down",
+        "linearScale": "Linear Scale"
+      },
+      "from": "From",
+      "to": "To",
+      "startLabel": "Start Label",
+      "endLabel": "End Label",
+      "addOption": "Add Option",
+      "required": "Required"
+    }
+  },
+
+  "vacancyCancelDialog": {
+    "title": "Are you sure?",
+    "description": "Are you sure you want to exit the vacancy creation workflow? Any unsaved changes will be lost",
+    "discardButton": "Discard and Exit",
+    "saveAsDraftButton": "Save as a Draft",
+    "notifications": {
+      "discard": {
+        "title": "Successfully Discarded",
+        "message": "Vacancy creation discarded successfully."
+      }
+    }
+  },
+
+  "preferredPatents": {
+    "title": "Preferred Patents",
+    "back": "Back",
+    "bannerTitle": "Build the Application Form",
+    "bannerCertainFields": "Certain fields",
+    "bannerDescription": " in this section are always collected from candidates to support consistent candidate profiles. Any fields you don't select won't be collected",
+    "dataTakenFromCandidate": "If selected, no manual input is required, and data will be taken from the candidate profile",
+    "patentTitle": "Patent {{number}}",
+    "relatedIndustry": "Related Industry",
+    "relatedIndustryPlaceholder": "Select or add related industry",
+    "status": "Status",
+    "statusPlaceholder": "Select status",
+    "from": "From",
+    "fromPlaceholder": "Select start date",
+    "to": "To",
+    "toPlaceholder": "Select end date",
+    "addPatent": "Add patent",
+    "removePatent": "Remove patent",
+    "collapse": "Collapse",
+    "expand": "Expand",
+    "cancelButton": "Cancel",
+    "nextButton": "Next",
+    "statusPending": "Patent Pending",
+    "statusIssued": "Patent Issued",
+    "industries": {
+      "loading": "Loading...",
+      "noData": "No results found"
+    },
+    "fieldList": {
+      "patentTitle": "Patent Title",
+      "patentApplicationNumber": "Patent/ Application Number",
+      "relatedIndustry": "Industry",
+      "status": "Status",
+      "issueDate": "Issue Date",
+      "fillingDate": "Filling Date",
+      "otherInventors": "Other Inventors",
+      "patentURL": "Patent URL"
+    },
+    "validation": {
+      "maxExceeded": "Exceeded maximum of {{max}} sections"
+    },
+    "disableDialog": {
+      "title": "Are you sure?",
+      "description": "Are you sure you want to disable this section? Disabling this section will permanently remove all added data. This action cannot be undone",
+      "cancelButton": "Cancel",
+      "confirmButton": "Disable"
+    },
+    "emptyDisableDialog": {
+      "title": "Are you sure?",
+      "message": "You've enabled this section but haven't filled any fields. This section will be disabled for this vacancy and no data will be collected from candidates",
+      "cancel": "Cancel",
+      "disable": "Disable"
+    },
+    "notifications": {
+      "disable": {
+        "title": "Successfully Disabled",
+        "message": "Patents have been successfully disabled."
+      }
+    }
+  },
+  "preferredHonoursAwards": {
+    "title": "Preferred Honours and Awards",
+    "back": "Back",
+    "dataTakenFromCandidate": "If selected, no manual input is required, and data will be taken from the candidate profile",
+    "honourTitle": "Honours and awards {{number}}",
+    "titleOfHonourOrAward": "Title of the Honours or Award",
+    "titleOfHonourOrAwardPlaceholder": "Title of the Honours or Award",
+    "issuedBy": "Issued By",
+    "issuedByPlaceholder": "Enter issued by",
+    "issuedDateFrom": "Issued Date From",
+    "issuedDateFromPlaceholder": "Select issue date from",
+    "issuedDateTo": "Issued Date To",
+    "issuedDateToPlaceholder": "Select issue date to",
+    "associatedOrganization": "Associated Organization",
+    "associatedOrganizationPlaceholder": "Select or add associated organization",
+    "addOrganization": "Add Organization",
+    "organizationLocation": "Organization Location",
+    "organizationLocationPlaceholder": "Select location",
+    "addHonour": "Add honour and award",
+    "removeHonour": "Remove honour and award",
+    "collapse": "Collapse",
+    "expand": "Expand",
+    "cancelButton": "Cancel",
+    "nextButton": "Next",
+    "fieldList": {
+      "titleOfHonourOrAward": "Title of the Honours or Award",
+      "associatedOrganization": "Associated Organization",
+      "issuedDate": "Issued Date"
+    },
+    "validation": {
+      "maxExceeded": "Exceeded maximum of {{max}} selections."
+    },
+    "disableDialog": {
+      "title": "Are you sure?",
+      "description": "Are you sure you want to disable this section? Disabling this section will permanently remove all added data. This action cannot be undone",
+      "cancelButton": "Cancel",
+      "confirmButton": "Disable"
+    },
+    "emptyDisableDialog": {
+      "title": "Are you sure?",
+      "message": "You've enabled this section but haven't filled any fields. This section will be disabled for this vacancy and no data will be collected from candidates",
+      "cancel": "Cancel",
+      "disable": "Disable"
+    },
+    "notifications": {
+      "disable": {
+        "title": "Successfully Disabled",
+        "message": "Preferred Honours and Awards have been successfully disabled."
+      }
+    }
+  },
+  "profileRequirements": {
+    "title": "Profile Requirements",
+    "back": "Back",
+    "bannerTitle": "Build the Application Form",
+    "bannerCertainFields": "Certain fields",
+    "bannerDescription": " in this section are always collected from candidates to support consistent candidate profiles. Any fields you don't select won't be collected",
+    "dataTakenFromCandidate": "If selected, no manual input is required, and data will be taken from the candidate profile",
+    "gender": "Gender",
+    "genderPlaceholder": "Select gender",
+    "maritalStatus": "Marital Status",
+    "maritalStatusPlaceholder": "Select marital status",
+    "addressesTitle": "Addresses",
+    "addressesDescription": "Please provide addresses",
+    "addressTitle": "Address {{number}}",
+    "city": "City",
+    "cityPlaceholder": "Select city",
+    "stateProvince": "State / Province / Region",
+    "stateProvincePlaceholder": "Select state/province/region",
+    "country": "Country",
+    "countryPlaceholder": "Select country",
+    "postalCode": "Postal Code / Zip",
+    "postalCodePlaceholder": "Enter portal code/zip",
+    "addAddress": "Add address",
+    "removeAddress": "Remove address",
+    "collapse": "Collapse",
+    "expand": "Expand",
+    "cancelButton": "Cancel",
+    "nextButton": "Next",
+    "errors": {
+      "duplicateEntry": "This entry already exists.",
+      "maxEntries": "Exceeded maximum of {{max}} entries allowed."
+    },
+    "fieldList": {
+      "title": "Title",
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "email": "Email",
+      "numberType": "Number Type",
+      "primaryPhoneNumber": "Primary Phone Number",
+      "permanentAddressDetails": "Permanent Address Details",
+      "currentAddressDetails": "Current Address Details"
+    },
+    "disableDialog": {
+      "title": "Are you sure?",
+      "description": "Are you sure you want to disable this section? Disabling this section will permanently remove all added data. This action cannot be undone",
+      "cancelButton": "Cancel",
+      "confirmButton": "Disable"
+    },
+    "emptyDisableDialog": {
+      "title": "Are you sure?",
+      "message": "You've enabled this section but haven't filled any fields. This section will be disabled for this vacancy and no data will be collected from candidates",
+      "cancel": "Cancel",
+      "disable": "Disable"
+    }
+  },
+  "secondaryEducation": {
+    "title": "Secondary Educational Requirements",
+    "sectionTitle": "Secondary Education",
+    "collectFromCandidates": "If selected, no manual input is required, and data will be taken from the candidate profile",
+    "acceptsHomeSchooling": "Accepts Home Schooling",
+    "schoolName": "School Name",
+    "schoolLocation": "School Location",
+    "examination": "Examination",
+    "awardingBody": "Awarding Body",
+    "fieldOfStudy": "Field of Study",
+    "grade": "Grade",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "results": "Results",
+    "bannerTitle": "Build the Application Form",
+    "bannerMessageHighlight": "Certain fields",
+    "bannerMessageRest": "in this section are always collected from candidates to support consistent candidate profiles. Any fields you don't select won't be collected",
+    "addEntry": "Add",
+    "back": "Back",
+    "cancel": "Cancel",
+    "next": "Next",
+    "addSchoolDialog": {
+      "title": "Add School",
+      "schoolName": "School Name",
+      "schoolLocation": "School Location",
+      "schoolUrl": "School URL",
+      "schoolNamePlaceholder": "Enter your school name",
+      "schoolLocationPlaceholder": "Select school location",
+      "schoolUrlPlaceholder": "Enter your school URL",
+      "cancel": "Cancel",
+      "addNow": "Add Now",
+      "nameRequired": "School name is required",
+      "locationRequired": "School location is required",
+      "schoolUrlInvalid": "School URL must start with http:// or https://.",
+      "schoolUrlFormat": "School URL must be a valid format.",
+      "success": {
+        "title": "Successfully Added",
+        "message": "New school has been successfully added."
+      }
+    },
+    "placeholders": {
+      "school": "Select or add school",
+      "schoolLocation": "Select location",
+      "examination": "Select or add examination",
+      "awardingBody": "Select or add awarding body",
+      "fieldOfStudy": "Select or add field of study",
+      "grade": "Enter grade",
+      "startDate": "Select start date",
+      "endDate": "Select end date",
+      "results": "Enter your results"
+    },
+    "errors": {
+      "maxSelections": "Exceeded maximum of 10 selections."
+    },
+    "search": {
+      "loading": "Loading...",
+      "noData": "No results found"
+    },
+    "confirmDisableDialog": {
+      "title": "Are you sure?",
+      "message": "Are you sure you want to disable this section? Disabling this section will permanently remove all added data. This action cannot be undone",
+      "cancel": "Cancel",
+      "disable": "Disable"
+    }
+  },
+  "tertiaryEducation": {
+    "title": "Tertiary Educational Requirements",
+    "sectionTitle": "Tertiary Education",
+    "collectFromCandidates": "If selected, no manual input is required, and data will be taken from the candidate profile",
+    "qualificationName": "Required Qualification(s)",
+    "tertiaryAwardingBody": "Preferred Awarding Body / Institute Name",
+    "tertiaryAwardingBodyLocations": "Desired Awarding Body / Institute Location",
+    "levelOfQualification": "Level of the Qualification",
+    "specialization": "Specialization",
+    "studyMode": "Mode of Study",
+    "studyPattern": "Study Pattern",
+    "deliverySchedule": "Delivery Schedule",
+    "batch": "Batch",
+    "department": "Department",
+    "faculty": "Faculty",
+    "grade": "Grade",
+    "bannerTitle": "Build the Application Form",
+    "bannerMessageHighlight": "Certain fields",
+    "bannerMessageRest": "in this section are always collected from candidates to support consistent candidate profiles. Any fields you don't select won't be collected",
+    "addEntry": "Add",
+    "back": "Back",
+    "cancel": "Cancel",
+    "next": "Next",
+    "addAwardingBodyDialog": {
+      "title": "Add Awarding Body/Institute",
+      "name": "Awarding Body/Institute Name",
+      "location": "Awarding Body/Institute Location",
+      "url": "Awarding Body/Institute URL",
+      "namePlaceholder": "Enter awarding body/institute name",
+      "locationPlaceholder": "Select awarding body/institute location",
+      "urlPlaceholder": "Enter awarding body/institute URL",
+      "cancel": "Cancel",
+      "addNow": "Add Now",
+      "nameRequired": "Awarding body/institute name is required",
+      "locationRequired": "Awarding body/institute location is required",
+      "urlInvalid": "Awarding Body/Institute URL must start with http:// or https://.",
+      "urlFormat": "Awarding Body/Institute URL must be a valid format.",
+      "success": {
+        "title": "Successfully Added",
+        "message": "New Awarding Body/Institute has been successfully added."
+      }
+    },
+    "placeholders": {
+      "qualificationName": "Select or add required qualification",
+      "awardingBody": "Select or add preferred awarding body/institute name",
+      "awardingBodyLocation": "Select location",
+      "levelOfQualification": "Select or add level of the qualification",
+      "specialization": "Select or add specialization",
+      "studyMode": "Select mode of study",
+      "studyPattern": "Select study pattern",
+      "deliverySchedule": "Select delivery schedule",
+      "batch": "Select or add batch",
+      "department": "Select or add department",
+      "faculty": "Select or add faculty",
+      "grade": "Enter grade"
+    },
+    "errors": {
+      "maxSelections": "Exceeded maximum of 10 selections."
+    },
+    "search": {
+      "loading": "Loading...",
+      "noData": "No results found"
+    },
+    "confirmDisableDialog": {
+      "title": "Are you sure?",
+      "message": "Are you sure you want to disable this section? Disabling this section will permanently remove all added data. This action cannot be undone",
+      "cancel": "Cancel",
+      "disable": "Disable"
+    }
+  },
+  "licenseCertificates": {
+    "title": "Preferred License and Certificate",
+    "sectionTitle": "License and Certificate",
+    "collectFromCandidates": "If selected, no manual input is required, and data will be taken from the candidate profile",
+    "nameOfLicenseCert": "Name of the License/Certification",
+    "issuingOrganization": "Issuing Organization",
+    "organizationLocations": "Organization Location",
+    "internationallyAccepted": "Internationally accepted license/certification",
+    "issueDate": "Issue Date",
+    "expirationDate": "Expiration Date",
+    "bannerTitle": "Build the Application Form",
+    "bannerMessageHighlight": "Certain fields",
+    "bannerMessageRest": "in this section are always collected from candidates to support consistent candidate profiles. Any fields you don't select won't be collected",
+    "back": "Back",
+    "cancel": "Cancel",
+    "next": "Next",
+    "addLicenseCertDialog": {
+      "title": "Add License/Certification",
+      "type": "Type",
+      "typePlaceholder": "Select license or certification",
+      "nameLicense": "Name of the License",
+      "nameCertification": "Name of the Certification",
+      "nameDefault": "Name of the expected License/Certification",
+      "namePlaceholderDefault": "Enter name of the expected license/certification",
+      "namePlaceholderLicense": "Enter name of the expected license",
+      "namePlaceholderCertification": "Enter name of the expected certification",
+      "typeRequired": "Type is required.",
+      "nameRequired": "Name of the expected license/certification is required.",
+      "cancel": "Cancel",
+      "addNow": "Add Now",
+      "licenseLabel": "License",
+      "certificationLabel": "Certification",
+      "success": {
+        "title": "Successfully Added",
+        "message": "New License/Certification has been successfully added."
+      }
+    },
+    "placeholders": {
+      "nameOfLicenseCert": "Select or add license/certification",
+      "issuingOrganization": "Select or add issuing organization",
+      "searchOrganization": "Search organization",
+      "organizationLocations": "Select location",
+      "issueDate": "Select issue date",
+      "expirationDate": "Select expiration date"
+    },
+    "errors": {
+      "maxSelections": "Exceeded maximum of 10 selections."
+    },
+    "confirmDisableDialog": {
+      "title": "Are you sure?",
+      "message": "Are you sure you want to disable this section? Disabling this section will permanently remove all added data. This action cannot be undone",
+      "cancel": "Cancel",
+      "disable": "Disable"
+    }
+  },
+  "notifications": {
+    "loading": {
+      "title": "We are loading your vacancy content..",
+      "message": "Every vacancy you post brings the right talent one step closer to your team. Start building your pipeline!"
+    },
+    "apiError": {
+      "save": {
+        "title": "Try Again",
+        "message": "Some changes could not be saved. Please try again."
+      },
+      "fetch": {
+        "title": "Try Again",
+        "message": "Some changes could not be loaded. Please try again."
+      }
+    },
+    "networkError": {
+      "title": "Try Again",
+      "message": "Some changes could not be saved. Please retry."
+    }
+  },
+  "preferredSkills": {
+    "title": "Preferred Skills",
+    "dataTakenFromCandidate": "If selected, no manual input is required, and data will be taken from the candidate profile",
+    "sectionLabel": "Tools, Technologies, Skills and Frameworks",
+    "input": {
+      "placeholder": "Select or add a skill",
+      "addNew": "Add \"{{value}}\"",
+      "typeToSearch": "Type to search skills…"
+    },
+    "validation": {
+      "maxSkills": "Exceeded maximum of {{max}} skills"
+    },
+    "chip": {
+      "remove": "Remove {{name}}"
+    },
+    "careerPath": {
+      "title": "Add Career Path",
+      "description": "Linking each skill to a career path helps the system understand your strengths clearly and recommend better opportunities",
+      "label": "Career Path",
+      "addButton": "Add Now",
+      "input": {
+        "placeholder": "Select or add career path"
+      },
+      "validation": {
+        "required": "Please select or add a Career Path to continue"
+      }
+    },
+    "confirmDisableDialog": {
+      "title": "Are you sure?",
+      "message": "Are you sure you want to disable this section? Disabling this section will permanently remove all added data. This action cannot be undone",
+      "cancel": "Cancel",
+      "disable": "Disable"
+    },
+    "emptyDisableDialog": {
+      "title": "Are you sure?",
+      "message": "You've enabled this section but haven't filled any fields. This section will be disabled for this vacancy and no data will be collected from candidates",
+      "cancel": "Cancel",
+      "disable": "Disable"
+    }
+  },
+  "preferredLanguages": {
+    "title": "Preferred Languages",
+    "dataTakenFromCandidate": "If selected, no manual input is required, and data will be taken from the candidate profile",
+    "sectionLabel": "Name of the language",
+    "input": {
+      "placeholder": "Select or add language",
+      "addNew": "Add \"{{value}}\"",
+      "typeToSearch": "Type to search languages…"
+    },
+    "validation": {
+      "maxLanguages": "Exceeded maximum of {{max}} languages"
+    },
+    "chip": {
+      "remove": "Remove {{name}}"
+    },
+    "confirmDisableDialog": {
+      "title": "Are you sure?",
+      "message": "Are you sure you want to disable this section? Disabling this section will permanently remove all added data. This action cannot be undone",
+      "cancel": "Cancel",
+      "disable": "Disable"
+    },
+    "emptyDisableDialog": {
+      "title": "Are you sure?",
+      "message": "You've enabled this section but haven't filled any fields. This section will be disabled for this vacancy and no data will be collected from candidates",
+      "cancel": "Cancel",
+      "disable": "Disable"
+    }
+  },
+  "preferredCauses": {
+    "title": "Preferred Causes",
+    "dataTakenFromCandidate": "If selected, no manual input is required, and data will be taken from the candidate profile",
+    "sectionLabel": "Causes",
+    "input": {
+      "placeholder": "Select or add Cause",
+      "addNew": "Add \"{{value}}\"",
+      "typeToSearch": "Type to search causes…"
+    },
+    "validation": {
+      "maxCauses": "Exceeded maximum of {{max}} causes"
+    },
+    "chip": {
+      "remove": "Remove {{name}}"
+    },
+    "confirmDisableDialog": {
+      "title": "Are you sure?",
+      "message": "Are you sure you want to disable this section? Disabling this section will permanently remove all added data. This action cannot be undone",
+      "cancel": "Cancel",
+      "disable": "Disable"
+    },
+    "emptyDisableDialog": {
+      "title": "Are you sure?",
+      "message": "You've enabled this section but haven't filled any fields. This section will be disabled for this vacancy and no data will be collected from candidates",
+      "cancel": "Cancel",
+      "disable": "Disable"
+    }
+  },
+  "preferredHobbies": {
+    "title": "Preferred Hobbies",
+    "dataTakenFromCandidate": "If selected, no manual input is required, and data will be taken from the candidate profile",
+    "sectionLabel": "Hobbies",
+    "input": {
+      "placeholder": "Select or add Hobbies",
+      "addNew": "Add \"{{value}}\"",
+      "typeToSearch": "Type to search hobbies…"
+    },
+    "validation": {
+      "maxHobbies": "Exceeded maximum of {{max}} hobbies"
+    },
+    "chip": {
+      "remove": "Remove {{name}}"
+    },
+    "confirmDisableDialog": {
+      "title": "Are you sure?",
+      "message": "Are you sure you want to disable this section? Disabling this section will permanently remove all added data. This action cannot be undone",
+      "cancel": "Cancel",
+      "disable": "Disable"
+    },
+    "emptyDisableDialog": {
+      "title": "Are you sure?",
+      "message": "You've enabled this section but haven't filled any fields. This section will be disabled for this vacancy and no data will be collected from candidates",
+      "cancel": "Cancel",
+      "disable": "Disable"
+    }
+  },
+  "preferredIndustries": {
+    "title": "Preferred Industries",
+    "dataTakenFromCandidate": "If selected, no manual input is required, and data will be taken from the candidate profile",
+    "sectionLabel": "Industries",
+    "input": {
+      "placeholder": "Select or add industries",
+      "addNew": "Add \"{{value}}\"",
+      "typeToSearch": "Type to search industries…"
+    },
+    "validation": {
+      "maxIndustries": "Exceeded maximum of {{max}} industries"
+    },
+    "chip": {
+      "remove": "Remove {{name}}"
+    },
+    "confirmDisableDialog": {
+      "title": "Are you sure?",
+      "message": "Are you sure you want to disable this section? Disabling this section will permanently remove all added data. This action cannot be undone",
+      "cancel": "Cancel",
+      "disable": "Disable"
+    },
+    "emptyDisableDialog": {
+      "title": "Are you sure?",
+      "message": "You've enabled this section but haven't filled any fields. This section will be disabled for this vacancy and no data will be collected from candidates",
+      "cancel": "Cancel",
+      "disable": "Disable"
+    }
+  },
+  "scheduleVacancy": {
+    "title": "Schedule Vacancy",
+    "publishDateLabel": "Scheduled Publish Date & Time",
+    "publishDatePlaceholder": "Select schedule publish date & time",
+    "expirationDateLabel": "Expiration Date & Time",
+    "expirationDatePlaceholder": "Expiration date & time",
+    "timeLabel": "Schedule Time",
+    "timePlaceholder": "hh:mm:ss AM/PM",
+    "create": "Create",
+    "cancel": "Cancel",
+    "validation": {
+      "publishDateRequired": "Scheduled Publish Date & Time is required.",
+      "expirationDateRequired": "Expiration Date & Time is required.",
+      "expirationAfterPublish": "Expiration Date & Time must be after Scheduled Publish Date & Time."
+    },
+    "notifications": {
+      "successTitle": "Successfully Created",
+      "successMessage": "Vacancy has been successfully created.",
+      "apiErrorTitle": "Try Again",
+      "apiErrorMessage": "Some changes could not be saved. Please try again.",
+      "networkErrorTitle": "Try Again",
+      "networkErrorMessage": "Some changes could not be saved. Please retry."
+    }
+  },
+  "projectsRequirements": {
+    "title": "Preferred Projects",
+    "sectionTitle": "Preferred Projects",
+    "dataTakenFromCandidate": "If selected, no manual input is required, and data will be taken from the candidate profile",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "relatedIndustry": "Related Industry",
+    "organizationLocation": "Organization Location",
+    "organizationName": "Organization Name",
+    "projectCard": "Project {{number}}",
+    "bannerTitle": "Build the Application Form",
+    "bannerMessageHighlight": "Certain fields",
+    "bannerMessageRest": "in this section are always collected from candidates to support consistent candidate profiles. Any fields you don't select won't be collected",
+    "addEntry": "Add",
+    "back": "Back",
+    "cancel": "Cancel",
+    "next": "Next",
+    "placeholders": {
+      "startDate": "Select start date",
+      "endDate": "Select end date",
+      "relatedIndustry": "Select or add related industry",
+      "organizationLocation": "Select location",
+      "organizationName": "Select or add organization name",
+      "searchLocation": "Search location",
+      "searchOrganization": "Search organization"
+    },
+    "organizationSearch": {
+      "noDataTitle": "No organizations found",
+      "noDataDescription": "Try searching with a different keyword or add a new organization"
+    },
+    "locationSearch": {
+      "noDataTitle": "No locations found",
+      "noDataDescription": "Try searching with a different keyword"
+    },
+    "industrySearch": {
+      "noDataTitle": "No industries found",
+      "noDataDescription": "Try searching with a different keyword or add a new industry"
+    },
+    "errors": {
+      "maxIndustries": "Exceeded maximum of 10 selections."
+    },
+    "confirmDisableDialog": {
+      "title": "Are you sure?",
+      "message": "Are you sure you want to disable this section? Disabling this section will permanently remove all added data. This action cannot be undone",
+      "cancel": "Cancel",
+      "disable": "Disable"
+    }
   }
 }

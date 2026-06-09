@@ -8,6 +8,7 @@ export default [
     // TypeScript itself already detects real duplicate-export conflicts.
     rules: {
       'import-x/export': 'off',
+      '@typescript-eslint/no-explicit-any': 'error',
     },
   },
 

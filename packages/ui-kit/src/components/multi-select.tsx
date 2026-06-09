@@ -2,7 +2,7 @@
 
 import { Check, ChevronDownIcon, Plus, X } from 'lucide-react';
 
-import { Edit2, ImportCurve } from 'iconsax-reactjs';
+import { ArrowDown2, Edit2, ImportCurve } from 'iconsax-reactjs';
 
 import * as React from 'react';
 import { forwardRef, useEffect } from 'react';
@@ -113,6 +113,8 @@ interface MultipleSelectorProps {
   errorMessage?: string;
   /** Callback fired when the internal max-selected error state changes. */
   onErrorStateChange?: (hasError: boolean) => void;
+  /** Show a vuesax/linear arrow-down icon on the right of the input. */
+  showArrow?: boolean;
 }
 
 export interface MultipleSelectorRef {
@@ -252,6 +254,7 @@ const MultipleSelector = React.forwardRef<
       keepSelectedInList = false,
       errorMessage,
       onErrorStateChange,
+      showArrow = false,
     }: MultipleSelectorProps,
     ref: React.Ref<MultipleSelectorRef>
   ) => {
@@ -401,7 +404,7 @@ const MultipleSelector = React.forwardRef<
         ]) ||
         selected.find(s => s.value === inputValue.trim()) ||
         selected.find(
-          s => s.label.toLowerCase() === inputValue.trim().toLowerCase()
+          s => s.label?.toLowerCase() === inputValue.trim().toLowerCase()
         )
       ) {
         return undefined;
@@ -517,13 +520,19 @@ const MultipleSelector = React.forwardRef<
     }, [keepSelectedInList, allOptionsWithCreated, selected]);
 
     const hasSelectableOptions = React.useMemo(() => {
+      if (onSearch || onSearchSync) {
+        // Server-managed mode: cmdk renders all items in selectables (shouldFilter=false).
+        // Don't apply client-side label filtering — the server already filters.
+        // Show empty indicator only when selectables is truly empty.
+        return Object.values(selectables).some(items => items.length > 0);
+      }
       const searchTerm = inputValue.trim().toLowerCase();
       return Object.values(selectables).some(items =>
         items.some(
           item => !searchTerm || item.label.toLowerCase().includes(searchTerm)
         )
       );
-    }, [selectables, inputValue]);
+    }, [onSearch, onSearchSync, selectables, inputValue]);
 
     const EmptyItem = React.useCallback(() => {
       if (!emptyIndicator || showLoading) return undefined;
@@ -579,8 +588,8 @@ const MultipleSelector = React.forwardRef<
             shouldFilter={
               commandProps?.shouldFilter !== undefined
                 ? commandProps.shouldFilter
-                : !onSearch
-            } // When onSearch is provided, we don't want to filter the options. You can still override it.
+                : !onSearch && !onSearchSync
+            } // When onSearch/onSearchSync is provided, we don't want to filter the options. You can still override it.
             filter={commandFilter()}
           >
             <PopoverAnchor asChild>
@@ -590,6 +599,8 @@ const MultipleSelector = React.forwardRef<
                   {
                     'cursor-text': !disabled && selected.length !== 0,
                     'border-destructive': showMaxError && !!errorMessage,
+                    'pointer-events-none cursor-not-allowed opacity-50':
+                      disabled,
                   },
                   className
                 )}
@@ -629,7 +640,7 @@ const MultipleSelector = React.forwardRef<
                         : placeholder
                     }
                     className={cn(
-                      'placeholder:text-muted-foreground flex-1 self-baseline bg-transparent outline-none',
+                      'flex-1 self-baseline bg-transparent font-medium outline-none placeholder:text-slate-500',
                       {
                         'w-full': hidePlaceholderWhenSelected,
                         'ml-0': selected.length !== 0,
@@ -668,10 +679,16 @@ const MultipleSelector = React.forwardRef<
                       'hidden'
                   )}
                 />
+                {showArrow && (
+                  <ArrowDown2
+                    size={20}
+                    className="size-5 shrink-0 text-slate-500"
+                  />
+                )}
               </div>
             </PopoverAnchor>
             <PopoverContent
-              className="mt-1 max-w-[376px] border-none p-0 shadow-none"
+              className="mt-1 max-w-94 border-none p-0 shadow-none"
               align="start"
               style={{ width: dropdownWidth }}
               onOpenAutoFocus={e => e.preventDefault()}

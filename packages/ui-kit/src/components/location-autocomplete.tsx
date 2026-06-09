@@ -2,6 +2,8 @@
 
 import { CheckIcon } from 'lucide-react';
 
+import * as ScrollAreaPrimitive from '@radix-ui/react-scroll-area';
+
 import * as React from 'react';
 
 import { Combobox as ComboboxPrimitive } from '@base-ui/react';
@@ -14,7 +16,6 @@ import {
 } from '@cgp/ui-kit/components/ui/combobox';
 import { ScrollBar } from '@cgp/ui-kit/components/ui/scroll-area';
 import { removeEmoji } from '@cgp/ui-kit/lib/utils';
-import { ScrollArea as ScrollAreaPrimitive } from 'radix-ui';
 import { useDebouncedCallback } from 'use-debounce';
 
 interface Option {

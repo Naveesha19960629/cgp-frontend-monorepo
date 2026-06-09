@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 
 export const httpClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
@@ -6,6 +6,12 @@ export const httpClient = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
+export function isAxiosError<T = unknown>(
+  error: unknown
+): error is AxiosError<T> {
+  return axios.isAxiosError(error);
+}
 
 /**
  * Called once by the shell after Keycloak is initialized.

@@ -1,20 +1,206 @@
+import { ArrowLeft2 } from 'iconsax-reactjs';
+
+import { Controller } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
+
+import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
+import {
+  type ScheduleVacancyFormValues,
+  toScheduleVacancyPayload,
+  useCreateVacancyMutation,
+  useScheduleVacancyForm,
+} from '@/views/vacancies/hooks';
 import type { StepProps } from '@/views/vacancies/types';
+import { formatDisplayDateTime } from '@/views/vacancies/utils';
 
+import { ErrorToast, SuccessToast } from '@cgp/ui-kit/components/custom-toast';
 import { Button } from '@cgp/ui-kit/components/ui/button';
+import { CalendarWithTime } from '@cgp/ui-kit/components/ui/calendar-with-time';
+import { Label } from '@cgp/ui-kit/components/ui/label';
+import { startOfToday } from 'date-fns';
 
-export default function ScheduleVacancyStep({ onBack, onSubmit }: StepProps) {
+export default function ScheduleVacancyStep({
+  onBack,
+  onSubmit,
+}: Readonly<StepProps>) {
+  const { t } = useTranslation('ats');
+  const { form } = useVacancyForm();
+
+  const {
+    control,
+    handleSubmit,
+    watch,
+    formState: { errors, isValid },
+  } = useScheduleVacancyForm(form.schedule);
+
+  const publishDate = watch('schedulePublishDate');
+
+  const { mutateAsync: createVacancy, isPending } = useCreateVacancyMutation();
+
+  const onValid = async (values: ScheduleVacancyFormValues) => {
+    try {
+      await createVacancy(toScheduleVacancyPayload(values));
+      SuccessToast({
+        title: t('scheduleVacancy.notifications.successTitle'),
+        description: t('scheduleVacancy.notifications.successMessage'),
+      });
+      onSubmit();
+    } catch {
+      ErrorToast({
+        title: t('scheduleVacancy.notifications.apiErrorTitle'),
+        description: t('scheduleVacancy.notifications.apiErrorMessage'),
+      });
+    }
+  };
+
   return (
-    <div className="p-8">
-      <h2 className="text-xl font-bold text-slate-900">Schedule Vacancy</h2>
-      <p className="mt-2 text-sm text-slate-500">
-        Form fields for Schedule Vacancy will go here.
-      </p>
-      <div className="mt-8 flex justify-end gap-4">
-        <Button variant="secondary" className="h-12 w-44" onClick={onBack}>
-          Back
+    <div className="flex min-h-full flex-col">
+      {/* ── Header ─────────────────────────────────────────────────── */}
+      <div className="flex items-center gap-2 px-7 py-8">
+        <button
+          type="button"
+          aria-label={t('common.back')}
+          className="text-slate-700 transition-colors hover:text-slate-900"
+          onClick={onBack}
+        >
+          <ArrowLeft2 size={24} />
+        </button>
+        <h2 className="text-xl font-bold tracking-tight text-slate-900">
+          {t('scheduleVacancy.title')}
+        </h2>
+      </div>
+
+      {/* ── Body ────────────────────────────────────────────────────── */}
+      <div className="flex-1 px-7 pb-6">
+        <div className="flex flex-wrap gap-4">
+          {/* ── Scheduled Publish Date & Time ── */}
+          <div className="flex w-[304px] flex-col gap-1">
+            <Label className="text-sm font-semibold text-slate-700">
+              {t('scheduleVacancy.publishDateLabel')}{' '}
+              <span className="text-destructive">*</span>
+            </Label>
+            <Controller
+              control={control}
+              name="schedulePublishDate"
+              render={({ field: dateField }) => (
+                <Controller
+                  control={control}
+                  name="schedulePublishTime"
+                  render={({ field: timeField }) => (
+                    <CalendarWithTime
+                      dateValue={dateField.value}
+                      onDateChange={dateField.onChange}
+                      timeValue={timeField.value}
+                      onTimeChange={timeField.onChange}
+                      timeLabel={t('scheduleVacancy.timeLabel')}
+                      dateButtonPlaceholder={t(
+                        'scheduleVacancy.publishDatePlaceholder'
+                      )}
+                      timeInputPlaceholder={t(
+                        'scheduleVacancy.timePlaceholder'
+                      )}
+                      disabledDates={date => date < startOfToday()}
+                      formattedDateDisplay={
+                        dateField.value
+                          ? formatDisplayDateTime(
+                              dateField.value,
+                              timeField.value
+                            )
+                          : undefined
+                      }
+                      error={
+                        errors.schedulePublishDate?.message ||
+                        errors.schedulePublishTime?.message
+                          ? t(
+                              errors.schedulePublishDate?.message ||
+                                errors.schedulePublishTime?.message ||
+                                ''
+                            )
+                          : undefined
+                      }
+                    />
+                  )}
+                />
+              )}
+            />
+          </div>
+
+          {/* ── Expiration Date & Time ── */}
+          <div className="flex w-[304px] flex-col gap-1">
+            <Label className="text-sm font-semibold text-slate-700">
+              {t('scheduleVacancy.expirationDateLabel')}{' '}
+              <span className="text-destructive">*</span>
+            </Label>
+            <Controller
+              control={control}
+              name="expirationDate"
+              render={({ field: dateField }) => (
+                <Controller
+                  control={control}
+                  name="expirationTime"
+                  render={({ field: timeField }) => (
+                    <CalendarWithTime
+                      dateValue={dateField.value}
+                      onDateChange={dateField.onChange}
+                      timeValue={timeField.value}
+                      onTimeChange={timeField.onChange}
+                      timeLabel="Expiration Time"
+                      dateButtonPlaceholder={t(
+                        'scheduleVacancy.expirationDatePlaceholder'
+                      )}
+                      timeInputPlaceholder={t(
+                        'scheduleVacancy.timePlaceholder'
+                      )}
+                      disabledDates={date =>
+                        date < startOfToday() ||
+                        (publishDate ? date < new Date(publishDate) : false)
+                      }
+                      formattedDateDisplay={
+                        dateField.value
+                          ? formatDisplayDateTime(
+                              dateField.value,
+                              timeField.value
+                            )
+                          : undefined
+                      }
+                      error={
+                        errors.expirationDate?.message ||
+                        errors.expirationTime?.message
+                          ? t(
+                              errors.expirationDate?.message ||
+                                errors.expirationTime?.message ||
+                                ''
+                            )
+                          : undefined
+                      }
+                    />
+                  )}
+                />
+              )}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* ── Footer ──────────────────────────────────────────────────── */}
+      <div className="sticky bottom-0 flex items-center justify-end gap-4 bg-white px-6 py-7 shadow-[0px_-8px_6.8px_0px_rgba(0,0,0,0.04)]">
+        <Button
+          variant="secondary"
+          className="h-12 w-48"
+          type="button"
+          onClick={onBack}
+        >
+          {t('scheduleVacancy.cancel')}
         </Button>
-        <Button className="h-12 w-44" onClick={() => onSubmit()}>
-          Submit
+        <Button
+          className="h-12 w-48"
+          type="button"
+          disabled={isPending || !isValid}
+          onClick={() => {
+            handleSubmit(onValid)().catch(() => {});
+          }}
+        >
+          {t('scheduleVacancy.create')}
         </Button>
       </div>
     </div>

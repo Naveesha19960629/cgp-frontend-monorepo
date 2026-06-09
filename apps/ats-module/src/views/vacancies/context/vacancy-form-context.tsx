@@ -125,8 +125,73 @@ const DEFAULT_FORM: VacancyForm = {
   title: '',
   status: 'draft',
   lastActiveStep: VACANCY_STEPS[0].key,
-  jobRequirements: [],
-  profileRequirements: [],
+  jobRequirements: [
+    {
+      isEnabled: true,
+      dataTakenFromCandidate: false,
+      discipline: [],
+      careerPath: [],
+      level: [],
+      role: [],
+      jobTitle: [],
+      employmentType: [],
+      workSchedule: [],
+      engagementModel: [],
+      description: '',
+    },
+  ],
+  profileRequirements: {
+    isEnabled: false,
+    dataTakenFromCandidate: false,
+    gender: { id: '', label: '' },
+    maritalStatus: { id: '', label: '' },
+    addresses: [],
+  },
+  secondaryEducation: [
+    { isEnabled: false, dataTakenFromCandidate: false, content: [] },
+  ],
+  tertiaryEducation: [
+    { isEnabled: false, dataTakenFromCandidate: false, content: [] },
+  ],
+  patents: {
+    isEnabled: false,
+    dataTakenFromCandidate: false,
+    patents: [],
+  },
+  preferredHonoursAwards: {
+    isEnabled: false,
+    dataTakenFromCandidate: false,
+    honoursAndAwards: [],
+  },
+  licenseCertificates: [
+    { isEnabled: false, dataTakenFromCandidate: false, content: [] },
+  ],
+  preferredSkills: {
+    isEnabled: false,
+    dataTakenFromCandidate: false,
+    skills: [],
+  },
+  preferredLanguages: {
+    isEnabled: false,
+    dataTakenFromCandidate: false,
+    languages: [],
+  },
+  preferredCauses: {
+    isEnabled: false,
+    dataTakenFromCandidate: false,
+    causes: [],
+  },
+  preferredHobbies: {
+    isEnabled: false,
+    dataTakenFromCandidate: false,
+    hobbies: [],
+  },
+  preferredIndustries: {
+    isEnabled: false,
+    dataTakenFromCandidate: false,
+    industries: [],
+  },
+  schedule: undefined,
 };
 
 interface VacancyFormContextValue {
@@ -140,6 +205,9 @@ interface VacancyFormContextValue {
   onBack: () => void;
   onCancel: () => void;
   onSubmit: () => void;
+  OnSaveAsDraft: () => void;
+  showCancelDialog: boolean;
+  setShowCancelDialog: (open: boolean) => void;
 }
 
 const VacancyFormContext = createContext<VacancyFormContextValue | null>(null);
@@ -149,6 +217,7 @@ function VacancyFormProvider({ children }: { children: React.ReactNode }) {
   const [currentStepIndex, _setCurrentStepIndex] = useState(0);
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
   const [isInitialStep, setIsInitialStep] = useState(true);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
 
   const setCurrentStepIndex = (index: number) => {
     _setCurrentStepIndex(index);
@@ -156,6 +225,12 @@ function VacancyFormProvider({ children }: { children: React.ReactNode }) {
   };
 
   const onNext = (data?: Partial<VacancyForm>) => {
+    const stepKey =
+      VACANCY_STEPS[currentStepIndex]?.key ?? `step-${currentStepIndex}`;
+    console.group(`[Vacancy Wizard] Step payload — ${stepKey}`);
+    console.log('Step data:', data);
+    console.log('Full form after merge:', data ? { ...form, ...data } : form);
+    console.groupEnd();
     if (data) {
       setForm(prev => ({ ...prev, ...data }));
     }
@@ -178,11 +253,15 @@ function VacancyFormProvider({ children }: { children: React.ReactNode }) {
   };
 
   const onCancel = () => {
-    // TODO: save as draft and navigate away
+    setShowCancelDialog(true);
   };
 
   const onSubmit = () => {
     // TODO: submit form
+  };
+
+  const OnSaveAsDraft = () => {
+    // Implement the payload convertion
   };
 
   return (
@@ -198,6 +277,9 @@ function VacancyFormProvider({ children }: { children: React.ReactNode }) {
         onBack,
         onCancel,
         onSubmit,
+        OnSaveAsDraft,
+        showCancelDialog,
+        setShowCancelDialog,
       }}
     >
       {children}

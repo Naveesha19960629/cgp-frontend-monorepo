@@ -14,10 +14,11 @@ import {
 export default function MainLayout() {
   return (
     <SidebarProvider
+      className="h-svh overflow-hidden"
       style={{ '--sidebar-width': '18.25rem' } as React.CSSProperties}
     >
       <AppSidebar />
-      <SidebarInset>
+      <SidebarInset className="min-h-0">
         <header className="flex h-17 shrink-0 items-center justify-between border-b px-7">
           <div className="flex items-center gap-3">
             <SidebarTrigger className="m-0! h-6 p-0!" />
@@ -25,7 +26,7 @@ export default function MainLayout() {
           </div>
           <HeaderControls />
         </header>
-        <div className="flex flex-1 flex-col">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <Outlet />
         </div>
       </SidebarInset>

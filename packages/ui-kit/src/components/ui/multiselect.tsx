@@ -1,10 +1,11 @@
 import { CheckIcon, ChevronDownIcon } from 'lucide-react';
 
+import * as PopoverPrimitive from '@radix-ui/react-popover';
+
 import * as React from 'react';
 
 import { applyTypography } from '@cgp/ui-kit/lib/typography';
 import { cn } from '@cgp/ui-kit/lib/utils';
-import { Popover as PopoverPrimitive } from 'radix-ui';
 
 interface MultiSelectProps {
   value?: string[];
