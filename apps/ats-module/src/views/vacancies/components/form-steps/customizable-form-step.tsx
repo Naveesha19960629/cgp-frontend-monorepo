@@ -543,16 +543,15 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
     const customForm = (form as any).customizableForm;
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     if (customForm?.forms && customForm.forms.length > 0) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
       const restoredForms: FormCard[] = customForm.forms.map(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (f: any) => {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-call
           const maxQuestionId = Math.max(
             ...(f.questions?.map((q: { id: number }) => q.id) ?? [0]),
             0
           );
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-call
+
           const maxOptionId = Math.max(
             ...(f.questions?.flatMap(
               (q: { options?: Array<{ id: number }> }) =>
@@ -560,7 +559,7 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
             ) ?? [0]),
             0
           );
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+
           return {
             id: f.id,
             title: f.title,
@@ -574,11 +573,11 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
 
       // eslint-disable-next-line react-hooks/set-state-in-effect, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
       setIsEnabled(customForm.isEnabled);
-      // eslint-disable-next-line react-hooks/set-state-in-effect, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
       setSectionTitle(customForm.sectionTitle);
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+
       setForms(restoredForms);
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+
       setNextFormId(Math.max(...restoredForms.map(f => f.id), 0) + 1);
     }
   }, [form]);
