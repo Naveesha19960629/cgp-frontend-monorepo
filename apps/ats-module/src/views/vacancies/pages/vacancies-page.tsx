@@ -136,33 +136,37 @@ export default function VacanciesPage() {
         </p>
         {showHeaderControls && (
           <div className="flex min-w-0 flex-1 items-center justify-end gap-4">
-            <VacancyFilteringSection
-              search={params.search}
-              onSearchChange={value =>
-                void setParams({ search: value, page: 0 })
-              }
-              careerPathFilter={params.careerPath}
-              onCareerPathChange={value =>
-                void setParams({ careerPath: value, page: 0 })
-              }
-              disciplineFilter={params.discipline}
-              onDisciplineChange={value =>
-                void setParams({ discipline: value, page: 0 })
-              }
-              statusFilter={params.status}
-              onStatusChange={value =>
-                void setParams({ status: value, page: 0 })
-              }
-            />
-            <Button
-              className="h-12 w-45 shrink-0 gap-1"
-              onClick={() => {
-                void navigate('/dashboard/ats/vacancies/new');
-              }}
-            >
-              <Add className="size-5 stroke-2" />
-              {t('vacancies.createVacancyButton')}
-            </Button>
+            {!isLoading && (
+              <VacancyFilteringSection
+                search={params.search}
+                onSearchChange={value =>
+                  void setParams({ search: value, page: 0 })
+                }
+                careerPathFilter={params.careerPath}
+                onCareerPathChange={value =>
+                  void setParams({ careerPath: value, page: 0 })
+                }
+                disciplineFilter={params.discipline}
+                onDisciplineChange={value =>
+                  void setParams({ discipline: value, page: 0 })
+                }
+                statusFilter={params.status}
+                onStatusChange={value =>
+                  void setParams({ status: value, page: 0 })
+                }
+              />
+            )}
+            {!isLoading && (
+              <Button
+                className="h-12 w-45 shrink-0 gap-1"
+                onClick={() => {
+                  void navigate('/dashboard/ats/vacancies/new');
+                }}
+              >
+                <Add className="size-5 stroke-2" />
+                {t('vacancies.createVacancyButton')}
+              </Button>
+            )}
           </div>
         )}
       </div>
