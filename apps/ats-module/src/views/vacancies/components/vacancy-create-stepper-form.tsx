@@ -76,6 +76,7 @@ export default function VacancyCreateStepperForm() {
   } = useVacancyForm();
 
   const currentStepKey = VACANCY_STEPS[currentStepIndex].key;
+  const isStepNavigationEnabled = completedSteps.has(0);
 
   return (
     <>
@@ -102,39 +103,49 @@ export default function VacancyCreateStepperForm() {
                 variant="line"
                 className="flex w-full flex-col items-start justify-start rounded-none border-none bg-transparent p-0"
               >
-                {VACANCY_STEPS.map((step, index) => (
-                  <div key={step.key} className="flex w-full flex-col">
-                    <TabsTrigger
-                      value={step.key}
-                      className="h-auto w-full cursor-pointer items-center justify-start gap-3 rounded-none border-none border-transparent p-0 text-[16px]/6 font-bold [&::after]:hidden"
+                {VACANCY_STEPS.map((step, index) => {
+                  const isDisabled = index > 0 && !isStepNavigationEnabled;
+                  return (
+                    <div
+                      key={step.key}
+                      className={cn(
+                        'flex w-full flex-col',
+                        isDisabled && 'cursor-not-allowed'
+                      )}
                     >
-                      <StepIndicator
-                        index={index}
-                        currentStepIndex={currentStepIndex}
-                        completedSteps={completedSteps}
-                      />
-                      <span
-                        className={cn(
-                          'text-slate-700',
-                          index === currentStepIndex &&
-                            'text-brand-primary-500 font-bold'
-                        )}
+                      <TabsTrigger
+                        value={step.key}
+                        disabled={isDisabled}
+                        className="h-auto w-full cursor-pointer items-center justify-start gap-3 rounded-none border-none border-transparent p-0 text-[16px]/6 font-bold [&::after]:hidden"
                       >
-                        {step.label}
-                      </span>
-                    </TabsTrigger>
-                    {index < VACANCY_STEPS.length - 1 && (
-                      <div
-                        className={cn(
-                          'my-2 ml-2.5 h-4 w-px',
-                          completedSteps.has(index)
-                            ? 'bg-brand-primary-400'
-                            : 'bg-slate-400'
-                        )}
-                      />
-                    )}
-                  </div>
-                ))}
+                        <StepIndicator
+                          index={index}
+                          currentStepIndex={currentStepIndex}
+                          completedSteps={completedSteps}
+                        />
+                        <span
+                          className={cn(
+                            'text-slate-700',
+                            index === currentStepIndex &&
+                              'text-brand-primary-500 font-bold'
+                          )}
+                        >
+                          {step.label}
+                        </span>
+                      </TabsTrigger>
+                      {index < VACANCY_STEPS.length - 1 && (
+                        <div
+                          className={cn(
+                            'my-2 ml-2.5 h-4 w-px',
+                            completedSteps.has(index)
+                              ? 'bg-brand-primary-400'
+                              : 'bg-slate-400'
+                          )}
+                        />
+                      )}
+                    </div>
+                  );
+                })}
               </TabsList>
             </ScrollArea>
           </div>

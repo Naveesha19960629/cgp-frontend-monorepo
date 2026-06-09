@@ -382,7 +382,10 @@ export default function PreferredPublicationsStep({
         <Button variant="secondary" className="h-12 w-44" onClick={onBack}>
           Cancel
         </Button>
-        <Button className="h-12 w-44" onClick={() => onNext()}>
+        <Button
+          className="h-12 w-44"
+          onClick={() => onNext(undefined, isEnabled)}
+        >
           Next
         </Button>
       </div>

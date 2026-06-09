@@ -311,7 +311,7 @@ interface VacancyStep {
   readonly component: React.ComponentType<StepProps>;
 }
 interface StepProps {
-  onNext: (data?: Partial<VacancyForm>) => void;
+  onNext: (data?: Partial<VacancyForm>, completed?: boolean) => void;
   onBack: () => void;
   onSubmit: () => void;
 }

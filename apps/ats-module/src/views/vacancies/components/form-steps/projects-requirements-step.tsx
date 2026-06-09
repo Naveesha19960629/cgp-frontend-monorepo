@@ -584,7 +584,7 @@ export default function ProjectsRequirementsStep({
       }
     }
 
-    onNext();
+    onNext(undefined, isEnabled);
   };
 
   return (

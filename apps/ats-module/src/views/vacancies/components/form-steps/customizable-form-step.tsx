@@ -806,7 +806,10 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
         <Button variant="secondary" className="h-12 w-48" onClick={onBack}>
           {t('common.cancel')}
         </Button>
-        <Button className="h-12 w-48" onClick={() => onNext()}>
+        <Button
+          className="h-12 w-48"
+          onClick={() => onNext(undefined, isEnabled)}
+        >
           {t('common.next')}
         </Button>
       </div>
