@@ -1,13 +1,13 @@
 import { useTranslation } from 'react-i18next';
 
+import { TABLE_PAGE_SIZE } from '@/views/vacancies/utils';
+
 import { cn } from '@cgp/ui-kit/lib/utils';
 
 const tableEmptyStateAvatar = new URL(
   '../../../assets/images/table-empty-state-avatar.svg',
   import.meta.url
 ).href;
-
-const EMPTY_ROWS = 12;
 
 const rowWidths = [
   { first: 'w-[269px]', rest: 'w-[141px]' },
@@ -58,12 +58,12 @@ export default function VacancySearchEmptyState() {
           </tr>
         </thead>
         <tbody className="bg-white">
-          {Array.from({ length: EMPTY_ROWS }).map((_, rowIndex) => (
+          {Array.from({ length: TABLE_PAGE_SIZE }).map((_, rowIndex) => (
             <tr key={rowIndex} className="h-18">
               <td
                 className={cn(
                   'px-6 py-4',
-                  rowIndex < EMPTY_ROWS - 1 && 'border-b border-slate-200'
+                  rowIndex < TABLE_PAGE_SIZE - 1 && 'border-b border-slate-200'
                 )}
                 style={{ width: 141, minWidth: 141 }}
               >
@@ -75,7 +75,7 @@ export default function VacancySearchEmptyState() {
               <td
                 className={cn(
                   'px-6 py-4',
-                  rowIndex < EMPTY_ROWS - 1 && 'border-b border-slate-200'
+                  rowIndex < TABLE_PAGE_SIZE - 1 && 'border-b border-slate-200'
                 )}
                 style={{ minWidth: 317, width: 'auto' }}
               >
@@ -91,7 +91,8 @@ export default function VacancySearchEmptyState() {
                   key={colIndex}
                   className={cn(
                     'px-6 py-4',
-                    rowIndex < EMPTY_ROWS - 1 && 'border-b border-slate-200'
+                    rowIndex < TABLE_PAGE_SIZE - 1 &&
+                      'border-b border-slate-200'
                   )}
                   style={{ width: 189, minWidth: 189 }}
                 >

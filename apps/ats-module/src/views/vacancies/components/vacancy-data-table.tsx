@@ -1,6 +1,7 @@
-import * as React from 'react';
+import { type CSSProperties, useEffect, useRef, useState } from 'react';
 
 import type { VacancyDataTableProps } from '@/views/vacancies/types';
+import { TABLE_PAGE_SIZE } from '@/views/vacancies/utils';
 
 import { ScrollArea } from '@cgp/ui-kit/components/ui/scroll-area';
 import { Skeleton } from '@cgp/ui-kit/components/ui/skeleton';
@@ -14,17 +15,15 @@ import {
 import { cn } from '@cgp/ui-kit/lib/utils';
 import { type Column, flexRender } from '@tanstack/react-table';
 
-const SKELETON_ROWS = 12;
-
 export default function VacancyDataTable<TData>({
   table,
   isLoading,
 }: VacancyDataTableProps<TData>) {
-  const scrollRootRef = React.useRef<HTMLDivElement>(null);
-  const [canScrollLeft, setCanScrollLeft] = React.useState(false);
-  const [canScrollRight, setCanScrollRight] = React.useState(false);
+  const scrollRootRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const root = scrollRootRef.current;
     if (!root) return;
 
@@ -55,14 +54,14 @@ export default function VacancyDataTable<TData>({
   const getCellStyles = (
     column: Column<TData, unknown>,
     isHeader = false
-  ): React.CSSProperties => {
+  ): CSSProperties => {
     const isPinned = column.getIsPinned();
     const size = column.getSize();
 
     // Title column is flex: it expands to fill available space on wide viewports
     // while keeping 317 px as its minimum (matching its defined size).
     if (column.id === 'title') {
-      const base: React.CSSProperties = {
+      const base: CSSProperties = {
         minWidth: `${size}px`,
         width: 'auto',
       };
@@ -80,7 +79,7 @@ export default function VacancyDataTable<TData>({
 
     // Always enforce explicit width so column.getStart() / column.getAfter()
     // offsets match the actual rendered widths (prevents sticky gaps).
-    const base: React.CSSProperties = {
+    const base: CSSProperties = {
       width: `${size}px`,
       minWidth: `${size}px`,
       maxWidth: `${size}px`,
@@ -162,14 +161,15 @@ export default function VacancyDataTable<TData>({
             </TableHeader>
             <TableBody>
               {isLoading || !table.getRowModel().rows?.length
-                ? Array.from({ length: SKELETON_ROWS }).map((_, i) => (
+                ? Array.from({ length: TABLE_PAGE_SIZE }).map((_, i) => (
                     <TableRow key={i} className="h-18">
                       {table.getAllColumns().map(column => (
                         <TableCell
                           key={column.id}
                           style={getCellStyles(column)}
                           className={cn(
-                            i < SKELETON_ROWS - 1 && 'border-b border-slate-200'
+                            i < TABLE_PAGE_SIZE - 1 &&
+                              'border-b border-slate-200'
                           )}
                         >
                           <Skeleton className="h-4 w-full rounded" />

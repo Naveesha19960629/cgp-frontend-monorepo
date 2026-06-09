@@ -5,12 +5,16 @@ import { useNavigate } from 'react-router-dom';
 
 import {
   EMPTY_STATE_ROW_WIDTHS,
-  TABLE_EMPTY_STATE_AVATAR_URL,
   TABLE_PAGE_SIZE,
 } from '@/views/vacancies/utils';
 
 import { Button } from '@cgp/ui-kit/components/ui/button';
 import { cn } from '@cgp/ui-kit/lib/utils';
+
+const TABLE_EMPTY_STATE_AVATAR_URL = new URL(
+  '../../../assets/images/table-empty-state-avatar.svg',
+  import.meta.url
+).href;
 
 export default function VacancyTableEmptyState() {
   const { t } = useTranslation('ats');

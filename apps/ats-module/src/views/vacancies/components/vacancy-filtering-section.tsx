@@ -1,6 +1,6 @@
 import { SearchNormal1 } from 'iconsax-reactjs';
 
-import * as React from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import {
@@ -11,11 +11,10 @@ import {
   useCareerPathsQuery,
   useDisciplinesQuery,
 } from '@/views/vacancies/hooks';
+import { SEARCH_DEBOUNCE_MS } from '@/views/vacancies/utils';
 
 import { Input } from '@cgp/ui-kit/components/ui/input';
 import { removeEmoji } from '@cgp/ui-kit/lib/utils';
-
-const DEBOUNCE_MS = 400;
 
 const STATUS_VALUES = [
   { value: 'Draft', labelKey: 'vacancies.table.filter.statusOptions.draft' },
@@ -52,9 +51,9 @@ export default function VacancyFilteringSection({
   // Because clearTimeout cancels every pending timer on each keystroke, only the
   // final typed value is ever sent upstream, so the prop echo always matches
   // localSearch and setLocalSearch becomes a no-op in that case.
-  const [localSearch, setLocalSearch] = React.useState(search);
-  const [prevPropSearch, setPrevPropSearch] = React.useState(search);
-  const searchTimerRef = React.useRef<ReturnType<typeof setTimeout>>(undefined);
+  const [localSearch, setLocalSearch] = useState(search);
+  const [prevPropSearch, setPrevPropSearch] = useState(search);
+  const searchTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   if (search !== prevPropSearch) {
     setPrevPropSearch(search);
@@ -67,7 +66,7 @@ export default function VacancyFilteringSection({
     clearTimeout(searchTimerRef.current);
     searchTimerRef.current = setTimeout(
       () => onSearchChange(clean),
-      DEBOUNCE_MS
+      SEARCH_DEBOUNCE_MS
     );
   };
 
@@ -78,29 +77,29 @@ export default function VacancyFilteringSection({
     onSearchChange(trimmed);
   };
 
-  React.useEffect(() => () => clearTimeout(searchTimerRef.current), []);
+  useEffect(() => () => clearTimeout(searchTimerRef.current), []);
 
   // Career path filter search — separate display vs query state so the
   // CommandInput stays responsive while the API call is debounced.
-  const [careerPathInput, setCareerPathInput] = React.useState('');
-  const [careerPathSearch, setCareerPathSearch] = React.useState('');
+  const [careerPathInput, setCareerPathInput] = useState('');
+  const [careerPathSearch, setCareerPathSearch] = useState('');
 
-  React.useEffect(() => {
+  useEffect(() => {
     const timer = setTimeout(
       () => setCareerPathSearch(careerPathInput),
-      DEBOUNCE_MS
+      SEARCH_DEBOUNCE_MS
     );
     return () => clearTimeout(timer);
   }, [careerPathInput]);
 
   // Discipline filter search — same pattern.
-  const [disciplineInput, setDisciplineInput] = React.useState('');
-  const [disciplineSearch, setDisciplineSearch] = React.useState('');
+  const [disciplineInput, setDisciplineInput] = useState('');
+  const [disciplineSearch, setDisciplineSearch] = useState('');
 
-  React.useEffect(() => {
+  useEffect(() => {
     const timer = setTimeout(
       () => setDisciplineSearch(disciplineInput),
-      DEBOUNCE_MS
+      SEARCH_DEBOUNCE_MS
     );
     return () => clearTimeout(timer);
   }, [disciplineInput]);
@@ -110,7 +109,7 @@ export default function VacancyFilteringSection({
   const { data: disciplinesData, isLoading: isDisciplinesLoading } =
     useDisciplinesQuery(disciplineSearch);
 
-  const careerPathOptions = React.useMemo(
+  const careerPathOptions = useMemo(
     () =>
       careerPathsData?.data.items.content.map(item => ({
         value: item.id,
@@ -119,7 +118,7 @@ export default function VacancyFilteringSection({
     [careerPathsData]
   );
 
-  const disciplineOptions = React.useMemo(
+  const disciplineOptions = useMemo(
     () =>
       disciplinesData?.data.items.content.map(item => ({
         value: item.id,
@@ -128,7 +127,7 @@ export default function VacancyFilteringSection({
     [disciplinesData]
   );
 
-  const statusOptions = React.useMemo(
+  const statusOptions = useMemo(
     () => STATUS_VALUES.map(s => ({ value: s.value, label: t(s.labelKey) })),
     [t]
   );
