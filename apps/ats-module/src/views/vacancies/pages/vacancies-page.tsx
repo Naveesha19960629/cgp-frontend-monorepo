@@ -1,6 +1,6 @@
 import { Add } from 'iconsax-reactjs';
 
-import * as React from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
@@ -14,6 +14,7 @@ import {
   VacancyTablePagination,
   createVacancyColumns,
 } from '@/views/vacancies';
+import { TABLE_PAGE_SIZE } from '@/views/vacancies/utils';
 
 import { Button } from '@cgp/ui-kit/components/ui/button';
 import {
@@ -27,7 +28,7 @@ export default function VacanciesPage() {
   const navigate = useNavigate();
   const [params, setParams] = useVacancyTableParams();
 
-  const queryParams: VacancyQueryParams = React.useMemo(
+  const queryParams: VacancyQueryParams = useMemo(
     () => ({
       page: params.page,
       size: params.size,
@@ -50,7 +51,7 @@ export default function VacanciesPage() {
   );
   const showHeaderControls = isLoading || data.length > 0 || hasActiveFilters;
 
-  React.useEffect(() => {
+  useEffect(() => {
     // Detect reload: beforeunload sets this key; a shared-link open (new tab/session)
     // has an empty sessionStorage and never finds it.
     const wasHere = sessionStorage.getItem('vacancies_page_loaded');
@@ -59,7 +60,7 @@ export default function VacanciesPage() {
     if (wasHere) {
       void setParams({
         page: 0,
-        size: 12,
+        size: TABLE_PAGE_SIZE,
         sortBy: '',
         sortOrder: null,
         search: '',
@@ -77,7 +78,7 @@ export default function VacanciesPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleSort = React.useCallback(
+  const handleSort = useCallback(
     (columnKey: string) => {
       if (params.sortBy !== columnKey) {
         // New column: start ascending
@@ -93,7 +94,7 @@ export default function VacanciesPage() {
     [params.sortBy, params.sortOrder, setParams]
   );
 
-  const columns = React.useMemo(
+  const columns = useMemo(
     () =>
       createVacancyColumns({
         sortBy: params.sortBy,

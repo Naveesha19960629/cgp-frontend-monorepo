@@ -844,8 +844,16 @@ interface StatusConfig {
   labelKey: string;
 }
 
+type VacancyStatus = 'draft' | 'unpublished' | 'live' | 'expired' | 'on_hold';
+
+interface VacancyStatusBadgeProps {
+  status: string;
+}
+
 export type {
   StatusConfig,
+  VacancyStatus,
+  VacancyStatusBadgeProps,
   VacancyActiveToggleProps,
   CreateColumnsOptions,
   VacancyTablePaginationProps,

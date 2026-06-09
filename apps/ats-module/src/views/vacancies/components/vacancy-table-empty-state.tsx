@@ -3,30 +3,14 @@ import { Add } from 'iconsax-reactjs';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
+import {
+  EMPTY_STATE_ROW_WIDTHS,
+  TABLE_EMPTY_STATE_AVATAR_URL,
+  TABLE_PAGE_SIZE,
+} from '@/views/vacancies/utils';
+
 import { Button } from '@cgp/ui-kit/components/ui/button';
 import { cn } from '@cgp/ui-kit/lib/utils';
-
-const tableEmptyStateAvatar = new URL(
-  '../../../assets/images/table-empty-state-avatar.svg',
-  import.meta.url
-).href;
-
-const EMPTY_ROWS = 12;
-
-const rowWidths = [
-  { first: 'w-[269px]', rest: 'w-[141px]' },
-  { first: 'w-[220px]', rest: 'w-[141px]' },
-  { first: 'w-[269px]', rest: 'w-[141px]' },
-  { first: 'w-[250px]', rest: 'w-[141px]' },
-  { first: 'w-[269px]', rest: 'w-[141px]' },
-  { first: 'w-[200px]', rest: 'w-[141px]' },
-  { first: 'w-[269px]', rest: 'w-[141px]' },
-  { first: 'w-[240px]', rest: 'w-[141px]' },
-  { first: 'w-[269px]', rest: 'w-[141px]' },
-  { first: 'w-[230px]', rest: 'w-[141px]' },
-  { first: 'w-[269px]', rest: 'w-[141px]' },
-  { first: 'w-[210px]', rest: 'w-[141px]' },
-];
 
 export default function VacancyTableEmptyState() {
   const { t } = useTranslation('ats');
@@ -63,12 +47,12 @@ export default function VacancyTableEmptyState() {
           </tr>
         </thead>
         <tbody>
-          {Array.from({ length: EMPTY_ROWS }).map((_, rowIndex) => (
+          {Array.from({ length: TABLE_PAGE_SIZE }).map((_, rowIndex) => (
             <tr key={rowIndex} className="h-18">
               <td
                 className={cn(
                   'px-6 py-4',
-                  rowIndex < EMPTY_ROWS - 1 && 'border-b border-slate-200'
+                  rowIndex < TABLE_PAGE_SIZE - 1 && 'border-b border-slate-200'
                 )}
                 style={{ width: 141, minWidth: 141 }}
               >
@@ -80,14 +64,14 @@ export default function VacancyTableEmptyState() {
               <td
                 className={cn(
                   'px-6 py-4',
-                  rowIndex < EMPTY_ROWS - 1 && 'border-b border-slate-200'
+                  rowIndex < TABLE_PAGE_SIZE - 1 && 'border-b border-slate-200'
                 )}
                 style={{ minWidth: 317, width: 'auto' }}
               >
                 <div
                   className={cn(
                     'h-5 rounded bg-slate-100',
-                    rowWidths[rowIndex]?.first ?? 'w-67.25'
+                    EMPTY_STATE_ROW_WIDTHS[rowIndex]?.first ?? 'w-67.25'
                   )}
                 />
               </td>
@@ -96,14 +80,15 @@ export default function VacancyTableEmptyState() {
                   key={colIndex}
                   className={cn(
                     'px-6 py-4',
-                    rowIndex < EMPTY_ROWS - 1 && 'border-b border-slate-200'
+                    rowIndex < TABLE_PAGE_SIZE - 1 &&
+                      'border-b border-slate-200'
                   )}
                   style={{ width: 189, minWidth: 189 }}
                 >
                   <div
                     className={cn(
                       'h-5 rounded bg-slate-100',
-                      rowWidths[rowIndex]?.rest ?? 'w-35.25'
+                      EMPTY_STATE_ROW_WIDTHS[rowIndex]?.rest ?? 'w-35.25'
                     )}
                   />
                 </td>
@@ -118,7 +103,7 @@ export default function VacancyTableEmptyState() {
           {/* Illustration */}
           <div className="relative size-32.75 shrink-0 overflow-hidden rounded-full">
             <img
-              src={tableEmptyStateAvatar}
+              src={TABLE_EMPTY_STATE_AVATAR_URL}
               alt=""
               className="absolute inset-0 size-full object-cover"
             />
