@@ -20,4 +20,14 @@ export { default as TertiaryEducationStep } from '@/views/vacancies/components/f
 export { default as VacancyCreateStepperForm } from '@/views/vacancies/components/vacancy-create-stepper-form';
 export { default as StepDisableDialog } from '@/views/vacancies/components/step-disable-dialog';
 export { default as VacancyCancelDialog } from '@/views/vacancies/components/vacancy-cancel-dialog';
+export { default as DataTableFacetedFilter } from '@/views/vacancies/components/data-table-faceted-filter';
+export { default as VacancyTableAction } from '@/views/vacancies/components/vacancy-table-action';
+export { default as createVacancyColumns } from '@/views/vacancies/components/vacancy-table-columns';
+export { default as VacancyTablePagination } from '@/views/vacancies/components/vacancy-table-pagination';
+export { default as VacancyDataTable } from '@/views/vacancies/components/vacancy-data-table';
+export { default as VacancyFilteringSection } from '@/views/vacancies/components/vacancy-filtering-section';
+export { default as VacancyStatusBadge } from '@/views/vacancies/components/vacancy-status-badge';
+export { default as VacancyActiveToggle } from '@/views/vacancies/components/vacancy-active-toggle';
+export { default as VacancyTableEmptyState } from '@/views/vacancies/components/vacancy-table-empty-state';
+export { default as VacancySearchEmptyState } from '@/views/vacancies/components/vacancy-search-empty-state';
 export * from '@/views/vacancies/components/dialogs';

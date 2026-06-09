@@ -1,12 +1,14 @@
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { vacancyService } from '@/views/vacancies/services/vacancy.service';
 
-import * as dataAccess from '@cgp/data-access';
+const { mockPost } = vi.hoisted(() => ({
+  mockPost: vi.fn(),
+}));
 
 vi.mock('@cgp/data-access', () => ({
   httpClient: {
-    post: vi.fn(),
+    post: mockPost,
   },
 }));
 
@@ -14,6 +16,10 @@ vi.mock('@cgp/data-access', () => ({
 const postMock = vi.mocked(dataAccess.httpClient.post);
 
 describe('vacancyService', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   describe('createVacancy', () => {
     it('sends POST request to /vacancies endpoint', async () => {
       const mockResponse = {
@@ -23,7 +29,7 @@ describe('vacancyService', () => {
           message: 'Vacancy created successfully',
         },
       };
-      postMock.mockResolvedValue(mockResponse);
+      mockPost.mockResolvedValue(mockResponse);
 
       const payload = {
         schedule: {
@@ -34,7 +40,7 @@ describe('vacancyService', () => {
 
       const result = await vacancyService.createVacancy(payload);
 
-      expect(postMock).toHaveBeenCalledWith('/vacancies', payload);
+      expect(mockPost).toHaveBeenCalledWith('/vacancies', payload);
       expect(result).toEqual(mockResponse.data);
     });
 
@@ -46,7 +52,7 @@ describe('vacancyService', () => {
           message: 'OK',
         },
       };
-      postMock.mockResolvedValue(mockResponse);
+      mockPost.mockResolvedValue(mockResponse);
 
       const result = await vacancyService.createVacancy({
         schedule: {
@@ -62,7 +68,7 @@ describe('vacancyService', () => {
 
     it('throws error when HTTP request fails', async () => {
       const mockError = new Error('Network error');
-      postMock.mockRejectedValue(mockError);
+      mockPost.mockRejectedValue(mockError);
 
       await expect(
         vacancyService.createVacancy({
@@ -82,7 +88,7 @@ describe('vacancyService', () => {
           message: 'Created',
         },
       };
-      postMock.mockResolvedValue(mockResponse);
+      mockPost.mockResolvedValue(mockResponse);
 
       const payload = {
         schedule: {
@@ -93,7 +99,7 @@ describe('vacancyService', () => {
 
       await vacancyService.createVacancy(payload);
 
-      expect(postMock).toHaveBeenCalledWith(
+      expect(mockPost).toHaveBeenCalledWith(
         '/vacancies',
         expect.objectContaining({
           schedule: {

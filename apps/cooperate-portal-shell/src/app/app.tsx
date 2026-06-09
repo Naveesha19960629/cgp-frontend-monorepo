@@ -1,3 +1,5 @@
+import { NuqsAdapter } from 'nuqs/adapters/react-router/v7';
+
 import { RouterProvider } from 'react-router-dom';
 
 import { UserProvider } from '@/app/contexts/user-context';
@@ -18,15 +20,17 @@ export default function App() {
       initOptions={keycloakInitOptions}
     >
       <UserProvider>
-        <QueryProvider>
-          <ThemeProvider defaultTheme="light" storageKey="ui-theme">
-            <LandscapeBlocker />
-            <TooltipProvider>
-              <RouterProvider router={router} />
-            </TooltipProvider>
-          </ThemeProvider>
-          <Toaster position="bottom-right" />
-        </QueryProvider>
+        <NuqsAdapter>
+          <QueryProvider>
+            <ThemeProvider defaultTheme="light" storageKey="ui-theme">
+              <LandscapeBlocker />
+              <TooltipProvider>
+                <RouterProvider router={router} />
+              </TooltipProvider>
+            </ThemeProvider>
+            <Toaster position="bottom-right" />
+          </QueryProvider>
+        </NuqsAdapter>
       </UserProvider>
     </ReactKeycloakProvider>
   );

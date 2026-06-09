@@ -1,3 +1,5 @@
+import type { useReactTable } from '@tanstack/react-table';
+
 interface AddOrSelectOption {
   source: string;
   id: string;
@@ -754,10 +756,153 @@ interface VacancyCancelDialogProps {
   onSaveAsDraft: () => void;
 }
 
+interface VacancyTableColumn {
+  vacancyId: string;
+  title: string;
+  jobTitle: string;
+  discipline: string;
+  careerPath: string;
+  role: string;
+  createdAt: string;
+  createdAtLabel: string;
+  createdBy: string;
+  schedulePublishAt: string;
+  schedulePublishAtLabel: string;
+  expirationAt: string;
+  expirationAtLabel: string;
+  applicantCount: number;
+  updatedAt: string;
+  updatedAtLabel: string;
+  updatedBy: string;
+  version: number;
+  status: string;
+  availableActions: string[];
+}
+
+interface VacancyFilteringSectionProps {
+  search: string;
+  onSearchChange: (value: string) => void;
+  careerPathFilter: string;
+  onCareerPathChange: (value: string) => void;
+  disciplineFilter: string;
+  onDisciplineChange: (value: string) => void;
+  statusFilter: string;
+  onStatusChange: (value: string) => void;
+}
+
+interface VacancyQueryParams {
+  page?: number;
+  size?: number;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+  search?: string;
+  careerPath?: string;
+  discipline?: string;
+  status?: string;
+}
+
+interface VacanciesPaginatedData {
+  content: VacancyTableColumn[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  last: boolean;
+}
+
+interface VacanciesApiResponse {
+  requestId: string;
+  success: boolean;
+  message: string;
+  data: VacanciesPaginatedData;
+}
+interface DataTableFacetedFilterProps {
+  title?: string;
+  options: {
+    label: string;
+    value: string;
+    icon?: React.ComponentType<{ className?: string }>;
+  }[];
+  selectedValues: string[];
+  onSelectionChange: (values: string[]) => void;
+  searchValue?: string;
+  onSearchChange?: (value: string) => void;
+  isLoading?: boolean;
+  hideSearch?: boolean;
+}
+
+interface VacancyDataTableProps<TData> {
+  table: ReturnType<typeof useReactTable<TData>>;
+  isLoading?: boolean;
+}
+
+interface VacancyTableActionProps {
+  vacancy: {
+    id: string;
+    status: string;
+    applicantCount: number;
+  };
+  onVersionHistory?: () => void;
+  onMatchCandidate?: () => void;
+  onCopyLink?: () => void;
+  onMakeACopy?: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
+}
+
+interface SortableHeaderProps {
+  label: string;
+  columnKey: string;
+  currentSortBy: string;
+  currentSortOrder: 'asc' | 'desc' | null;
+  onSort: (columnKey: string) => void;
+}
+
+interface VacancyTablePaginationProps {
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+}
+
+interface CreateColumnsOptions {
+  sortBy: string;
+  sortOrder: 'asc' | 'desc' | null;
+  onSort: (columnKey: string) => void;
+  t: (key: string) => string;
+}
+
+interface VacancyActiveToggleProps {
+  isActive: boolean;
+  onToggle?: (isActive: boolean) => void;
+}
+
+interface StatusConfig {
+  bg: string;
+  border: string;
+  text: string;
+  labelKey: string;
+}
+
+type VacancyStatus = 'draft' | 'unpublished' | 'live' | 'expired' | 'on_hold';
+
+interface VacancyStatusBadgeProps {
+  status: string;
+}
+
 export type {
+  StatusConfig,
+  VacancyStatus,
+  VacancyStatusBadgeProps,
+  VacancyActiveToggleProps,
+  CreateColumnsOptions,
+  VacancyTablePaginationProps,
+  SortableHeaderProps,
+  VacancyTableActionProps,
+  VacancyDataTableProps,
+  DataTableFacetedFilterProps,
+  VacancyFilteringSectionProps,
   AddOrSelectOption,
   SelectOption,
-  DisciplineItem,
   RoleItem,
   JobTitleItem,
   EmploymentTypeItem,
@@ -816,6 +961,7 @@ export type {
   StepFooterProps,
   SkillItem,
   CareerPathItem,
+  DisciplineItem,
   SkillCareerPathEntry,
   PreferredSkills,
   LanguageItem,
@@ -842,6 +988,10 @@ export type {
   PublicationApiData,
   PublicationResponse,
   VacancyCancelDialogProps,
+  VacancyTableColumn,
+  VacancyQueryParams,
+  VacanciesPaginatedData,
+  VacanciesApiResponse,
   MaritalStatusItem,
   CustomizableFormQuestionOption,
   CustomizableFormQuestion,

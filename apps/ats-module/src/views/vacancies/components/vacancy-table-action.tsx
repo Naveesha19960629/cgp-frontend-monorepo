@@ -1,0 +1,118 @@
+import { History, MoreVertical, UserSearch } from 'lucide-react';
+
+import { Edit2, Link21, Simcard2, Trash } from 'iconsax-reactjs';
+
+import { useTranslation } from 'react-i18next';
+
+import type { VacancyTableActionProps } from '@/views/vacancies/types';
+
+import { Button } from '@cgp/ui-kit/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@cgp/ui-kit/components/ui/dropdown-menu';
+
+export default function VacancyTableAction({
+  vacancy,
+  onVersionHistory,
+  onMatchCandidate,
+  onCopyLink,
+  onMakeACopy,
+  onEdit,
+  onDelete,
+}: VacancyTableActionProps) {
+  const { t } = useTranslation('ats');
+
+  const { status, applicantCount } = vacancy;
+  const hasApplicants = applicantCount > 0;
+  const normalizedStatus = status.toLowerCase();
+
+  const isDraft = normalizedStatus === 'draft';
+  const isUnpublished = normalizedStatus === 'unpublished';
+  const isLive = normalizedStatus === 'live';
+  const isExpired = normalizedStatus === 'expired';
+  const isOnHold = normalizedStatus === 'on_hold';
+
+  const showDuplicate = isUnpublished || isLive || isExpired || isOnHold;
+  const showVersionHistory = isUnpublished || isLive || isExpired || isOnHold;
+  const showCopyLink = isUnpublished || isLive || isExpired || isOnHold;
+  const showMatchCandidates =
+    (isLive || isExpired || isOnHold) && hasApplicants;
+  const showDelete =
+    isDraft ||
+    isUnpublished ||
+    ((isLive || isExpired || isOnHold) && !hasApplicants);
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" className="size-8 p-0">
+          <span className="sr-only">
+            {t('vacancies.table.actions.openMenu')}
+          </span>
+          <MoreVertical className="size-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        align="end"
+        className="w-47.5 rounded-lg p-3 shadow-[0px_4px_30px_0px_rgba(0,0,0,0.16)]"
+      >
+        <DropdownMenuItem
+          className="gap-2 px-3 py-3 text-sm font-medium text-slate-500"
+          onClick={onEdit}
+        >
+          <Edit2 className="size-4 shrink-0" />
+          {t('vacancies.table.actions.edit')}
+        </DropdownMenuItem>
+
+        {showDuplicate && (
+          <DropdownMenuItem
+            className="gap-2 px-3 py-3 text-sm font-medium text-slate-500"
+            onClick={onMakeACopy}
+          >
+            <Simcard2 className="size-4 shrink-0" />
+            {t('vacancies.table.actions.makeACopy')}
+          </DropdownMenuItem>
+        )}
+        {showMatchCandidates && (
+          <DropdownMenuItem
+            className="gap-2 px-3 py-3 text-sm font-medium text-slate-500"
+            onClick={onMatchCandidate}
+          >
+            <UserSearch className="size-4 shrink-0" />
+            {t('vacancies.table.actions.matchCandidate')}
+          </DropdownMenuItem>
+        )}
+        {showVersionHistory && (
+          <DropdownMenuItem
+            className="gap-2 px-3 py-3 text-sm font-medium text-slate-500"
+            onClick={onVersionHistory}
+          >
+            <History className="size-4 shrink-0" />
+            {t('vacancies.table.actions.versionHistory')}
+          </DropdownMenuItem>
+        )}
+        {showCopyLink && (
+          <DropdownMenuItem
+            className="gap-2 px-3 py-3 text-sm font-medium text-slate-500"
+            onClick={onCopyLink}
+          >
+            <Link21 className="size-4 shrink-0" />
+            {t('vacancies.table.actions.copyLink')}
+          </DropdownMenuItem>
+        )}
+        {showDelete && (
+          <DropdownMenuItem
+            className="gap-2 px-3 py-3 text-sm font-medium text-[#e11d48] focus:text-[#e11d48]"
+            onClick={onDelete}
+          >
+            <Trash className="size-4 shrink-0 text-[#e11d48]" />
+            {t('vacancies.table.actions.delete')}
+          </DropdownMenuItem>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}

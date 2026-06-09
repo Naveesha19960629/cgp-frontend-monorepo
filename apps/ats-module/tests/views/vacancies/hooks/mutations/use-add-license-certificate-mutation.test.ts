@@ -28,23 +28,21 @@ vi.mock('@/views/vacancies/services', () => ({
   },
 }));
 
-// ── Setup ──────────────────────────────────────────────────────────────────
-
-beforeEach(() => {
-  vi.clearAllMocks();
-  mockUseMutation.mockImplementation((options: unknown) => options);
-  mockInvalidateQueries.mockResolvedValue(undefined);
-  mockAddLicenseCertificate.mockResolvedValue({
-    requestId: 'req-1',
-    success: true,
-    message: 'Created',
-    data: { type: 'PENDING', items: { content: null } },
-  });
-});
-
 // ── useAddLicenseCertificateMutation ───────────────────────────────────────
 
 describe('useAddLicenseCertificateMutation', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockUseMutation.mockImplementation((options: unknown) => options);
+    mockInvalidateQueries.mockResolvedValue(undefined);
+    mockAddLicenseCertificate.mockResolvedValue({
+      requestId: 'req-1',
+      success: true,
+      message: 'Created',
+      data: { type: 'PENDING', items: { content: null } },
+    });
+  });
+
   it('mutationFn calls addLicenseCertificate with the given params', async () => {
     const mutation =
       useAddLicenseCertificateMutation() as unknown as MockMutation<{

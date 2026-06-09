@@ -100,7 +100,7 @@ export default function JobRequirementsStep({
 
   const { data: disciplinesData, isLoading: isDisciplinesLoading } =
     useDisciplinesQuery(disciplineSearch);
-  const disciplines = disciplinesData?.data.items.content ?? [];
+  const disciplines = disciplinesData?.data?.items?.content ?? [];
 
   const { data: careerPathsData, isLoading: isCareerPathsLoading } =
     useCareerPathsQuery(
@@ -108,7 +108,7 @@ export default function JobRequirementsStep({
       selectedDiscipline?.value,
       !isCareerPathDisabled
     );
-  const careerPaths = careerPathsData?.data.items.content ?? [];
+  const careerPaths = careerPathsData?.data?.items?.content ?? [];
 
   const { data: jobLevelsData, isLoading: isJobLevelsLoading } =
     useJobLevelsQuery();
@@ -122,23 +122,23 @@ export default function JobRequirementsStep({
     selectedLevel?.value,
     !isRoleDisabled
   );
-  const roles = rolesData?.data.items.content ?? [];
+  const roles = rolesData?.data?.items?.content ?? [];
 
   const { data: jobTitlesData, isLoading: isJobTitlesLoading } =
     useJobTitlesQuery(jobTitleSearch);
-  const jobTitles = jobTitlesData?.data.items.content ?? [];
+  const jobTitles = jobTitlesData?.data?.items?.content ?? [];
 
   const { data: employmentTypesData, isLoading: isEmploymentTypesLoading } =
     useEmploymentTypesQuery(employmentTypeSearch);
-  const employmentTypes = employmentTypesData?.data.items.content ?? [];
+  const employmentTypes = employmentTypesData?.data?.items?.content ?? [];
 
   const { data: workSchedulesData, isLoading: isWorkSchedulesLoading } =
     useWorkSchedulesQuery(workScheduleSearch);
-  const workSchedules = workSchedulesData?.data.items.content ?? [];
+  const workSchedules = workSchedulesData?.data?.items?.content ?? [];
 
   const { data: engagementModelsData, isLoading: isEngagementModelsLoading } =
     useEngagementModelsQuery(engagementModelSearch);
-  const engagementModels = engagementModelsData?.data.items.content ?? [];
+  const engagementModels = engagementModelsData?.data?.items?.content ?? [];
 
   const addDisciplineMutation = useAddDisciplineMutation();
   const addCareerPathMutation = useAddCareerPathMutation();

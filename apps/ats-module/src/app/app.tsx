@@ -1,3 +1,5 @@
+import { NuqsAdapter } from 'nuqs/adapters/react-router/v7';
+
 import { RouterProvider } from 'react-router-dom';
 
 import { UserProvider } from '@/app/contexts/user-context';
@@ -23,7 +25,9 @@ export default function App() {
       >
         <UserProvider>
           <TooltipProvider>
-            <RouterProvider router={createStandaloneRouter()} />
+            <NuqsAdapter>
+              <RouterProvider router={createStandaloneRouter()} />
+            </NuqsAdapter>
           </TooltipProvider>
         </UserProvider>
       </ReactKeycloakProvider>

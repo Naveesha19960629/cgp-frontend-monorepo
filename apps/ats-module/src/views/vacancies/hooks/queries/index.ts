@@ -95,3 +95,4 @@ export {
   useFacultiesQuery,
   useFacultiesSearch,
 } from '@/views/vacancies/hooks/queries/use-faculties-query';
+export { useVacanciesQuery } from '@/views/vacancies/hooks/queries/use-vacancies-query';

@@ -79,7 +79,7 @@ function PatentCard({
 
   const { data: industriesResponse, isLoading: isIndustriesLoading } =
     useIndustriesQuery(industriesSearch);
-  const industriesData = industriesResponse?.data.items.content ?? [];
+  const industriesData = industriesResponse?.data?.items?.content ?? [];
 
   const isOpen = form.watch(`patents.${index}.isOpen`);
   const isEnabled = form.watch('isEnabled');

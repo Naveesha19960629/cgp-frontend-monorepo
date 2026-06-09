@@ -4,12 +4,30 @@ import userEvent from '@testing-library/user-event';
 import VacanciesPage from '@/views/vacancies/pages/vacancies-page';
 
 const navigate = vi.fn();
-const useUserMock = vi.fn();
-const useGendersQueryMock = vi.fn();
+const useVacanciesQueryMock = vi.fn();
+const useVacancyTableParamsMock = vi.fn();
+
+const defaultParams = {
+  page: 0,
+  size: 12,
+  sortBy: '',
+  sortOrder: null,
+  search: '',
+  careerPath: '',
+  discipline: '',
+  status: '',
+};
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
     t: (key: string) => key,
+  }),
+}));
+
+vi.mock('@react-keycloak/web', () => ({
+  useKeycloak: () => ({
+    keycloak: { authenticated: true },
+    initialized: true,
   }),
 }));
 
@@ -21,28 +39,44 @@ vi.mock('react-router-dom', async importOriginal => {
   };
 });
 
-vi.mock('@/app/contexts/user-context', () => ({
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-  useUser: () => useUserMock(),
-}));
-
-vi.mock('@/views/vacancies', () => ({
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-  useGendersQuery: () => useGendersQueryMock(),
-}));
+vi.mock('@/views/vacancies', async importOriginal => {
+  const actual = await importOriginal<typeof import('@/views/vacancies')>();
+  return {
+    ...actual,
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    useVacanciesQuery: () => useVacanciesQueryMock(),
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    useVacancyTableParams: () => useVacancyTableParamsMock(),
+    VacancyDataTable: () => <div data-testid="vacancy-data-table" />,
+    VacancyFilteringSection: () => (
+      <div data-testid="vacancy-filtering-section" />
+    ),
+    VacancyTableEmptyState: () => (
+      <div data-testid="vacancy-table-empty-state" />
+    ),
+    VacancyTablePagination: () => (
+      <div data-testid="vacancy-table-pagination" />
+    ),
+    createVacancyColumns: () => [],
+  };
+});
 
 describe('VacanciesPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    useUserMock.mockReturnValue({ user: null });
-    useGendersQueryMock.mockReturnValue({
+    useVacanciesQueryMock.mockReturnValue({
       data: undefined,
       isLoading: false,
-      isError: false,
     });
+    useVacancyTableParamsMock.mockReturnValue([defaultParams, vi.fn()]);
   });
 
-  it('renders page heading and create vacancy button', () => {
+  it('renders page heading and create vacancy button when data exists', () => {
+    useVacanciesQueryMock.mockReturnValue({
+      isLoading: false,
+      data: { data: { content: [{ id: '1' }], totalPages: 1 } },
+    });
+
     render(<VacanciesPage />);
 
     expect(screen.getByText('vacancies.title')).toBeInTheDocument();
@@ -51,8 +85,25 @@ describe('VacanciesPage', () => {
     ).toBeInTheDocument();
   });
 
+  it('hides create vacancy button and filters when no data and no active filters', () => {
+    render(<VacanciesPage />);
+
+    expect(screen.getByText('vacancies.title')).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'vacancies.createVacancyButton' })
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId('vacancy-filtering-section')
+    ).not.toBeInTheDocument();
+  });
+
   it('navigates to create vacancy route when create button is clicked', async () => {
     const user = userEvent.setup();
+
+    useVacanciesQueryMock.mockReturnValue({
+      isLoading: false,
+      data: { data: { content: [{ id: '1' }], totalPages: 1 } },
+    });
 
     render(<VacanciesPage />);
 
@@ -63,47 +114,34 @@ describe('VacanciesPage', () => {
     expect(navigate).toHaveBeenCalledWith('/dashboard/ats/vacancies/new');
   });
 
-  it('renders loading and error states from genders query', () => {
-    useGendersQueryMock.mockReturnValue({
+  it('shows empty state when not loading and no vacancies exist', () => {
+    useVacanciesQueryMock.mockReturnValue({
       data: undefined,
-      isLoading: true,
-      isError: true,
+      isLoading: false,
     });
 
     render(<VacanciesPage />);
 
-    expect(screen.getByText('notifications.loading.title')).toBeInTheDocument();
-    expect(
-      screen.getByText('notifications.loading.message')
-    ).toBeInTheDocument();
+    expect(screen.getByTestId('vacancy-table-empty-state')).toBeInTheDocument();
+    expect(screen.queryByTestId('vacancy-data-table')).not.toBeInTheDocument();
   });
 
-  it('renders welcome message and gender labels when data exists', () => {
-    useUserMock.mockReturnValue({
-      user: {
-        firstName: 'John',
-      },
-    });
-
-    useGendersQueryMock.mockReturnValue({
+  it('shows data table when vacancies data has content', () => {
+    useVacanciesQueryMock.mockReturnValue({
       isLoading: false,
-      isError: false,
       data: {
         data: {
-          items: {
-            content: [
-              { id: '1', label: 'Male' },
-              { id: '2', label: 'Female' },
-            ],
-          },
+          content: [{ id: '1' }],
+          totalPages: 1,
         },
       },
     });
 
     render(<VacanciesPage />);
 
-    expect(screen.getByText('Welcome, John!')).toBeInTheDocument();
-    expect(screen.getByText('Male')).toBeInTheDocument();
-    expect(screen.getByText('Female')).toBeInTheDocument();
+    expect(screen.getByTestId('vacancy-data-table')).toBeInTheDocument();
+    expect(
+      screen.queryByTestId('vacancy-table-empty-state')
+    ).not.toBeInTheDocument();
   });
 });

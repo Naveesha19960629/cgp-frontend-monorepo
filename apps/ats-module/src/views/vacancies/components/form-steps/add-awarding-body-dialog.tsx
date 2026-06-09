@@ -106,7 +106,7 @@ export function AddAwardingBodyDialog({
 
   const { data: locationsResponse, isLoading: isLocationLoading } =
     useTertiaryAwardingBodyLocationsQuery(locationSearch);
-  const locationData = (locationsResponse?.data.items.content ?? []).filter(
+  const locationData = (locationsResponse?.data?.items?.content ?? []).filter(
     item =>
       !locationSearch.trim() ||
       item.label.toLowerCase().includes(locationSearch.trim().toLowerCase())
