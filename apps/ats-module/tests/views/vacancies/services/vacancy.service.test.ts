@@ -12,9 +12,6 @@ vi.mock('@cgp/data-access', () => ({
   },
 }));
 
-// eslint-disable-next-line @typescript-eslint/unbound-method
-const postMock = vi.mocked(dataAccess.httpClient.post);
-
 describe('vacancyService', () => {
   beforeEach(() => {
     vi.clearAllMocks();
