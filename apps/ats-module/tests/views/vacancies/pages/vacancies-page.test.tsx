@@ -24,6 +24,13 @@ vi.mock('react-i18next', () => ({
   }),
 }));
 
+vi.mock('@react-keycloak/web', () => ({
+  useKeycloak: () => ({
+    keycloak: { authenticated: true },
+    initialized: true,
+  }),
+}));
+
 vi.mock('react-router-dom', async importOriginal => {
   const actual = await importOriginal<typeof import('react-router-dom')>();
   return {
