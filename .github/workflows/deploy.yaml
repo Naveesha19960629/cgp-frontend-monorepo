@@ -1,4 +1,4 @@
-name: Deploy CGP Frontend Monorepo to Cloud Run
+name: Deploy CGP Frontend Microfrontends to Cloud Run
 
 on:
   pull_request:
@@ -9,14 +9,15 @@ on:
 
 env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-  SERVICE_NAME: cgp-frontend-monorepo
   REGION: us-central1
   AR_HOSTNAME: us-central1-docker.pkg.dev
   REPOSITORY: cgp-repo
 
+  SHELL_SERVICE: cgp-shell
+  ATS_SERVICE: ats-module
+
 jobs:
   build-and-test:
-    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
 
     steps:
@@ -34,41 +35,19 @@ jobs:
           version: 10.13.1
           run_install: false
 
-      - name: Get pnpm store directory
-        shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_ENV
-
-      - name: Setup pnpm cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            ${{ env.STORE_PATH }}
-            ~/.cache/Cypress
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
-
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
-
-      #      - name: Run Linter
-      #        run: pnpm run lint --if-present
 
       - name: Run Tests
         run: pnpm test
 
-      - name: Verify coverage (optional)
-        run: |
-          find . -type d -name coverage -exec ls -R {} + || echo "No coverage directory found"
-
       - name: Build Application
         env:
+          VITE_PORTAL_LOGO: ${{ secrets.VITE_PORTAL_LOGO }}
+          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
           VITE_API_URL: ${{ secrets.VITE_API_URL }}
           VITE_FALLBACK_LANG: ${{ secrets.VITE_FALLBACK_LANG }}
           VITE_LANG: ${{ secrets.VITE_LANG }}
-          VITE_OXO_LOGO_URL: ${{ secrets.VITE_OXO_LOGO_URL }}
-          VITE_OXO_LOGO_WHITE_URL: ${{ secrets.VITE_OXO_LOGO_WHITE_URL }}
           VITE_WS_URL: ${{ secrets.VITE_WS_URL }}
           VITE_KEYCLOAK_URL: ${{ secrets.VITE_KEYCLOAK_URL }}
           VITE_KEYCLOAK_REALM: ${{ secrets.VITE_KEYCLOAK_REALM }}
@@ -77,8 +56,7 @@ jobs:
           VITE_BACKEND_API_VERSION: ${{ secrets.VITE_BACKEND_API_VERSION }}
         run: pnpm nx run-many -t build
 
-  deploy-to-cloud-run:
-    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
+  build-and-deploy:
     runs-on: ubuntu-latest
     needs: [build-and-test]
 
@@ -86,35 +64,41 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      # =========================
+      # 🔐 AUTH GCP
+      # =========================
       - name: Google Cloud Auth
         uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
-          project_id: ${{ secrets.GCP_PROJECT_ID }}
 
-      - name: Setup Google Cloud SDK
+      - name: Setup GCloud
         uses: google-github-actions/setup-gcloud@v2
-        with:
-          project_id: ${{ secrets.GCP_PROJECT_ID }}
-          export_default_credentials: true
 
-      - name: Configure Docker for Artifact Registry
-        run: |
-          gcloud auth configure-docker $AR_HOSTNAME --quiet
+      - name: Configure Docker
+        run: gcloud auth configure-docker $AR_HOSTNAME --quiet
 
-      - name: Get Application Version
-        id: application-version
+      # =========================
+      # 📦 VERSION
+      # =========================
+      - name: Get Version
+        id: version
         run: |
           # Extract version from package.json
           VERSION=$(node -p "require('./package.json').version")
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Extracted version: $VERSION"
 
-      - name: Build Docker Image
+      # =========================
+      # 🔥 BUILD ATS IMAGE
+      # =========================
+      - name: Build ATS Image
         run: |
-          docker build --no-cache \
+          docker build  --no-cache \
+            -f Dockerfile.ats \
             --build-arg COMMIT_SHA=${{ github.sha }} \
             --build-arg BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') \
+            --build-arg VITE_API_BASE_URL=${{ secrets.VITE_API_BASE_URL }} \
             --build-arg VITE_API_URL=${{ secrets.VITE_API_URL }} \
             --build-arg VITE_FALLBACK_LANG=${{ secrets.VITE_FALLBACK_LANG }} \
             --build-arg VITE_LANG=${{ secrets.VITE_LANG }} \
@@ -126,21 +110,22 @@ jobs:
             --build-arg VITE_BACKEND_API_URL=${{ secrets.VITE_BACKEND_API_URL }} \
             --build-arg VITE_BACKEND_API_VERSION=${{ secrets.VITE_BACKEND_API_VERSION }} \
             --build-arg VITE_WS_URL=${{ secrets.VITE_WS_URL }} \
-            -t $AR_HOSTNAME/$PROJECT_ID/$REPOSITORY/$SERVICE_NAME:${{ steps.application-version.outputs.version }} \
-            -t $AR_HOSTNAME/$PROJECT_ID/$REPOSITORY/$SERVICE_NAME:latest \
+            -t $AR_HOSTNAME/$PROJECT_ID/$REPOSITORY/$ATS_SERVICE:${{ steps.version.outputs.version }} \
+            -t $AR_HOSTNAME/$PROJECT_ID/$REPOSITORY/$ATS_SERVICE:latest \
             .
 
-      - name: Push to Artifact Registry
+      - name: Push ATS Image
         run: |
-          docker push $AR_HOSTNAME/$PROJECT_ID/$REPOSITORY/$SERVICE_NAME:${{ steps.application-version.outputs.version }}
-          docker push $AR_HOSTNAME/$PROJECT_ID/$REPOSITORY/$SERVICE_NAME:latest
+          docker push $AR_HOSTNAME/$PROJECT_ID/$REPOSITORY/$ATS_SERVICE:${{ steps.version.outputs.version }}
 
-      - name: Deploy to Cloud Run
-        id: deploy
+      # =========================
+      # 🚀 DEPLOY ATS FIRST
+      # =========================
+      - name: Deploy ATS Module
+        id: deploy_ats
         run: |
-          # Deploy the service
-          gcloud run deploy $SERVICE_NAME \
-            --image=$AR_HOSTNAME/$PROJECT_ID/$REPOSITORY/$SERVICE_NAME:${{ steps.application-version.outputs.version }} \
+          gcloud run deploy $ATS_SERVICE \
+            --image=$AR_HOSTNAME/$PROJECT_ID/$REPOSITORY/$ATS_SERVICE:${{ steps.version.outputs.version }} \
             --region=$REGION \
             --platform=managed \
             --allow-unauthenticated \
@@ -149,18 +134,76 @@ jobs:
             --port=80 \
             --set-env-vars="NODE_ENV=production" \
             --revision-suffix=${{ github.sha }} \
-            --labels="commit=${{ github.sha }},branch=develop,app=cgp-frontend-monorepo" \
+            --labels="commit=${{ github.sha }},branch=develop,app=ats-module" \
             --quiet
 
-          # Get service URL
-          SERVICE_URL=$(gcloud run services describe $SERVICE_NAME \
+          ATS_URL=$(gcloud run services describe $ATS_SERVICE \
             --region=$REGION \
             --format='value(status.url)')
-          echo "url=$SERVICE_URL" >> $GITHUB_OUTPUT
-          echo "service_name=$SERVICE_NAME" >> $GITHUB_OUTPUT
 
-      - name: Show Deployment Info
+          echo "ats_url=$ATS_URL" >> $GITHUB_OUTPUT
+          echo "ATS URL: $ATS_URL"
+
+      # =========================
+      # 🧱 BUILD SHELL IMAGE (with ATS URL injection)
+      # =========================
+      - name: Build Shell Image
         run: |
-          echo "Deployment Successful!"
-          echo "URL: ${{ steps.deploy.outputs.url }}"
-          echo "Image: $AR_HOSTNAME/$PROJECT_ID/$REPOSITORY/$SERVICE_NAME:${{ steps.application-version.outputs.version }}"
+          docker build --no-cache \
+            -f Dockerfile.shell \
+            --build-arg VITE_ATS_MODULE_URL=${{ steps.deploy_ats.outputs.ats_url }} \
+            --build-arg COMMIT_SHA=${{ github.sha }} \
+            --build-arg BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') \
+            --build-arg VITE_PORTAL_LOGO=${{ secrets.VITE_PORTAL_LOGO }} \
+            --build-arg VITE_API_BASE_URL=${{ secrets.VITE_API_BASE_URL }} \
+            --build-arg VITE_API_URL=${{ secrets.VITE_API_URL }} \
+            --build-arg VITE_FALLBACK_LANG=${{ secrets.VITE_FALLBACK_LANG }} \
+            --build-arg VITE_LANG=${{ secrets.VITE_LANG }} \
+            --build-arg VITE_KEYCLOAK_URL=${{ secrets.VITE_KEYCLOAK_URL }} \
+            --build-arg VITE_KEYCLOAK_REALM=${{ secrets.VITE_KEYCLOAK_REALM }} \
+            --build-arg VITE_KEYCLOAK_CLIENT_ID=${{ secrets.VITE_KEYCLOAK_CLIENT_ID }} \
+            --build-arg VITE_BACKEND_API_URL=${{ secrets.VITE_BACKEND_API_URL }} \
+            --build-arg VITE_BACKEND_API_VERSION=${{ secrets.VITE_BACKEND_API_VERSION }} \
+            --build-arg VITE_WS_URL=${{ secrets.VITE_WS_URL }} \
+            -t $AR_HOSTNAME/$PROJECT_ID/$REPOSITORY/$SHELL_SERVICE:${{ steps.version.outputs.version }} \
+            -t $AR_HOSTNAME/$PROJECT_ID/$REPOSITORY/$SHELL_SERVICE:latest \
+            .
+
+      - name: Push Shell Image
+        run: |
+          docker push $AR_HOSTNAME/$PROJECT_ID/$REPOSITORY/$SHELL_SERVICE:${{ steps.version.outputs.version }}
+
+      # =========================
+      # 🌐 DEPLOY SHELL
+      # =========================
+      - name: Deploy Shell
+        id: deploy_shell
+        run: |
+          gcloud run deploy $SHELL_SERVICE \
+            --image=$AR_HOSTNAME/$PROJECT_ID/$REPOSITORY/$SHELL_SERVICE:${{ steps.version.outputs.version }} \
+            --region=$REGION \
+            --platform=managed \
+            --allow-unauthenticated \
+            --memory=1Gi \
+            --cpu=1 \
+            --port=80 \
+            --set-env-vars="NODE_ENV=production" \
+            --revision-suffix=${{ github.sha }} \
+            --labels="commit=${{ github.sha }},branch=develop,app=cgp-shell" \
+            --quiet
+
+          SHELL_URL=$(gcloud run services describe $SHELL_SERVICE \
+            --region=$REGION \
+            --format='value(status.url)')
+
+          echo "shell_url=$SHELL_URL" >> $GITHUB_OUTPUT
+
+      # =========================
+      # 📢 SUMMARY
+      # =========================
+      - name: Deployment Summary
+        run: |
+          echo "===================================="
+          echo "ATS Module URL: ${{ steps.deploy_ats.outputs.ats_url }}"
+          echo "Shell URL: ${{ steps.deploy_shell.outputs.shell_url }}"
+          echo "===================================="

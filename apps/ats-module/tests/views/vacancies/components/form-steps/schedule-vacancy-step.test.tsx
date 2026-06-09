@@ -13,6 +13,16 @@ import { useCreateVacancyMutation } from '@/views/vacancies/hooks';
 
 import { CalendarWithTime } from '@cgp/ui-kit/components/ui/calendar-with-time';
 
+type CalendarWithTimeProps = {
+  label?: string;
+  error?: string;
+  value?: string;
+  onChange?: (v: string) => void;
+  formattedDateDisplay?: string;
+  timeLabel?: string;
+  disabledDates?: (date: Date) => boolean;
+};
+
 // Mock dependencies
 vi.mock('@/views/vacancies/context/vacancy-form-context');
 vi.mock('@/views/vacancies/hooks', async importOriginal => {
@@ -24,18 +34,22 @@ vi.mock('@/views/vacancies/hooks', async importOriginal => {
   };
 });
 vi.mock('@cgp/ui-kit/components/ui/calendar-with-time', () => ({
-  CalendarWithTime: vi.fn(({ label, error, value, onChange }) => (
-    <div data-testid="calendar-with-time">
-      <label>{label}</label>
-      {error && <div className="text-red-500">{error}</div>}
-      <input
-        type="hidden"
-        value={value || ''}
-        onChange={e => onChange?.(e.target.value)}
-        data-testid={`${label}-input`}
-      />
-    </div>
-  )),
+  CalendarWithTime: vi.fn(
+    ({ label, error, value, onChange }: CalendarWithTimeProps) => (
+      <div data-testid="calendar-with-time">
+        <label>{label}</label>
+        {error && <div className="text-red-500">{error}</div>}
+        <input
+          type="hidden"
+          value={value ?? ''}
+          onChange={e => {
+            onChange?.(e.target.value);
+          }}
+          data-testid={`${label}-input`}
+        />
+      </div>
+    )
+  ),
 }));
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
@@ -67,7 +81,7 @@ describe('ScheduleVacancyStep', () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    (useVacancyForm as any).mockReturnValue({
+    vi.mocked(useVacancyForm).mockReturnValue({
       form: {
         schedule: {
           schedulePublishDate: '',
@@ -76,12 +90,12 @@ describe('ScheduleVacancyStep', () => {
           expirationTime: '',
         },
       },
-    });
+    } as unknown as ReturnType<typeof useVacancyForm>);
 
-    (useCreateVacancyMutation as any).mockReturnValue({
+    vi.mocked(useCreateVacancyMutation).mockReturnValue({
       mutateAsync: mockCreateVacancy,
       isPending: false,
-    });
+    } as unknown as ReturnType<typeof useCreateVacancyMutation>);
   });
 
   const renderComponent = (overrideProps = {}) => {
@@ -142,10 +156,10 @@ describe('ScheduleVacancyStep', () => {
     });
 
     it('should disable Create button when mutation is pending', () => {
-      (useCreateVacancyMutation as any).mockReturnValue({
+      vi.mocked(useCreateVacancyMutation).mockReturnValue({
         mutateAsync: mockCreateVacancy,
         isPending: true,
-      });
+      } as unknown as ReturnType<typeof useCreateVacancyMutation>);
 
       renderComponent();
 
@@ -193,13 +207,13 @@ describe('ScheduleVacancyStep', () => {
     });
 
     it('should pass combined date and 24-hour time as formatted display', () => {
-      (useVacancyForm as any).mockReturnValue({
+      vi.mocked(useVacancyForm).mockReturnValue({
         form: {
           schedule: {
             schedulePublishAt: '2026-06-25T10:30:00 AM',
           },
         },
-      });
+      } as unknown as ReturnType<typeof useVacancyForm>);
 
       renderComponent();
 
@@ -210,13 +224,13 @@ describe('ScheduleVacancyStep', () => {
     });
 
     it('should pass combined date and 12-hour normalized time as formatted display', () => {
-      (useVacancyForm as any).mockReturnValue({
+      vi.mocked(useVacancyForm).mockReturnValue({
         form: {
           schedule: {
             expirationAt: '2026-06-30T5:27 PM',
           },
         },
-      });
+      } as unknown as ReturnType<typeof useVacancyForm>);
 
       renderComponent();
 
@@ -229,13 +243,13 @@ describe('ScheduleVacancyStep', () => {
     });
 
     it('should pass date-only formatted display when time is missing', () => {
-      (useVacancyForm as any).mockReturnValue({
+      vi.mocked(useVacancyForm).mockReturnValue({
         form: {
           schedule: {
             schedulePublishAt: '2026-06-25T',
           },
         },
-      });
+      } as unknown as ReturnType<typeof useVacancyForm>);
 
       renderComponent();
 
@@ -257,22 +271,20 @@ describe('ScheduleVacancyStep', () => {
     });
 
     it('should pass disabledDates function that blocks dates before publish date for expiration', () => {
-      (useVacancyForm as any).mockReturnValue({
+      vi.mocked(useVacancyForm).mockReturnValue({
         form: {
           schedule: {
             schedulePublishAt: '2026-06-25T10:30:00 AM',
             expirationAt: '2026-06-30T05:27:00 PM',
           },
         },
-      });
+      } as unknown as ReturnType<typeof useVacancyForm>);
 
       renderComponent();
 
       const calendarWithTimeMock = vi.mocked(CalendarWithTime);
       const expirationCall = calendarWithTimeMock.mock.calls[1]?.[0];
-      const expirationDisabledDates = expirationCall?.disabledDates as
-        | ((date: Date) => boolean)
-        | undefined;
+      const expirationDisabledDates = expirationCall?.disabledDates;
 
       expect(expirationDisabledDates).toBeTypeOf('function');
       expect(expirationDisabledDates?.(new Date('2026-06-24'))).toBe(true);

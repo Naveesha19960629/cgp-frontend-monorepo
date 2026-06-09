@@ -6,7 +6,6 @@ import federation from '@originjs/vite-plugin-federation';
 import tailwindcss from '@tailwindcss/vite';
 import path from 'path';
 
-// https://vite.dev/config/
 export default defineConfig({
   plugins: [
     react(),
@@ -14,17 +13,21 @@ export default defineConfig({
     federation({
       name: 'cooperate-portal-shell',
       filename: 'remoteEntry.js',
+
       exposes: {
         './i18n': './src/app/utils/i18n/index.ts',
         './KeycloakContext': './src/app/contexts/keycloak-context.tsx',
         './UserContext': './src/app/contexts/user-context.tsx',
         './keycloak': './src/app/services/keycloak.ts',
       },
+
       remotes: {
-        'ats-module': 'http://localhost:4173/assets/remoteEntry.js',
+        'ats-module':
+          process.env.VITE_ATS_MODULE_URL + '/assets/remoteEntry.js',
         from: 'vite',
         format: 'esm',
       },
+
       shared: [
         'react',
         'react-dom',
@@ -37,6 +40,7 @@ export default defineConfig({
       ],
     }),
   ],
+
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
@@ -52,10 +56,20 @@ export default defineConfig({
       '@react-keycloak/web',
     ],
   },
+
   server: {
     port: 5174,
     strictPort: true,
+    cors: true,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods':
+        'GET, HEAD, PUT, PATCH, POST, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers':
+        'Content-Type, Authorization, X-Requested-With',
+    },
   },
+
   build: {
     modulePreload: false,
     target: 'esnext',

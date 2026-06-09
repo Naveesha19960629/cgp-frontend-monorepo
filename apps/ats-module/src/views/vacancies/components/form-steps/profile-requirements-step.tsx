@@ -354,10 +354,11 @@ export default function ProfileRequirementsStep({ onNext, onBack }: StepProps) {
   const [showEmptyConfirm, setShowEmptyConfirm] = useState(false);
 
   const { data: gendersResponse } = useGendersQuery();
-  const gendersData = gendersResponse?.data.items.content ?? [];
+  const gendersData = gendersResponse?.data?.items?.content ?? [];
 
   const { data: maritalStatusesResponse } = useMaritalStatusesQuery();
-  const maritalStatusesData = maritalStatusesResponse?.data.items.content ?? [];
+  const maritalStatusesData =
+    maritalStatusesResponse?.data?.items?.content ?? [];
 
   const isEnabled = form.watch('isEnabled');
   const dataTakenFromCandidate = form.watch('dataTakenFromCandidate');

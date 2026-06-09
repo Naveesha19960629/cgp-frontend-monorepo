@@ -70,253 +70,255 @@ vi.mock('@/views/vacancies', () => ({
 
 // -- Setup ------------------------------------------------------------------
 
-beforeEach(() => {
-  vi.clearAllMocks();
-  mockUseQuery.mockReturnValue({ data: undefined, isLoading: false });
-});
-
-// -- useDisciplinesQuery ----------------------------------------------------
-
-describe('useDisciplinesQuery', () => {
-  it('passes correct queryKey with search', () => {
-    useDisciplinesQuery('eng');
-    expect(mockUseQuery).toHaveBeenCalledWith(
-      expect.objectContaining({ queryKey: ['disciplines', 'eng'] })
-    );
+describe('job requirement query hooks', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockUseQuery.mockReturnValue({ data: undefined, isLoading: false });
   });
 
-  it('defaults search to empty string', () => {
-    useDisciplinesQuery();
-    expect(mockUseQuery).toHaveBeenCalledWith(
-      expect.objectContaining({ queryKey: ['disciplines', ''] })
-    );
+  // -- useDisciplinesQuery ----------------------------------------------------
+
+  describe('useDisciplinesQuery', () => {
+    it('passes correct queryKey with search', () => {
+      useDisciplinesQuery('eng');
+      expect(mockUseQuery).toHaveBeenCalledWith(
+        expect.objectContaining({ queryKey: ['disciplines', 'eng'] })
+      );
+    });
+
+    it('defaults search to empty string', () => {
+      useDisciplinesQuery();
+      expect(mockUseQuery).toHaveBeenCalledWith(
+        expect.objectContaining({ queryKey: ['disciplines', ''] })
+      );
+    });
+
+    it('queryFn calls disciplineService.getAllDisciplines', async () => {
+      mockGetDisciplines.mockResolvedValue({ data: {} });
+      useDisciplinesQuery('test');
+      const { queryFn } = mockUseQuery.mock.calls[0][0] as {
+        queryFn: () => Promise<unknown>;
+      };
+      await queryFn();
+      expect(mockGetDisciplines).toHaveBeenCalledWith('test');
+    });
   });
 
-  it('queryFn calls disciplineService.getAllDisciplines', async () => {
-    mockGetDisciplines.mockResolvedValue({ data: {} });
-    useDisciplinesQuery('test');
-    const { queryFn } = mockUseQuery.mock.calls[0][0] as {
-      queryFn: () => Promise<unknown>;
-    };
-    await queryFn();
-    expect(mockGetDisciplines).toHaveBeenCalledWith('test');
-  });
-});
+  // -- useCareerPathsQuery ----------------------------------------------------
 
-// -- useCareerPathsQuery ----------------------------------------------------
+  describe('useCareerPathsQuery', () => {
+    it('passes correct queryKey with search and disciplineId', () => {
+      useCareerPathsQuery('test', 'disc-1');
+      expect(mockUseQuery).toHaveBeenCalledWith(
+        expect.objectContaining({
+          queryKey: ['career-paths', 'test', 'disc-1'],
+        })
+      );
+    });
 
-describe('useCareerPathsQuery', () => {
-  it('passes correct queryKey with search and disciplineId', () => {
-    useCareerPathsQuery('test', 'disc-1');
-    expect(mockUseQuery).toHaveBeenCalledWith(
-      expect.objectContaining({
-        queryKey: ['career-paths', 'test', 'disc-1'],
-      })
-    );
-  });
+    it('uses empty string for missing disciplineId in queryKey', () => {
+      useCareerPathsQuery('test');
+      expect(mockUseQuery).toHaveBeenCalledWith(
+        expect.objectContaining({
+          queryKey: ['career-paths', 'test', ''],
+        })
+      );
+    });
 
-  it('uses empty string for missing disciplineId in queryKey', () => {
-    useCareerPathsQuery('test');
-    expect(mockUseQuery).toHaveBeenCalledWith(
-      expect.objectContaining({
-        queryKey: ['career-paths', 'test', ''],
-      })
-    );
-  });
+    it('passes enabled flag', () => {
+      useCareerPathsQuery('', undefined, false);
+      expect(mockUseQuery).toHaveBeenCalledWith(
+        expect.objectContaining({ enabled: false })
+      );
+    });
 
-  it('passes enabled flag', () => {
-    useCareerPathsQuery('', undefined, false);
-    expect(mockUseQuery).toHaveBeenCalledWith(
-      expect.objectContaining({ enabled: false })
-    );
-  });
-
-  it('queryFn calls careerPathService.getAllCareerPaths', async () => {
-    mockGetCareerPaths.mockResolvedValue({ data: {} });
-    useCareerPathsQuery('test', 'disc-1');
-    const { queryFn } = mockUseQuery.mock.calls[0][0] as {
-      queryFn: () => Promise<unknown>;
-    };
-    await queryFn();
-    expect(mockGetCareerPaths).toHaveBeenCalledWith('test', 'disc-1');
-  });
-});
-
-// -- useRolesQuery ----------------------------------------------------------
-
-describe('useRolesQuery', () => {
-  it('passes correct queryKey with all params', () => {
-    useRolesQuery('dev', 'cp-1', 'level-1');
-    expect(mockUseQuery).toHaveBeenCalledWith(
-      expect.objectContaining({
-        queryKey: ['job-roles', 'dev', 'cp-1', 'level-1'],
-      })
-    );
+    it('queryFn calls careerPathService.getAllCareerPaths', async () => {
+      mockGetCareerPaths.mockResolvedValue({ data: {} });
+      useCareerPathsQuery('test', 'disc-1');
+      const { queryFn } = mockUseQuery.mock.calls[0][0] as {
+        queryFn: () => Promise<unknown>;
+      };
+      await queryFn();
+      expect(mockGetCareerPaths).toHaveBeenCalledWith('test', 'disc-1');
+    });
   });
 
-  it('uses empty strings for missing optional params in queryKey', () => {
-    useRolesQuery('dev');
-    expect(mockUseQuery).toHaveBeenCalledWith(
-      expect.objectContaining({
-        queryKey: ['job-roles', 'dev', '', ''],
-      })
-    );
+  // -- useRolesQuery ----------------------------------------------------------
+
+  describe('useRolesQuery', () => {
+    it('passes correct queryKey with all params', () => {
+      useRolesQuery('dev', 'cp-1', 'level-1');
+      expect(mockUseQuery).toHaveBeenCalledWith(
+        expect.objectContaining({
+          queryKey: ['job-roles', 'dev', 'cp-1', 'level-1'],
+        })
+      );
+    });
+
+    it('uses empty strings for missing optional params in queryKey', () => {
+      useRolesQuery('dev');
+      expect(mockUseQuery).toHaveBeenCalledWith(
+        expect.objectContaining({
+          queryKey: ['job-roles', 'dev', '', ''],
+        })
+      );
+    });
+
+    it('passes enabled flag', () => {
+      useRolesQuery('', undefined, undefined, false);
+      expect(mockUseQuery).toHaveBeenCalledWith(
+        expect.objectContaining({ enabled: false })
+      );
+    });
+
+    it('queryFn calls roleService.getAllRoles with all params', async () => {
+      mockGetRoles.mockResolvedValue({ data: {} });
+      useRolesQuery('dev', 'cp-1', 'level-1');
+      const { queryFn } = mockUseQuery.mock.calls[0][0] as {
+        queryFn: () => Promise<unknown>;
+      };
+      await queryFn();
+      expect(mockGetRoles).toHaveBeenCalledWith('dev', 'cp-1', 'level-1');
+    });
   });
 
-  it('passes enabled flag', () => {
-    useRolesQuery('', undefined, undefined, false);
-    expect(mockUseQuery).toHaveBeenCalledWith(
-      expect.objectContaining({ enabled: false })
-    );
+  // -- useJobTitlesQuery ------------------------------------------------------
+
+  describe('useJobTitlesQuery', () => {
+    it('passes correct queryKey with search', () => {
+      useJobTitlesQuery('soft');
+      expect(mockUseQuery).toHaveBeenCalledWith(
+        expect.objectContaining({ queryKey: ['job-titles', 'soft'] })
+      );
+    });
+
+    it('defaults search to empty string', () => {
+      useJobTitlesQuery();
+      expect(mockUseQuery).toHaveBeenCalledWith(
+        expect.objectContaining({ queryKey: ['job-titles', ''] })
+      );
+    });
+
+    it('queryFn calls jobTitleService.getAllJobTitles', async () => {
+      mockGetJobTitles.mockResolvedValue({ data: {} });
+      useJobTitlesQuery('test');
+      const { queryFn } = mockUseQuery.mock.calls[0][0] as {
+        queryFn: () => Promise<unknown>;
+      };
+      await queryFn();
+      expect(mockGetJobTitles).toHaveBeenCalledWith('test');
+    });
   });
 
-  it('queryFn calls roleService.getAllRoles with all params', async () => {
-    mockGetRoles.mockResolvedValue({ data: {} });
-    useRolesQuery('dev', 'cp-1', 'level-1');
-    const { queryFn } = mockUseQuery.mock.calls[0][0] as {
-      queryFn: () => Promise<unknown>;
-    };
-    await queryFn();
-    expect(mockGetRoles).toHaveBeenCalledWith('dev', 'cp-1', 'level-1');
-  });
-});
+  // -- useEmploymentTypesQuery ------------------------------------------------
 
-// -- useJobTitlesQuery ------------------------------------------------------
+  describe('useEmploymentTypesQuery', () => {
+    it('passes correct queryKey with search', () => {
+      useEmploymentTypesQuery('full');
+      expect(mockUseQuery).toHaveBeenCalledWith(
+        expect.objectContaining({ queryKey: ['employment-types', 'full'] })
+      );
+    });
 
-describe('useJobTitlesQuery', () => {
-  it('passes correct queryKey with search', () => {
-    useJobTitlesQuery('soft');
-    expect(mockUseQuery).toHaveBeenCalledWith(
-      expect.objectContaining({ queryKey: ['job-titles', 'soft'] })
-    );
-  });
+    it('defaults search to empty string', () => {
+      useEmploymentTypesQuery();
+      expect(mockUseQuery).toHaveBeenCalledWith(
+        expect.objectContaining({ queryKey: ['employment-types', ''] })
+      );
+    });
 
-  it('defaults search to empty string', () => {
-    useJobTitlesQuery();
-    expect(mockUseQuery).toHaveBeenCalledWith(
-      expect.objectContaining({ queryKey: ['job-titles', ''] })
-    );
-  });
-
-  it('queryFn calls jobTitleService.getAllJobTitles', async () => {
-    mockGetJobTitles.mockResolvedValue({ data: {} });
-    useJobTitlesQuery('test');
-    const { queryFn } = mockUseQuery.mock.calls[0][0] as {
-      queryFn: () => Promise<unknown>;
-    };
-    await queryFn();
-    expect(mockGetJobTitles).toHaveBeenCalledWith('test');
-  });
-});
-
-// -- useEmploymentTypesQuery ------------------------------------------------
-
-describe('useEmploymentTypesQuery', () => {
-  it('passes correct queryKey with search', () => {
-    useEmploymentTypesQuery('full');
-    expect(mockUseQuery).toHaveBeenCalledWith(
-      expect.objectContaining({ queryKey: ['employment-types', 'full'] })
-    );
+    it('queryFn calls employmentTypeService.getAllEmploymentTypes', async () => {
+      mockGetEmploymentTypes.mockResolvedValue({ data: {} });
+      useEmploymentTypesQuery('test');
+      const { queryFn } = mockUseQuery.mock.calls[0][0] as {
+        queryFn: () => Promise<unknown>;
+      };
+      await queryFn();
+      expect(mockGetEmploymentTypes).toHaveBeenCalledWith('test');
+    });
   });
 
-  it('defaults search to empty string', () => {
-    useEmploymentTypesQuery();
-    expect(mockUseQuery).toHaveBeenCalledWith(
-      expect.objectContaining({ queryKey: ['employment-types', ''] })
-    );
+  // -- useWorkSchedulesQuery --------------------------------------------------
+
+  describe('useWorkSchedulesQuery', () => {
+    it('passes correct queryKey with search', () => {
+      useWorkSchedulesQuery('morn');
+      expect(mockUseQuery).toHaveBeenCalledWith(
+        expect.objectContaining({ queryKey: ['work-schedules', 'morn'] })
+      );
+    });
+
+    it('defaults search to empty string', () => {
+      useWorkSchedulesQuery();
+      expect(mockUseQuery).toHaveBeenCalledWith(
+        expect.objectContaining({ queryKey: ['work-schedules', ''] })
+      );
+    });
+
+    it('queryFn calls workScheduleService.getAllWorkSchedules', async () => {
+      mockGetWorkSchedules.mockResolvedValue({ data: {} });
+      useWorkSchedulesQuery('test');
+      const { queryFn } = mockUseQuery.mock.calls[0][0] as {
+        queryFn: () => Promise<unknown>;
+      };
+      await queryFn();
+      expect(mockGetWorkSchedules).toHaveBeenCalledWith('test');
+    });
   });
 
-  it('queryFn calls employmentTypeService.getAllEmploymentTypes', async () => {
-    mockGetEmploymentTypes.mockResolvedValue({ data: {} });
-    useEmploymentTypesQuery('test');
-    const { queryFn } = mockUseQuery.mock.calls[0][0] as {
-      queryFn: () => Promise<unknown>;
-    };
-    await queryFn();
-    expect(mockGetEmploymentTypes).toHaveBeenCalledWith('test');
-  });
-});
+  // -- useEngagementModelsQuery -----------------------------------------------
 
-// -- useWorkSchedulesQuery --------------------------------------------------
+  describe('useEngagementModelsQuery', () => {
+    it('passes correct queryKey with search', () => {
+      useEngagementModelsQuery('free');
+      expect(mockUseQuery).toHaveBeenCalledWith(
+        expect.objectContaining({ queryKey: ['engagement-models', 'free'] })
+      );
+    });
 
-describe('useWorkSchedulesQuery', () => {
-  it('passes correct queryKey with search', () => {
-    useWorkSchedulesQuery('morn');
-    expect(mockUseQuery).toHaveBeenCalledWith(
-      expect.objectContaining({ queryKey: ['work-schedules', 'morn'] })
-    );
-  });
+    it('defaults search to empty string', () => {
+      useEngagementModelsQuery();
+      expect(mockUseQuery).toHaveBeenCalledWith(
+        expect.objectContaining({ queryKey: ['engagement-models', ''] })
+      );
+    });
 
-  it('defaults search to empty string', () => {
-    useWorkSchedulesQuery();
-    expect(mockUseQuery).toHaveBeenCalledWith(
-      expect.objectContaining({ queryKey: ['work-schedules', ''] })
-    );
-  });
-
-  it('queryFn calls workScheduleService.getAllWorkSchedules', async () => {
-    mockGetWorkSchedules.mockResolvedValue({ data: {} });
-    useWorkSchedulesQuery('test');
-    const { queryFn } = mockUseQuery.mock.calls[0][0] as {
-      queryFn: () => Promise<unknown>;
-    };
-    await queryFn();
-    expect(mockGetWorkSchedules).toHaveBeenCalledWith('test');
-  });
-});
-
-// -- useEngagementModelsQuery -----------------------------------------------
-
-describe('useEngagementModelsQuery', () => {
-  it('passes correct queryKey with search', () => {
-    useEngagementModelsQuery('free');
-    expect(mockUseQuery).toHaveBeenCalledWith(
-      expect.objectContaining({ queryKey: ['engagement-models', 'free'] })
-    );
+    it('queryFn calls engagementModelService.getAllEngagementModels', async () => {
+      mockGetEngagementModels.mockResolvedValue({ data: {} });
+      useEngagementModelsQuery('test');
+      const { queryFn } = mockUseQuery.mock.calls[0][0] as {
+        queryFn: () => Promise<unknown>;
+      };
+      await queryFn();
+      expect(mockGetEngagementModels).toHaveBeenCalledWith('test');
+    });
   });
 
-  it('defaults search to empty string', () => {
-    useEngagementModelsQuery();
-    expect(mockUseQuery).toHaveBeenCalledWith(
-      expect.objectContaining({ queryKey: ['engagement-models', ''] })
-    );
-  });
+  // -- useJobLevelsQuery ------------------------------------------------------
 
-  it('queryFn calls engagementModelService.getAllEngagementModels', async () => {
-    mockGetEngagementModels.mockResolvedValue({ data: {} });
-    useEngagementModelsQuery('test');
-    const { queryFn } = mockUseQuery.mock.calls[0][0] as {
-      queryFn: () => Promise<unknown>;
-    };
-    await queryFn();
-    expect(mockGetEngagementModels).toHaveBeenCalledWith('test');
-  });
-});
+  describe('useJobLevelsQuery', () => {
+    it('passes correct queryKey', () => {
+      useJobLevelsQuery();
+      expect(mockUseQuery).toHaveBeenCalledWith(
+        expect.objectContaining({ queryKey: ['levels'] })
+      );
+    });
 
-// -- useJobLevelsQuery ------------------------------------------------------
+    it('sets staleTime to Infinity', () => {
+      useJobLevelsQuery();
+      expect(mockUseQuery).toHaveBeenCalledWith(
+        expect.objectContaining({ staleTime: Infinity })
+      );
+    });
 
-describe('useJobLevelsQuery', () => {
-  it('passes correct queryKey', () => {
-    useJobLevelsQuery();
-    expect(mockUseQuery).toHaveBeenCalledWith(
-      expect.objectContaining({ queryKey: ['levels'] })
-    );
+    it('queryFn calls jobLevelService.getAllJobLevels', async () => {
+      mockGetJobLevels.mockResolvedValue({ data: [] });
+      useJobLevelsQuery();
+      const { queryFn } = mockUseQuery.mock.calls[0][0] as {
+        queryFn: () => Promise<unknown>;
+      };
+      await queryFn();
+      expect(mockGetJobLevels).toHaveBeenCalledTimes(1);
+    });
   });
-
-  it('sets staleTime to Infinity', () => {
-    useJobLevelsQuery();
-    expect(mockUseQuery).toHaveBeenCalledWith(
-      expect.objectContaining({ staleTime: Infinity })
-    );
-  });
-
-  it('queryFn calls jobLevelService.getAllJobLevels', async () => {
-    mockGetJobLevels.mockResolvedValue({ data: [] });
-    useJobLevelsQuery();
-    const { queryFn } = mockUseQuery.mock.calls[0][0] as {
-      queryFn: () => Promise<unknown>;
-    };
-    await queryFn();
-    expect(mockGetJobLevels).toHaveBeenCalledTimes(1);
-  });
-});
+}); // end: job requirement query hooks
