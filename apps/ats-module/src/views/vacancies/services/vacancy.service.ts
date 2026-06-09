@@ -4,7 +4,7 @@ import type {
 } from '@/views/vacancies/types';
 import type { ScheduleVacancyPayload } from '@/views/vacancies/types';
 
-import { httpClient, temporaryHttpClient } from '@cgp/data-access';
+import { httpClient } from '@cgp/data-access';
 
 interface ScheduleVacancyRequest {
   schedule: ScheduleVacancyPayload;
@@ -20,12 +20,9 @@ export const vacancyService = {
   getVacancies: async (
     params: VacancyQueryParams
   ): Promise<VacanciesApiResponse> => {
-    const response = await temporaryHttpClient.get<VacanciesApiResponse>(
-      '/vacancies',
-      {
-        params,
-      }
-    );
+    const response = await httpClient.get<VacanciesApiResponse>('/vacancies', {
+      params,
+    });
     return response.data;
   },
   createVacancy: async (
