@@ -43,6 +43,7 @@ jobs:
       
       - name: Build Application
         env:
+          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
           VITE_API_URL: ${{ secrets.VITE_API_URL }}
           VITE_FALLBACK_LANG: ${{ secrets.VITE_FALLBACK_LANG }}
           VITE_LANG: ${{ secrets.VITE_LANG }}
@@ -98,6 +99,7 @@ jobs:
             -f Dockerfile.ats \
             --build-arg COMMIT_SHA=${{ github.sha }} \
             --build-arg BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') \
+            --build-arg VITE_API_BASE_URL=${{ secrets.VITE_API_BASE_URL }} \
             --build-arg VITE_API_URL=${{ secrets.VITE_API_URL }} \
             --build-arg VITE_FALLBACK_LANG=${{ secrets.VITE_FALLBACK_LANG }} \
             --build-arg VITE_LANG=${{ secrets.VITE_LANG }} \
