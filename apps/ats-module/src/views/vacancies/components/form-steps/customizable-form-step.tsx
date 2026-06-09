@@ -6,17 +6,17 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
-import type { StepProps, VacancyForm } from '@/views/vacancies/types';
+import { useDisableSuccessToast } from '@/views/vacancies/hooks';
+import type {
+  CustomizableFormData,
+  CustomizableFormFormCard,
+  StepProps,
+  VacancyForm,
+} from '@/views/vacancies/types';
 
 import { CharacterCount } from '@cgp/ui-kit/components/character-count';
 import { ErrorToast } from '@cgp/ui-kit/components/custom-toast';
 import { Button } from '@cgp/ui-kit/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogTitle,
-} from '@cgp/ui-kit/components/ui/dialog';
 import {
   Select,
   SelectContent,
@@ -87,6 +87,34 @@ const createForm = (id: number): FormCard => ({
   nextQuestionId: 1,
   nextOptionId: 2,
 });
+
+const toFormCard = (savedForm: CustomizableFormFormCard): FormCard => {
+  const maxQuestionId = Math.max(...savedForm.questions.map(q => q.id), 0);
+  const maxOptionId = Math.max(
+    ...savedForm.questions.flatMap(q => q.options.map(o => o.id)),
+    0
+  );
+
+  return {
+    id: savedForm.id,
+    title: savedForm.title,
+    isOpen: true,
+    questions: savedForm.questions,
+    nextQuestionId: maxQuestionId + 1,
+    nextOptionId: maxOptionId + 1,
+  };
+};
+
+const getInitialForms = (savedData?: CustomizableFormData): FormCard[] => {
+  if (savedData?.forms?.length) {
+    return savedData.forms.map(toFormCard);
+  }
+
+  return [createForm(1)];
+};
+
+const getNextFormId = (currentForms: FormCard[]): number =>
+  Math.max(...currentForms.map(f => f.id), 0) + 1;
 
 // ── Scale range options ────────────────────────────────────────────────────────
 const SCALE_RANGE_START = [0, 1];
@@ -525,62 +553,32 @@ function QuestionCard({
 // ── Main step ────────────────────────────────────────────────────────────────
 export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
   const { t } = useTranslation('ats');
-  const { form } = useVacancyForm();
-  const [isEnabled, setIsEnabled] = useState(false);
-  const [sectionTitle, setSectionTitle] = useState('');
-  const [forms, setForms] = useState<FormCard[]>([createForm(1)]);
-  const [nextFormId, setNextFormId] = useState(2);
+  const showDisableToast = useDisableSuccessToast();
+  const { form, onCancel } = useVacancyForm();
+  const initialCustomizableForm = form.customizableForm;
+  const initialForms = getInitialForms(initialCustomizableForm);
+
+  const [isEnabled, setIsEnabled] = useState(
+    initialCustomizableForm?.isEnabled ?? false
+  );
+  const [sectionTitle, setSectionTitle] = useState(
+    initialCustomizableForm?.sectionTitle ?? ''
+  );
+  const [forms, setForms] = useState<FormCard[]>(initialForms);
+  const [nextFormId, setNextFormId] = useState(getNextFormId(initialForms));
   const [showDisableConfirm, setShowDisableConfirm] = useState(false);
   const [showValidationModal, setShowValidationModal] = useState(false);
+  const [pendingQuestionDelete, setPendingQuestionDelete] = useState<{
+    formId: number;
+    questionId: number;
+  } | null>(null);
+  const [pendingFormDelete, setPendingFormDelete] = useState<number | null>(
+    null
+  );
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, []);
-
-  // Load saved customizable form data from context
-  useEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
-    const customForm = (form as any).customizableForm;
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    if (customForm?.forms && customForm.forms.length > 0) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-      const restoredForms: FormCard[] = customForm.forms.map(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (f: any) => {
-          const maxQuestionId = Math.max(
-            ...(f.questions?.map((q: { id: number }) => q.id) ?? [0]),
-            0
-          );
-
-          const maxOptionId = Math.max(
-            ...(f.questions?.flatMap(
-              (q: { options?: Array<{ id: number }> }) =>
-                q.options?.map(o => o.id) ?? []
-            ) ?? [0]),
-            0
-          );
-
-          return {
-            id: f.id,
-            title: f.title,
-            isOpen: true,
-            questions: f.questions,
-            nextQuestionId: maxQuestionId + 1,
-            nextOptionId: maxOptionId + 1,
-          };
-        }
-      );
-
-      // eslint-disable-next-line react-hooks/set-state-in-effect, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
-      setIsEnabled(customForm.isEnabled);
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-member-access
-      setSectionTitle(customForm.sectionTitle);
-
-      setForms(restoredForms);
-
-      setNextFormId(Math.max(...restoredForms.map(f => f.id), 0) + 1);
-    }
-  }, [form]);
 
   const hasAtLeastOneQuestion = forms.some(form => form.questions.length > 0);
   const hasFormData =
@@ -754,16 +752,20 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
       }
     }
 
+    const formsPayload = isEnabled
+      ? forms.map(currentForm => ({
+          id: currentForm.id,
+          title: currentForm.title,
+          questions: currentForm.questions,
+        }))
+      : [];
+
     // Build the payload for persistence
     const payload: Partial<VacancyForm> = {
       customizableForm: {
         isEnabled,
-        sectionTitle,
-        forms: forms.map(form => ({
-          id: form.id,
-          title: form.title,
-          questions: form.questions,
-        })),
+        sectionTitle: isEnabled ? sectionTitle : '',
+        forms: formsPayload,
       },
     };
 
@@ -849,7 +851,7 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
                       type="button"
                       aria-label="Delete form"
                       className="transition-colors hover:text-red-600"
-                      onClick={() => removeForm(form.id)}
+                      onClick={() => setPendingFormDelete(form.id)}
                     >
                       <Trash size={24} />
                     </button>
@@ -902,7 +904,12 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
                         onDuplicate={() =>
                           duplicateQuestion(form.id, question.id)
                         }
-                        onRemove={() => removeQuestion(form.id, question.id)}
+                        onRemove={() =>
+                          setPendingQuestionDelete({
+                            formId: form.id,
+                            questionId: question.id,
+                          })
+                        }
                         onNextOptionId={n => setNextOptionId(form.id, n)}
                       />
                     ))}
@@ -953,31 +960,77 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
           setNextFormId(2);
           setShowDisableConfirm(false);
           setIsEnabled(false);
+          showDisableToast(t('customizableForm.title'));
         }}
       />
 
-      <Dialog open={showValidationModal} onOpenChange={setShowValidationModal}>
-        <DialogContent className="w-99 rounded-2xl p-7">
-          <DialogTitle className="text-xl font-bold text-slate-900">
-            {t('customizableForm.validationModal.title')}
-          </DialogTitle>
-          <DialogDescription className="mt-2 text-sm text-slate-900">
-            {t('customizableForm.validationModal.message')}
-          </DialogDescription>
-          <div className="mt-6 flex justify-end">
-            <Button
-              type="button"
-              className="h-10 min-w-24"
-              onClick={() => setShowValidationModal(false)}
-            >
-              {t('customizableForm.validationModal.action')}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <DisableDialog
+        open={showValidationModal}
+        onOpenChange={setShowValidationModal}
+        title={t('customizableForm.validationModal.title')}
+        message={t('customizableForm.validationModal.message')}
+        cancelLabel={t('customizableForm.validationModal.cancel')}
+        disableLabel={t('customizableForm.validationModal.disable')}
+        onCancel={() => setShowValidationModal(false)}
+        onDisable={() => {
+          setSectionTitle('');
+          setForms([createForm(1)]);
+          setNextFormId(2);
+          setIsEnabled(false);
+          setShowValidationModal(false);
+          showDisableToast(t('customizableForm.title'));
+
+          onNext({
+            customizableForm: {
+              isEnabled: false,
+              sectionTitle: '',
+              forms: [],
+            },
+          });
+        }}
+      />
+
+      <DisableDialog
+        open={pendingQuestionDelete !== null}
+        onOpenChange={open => {
+          if (!open) setPendingQuestionDelete(null);
+        }}
+        title={t('customizableForm.deleteQuestionModal.title')}
+        message={t('customizableForm.deleteQuestionModal.message')}
+        cancelLabel={t('customizableForm.deleteQuestionModal.cancel')}
+        disableLabel={t('customizableForm.deleteQuestionModal.delete')}
+        onCancel={() => setPendingQuestionDelete(null)}
+        onDisable={() => {
+          if (pendingQuestionDelete) {
+            removeQuestion(
+              pendingQuestionDelete.formId,
+              pendingQuestionDelete.questionId
+            );
+          }
+          setPendingQuestionDelete(null);
+        }}
+      />
+
+      <DisableDialog
+        open={pendingFormDelete !== null}
+        onOpenChange={open => {
+          if (!open) setPendingFormDelete(null);
+        }}
+        title={t('customizableForm.deleteFormModal.title')}
+        message={t('customizableForm.deleteFormModal.message')}
+        cancelLabel={t('customizableForm.deleteFormModal.cancel')}
+        disableLabel={t('customizableForm.deleteFormModal.delete')}
+        onCancel={() => setPendingFormDelete(null)}
+        onDisable={() => {
+          if (pendingFormDelete !== null) {
+            removeForm(pendingFormDelete);
+          }
+          setPendingFormDelete(null);
+        }}
+      />
 
       <div className="sticky bottom-0 mt-auto flex items-center justify-end gap-4 bg-white px-6 py-7 shadow-[0px_-8px_6.8px_0px_rgba(0,0,0,0.04)]">
-        <Button variant="secondary" className="h-12 w-48" onClick={onBack}>
+        <Button variant="secondary" className="h-12 w-48" onClick={onCancel}>
           {t('common.cancel')}
         </Button>
         <Button className="h-12 w-48" onClick={handleNext}>

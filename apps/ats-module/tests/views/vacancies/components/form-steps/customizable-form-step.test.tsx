@@ -347,6 +347,12 @@ describe('CustomizableFormStep', () => {
       const deleteButton = screen.getByRole('button', { name: 'Delete form' });
       await user.click(deleteButton);
 
+      // Confirm deletion in the dialog (i18n key used in tests)
+      const confirmButton = screen.getByRole('button', {
+        name: 'customizableForm.deleteFormModal.delete',
+      });
+      await user.click(confirmButton);
+
       const formInputs = screen.queryAllByPlaceholderText('Form Title');
       expect(formInputs.length).toBe(0);
     });
