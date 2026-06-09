@@ -1,11 +1,11 @@
 name: Deploy CGP Frontend Microfrontends to Cloud Run
 
 on:
-  # pull_request:
-  #   branches: [develop]
-  #   types: [closed]
-  push:
-    branches: [feature/ci-cd-integration-multi-service]
+  pull_request:
+    branches: [develop]
+    types: [closed]
+    paths-ignore:
+      - '.github/workflows/**'
 
 env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
@@ -40,7 +40,7 @@ jobs:
 
       - name: Run Tests
         run: pnpm test
-      
+
       - name: Build Application
         env:
           VITE_PORTAL_LOGO: ${{ secrets.VITE_PORTAL_LOGO }}
