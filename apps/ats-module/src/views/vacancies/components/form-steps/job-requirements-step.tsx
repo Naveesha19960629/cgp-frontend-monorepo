@@ -53,6 +53,8 @@ import {
 const MAX_CHAR = 100;
 const MAX_DESCRIPTION = 2000;
 const MAX_SELECTIONS = 10;
+const dependencyTooltipClassName =
+  'relative rounded-lg bg-slate-700 px-4 py-3 text-sm font-semibold text-white shadow-md [&>span:has([data-slot=tooltip-arrow])]:hidden after:absolute after:-bottom-1.5 after:left-8 after:size-3 after:rotate-45 after:bg-slate-700';
 
 export default function JobRequirementsStep({
   onNext,
@@ -498,9 +500,8 @@ export default function JobRequirementsStep({
                         <TooltipContent
                           side="top"
                           align="start"
-                          sideOffset={4}
-                          arrowPadding={15}
-                          className="bg-slate-700 px-3 py-2 text-xs font-medium text-white [&>[data-slot=tooltip-arrow]]:fill-slate-700"
+                          sideOffset={10}
+                          className={dependencyTooltipClassName}
                         >
                           {t(
                             'jobRequirements.dependencyHints.careerPathNeedDiscipline'
@@ -706,9 +707,8 @@ export default function JobRequirementsStep({
                         <TooltipContent
                           side="top"
                           align="start"
-                          sideOffset={4}
-                          arrowPadding={15}
-                          className="bg-slate-700 px-3 py-2 text-xs font-medium text-white [&>[data-slot=tooltip-arrow]]:fill-slate-700"
+                          sideOffset={10}
+                          className={dependencyTooltipClassName}
                         >
                           {roleDisabledMessage}
                         </TooltipContent>
