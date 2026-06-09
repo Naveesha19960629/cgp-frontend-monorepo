@@ -106,7 +106,7 @@ export function AddSchoolDialog({
 
   const { data: locationsResponse, isLoading: isLocationLoading } =
     useSchoolLocationsQuery(locationSearch);
-  const locationData = (locationsResponse?.data.items.content ?? []).filter(
+  const locationData = (locationsResponse?.data?.items?.content ?? []).filter(
     item =>
       !locationSearch.trim() ||
       item.label.toLowerCase().includes(locationSearch.trim().toLowerCase())

@@ -8,6 +8,7 @@ import path from 'path';
 
 // https://vite.dev/config/
 export default defineConfig({
+  base: '/',
   plugins: [
     react(),
     tailwindcss(),
@@ -50,6 +51,14 @@ export default defineConfig({
   server: {
     port: 5173,
     strictPort: true,
+    cors: true,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods':
+        'GET, HEAD, PUT, PATCH, POST, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers':
+        'Content-Type, Authorization, X-Requested-With',
+    },
   },
   build: {
     modulePreload: false,

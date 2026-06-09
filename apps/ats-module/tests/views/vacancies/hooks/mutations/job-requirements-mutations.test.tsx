@@ -50,114 +50,116 @@ vi.mock('@/views/vacancies/services', () => ({
 
 // -- Shared setup -----------------------------------------------------------
 
-beforeEach(() => {
-  vi.clearAllMocks();
-  mockUseMutation.mockImplementation((options: unknown) => options);
-  mockInvalidateQueries.mockResolvedValue(undefined);
-  mockAddDiscipline.mockResolvedValue({ data: { pendingId: 'new-id' } });
-  mockAddCareerPath.mockResolvedValue({ data: { pendingId: 'new-id' } });
-  mockAddRole.mockResolvedValue({ data: { pendingId: 'new-id' } });
-  mockAddJobTitle.mockResolvedValue({ data: { pendingId: 'new-id' } });
-});
-
-// -- useAddDisciplineMutation -----------------------------------------------
-
-describe('useAddDisciplineMutation', () => {
-  it('mutationFn calls addDiscipline with the display value', async () => {
-    const mutation =
-      useAddDisciplineMutation() as unknown as MockMutation<string>;
-    await mutation.mutationFn('Engineering');
-    expect(mockAddDiscipline).toHaveBeenCalledWith('Engineering');
+describe('job requirement mutation hooks', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockUseMutation.mockImplementation((options: unknown) => options);
+    mockInvalidateQueries.mockResolvedValue(undefined);
+    mockAddDiscipline.mockResolvedValue({ data: { pendingId: 'new-id' } });
+    mockAddCareerPath.mockResolvedValue({ data: { pendingId: 'new-id' } });
+    mockAddRole.mockResolvedValue({ data: { pendingId: 'new-id' } });
+    mockAddJobTitle.mockResolvedValue({ data: { pendingId: 'new-id' } });
   });
 
-  it('mutationFn returns the API response', async () => {
-    const mutation =
-      useAddDisciplineMutation() as unknown as MockMutation<string>;
-    const result = await mutation.mutationFn('Engineering');
-    expect(result).toEqual({ data: { pendingId: 'new-id' } });
-  });
+  // -- useAddDisciplineMutation -----------------------------------------------
 
-  it("onSuccess invalidates the ['disciplines'] query cache", async () => {
-    const mutation =
-      useAddDisciplineMutation() as unknown as MockMutation<string>;
-    await mutation.onSuccess();
-    expect(mockInvalidateQueries).toHaveBeenCalledWith({
-      queryKey: ['disciplines'],
+  describe('useAddDisciplineMutation', () => {
+    it('mutationFn calls addDiscipline with the display value', async () => {
+      const mutation =
+        useAddDisciplineMutation() as unknown as MockMutation<string>;
+      await mutation.mutationFn('Engineering');
+      expect(mockAddDiscipline).toHaveBeenCalledWith('Engineering');
+    });
+
+    it('mutationFn returns the API response', async () => {
+      const mutation =
+        useAddDisciplineMutation() as unknown as MockMutation<string>;
+      const result = await mutation.mutationFn('Engineering');
+      expect(result).toEqual({ data: { pendingId: 'new-id' } });
+    });
+
+    it("onSuccess invalidates the ['disciplines'] query cache", async () => {
+      const mutation =
+        useAddDisciplineMutation() as unknown as MockMutation<string>;
+      await mutation.onSuccess();
+      expect(mockInvalidateQueries).toHaveBeenCalledWith({
+        queryKey: ['disciplines'],
+      });
     });
   });
-});
 
-// -- useAddCareerPathMutation -----------------------------------------------
+  // -- useAddCareerPathMutation -----------------------------------------------
 
-describe('useAddCareerPathMutation', () => {
-  it('mutationFn calls addCareerPath with the payload', async () => {
-    const payload: CreateCareerPathPayload = {
-      displayValue: 'New Career Path',
-      discipline: { id: 'disc-1', source: 'MASTER' },
-    };
-    const mutation =
-      useAddCareerPathMutation() as unknown as MockMutation<CreateCareerPathPayload>;
-    await mutation.mutationFn(payload);
-    expect(mockAddCareerPath).toHaveBeenCalledWith(payload);
-  });
+  describe('useAddCareerPathMutation', () => {
+    it('mutationFn calls addCareerPath with the payload', async () => {
+      const payload: CreateCareerPathPayload = {
+        displayValue: 'New Career Path',
+        discipline: { id: 'disc-1', source: 'MASTER' },
+      };
+      const mutation =
+        useAddCareerPathMutation() as unknown as MockMutation<CreateCareerPathPayload>;
+      await mutation.mutationFn(payload);
+      expect(mockAddCareerPath).toHaveBeenCalledWith(payload);
+    });
 
-  it("onSuccess invalidates the ['career-paths'] query cache", async () => {
-    const mutation =
-      useAddCareerPathMutation() as unknown as MockMutation<CreateCareerPathPayload>;
-    await mutation.onSuccess();
-    expect(mockInvalidateQueries).toHaveBeenCalledWith({
-      queryKey: ['career-paths'],
+    it("onSuccess invalidates the ['career-paths'] query cache", async () => {
+      const mutation =
+        useAddCareerPathMutation() as unknown as MockMutation<CreateCareerPathPayload>;
+      await mutation.onSuccess();
+      expect(mockInvalidateQueries).toHaveBeenCalledWith({
+        queryKey: ['career-paths'],
+      });
     });
   });
-});
 
-// -- useAddRoleMutation -----------------------------------------------------
+  // -- useAddRoleMutation -----------------------------------------------------
 
-describe('useAddRoleMutation', () => {
-  it('mutationFn calls addRole with the payload', async () => {
-    const payload: CreateRolePayload = {
-      displayValue: 'New Role',
-      careerPath: { id: 'cp-1', source: 'MASTER' },
-    };
-    const mutation =
-      useAddRoleMutation() as unknown as MockMutation<CreateRolePayload>;
-    await mutation.mutationFn(payload);
-    expect(mockAddRole).toHaveBeenCalledWith(payload);
-  });
+  describe('useAddRoleMutation', () => {
+    it('mutationFn calls addRole with the payload', async () => {
+      const payload: CreateRolePayload = {
+        displayValue: 'New Role',
+        careerPath: { id: 'cp-1', source: 'MASTER' },
+      };
+      const mutation =
+        useAddRoleMutation() as unknown as MockMutation<CreateRolePayload>;
+      await mutation.mutationFn(payload);
+      expect(mockAddRole).toHaveBeenCalledWith(payload);
+    });
 
-  it("onSuccess invalidates the ['job-roles'] query cache", async () => {
-    const mutation =
-      useAddRoleMutation() as unknown as MockMutation<CreateRolePayload>;
-    await mutation.onSuccess();
-    expect(mockInvalidateQueries).toHaveBeenCalledWith({
-      queryKey: ['job-roles'],
+    it("onSuccess invalidates the ['job-roles'] query cache", async () => {
+      const mutation =
+        useAddRoleMutation() as unknown as MockMutation<CreateRolePayload>;
+      await mutation.onSuccess();
+      expect(mockInvalidateQueries).toHaveBeenCalledWith({
+        queryKey: ['job-roles'],
+      });
     });
   });
-});
 
-// -- useAddJobTitleMutation -------------------------------------------------
+  // -- useAddJobTitleMutation -------------------------------------------------
 
-describe('useAddJobTitleMutation', () => {
-  it('mutationFn calls addJobTitle with the display value', async () => {
-    const mutation =
-      useAddJobTitleMutation() as unknown as MockMutation<string>;
-    await mutation.mutationFn('Software Engineer');
-    expect(mockAddJobTitle).toHaveBeenCalledWith('Software Engineer');
-  });
+  describe('useAddJobTitleMutation', () => {
+    it('mutationFn calls addJobTitle with the display value', async () => {
+      const mutation =
+        useAddJobTitleMutation() as unknown as MockMutation<string>;
+      await mutation.mutationFn('Software Engineer');
+      expect(mockAddJobTitle).toHaveBeenCalledWith('Software Engineer');
+    });
 
-  it('mutationFn returns the API response', async () => {
-    const mutation =
-      useAddJobTitleMutation() as unknown as MockMutation<string>;
-    const result = await mutation.mutationFn('Software Engineer');
-    expect(result).toEqual({ data: { pendingId: 'new-id' } });
-  });
+    it('mutationFn returns the API response', async () => {
+      const mutation =
+        useAddJobTitleMutation() as unknown as MockMutation<string>;
+      const result = await mutation.mutationFn('Software Engineer');
+      expect(result).toEqual({ data: { pendingId: 'new-id' } });
+    });
 
-  it("onSuccess invalidates the ['job-titles'] query cache", async () => {
-    const mutation =
-      useAddJobTitleMutation() as unknown as MockMutation<string>;
-    await mutation.onSuccess();
-    expect(mockInvalidateQueries).toHaveBeenCalledWith({
-      queryKey: ['job-titles'],
+    it("onSuccess invalidates the ['job-titles'] query cache", async () => {
+      const mutation =
+        useAddJobTitleMutation() as unknown as MockMutation<string>;
+      await mutation.onSuccess();
+      expect(mockInvalidateQueries).toHaveBeenCalledWith({
+        queryKey: ['job-titles'],
+      });
     });
   });
-});
+}); // end: job requirement mutation hooks

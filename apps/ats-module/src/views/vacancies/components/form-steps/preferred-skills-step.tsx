@@ -228,7 +228,7 @@ export default function PreferredSkillsStep({
                   const cpSearch = await careerPathService.getAllCareerPaths(
                     entry.careerPathName
                   );
-                  const existingCp = cpSearch.data.items.content.find(
+                  const existingCp = cpSearch.data?.items?.content?.find(
                     item =>
                       item.label.toLowerCase() ===
                       entry.careerPathName.toLowerCase()
@@ -262,7 +262,7 @@ export default function PreferredSkillsStep({
               const searchResult = await skillService.getAllSkills(
                 entry.displayValue
               );
-              const existing = searchResult.data.items.content.find(
+              const existing = searchResult.data?.items?.content?.find(
                 item =>
                   item.label.toLowerCase() === entry.displayValue.toLowerCase()
               );

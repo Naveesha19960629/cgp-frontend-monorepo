@@ -17,6 +17,7 @@ import {
 import { TABLE_PAGE_SIZE } from '@/views/vacancies/utils';
 
 import { Button } from '@cgp/ui-kit/components/ui/button';
+import { useKeycloak } from '@react-keycloak/web';
 import {
   getCoreRowModel,
   getFilteredRowModel,
@@ -27,6 +28,7 @@ export default function VacanciesPage() {
   const { t } = useTranslation('ats');
   const navigate = useNavigate();
   const [params, setParams] = useVacancyTableParams();
+  const { keycloak, initialized } = useKeycloak();
 
   const queryParams: VacancyQueryParams = useMemo(
     () => ({
@@ -42,7 +44,12 @@ export default function VacanciesPage() {
     [params]
   );
 
-  const { data: vacanciesResponse, isLoading } = useVacanciesQuery(queryParams);
+  const { data: vacanciesResponse, isLoading } = useVacanciesQuery(
+    queryParams,
+    {
+      enabled: initialized && !!keycloak.authenticated,
+    }
+  );
 
   const data = vacanciesResponse?.data.content ?? [];
   const totalPages = vacanciesResponse?.data.totalPages ?? 0;
