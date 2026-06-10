@@ -191,6 +191,11 @@ const DEFAULT_FORM: VacancyForm = {
     dataTakenFromCandidate: false,
     industries: [],
   },
+  customizableForm: {
+    isEnabled: false,
+    sectionTitle: '',
+    forms: [],
+  },
   schedule: undefined,
 };
 

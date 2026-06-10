@@ -285,6 +285,44 @@ interface ScheduleVacancyPayload {
   expirationAt: string;
 }
 
+// ─── Customizable Form ──────────────────────────────────────────────────────
+
+interface CustomizableFormQuestionOption {
+  id: number;
+  value: string;
+}
+
+interface CustomizableFormQuestion {
+  id: number;
+  text: string;
+  type:
+    | 'SHORT_ANSWER'
+    | 'PARAGRAPH'
+    | 'MULTIPLE_CHOICE'
+    | 'CHECKBOXES'
+    | 'DROP_DOWN'
+    | 'LINEAR_SCALE'
+    | '';
+  required: boolean;
+  options: CustomizableFormQuestionOption[];
+  from: number;
+  to: number;
+  startLabel: string;
+  endLabel: string;
+}
+
+interface CustomizableFormFormCard {
+  id: number;
+  title: string;
+  questions: CustomizableFormQuestion[];
+}
+
+interface CustomizableFormData {
+  isEnabled: boolean;
+  sectionTitle: string;
+  forms: CustomizableFormFormCard[];
+}
+
 // ─── Vacancy Form ─────────────────────────────────────────────────────────────
 
 interface VacancyForm {
@@ -303,6 +341,7 @@ interface VacancyForm {
   patents?: preferredPatentsSchema;
   preferredHonoursAwards?: preferredHonoursAwardsSchema;
   licenseCertificates?: LicenseCertificates[];
+  customizableForm?: CustomizableFormData;
   schedule?: ScheduleVacancy;
 }
 interface VacancyStep {
@@ -954,6 +993,10 @@ export type {
   VacanciesPaginatedData,
   VacanciesApiResponse,
   MaritalStatusItem,
+  CustomizableFormQuestionOption,
+  CustomizableFormQuestion,
+  CustomizableFormFormCard,
+  CustomizableFormData,
   ScheduleVacancy,
   ScheduleVacancyPayload,
   PlaceItem,
