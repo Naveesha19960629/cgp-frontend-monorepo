@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { forwardRef } from 'react';
 
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import { describe, expect, it, vi } from 'vitest';
@@ -286,7 +286,9 @@ describe('CustomizableFormStep', () => {
       const sectionInput = screen.getByPlaceholderText('Section Title');
 
       const longText = 'a'.repeat(201);
-      await user.type(sectionInput, longText);
+      // Set the value in one shot — typing 201 chars one keystroke at a time
+      // via userEvent overruns the test timeout.
+      fireEvent.change(sectionInput, { target: { value: longText } });
 
       await waitFor(() => {
         expect(screen.getByText(/Max length exceeded/)).toBeInTheDocument();
@@ -303,7 +305,7 @@ describe('CustomizableFormStep', () => {
       const sectionInput = screen.getByPlaceholderText('Section Title');
 
       const validText = 'a'.repeat(150);
-      await user.type(sectionInput, validText);
+      fireEvent.change(sectionInput, { target: { value: validText } });
 
       expect(
         screen.queryByText(/Max length exceeded.*max: 200/)
@@ -436,7 +438,7 @@ describe('CustomizableFormStep', () => {
 
       const formInput = screen.getByPlaceholderText('Form Title');
       const longText = 'a'.repeat(151);
-      await user.type(formInput, longText);
+      fireEvent.change(formInput, { target: { value: longText } });
 
       await waitFor(() => {
         expect(
