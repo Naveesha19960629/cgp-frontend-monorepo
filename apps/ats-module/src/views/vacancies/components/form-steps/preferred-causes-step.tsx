@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
@@ -6,6 +6,7 @@ import {
   useCausesQuery,
   useCreateCauseMutation,
   useDisableSuccessToast,
+  useStepGuard,
 } from '@/views/vacancies/hooks';
 import { causeService } from '@/views/vacancies/services';
 import type { CauseEntry, StepProps } from '@/views/vacancies/types';
@@ -34,7 +35,7 @@ export default function PreferredCausesStep({
 }: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
   const showDisableToast = useDisableSuccessToast();
-  const { form } = useVacancyForm();
+  const { form, setForm, stepPersistRef } = useVacancyForm();
 
   const [isEnabled, setIsEnabled] = useState(
     form.preferredCauses?.isEnabled ?? false
@@ -45,6 +46,30 @@ export default function PreferredCausesStep({
   const [selectedCauses, setSelectedCauses] = useState<CauseEntry[]>(
     form.preferredCauses?.causes ?? []
   );
+
+  useStepGuard(
+    isEnabled && !dataTakenFromCandidate && selectedCauses.length === 0
+  );
+
+  const _causesRef = useRef<() => void>(() => {});
+  useEffect(() => {
+    _causesRef.current = () => {
+      setForm(prev => ({
+        ...prev,
+        preferredCauses: {
+          isEnabled,
+          dataTakenFromCandidate,
+          causes: selectedCauses,
+        },
+      }));
+    };
+  }, [isEnabled, dataTakenFromCandidate, selectedCauses, setForm]);
+  useEffect(() => {
+    stepPersistRef.current = () => _causesRef.current();
+    return () => {
+      stepPersistRef.current = null;
+    };
+  }, [stepPersistRef]);
 
   // Cause search state for the query
   const [causeSearch, setCauseSearch] = useState('');

@@ -14,6 +14,7 @@ import {
   useIndustriesQuery,
   useLocationsQuery,
   useOrganizationsQuery,
+  useStepGuard,
 } from '@/views/vacancies/hooks';
 import type {
   LocationOption,
@@ -429,6 +430,30 @@ export default function ProjectsRequirementsStep({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [confirmDisableOpen, setConfirmDisableOpen] = useState(false);
 
+  // TODO: Persist state on tab navigation — not yet wired because VacancyForm
+  // has no `projects` field. To activate:
+  //   1. Add `projects` to VacancyForm in types.ts
+  //   2. Add its default value to DEFAULT_FORM in vacancy-form-context.tsx
+  //   3. Uncomment the block below and add to the React import: useEffect, useRef
+  //      and add to the file import: useVacancyForm from vacancy-form-context
+  //
+  // const { setForm, stepPersistRef } = useVacancyForm();
+  // const _projectsRef = useRef<() => void>(() => {});
+  // useEffect(() => {
+  //   _projectsRef.current = () => {
+  //     setForm(prev => ({
+  //       ...prev,
+  //       projects: { isEnabled, dataTakenFromCandidate, projects },
+  //     }));
+  //   };
+  // }, [isEnabled, dataTakenFromCandidate, projects, setForm]);
+  // useEffect(() => {
+  //   stepPersistRef.current = () => _projectsRef.current();
+  //   return () => {
+  //     stepPersistRef.current = null;
+  //   };
+  // }, [stepPersistRef]);
+
   const [projects, setProjects] = useState<ProjectEntry[]>([
     {
       id: '1',
@@ -440,6 +465,14 @@ export default function ProjectsRequirementsStep({
       organization: undefined,
     },
   ]);
+
+  useStepGuard(
+    isEnabled &&
+      !dataTakenFromCandidate &&
+      !projects.some(
+        p => p.relatedIndustry.length > 0 || p.organization != null
+      )
+  );
 
   // Industry search (searchable, backed by industries API)
   const { data: industriesData, isLoading: isIndustriesLoading } =

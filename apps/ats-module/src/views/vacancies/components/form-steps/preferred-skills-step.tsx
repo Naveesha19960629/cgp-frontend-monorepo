@@ -1,6 +1,6 @@
 import { Plus, X } from 'lucide-react';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
@@ -10,6 +10,7 @@ import {
   useCreateSkillCareerPathMutation,
   useDisableSuccessToast,
   useSkillsQuery,
+  useStepGuard,
 } from '@/views/vacancies/hooks';
 import { careerPathService, skillService } from '@/views/vacancies/services';
 import type {
@@ -49,7 +50,7 @@ export default function PreferredSkillsStep({
 }: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
   const showDisableToast = useDisableSuccessToast();
-  const { form } = useVacancyForm();
+  const { form, setForm, stepPersistRef } = useVacancyForm();
 
   const [isEnabled, setIsEnabled] = useState(
     form.preferredSkills?.isEnabled ?? false
@@ -60,6 +61,30 @@ export default function PreferredSkillsStep({
   const [selectedSkills, setSelectedSkills] = useState<SkillCareerPathEntry[]>(
     form.preferredSkills?.skills ?? []
   );
+
+  useStepGuard(
+    isEnabled && !dataTakenFromCandidate && selectedSkills.length === 0
+  );
+
+  const _skillsRef = useRef<() => void>(() => {});
+  useEffect(() => {
+    _skillsRef.current = () => {
+      setForm(prev => ({
+        ...prev,
+        preferredSkills: {
+          isEnabled,
+          dataTakenFromCandidate,
+          skills: selectedSkills,
+        },
+      }));
+    };
+  }, [isEnabled, dataTakenFromCandidate, selectedSkills, setForm]);
+  useEffect(() => {
+    stepPersistRef.current = () => _skillsRef.current();
+    return () => {
+      stepPersistRef.current = null;
+    };
+  }, [stepPersistRef]);
 
   // Skill search state for the query
   const [skillSearch, setSkillSearch] = useState('');

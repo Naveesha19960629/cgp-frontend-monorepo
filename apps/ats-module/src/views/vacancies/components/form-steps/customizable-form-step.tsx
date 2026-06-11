@@ -5,6 +5,7 @@ import { ArrowDown2, ArrowLeft2, Simcard2, Trash } from 'iconsax-reactjs';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { useStepGuard } from '@/views/vacancies/hooks';
 import type { StepProps } from '@/views/vacancies/types';
 
 import { CharacterCount } from '@cgp/ui-kit/components/character-count';
@@ -511,9 +512,40 @@ function QuestionCard({
 export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
   const { t } = useTranslation('ats');
   const [isEnabled, setIsEnabled] = useState(true);
+
+  // TODO: Persist state on tab navigation — not yet wired because VacancyForm
+  // has no `customizableForm` field. To activate:
+  //   1. Add `customizableForm` to VacancyForm in types.ts
+  //   2. Add its default value to DEFAULT_FORM in vacancy-form-context.tsx
+  //   3. Uncomment the block below and add to the existing React import: useRef
+  //      and add to the file import: useVacancyForm from vacancy-form-context
+  //
+  // const { setForm, stepPersistRef } = useVacancyForm();
+  // const _customizableRef = useRef<() => void>(() => {});
+  // useEffect(() => {
+  //   _customizableRef.current = () => {
+  //     setForm(prev => ({
+  //       ...prev,
+  //       customizableForm: { isEnabled, sectionTitle, forms },
+  //     }));
+  //   };
+  // }, [isEnabled, sectionTitle, forms, setForm]);
+  // useEffect(() => {
+  //   stepPersistRef.current = () => _customizableRef.current();
+  //   return () => {
+  //     stepPersistRef.current = null;
+  //   };
+  // }, [stepPersistRef]);
+
   const [sectionTitle, setSectionTitle] = useState('');
   const [forms, setForms] = useState<FormCard[]>([createForm(1)]);
   const [nextFormId, setNextFormId] = useState(2);
+
+  useStepGuard(
+    isEnabled &&
+      !sectionTitle.trim() &&
+      forms.every(f => f.questions.length === 0)
+  );
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });

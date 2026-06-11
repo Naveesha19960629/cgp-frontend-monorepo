@@ -2,7 +2,7 @@ import { ChevronUp, Loader2, Plus, Trash2 } from 'lucide-react';
 
 import { ArrowLeft2, Calendar as CalenderIcon } from 'iconsax-reactjs';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { type UseFormReturn } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
@@ -14,6 +14,7 @@ import {
   useCreateIndustryMutation,
   useIndustriesQuery,
   usePreferredPatentsForm,
+  useStepGuard,
 } from '@/views/vacancies/hooks';
 import { industryService } from '@/views/vacancies/services';
 import type {
@@ -474,10 +475,46 @@ function PatentCard({
 export default function PreferredPatentsStep({ onNext, onBack }: StepProps) {
   const { t } = useTranslation('ats');
 
-  const { form: contextForm, onCancel } = useVacancyForm();
+  const {
+    form: contextForm,
+    setForm,
+    onCancel,
+    stepPersistRef,
+  } = useVacancyForm();
   const { form, fields, append, remove, replace } = usePreferredPatentsForm(
     contextForm.patents
   );
+
+  const isEnabled = form.watch('isEnabled');
+  const dataTakenFromCandidate = form.watch('dataTakenFromCandidate');
+  const patentEntries = form.watch('patents');
+  useStepGuard(
+    isEnabled &&
+      !dataTakenFromCandidate &&
+      !patentEntries.some(
+        p =>
+          p.relatedIndustries.length > 0 ||
+          p.statuses.length > 0 ||
+          p.fromDate != null ||
+          p.toDate != null
+      )
+  );
+  useEffect(() => {
+    stepPersistRef.current = () => {
+      const values = form.getValues();
+      setForm(prev => ({
+        ...prev,
+        patents: {
+          isEnabled: values.isEnabled,
+          dataTakenFromCandidate: values.dataTakenFromCandidate,
+          patents: values.patents ?? [],
+        },
+      }));
+    };
+    return () => {
+      stepPersistRef.current = null;
+    };
+  }, [form, setForm, stepPersistRef]);
 
   const [showDisableConfirm, setShowDisableConfirm] = useState(false);
   const [showEmptyConfirm, setShowEmptyConfirm] = useState(false);

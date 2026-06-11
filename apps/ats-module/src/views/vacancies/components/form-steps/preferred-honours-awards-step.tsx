@@ -2,7 +2,7 @@ import { ChevronUp, Loader2, Plus, Trash2 } from 'lucide-react';
 
 import { ArrowLeft2, Calendar as CalenderIcon } from 'iconsax-reactjs';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { type UseFormReturn } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
@@ -16,6 +16,7 @@ import {
   useLocationsQuery,
   useOrganizationsQuery,
   usePreferredHonoursAwardsForm,
+  useStepGuard,
 } from '@/views/vacancies/hooks';
 import type {
   StepProps,
@@ -623,7 +624,12 @@ export default function PreferredHonoursAwardsStep({
 }: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
 
-  const { form: contextForm, setForm, onCancel } = useVacancyForm();
+  const {
+    form: contextForm,
+    setForm,
+    onCancel,
+    stepPersistRef,
+  } = useVacancyForm();
   const { form, fields, append, remove, replace } =
     usePreferredHonoursAwardsForm(contextForm.preferredHonoursAwards);
 
@@ -641,6 +647,26 @@ export default function PreferredHonoursAwardsStep({
   const dataTakenFromCandidate = form.watch('dataTakenFromCandidate');
   // Watch honoursAndAwards to trigger re-renders when form data changes
   form.watch('honoursAndAwards');
+
+  useStepGuard(
+    isEnabled && !dataTakenFromCandidate && !hasHonoursData(form.getValues())
+  );
+  useEffect(() => {
+    stepPersistRef.current = () => {
+      const values = form.getValues();
+      setForm(prev => ({
+        ...prev,
+        preferredHonoursAwards: {
+          isEnabled: values.isEnabled,
+          dataTakenFromCandidate: values.dataTakenFromCandidate,
+          honoursAndAwards: values.honoursAndAwards ?? [],
+        },
+      }));
+    };
+    return () => {
+      stepPersistRef.current = null;
+    };
+  }, [form, setForm, stepPersistRef]);
 
   const canNavigate =
     !isEnabled || dataTakenFromCandidate || hasHonoursData(form.getValues());

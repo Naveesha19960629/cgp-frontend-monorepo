@@ -22,6 +22,7 @@ export {
   type LicenseCertificatesFormValues,
 } from '@/views/vacancies/hooks/use-license-certificates-form';
 export { useDisableSuccessToast } from '@/views/vacancies/hooks/use-disable-success-toast';
+export { useStepGuard } from '@/views/vacancies/hooks/use-step-guard';
 export {
   useJobRequirementsForm,
   type JobRequirementsFormValues,

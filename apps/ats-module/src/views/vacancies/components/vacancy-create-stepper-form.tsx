@@ -1,9 +1,13 @@
 import { Status } from 'iconsax-reactjs';
 
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
-import { VacancyCancelDialog } from '@/views/vacancies/components';
+import {
+  StepDisableDialog,
+  VacancyCancelDialog,
+} from '@/views/vacancies/components';
 import {
   VACANCY_STEPS,
   useVacancyForm,
@@ -67,6 +71,8 @@ export default function VacancyCreateStepperForm() {
     currentStepIndex,
     setCurrentStepIndex,
     completedSteps,
+    stepGuard,
+    stepPersistRef,
     onNext,
     onBack,
     onSubmit,
@@ -78,15 +84,27 @@ export default function VacancyCreateStepperForm() {
   const currentStepKey = VACANCY_STEPS[currentStepIndex].key;
   const isStepNavigationEnabled = completedSteps.has(0);
 
+  const [pendingTargetIndex, setPendingTargetIndex] = useState<number | null>(
+    null
+  );
+
+  const handleTabChange = (value: string) => {
+    const targetIndex = VACANCY_STEPS.findIndex(s => s.key === value);
+    if (targetIndex === -1 || targetIndex === currentStepIndex) return;
+    if (stepGuard) {
+      setPendingTargetIndex(targetIndex);
+    } else {
+      stepPersistRef.current?.();
+      setCurrentStepIndex(targetIndex);
+    }
+  };
+
   return (
     <>
       <div className="flex min-h-0 flex-1 overflow-hidden">
         <Tabs
           value={currentStepKey}
-          onValueChange={value => {
-            const index = VACANCY_STEPS.findIndex(s => s.key === value);
-            if (index !== -1) setCurrentStepIndex(index);
-          }}
+          onValueChange={handleTabChange}
           orientation="vertical"
           className="flex min-h-0 flex-1 gap-0"
         >
@@ -186,6 +204,23 @@ export default function VacancyCreateStepperForm() {
           void navigate('/dashboard/ats/vacancies');
         }}
         onSaveAsDraft={OnSaveAsDraft}
+      />
+
+      <StepDisableDialog
+        open={pendingTargetIndex !== null}
+        onOpenChange={open => {
+          if (!open) setPendingTargetIndex(null);
+        }}
+        title={t('stepNavigation.disableDialog.title')}
+        description={t('stepNavigation.disableDialog.description')}
+        confirmLabel={t('stepNavigation.disableDialog.confirmButton')}
+        onConfirm={() => {
+          if (pendingTargetIndex !== null) {
+            stepPersistRef.current?.();
+            setCurrentStepIndex(pendingTargetIndex);
+            setPendingTargetIndex(null);
+          }
+        }}
       />
     </>
   );

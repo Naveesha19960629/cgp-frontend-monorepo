@@ -4,7 +4,7 @@ import { ArrowLeft2, Calendar as CalendarIcon } from 'iconsax-reactjs';
 
 import * as SwitchPrimitive from '@radix-ui/react-switch';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { RefObject } from 'react';
 import { Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -23,6 +23,7 @@ import {
   useSchoolLocationsSearch,
   useSchoolsSearch,
   useSecondaryEducationForm,
+  useStepGuard,
 } from '@/views/vacancies/hooks';
 import type { StepProps } from '@/views/vacancies/types';
 import {
@@ -67,7 +68,7 @@ export default function SecondaryEducationStep({
   onBack,
 }: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
-  const { form: vacancyForm } = useVacancyForm();
+  const { form: vacancyForm, setForm, stepPersistRef } = useVacancyForm();
 
   const { control, watch, handleSubmit, setValue, getValues, resetField } =
     useSecondaryEducationForm(vacancyForm.secondaryEducation);
@@ -77,6 +78,8 @@ export default function SecondaryEducationStep({
   const startDateValue = watch('entry.startDate');
   const endDateValue = watch('entry.endDate');
   const schoolsValue = watch('entry.schools');
+
+  const savedEntries = vacancyForm.secondaryEducation[0]?.content ?? [];
 
   // ── Form field helpers ───────────────────────────────────────
   const fieldsDisabled = !isEnabled || dataTakenFromCandidate;
@@ -111,6 +114,24 @@ export default function SecondaryEducationStep({
       getValues('dataTakenFromCandidate')
     );
   };
+
+  useStepGuard(
+    isEnabled &&
+      !dataTakenFromCandidate &&
+      !checkHasFilledData() &&
+      savedEntries.length === 0
+  );
+  useEffect(() => {
+    stepPersistRef.current = () => {
+      setForm(prev => ({
+        ...prev,
+        secondaryEducation: toSecondaryEducationPayload(getValues()),
+      }));
+    };
+    return () => {
+      stepPersistRef.current = null;
+    };
+  }, [getValues, setForm, stepPersistRef]);
 
   // ── Add-Now mutations ────────────────────────────────────────────────────
   const addExaminationMutation = useAddExaminationMutation();

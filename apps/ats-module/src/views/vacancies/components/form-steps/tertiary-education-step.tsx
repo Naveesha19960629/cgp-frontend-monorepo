@@ -4,7 +4,7 @@ import { ArrowLeft2 } from 'iconsax-reactjs';
 
 import * as SwitchPrimitive from '@radix-ui/react-switch';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { RefObject } from 'react';
 import { Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -27,6 +27,7 @@ import {
   useLevelOfQualificationsSearch,
   useQualificationsSearch,
   useSpecializationsSearch,
+  useStepGuard,
   useStudyModesSearch,
   useStudyPatternsSearch,
   useTertiaryAwardingBodiesSearch,
@@ -64,13 +65,15 @@ export default function TertiaryEducationStep({
   onBack,
 }: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
-  const { form: vacancyForm } = useVacancyForm();
+  const { form: vacancyForm, setForm, stepPersistRef } = useVacancyForm();
 
   const { control, watch, handleSubmit, setValue, getValues } =
     useTertiaryEducationForm(vacancyForm.tertiaryEducation);
 
   const isEnabled = watch('isEnabled');
   const dataTakenFromCandidate = watch('dataTakenFromCandidate');
+
+  const savedEntries = vacancyForm.tertiaryEducation[0]?.content ?? [];
 
   // ── Form field helpers ───────────────────────────────────────────────────
   const fieldsDisabled = !isEnabled || dataTakenFromCandidate;
@@ -108,6 +111,24 @@ export default function TertiaryEducationStep({
       getValues('dataTakenFromCandidate')
     );
   };
+
+  useStepGuard(
+    isEnabled &&
+      !dataTakenFromCandidate &&
+      !checkHasFilledData() &&
+      savedEntries.length === 0
+  );
+  useEffect(() => {
+    stepPersistRef.current = () => {
+      setForm(prev => ({
+        ...prev,
+        tertiaryEducation: toTertiaryEducationPayload(getValues()),
+      }));
+    };
+    return () => {
+      stepPersistRef.current = null;
+    };
+  }, [getValues, setForm, stepPersistRef]);
 
   // ── Add-Now mutations ────────────────────────────────────────────────────
   const addQualificationMutation = useAddQualificationMutation();

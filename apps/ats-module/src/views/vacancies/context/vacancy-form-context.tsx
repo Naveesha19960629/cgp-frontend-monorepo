@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useRef, useState } from 'react';
 
 import {
   CustomizableFormStep,
@@ -208,6 +208,9 @@ interface VacancyFormContextValue {
   OnSaveAsDraft: () => void;
   showCancelDialog: boolean;
   setShowCancelDialog: (open: boolean) => void;
+  stepGuard: boolean;
+  setStepGuard: (guard: boolean) => void;
+  stepPersistRef: React.MutableRefObject<(() => void) | null>;
 }
 
 const VacancyFormContext = createContext<VacancyFormContextValue | null>(null);
@@ -218,10 +221,13 @@ function VacancyFormProvider({ children }: { children: React.ReactNode }) {
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
   const [isInitialStep, setIsInitialStep] = useState(true);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [stepGuard, setStepGuard] = useState(false);
+  const stepPersistRef = useRef<(() => void) | null>(null);
 
   const setCurrentStepIndex = (index: number) => {
     _setCurrentStepIndex(index);
     setForm(prev => ({ ...prev, lastActiveStep: VACANCY_STEPS[index].key }));
+    setStepGuard(false);
   };
 
   const isStepEnabled = (
@@ -299,6 +305,9 @@ function VacancyFormProvider({ children }: { children: React.ReactNode }) {
         OnSaveAsDraft,
         showCancelDialog,
         setShowCancelDialog,
+        stepGuard,
+        setStepGuard,
+        stepPersistRef,
       }}
     >
       {children}

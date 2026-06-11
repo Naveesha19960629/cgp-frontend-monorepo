@@ -11,6 +11,7 @@ import {
   useCausesQuery,
   useLocationsQuery,
   useOrganizationsQuery,
+  useStepGuard,
 } from '@/views/vacancies/hooks';
 import type { LocationOption } from '@/views/vacancies/services';
 import type { StepProps } from '@/views/vacancies/types';
@@ -387,9 +388,39 @@ export default function PreferredVolunteeringStep({
   const [dataTakenFromCandidate, setDataTakenFromCandidate] = useState(false);
   const [confirmDisableOpen, setConfirmDisableOpen] = useState(false);
 
+  // TODO: Persist state on tab navigation — not yet wired because VacancyForm
+  // has no `preferredVolunteering` field. To activate:
+  //   1. Add `preferredVolunteering` to VacancyForm in types.ts
+  //   2. Add its default value to DEFAULT_FORM in vacancy-form-context.tsx
+  //   3. Uncomment the block below and add to the React import: useEffect, useRef
+  //      and add to the file import: useVacancyForm from vacancy-form-context
+  //
+  // const { setForm, stepPersistRef } = useVacancyForm();
+  // const _volunteeringRef = useRef<() => void>(() => {});
+  // useEffect(() => {
+  //   _volunteeringRef.current = () => {
+  //     setForm(prev => ({
+  //       ...prev,
+  //       preferredVolunteering: { isEnabled, dataTakenFromCandidate, entries },
+  //     }));
+  //   };
+  // }, [isEnabled, dataTakenFromCandidate, entries, setForm]);
+  // useEffect(() => {
+  //   stepPersistRef.current = () => _volunteeringRef.current();
+  //   return () => {
+  //     stepPersistRef.current = null;
+  //   };
+  // }, [stepPersistRef]);
+
   const [entries, setEntries] = useState<VolunteeringEntry[]>([
     createEmptyEntry('1'),
   ]);
+
+  useStepGuard(
+    isEnabled &&
+      !dataTakenFromCandidate &&
+      !entries.some(e => e.organizationName.length > 0 || e.cause.length > 0)
+  );
 
   const fieldsDisabled = !isEnabled || dataTakenFromCandidate;
 

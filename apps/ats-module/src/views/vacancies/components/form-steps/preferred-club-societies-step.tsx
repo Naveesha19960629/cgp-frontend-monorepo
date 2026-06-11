@@ -11,6 +11,7 @@ import {
   useLocationsQuery,
   useOrganizationsQuery,
   useSocietiesQuery,
+  useStepGuard,
 } from '@/views/vacancies/hooks';
 import type { LocationOption } from '@/views/vacancies/services';
 import type { StepProps } from '@/views/vacancies/types';
@@ -368,6 +369,30 @@ export default function PreferredClubSocietiesStep({
   const [dataTakenFromCandidate, setDataTakenFromCandidate] = useState(false);
   const [confirmDisableOpen, setConfirmDisableOpen] = useState(false);
 
+  // TODO: Persist state on tab navigation — not yet wired because VacancyForm
+  // has no `preferredClubSocieties` field. To activate:
+  //   1. Add `preferredClubSocieties` to VacancyForm in types.ts
+  //   2. Add its default value to DEFAULT_FORM in vacancy-form-context.tsx
+  //   3. Uncomment the block below and add to the React import: useEffect, useRef
+  //      and add to the file import: useVacancyForm from vacancy-form-context
+  //
+  // const { setForm, stepPersistRef } = useVacancyForm();
+  // const _clubRef = useRef<() => void>(() => {});
+  // useEffect(() => {
+  //   _clubRef.current = () => {
+  //     setForm(prev => ({
+  //       ...prev,
+  //       preferredClubSocieties: { isEnabled, dataTakenFromCandidate, entries },
+  //     }));
+  //   };
+  // }, [isEnabled, dataTakenFromCandidate, entries, setForm]);
+  // useEffect(() => {
+  //   stepPersistRef.current = () => _clubRef.current();
+  //   return () => {
+  //     stepPersistRef.current = null;
+  //   };
+  // }, [stepPersistRef]);
+
   const [entries, setEntries] = useState<ClubSocietyEntry[]>([
     {
       id: '1',
@@ -380,6 +405,12 @@ export default function PreferredClubSocietiesStep({
       position: '',
     },
   ]);
+
+  useStepGuard(
+    isEnabled &&
+      !dataTakenFromCandidate &&
+      !entries.some(e => e.clubSociety.length > 0)
+  );
 
   const fieldsDisabled = !isEnabled || dataTakenFromCandidate;
 

@@ -7,6 +7,7 @@ import * as SwitchPrimitive from '@radix-ui/react-switch';
 import { useState } from 'react';
 
 import MessageBox from '@/app/components/message-box';
+import { useStepGuard } from '@/views/vacancies/hooks';
 import type { StepProps } from '@/views/vacancies/types';
 import { formatDate } from '@/views/vacancies/utils';
 
@@ -215,6 +216,30 @@ export default function PreferredPublicationsStep({
   const [dataTakenFromCandidate, setDataTakenFromCandidate] = useState(false);
   const [confirmDisableOpen, setConfirmDisableOpen] = useState(false);
 
+  // TODO: Persist state on tab navigation — not yet wired because VacancyForm
+  // has no `preferredPublications` field. To activate:
+  //   1. Add `preferredPublications` to VacancyForm in types.ts
+  //   2. Add its default value to DEFAULT_FORM in vacancy-form-context.tsx
+  //   3. Uncomment the block below and add to the React import: useEffect, useRef
+  //      and add to the file import: useVacancyForm from vacancy-form-context
+  //
+  // const { setForm, stepPersistRef } = useVacancyForm();
+  // const _publicationsRef = useRef<() => void>(() => {});
+  // useEffect(() => {
+  //   _publicationsRef.current = () => {
+  //     setForm(prev => ({
+  //       ...prev,
+  //       preferredPublications: { isEnabled, dataTakenFromCandidate, publications },
+  //     }));
+  //   };
+  // }, [isEnabled, dataTakenFromCandidate, publications, setForm]);
+  // useEffect(() => {
+  //   stepPersistRef.current = () => _publicationsRef.current();
+  //   return () => {
+  //     stepPersistRef.current = null;
+  //   };
+  // }, [stepPersistRef]);
+
   const [publications, setPublications] = useState<PublicationEntry[]>([
     {
       id: '1',
@@ -224,6 +249,12 @@ export default function PreferredPublicationsStep({
       publishedDateTo: undefined,
     },
   ]);
+
+  useStepGuard(
+    isEnabled &&
+      !dataTakenFromCandidate &&
+      !publications.some(p => p.acceptedPublisher.trim().length > 0)
+  );
 
   const fieldsDisabled = !isEnabled || dataTakenFromCandidate;
 

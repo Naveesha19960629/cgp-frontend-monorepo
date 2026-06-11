@@ -4,7 +4,7 @@ import { ArrowLeft2, Calendar as CalendarIcon } from 'iconsax-reactjs';
 
 import * as SwitchPrimitive from '@radix-ui/react-switch';
 
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
@@ -17,6 +17,7 @@ import {
   useLicenseCertificatesForm,
   useLicenseCertificatesSearch,
   useOrganizationsQuery,
+  useStepGuard,
   useTertiaryAwardingBodyLocationsSearch,
 } from '@/views/vacancies/hooks';
 import type { LicenseCertType, StepProps } from '@/views/vacancies/types';
@@ -58,13 +59,16 @@ export default function LicenseCertificatesStep({
   onBack,
 }: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
-  const { form: vacancyForm } = useVacancyForm();
+  const { form: vacancyForm, setForm, stepPersistRef } = useVacancyForm();
 
   const { control, watch, handleSubmit, setValue, getValues } =
     useLicenseCertificatesForm(vacancyForm.licenseCertificates);
 
   const isEnabled = watch('isEnabled');
   const dataTakenFromCandidate = watch('dataTakenFromCandidate');
+
+  const savedEntries = vacancyForm.licenseCertificates?.[0]?.content ?? [];
+
   const fieldsDisabled = !isEnabled || dataTakenFromCandidate;
 
   // ── Disable confirmation ─────────────────────────────────────────────────
@@ -91,6 +95,24 @@ export default function LicenseCertificatesStep({
       getValues('dataTakenFromCandidate')
     );
   };
+
+  useStepGuard(
+    isEnabled &&
+      !dataTakenFromCandidate &&
+      !checkHasFilledData() &&
+      savedEntries.length === 0
+  );
+  useEffect(() => {
+    stepPersistRef.current = () => {
+      setForm(prev => ({
+        ...prev,
+        licenseCertificates: toLicenseCertificatesPayload(getValues()),
+      }));
+    };
+    return () => {
+      stepPersistRef.current = null;
+    };
+  }, [getValues, setForm, stepPersistRef]);
 
   // ── Add License/Cert dialog state ────────────────────────────────────────
   const licenseCertValue = watch('entry.nameOfLicenseCert');
