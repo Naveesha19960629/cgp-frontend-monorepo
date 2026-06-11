@@ -5,8 +5,10 @@ import { ArrowLeft2, Calendar as CalendarIcon } from 'iconsax-reactjs';
 import * as SwitchPrimitive from '@radix-ui/react-switch';
 
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
-import MessageBox from '@/app/components/message-box';
+import MessageBox from '@/components/message-box';
+import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import type { StepProps } from '@/views/vacancies/types';
 import { formatDate } from '@/views/vacancies/utils';
 
@@ -27,11 +29,14 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@cgp/ui-kit/components/ui/popover';
+import { applyTypography } from '@cgp/ui-kit/lib/typography';
 import { cn } from '@cgp/ui-kit/lib/utils';
 
 import DisableDialog from './disable-dialog';
 
 const MAX_PUBLISHER_LENGTH = 250;
+const HUNDRED_YEARS_AGO = new Date(new Date().getFullYear() - 100, 0, 1);
+const HUNDRED_YEARS_FROM_NOW = new Date(new Date().getFullYear() + 100, 11, 31);
 
 interface PublicationEntry {
   id: string;
@@ -39,6 +44,7 @@ interface PublicationEntry {
   acceptedPublisher: string;
   publishedDateFrom?: string;
   publishedDateTo?: string;
+  openDatePopover?: 'publishedDateFrom' | 'publishedDateTo' | null;
 }
 
 function PublicationCard({
@@ -88,7 +94,7 @@ function PublicationCard({
             )}
           >
             {/* Row 1: Accepted Publisher | Published Date From | Published Date To */}
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-4 gap-4">
               <div className="flex flex-col gap-1">
                 <div className="flex items-center justify-between">
                   <Label>Accepted Publisher</Label>
@@ -112,13 +118,30 @@ function PublicationCard({
                 <div className="flex h-5 items-center">
                   <Label>Published Date From</Label>
                 </div>
-                <Popover>
+                <Popover
+                  modal
+                  open={publication.openDatePopover === 'publishedDateFrom'}
+                  onOpenChange={open =>
+                    onUpdate(index, {
+                      openDatePopover:
+                        !fieldsDisabled && open ? 'publishedDateFrom' : null,
+                    })
+                  }
+                >
                   <PopoverTrigger asChild>
                     <Button
+                      type="button"
                       variant="outline"
+                      disabled={fieldsDisabled}
                       className={cn(
-                        'h-11 w-full justify-between text-left font-normal',
-                        !publication.publishedDateFrom && 'text-slate-500'
+                        'border-input flex h-11 w-full items-center justify-between rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
+                        !publication.publishedDateFrom && 'text-slate-500',
+                        publication.publishedDateFrom && 'text-zinc-800',
+                        'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
+                        'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
+                        'dark:bg-input/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
+                        applyTypography('body-medium'),
+                        'shadow-none!'
                       )}
                     >
                       {publication.publishedDateFrom
@@ -127,7 +150,7 @@ function PublicationCard({
                       <CalendarIcon
                         variant="Linear"
                         size={20}
-                        className="text-slate-400"
+                        className="text-zinc-800"
                       />
                     </Button>
                   </PopoverTrigger>
@@ -139,14 +162,33 @@ function PublicationCard({
                           ? new Date(publication.publishedDateFrom)
                           : undefined
                       }
-                      onSelect={date =>
+                      defaultMonth={
+                        (publication.publishedDateFrom &&
+                          new Date(publication.publishedDateFrom)) ||
+                        (publication.publishedDateTo &&
+                          new Date(publication.publishedDateTo)) ||
+                        new Date()
+                      }
+                      onSelect={date => {
                         onUpdate(index, {
                           publishedDateFrom: date
                             ? date.toISOString()
                             : undefined,
-                        })
+                        });
+                        onUpdate(index, { openDatePopover: null });
+
+                        if (publication.publishedDateTo && date) {
+                          const toDate = new Date(publication.publishedDateTo);
+                          if (toDate < date) {
+                            onUpdate(index, { publishedDateTo: undefined });
+                          }
+                        }
+                      }}
+                      disabled={date =>
+                        date > new Date() || date < HUNDRED_YEARS_AGO
                       }
-                      disabled={date => date > new Date()}
+                      captionLayout="dropdown"
+                      startMonth={HUNDRED_YEARS_AGO}
                     />
                   </PopoverContent>
                 </Popover>
@@ -156,13 +198,30 @@ function PublicationCard({
                 <div className="flex h-5 items-center">
                   <Label>Published Date To</Label>
                 </div>
-                <Popover>
+                <Popover
+                  modal
+                  open={publication.openDatePopover === 'publishedDateTo'}
+                  onOpenChange={open =>
+                    onUpdate(index, {
+                      openDatePopover:
+                        !fieldsDisabled && open ? 'publishedDateTo' : null,
+                    })
+                  }
+                >
                   <PopoverTrigger asChild>
                     <Button
+                      type="button"
                       variant="outline"
+                      disabled={fieldsDisabled}
                       className={cn(
-                        'h-11 w-full justify-between text-left font-normal',
-                        !publication.publishedDateTo && 'text-slate-500'
+                        'border-input flex h-11 w-full items-center justify-between rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
+                        !publication.publishedDateTo && 'text-slate-500',
+                        publication.publishedDateTo && 'text-zinc-800',
+                        'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
+                        'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
+                        'dark:bg-input/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
+                        applyTypography('body-medium'),
+                        'shadow-none!'
                       )}
                     >
                       {publication.publishedDateTo
@@ -171,7 +230,7 @@ function PublicationCard({
                       <CalendarIcon
                         variant="Linear"
                         size={20}
-                        className="text-slate-400"
+                        className="text-zinc-800"
                       />
                     </Button>
                   </PopoverTrigger>
@@ -183,18 +242,34 @@ function PublicationCard({
                           ? new Date(publication.publishedDateTo)
                           : undefined
                       }
-                      onSelect={date =>
+                      defaultMonth={
+                        (publication.publishedDateTo &&
+                          new Date(publication.publishedDateTo)) ||
+                        (publication.publishedDateFrom &&
+                          new Date(publication.publishedDateFrom)) ||
+                        new Date()
+                      }
+                      onSelect={date => {
                         onUpdate(index, {
                           publishedDateTo: date
                             ? date.toISOString()
                             : undefined,
-                        })
-                      }
-                      disabled={date =>
-                        publication.publishedDateFrom
-                          ? date <= new Date(publication.publishedDateFrom)
-                          : false
-                      }
+                        });
+                        onUpdate(index, { openDatePopover: null });
+                      }}
+                      disabled={date => {
+                        const fromDate = publication.publishedDateFrom
+                          ? new Date(publication.publishedDateFrom)
+                          : undefined;
+                        return (
+                          date < HUNDRED_YEARS_AGO ||
+                          date > HUNDRED_YEARS_FROM_NOW ||
+                          (fromDate != null && date < fromDate)
+                        );
+                      }}
+                      captionLayout="dropdown"
+                      startMonth={HUNDRED_YEARS_AGO}
+                      endMonth={HUNDRED_YEARS_FROM_NOW}
                     />
                   </PopoverContent>
                 </Popover>
@@ -211,19 +286,41 @@ export default function PreferredPublicationsStep({
   onNext,
   onBack,
 }: Readonly<StepProps>) {
-  const [isEnabled, setIsEnabled] = useState(false);
-  const [dataTakenFromCandidate, setDataTakenFromCandidate] = useState(false);
+  const { t } = useTranslation('ats');
+  const { form: contextForm, onCancel } = useVacancyForm();
+  const savedPublications = contextForm.preferredPublications;
+
+  const [isEnabled, setIsEnabled] = useState(
+    savedPublications?.isEnabled ?? false
+  );
+  const [dataTakenFromCandidate, setDataTakenFromCandidate] = useState(
+    savedPublications?.dataTakenFromCandidate ?? false
+  );
   const [confirmDisableOpen, setConfirmDisableOpen] = useState(false);
 
-  const [publications, setPublications] = useState<PublicationEntry[]>([
-    {
-      id: '1',
-      isOpen: true,
-      acceptedPublisher: '',
-      publishedDateFrom: undefined,
-      publishedDateTo: undefined,
-    },
-  ]);
+  const [publications, setPublications] = useState<PublicationEntry[]>(
+    savedPublications?.publications && savedPublications.publications.length > 0
+      ? savedPublications.publications
+      : [
+          {
+            id: '1',
+            isOpen: true,
+            acceptedPublisher: '',
+            publishedDateFrom: undefined,
+            publishedDateTo: undefined,
+          },
+        ]
+  );
+
+  const handleNext = () => {
+    onNext({
+      preferredPublications: {
+        isEnabled,
+        dataTakenFromCandidate,
+        publications,
+      },
+    });
+  };
 
   const fieldsDisabled = !isEnabled || dataTakenFromCandidate;
 
@@ -279,89 +376,88 @@ export default function PreferredPublicationsStep({
   };
 
   return (
-    <div className="flex flex-col gap-4 pb-6">
-      {/* ── Informational Banner ────────────────────────────────────────── */}
-      <div className="px-6">
+    <>
+      <div className="flex flex-1 flex-col">
+        {/* ── Informational Banner ──────────────────────────────────────── */}
         <MessageBox
-          title="Build the Application Form"
-          message={
-            <>
-              <span className="text-brand-primary-500 font-bold">
-                Certain fields
-              </span>{' '}
-              in this section are always collected from candidates to support
-              consistent candidate profiles. Any fields you don&apos;t select
-              won&apos;t be collected
-            </>
-          }
+          fields={[
+            t('preferredPublications.fieldList.publisher'),
+            t('preferredPublications.fieldList.publishedDateFrom'),
+            t('preferredPublications.fieldList.publishedDateTo'),
+          ]}
         />
-      </div>
 
-      {/* ── Section Header ──────────────────────────────────────────────── */}
-      <div className="flex items-center gap-2 px-6">
-        <button
-          type="button"
-          aria-label="Back"
-          className="flex h-8 w-8 items-center justify-center"
-          onClick={onBack}
-        >
-          <ArrowLeft2 size={24} />
-        </button>
-        <h2 className="flex-1 text-xl font-bold text-slate-900">
-          Preferred Publications
-        </h2>
-        <SwitchPrimitive.Root
-          checked={isEnabled}
-          onCheckedChange={handleToggle}
-          className={cn(
-            'focus-visible:ring-ring/50 inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent shadow-xs transition-colors outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50',
-            isEnabled ? 'bg-brand-primary-500' : 'bg-slate-300'
-          )}
-        >
-          <SwitchPrimitive.Thumb
-            className={cn(
-              'pointer-events-none block h-5 w-5 rounded-full bg-white shadow-lg ring-0 transition-transform',
-              isEnabled ? 'translate-x-5' : 'translate-x-0'
-            )}
-          />
-        </SwitchPrimitive.Root>
-      </div>
-
-      <div className="flex flex-col gap-4 px-6">
-        {/* dataTakenFromCandidate — grayed when toggle off */}
-        <div className={cn(!isEnabled && 'pointer-events-none opacity-60')}>
-          <div className="flex items-start gap-2">
-            <Checkbox
-              id="publicationsDataTakenFromCandidate"
-              checked={dataTakenFromCandidate}
-              onCheckedChange={value => setDataTakenFromCandidate(!!value)}
-              className="mt-0.5"
-            />
-            <Label
-              htmlFor="publicationsDataTakenFromCandidate"
-              className="cursor-pointer leading-snug"
+        {/* ── Section header: back arrow + title + toggle ───────────────── */}
+        <div className="flex items-center justify-between px-7 py-8">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              aria-label="Back"
+              className="text-slate-700 transition-colors hover:text-slate-900"
+              onClick={onBack}
             >
-              If selected, no manual input is required, and data will be taken
-              from the candidate profile
-            </Label>
+              <ArrowLeft2 size={24} />
+            </button>
+            <h2 className="text-xl font-bold tracking-tight text-slate-900">
+              Preferred Publications
+            </h2>
           </div>
+          <SwitchPrimitive.Root
+            checked={isEnabled}
+            onCheckedChange={handleToggle}
+            className={cn(
+              'focus-visible:ring-ring/50 inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent shadow-xs transition-colors outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50',
+              isEnabled ? 'bg-brand-primary-500' : 'bg-slate-300'
+            )}
+          >
+            <SwitchPrimitive.Thumb
+              className={cn(
+                'pointer-events-none block h-5 w-5 rounded-full bg-white shadow-lg ring-0 transition-transform',
+                isEnabled ? 'translate-x-5' : 'translate-x-0'
+              )}
+            />
+          </SwitchPrimitive.Root>
         </div>
 
-        {/* ── Publication Cards ──────────────────────────────────────────── */}
-        {publications.map((publication, index) => (
-          <PublicationCard
-            key={publication.id}
-            index={index}
-            publication={publication}
-            onUpdate={updatePublication}
-            fieldsDisabled={fieldsDisabled}
-          />
-        ))}
-
-        {/* ── Add Entry button (outside card, bottom-right) ─────────── */}
+        {/* ── Checkbox: data from candidate profile ─────────────────────── */}
         <div
           className={cn(
-            'flex justify-end',
+            'flex items-start gap-3 px-7 pb-8',
+            !isEnabled && 'pointer-events-none opacity-60'
+          )}
+        >
+          <Checkbox
+            id="publicationsDataTakenFromCandidate"
+            checked={dataTakenFromCandidate}
+            onCheckedChange={value => setDataTakenFromCandidate(!!value)}
+            className="mt-0.5"
+          />
+          <Label
+            htmlFor="publicationsDataTakenFromCandidate"
+            className="cursor-pointer text-sm leading-snug font-medium text-slate-900"
+          >
+            If selected, no manual input is required, and data will be taken
+            from the candidate profile
+          </Label>
+        </div>
+
+        {/* ── Publication cards ─────────────────────────────────────────── */}
+        <div className="flex flex-col gap-4 px-6">
+          {publications.map((publication, index) => (
+            <PublicationCard
+              key={publication.id}
+              index={index}
+              publication={publication}
+              onUpdate={updatePublication}
+              fieldsDisabled={fieldsDisabled}
+            />
+          ))}
+        </div>
+
+        {/* ── Add entry button ──────────────────────────────────────────── */}
+        <div
+          className={cn(
+            'flex justify-end px-6 py-4',
             !isEnabled && 'pointer-events-none opacity-60'
           )}
         >
@@ -375,16 +471,16 @@ export default function PreferredPublicationsStep({
             <PlusIcon className="size-4 text-neutral-600!" />
           </Button>
         </div>
-      </div>
 
-      {/* ── Step footer ──────────────────────────────────────────────────── */}
-      <div className="mt-auto flex justify-end gap-4 border-t border-slate-200 px-6 pt-4">
-        <Button variant="secondary" className="h-12 w-44" onClick={onBack}>
-          Cancel
-        </Button>
-        <Button className="h-12 w-44" onClick={() => onNext()}>
-          Next
-        </Button>
+        {/* ── Step footer ───────────────────────────────────────────────── */}
+        <div className="sticky bottom-0 mt-auto flex items-center justify-end gap-4 bg-white px-6 py-7 shadow-[0px_-8px_6.8px_0px_rgba(0,0,0,0.04)]">
+          <Button variant="secondary" className="h-12 w-48" onClick={onCancel}>
+            Cancel
+          </Button>
+          <Button className="h-12 w-48" onClick={handleNext}>
+            Next
+          </Button>
+        </div>
       </div>
 
       {/* ── Disable Confirmation Dialog ───────────────────────────────────── */}
@@ -400,6 +496,6 @@ export default function PreferredPublicationsStep({
         onCancel={() => setConfirmDisableOpen(false)}
         onDisable={handleDisable}
       />
-    </div>
+    </>
   );
 }

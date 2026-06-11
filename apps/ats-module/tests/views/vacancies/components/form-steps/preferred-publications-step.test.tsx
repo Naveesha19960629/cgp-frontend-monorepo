@@ -13,6 +13,11 @@ vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
 }));
 
+const onCancel = vi.hoisted(() => vi.fn());
+vi.mock('@/views/vacancies/context/vacancy-form-context', () => ({
+  useVacancyForm: () => ({ form: {}, onCancel }),
+}));
+
 vi.mock('@cgp/ui-kit/components/custom-toast', () => ({
   SuccessToast: vi.fn(),
 }));
@@ -181,11 +186,12 @@ vi.mock('@radix-ui/react-switch', () => ({
   ),
 }));
 
-vi.mock('@/app/components/message-box', () => ({
-  default: ({ title, message }: { title?: string; message?: ReactNode }) => (
+vi.mock('@/components/message-box', () => ({
+  default: ({ fields = [] }: { fields?: string[] }) => (
     <div data-testid="message-box">
-      <h3>{title}</h3>
-      <div>{message}</div>
+      {fields.map(f => (
+        <span key={f}>{f}</span>
+      ))}
     </div>
   ),
 }));
@@ -246,12 +252,9 @@ function renderStep() {
 
 describe('PreferredPublicationsStep', () => {
   describe('rendering', () => {
-    it('renders the message box with correct title', () => {
+    it('renders the message box', () => {
       renderStep();
       expect(screen.getByTestId('message-box')).toBeInTheDocument();
-      expect(
-        screen.getByText('Build the Application Form')
-      ).toBeInTheDocument();
     });
 
     it('renders the section heading', () => {
@@ -443,14 +446,14 @@ describe('PreferredPublicationsStep', () => {
       expect(onBack).toHaveBeenCalledTimes(1);
     });
 
-    it('calls onBack when Cancel button is clicked', async () => {
+    it('calls the context onCancel when Cancel button is clicked', async () => {
       const user = userEvent.setup();
-      const { onBack } = renderStep();
+      renderStep();
 
       const cancelButton = screen.getByText('Cancel');
       await user.click(cancelButton);
 
-      expect(onBack).toHaveBeenCalledTimes(1);
+      expect(onCancel).toHaveBeenCalledTimes(1);
     });
 
     it('calls onNext when Next button is clicked', async () => {

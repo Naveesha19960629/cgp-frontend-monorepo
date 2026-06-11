@@ -3,11 +3,21 @@ import userEvent from '@testing-library/user-event';
 
 import PreferredClubSocietiesStep from '@/views/vacancies/components/form-steps/preferred-club-societies-step';
 
+// ── Mock wizard form context ──────────────────────────────────────────────────
+
+const onCancel = vi.hoisted(() => vi.fn());
+vi.mock('@/views/vacancies/context/vacancy-form-context', () => ({
+  useVacancyForm: () => ({ form: {}, onCancel }),
+}));
+
 // ── Mock hooks ──────────────────────────────────────────────────────────────
 
 const mockSocietiesData = [
   { id: 'soc-1', name: 'Rotaract Club', source: 'MASTER' },
   { id: 'soc-2', name: 'Swimming Team', source: 'MASTER' },
+  // Master item exposing only `label` (no `name`) — reproduces the
+  // "dropdown shows id instead of name" bug fixed by the `name || label` fallback.
+  { id: 'soc-3', label: 'Debate Society', source: 'MASTER' },
 ];
 
 const mockOrganizationsData = [
@@ -51,9 +61,30 @@ vi.mock('@/views/vacancies/components/form-steps/disable-dialog', () => ({
 
 // ── Mock UI components ──────────────────────────────────────────────────────
 
+interface StubOption {
+  value: string;
+  label: string;
+  source?: string;
+}
 vi.mock('@cgp/ui-kit/components/multi-select', () => ({
-  default: ({ placeholder }: { placeholder: string }) => (
-    <input placeholder={placeholder} readOnly />
+  default: ({
+    placeholder,
+    options = [],
+    onChange,
+  }: {
+    placeholder: string;
+    options?: StubOption[];
+    onChange?: (options: StubOption[]) => void;
+  }) => (
+    <div>
+      <input placeholder={placeholder} readOnly />
+      {options.map(o => (
+        <span key={o.value}>{o.label}</span>
+      ))}
+      <button type="button" onClick={() => onChange?.(options)}>
+        {`select:${placeholder}`}
+      </button>
+    </div>
   ),
 }));
 
@@ -136,7 +167,9 @@ describe('PreferredClubSocietiesStep', () => {
         onSubmit={vi.fn()}
       />
     );
-    expect(screen.getByText('Build the Application Form')).toBeInTheDocument();
+    expect(
+      screen.getByText('preferredPatents.bannerTitle')
+    ).toBeInTheDocument();
   });
 
   it('renders the first club/society card by default', () => {
@@ -166,7 +199,7 @@ describe('PreferredClubSocietiesStep', () => {
     expect(screen.getByText('Position / Role Held')).toBeInTheDocument();
   });
 
-  it('calls onBack when Cancel button is clicked', async () => {
+  it('calls the context onCancel when Cancel button is clicked', async () => {
     const user = userEvent.setup();
     render(
       <PreferredClubSocietiesStep
@@ -177,7 +210,7 @@ describe('PreferredClubSocietiesStep', () => {
     );
     const cancelButton = screen.getByRole('button', { name: /cancel/i });
     await user.click(cancelButton);
-    expect(mockOnBack).toHaveBeenCalledTimes(1);
+    expect(onCancel).toHaveBeenCalledTimes(1);
   });
 
   it('calls onNext when Next button is clicked', async () => {
@@ -192,6 +225,82 @@ describe('PreferredClubSocietiesStep', () => {
     const nextButton = screen.getByRole('button', { name: /next/i });
     await user.click(nextButton);
     expect(mockOnNext).toHaveBeenCalledTimes(1);
+  });
+
+  it('resolves the society name from `label` when `name` is absent', () => {
+    render(
+      <PreferredClubSocietiesStep
+        onNext={mockOnNext}
+        onBack={mockOnBack}
+        onSubmit={vi.fn()}
+      />
+    );
+    // Without the `s.name || s.label` fallback this option would be blank.
+    expect(screen.getByText('Debate Society')).toBeInTheDocument();
+    expect(screen.getByText('Rotaract Club')).toBeInTheDocument();
+  });
+
+  it('renders the Organization Location as a multi-select fed by locations', () => {
+    render(
+      <PreferredClubSocietiesStep
+        onNext={mockOnNext}
+        onBack={mockOnBack}
+        onSubmit={vi.fn()}
+      />
+    );
+    expect(screen.getByText('Colombo, Sri Lanka')).toBeInTheDocument();
+    expect(screen.getByText('London, UK')).toBeInTheDocument();
+  });
+
+  it('saves the section to the wizard context on Next', async () => {
+    const user = userEvent.setup();
+    render(
+      <PreferredClubSocietiesStep
+        onNext={mockOnNext}
+        onBack={mockOnBack}
+        onSubmit={vi.fn()}
+      />
+    );
+    await user.click(screen.getByRole('button', { name: /next/i }));
+    expect(mockOnNext).toHaveBeenCalledWith({
+      preferredClubSocieties: expect.objectContaining({
+        isEnabled: false,
+        dataTakenFromCandidate: false,
+        clubSocieties: expect.any(Array),
+      }),
+    });
+  });
+
+  it('persists the resolved society label and organization locations on Next', async () => {
+    const user = userEvent.setup();
+    render(
+      <PreferredClubSocietiesStep
+        onNext={mockOnNext}
+        onBack={mockOnBack}
+        onSubmit={vi.fn()}
+      />
+    );
+
+    await user.click(
+      screen.getByRole('button', {
+        name: 'select:Select or add club or society',
+      })
+    );
+    await user.click(
+      screen.getByRole('button', { name: 'select:Select location' })
+    );
+    await user.click(screen.getByRole('button', { name: /next/i }));
+
+    const payload = mockOnNext.mock.calls[0][0].preferredClubSocieties;
+    expect(payload.clubSocieties[0].clubSociety).toContainEqual({
+      value: 'soc-3',
+      label: 'Debate Society',
+      source: 'MASTER',
+    });
+    expect(payload.clubSocieties[0].organizationLocations).toEqual([
+      { value: 'loc-1', label: 'Colombo, Sri Lanka' },
+      { value: 'loc-2', label: 'London, UK' },
+    ]);
   });
 
   it('renders the add entry button', () => {
@@ -221,7 +330,7 @@ describe('PreferredClubSocietiesStep', () => {
     ).toBeInTheDocument();
   });
 
-  it('adds a new entry when add button is clicked', async () => {
+  it('keeps the add entry button disabled (multiple entries not yet released)', async () => {
     const user = userEvent.setup();
     render(
       <PreferredClubSocietiesStep
@@ -237,12 +346,14 @@ describe('PreferredClubSocietiesStep', () => {
       screen.queryByText('Clubs and societies 02')
     ).not.toBeInTheDocument();
 
-    // Click add button
     const addButton = screen.getByRole('button', { name: /add entry/i });
+    expect(addButton).toBeDisabled();
+
     await user.click(addButton);
 
-    // Now two cards should exist
-    expect(screen.getByText('Clubs and societies 01')).toBeInTheDocument();
-    expect(screen.getByText('Clubs and societies 02')).toBeInTheDocument();
+    // Disabled button must not append a second card.
+    expect(
+      screen.queryByText('Clubs and societies 02')
+    ).not.toBeInTheDocument();
   });
 });
