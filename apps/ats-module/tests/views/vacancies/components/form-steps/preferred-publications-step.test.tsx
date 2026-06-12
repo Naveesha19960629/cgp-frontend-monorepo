@@ -15,7 +15,13 @@ vi.mock('react-i18next', () => ({
 
 const onCancel = vi.hoisted(() => vi.fn());
 vi.mock('@/views/vacancies/context/vacancy-form-context', () => ({
-  useVacancyForm: () => ({ form: {}, onCancel }),
+  useVacancyForm: () => ({
+    form: {},
+    onCancel,
+    setForm: vi.fn(),
+    stepPersistRef: { current: null },
+    stepDisableRef: { current: null },
+  }),
 }));
 
 vi.mock('@cgp/ui-kit/components/custom-toast', () => ({

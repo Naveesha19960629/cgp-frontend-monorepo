@@ -239,6 +239,7 @@ function makeForm(
     },
     setForm: vi.fn(),
     stepPersistRef: { current: null },
+    stepDisableRef: { current: null },
   };
 }
 

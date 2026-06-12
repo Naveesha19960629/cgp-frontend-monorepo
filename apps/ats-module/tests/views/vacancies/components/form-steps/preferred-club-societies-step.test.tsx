@@ -7,7 +7,13 @@ import PreferredClubSocietiesStep from '@/views/vacancies/components/form-steps/
 
 const onCancel = vi.hoisted(() => vi.fn());
 vi.mock('@/views/vacancies/context/vacancy-form-context', () => ({
-  useVacancyForm: () => ({ form: {}, onCancel }),
+  useVacancyForm: () => ({
+    form: {},
+    onCancel,
+    setForm: vi.fn(),
+    stepPersistRef: { current: null },
+    stepDisableRef: { current: null },
+  }),
 }));
 
 // ── Mock hooks ──────────────────────────────────────────────────────────────

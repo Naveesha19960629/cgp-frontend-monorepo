@@ -26,6 +26,7 @@ const mockUseVacancyForm = vi.hoisted(() =>
     onCancel: vi.fn(),
     setStepGuard: vi.fn(),
     stepPersistRef: { current: null },
+    stepDisableRef: { current: null },
   }))
 );
 
@@ -297,6 +298,7 @@ function makeForm(
     setForm: vi.fn(),
     setStepGuard: vi.fn(),
     stepPersistRef: { current: null },
+    stepDisableRef: { current: null },
   };
 }
 

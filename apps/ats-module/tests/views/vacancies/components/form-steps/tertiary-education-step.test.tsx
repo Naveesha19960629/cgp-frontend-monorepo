@@ -70,6 +70,7 @@ vi.mock('@/views/vacancies/context/vacancy-form-context', () => ({
     },
     setStepGuard: vi.fn(),
     stepPersistRef: { current: null },
+    stepDisableRef: { current: null },
   }),
 }));
 
