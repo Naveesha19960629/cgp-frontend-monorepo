@@ -217,7 +217,14 @@ export default function VacancyCreateStepperForm() {
         confirmLabel={t('stepNavigation.disableDialog.confirmButton')}
         onConfirm={() => {
           if (pendingTargetIndex !== null) {
+            const sectionName = VACANCY_STEPS[currentStepIndex].label;
             stepDisableRef.current?.();
+            SuccessToast({
+              title: t('common.notifications.disable.title'),
+              description: t('common.notifications.disable.message', {
+                sectionName,
+              }),
+            });
             setCurrentStepIndex(pendingTargetIndex);
             setPendingTargetIndex(null);
           }
