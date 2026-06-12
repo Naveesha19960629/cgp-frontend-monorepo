@@ -2,10 +2,11 @@ import { Plus, X } from 'lucide-react';
 
 import { ArrowDown2, ArrowLeft2, Simcard2, Trash } from 'iconsax-reactjs';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
+import { useStepGuard } from '@/views/vacancies/hooks';
 import { useDisableSuccessToast } from '@/views/vacancies/hooks';
 import type {
   CustomizableFormData,
@@ -553,6 +554,7 @@ function QuestionCard({
 // ── Main step ────────────────────────────────────────────────────────────────
 export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
   const { t } = useTranslation('ats');
+
   const showDisableToast = useDisableSuccessToast();
   const { form, onCancel } = useVacancyForm();
   const initialCustomizableForm = form.customizableForm;
@@ -574,6 +576,40 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
   } | null>(null);
   const [pendingFormDelete, setPendingFormDelete] = useState<number | null>(
     null
+  );
+
+  const { setForm, stepPersistRef, stepDisableRef } = useVacancyForm();
+  const _customizableRef = useRef<() => void>(() => {});
+  useEffect(() => {
+    _customizableRef.current = () => {
+      setForm(prev => ({
+        ...prev,
+        customizableForm: { isEnabled, sectionTitle, forms },
+      }));
+    };
+  }, [isEnabled, sectionTitle, forms, setForm]);
+  useEffect(() => {
+    stepPersistRef.current = () => _customizableRef.current();
+    return () => {
+      stepPersistRef.current = null;
+    };
+  }, [stepPersistRef]);
+  useEffect(() => {
+    stepDisableRef.current = () => {
+      setForm(prev => ({
+        ...prev,
+        customizableForm: { isEnabled: false, sectionTitle: '', forms: [] },
+      }));
+    };
+    return () => {
+      stepDisableRef.current = null;
+    };
+  }, [setForm, stepDisableRef]);
+
+  useStepGuard(
+    isEnabled &&
+      !sectionTitle.trim() &&
+      forms.every(f => f.questions.length === 0)
   );
 
   useEffect(() => {

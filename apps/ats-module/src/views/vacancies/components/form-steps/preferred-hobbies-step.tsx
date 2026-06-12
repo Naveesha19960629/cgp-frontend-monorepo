@@ -2,7 +2,7 @@ import { ArrowLeft2 } from 'iconsax-reactjs';
 
 import * as SwitchPrimitive from '@radix-ui/react-switch';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
@@ -10,6 +10,7 @@ import {
   useCreateHobbyMutation,
   useDisableSuccessToast,
   useHobbiesQuery,
+  useStepGuard,
 } from '@/views/vacancies/hooks';
 import { hobbyService } from '@/views/vacancies/services';
 import type { HobbyEntry, StepProps } from '@/views/vacancies/types';
@@ -37,7 +38,7 @@ export default function PreferredHobbiesStep({
 }: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
   const showDisableToast = useDisableSuccessToast();
-  const { form } = useVacancyForm();
+  const { form, setForm, stepPersistRef, stepDisableRef } = useVacancyForm();
 
   const [isEnabled, setIsEnabled] = useState(
     form.preferredHobbies?.isEnabled ?? false
@@ -48,6 +49,45 @@ export default function PreferredHobbiesStep({
   const [selectedHobbies, setSelectedHobbies] = useState<HobbyEntry[]>(
     form.preferredHobbies?.hobbies ?? []
   );
+
+  useStepGuard(
+    isEnabled && !dataTakenFromCandidate && selectedHobbies.length === 0
+  );
+
+  const _hobbiesRef = useRef<() => void>(() => {});
+  useEffect(() => {
+    _hobbiesRef.current = () => {
+      setForm(prev => ({
+        ...prev,
+        preferredHobbies: {
+          isEnabled,
+          dataTakenFromCandidate,
+          hobbies: selectedHobbies,
+        },
+      }));
+    };
+  }, [isEnabled, dataTakenFromCandidate, selectedHobbies, setForm]);
+  useEffect(() => {
+    stepPersistRef.current = () => _hobbiesRef.current();
+    return () => {
+      stepPersistRef.current = null;
+    };
+  }, [stepPersistRef]);
+  useEffect(() => {
+    stepDisableRef.current = () => {
+      setForm(prev => ({
+        ...prev,
+        preferredHobbies: {
+          isEnabled: false,
+          dataTakenFromCandidate: false,
+          hobbies: [],
+        },
+      }));
+    };
+    return () => {
+      stepDisableRef.current = null;
+    };
+  }, [setForm, stepDisableRef]);
 
   // Hobby search state for the query
   const [hobbySearch, setHobbySearch] = useState('');

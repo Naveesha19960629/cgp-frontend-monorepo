@@ -2,7 +2,7 @@ import { Plus, Trash2 } from 'lucide-react';
 
 import { ArrowLeft2 } from 'iconsax-reactjs';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { type UseFormReturn } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
@@ -17,6 +17,7 @@ import {
   usePlacesCountryQuery,
   usePlacesStateQuery,
   useProfileRequirementsForm,
+  useStepGuard,
 } from '@/views/vacancies/hooks';
 import type { ProfileRequirementsFormValues } from '@/views/vacancies/hooks/use-profile-requirements-form';
 import type { StepProps } from '@/views/vacancies/types';
@@ -345,7 +346,13 @@ export default function ProfileRequirementsStep({ onNext, onBack }: StepProps) {
   const { t } = useTranslation('ats');
   const showDisableToast = useDisableSuccessToast();
 
-  const { form: contextForm, onCancel } = useVacancyForm();
+  const {
+    form: contextForm,
+    setForm,
+    onCancel,
+    stepPersistRef,
+    stepDisableRef,
+  } = useVacancyForm();
   const { form, fields, append, remove, replace } = useProfileRequirementsForm(
     contextForm.profileRequirements
   );
@@ -362,6 +369,59 @@ export default function ProfileRequirementsStep({ onNext, onBack }: StepProps) {
 
   const isEnabled = form.watch('isEnabled');
   const dataTakenFromCandidate = form.watch('dataTakenFromCandidate');
+  const genderValue = form.watch('gender');
+  const maritalStatusValue = form.watch('maritalStatus');
+  const addressEntries = form.watch('addresses');
+
+  useStepGuard(
+    isEnabled &&
+      !dataTakenFromCandidate &&
+      !genderValue?.id &&
+      !maritalStatusValue?.id &&
+      !addressEntries.some(
+        a =>
+          !!a.city.id ||
+          !!a.stateProvince.id ||
+          !!a.country.id ||
+          !!a.postalCode.trim()
+      )
+  );
+  useEffect(() => {
+    stepPersistRef.current = () => {
+      const values = form.getValues();
+      setForm(prev => ({
+        ...prev,
+        profileRequirements: {
+          isEnabled: values.isEnabled,
+          dataTakenFromCandidate: values.dataTakenFromCandidate,
+          gender: values.gender ?? { id: '', label: '' },
+          maritalStatus: values.maritalStatus ?? { id: '', label: '' },
+          addresses: values.addresses ?? [],
+        },
+      }));
+    };
+    return () => {
+      stepPersistRef.current = null;
+    };
+  }, [form, setForm, stepPersistRef]);
+  useEffect(() => {
+    stepDisableRef.current = () => {
+      setForm(prev => ({
+        ...prev,
+        profileRequirements: {
+          isEnabled: false,
+          dataTakenFromCandidate: false,
+          gender: { id: '', label: '' },
+          maritalStatus: { id: '', label: '' },
+          addresses: [],
+        },
+      }));
+    };
+    return () => {
+      stepDisableRef.current = null;
+    };
+  }, [setForm, stepDisableRef]);
+
   const isFieldsDisabled = !isEnabled || dataTakenFromCandidate;
 
   const handleConfirmDisable = () => {

@@ -4,7 +4,7 @@ import { ArrowLeft2 } from 'iconsax-reactjs';
 
 import * as SwitchPrimitive from '@radix-ui/react-switch';
 
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
@@ -14,6 +14,7 @@ import {
   useCreateSkillCareerPathMutation,
   useDisableSuccessToast,
   useSkillsQuery,
+  useStepGuard,
 } from '@/views/vacancies/hooks';
 import { careerPathService, skillService } from '@/views/vacancies/services';
 import type {
@@ -51,7 +52,7 @@ export default function PreferredSkillsStep({
 }: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
   const showDisableToast = useDisableSuccessToast();
-  const { form } = useVacancyForm();
+  const { form, setForm, stepPersistRef, stepDisableRef } = useVacancyForm();
 
   const [isEnabled, setIsEnabled] = useState(
     form.preferredSkills?.isEnabled ?? false
@@ -73,6 +74,45 @@ export default function PreferredSkillsStep({
         source: s.source,
       }))
   );
+
+  useStepGuard(
+    isEnabled && !dataTakenFromCandidate && selectedSkills.length === 0
+  );
+
+  const _skillsRef = useRef<() => void>(() => {});
+  useEffect(() => {
+    _skillsRef.current = () => {
+      setForm(prev => ({
+        ...prev,
+        preferredSkills: {
+          isEnabled,
+          dataTakenFromCandidate,
+          skills: selectedSkills,
+        },
+      }));
+    };
+  }, [isEnabled, dataTakenFromCandidate, selectedSkills, setForm]);
+  useEffect(() => {
+    stepPersistRef.current = () => _skillsRef.current();
+    return () => {
+      stepPersistRef.current = null;
+    };
+  }, [stepPersistRef]);
+  useEffect(() => {
+    stepDisableRef.current = () => {
+      setForm(prev => ({
+        ...prev,
+        preferredSkills: {
+          isEnabled: false,
+          dataTakenFromCandidate: false,
+          skills: [],
+        },
+      }));
+    };
+    return () => {
+      stepDisableRef.current = null;
+    };
+  }, [setForm, stepDisableRef]);
 
   // Skill search state for the query
   const [skillSearch, setSkillSearch] = useState('');

@@ -68,6 +68,9 @@ vi.mock('@/views/vacancies/context/vacancy-form-context', () => ({
         { isEnabled: false, dataTakenFromCandidate: false, content: [] },
       ],
     },
+    setStepGuard: vi.fn(),
+    stepPersistRef: { current: null },
+    stepDisableRef: { current: null },
   }),
 }));
 

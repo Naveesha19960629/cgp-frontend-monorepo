@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useRef, useState } from 'react';
 
 import {
   CustomizableFormStep,
@@ -230,14 +230,19 @@ interface VacancyFormContextValue {
   currentStepIndex: number;
   setCurrentStepIndex: (index: number) => void;
   completedSteps: Set<number>;
+  removeCompletedStep: (index: number) => void;
   isInitialStep: boolean;
-  onNext: (data?: Partial<VacancyForm>) => void;
+  onNext: (data?: Partial<VacancyForm>, completed?: boolean) => void;
   onBack: () => void;
   onCancel: () => void;
   onSubmit: () => void;
   OnSaveAsDraft: () => void;
   showCancelDialog: boolean;
   setShowCancelDialog: (open: boolean) => void;
+  stepGuard: boolean;
+  setStepGuard: (guard: boolean) => void;
+  stepPersistRef: React.MutableRefObject<(() => void) | null>;
+  stepDisableRef: React.MutableRefObject<(() => void) | null>;
 }
 
 const VacancyFormContext = createContext<VacancyFormContextValue | null>(null);
@@ -248,13 +253,40 @@ function VacancyFormProvider({ children }: { children: React.ReactNode }) {
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
   const [isInitialStep, setIsInitialStep] = useState(true);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [stepGuard, setStepGuard] = useState(false);
+  const stepPersistRef = useRef<(() => void) | null>(null);
+  const stepDisableRef = useRef<(() => void) | null>(null);
 
   const setCurrentStepIndex = (index: number) => {
     _setCurrentStepIndex(index);
     setForm(prev => ({ ...prev, lastActiveStep: VACANCY_STEPS[index].key }));
+    setStepGuard(false);
   };
 
-  const onNext = (data?: Partial<VacancyForm>) => {
+  const removeCompletedStep = (index: number) => {
+    setCompletedSteps(prev => {
+      const next = new Set(prev);
+      next.delete(index);
+      return next;
+    });
+  };
+
+  const isStepEnabled = (
+    data?: Partial<VacancyForm>,
+    completed?: boolean
+  ): boolean => {
+    if (completed !== undefined) return completed;
+    if (!data) return false;
+    return Object.values(data).some(val => {
+      if (Array.isArray(val))
+        return val.length > 0 && Boolean(val[0]?.isEnabled);
+      if (val !== null && typeof val === 'object' && 'isEnabled' in val)
+        return Boolean((val as { isEnabled?: unknown }).isEnabled);
+      return false;
+    });
+  };
+
+  const onNext = (data?: Partial<VacancyForm>, completed?: boolean) => {
     const stepKey =
       VACANCY_STEPS[currentStepIndex]?.key ?? `step-${currentStepIndex}`;
     console.group(`[Vacancy Wizard] Step payload — ${stepKey}`);
@@ -269,7 +301,13 @@ function VacancyFormProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     if (currentStepIndex < VACANCY_STEPS.length - 1) {
-      setCompletedSteps(prev => new Set([...prev, currentStepIndex]));
+      const shouldComplete =
+        currentStepIndex === 0 || isStepEnabled(data, completed);
+      if (shouldComplete) {
+        setCompletedSteps(prev => new Set([...prev, currentStepIndex]));
+      } else if (currentStepIndex !== 0) {
+        removeCompletedStep(currentStepIndex);
+      }
       setCurrentStepIndex(currentStepIndex + 1);
     }
   };
@@ -302,6 +340,7 @@ function VacancyFormProvider({ children }: { children: React.ReactNode }) {
         currentStepIndex,
         setCurrentStepIndex,
         completedSteps,
+        removeCompletedStep,
         isInitialStep,
         onNext,
         onBack,
@@ -310,6 +349,10 @@ function VacancyFormProvider({ children }: { children: React.ReactNode }) {
         OnSaveAsDraft,
         showCancelDialog,
         setShowCancelDialog,
+        stepGuard,
+        setStepGuard,
+        stepPersistRef,
+        stepDisableRef,
       }}
     >
       {children}

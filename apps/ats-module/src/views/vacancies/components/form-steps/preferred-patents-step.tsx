@@ -2,7 +2,7 @@ import { ChevronUp, Loader2, Plus, Trash2 } from 'lucide-react';
 
 import { ArrowLeft2, Calendar as CalenderIcon } from 'iconsax-reactjs';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { type UseFormReturn } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
@@ -14,6 +14,7 @@ import {
   useCreateIndustryMutation,
   useIndustriesQuery,
   usePreferredPatentsForm,
+  useStepGuard,
 } from '@/views/vacancies/hooks';
 import { industryService } from '@/views/vacancies/services';
 import type {
@@ -65,10 +66,12 @@ function PatentCard({
   index,
   form,
   onRemove,
+  dataTakenFromCandidate,
 }: {
   index: number;
   form: UseFormReturn<preferredPatentsSchema>;
   onRemove: () => void;
+  dataTakenFromCandidate: boolean;
 }) {
   const { t } = useTranslation('ats');
   const [hasMaxError, setHasMaxError] = useState(false);
@@ -200,7 +203,7 @@ function PatentCard({
                         triggerSearchOnFocus
                         hideClearAllButton
                         maxSelected={10}
-                        disabled={!isEnabled}
+                        disabled={!isEnabled || dataTakenFromCandidate}
                         inputProps={{ maxLength: 100 }}
                         loading={isIndustriesLoading}
                         placeholder={t(
@@ -266,7 +269,7 @@ function PatentCard({
                       options={STATUS_OPTIONS}
                       hideClearAllButton
                       keepSelectedInList
-                      disabled={!isEnabled}
+                      disabled={!isEnabled || dataTakenFromCandidate}
                       placeholder={t('preferredPatents.statusPlaceholder')}
                       loadingIndicator={
                         <p className="px-3 pb-3 text-left">
@@ -313,7 +316,9 @@ function PatentCard({
                       open={openDatePopover === 'fromDate'}
                       onOpenChange={open =>
                         setOpenDatePopover(
-                          isEnabled && open ? 'fromDate' : null
+                          isEnabled && !dataTakenFromCandidate && open
+                            ? 'fromDate'
+                            : null
                         )
                       }
                     >
@@ -322,7 +327,7 @@ function PatentCard({
                           <Button
                             type="button"
                             variant="outline"
-                            disabled={!isEnabled}
+                            disabled={!isEnabled || dataTakenFromCandidate}
                             className={cn(
                               'border-input flex h-11 w-full items-center justify-between rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
                               !field.value && 'text-slate-500',
@@ -376,6 +381,7 @@ function PatentCard({
                           }
                           captionLayout="dropdown"
                           startMonth={HUNDRED_YEARS_AGO}
+                          endMonth={new Date()}
                         />
                       </PopoverContent>
                     </Popover>
@@ -397,7 +403,11 @@ function PatentCard({
                       modal
                       open={openDatePopover === 'toDate'}
                       onOpenChange={open =>
-                        setOpenDatePopover(isEnabled && open ? 'toDate' : null)
+                        setOpenDatePopover(
+                          isEnabled && !dataTakenFromCandidate && open
+                            ? 'toDate'
+                            : null
+                        )
                       }
                     >
                       <PopoverTrigger asChild>
@@ -405,7 +415,7 @@ function PatentCard({
                           <Button
                             type="button"
                             variant="outline"
-                            disabled={!isEnabled}
+                            disabled={!isEnabled || dataTakenFromCandidate}
                             className={cn(
                               'border-input flex h-11 w-full items-center justify-between rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
                               !field.value && 'text-slate-500',
@@ -474,29 +484,88 @@ function PatentCard({
 export default function PreferredPatentsStep({ onNext, onBack }: StepProps) {
   const { t } = useTranslation('ats');
 
-  const { form: contextForm, onCancel } = useVacancyForm();
+  const {
+    form: contextForm,
+    setForm,
+    onCancel,
+    stepPersistRef,
+    stepDisableRef,
+    currentStepIndex,
+    removeCompletedStep,
+  } = useVacancyForm();
   const { form, fields, append, remove, replace } = usePreferredPatentsForm(
     contextForm.patents
   );
 
+  const isEnabled = form.watch('isEnabled');
+  const dataTakenFromCandidate = form.watch('dataTakenFromCandidate');
+  const patentEntries = form.watch('patents');
+  const shouldGuard =
+    isEnabled &&
+    !dataTakenFromCandidate &&
+    !patentEntries.some(
+      p =>
+        p.relatedIndustries.length > 0 ||
+        p.statuses.length > 0 ||
+        p.fromDate != null ||
+        p.toDate != null
+    );
+  useStepGuard(shouldGuard);
+  useEffect(() => {
+    stepPersistRef.current = () => {
+      const values = form.getValues();
+      setForm(prev => ({
+        ...prev,
+        patents: {
+          isEnabled: values.isEnabled,
+          dataTakenFromCandidate: values.dataTakenFromCandidate,
+          patents: values.patents ?? [],
+        },
+      }));
+    };
+    return () => {
+      stepPersistRef.current = null;
+    };
+  }, [form, setForm, stepPersistRef]);
+  useEffect(() => {
+    stepDisableRef.current = () => {
+      setForm(prev => ({
+        ...prev,
+        patents: {
+          isEnabled: false,
+          dataTakenFromCandidate: false,
+          patents: [],
+        },
+      }));
+    };
+    return () => {
+      stepDisableRef.current = null;
+    };
+  }, [setForm, stepDisableRef]);
+
   const [showDisableConfirm, setShowDisableConfirm] = useState(false);
-  const [showEmptyConfirm, setShowEmptyConfirm] = useState(false);
+  const [pendingEmptyAction, setPendingEmptyAction] = useState<
+    'next' | 'back' | null
+  >(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { mutateAsync } = useCreateIndustryMutation();
 
   const handleConfirmDisable = () => {
-    form.setValue('isEnabled', false);
-    form.setValue('dataTakenFromCandidate', false);
-    replace([
-      {
-        relatedIndustries: [],
-        statuses: [],
-        fromDate: undefined,
-        toDate: undefined,
-        isOpen: true,
-      },
-    ]);
+    form.reset({
+      isEnabled: false,
+      dataTakenFromCandidate: false,
+      patents: [
+        {
+          relatedIndustries: [],
+          statuses: [],
+          fromDate: undefined,
+          toDate: undefined,
+          isOpen: true,
+        },
+      ],
+    });
+    removeCompletedStep(currentStepIndex);
     setShowDisableConfirm(false);
     SuccessToast({
       title: t('preferredPatents.notifications.disable.title'),
@@ -505,6 +574,7 @@ export default function PreferredPatentsStep({ onNext, onBack }: StepProps) {
   };
 
   const handleConfirmEmptyData = () => {
+    form.setValue('isEnabled', false);
     replace([
       {
         relatedIndustries: [],
@@ -514,14 +584,27 @@ export default function PreferredPatentsStep({ onNext, onBack }: StepProps) {
         isOpen: true,
       },
     ]);
-    setShowEmptyConfirm(false);
-    onNext({
-      patents: {
-        isEnabled: false,
-        dataTakenFromCandidate: form.getValues('dataTakenFromCandidate'),
-        patents: [],
-      },
-    });
+    const action = pendingEmptyAction;
+    setPendingEmptyAction(null);
+    if (action === 'back') {
+      setForm(prev => ({
+        ...prev,
+        patents: {
+          isEnabled: false,
+          dataTakenFromCandidate: false,
+          patents: [],
+        },
+      }));
+      onBack();
+    } else {
+      onNext({
+        patents: {
+          isEnabled: false,
+          dataTakenFromCandidate: form.getValues('dataTakenFromCandidate'),
+          patents: [],
+        },
+      });
+    }
   };
 
   const handleSubmit = async (data: preferredPatentsSchema) => {
@@ -534,7 +617,7 @@ export default function PreferredPatentsStep({ onNext, onBack }: StepProps) {
           p.toDate != null
       );
       if (!hasData) {
-        setShowEmptyConfirm(true);
+        setPendingEmptyAction('next');
         return;
       }
     }
@@ -578,6 +661,23 @@ export default function PreferredPatentsStep({ onNext, onBack }: StepProps) {
     });
   };
 
+  const handleBack = () => {
+    if (shouldGuard) {
+      setPendingEmptyAction('back');
+    } else {
+      const values = form.getValues();
+      setForm(prev => ({
+        ...prev,
+        patents: {
+          isEnabled: values.isEnabled,
+          dataTakenFromCandidate: values.dataTakenFromCandidate,
+          patents: values.patents ?? [],
+        },
+      }));
+      onBack();
+    }
+  };
+
   const handleCancel = () => {
     onCancel();
   };
@@ -609,7 +709,7 @@ export default function PreferredPatentsStep({ onNext, onBack }: StepProps) {
             <div className="flex items-center gap-2">
               <button
                 type="button"
-                onClick={onBack}
+                onClick={handleBack}
                 className="text-slate-700 transition-colors hover:text-slate-900"
                 aria-label={t('preferredPatents.back')}
               >
@@ -666,7 +766,23 @@ export default function PreferredPatentsStep({ onNext, onBack }: StepProps) {
                     id="data-from-candidate"
                     checked={field.value}
                     disabled={!form.watch('isEnabled')}
-                    onCheckedChange={field.onChange}
+                    onCheckedChange={checked => {
+                      field.onChange(checked);
+                      if (checked) {
+                        const values = form.getValues();
+                        form.reset({
+                          isEnabled: values.isEnabled,
+                          dataTakenFromCandidate: true,
+                          patents: values.patents.map(p => ({
+                            ...p,
+                            relatedIndustries: [],
+                            statuses: [],
+                            fromDate: undefined,
+                            toDate: undefined,
+                          })),
+                        });
+                      }
+                    }}
                   />
                   <label
                     htmlFor="data-from-candidate"
@@ -687,6 +803,7 @@ export default function PreferredPatentsStep({ onNext, onBack }: StepProps) {
                 index={index}
                 form={form}
                 onRemove={() => remove(index)}
+                dataTakenFromCandidate={dataTakenFromCandidate}
               />
             ))}
           </div>
@@ -740,8 +857,8 @@ export default function PreferredPatentsStep({ onNext, onBack }: StepProps) {
       />
 
       <StepDisableDialog
-        open={showEmptyConfirm}
-        onOpenChange={setShowEmptyConfirm}
+        open={pendingEmptyAction !== null}
+        onOpenChange={open => !open && setPendingEmptyAction(null)}
         onConfirm={handleConfirmEmptyData}
         title={t('preferredPatents.emptyDisableDialog.title')}
         description={t('preferredPatents.emptyDisableDialog.message')}

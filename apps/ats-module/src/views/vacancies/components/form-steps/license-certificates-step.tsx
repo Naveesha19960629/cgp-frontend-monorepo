@@ -4,7 +4,7 @@ import { ArrowLeft2, Calendar as CalendarIcon } from 'iconsax-reactjs';
 
 import * as SwitchPrimitive from '@radix-ui/react-switch';
 
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
@@ -17,6 +17,7 @@ import {
   useLicenseCertificatesForm,
   useLicenseCertificatesSearch,
   useOrganizationsQuery,
+  useStepGuard,
   useTertiaryAwardingBodyLocationsSearch,
 } from '@/views/vacancies/hooks';
 import type { LicenseCertType, StepProps } from '@/views/vacancies/types';
@@ -58,13 +59,20 @@ export default function LicenseCertificatesStep({
   onBack,
 }: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
-  const { form: vacancyForm } = useVacancyForm();
+  const {
+    form: vacancyForm,
+    setForm,
+    stepPersistRef,
+    stepDisableRef,
+  } = useVacancyForm();
 
   const { control, watch, handleSubmit, setValue, getValues } =
     useLicenseCertificatesForm(vacancyForm.licenseCertificates);
 
   const isEnabled = watch('isEnabled');
   const dataTakenFromCandidate = watch('dataTakenFromCandidate');
+  const entryValue = watch('entry');
+
   const fieldsDisabled = !isEnabled || dataTakenFromCandidate;
 
   // ── Disable confirmation ─────────────────────────────────────────────────
@@ -92,8 +100,34 @@ export default function LicenseCertificatesStep({
     );
   };
 
+  useStepGuard(isEnabled && !dataTakenFromCandidate && !checkHasFilledData());
+  useEffect(() => {
+    stepPersistRef.current = () => {
+      setForm(prev => ({
+        ...prev,
+        licenseCertificates: toLicenseCertificatesPayload(getValues()),
+      }));
+    };
+    return () => {
+      stepPersistRef.current = null;
+    };
+  }, [getValues, setForm, stepPersistRef]);
+  useEffect(() => {
+    stepDisableRef.current = () => {
+      setForm(prev => ({
+        ...prev,
+        licenseCertificates: [
+          { isEnabled: false, dataTakenFromCandidate: false, content: [] },
+        ],
+      }));
+    };
+    return () => {
+      stepDisableRef.current = null;
+    };
+  }, [setForm, stepDisableRef]);
+
   // ── Add License/Cert dialog state ────────────────────────────────────────
-  const licenseCertValue = watch('entry.nameOfLicenseCert');
+  const licenseCertValue = entryValue.nameOfLicenseCert;
   const addLicenseCertMutation = useAddLicenseCertificateMutation();
   const pendingLicenseCertsDataRef = useRef<
     Map<string, { displayValue: string; certType: LicenseCertType }>
@@ -111,7 +145,7 @@ export default function LicenseCertificatesStep({
     'issueDate' | 'expirationDate' | null
   >(null);
 
-  const issueDateValue = watch('entry.issueDate');
+  const issueDateValue = entryValue.issueDate;
 
   // ── Max-selection tracking ───────────────────────────────────────────────
   const [maxReachedFields, setMaxReachedFields] = useState<Set<string>>(

@@ -4,7 +4,7 @@ import { ArrowLeft2 } from 'iconsax-reactjs';
 
 import * as SwitchPrimitive from '@radix-ui/react-switch';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { RefObject } from 'react';
 import { Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -27,6 +27,7 @@ import {
   useLevelOfQualificationsSearch,
   useQualificationsSearch,
   useSpecializationsSearch,
+  useStepGuard,
   useStudyModesSearch,
   useStudyPatternsSearch,
   useTertiaryAwardingBodiesSearch,
@@ -64,13 +65,19 @@ export default function TertiaryEducationStep({
   onBack,
 }: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
-  const { form: vacancyForm } = useVacancyForm();
+  const {
+    form: vacancyForm,
+    setForm,
+    stepPersistRef,
+    stepDisableRef,
+  } = useVacancyForm();
 
   const { control, watch, handleSubmit, setValue, getValues } =
     useTertiaryEducationForm(vacancyForm.tertiaryEducation);
 
   const isEnabled = watch('isEnabled');
   const dataTakenFromCandidate = watch('dataTakenFromCandidate');
+  const entryValue = watch('entry');
 
   // ── Form field helpers ───────────────────────────────────────────────────
   const fieldsDisabled = !isEnabled || dataTakenFromCandidate;
@@ -109,6 +116,32 @@ export default function TertiaryEducationStep({
     );
   };
 
+  useStepGuard(isEnabled && !dataTakenFromCandidate && !checkHasFilledData());
+  useEffect(() => {
+    stepPersistRef.current = () => {
+      setForm(prev => ({
+        ...prev,
+        tertiaryEducation: toTertiaryEducationPayload(getValues()),
+      }));
+    };
+    return () => {
+      stepPersistRef.current = null;
+    };
+  }, [getValues, setForm, stepPersistRef]);
+  useEffect(() => {
+    stepDisableRef.current = () => {
+      setForm(prev => ({
+        ...prev,
+        tertiaryEducation: [
+          { isEnabled: false, dataTakenFromCandidate: false, content: [] },
+        ],
+      }));
+    };
+    return () => {
+      stepDisableRef.current = null;
+    };
+  }, [setForm, stepDisableRef]);
+
   // ── Add-Now mutations ────────────────────────────────────────────────────
   const addQualificationMutation = useAddQualificationMutation();
   const addLevelOfQualificationMutation = useAddLevelOfQualificationMutation();
@@ -118,7 +151,7 @@ export default function TertiaryEducationStep({
   const addFacultyMutation = useAddFacultyMutation();
 
   // ── Awarding body dialog state ───────────────────────────────────────────
-  const awardingBodyValue = watch('entry.tertiaryAwardingBody');
+  const awardingBodyValue = entryValue.tertiaryAwardingBody;
   const addTertiaryAwardingBodyMutation = useAddTertiaryAwardingBodyMutation();
   const pendingAwardingBodiesDataRef = useRef<
     Map<string, { displayValue: string; locationId?: string; url?: string }>

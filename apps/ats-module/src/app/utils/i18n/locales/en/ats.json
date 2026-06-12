@@ -858,5 +858,13 @@
       "cancel": "Cancel",
       "disable": "Disable"
     }
+  },
+  "stepNavigation": {
+    "disableDialog": {
+      "title": "Are you sure?",
+      "description": "You’ve enabled this section but haven’t filled any fields. This section will be disabled for this vacancy and no data will be collected from candidates.",
+      "confirmButton": "Disable",
+      "cancelButton": "Cancel"
+    }
   }
 }

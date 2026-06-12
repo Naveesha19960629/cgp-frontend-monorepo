@@ -2,7 +2,7 @@ import { ArrowLeft2 } from 'iconsax-reactjs';
 
 import * as SwitchPrimitive from '@radix-ui/react-switch';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
@@ -10,6 +10,7 @@ import {
   useCreateIndustryMutation,
   useDisableSuccessToast,
   useIndustriesQuery,
+  useStepGuard,
 } from '@/views/vacancies/hooks';
 import { industryService } from '@/views/vacancies/services';
 import type { IndustryEntry, StepProps } from '@/views/vacancies/types';
@@ -37,7 +38,7 @@ export default function PreferredIndustryStep({
 }: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
   const showDisableToast = useDisableSuccessToast();
-  const { form } = useVacancyForm();
+  const { form, setForm, stepPersistRef, stepDisableRef } = useVacancyForm();
 
   const [isEnabled, setIsEnabled] = useState(
     form.preferredIndustries?.isEnabled ?? false
@@ -48,6 +49,45 @@ export default function PreferredIndustryStep({
   const [selectedIndustries, setSelectedIndustries] = useState<IndustryEntry[]>(
     form.preferredIndustries?.industries ?? []
   );
+
+  useStepGuard(
+    isEnabled && !dataTakenFromCandidate && selectedIndustries.length === 0
+  );
+
+  const _industriesRef = useRef<() => void>(() => {});
+  useEffect(() => {
+    _industriesRef.current = () => {
+      setForm(prev => ({
+        ...prev,
+        preferredIndustries: {
+          isEnabled,
+          dataTakenFromCandidate,
+          industries: selectedIndustries,
+        },
+      }));
+    };
+  }, [isEnabled, dataTakenFromCandidate, selectedIndustries, setForm]);
+  useEffect(() => {
+    stepPersistRef.current = () => _industriesRef.current();
+    return () => {
+      stepPersistRef.current = null;
+    };
+  }, [stepPersistRef]);
+  useEffect(() => {
+    stepDisableRef.current = () => {
+      setForm(prev => ({
+        ...prev,
+        preferredIndustries: {
+          isEnabled: false,
+          dataTakenFromCandidate: false,
+          industries: [],
+        },
+      }));
+    };
+    return () => {
+      stepDisableRef.current = null;
+    };
+  }, [setForm, stepDisableRef]);
 
   const [industrySearch, setIndustrySearch] = useState('');
   const [hasMaxError, setHasMaxError] = useState(false);

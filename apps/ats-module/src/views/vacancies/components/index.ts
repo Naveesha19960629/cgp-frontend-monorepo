@@ -30,4 +30,5 @@ export { default as VacancyStatusBadge } from '@/views/vacancies/components/vaca
 export { default as VacancyActiveToggle } from '@/views/vacancies/components/vacancy-active-toggle';
 export { default as VacancyTableEmptyState } from '@/views/vacancies/components/vacancy-table-empty-state';
 export { default as VacancySearchEmptyState } from '@/views/vacancies/components/vacancy-search-empty-state';
+export { default as VacancyLoadingState } from '@/views/vacancies/components/vacancy-loading-state';
 export * from '@/views/vacancies/components/dialogs';

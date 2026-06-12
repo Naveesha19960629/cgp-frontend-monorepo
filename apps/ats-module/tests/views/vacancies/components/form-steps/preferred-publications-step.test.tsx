@@ -15,7 +15,13 @@ vi.mock('react-i18next', () => ({
 
 const onCancel = vi.hoisted(() => vi.fn());
 vi.mock('@/views/vacancies/context/vacancy-form-context', () => ({
-  useVacancyForm: () => ({ form: {}, onCancel }),
+  useVacancyForm: () => ({
+    form: {},
+    onCancel,
+    setForm: vi.fn(),
+    stepPersistRef: { current: null },
+    stepDisableRef: { current: null },
+  }),
 }));
 
 vi.mock('@cgp/ui-kit/components/custom-toast', () => ({
@@ -219,6 +225,10 @@ vi.mock('lucide-react', () => ({
 vi.mock('iconsax-reactjs', () => ({
   Calendar: () => <span data-testid="calendar-icon" />,
   ArrowLeft2: () => <span data-testid="arrow-left-icon" />,
+}));
+
+vi.mock('@/views/vacancies/hooks', () => ({
+  useStepGuard: vi.fn(),
 }));
 
 vi.mock('@/views/vacancies/utils', () => ({

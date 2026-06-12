@@ -4,11 +4,12 @@ import { ArrowLeft2, Calendar as CalendarIcon } from 'iconsax-reactjs';
 
 import * as SwitchPrimitive from '@radix-ui/react-switch';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import MessageBox from '@/components/message-box';
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
+import { useStepGuard } from '@/views/vacancies/hooks';
 import type { StepProps } from '@/views/vacancies/types';
 import { formatDate } from '@/views/vacancies/utils';
 
@@ -312,6 +313,42 @@ export default function PreferredPublicationsStep({
         ]
   );
 
+  const { setForm, stepPersistRef, stepDisableRef } = useVacancyForm();
+  const _publicationsRef = useRef<() => void>(() => {});
+  useEffect(() => {
+    _publicationsRef.current = () => {
+      setForm(prev => ({
+        ...prev,
+        preferredPublications: {
+          isEnabled,
+          dataTakenFromCandidate,
+          publications,
+        },
+      }));
+    };
+  }, [isEnabled, dataTakenFromCandidate, publications, setForm]);
+  useEffect(() => {
+    stepPersistRef.current = () => _publicationsRef.current();
+    return () => {
+      stepPersistRef.current = null;
+    };
+  }, [stepPersistRef]);
+  useEffect(() => {
+    stepDisableRef.current = () => {
+      setForm(prev => ({
+        ...prev,
+        preferredPublications: {
+          isEnabled: false,
+          dataTakenFromCandidate: false,
+          publications: [],
+        },
+      }));
+    };
+    return () => {
+      stepDisableRef.current = null;
+    };
+  }, [setForm, stepDisableRef]);
+
   const handleNext = () => {
     onNext({
       preferredPublications: {
@@ -321,6 +358,12 @@ export default function PreferredPublicationsStep({
       },
     });
   };
+
+  useStepGuard(
+    isEnabled &&
+      !dataTakenFromCandidate &&
+      !publications.some(p => p.acceptedPublisher.trim().length > 0)
+  );
 
   const fieldsDisabled = !isEnabled || dataTakenFromCandidate;
 

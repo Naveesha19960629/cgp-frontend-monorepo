@@ -4,7 +4,7 @@ import { ArrowLeft2, Calendar as CalendarIcon } from 'iconsax-reactjs';
 
 import * as SwitchPrimitive from '@radix-ui/react-switch';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import MessageBox from '@/components/message-box';
@@ -13,6 +13,7 @@ import {
   useCausesQuery,
   useLocationsQuery,
   useOrganizationsQuery,
+  useStepGuard,
 } from '@/views/vacancies/hooks';
 import type { StepProps } from '@/views/vacancies/types';
 import { formatDate } from '@/views/vacancies/utils';
@@ -483,6 +484,48 @@ export default function PreferredVolunteeringStep({
       },
     });
   };
+
+  const { setForm, stepPersistRef, stepDisableRef } = useVacancyForm();
+  const _volunteeringRef = useRef<() => void>(() => {});
+  useEffect(() => {
+    _volunteeringRef.current = () => {
+      setForm(prev => ({
+        ...prev,
+        preferredVolunteering: {
+          isEnabled,
+          dataTakenFromCandidate,
+          volunteering: entries,
+        },
+      }));
+    };
+  }, [isEnabled, dataTakenFromCandidate, entries, setForm]);
+  useEffect(() => {
+    stepPersistRef.current = () => _volunteeringRef.current();
+    return () => {
+      stepPersistRef.current = null;
+    };
+  }, [stepPersistRef]);
+  useEffect(() => {
+    stepDisableRef.current = () => {
+      setForm(prev => ({
+        ...prev,
+        preferredVolunteering: {
+          isEnabled: false,
+          dataTakenFromCandidate: false,
+          volunteering: [],
+        },
+      }));
+    };
+    return () => {
+      stepDisableRef.current = null;
+    };
+  }, [setForm, stepDisableRef]);
+
+  useStepGuard(
+    isEnabled &&
+      !dataTakenFromCandidate &&
+      !entries.some(e => e.organizationName.length > 0 || e.cause.length > 0)
+  );
 
   const fieldsDisabled = !isEnabled || dataTakenFromCandidate;
 

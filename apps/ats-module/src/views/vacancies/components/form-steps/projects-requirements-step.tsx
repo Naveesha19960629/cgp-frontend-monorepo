@@ -4,7 +4,7 @@ import { ArrowLeft2, Calendar as CalendarIcon } from 'iconsax-reactjs';
 
 import * as SwitchPrimitive from '@radix-ui/react-switch';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import MessageBox from '@/components/message-box';
@@ -14,6 +14,7 @@ import {
   useIndustriesQuery,
   useLocationsQuery,
   useOrganizationsQuery,
+  useStepGuard,
 } from '@/views/vacancies/hooks';
 import type { StepProps } from '@/views/vacancies/types';
 import { formatDate } from '@/views/vacancies/utils';
@@ -487,6 +488,51 @@ export default function ProjectsRequirementsStep({
             organizations: [],
           },
         ]
+  );
+
+  const { setForm, stepPersistRef, stepDisableRef } = useVacancyForm();
+  const _projectsRef = useRef<() => void>(() => {});
+  useEffect(() => {
+    _projectsRef.current = () => {
+      setForm(prev => ({
+        ...prev,
+        projectsRequirements: { isEnabled, dataTakenFromCandidate, projects },
+      }));
+    };
+  }, [isEnabled, dataTakenFromCandidate, projects, setForm]);
+  useEffect(() => {
+    stepPersistRef.current = () => _projectsRef.current();
+    return () => {
+      stepPersistRef.current = null;
+    };
+  }, [stepPersistRef]);
+  useEffect(() => {
+    stepDisableRef.current = () => {
+      setForm(prev => ({
+        ...prev,
+        projectsRequirements: {
+          isEnabled: false,
+          dataTakenFromCandidate: false,
+          projects: [],
+        },
+      }));
+    };
+    return () => {
+      stepDisableRef.current = null;
+    };
+  }, [setForm, stepDisableRef]);
+
+  useStepGuard(
+    isEnabled &&
+      !dataTakenFromCandidate &&
+      !projects.some(
+        p =>
+          p.relatedIndustry.length > 0 ||
+          p.organizations.length > 0 ||
+          p.organizationLocations.length > 0 ||
+          p.startDate != null ||
+          p.endDate != null
+      )
   );
 
   // Industry search (searchable, backed by industries API)

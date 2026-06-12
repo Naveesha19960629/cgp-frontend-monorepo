@@ -4,7 +4,7 @@ import { ArrowLeft2, Calendar as CalendarIcon } from 'iconsax-reactjs';
 
 import * as SwitchPrimitive from '@radix-ui/react-switch';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import MessageBox from '@/components/message-box';
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
@@ -12,6 +12,7 @@ import {
   useLocationsQuery,
   useOrganizationsQuery,
   useSportsQuery,
+  useStepGuard,
 } from '@/views/vacancies/hooks';
 import type { StepProps } from '@/views/vacancies/types';
 import { formatDate } from '@/views/vacancies/utils';
@@ -532,6 +533,38 @@ export default function PreferredSportsStep({
       : [createEmptyEntry('1')]
   );
 
+  const { setForm, stepPersistRef, stepDisableRef } = useVacancyForm();
+  const _sportsRef = useRef<() => void>(() => {});
+  useEffect(() => {
+    _sportsRef.current = () => {
+      setForm(prev => ({
+        ...prev,
+        preferredSports: { isEnabled, dataTakenFromCandidate, sports: entries },
+      }));
+    };
+  }, [isEnabled, dataTakenFromCandidate, entries, setForm]);
+  useEffect(() => {
+    stepPersistRef.current = () => _sportsRef.current();
+    return () => {
+      stepPersistRef.current = null;
+    };
+  }, [stepPersistRef]);
+  useEffect(() => {
+    stepDisableRef.current = () => {
+      setForm(prev => ({
+        ...prev,
+        preferredSports: {
+          isEnabled: false,
+          dataTakenFromCandidate: false,
+          sports: [],
+        },
+      }));
+    };
+    return () => {
+      stepDisableRef.current = null;
+    };
+  }, [setForm, stepDisableRef]);
+
   const handleNext = () => {
     onNext({
       preferredSports: {
@@ -541,6 +574,12 @@ export default function PreferredSportsStep({
       },
     });
   };
+
+  useStepGuard(
+    isEnabled &&
+      !dataTakenFromCandidate &&
+      !entries.some(e => e.sport.length > 0)
+  );
 
   const fieldsDisabled = !isEnabled || dataTakenFromCandidate;
 

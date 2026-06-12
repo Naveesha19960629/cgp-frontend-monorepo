@@ -2,7 +2,7 @@ import { ArrowLeft2 } from 'iconsax-reactjs';
 
 import * as SwitchPrimitive from '@radix-ui/react-switch';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
@@ -10,6 +10,7 @@ import {
   useCreateLanguageMutation,
   useDisableSuccessToast,
   useLanguagesQuery,
+  useStepGuard,
 } from '@/views/vacancies/hooks';
 import { languageService } from '@/views/vacancies/services';
 import type { LanguageEntry, StepProps } from '@/views/vacancies/types';
@@ -37,7 +38,7 @@ export default function PreferredLanguagesStep({
 }: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
   const showDisableToast = useDisableSuccessToast();
-  const { form } = useVacancyForm();
+  const { form, setForm, stepPersistRef, stepDisableRef } = useVacancyForm();
 
   const [isEnabled, setIsEnabled] = useState(
     form.preferredLanguages?.isEnabled ?? false
@@ -48,6 +49,45 @@ export default function PreferredLanguagesStep({
   const [selectedLanguages, setSelectedLanguages] = useState<LanguageEntry[]>(
     form.preferredLanguages?.languages ?? []
   );
+
+  useStepGuard(
+    isEnabled && !dataTakenFromCandidate && selectedLanguages.length === 0
+  );
+
+  const _languagesRef = useRef<() => void>(() => {});
+  useEffect(() => {
+    _languagesRef.current = () => {
+      setForm(prev => ({
+        ...prev,
+        preferredLanguages: {
+          isEnabled,
+          dataTakenFromCandidate,
+          languages: selectedLanguages,
+        },
+      }));
+    };
+  }, [isEnabled, dataTakenFromCandidate, selectedLanguages, setForm]);
+  useEffect(() => {
+    stepPersistRef.current = () => _languagesRef.current();
+    return () => {
+      stepPersistRef.current = null;
+    };
+  }, [stepPersistRef]);
+  useEffect(() => {
+    stepDisableRef.current = () => {
+      setForm(prev => ({
+        ...prev,
+        preferredLanguages: {
+          isEnabled: false,
+          dataTakenFromCandidate: false,
+          languages: [],
+        },
+      }));
+    };
+    return () => {
+      stepDisableRef.current = null;
+    };
+  }, [setForm, stepDisableRef]);
 
   // Language search state for the query
   const [langSearch, setLangSearch] = useState('');
