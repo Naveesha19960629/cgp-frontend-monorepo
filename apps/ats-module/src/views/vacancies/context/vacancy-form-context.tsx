@@ -153,6 +153,31 @@ const DEFAULT_FORM: VacancyForm = {
   tertiaryEducation: [
     { isEnabled: false, dataTakenFromCandidate: false, content: [] },
   ],
+  projectsRequirements: {
+    isEnabled: false,
+    dataTakenFromCandidate: false,
+    projects: [],
+  },
+  preferredPublications: {
+    isEnabled: false,
+    dataTakenFromCandidate: false,
+    publications: [],
+  },
+  preferredClubSocieties: {
+    isEnabled: false,
+    dataTakenFromCandidate: false,
+    clubSocieties: [],
+  },
+  preferredSports: {
+    isEnabled: false,
+    dataTakenFromCandidate: false,
+    sports: [],
+  },
+  preferredVolunteering: {
+    isEnabled: false,
+    dataTakenFromCandidate: false,
+    volunteering: [],
+  },
   patents: {
     isEnabled: false,
     dataTakenFromCandidate: false,
@@ -190,6 +215,11 @@ const DEFAULT_FORM: VacancyForm = {
     isEnabled: false,
     dataTakenFromCandidate: false,
     industries: [],
+  },
+  customizableForm: {
+    isEnabled: false,
+    sectionTitle: '',
+    forms: [],
   },
   schedule: undefined,
 };

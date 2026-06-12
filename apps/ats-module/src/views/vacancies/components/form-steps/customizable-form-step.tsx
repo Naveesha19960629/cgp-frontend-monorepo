@@ -5,8 +5,15 @@ import { ArrowDown2, ArrowLeft2, Simcard2, Trash } from 'iconsax-reactjs';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import { useStepGuard } from '@/views/vacancies/hooks';
-import type { StepProps } from '@/views/vacancies/types';
+import { useDisableSuccessToast } from '@/views/vacancies/hooks';
+import type {
+  CustomizableFormData,
+  CustomizableFormFormCard,
+  StepProps,
+  VacancyForm,
+} from '@/views/vacancies/types';
 
 import { CharacterCount } from '@cgp/ui-kit/components/character-count';
 import { ErrorToast } from '@cgp/ui-kit/components/custom-toast';
@@ -19,6 +26,9 @@ import {
   SelectValue,
 } from '@cgp/ui-kit/components/ui/select';
 import { Switch } from '@cgp/ui-kit/components/ui/switch';
+import { removeEmoji } from '@cgp/ui-kit/lib/utils';
+
+import DisableDialog from './disable-dialog';
 
 // ── UI-only state types (not API types) ──────────────────────────────────────
 
@@ -64,7 +74,7 @@ const createQuestion = (id: number): Question => ({
   type: '',
   required: false,
   options: [{ id: 1, value: '' }],
-  from: 1,
+  from: 0,
   to: 2,
   startLabel: '',
   endLabel: '',
@@ -78,6 +88,34 @@ const createForm = (id: number): FormCard => ({
   nextQuestionId: 1,
   nextOptionId: 2,
 });
+
+const toFormCard = (savedForm: CustomizableFormFormCard): FormCard => {
+  const maxQuestionId = Math.max(...savedForm.questions.map(q => q.id), 0);
+  const maxOptionId = Math.max(
+    ...savedForm.questions.flatMap(q => q.options.map(o => o.id)),
+    0
+  );
+
+  return {
+    id: savedForm.id,
+    title: savedForm.title,
+    isOpen: true,
+    questions: savedForm.questions,
+    nextQuestionId: maxQuestionId + 1,
+    nextOptionId: maxOptionId + 1,
+  };
+};
+
+const getInitialForms = (savedData?: CustomizableFormData): FormCard[] => {
+  if (savedData?.forms?.length) {
+    return savedData.forms.map(toFormCard);
+  }
+
+  return [createForm(1)];
+};
+
+const getNextFormId = (currentForms: FormCard[]): number =>
+  Math.max(...currentForms.map(f => f.id), 0) + 1;
 
 // ── Scale range options ────────────────────────────────────────────────────────
 const SCALE_RANGE_START = [0, 1];
@@ -176,7 +214,7 @@ function QuestionCard({
             maxLength={QUESTION_MAX}
             value={question.text}
             placeholder={t('customizableForm.question.questionPlaceholder')}
-            onChange={e => set({ text: e.target.value })}
+            onChange={e => set({ text: removeEmoji(e.target.value) })}
             className="h-11 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:ring-0 focus:outline-none"
           />
         </div>
@@ -240,7 +278,9 @@ function QuestionCard({
                     type="text"
                     maxLength={OPTION_MAX}
                     value={opt.value}
-                    onChange={e => updateOption(opt.id, e.target.value)}
+                    onChange={e =>
+                      updateOption(opt.id, removeEmoji(e.target.value))
+                    }
                     placeholder={t('customizableForm.question.enterOption')}
                     className="h-11 flex-1 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:ring-0 focus:outline-none"
                   />
@@ -292,7 +332,9 @@ function QuestionCard({
                     type="text"
                     maxLength={OPTION_MAX}
                     value={opt.value}
-                    onChange={e => updateOption(opt.id, e.target.value)}
+                    onChange={e =>
+                      updateOption(opt.id, removeEmoji(e.target.value))
+                    }
                     placeholder={t('customizableForm.question.enterOption')}
                     className="h-11 flex-1 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:ring-0 focus:outline-none"
                   />
@@ -344,7 +386,9 @@ function QuestionCard({
                     type="text"
                     maxLength={OPTION_MAX}
                     value={opt.value}
-                    onChange={e => updateOption(opt.id, e.target.value)}
+                    onChange={e =>
+                      updateOption(opt.id, removeEmoji(e.target.value))
+                    }
                     placeholder={t('customizableForm.question.enterOption')}
                     className="h-11 flex-1 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:ring-0 focus:outline-none"
                   />
@@ -397,7 +441,7 @@ function QuestionCard({
                     <SelectContent>
                       {SCALE_RANGE_START.map(n => (
                         <SelectItem key={n} value={String(n)}>
-                          {n}
+                          {String(n)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -418,7 +462,7 @@ function QuestionCard({
                     <SelectContent>
                       {SCALE_RANGE_END.map(n => (
                         <SelectItem key={n} value={String(n)}>
-                          {n}
+                          {String(n)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -446,7 +490,7 @@ function QuestionCard({
                 type="text"
                 maxLength={START_END_MAX}
                 value={question.startLabel}
-                onChange={e => set({ startLabel: e.target.value })}
+                onChange={e => set({ startLabel: removeEmoji(e.target.value) })}
                 className="h-11 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:ring-0 focus:outline-none"
               />
             </div>
@@ -465,7 +509,7 @@ function QuestionCard({
                 type="text"
                 maxLength={START_END_MAX}
                 value={question.endLabel}
-                onChange={e => set({ endLabel: e.target.value })}
+                onChange={e => set({ endLabel: removeEmoji(e.target.value) })}
                 className="h-11 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:ring-0 focus:outline-none"
               />
             </div>
@@ -508,10 +552,8 @@ function QuestionCard({
 }
 
 // ── Main step ────────────────────────────────────────────────────────────────
-
 export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
   const { t } = useTranslation('ats');
-  const [isEnabled, setIsEnabled] = useState(true);
 
   // TODO: Persist state on tab navigation — not yet wired because VacancyForm
   // has no `customizableForm` field. To activate:
@@ -537,9 +579,28 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
   //   };
   // }, [stepPersistRef]);
 
-  const [sectionTitle, setSectionTitle] = useState('');
-  const [forms, setForms] = useState<FormCard[]>([createForm(1)]);
-  const [nextFormId, setNextFormId] = useState(2);
+  const showDisableToast = useDisableSuccessToast();
+  const { form, onCancel } = useVacancyForm();
+  const initialCustomizableForm = form.customizableForm;
+  const initialForms = getInitialForms(initialCustomizableForm);
+
+  const [isEnabled, setIsEnabled] = useState(
+    initialCustomizableForm?.isEnabled ?? false
+  );
+  const [sectionTitle, setSectionTitle] = useState(
+    initialCustomizableForm?.sectionTitle ?? ''
+  );
+  const [forms, setForms] = useState<FormCard[]>(initialForms);
+  const [nextFormId, setNextFormId] = useState(getNextFormId(initialForms));
+  const [showDisableConfirm, setShowDisableConfirm] = useState(false);
+  const [showValidationModal, setShowValidationModal] = useState(false);
+  const [pendingQuestionDelete, setPendingQuestionDelete] = useState<{
+    formId: number;
+    questionId: number;
+  } | null>(null);
+  const [pendingFormDelete, setPendingFormDelete] = useState<number | null>(
+    null
+  );
 
   useStepGuard(
     isEnabled &&
@@ -550,6 +611,20 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, []);
+
+  const hasAtLeastOneQuestion = forms.some(form => form.questions.length > 0);
+  const hasFormData =
+    sectionTitle.trim().length > 0 ||
+    forms.some(
+      form =>
+        form.title.trim().length > 0 ||
+        form.questions.length > 0 ||
+        form.questions.some(
+          q =>
+            q.text.trim().length > 0 ||
+            q.options.some(o => o.value.trim().length > 0)
+        )
+    );
 
   const isSectionTitleError = sectionTitle.length > 200;
 
@@ -649,6 +724,15 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
   };
 
   const duplicateQuestion = (formId: number, questionId: number) => {
+    const form = forms.find(f => f.id === formId);
+    if (form && form.questions.length >= MAX_QUESTIONS) {
+      ErrorToast({
+        title: t('common.errorTitle'),
+        description: t('customizableForm.errors.maxQuestionsExceeded'),
+      });
+      return;
+    }
+
     setForms(prev =>
       prev.map(f => {
         if (f.id !== formId) return f;
@@ -675,6 +759,51 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
     );
   };
 
+  const handleToggleEnabled = (enabled: boolean) => {
+    if (!enabled) {
+      if (hasFormData) {
+        setShowDisableConfirm(true);
+      } else {
+        setIsEnabled(false);
+      }
+      return;
+    }
+
+    setIsEnabled(true);
+  };
+
+  const handleNext = () => {
+    if (isEnabled) {
+      const missingSectionTitle = sectionTitle.trim().length === 0;
+      const missingRequiredFormData =
+        forms.length === 0 || !hasAtLeastOneQuestion;
+
+      if (missingSectionTitle || missingRequiredFormData) {
+        setShowValidationModal(true);
+        return;
+      }
+    }
+
+    const formsPayload = isEnabled
+      ? forms.map(currentForm => ({
+          id: currentForm.id,
+          title: currentForm.title,
+          questions: currentForm.questions,
+        }))
+      : [];
+
+    // Build the payload for persistence
+    const payload: Partial<VacancyForm> = {
+      customizableForm: {
+        isEnabled,
+        sectionTitle: isEnabled ? sectionTitle : '',
+        forms: formsPayload,
+      },
+    };
+
+    onNext(payload);
+  };
+
   // ── Render ──────────────────────────────────────────────────────────────
 
   return (
@@ -695,18 +824,26 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
           </h2>
         </div>
 
-        <Switch checked={isEnabled} onCheckedChange={setIsEnabled} size="lg" />
+        <Switch
+          checked={isEnabled}
+          onCheckedChange={handleToggleEnabled}
+          size="lg"
+        />
       </div>
 
       {/* Content area */}
-      <div className="px-7 pb-6">
+      <div
+        className={
+          isEnabled ? 'px-7 pb-6' : 'pointer-events-none px-7 pb-6 opacity-60'
+        }
+      >
         {/* Section Title */}
         <div className="mt-2">
           <input
             type="text"
             placeholder={t('customizableForm.sectionTitlePlaceholder')}
             value={sectionTitle}
-            onChange={e => setSectionTitle(e.target.value)}
+            onChange={e => setSectionTitle(removeEmoji(e.target.value))}
             className="w-full border-0 border-b border-slate-200 bg-transparent px-0 pb-3 text-[24px] leading-8 font-bold tracking-[-0.144px] text-slate-900 placeholder:text-slate-300 focus:border-slate-300 focus:ring-0 focus:outline-none"
           />
           {isSectionTitleError && (
@@ -746,7 +883,7 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
                       type="button"
                       aria-label="Delete form"
                       className="transition-colors hover:text-red-600"
-                      onClick={() => removeForm(form.id)}
+                      onClick={() => setPendingFormDelete(form.id)}
                     >
                       <Trash size={24} />
                     </button>
@@ -774,7 +911,9 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
                         type="text"
                         placeholder={t('customizableForm.formTitlePlaceholder')}
                         value={form.title}
-                        onChange={e => updateFormTitle(form.id, e.target.value)}
+                        onChange={e =>
+                          updateFormTitle(form.id, removeEmoji(e.target.value))
+                        }
                         className="w-full border-0 border-b border-slate-200 bg-transparent px-0 pb-3 text-[24px] leading-8 font-bold tracking-[-0.144px] text-slate-900 placeholder:text-slate-300 focus:border-slate-300 focus:ring-0 focus:outline-none"
                       />
                       {isFormTitleError && (
@@ -797,7 +936,12 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
                         onDuplicate={() =>
                           duplicateQuestion(form.id, question.id)
                         }
-                        onRemove={() => removeQuestion(form.id, question.id)}
+                        onRemove={() =>
+                          setPendingQuestionDelete({
+                            formId: form.id,
+                            questionId: question.id,
+                          })
+                        }
                         onNextOptionId={n => setNextOptionId(form.id, n)}
                       />
                     ))}
@@ -834,14 +978,94 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
         </div>
       </div>
 
+      <DisableDialog
+        open={showDisableConfirm}
+        onOpenChange={setShowDisableConfirm}
+        title={t('customizableForm.confirmDisableDialog.title')}
+        message={t('customizableForm.confirmDisableDialog.message')}
+        cancelLabel={t('customizableForm.confirmDisableDialog.cancel')}
+        disableLabel={t('customizableForm.confirmDisableDialog.disable')}
+        onCancel={() => setShowDisableConfirm(false)}
+        onDisable={() => {
+          setSectionTitle('');
+          setForms([createForm(1)]);
+          setNextFormId(2);
+          setShowDisableConfirm(false);
+          setIsEnabled(false);
+          showDisableToast(t('customizableForm.title'));
+        }}
+      />
+
+      <DisableDialog
+        open={showValidationModal}
+        onOpenChange={setShowValidationModal}
+        title={t('customizableForm.validationModal.title')}
+        message={t('customizableForm.validationModal.message')}
+        cancelLabel={t('customizableForm.validationModal.cancel')}
+        disableLabel={t('customizableForm.validationModal.disable')}
+        onCancel={() => setShowValidationModal(false)}
+        onDisable={() => {
+          setSectionTitle('');
+          setForms([createForm(1)]);
+          setNextFormId(2);
+          setIsEnabled(false);
+          setShowValidationModal(false);
+          showDisableToast(t('customizableForm.title'));
+
+          onNext({
+            customizableForm: {
+              isEnabled: false,
+              sectionTitle: '',
+              forms: [],
+            },
+          });
+        }}
+      />
+
+      <DisableDialog
+        open={pendingQuestionDelete !== null}
+        onOpenChange={open => {
+          if (!open) setPendingQuestionDelete(null);
+        }}
+        title={t('customizableForm.deleteQuestionModal.title')}
+        message={t('customizableForm.deleteQuestionModal.message')}
+        cancelLabel={t('customizableForm.deleteQuestionModal.cancel')}
+        disableLabel={t('customizableForm.deleteQuestionModal.delete')}
+        onCancel={() => setPendingQuestionDelete(null)}
+        onDisable={() => {
+          if (pendingQuestionDelete) {
+            removeQuestion(
+              pendingQuestionDelete.formId,
+              pendingQuestionDelete.questionId
+            );
+          }
+          setPendingQuestionDelete(null);
+        }}
+      />
+
+      <DisableDialog
+        open={pendingFormDelete !== null}
+        onOpenChange={open => {
+          if (!open) setPendingFormDelete(null);
+        }}
+        title={t('customizableForm.deleteFormModal.title')}
+        message={t('customizableForm.deleteFormModal.message')}
+        cancelLabel={t('customizableForm.deleteFormModal.cancel')}
+        disableLabel={t('customizableForm.deleteFormModal.delete')}
+        onCancel={() => setPendingFormDelete(null)}
+        onDisable={() => {
+          if (pendingFormDelete !== null) {
+            removeForm(pendingFormDelete);
+          }
+          setPendingFormDelete(null);
+        }}
+      />
+
       <div className="sticky bottom-0 mt-auto flex items-center justify-end gap-4 bg-white px-6 py-7 shadow-[0px_-8px_6.8px_0px_rgba(0,0,0,0.04)]">
-        <Button variant="secondary" className="h-12 w-48" onClick={onBack}>
+        <Button variant="secondary" className="h-12 w-48" onClick={onCancel}>
           {t('common.cancel')}
         </Button>
-        <Button
-          className="h-12 w-48"
-          onClick={() => onNext(undefined, isEnabled)}
-        >
+        <Button className="h-12 w-48" onClick={handleNext}>
           {t('common.next')}
         </Button>
       </div>

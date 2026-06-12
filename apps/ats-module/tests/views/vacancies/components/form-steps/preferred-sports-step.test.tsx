@@ -3,11 +3,21 @@ import userEvent from '@testing-library/user-event';
 
 import PreferredSportsStep from '@/views/vacancies/components/form-steps/preferred-sports-step';
 
+// ── Mock wizard form context ──────────────────────────────────────────────────
+
+const onCancel = vi.hoisted(() => vi.fn());
+vi.mock('@/views/vacancies/context/vacancy-form-context', () => ({
+  useVacancyForm: () => ({ form: {}, onCancel }),
+}));
+
 // ── Mock hooks ──────────────────────────────────────────────────────────────
 
 const mockSportsData = [
   { id: 'spo-1', name: 'Cricket', source: 'MASTER' },
   { id: 'spo-2', name: 'Rugby', source: 'MASTER' },
+  // Master item exposing only `label` (no `name`) — reproduces the
+  // "dropdown shows id instead of name" bug fixed by the `name || label` fallback.
+  { id: 'spo-3', label: 'Tennis', source: 'MASTER' },
 ];
 
 const mockOrganizationsData = [
@@ -52,9 +62,30 @@ vi.mock('@/views/vacancies/components/form-steps/disable-dialog', () => ({
 
 // ── Mock UI components ──────────────────────────────────────────────────────
 
+interface StubOption {
+  value: string;
+  label: string;
+  source?: string;
+}
 vi.mock('@cgp/ui-kit/components/multi-select', () => ({
-  default: ({ placeholder }: { placeholder: string }) => (
-    <input placeholder={placeholder} readOnly />
+  default: ({
+    placeholder,
+    options = [],
+    onChange,
+  }: {
+    placeholder: string;
+    options?: StubOption[];
+    onChange?: (options: StubOption[]) => void;
+  }) => (
+    <div>
+      <input placeholder={placeholder} readOnly />
+      {options.map(o => (
+        <span key={o.value}>{o.label}</span>
+      ))}
+      <button type="button" onClick={() => onChange?.(options)}>
+        {`select:${placeholder}`}
+      </button>
+    </div>
   ),
 }));
 
@@ -135,7 +166,9 @@ describe('PreferredSportsStep', () => {
         onSubmit={vi.fn()}
       />
     );
-    expect(screen.getByText('Build the Application Form')).toBeInTheDocument();
+    expect(
+      screen.getByText('preferredPatents.bannerTitle')
+    ).toBeInTheDocument();
   });
 
   it('renders the first sport card by default', () => {
@@ -166,7 +199,7 @@ describe('PreferredSportsStep', () => {
     expect(screen.getByText('End Date')).toBeInTheDocument();
   });
 
-  it('calls onBack when Cancel button is clicked', async () => {
+  it('calls the context onCancel when Cancel button is clicked', async () => {
     const user = userEvent.setup();
     render(
       <PreferredSportsStep
@@ -177,7 +210,7 @@ describe('PreferredSportsStep', () => {
     );
     const cancelButton = screen.getByRole('button', { name: /cancel/i });
     await user.click(cancelButton);
-    expect(mockOnBack).toHaveBeenCalledTimes(1);
+    expect(onCancel).toHaveBeenCalledTimes(1);
   });
 
   it('calls onNext when Next button is clicked', async () => {
@@ -192,6 +225,80 @@ describe('PreferredSportsStep', () => {
     const nextButton = screen.getByRole('button', { name: /next/i });
     await user.click(nextButton);
     expect(mockOnNext).toHaveBeenCalledTimes(1);
+  });
+
+  it('resolves the sport name from `label` when `name` is absent', () => {
+    render(
+      <PreferredSportsStep
+        onNext={mockOnNext}
+        onBack={mockOnBack}
+        onSubmit={vi.fn()}
+      />
+    );
+    // Without the `s.name || s.label` fallback this option would be blank.
+    expect(screen.getByText('Tennis')).toBeInTheDocument();
+    expect(screen.getByText('Cricket')).toBeInTheDocument();
+  });
+
+  it('renders the Organization Location as a multi-select fed by locations', () => {
+    render(
+      <PreferredSportsStep
+        onNext={mockOnNext}
+        onBack={mockOnBack}
+        onSubmit={vi.fn()}
+      />
+    );
+    expect(screen.getByText('Colombo, Sri Lanka')).toBeInTheDocument();
+    expect(screen.getByText('London, UK')).toBeInTheDocument();
+  });
+
+  it('saves the section to the wizard context on Next', async () => {
+    const user = userEvent.setup();
+    render(
+      <PreferredSportsStep
+        onNext={mockOnNext}
+        onBack={mockOnBack}
+        onSubmit={vi.fn()}
+      />
+    );
+    await user.click(screen.getByRole('button', { name: /next/i }));
+    expect(mockOnNext).toHaveBeenCalledWith({
+      preferredSports: expect.objectContaining({
+        isEnabled: false,
+        dataTakenFromCandidate: false,
+        sports: expect.any(Array),
+      }),
+    });
+  });
+
+  it('persists the resolved sport label and organization locations on Next', async () => {
+    const user = userEvent.setup();
+    render(
+      <PreferredSportsStep
+        onNext={mockOnNext}
+        onBack={mockOnBack}
+        onSubmit={vi.fn()}
+      />
+    );
+
+    await user.click(
+      screen.getByRole('button', { name: 'select:Select or add sport name' })
+    );
+    await user.click(
+      screen.getByRole('button', { name: 'select:Select location' })
+    );
+    await user.click(screen.getByRole('button', { name: /next/i }));
+
+    const payload = mockOnNext.mock.calls[0][0].preferredSports;
+    expect(payload.sports[0].sport).toContainEqual({
+      value: 'spo-3',
+      label: 'Tennis',
+      source: 'MASTER',
+    });
+    expect(payload.sports[0].organizationLocations).toEqual([
+      { value: 'loc-1', label: 'Colombo, Sri Lanka' },
+      { value: 'loc-2', label: 'London, UK' },
+    ]);
   });
 
   it('renders the add entry button', () => {
@@ -222,7 +329,7 @@ describe('PreferredSportsStep', () => {
     ).toBeInTheDocument();
   });
 
-  it('adds a new entry when add button is clicked', async () => {
+  it('keeps the add entry button disabled (multiple entries not yet released)', async () => {
     const user = userEvent.setup();
     render(
       <PreferredSportsStep
@@ -236,9 +343,11 @@ describe('PreferredSportsStep', () => {
     expect(screen.queryByText('Sports 02')).not.toBeInTheDocument();
 
     const addButton = screen.getByRole('button', { name: /add entry/i });
+    expect(addButton).toBeDisabled();
+
     await user.click(addButton);
 
-    expect(screen.getByText('Sports 01')).toBeInTheDocument();
-    expect(screen.getByText('Sports 02')).toBeInTheDocument();
+    // Disabled button must not append a second card.
+    expect(screen.queryByText('Sports 02')).not.toBeInTheDocument();
   });
 });

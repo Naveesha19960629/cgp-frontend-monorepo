@@ -5,20 +5,20 @@ import { ArrowLeft2, Calendar as CalendarIcon } from 'iconsax-reactjs';
 import * as SwitchPrimitive from '@radix-ui/react-switch';
 
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
-import MessageBox from '@/app/components/message-box';
+import MessageBox from '@/components/message-box';
+import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import {
   useCausesQuery,
   useLocationsQuery,
   useOrganizationsQuery,
   useStepGuard,
 } from '@/views/vacancies/hooks';
-import type { LocationOption } from '@/views/vacancies/services';
 import type { StepProps } from '@/views/vacancies/types';
 import { formatDate } from '@/views/vacancies/utils';
 
 import { CharacterCount } from '@cgp/ui-kit/components/character-count';
-import { Combobox } from '@cgp/ui-kit/components/combobox';
 import { SuccessToast } from '@cgp/ui-kit/components/custom-toast';
 import MultipleSelector from '@cgp/ui-kit/components/multi-select';
 import { Button } from '@cgp/ui-kit/components/ui/button';
@@ -36,9 +36,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@cgp/ui-kit/components/ui/popover';
+import { applyTypography } from '@cgp/ui-kit/lib/typography';
 import { cn } from '@cgp/ui-kit/lib/utils';
 
 import DisableDialog from './disable-dialog';
+
+const HUNDRED_YEARS_AGO = new Date(new Date().getFullYear() - 100, 0, 1);
+const HUNDRED_YEARS_FROM_NOW = new Date(new Date().getFullYear() + 100, 11, 31);
 
 const MAX_CAUSE_LENGTH = 100;
 const MAX_POSITION_LENGTH = 100;
@@ -48,12 +52,13 @@ interface VolunteeringEntry {
   id: string;
   isOpen: boolean;
   organizationName: Array<{ value: string; label: string; source: string }>;
-  organizationLocation?: { id: string; label: string };
+  organizationLocations: Array<{ value: string; label: string }>;
   cause: Array<{ value: string; label: string; source: string }>;
   causeSearch: string;
   position: string;
   startDate?: string;
   endDate?: string;
+  openDatePopover?: 'startDate' | 'endDate' | null;
 }
 
 function createEmptyEntry(id: string): VolunteeringEntry {
@@ -61,7 +66,7 @@ function createEmptyEntry(id: string): VolunteeringEntry {
     id,
     isOpen: true,
     organizationName: [],
-    organizationLocation: undefined,
+    organizationLocations: [],
     cause: [],
     causeSearch: '',
     position: '',
@@ -81,7 +86,6 @@ function VolunteeringCard({
   isCausesLoading,
   locationOptions,
   isLocationsLoading,
-  locationsData,
 }: Readonly<{
   index: number;
   entry: VolunteeringEntry;
@@ -98,7 +102,6 @@ function VolunteeringCard({
   isCausesLoading: boolean;
   locationOptions: Array<{ value: string; label: string }>;
   isLocationsLoading: boolean;
-  locationsData: LocationOption[];
 }>) {
   return (
     <Collapsible
@@ -131,7 +134,7 @@ function VolunteeringCard({
         <CollapsibleContent>
           <div
             className={cn(
-              'flex flex-col gap-5 border-t border-slate-200 px-6 py-5',
+              'flex flex-col gap-5 px-5 pb-5',
               fieldsDisabled && 'pointer-events-none opacity-60'
             )}
           >
@@ -190,25 +193,30 @@ function VolunteeringCard({
                 <div className="flex h-5 items-center">
                   <Label>Organization Location</Label>
                 </div>
-                <Combobox
-                  options={locationOptions}
-                  value={entry.organizationLocation?.id ?? ''}
-                  onValueChange={value => {
-                    const found = locationsData.find(l => l.id === value);
-                    if (found) {
-                      onUpdate(index, {
-                        organizationLocation: {
-                          id: found.id,
-                          label: found.label,
-                        },
-                      });
-                    }
+                <MultipleSelector
+                  value={entry.organizationLocations}
+                  onChange={options => {
+                    onUpdate(index, {
+                      organizationLocations: options.map(opt => ({
+                        value: opt.value,
+                        label: opt.label,
+                      })),
+                    });
                   }}
-                  onSearchChange={() => {}}
+                  options={locationOptions}
+                  onSearchSync={() => locationOptions}
+                  showArrow
+                  keepSelectedInList
+                  hideClearAllButton
+                  maxSelected={MAX_SELECTIONS}
+                  disabled={fieldsDisabled}
                   loading={isLocationsLoading}
                   placeholder="Select location"
-                  searchPlaceholder="Search location"
-                  hideAddNew
+                  emptyIndicator={
+                    <p className="px-3 pb-3 text-left text-sm text-slate-500">
+                      No locations found
+                    </p>
+                  }
                 />
               </div>
             </div>
@@ -271,7 +279,7 @@ function VolunteeringCard({
             </div>
 
             {/* Row 3: Position / Role | Start Date | End Date */}
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-4 gap-4">
               <div className="flex flex-col gap-1">
                 <div className="flex items-center justify-between">
                   <Label>Position / Role</Label>
@@ -293,13 +301,30 @@ function VolunteeringCard({
                 <div className="flex h-5 items-center">
                   <Label>Start Date</Label>
                 </div>
-                <Popover>
+                <Popover
+                  modal
+                  open={entry.openDatePopover === 'startDate'}
+                  onOpenChange={open =>
+                    onUpdate(index, {
+                      openDatePopover:
+                        !fieldsDisabled && open ? 'startDate' : null,
+                    })
+                  }
+                >
                   <PopoverTrigger asChild>
                     <Button
+                      type="button"
                       variant="outline"
+                      disabled={fieldsDisabled}
                       className={cn(
-                        'h-11 w-full justify-between text-left font-normal',
-                        !entry.startDate && 'text-slate-500'
+                        'border-input flex h-11 w-full items-center justify-between rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
+                        !entry.startDate && 'text-slate-500',
+                        entry.startDate && 'text-zinc-800',
+                        'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
+                        'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
+                        'dark:bg-input/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
+                        applyTypography('body-medium'),
+                        'shadow-none!'
                       )}
                     >
                       {entry.startDate
@@ -308,7 +333,7 @@ function VolunteeringCard({
                       <CalendarIcon
                         variant="Linear"
                         size={20}
-                        className="text-slate-400"
+                        className="text-zinc-800"
                       />
                     </Button>
                   </PopoverTrigger>
@@ -318,12 +343,29 @@ function VolunteeringCard({
                       selected={
                         entry.startDate ? new Date(entry.startDate) : undefined
                       }
-                      onSelect={date =>
+                      defaultMonth={
+                        (entry.startDate && new Date(entry.startDate)) ||
+                        (entry.endDate && new Date(entry.endDate)) ||
+                        new Date()
+                      }
+                      onSelect={date => {
                         onUpdate(index, {
                           startDate: date ? date.toISOString() : undefined,
-                        })
+                        });
+                        onUpdate(index, { openDatePopover: null });
+
+                        if (entry.endDate && date) {
+                          const endDate = new Date(entry.endDate);
+                          if (endDate < date) {
+                            onUpdate(index, { endDate: undefined });
+                          }
+                        }
+                      }}
+                      disabled={date =>
+                        date > new Date() || date < HUNDRED_YEARS_AGO
                       }
-                      disabled={date => date > new Date()}
+                      captionLayout="dropdown"
+                      startMonth={HUNDRED_YEARS_AGO}
                     />
                   </PopoverContent>
                 </Popover>
@@ -333,13 +375,30 @@ function VolunteeringCard({
                 <div className="flex h-5 items-center">
                   <Label>End Date</Label>
                 </div>
-                <Popover>
+                <Popover
+                  modal
+                  open={entry.openDatePopover === 'endDate'}
+                  onOpenChange={open =>
+                    onUpdate(index, {
+                      openDatePopover:
+                        !fieldsDisabled && open ? 'endDate' : null,
+                    })
+                  }
+                >
                   <PopoverTrigger asChild>
                     <Button
+                      type="button"
                       variant="outline"
+                      disabled={fieldsDisabled}
                       className={cn(
-                        'h-11 w-full justify-between text-left font-normal',
-                        !entry.endDate && 'text-slate-500'
+                        'border-input flex h-11 w-full items-center justify-between rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
+                        !entry.endDate && 'text-slate-500',
+                        entry.endDate && 'text-zinc-800',
+                        'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
+                        'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
+                        'dark:bg-input/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
+                        applyTypography('body-medium'),
+                        'shadow-none!'
                       )}
                     >
                       {entry.endDate
@@ -348,7 +407,7 @@ function VolunteeringCard({
                       <CalendarIcon
                         variant="Linear"
                         size={20}
-                        className="text-slate-400"
+                        className="text-zinc-800"
                       />
                     </Button>
                   </PopoverTrigger>
@@ -358,16 +417,30 @@ function VolunteeringCard({
                       selected={
                         entry.endDate ? new Date(entry.endDate) : undefined
                       }
-                      onSelect={date =>
+                      defaultMonth={
+                        (entry.endDate && new Date(entry.endDate)) ||
+                        (entry.startDate && new Date(entry.startDate)) ||
+                        new Date()
+                      }
+                      onSelect={date => {
                         onUpdate(index, {
                           endDate: date ? date.toISOString() : undefined,
-                        })
-                      }
-                      disabled={date =>
-                        entry.startDate
-                          ? date <= new Date(entry.startDate)
-                          : false
-                      }
+                        });
+                        onUpdate(index, { openDatePopover: null });
+                      }}
+                      disabled={date => {
+                        const startDate = entry.startDate
+                          ? new Date(entry.startDate)
+                          : undefined;
+                        return (
+                          date < HUNDRED_YEARS_AGO ||
+                          date > HUNDRED_YEARS_FROM_NOW ||
+                          (startDate != null && date < startDate)
+                        );
+                      }}
+                      captionLayout="dropdown"
+                      startMonth={HUNDRED_YEARS_AGO}
+                      endMonth={HUNDRED_YEARS_FROM_NOW}
                     />
                   </PopoverContent>
                 </Popover>
@@ -384,8 +457,16 @@ export default function PreferredVolunteeringStep({
   onNext,
   onBack,
 }: Readonly<StepProps>) {
-  const [isEnabled, setIsEnabled] = useState(false);
-  const [dataTakenFromCandidate, setDataTakenFromCandidate] = useState(false);
+  const { t } = useTranslation('ats');
+  const { form: contextForm, onCancel } = useVacancyForm();
+  const savedVolunteering = contextForm.preferredVolunteering;
+
+  const [isEnabled, setIsEnabled] = useState(
+    savedVolunteering?.isEnabled ?? false
+  );
+  const [dataTakenFromCandidate, setDataTakenFromCandidate] = useState(
+    savedVolunteering?.dataTakenFromCandidate ?? false
+  );
   const [confirmDisableOpen, setConfirmDisableOpen] = useState(false);
 
   // TODO: Persist state on tab navigation — not yet wired because VacancyForm
@@ -412,9 +493,21 @@ export default function PreferredVolunteeringStep({
   //   };
   // }, [stepPersistRef]);
 
-  const [entries, setEntries] = useState<VolunteeringEntry[]>([
-    createEmptyEntry('1'),
-  ]);
+  const [entries, setEntries] = useState<VolunteeringEntry[]>(
+    savedVolunteering?.volunteering && savedVolunteering.volunteering.length > 0
+      ? savedVolunteering.volunteering
+      : [createEmptyEntry('1')]
+  );
+
+  const handleNext = () => {
+    onNext({
+      preferredVolunteering: {
+        isEnabled,
+        dataTakenFromCandidate,
+        volunteering: entries,
+      },
+    });
+  };
 
   useStepGuard(
     isEnabled &&
@@ -482,96 +575,95 @@ export default function PreferredVolunteeringStep({
   };
 
   return (
-    <div className="flex flex-col gap-4 pb-6">
-      {/* ── Informational Banner ────────────────────────────────────────── */}
-      <div className="px-6">
+    <>
+      <div className="flex flex-1 flex-col">
+        {/* ── Informational Banner ──────────────────────────────────────── */}
         <MessageBox
-          title="Build the Application Form"
-          message={
-            <>
-              <span className="text-brand-primary-500 font-bold">
-                Certain fields
-              </span>{' '}
-              in this section are always collected from candidates to support
-              consistent candidate profiles. Any fields you don&apos;t select
-              won&apos;t be collected
-            </>
-          }
+          fields={[
+            t('preferredVolunteering.fieldList.organization'),
+            t('preferredVolunteering.fieldList.location'),
+            t('preferredVolunteering.fieldList.startDate'),
+            t('preferredVolunteering.fieldList.endDate'),
+          ]}
         />
-      </div>
 
-      {/* ── Section Header ──────────────────────────────────────────────── */}
-      <div className="flex items-center gap-2 px-6">
-        <button
-          type="button"
-          aria-label="Back"
-          className="flex h-8 w-8 items-center justify-center"
-          onClick={onBack}
-        >
-          <ArrowLeft2 size={24} />
-        </button>
-        <h2 className="flex-1 text-xl font-bold text-slate-900">
-          Preferred Volunteering
-        </h2>
-        <SwitchPrimitive.Root
-          checked={isEnabled}
-          onCheckedChange={handleToggle}
-          className={cn(
-            'focus-visible:ring-ring/50 inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent shadow-xs transition-colors outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50',
-            isEnabled ? 'bg-brand-primary-500' : 'bg-slate-300'
-          )}
-        >
-          <SwitchPrimitive.Thumb
-            className={cn(
-              'pointer-events-none block h-5 w-5 rounded-full bg-white shadow-lg ring-0 transition-transform',
-              isEnabled ? 'translate-x-5' : 'translate-x-0'
-            )}
-          />
-        </SwitchPrimitive.Root>
-      </div>
-
-      <div className="flex flex-col gap-4 px-6">
-        {/* dataTakenFromCandidate — grayed when toggle off */}
-        <div className={cn(!isEnabled && 'pointer-events-none opacity-60')}>
-          <div className="flex items-start gap-2">
-            <Checkbox
-              id="volunteeringDataTakenFromCandidate"
-              checked={dataTakenFromCandidate}
-              onCheckedChange={value => setDataTakenFromCandidate(!!value)}
-              className="mt-0.5"
-            />
-            <Label
-              htmlFor="volunteeringDataTakenFromCandidate"
-              className="cursor-pointer leading-snug"
+        {/* ── Section header: back arrow + title + toggle ───────────────── */}
+        <div className="flex items-center justify-between px-7 py-8">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              aria-label="Back"
+              className="text-slate-700 transition-colors hover:text-slate-900"
+              onClick={onBack}
             >
-              If selected, no manual input is required, and data will be taken
-              from the candidate profile
-            </Label>
+              <ArrowLeft2 size={24} />
+            </button>
+            <h2 className="text-xl font-bold tracking-tight text-slate-900">
+              Preferred Volunteering
+            </h2>
           </div>
+          <SwitchPrimitive.Root
+            checked={isEnabled}
+            onCheckedChange={handleToggle}
+            className={cn(
+              'focus-visible:ring-ring/50 inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent shadow-xs transition-colors outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50',
+              isEnabled ? 'bg-brand-primary-500' : 'bg-slate-300'
+            )}
+          >
+            <SwitchPrimitive.Thumb
+              className={cn(
+                'pointer-events-none block h-5 w-5 rounded-full bg-white shadow-lg ring-0 transition-transform',
+                isEnabled ? 'translate-x-5' : 'translate-x-0'
+              )}
+            />
+          </SwitchPrimitive.Root>
         </div>
 
-        {/* ── Volunteering Cards ──────────────────────────────────────────── */}
-        {entries.map((entry, index) => (
-          <VolunteeringCard
-            key={entry.id}
-            index={index}
-            entry={entry}
-            onUpdate={updateEntry}
-            fieldsDisabled={fieldsDisabled}
-            organizations={organizations}
-            isOrganizationsLoading={isOrganizationsLoading}
-            causes={causes}
-            isCausesLoading={isCausesLoading}
-            locationOptions={locationOptions}
-            isLocationsLoading={isLocationsLoading}
-            locationsData={locationsData ?? []}
-          />
-        ))}
-
-        {/* ── Add Entry button (outside card, bottom-right) ─────────── */}
+        {/* ── Checkbox: data from candidate profile ─────────────────────── */}
         <div
           className={cn(
-            'flex justify-end',
+            'flex items-start gap-3 px-7 pb-8',
+            !isEnabled && 'pointer-events-none opacity-60'
+          )}
+        >
+          <Checkbox
+            id="volunteeringDataTakenFromCandidate"
+            checked={dataTakenFromCandidate}
+            onCheckedChange={value => setDataTakenFromCandidate(!!value)}
+            className="mt-0.5"
+          />
+          <Label
+            htmlFor="volunteeringDataTakenFromCandidate"
+            className="cursor-pointer text-sm leading-snug font-medium text-slate-900"
+          >
+            If selected, no manual input is required, and data will be taken
+            from the candidate profile
+          </Label>
+        </div>
+
+        {/* ── Volunteering cards ────────────────────────────────────────── */}
+        <div className="flex flex-col gap-4 px-6">
+          {entries.map((entry, index) => (
+            <VolunteeringCard
+              key={entry.id}
+              index={index}
+              entry={entry}
+              onUpdate={updateEntry}
+              fieldsDisabled={fieldsDisabled}
+              organizations={organizations}
+              isOrganizationsLoading={isOrganizationsLoading}
+              causes={causes}
+              isCausesLoading={isCausesLoading}
+              locationOptions={locationOptions}
+              isLocationsLoading={isLocationsLoading}
+            />
+          ))}
+        </div>
+
+        {/* ── Add entry button ──────────────────────────────────────────── */}
+        <div
+          className={cn(
+            'flex justify-end px-6 py-4',
             !isEnabled && 'pointer-events-none opacity-60'
           )}
         >
@@ -580,24 +672,22 @@ export default function PreferredVolunteeringStep({
             size="icon"
             aria-label="Add entry"
             className="size-11 rounded-lg bg-gray-200 px-3 text-sm"
+            disabled
             onClick={addEntry}
           >
             <PlusIcon className="size-4 text-neutral-600!" />
           </Button>
         </div>
-      </div>
 
-      {/* ── Step footer ──────────────────────────────────────────────────── */}
-      <div className="mt-auto flex justify-end gap-4 border-t border-slate-200 px-6 pt-4">
-        <Button variant="secondary" className="h-12 w-44" onClick={onBack}>
-          Cancel
-        </Button>
-        <Button
-          className="h-12 w-44"
-          onClick={() => onNext(undefined, isEnabled)}
-        >
-          Next
-        </Button>
+        {/* ── Step footer ───────────────────────────────────────────────── */}
+        <div className="sticky bottom-0 mt-auto flex items-center justify-end gap-4 bg-white px-6 py-7 shadow-[0px_-8px_6.8px_0px_rgba(0,0,0,0.04)]">
+          <Button variant="secondary" className="h-12 w-48" onClick={onCancel}>
+            Cancel
+          </Button>
+          <Button className="h-12 w-48" onClick={handleNext}>
+            Next
+          </Button>
+        </div>
       </div>
 
       {/* ── Disable Confirmation Dialog ───────────────────────────────────── */}
@@ -613,6 +703,6 @@ export default function PreferredVolunteeringStep({
         onCancel={() => setConfirmDisableOpen(false)}
         onDisable={handleDisable}
       />
-    </div>
+    </>
   );
 }

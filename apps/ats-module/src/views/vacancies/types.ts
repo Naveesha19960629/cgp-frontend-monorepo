@@ -285,6 +285,143 @@ interface ScheduleVacancyPayload {
   expirationAt: string;
 }
 
+// ─── Customizable Form ──────────────────────────────────────────────────────
+
+interface CustomizableFormQuestionOption {
+  id: number;
+  value: string;
+}
+
+interface CustomizableFormQuestion {
+  id: number;
+  text: string;
+  type:
+    | 'SHORT_ANSWER'
+    | 'PARAGRAPH'
+    | 'MULTIPLE_CHOICE'
+    | 'CHECKBOXES'
+    | 'DROP_DOWN'
+    | 'LINEAR_SCALE'
+    | '';
+  required: boolean;
+  options: CustomizableFormQuestionOption[];
+  from: number;
+  to: number;
+  startLabel: string;
+  endLabel: string;
+}
+
+interface CustomizableFormFormCard {
+  id: number;
+  title: string;
+  questions: CustomizableFormQuestion[];
+}
+
+interface CustomizableFormData {
+  isEnabled: boolean;
+  sectionTitle: string;
+  forms: CustomizableFormFormCard[];
+}
+
+// ─── Step Form States (wizard context persistence) ───────────────────────────
+
+interface OptionWithSource {
+  value: string;
+  label: string;
+  source: string;
+}
+
+interface OptionLabel {
+  value: string;
+  label: string;
+}
+
+interface PublicationFormEntry {
+  id: string;
+  isOpen: boolean;
+  acceptedPublisher: string;
+  publishedDateFrom?: string;
+  publishedDateTo?: string;
+  openDatePopover?: 'publishedDateFrom' | 'publishedDateTo' | null;
+}
+
+interface PreferredPublicationsState {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  publications: PublicationFormEntry[];
+}
+
+interface ClubSocietyFormEntry {
+  id: string;
+  isOpen: boolean;
+  clubSociety: OptionWithSource[];
+  startDate?: string;
+  endDate?: string;
+  representedOrganization: OptionWithSource[];
+  organizationLocations: OptionLabel[];
+  position: string;
+}
+
+interface PreferredClubSocietiesState {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  clubSocieties: ClubSocietyFormEntry[];
+}
+
+interface SportFormEntry {
+  id: string;
+  isOpen: boolean;
+  sport: OptionWithSource[];
+  sportSearch: string;
+  levelRepresented: OptionWithSource[];
+  representedOrganization: OptionWithSource[];
+  organizationLocations: OptionLabel[];
+  position: string;
+  startDate?: string;
+  endDate?: string;
+}
+
+interface PreferredSportsState {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  sports: SportFormEntry[];
+}
+
+interface VolunteeringFormEntry {
+  id: string;
+  isOpen: boolean;
+  organizationName: OptionWithSource[];
+  organizationLocations: OptionLabel[];
+  cause: OptionWithSource[];
+  causeSearch: string;
+  position: string;
+  startDate?: string;
+  endDate?: string;
+  openDatePopover?: 'startDate' | 'endDate' | null;
+}
+
+interface PreferredVolunteeringState {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  volunteering: VolunteeringFormEntry[];
+}
+
+interface ProjectFormEntry {
+  id: string;
+  isOpen: boolean;
+  startDate?: string;
+  endDate?: string;
+  relatedIndustry: OptionWithSource[];
+  organizationLocations: OptionLabel[];
+  organizations: OptionWithSource[];
+}
+
+interface ProjectsRequirementsState {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  projects: ProjectFormEntry[];
+}
+
 // ─── Vacancy Form ─────────────────────────────────────────────────────────────
 
 interface VacancyForm {
@@ -295,6 +432,11 @@ interface VacancyForm {
   profileRequirements: ProfileRequirements;
   secondaryEducation: SecondaryEducation[];
   tertiaryEducation: TertiaryEducation[];
+  projectsRequirements?: ProjectsRequirementsState;
+  preferredPublications?: PreferredPublicationsState;
+  preferredClubSocieties?: PreferredClubSocietiesState;
+  preferredSports?: PreferredSportsState;
+  preferredVolunteering?: PreferredVolunteeringState;
   preferredSkills?: PreferredSkills;
   preferredLanguages?: PreferredLanguages;
   preferredCauses?: PreferredCauses;
@@ -303,6 +445,7 @@ interface VacancyForm {
   patents?: preferredPatentsSchema;
   preferredHonoursAwards?: preferredHonoursAwardsSchema;
   licenseCertificates?: LicenseCertificates[];
+  customizableForm?: CustomizableFormData;
   schedule?: ScheduleVacancy;
 }
 interface VacancyStep {
@@ -377,7 +520,8 @@ interface IndustryCreateResponse {
 
 interface SocietyItem {
   id: string;
-  name: string;
+  name?: string;
+  label?: string;
   source: string;
 }
 
@@ -390,7 +534,8 @@ interface SocietyCreateResponse {
 
 interface SportItem {
   id: string;
-  name: string;
+  name?: string;
+  label?: string;
   source: string;
 }
 
@@ -936,6 +1081,18 @@ export type {
   PreferredHobbies,
   IndustryEntry,
   PreferredIndustries,
+  OptionWithSource,
+  OptionLabel,
+  PublicationFormEntry,
+  PreferredPublicationsState,
+  ClubSocietyFormEntry,
+  PreferredClubSocietiesState,
+  SportFormEntry,
+  PreferredSportsState,
+  VolunteeringFormEntry,
+  PreferredVolunteeringState,
+  ProjectFormEntry,
+  ProjectsRequirementsState,
   ProjectRef,
   ProjectEntry,
   ProjectRequirement,
@@ -954,6 +1111,10 @@ export type {
   VacanciesPaginatedData,
   VacanciesApiResponse,
   MaritalStatusItem,
+  CustomizableFormQuestionOption,
+  CustomizableFormQuestion,
+  CustomizableFormFormCard,
+  CustomizableFormData,
   ScheduleVacancy,
   ScheduleVacancyPayload,
   PlaceItem,

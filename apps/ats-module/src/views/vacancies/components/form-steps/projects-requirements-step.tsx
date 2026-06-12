@@ -7,8 +7,8 @@ import * as SwitchPrimitive from '@radix-ui/react-switch';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import MessageBox from '@/app/components/message-box';
-import { AddOrganizationFormDialog } from '@/views/vacancies/components/dialogs';
+import MessageBox from '@/components/message-box';
+import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import {
   useCreateIndustryMutation,
   useIndustriesQuery,
@@ -16,15 +16,10 @@ import {
   useOrganizationsQuery,
   useStepGuard,
 } from '@/views/vacancies/hooks';
-import type {
-  LocationOption,
-  OrganizationOption,
-} from '@/views/vacancies/services';
 import type { StepProps } from '@/views/vacancies/types';
 import { formatDate } from '@/views/vacancies/utils';
 
 import { CharacterCount } from '@cgp/ui-kit/components/character-count';
-import { Combobox } from '@cgp/ui-kit/components/combobox';
 import { SuccessToast } from '@cgp/ui-kit/components/custom-toast';
 import MultipleSelector from '@cgp/ui-kit/components/multi-select';
 import { Button } from '@cgp/ui-kit/components/ui/button';
@@ -41,19 +36,14 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@cgp/ui-kit/components/ui/popover';
+import { applyTypography } from '@cgp/ui-kit/lib/typography';
 import { cn } from '@cgp/ui-kit/lib/utils';
 
 import DisableDialog from './disable-dialog';
 
 const MAX_SELECTIONS = 10;
-
-interface OrganizationValue {
-  id: string;
-  name: string;
-  location?: string;
-  organizationWebSite?: string;
-  source?: 'MASTER' | 'PENDING' | 'USER_CREATED';
-}
+const HUNDRED_YEARS_AGO = new Date(new Date().getFullYear() - 100, 0, 1);
+const HUNDRED_YEARS_FROM_NOW = new Date(new Date().getFullYear() + 100, 11, 31);
 
 interface ProjectEntry {
   id: string;
@@ -61,8 +51,8 @@ interface ProjectEntry {
   startDate?: string;
   endDate?: string;
   relatedIndustry: Array<{ value: string; label: string; source: string }>;
-  organizationLocation?: { id: string; label: string };
-  organization?: OrganizationValue;
+  organizationLocations: Array<{ value: string; label: string }>;
+  organizations: Array<{ value: string; label: string; source: string }>;
 }
 
 function ProjectCard({
@@ -76,9 +66,6 @@ function ProjectCard({
   isLocationsLoading,
   organizationOptions,
   isOrganizationsLoading,
-  locationsData,
-  organizationsData,
-  onOpenAddOrganizationDialog,
 }: Readonly<{
   index: number;
   project: ProjectEntry;
@@ -88,15 +75,15 @@ function ProjectCard({
   isIndustriesLoading: boolean;
   locationOptions: Array<{ value: string; label: string }>;
   isLocationsLoading: boolean;
-  organizationOptions: Array<{ value: string; label: string }>;
+  organizationOptions: Array<{ value: string; label: string; source?: string }>;
   isOrganizationsLoading: boolean;
-  locationsData: LocationOption[];
-  organizationsData: OrganizationOption[];
-  onOpenAddOrganizationDialog: (name: string, projectIndex: number) => void;
 }>) {
   const { t } = useTranslation('ats');
   const [hasMaxError, setHasMaxError] = useState(false);
   const [industriesSearch, setIndustriesSearch] = useState('');
+  const [openDatePopover, setOpenDatePopover] = useState<
+    'startDate' | 'endDate' | null
+  >(null);
 
   return (
     <Collapsible
@@ -141,7 +128,7 @@ function ProjectCard({
         <CollapsibleContent>
           <div
             className={cn(
-              'flex flex-col gap-5 border-t border-slate-200 px-6 py-5',
+              'flex flex-col gap-5 px-5 pb-5',
               fieldsDisabled && 'pointer-events-none opacity-60'
             )}
           >
@@ -151,13 +138,29 @@ function ProjectCard({
                 <div className="flex h-5 items-center">
                   <Label>{t('projectsRequirements.startDate')}</Label>
                 </div>
-                <Popover>
+                <Popover
+                  modal
+                  open={openDatePopover === 'startDate'}
+                  onOpenChange={open =>
+                    setOpenDatePopover(
+                      !fieldsDisabled && open ? 'startDate' : null
+                    )
+                  }
+                >
                   <PopoverTrigger asChild>
                     <Button
+                      type="button"
                       variant="outline"
+                      disabled={fieldsDisabled}
                       className={cn(
-                        'h-11 w-full justify-between text-left font-normal',
-                        !project.startDate && 'text-slate-500'
+                        'border-input flex h-11 w-full items-center justify-between rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
+                        !project.startDate && 'text-slate-500',
+                        project.startDate && 'text-zinc-800',
+                        'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
+                        'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
+                        'dark:bg-input/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
+                        applyTypography('body-medium'),
+                        'shadow-none!'
                       )}
                     >
                       {project.startDate
@@ -166,7 +169,7 @@ function ProjectCard({
                       <CalendarIcon
                         variant="Linear"
                         size={20}
-                        className="text-slate-400"
+                        className="text-zinc-800"
                       />
                     </Button>
                   </PopoverTrigger>
@@ -178,12 +181,29 @@ function ProjectCard({
                           ? new Date(project.startDate)
                           : undefined
                       }
-                      onSelect={date =>
+                      defaultMonth={
+                        (project.startDate && new Date(project.startDate)) ||
+                        (project.endDate && new Date(project.endDate)) ||
+                        new Date()
+                      }
+                      onSelect={date => {
                         onUpdate(index, {
                           startDate: date ? date.toISOString() : undefined,
-                        })
+                        });
+                        setOpenDatePopover(null);
+
+                        if (project.endDate && date) {
+                          const endDate = new Date(project.endDate);
+                          if (endDate < date) {
+                            onUpdate(index, { endDate: undefined });
+                          }
+                        }
+                      }}
+                      disabled={date =>
+                        date > new Date() || date < HUNDRED_YEARS_AGO
                       }
-                      disabled={date => date > new Date()}
+                      captionLayout="dropdown"
+                      startMonth={HUNDRED_YEARS_AGO}
                     />
                   </PopoverContent>
                 </Popover>
@@ -193,13 +213,29 @@ function ProjectCard({
                 <div className="flex h-5 items-center">
                   <Label>{t('projectsRequirements.endDate')}</Label>
                 </div>
-                <Popover>
+                <Popover
+                  modal
+                  open={openDatePopover === 'endDate'}
+                  onOpenChange={open =>
+                    setOpenDatePopover(
+                      !fieldsDisabled && open ? 'endDate' : null
+                    )
+                  }
+                >
                   <PopoverTrigger asChild>
                     <Button
+                      type="button"
                       variant="outline"
+                      disabled={fieldsDisabled}
                       className={cn(
-                        'h-11 w-full justify-between text-left font-normal',
-                        !project.endDate && 'text-slate-500'
+                        'border-input flex h-11 w-full items-center justify-between rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
+                        !project.endDate && 'text-slate-500',
+                        project.endDate && 'text-zinc-800',
+                        'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
+                        'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
+                        'dark:bg-input/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
+                        applyTypography('body-medium'),
+                        'shadow-none!'
                       )}
                     >
                       {project.endDate
@@ -208,7 +244,7 @@ function ProjectCard({
                       <CalendarIcon
                         variant="Linear"
                         size={20}
-                        className="text-slate-400"
+                        className="text-zinc-800"
                       />
                     </Button>
                   </PopoverTrigger>
@@ -218,16 +254,30 @@ function ProjectCard({
                       selected={
                         project.endDate ? new Date(project.endDate) : undefined
                       }
-                      onSelect={date =>
+                      defaultMonth={
+                        (project.endDate && new Date(project.endDate)) ||
+                        (project.startDate && new Date(project.startDate)) ||
+                        new Date()
+                      }
+                      onSelect={date => {
                         onUpdate(index, {
                           endDate: date ? date.toISOString() : undefined,
-                        })
-                      }
-                      disabled={date =>
-                        project.startDate
-                          ? date <= new Date(project.startDate)
-                          : false
-                      }
+                        });
+                        setOpenDatePopover(null);
+                      }}
+                      disabled={date => {
+                        const startDate = project.startDate
+                          ? new Date(project.startDate)
+                          : undefined;
+                        return (
+                          date < HUNDRED_YEARS_AGO ||
+                          date > HUNDRED_YEARS_FROM_NOW ||
+                          (startDate != null && date < startDate)
+                        );
+                      }}
+                      captionLayout="dropdown"
+                      startMonth={HUNDRED_YEARS_AGO}
+                      endMonth={HUNDRED_YEARS_FROM_NOW}
                     />
                   </PopoverContent>
                 </Popover>
@@ -320,29 +370,41 @@ function ProjectCard({
                     {t('projectsRequirements.organizationLocation')}
                   </Label>
                 </div>
-                <Combobox
-                  options={locationOptions}
-                  value={project.organizationLocation?.id ?? ''}
-                  onValueChange={value => {
-                    const found = locationsData.find(l => l.id === value);
-                    if (found) {
-                      onUpdate(index, {
-                        organizationLocation: {
-                          id: found.id,
-                          label: found.label,
-                        },
-                      });
-                    }
+                <MultipleSelector
+                  value={project.organizationLocations}
+                  onChange={options => {
+                    onUpdate(index, {
+                      organizationLocations: options.map(opt => ({
+                        value: opt.value,
+                        label: opt.label,
+                      })),
+                    });
                   }}
-                  onSearchChange={() => {}}
+                  options={locationOptions}
+                  onSearchSync={() => locationOptions}
+                  showArrow
+                  keepSelectedInList
+                  hideClearAllButton
+                  maxSelected={10}
+                  disabled={fieldsDisabled}
                   loading={isLocationsLoading}
                   placeholder={t(
                     'projectsRequirements.placeholders.organizationLocation'
                   )}
-                  searchPlaceholder={t(
-                    'projectsRequirements.placeholders.searchLocation'
-                  )}
-                  hideAddNew
+                  loadingIndicator={
+                    <p className="px-3 pb-3 text-left text-sm text-slate-500">
+                      {t('projectsRequirements.industrySearch.loading', {
+                        defaultValue: 'Searching...',
+                      })}
+                    </p>
+                  }
+                  emptyIndicator={
+                    <p className="px-3 pb-3 text-left text-sm text-slate-500">
+                      {t(
+                        'projectsRequirements.industrySearch.noDataDescription'
+                      )}
+                    </p>
+                  }
                 />
               </div>
 
@@ -350,65 +412,43 @@ function ProjectCard({
                 <div className="flex h-5 items-center">
                   <Label>{t('projectsRequirements.organizationName')}</Label>
                 </div>
-                <Combobox
+                <MultipleSelector
+                  value={project.organizations}
+                  onChange={options => {
+                    onUpdate(index, {
+                      organizations: options.map(opt => ({
+                        value: opt.value,
+                        label: opt.label,
+                        source: (opt.source as string) ?? 'USER_CREATED',
+                      })),
+                    });
+                  }}
                   options={organizationOptions}
-                  value={project.organization?.id ?? ''}
-                  onValueChange={value => {
-                    const found = organizationsData.find(o => o.id === value);
-                    if (found) {
-                      onUpdate(index, {
-                        organization: {
-                          id: found.id,
-                          name: found.name || found.label || '',
-                          location: found.location,
-                          organizationWebSite: found.organizationWebSite,
-                          source: found.source,
-                        },
-                      });
-                      const locationId = found.location;
-                      if (locationId) {
-                        const matchingLocation = locationsData.find(
-                          l => l.id === locationId
-                        );
-                        if (matchingLocation) {
-                          onUpdate(index, {
-                            organizationLocation: {
-                              id: matchingLocation.id,
-                              label: matchingLocation.label,
-                            },
-                          });
-                        }
-                      }
-                    }
-                  }}
-                  onSearchChange={() => {}}
+                  onSearchSync={() => organizationOptions}
+                  creatable
+                  keepSelectedInList
+                  triggerSearchOnFocus
+                  hideClearAllButton
+                  maxSelected={10}
+                  disabled={fieldsDisabled}
                   loading={isOrganizationsLoading}
-                  onAddNew={value => {
-                    const existing = organizationsData.find(
-                      o =>
-                        (o.name || o.label || '').toLowerCase() ===
-                        value.toLowerCase()
-                    );
-                    if (existing) {
-                      onUpdate(index, {
-                        organization: {
-                          id: existing.id,
-                          name: existing.name || existing.label || '',
-                          location: existing.location,
-                          organizationWebSite: existing.organizationWebSite,
-                          source: existing.source,
-                        },
-                      });
-                      return;
-                    }
-                    onOpenAddOrganizationDialog(value, index);
-                  }}
                   placeholder={t(
                     'projectsRequirements.placeholders.organizationName'
                   )}
-                  searchPlaceholder={t(
-                    'projectsRequirements.placeholders.searchOrganization'
-                  )}
+                  loadingIndicator={
+                    <p className="px-3 pb-3 text-left text-sm text-slate-500">
+                      {t('projectsRequirements.industrySearch.loading', {
+                        defaultValue: 'Searching...',
+                      })}
+                    </p>
+                  }
+                  emptyIndicator={
+                    <p className="px-3 pb-3 text-left text-sm text-slate-500">
+                      {t(
+                        'projectsRequirements.industrySearch.noDataDescription'
+                      )}
+                    </p>
+                  }
                 />
               </div>
             </div>
@@ -424,9 +464,13 @@ export default function ProjectsRequirementsStep({
   onBack,
 }: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
+  const { form: contextForm, onCancel } = useVacancyForm();
+  const savedProjects = contextForm.projectsRequirements;
 
-  const [isEnabled, setIsEnabled] = useState(false);
-  const [dataTakenFromCandidate, setDataTakenFromCandidate] = useState(false);
+  const [isEnabled, setIsEnabled] = useState(savedProjects?.isEnabled ?? false);
+  const [dataTakenFromCandidate, setDataTakenFromCandidate] = useState(
+    savedProjects?.dataTakenFromCandidate ?? false
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [confirmDisableOpen, setConfirmDisableOpen] = useState(false);
 
@@ -454,23 +498,27 @@ export default function ProjectsRequirementsStep({
   //   };
   // }, [stepPersistRef]);
 
-  const [projects, setProjects] = useState<ProjectEntry[]>([
-    {
-      id: '1',
-      isOpen: true,
-      startDate: undefined,
-      endDate: undefined,
-      relatedIndustry: [],
-      organizationLocation: undefined,
-      organization: undefined,
-    },
-  ]);
+  const [projects, setProjects] = useState<ProjectEntry[]>(
+    savedProjects?.projects && savedProjects.projects.length > 0
+      ? savedProjects.projects
+      : [
+          {
+            id: '1',
+            isOpen: true,
+            startDate: undefined,
+            endDate: undefined,
+            relatedIndustry: [],
+            organizationLocations: [],
+            organizations: [],
+          },
+        ]
+  );
 
   useStepGuard(
     isEnabled &&
       !dataTakenFromCandidate &&
       !projects.some(
-        p => p.relatedIndustry.length > 0 || p.organization != null
+        p => p.relatedIndustry.length > 0 || p.organizations != null
       )
   );
 
@@ -483,13 +531,9 @@ export default function ProjectsRequirementsStep({
   const { data: locationsData, isLoading: isLocationsLoading } =
     useLocationsQuery('', isEnabled && !dataTakenFromCandidate);
 
-  // Organization Name combobox (searchable + add-new opens dialog)
+  // Organization Name multi-select (searchable, backed by organizations API)
   const { data: organizationsData, isLoading: isOrganizationsLoading } =
     useOrganizationsQuery('', isEnabled && !dataTakenFromCandidate);
-  const [showAddOrganizationDialog, setShowAddOrganizationDialog] =
-    useState(false);
-  const [pendingOrganizationName, setPendingOrganizationName] = useState('');
-  const [pendingProjectIndex, setPendingProjectIndex] = useState<number>(0);
 
   const fieldsDisabled = !isEnabled || dataTakenFromCandidate;
 
@@ -517,6 +561,7 @@ export default function ProjectsRequirementsStep({
       (organizationsData ?? []).map(o => ({
         value: o.id,
         label: o.name || o.label || '',
+        source: o.source,
       })),
     [organizationsData]
   );
@@ -537,8 +582,8 @@ export default function ProjectsRequirementsStep({
         startDate: undefined,
         endDate: undefined,
         relatedIndustry: [],
-        organizationLocation: undefined,
-        organization: undefined,
+        organizationLocations: [],
+        organizations: [],
       },
     ]);
   };
@@ -551,8 +596,8 @@ export default function ProjectsRequirementsStep({
         startDate: undefined,
         endDate: undefined,
         relatedIndustry: [],
-        organizationLocation: undefined,
-        organization: undefined,
+        organizationLocations: [],
+        organizations: [],
       },
     ]);
     setDataTakenFromCandidate(false);
@@ -569,6 +614,8 @@ export default function ProjectsRequirementsStep({
     // Check if any industries in any project are user-created
     const allIndustries = projects.flatMap(p => p.relatedIndustry);
     const hasUserCreated = allIndustries.some(i => i.source === 'USER_CREATED');
+
+    let resolvedProjects = projects;
 
     if (hasUserCreated) {
       setIsSubmitting(true);
@@ -593,165 +640,157 @@ export default function ProjectsRequirementsStep({
         );
 
         // Update all projects with the resolved industry IDs
-        setProjects(prevProjects =>
-          prevProjects.map(project => ({
-            ...project,
-            relatedIndustry: project.relatedIndustry.map(industry => {
-              if (industry.source === 'USER_CREATED') {
-                const result = resultMap.get(industry.label);
-                if (result) {
-                  return {
-                    // fix the build failure
-                    value: result.pendingId,
-                    label: result.value,
-                    source: result.status,
-                  };
-                }
+        resolvedProjects = projects.map(project => ({
+          ...project,
+          relatedIndustry: project.relatedIndustry.map(industry => {
+            if (industry.source === 'USER_CREATED') {
+              const result = resultMap.get(industry.label);
+              if (result) {
+                return {
+                  // fix the build failure
+                  value: result.pendingId,
+                  label: result.value,
+                  source: result.status,
+                };
               }
-              return industry;
-            }),
-          }))
-        );
+            }
+            return industry;
+          }),
+        }));
+
+        setProjects(resolvedProjects);
       } finally {
         setIsSubmitting(false);
       }
     }
 
-    onNext(undefined, isEnabled);
+    onNext({
+      projectsRequirements: {
+        isEnabled,
+        dataTakenFromCandidate,
+        projects: resolvedProjects,
+      },
+    });
   };
 
   return (
-    <div className="flex flex-col gap-4 pb-6">
-      {/* ── Informational Banner ────────────────────────────────────────── */}
-      <div className="px-6">
+    <>
+      <div className="flex flex-1 flex-col">
+        {/* ── Informational Banner ──────────────────────────────────────── */}
         <MessageBox
-          title={t('projectsRequirements.bannerTitle')}
-          message={
-            <>
-              <span className="text-brand-primary-500 font-bold">
-                {t('projectsRequirements.bannerMessageHighlight')}
-              </span>{' '}
-              {t('projectsRequirements.bannerMessageRest')}
-            </>
-          }
+          fields={[
+            t('projectsRequirements.fieldList.startDate'),
+            t('projectsRequirements.fieldList.endDate'),
+            t('projectsRequirements.fieldList.organization'),
+            t('projectsRequirements.fieldList.location'),
+          ]}
         />
-      </div>
 
-      {/* ── Section Header ──────────────────────────────────────────────── */}
-      <div className="flex items-center gap-2 px-6">
-        <button
-          type="button"
-          aria-label="Back"
-          className="flex h-8 w-8 items-center justify-center"
-          onClick={onBack}
-        >
-          <ArrowLeft2 size={24} />
-        </button>
-        <h2 className="flex-1 text-xl font-bold text-slate-900">
-          {t('projectsRequirements.title')}
-        </h2>
-        <SwitchPrimitive.Root
-          checked={isEnabled}
-          onCheckedChange={handleToggle}
-          className={cn(
-            'focus-visible:ring-ring/50 inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent shadow-xs transition-colors outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50',
-            isEnabled ? 'bg-brand-primary-500' : 'bg-slate-300'
-          )}
-        >
-          <SwitchPrimitive.Thumb
-            className={cn(
-              'pointer-events-none block h-5 w-5 rounded-full bg-white shadow-lg ring-0 transition-transform',
-              isEnabled ? 'translate-x-5' : 'translate-x-0'
-            )}
-          />
-        </SwitchPrimitive.Root>
-      </div>
-
-      <div className="flex flex-col gap-4 px-6">
-        {/* dataTakenFromCandidate — grayed when toggle off */}
-        <div className={cn(!isEnabled && 'pointer-events-none opacity-60')}>
-          <div className="flex items-start gap-2">
-            <Checkbox
-              id="projectsDataTakenFromCandidate"
-              checked={dataTakenFromCandidate}
-              onCheckedChange={value => setDataTakenFromCandidate(!!value)}
-              className="mt-0.5"
-            />
-            <Label
-              htmlFor="projectsDataTakenFromCandidate"
-              className="cursor-pointer leading-snug"
+        {/* ── Section header: back arrow + title + toggle ───────────────── */}
+        <div className="flex items-center justify-between px-7 py-8">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              aria-label="Back"
+              className="text-slate-700 transition-colors hover:text-slate-900"
+              onClick={onBack}
             >
-              {t('projectsRequirements.dataTakenFromCandidate')}
-            </Label>
+              <ArrowLeft2 size={24} />
+            </button>
+            <h2 className="text-xl font-bold tracking-tight text-slate-900">
+              {t('projectsRequirements.title')}
+            </h2>
           </div>
+
+          <SwitchPrimitive.Root
+            checked={isEnabled}
+            onCheckedChange={handleToggle}
+            className={cn(
+              'focus-visible:ring-ring/50 inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent shadow-xs transition-colors outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50',
+              isEnabled ? 'bg-brand-primary-500' : 'bg-slate-300'
+            )}
+          >
+            <SwitchPrimitive.Thumb
+              className={cn(
+                'pointer-events-none block h-5 w-5 rounded-full bg-white shadow-lg ring-0 transition-transform',
+                isEnabled ? 'translate-x-5' : 'translate-x-0'
+              )}
+            />
+          </SwitchPrimitive.Root>
         </div>
 
-        {/* ── Project Cards ──────────────────────────────────────────── */}
-        {projects.map((project, index) => (
-          <ProjectCard
-            key={project.id}
-            index={index}
-            project={project}
-            onUpdate={updateProject}
-            fieldsDisabled={fieldsDisabled}
-            industries={industries}
-            isIndustriesLoading={isIndustriesLoading}
-            locationOptions={locationOptions}
-            isLocationsLoading={isLocationsLoading}
-            organizationOptions={organizationOptions}
-            isOrganizationsLoading={isOrganizationsLoading}
-            locationsData={locationsData ?? []}
-            organizationsData={organizationsData ?? []}
-            onOpenAddOrganizationDialog={(name, projectIdx) => {
-              setPendingOrganizationName(name);
-              setPendingProjectIndex(projectIdx);
-              setShowAddOrganizationDialog(true);
-            }}
-          />
-        ))}
-
-        {/* ── Add Entry button (outside card, bottom-right) ─────────── */}
+        {/* ── Checkbox: data from candidate profile ─────────────────────── */}
         <div
           className={cn(
-            'flex justify-end',
+            'flex items-center gap-3 px-7 pb-8',
             !isEnabled && 'pointer-events-none opacity-60'
           )}
         >
+          <Checkbox
+            id="projectsDataTakenFromCandidate"
+            checked={dataTakenFromCandidate}
+            onCheckedChange={value => setDataTakenFromCandidate(!!value)}
+          />
+          <Label
+            htmlFor="projectsDataTakenFromCandidate"
+            className="cursor-pointer text-sm font-medium text-slate-900"
+          >
+            {t('projectsRequirements.dataTakenFromCandidate')}
+          </Label>
+        </div>
+
+        {/* ── Project cards ─────────────────────────────────────────────── */}
+        <div className="flex flex-col gap-4 px-6">
+          {projects.map((project, index) => (
+            <ProjectCard
+              key={project.id}
+              index={index}
+              project={project}
+              onUpdate={updateProject}
+              fieldsDisabled={fieldsDisabled}
+              industries={industries}
+              isIndustriesLoading={isIndustriesLoading}
+              locationOptions={locationOptions}
+              isLocationsLoading={isLocationsLoading}
+              organizationOptions={organizationOptions}
+              isOrganizationsLoading={isOrganizationsLoading}
+            />
+          ))}
+        </div>
+
+        {/* ── Add project button ────────────────────────────────────────── */}
+        <div className="flex justify-end px-6 py-4">
           <Button
+            type="button"
             variant="secondary"
-            size="icon"
-            aria-label="Add entry"
+            disabled
             className="size-11 rounded-lg bg-gray-200 px-3 text-sm"
             onClick={addProject}
           >
             <PlusIcon className="size-4 text-neutral-600!" />
           </Button>
         </div>
-      </div>
 
-      {/* ── Add Organization dialog ─────────────────────────────────────── */}
-      <AddOrganizationFormDialog
-        open={showAddOrganizationDialog}
-        onOpenChange={setShowAddOrganizationDialog}
-        organizationName={pendingOrganizationName}
-        onOrganizationAdded={org => {
-          updateProject(pendingProjectIndex, {
-            organization: org,
-          });
-          const matchingLocation = (locationsData ?? []).find(
-            l => l.id === org.location
-          );
-          if (matchingLocation) {
-            updateProject(pendingProjectIndex, {
-              organizationLocation: {
-                id: matchingLocation.id,
-                label: matchingLocation.label,
-              },
-            });
-          }
-          setShowAddOrganizationDialog(false);
-        }}
-      />
+        {/* ── Step footer ───────────────────────────────────────────────── */}
+        <div className="sticky bottom-0 mt-auto flex items-center justify-end gap-4 bg-white px-6 py-7 shadow-[0px_-8px_6.8px_0px_rgba(0,0,0,0.04)]">
+          <Button variant="secondary" className="h-12 w-48" onClick={onCancel}>
+            {t('projectsRequirements.cancel')}
+          </Button>
+          <Button
+            className="h-12 w-48"
+            onClick={() => {
+              void handleNext();
+            }}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              t('projectsRequirements.next')
+            )}
+          </Button>
+        </div>
+      </div>
 
       {/* ── Disable Confirmation Dialog ───────────────────────────────────── */}
       <DisableDialog
@@ -766,26 +805,6 @@ export default function ProjectsRequirementsStep({
         onCancel={() => setConfirmDisableOpen(false)}
         onDisable={handleDisable}
       />
-
-      {/* ── Step footer ──────────────────────────────────────────────────── */}
-      <div className="mt-auto flex justify-end gap-4 border-t border-slate-200 px-6 pt-4">
-        <Button variant="secondary" className="h-12 w-44" onClick={onBack}>
-          {t('projectsRequirements.cancel')}
-        </Button>
-        <Button
-          className="h-12 w-44"
-          onClick={() => {
-            void handleNext();
-          }}
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? (
-            <Loader2 className="size-4 animate-spin" />
-          ) : (
-            t('projectsRequirements.next')
-          )}
-        </Button>
-      </div>
-    </div>
+    </>
   );
 }
