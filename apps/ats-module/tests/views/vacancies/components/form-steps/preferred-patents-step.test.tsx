@@ -23,6 +23,7 @@ const mockUseVacancyForm = vi.hoisted(() =>
         patents: [],
       },
     },
+    setForm: vi.fn(),
     setStepGuard: vi.fn(),
     stepPersistRef: { current: null },
     stepDisableRef: { current: null },
