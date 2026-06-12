@@ -241,6 +241,7 @@ interface VacancyFormContextValue {
   stepGuard: boolean;
   setStepGuard: (guard: boolean) => void;
   stepPersistRef: React.MutableRefObject<(() => void) | null>;
+  stepDisableRef: React.MutableRefObject<(() => void) | null>;
 }
 
 const VacancyFormContext = createContext<VacancyFormContextValue | null>(null);
@@ -253,6 +254,7 @@ function VacancyFormProvider({ children }: { children: React.ReactNode }) {
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [stepGuard, setStepGuard] = useState(false);
   const stepPersistRef = useRef<(() => void) | null>(null);
+  const stepDisableRef = useRef<(() => void) | null>(null);
 
   const setCurrentStepIndex = (index: number) => {
     _setCurrentStepIndex(index);
@@ -338,6 +340,7 @@ function VacancyFormProvider({ children }: { children: React.ReactNode }) {
         stepGuard,
         setStepGuard,
         stepPersistRef,
+        stepDisableRef,
       }}
     >
       {children}

@@ -38,7 +38,7 @@ export default function PreferredHobbiesStep({
 }: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
   const showDisableToast = useDisableSuccessToast();
-  const { form, setForm, stepPersistRef } = useVacancyForm();
+  const { form, setForm, stepPersistRef, stepDisableRef } = useVacancyForm();
 
   const [isEnabled, setIsEnabled] = useState(
     form.preferredHobbies?.isEnabled ?? false
@@ -73,6 +73,21 @@ export default function PreferredHobbiesStep({
       stepPersistRef.current = null;
     };
   }, [stepPersistRef]);
+  useEffect(() => {
+    stepDisableRef.current = () => {
+      setForm(prev => ({
+        ...prev,
+        preferredHobbies: {
+          isEnabled: false,
+          dataTakenFromCandidate: false,
+          hobbies: [],
+        },
+      }));
+    };
+    return () => {
+      stepDisableRef.current = null;
+    };
+  }, [setForm, stepDisableRef]);
 
   // Hobby search state for the query
   const [hobbySearch, setHobbySearch] = useState('');

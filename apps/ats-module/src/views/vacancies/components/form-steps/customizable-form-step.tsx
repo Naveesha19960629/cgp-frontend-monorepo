@@ -2,7 +2,7 @@ import { Plus, X } from 'lucide-react';
 
 import { ArrowDown2, ArrowLeft2, Simcard2, Trash } from 'iconsax-reactjs';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
@@ -555,30 +555,6 @@ function QuestionCard({
 export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
   const { t } = useTranslation('ats');
 
-  // TODO: Persist state on tab navigation — not yet wired because VacancyForm
-  // has no `customizableForm` field. To activate:
-  //   1. Add `customizableForm` to VacancyForm in types.ts
-  //   2. Add its default value to DEFAULT_FORM in vacancy-form-context.tsx
-  //   3. Uncomment the block below and add to the existing React import: useRef
-  //      and add to the file import: useVacancyForm from vacancy-form-context
-  //
-  // const { setForm, stepPersistRef } = useVacancyForm();
-  // const _customizableRef = useRef<() => void>(() => {});
-  // useEffect(() => {
-  //   _customizableRef.current = () => {
-  //     setForm(prev => ({
-  //       ...prev,
-  //       customizableForm: { isEnabled, sectionTitle, forms },
-  //     }));
-  //   };
-  // }, [isEnabled, sectionTitle, forms, setForm]);
-  // useEffect(() => {
-  //   stepPersistRef.current = () => _customizableRef.current();
-  //   return () => {
-  //     stepPersistRef.current = null;
-  //   };
-  // }, [stepPersistRef]);
-
   const showDisableToast = useDisableSuccessToast();
   const { form, onCancel } = useVacancyForm();
   const initialCustomizableForm = form.customizableForm;
@@ -601,6 +577,34 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
   const [pendingFormDelete, setPendingFormDelete] = useState<number | null>(
     null
   );
+
+  const { setForm, stepPersistRef, stepDisableRef } = useVacancyForm();
+  const _customizableRef = useRef<() => void>(() => {});
+  useEffect(() => {
+    _customizableRef.current = () => {
+      setForm(prev => ({
+        ...prev,
+        customizableForm: { isEnabled, sectionTitle, forms },
+      }));
+    };
+  }, [isEnabled, sectionTitle, forms, setForm]);
+  useEffect(() => {
+    stepPersistRef.current = () => _customizableRef.current();
+    return () => {
+      stepPersistRef.current = null;
+    };
+  }, [stepPersistRef]);
+  useEffect(() => {
+    stepDisableRef.current = () => {
+      setForm(prev => ({
+        ...prev,
+        customizableForm: { isEnabled: false, sectionTitle: '', forms: [] },
+      }));
+    };
+    return () => {
+      stepDisableRef.current = null;
+    };
+  }, [setForm, stepDisableRef]);
 
   useStepGuard(
     isEnabled &&

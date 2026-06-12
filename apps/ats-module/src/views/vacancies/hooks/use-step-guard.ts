@@ -1,11 +1,11 @@
-import { useEffect } from 'react';
+import { useLayoutEffect } from 'react';
 
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 
 function useStepGuard(shouldGuard: boolean): void {
   const { setStepGuard } = useVacancyForm();
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     setStepGuard(shouldGuard);
     return () => setStepGuard(false);
   }, [shouldGuard, setStepGuard]);

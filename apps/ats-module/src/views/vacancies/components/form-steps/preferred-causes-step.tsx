@@ -38,7 +38,7 @@ export default function PreferredCausesStep({
 }: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
   const showDisableToast = useDisableSuccessToast();
-  const { form, setForm, stepPersistRef } = useVacancyForm();
+  const { form, setForm, stepPersistRef, stepDisableRef } = useVacancyForm();
 
   const [isEnabled, setIsEnabled] = useState(
     form.preferredCauses?.isEnabled ?? false
@@ -73,6 +73,21 @@ export default function PreferredCausesStep({
       stepPersistRef.current = null;
     };
   }, [stepPersistRef]);
+  useEffect(() => {
+    stepDisableRef.current = () => {
+      setForm(prev => ({
+        ...prev,
+        preferredCauses: {
+          isEnabled: false,
+          dataTakenFromCandidate: false,
+          causes: [],
+        },
+      }));
+    };
+    return () => {
+      stepDisableRef.current = null;
+    };
+  }, [setForm, stepDisableRef]);
 
   // Cause search state for the query
   const [causeSearch, setCauseSearch] = useState('');

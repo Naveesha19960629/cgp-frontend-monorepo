@@ -4,7 +4,7 @@ import { ArrowLeft2, Calendar as CalendarIcon } from 'iconsax-reactjs';
 
 import * as SwitchPrimitive from '@radix-ui/react-switch';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import MessageBox from '@/components/message-box';
@@ -474,30 +474,6 @@ export default function ProjectsRequirementsStep({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [confirmDisableOpen, setConfirmDisableOpen] = useState(false);
 
-  // TODO: Persist state on tab navigation — not yet wired because VacancyForm
-  // has no `projects` field. To activate:
-  //   1. Add `projects` to VacancyForm in types.ts
-  //   2. Add its default value to DEFAULT_FORM in vacancy-form-context.tsx
-  //   3. Uncomment the block below and add to the React import: useEffect, useRef
-  //      and add to the file import: useVacancyForm from vacancy-form-context
-  //
-  // const { setForm, stepPersistRef } = useVacancyForm();
-  // const _projectsRef = useRef<() => void>(() => {});
-  // useEffect(() => {
-  //   _projectsRef.current = () => {
-  //     setForm(prev => ({
-  //       ...prev,
-  //       projects: { isEnabled, dataTakenFromCandidate, projects },
-  //     }));
-  //   };
-  // }, [isEnabled, dataTakenFromCandidate, projects, setForm]);
-  // useEffect(() => {
-  //   stepPersistRef.current = () => _projectsRef.current();
-  //   return () => {
-  //     stepPersistRef.current = null;
-  //   };
-  // }, [stepPersistRef]);
-
   const [projects, setProjects] = useState<ProjectEntry[]>(
     savedProjects?.projects && savedProjects.projects.length > 0
       ? savedProjects.projects
@@ -514,11 +490,48 @@ export default function ProjectsRequirementsStep({
         ]
   );
 
+  const { setForm, stepPersistRef, stepDisableRef } = useVacancyForm();
+  const _projectsRef = useRef<() => void>(() => {});
+  useEffect(() => {
+    _projectsRef.current = () => {
+      setForm(prev => ({
+        ...prev,
+        projectsRequirements: { isEnabled, dataTakenFromCandidate, projects },
+      }));
+    };
+  }, [isEnabled, dataTakenFromCandidate, projects, setForm]);
+  useEffect(() => {
+    stepPersistRef.current = () => _projectsRef.current();
+    return () => {
+      stepPersistRef.current = null;
+    };
+  }, [stepPersistRef]);
+  useEffect(() => {
+    stepDisableRef.current = () => {
+      setForm(prev => ({
+        ...prev,
+        projectsRequirements: {
+          isEnabled: false,
+          dataTakenFromCandidate: false,
+          projects: [],
+        },
+      }));
+    };
+    return () => {
+      stepDisableRef.current = null;
+    };
+  }, [setForm, stepDisableRef]);
+
   useStepGuard(
     isEnabled &&
       !dataTakenFromCandidate &&
       !projects.some(
-        p => p.relatedIndustry.length > 0 || p.organizations != null
+        p =>
+          p.relatedIndustry.length > 0 ||
+          p.organizations.length > 0 ||
+          p.organizationLocations.length > 0 ||
+          p.startDate != null ||
+          p.endDate != null
       )
   );
 

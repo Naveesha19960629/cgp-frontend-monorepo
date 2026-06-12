@@ -4,7 +4,7 @@ import { ArrowLeft2, Calendar as CalendarIcon } from 'iconsax-reactjs';
 
 import * as SwitchPrimitive from '@radix-ui/react-switch';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import MessageBox from '@/components/message-box';
@@ -399,30 +399,6 @@ export default function PreferredClubSocietiesStep({
   );
   const [confirmDisableOpen, setConfirmDisableOpen] = useState(false);
 
-  // TODO: Persist state on tab navigation — not yet wired because VacancyForm
-  // has no `preferredClubSocieties` field. To activate:
-  //   1. Add `preferredClubSocieties` to VacancyForm in types.ts
-  //   2. Add its default value to DEFAULT_FORM in vacancy-form-context.tsx
-  //   3. Uncomment the block below and add to the React import: useEffect, useRef
-  //      and add to the file import: useVacancyForm from vacancy-form-context
-  //
-  // const { setForm, stepPersistRef } = useVacancyForm();
-  // const _clubRef = useRef<() => void>(() => {});
-  // useEffect(() => {
-  //   _clubRef.current = () => {
-  //     setForm(prev => ({
-  //       ...prev,
-  //       preferredClubSocieties: { isEnabled, dataTakenFromCandidate, entries },
-  //     }));
-  //   };
-  // }, [isEnabled, dataTakenFromCandidate, entries, setForm]);
-  // useEffect(() => {
-  //   stepPersistRef.current = () => _clubRef.current();
-  //   return () => {
-  //     stepPersistRef.current = null;
-  //   };
-  // }, [stepPersistRef]);
-
   const [entries, setEntries] = useState<ClubSocietyEntry[]>(
     savedClubSocieties?.clubSocieties &&
       savedClubSocieties.clubSocieties.length > 0
@@ -440,6 +416,42 @@ export default function PreferredClubSocietiesStep({
           },
         ]
   );
+
+  const { setForm, stepPersistRef, stepDisableRef } = useVacancyForm();
+  const _clubRef = useRef<() => void>(() => {});
+  useEffect(() => {
+    _clubRef.current = () => {
+      setForm(prev => ({
+        ...prev,
+        preferredClubSocieties: {
+          isEnabled,
+          dataTakenFromCandidate,
+          clubSocieties: entries,
+        },
+      }));
+    };
+  }, [isEnabled, dataTakenFromCandidate, entries, setForm]);
+  useEffect(() => {
+    stepPersistRef.current = () => _clubRef.current();
+    return () => {
+      stepPersistRef.current = null;
+    };
+  }, [stepPersistRef]);
+  useEffect(() => {
+    stepDisableRef.current = () => {
+      setForm(prev => ({
+        ...prev,
+        preferredClubSocieties: {
+          isEnabled: false,
+          dataTakenFromCandidate: false,
+          clubSocieties: [],
+        },
+      }));
+    };
+    return () => {
+      stepDisableRef.current = null;
+    };
+  }, [setForm, stepDisableRef]);
 
   const handleNext = () => {
     onNext({

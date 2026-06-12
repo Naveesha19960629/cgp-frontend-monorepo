@@ -52,7 +52,7 @@ export default function PreferredSkillsStep({
 }: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
   const showDisableToast = useDisableSuccessToast();
-  const { form, setForm, stepPersistRef } = useVacancyForm();
+  const { form, setForm, stepPersistRef, stepDisableRef } = useVacancyForm();
 
   const [isEnabled, setIsEnabled] = useState(
     form.preferredSkills?.isEnabled ?? false
@@ -98,6 +98,21 @@ export default function PreferredSkillsStep({
       stepPersistRef.current = null;
     };
   }, [stepPersistRef]);
+  useEffect(() => {
+    stepDisableRef.current = () => {
+      setForm(prev => ({
+        ...prev,
+        preferredSkills: {
+          isEnabled: false,
+          dataTakenFromCandidate: false,
+          skills: [],
+        },
+      }));
+    };
+    return () => {
+      stepDisableRef.current = null;
+    };
+  }, [setForm, stepDisableRef]);
 
   // Skill search state for the query
   const [skillSearch, setSkillSearch] = useState('');

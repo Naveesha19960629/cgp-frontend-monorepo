@@ -4,7 +4,7 @@ import { ArrowLeft2, Calendar as CalendarIcon } from 'iconsax-reactjs';
 
 import * as SwitchPrimitive from '@radix-ui/react-switch';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import MessageBox from '@/components/message-box';
@@ -469,30 +469,6 @@ export default function PreferredVolunteeringStep({
   );
   const [confirmDisableOpen, setConfirmDisableOpen] = useState(false);
 
-  // TODO: Persist state on tab navigation — not yet wired because VacancyForm
-  // has no `preferredVolunteering` field. To activate:
-  //   1. Add `preferredVolunteering` to VacancyForm in types.ts
-  //   2. Add its default value to DEFAULT_FORM in vacancy-form-context.tsx
-  //   3. Uncomment the block below and add to the React import: useEffect, useRef
-  //      and add to the file import: useVacancyForm from vacancy-form-context
-  //
-  // const { setForm, stepPersistRef } = useVacancyForm();
-  // const _volunteeringRef = useRef<() => void>(() => {});
-  // useEffect(() => {
-  //   _volunteeringRef.current = () => {
-  //     setForm(prev => ({
-  //       ...prev,
-  //       preferredVolunteering: { isEnabled, dataTakenFromCandidate, entries },
-  //     }));
-  //   };
-  // }, [isEnabled, dataTakenFromCandidate, entries, setForm]);
-  // useEffect(() => {
-  //   stepPersistRef.current = () => _volunteeringRef.current();
-  //   return () => {
-  //     stepPersistRef.current = null;
-  //   };
-  // }, [stepPersistRef]);
-
   const [entries, setEntries] = useState<VolunteeringEntry[]>(
     savedVolunteering?.volunteering && savedVolunteering.volunteering.length > 0
       ? savedVolunteering.volunteering
@@ -508,6 +484,42 @@ export default function PreferredVolunteeringStep({
       },
     });
   };
+
+  const { setForm, stepPersistRef, stepDisableRef } = useVacancyForm();
+  const _volunteeringRef = useRef<() => void>(() => {});
+  useEffect(() => {
+    _volunteeringRef.current = () => {
+      setForm(prev => ({
+        ...prev,
+        preferredVolunteering: {
+          isEnabled,
+          dataTakenFromCandidate,
+          volunteering: entries,
+        },
+      }));
+    };
+  }, [isEnabled, dataTakenFromCandidate, entries, setForm]);
+  useEffect(() => {
+    stepPersistRef.current = () => _volunteeringRef.current();
+    return () => {
+      stepPersistRef.current = null;
+    };
+  }, [stepPersistRef]);
+  useEffect(() => {
+    stepDisableRef.current = () => {
+      setForm(prev => ({
+        ...prev,
+        preferredVolunteering: {
+          isEnabled: false,
+          dataTakenFromCandidate: false,
+          volunteering: [],
+        },
+      }));
+    };
+    return () => {
+      stepDisableRef.current = null;
+    };
+  }, [setForm, stepDisableRef]);
 
   useStepGuard(
     isEnabled &&

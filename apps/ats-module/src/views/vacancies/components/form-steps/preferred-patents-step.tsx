@@ -480,6 +480,7 @@ export default function PreferredPatentsStep({ onNext, onBack }: StepProps) {
     setForm,
     onCancel,
     stepPersistRef,
+    stepDisableRef,
   } = useVacancyForm();
   const { form, fields, append, remove, replace } = usePreferredPatentsForm(
     contextForm.patents
@@ -515,6 +516,21 @@ export default function PreferredPatentsStep({ onNext, onBack }: StepProps) {
       stepPersistRef.current = null;
     };
   }, [form, setForm, stepPersistRef]);
+  useEffect(() => {
+    stepDisableRef.current = () => {
+      setForm(prev => ({
+        ...prev,
+        patents: {
+          isEnabled: false,
+          dataTakenFromCandidate: false,
+          patents: [],
+        },
+      }));
+    };
+    return () => {
+      stepDisableRef.current = null;
+    };
+  }, [setForm, stepDisableRef]);
 
   const [showDisableConfirm, setShowDisableConfirm] = useState(false);
   const [showEmptyConfirm, setShowEmptyConfirm] = useState(false);

@@ -351,6 +351,7 @@ export default function ProfileRequirementsStep({ onNext, onBack }: StepProps) {
     setForm,
     onCancel,
     stepPersistRef,
+    stepDisableRef,
   } = useVacancyForm();
   const { form, fields, append, remove, replace } = useProfileRequirementsForm(
     contextForm.profileRequirements
@@ -403,6 +404,23 @@ export default function ProfileRequirementsStep({ onNext, onBack }: StepProps) {
       stepPersistRef.current = null;
     };
   }, [form, setForm, stepPersistRef]);
+  useEffect(() => {
+    stepDisableRef.current = () => {
+      setForm(prev => ({
+        ...prev,
+        profileRequirements: {
+          isEnabled: false,
+          dataTakenFromCandidate: false,
+          gender: { id: '', label: '' },
+          maritalStatus: { id: '', label: '' },
+          addresses: [],
+        },
+      }));
+    };
+    return () => {
+      stepDisableRef.current = null;
+    };
+  }, [setForm, stepDisableRef]);
 
   const isFieldsDisabled = !isEnabled || dataTakenFromCandidate;
 

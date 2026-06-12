@@ -73,6 +73,7 @@ export default function VacancyCreateStepperForm() {
     completedSteps,
     stepGuard,
     stepPersistRef,
+    stepDisableRef,
     onNext,
     onBack,
     onSubmit,
@@ -216,7 +217,7 @@ export default function VacancyCreateStepperForm() {
         confirmLabel={t('stepNavigation.disableDialog.confirmButton')}
         onConfirm={() => {
           if (pendingTargetIndex !== null) {
-            stepPersistRef.current?.();
+            stepDisableRef.current?.();
             setCurrentStepIndex(pendingTargetIndex);
             setPendingTargetIndex(null);
           }

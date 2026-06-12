@@ -629,6 +629,7 @@ export default function PreferredHonoursAwardsStep({
     setForm,
     onCancel,
     stepPersistRef,
+    stepDisableRef,
   } = useVacancyForm();
   const { form, fields, append, remove, replace } =
     usePreferredHonoursAwardsForm(contextForm.preferredHonoursAwards);
@@ -667,6 +668,21 @@ export default function PreferredHonoursAwardsStep({
       stepPersistRef.current = null;
     };
   }, [form, setForm, stepPersistRef]);
+  useEffect(() => {
+    stepDisableRef.current = () => {
+      setForm(prev => ({
+        ...prev,
+        preferredHonoursAwards: {
+          isEnabled: false,
+          dataTakenFromCandidate: false,
+          honoursAndAwards: [],
+        },
+      }));
+    };
+    return () => {
+      stepDisableRef.current = null;
+    };
+  }, [setForm, stepDisableRef]);
 
   const canNavigate =
     !isEnabled || dataTakenFromCandidate || hasHonoursData(form.getValues());

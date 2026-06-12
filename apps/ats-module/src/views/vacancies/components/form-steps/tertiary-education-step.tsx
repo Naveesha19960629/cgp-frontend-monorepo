@@ -65,15 +65,19 @@ export default function TertiaryEducationStep({
   onBack,
 }: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
-  const { form: vacancyForm, setForm, stepPersistRef } = useVacancyForm();
+  const {
+    form: vacancyForm,
+    setForm,
+    stepPersistRef,
+    stepDisableRef,
+  } = useVacancyForm();
 
   const { control, watch, handleSubmit, setValue, getValues } =
     useTertiaryEducationForm(vacancyForm.tertiaryEducation);
 
   const isEnabled = watch('isEnabled');
   const dataTakenFromCandidate = watch('dataTakenFromCandidate');
-
-  const savedEntries = vacancyForm.tertiaryEducation[0]?.content ?? [];
+  const entryValue = watch('entry');
 
   // ── Form field helpers ───────────────────────────────────────────────────
   const fieldsDisabled = !isEnabled || dataTakenFromCandidate;
@@ -112,12 +116,7 @@ export default function TertiaryEducationStep({
     );
   };
 
-  useStepGuard(
-    isEnabled &&
-      !dataTakenFromCandidate &&
-      !checkHasFilledData() &&
-      savedEntries.length === 0
-  );
+  useStepGuard(isEnabled && !dataTakenFromCandidate && !checkHasFilledData());
   useEffect(() => {
     stepPersistRef.current = () => {
       setForm(prev => ({
@@ -129,6 +128,19 @@ export default function TertiaryEducationStep({
       stepPersistRef.current = null;
     };
   }, [getValues, setForm, stepPersistRef]);
+  useEffect(() => {
+    stepDisableRef.current = () => {
+      setForm(prev => ({
+        ...prev,
+        tertiaryEducation: [
+          { isEnabled: false, dataTakenFromCandidate: false, content: [] },
+        ],
+      }));
+    };
+    return () => {
+      stepDisableRef.current = null;
+    };
+  }, [setForm, stepDisableRef]);
 
   // ── Add-Now mutations ────────────────────────────────────────────────────
   const addQualificationMutation = useAddQualificationMutation();
@@ -139,7 +151,7 @@ export default function TertiaryEducationStep({
   const addFacultyMutation = useAddFacultyMutation();
 
   // ── Awarding body dialog state ───────────────────────────────────────────
-  const awardingBodyValue = watch('entry.tertiaryAwardingBody');
+  const awardingBodyValue = entryValue.tertiaryAwardingBody;
   const addTertiaryAwardingBodyMutation = useAddTertiaryAwardingBodyMutation();
   const pendingAwardingBodiesDataRef = useRef<
     Map<string, { displayValue: string; locationId?: string; url?: string }>

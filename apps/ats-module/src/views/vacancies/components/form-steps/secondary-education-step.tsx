@@ -68,18 +68,22 @@ export default function SecondaryEducationStep({
   onBack,
 }: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
-  const { form: vacancyForm, setForm, stepPersistRef } = useVacancyForm();
+  const {
+    form: vacancyForm,
+    setForm,
+    stepPersistRef,
+    stepDisableRef,
+  } = useVacancyForm();
 
   const { control, watch, handleSubmit, setValue, getValues, resetField } =
     useSecondaryEducationForm(vacancyForm.secondaryEducation);
 
   const isEnabled = watch('isEnabled');
   const dataTakenFromCandidate = watch('dataTakenFromCandidate');
-  const startDateValue = watch('entry.startDate');
-  const endDateValue = watch('entry.endDate');
-  const schoolsValue = watch('entry.schools');
-
-  const savedEntries = vacancyForm.secondaryEducation[0]?.content ?? [];
+  const entryValue = watch('entry');
+  const startDateValue = entryValue.startDate;
+  const endDateValue = entryValue.endDate;
+  const schoolsValue = entryValue.schools;
 
   // ── Form field helpers ───────────────────────────────────────
   const fieldsDisabled = !isEnabled || dataTakenFromCandidate;
@@ -115,12 +119,7 @@ export default function SecondaryEducationStep({
     );
   };
 
-  useStepGuard(
-    isEnabled &&
-      !dataTakenFromCandidate &&
-      !checkHasFilledData() &&
-      savedEntries.length === 0
-  );
+  useStepGuard(isEnabled && !dataTakenFromCandidate && !checkHasFilledData());
   useEffect(() => {
     stepPersistRef.current = () => {
       setForm(prev => ({
@@ -132,6 +131,19 @@ export default function SecondaryEducationStep({
       stepPersistRef.current = null;
     };
   }, [getValues, setForm, stepPersistRef]);
+  useEffect(() => {
+    stepDisableRef.current = () => {
+      setForm(prev => ({
+        ...prev,
+        secondaryEducation: [
+          { isEnabled: false, dataTakenFromCandidate: false, content: [] },
+        ],
+      }));
+    };
+    return () => {
+      stepDisableRef.current = null;
+    };
+  }, [setForm, stepDisableRef]);
 
   // ── Add-Now mutations ────────────────────────────────────────────────────
   const addExaminationMutation = useAddExaminationMutation();

@@ -38,7 +38,7 @@ export default function PreferredLanguagesStep({
 }: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
   const showDisableToast = useDisableSuccessToast();
-  const { form, setForm, stepPersistRef } = useVacancyForm();
+  const { form, setForm, stepPersistRef, stepDisableRef } = useVacancyForm();
 
   const [isEnabled, setIsEnabled] = useState(
     form.preferredLanguages?.isEnabled ?? false
@@ -73,6 +73,21 @@ export default function PreferredLanguagesStep({
       stepPersistRef.current = null;
     };
   }, [stepPersistRef]);
+  useEffect(() => {
+    stepDisableRef.current = () => {
+      setForm(prev => ({
+        ...prev,
+        preferredLanguages: {
+          isEnabled: false,
+          dataTakenFromCandidate: false,
+          languages: [],
+        },
+      }));
+    };
+    return () => {
+      stepDisableRef.current = null;
+    };
+  }, [setForm, stepDisableRef]);
 
   // Language search state for the query
   const [langSearch, setLangSearch] = useState('');
