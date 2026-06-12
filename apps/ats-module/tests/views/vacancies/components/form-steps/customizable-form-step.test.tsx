@@ -196,6 +196,7 @@ const renderComponent = (
   mockUseVacancyForm.mockReturnValue({
     form: { customizableForm: undefined },
     onCancel: vi.fn(),
+    setStepGuard: vi.fn(),
   });
 
   return render(<CustomizableFormStep {...props} />);
