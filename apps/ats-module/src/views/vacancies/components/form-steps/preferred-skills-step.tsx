@@ -7,6 +7,7 @@ import * as SwitchPrimitive from '@radix-ui/react-switch';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { StepDisableDialog } from '@/views/vacancies';
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import {
   useCareerPathsQuery,
@@ -34,8 +35,6 @@ import { Badge } from '@cgp/ui-kit/components/ui/badge';
 import { Button } from '@cgp/ui-kit/components/ui/button';
 import { Checkbox } from '@cgp/ui-kit/components/ui/checkbox';
 import { cn } from '@cgp/ui-kit/lib/utils';
-
-import DisableDialog from './disable-dialog';
 
 const MAX_SKILLS = 10;
 const MAX_SKILL_CHARS = 100;
@@ -626,36 +625,29 @@ export default function PreferredSkillsStep({
         </div>
       </div>
 
-      <DisableDialog
+      <StepDisableDialog
         open={confirmDisableOpen}
         onOpenChange={open => {
           if (!open) setConfirmDisableOpen(false);
         }}
-        title={t('preferredSkills.confirmDisableDialog.title')}
-        message={t('preferredSkills.confirmDisableDialog.message')}
-        cancelLabel={t('preferredSkills.confirmDisableDialog.cancel')}
-        disableLabel={t('preferredSkills.confirmDisableDialog.disable')}
-        onCancel={() => setConfirmDisableOpen(false)}
-        onDisable={() => {
+        onConfirm={() => {
           setSelectedSkills([]);
           setDataTakenFromCandidate(false);
           setIsEnabled(false);
           setConfirmDisableOpen(false);
           showDisableToast(t('preferredSkills.title'));
         }}
+        title={t('preferredSkills.confirmDisableDialog.title')}
+        description={t('preferredSkills.confirmDisableDialog.message')}
+        confirmLabel={t('preferredSkills.confirmDisableDialog.disable')}
       />
 
-      <DisableDialog
+      <StepDisableDialog
         open={emptyDisableOpen}
         onOpenChange={open => {
           if (!open) setEmptyDisableOpen(false);
         }}
-        title={t('preferredSkills.emptyDisableDialog.title')}
-        message={t('preferredSkills.emptyDisableDialog.message')}
-        cancelLabel={t('preferredSkills.emptyDisableDialog.cancel')}
-        disableLabel={t('preferredSkills.emptyDisableDialog.disable')}
-        onCancel={() => setEmptyDisableOpen(false)}
-        onDisable={() => {
+        onConfirm={() => {
           setIsEnabled(false);
           setEmptyDisableOpen(false);
           showDisableToast(t('preferredSkills.title'));
@@ -667,6 +659,9 @@ export default function PreferredSkillsStep({
             },
           });
         }}
+        title={t('preferredSkills.emptyDisableDialog.title')}
+        description={t('preferredSkills.emptyDisableDialog.message')}
+        confirmLabel={t('preferredSkills.emptyDisableDialog.disable')}
       />
 
       {/* Footer — sticky at bottom of the parent scroll container */}

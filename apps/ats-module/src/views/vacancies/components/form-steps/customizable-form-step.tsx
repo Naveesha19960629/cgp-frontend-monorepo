@@ -5,6 +5,7 @@ import { ArrowDown2, ArrowLeft2, Simcard2, Trash } from 'iconsax-reactjs';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { StepDisableDialog } from '@/views/vacancies';
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import { useStepGuard } from '@/views/vacancies/hooks';
 import { useDisableSuccessToast } from '@/views/vacancies/hooks';
@@ -27,8 +28,6 @@ import {
 } from '@cgp/ui-kit/components/ui/select';
 import { Switch } from '@cgp/ui-kit/components/ui/switch';
 import { removeEmoji } from '@cgp/ui-kit/lib/utils';
-
-import DisableDialog from './disable-dialog';
 
 // ── UI-only state types (not API types) ──────────────────────────────────────
 
@@ -982,15 +981,10 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
         </div>
       </div>
 
-      <DisableDialog
+      <StepDisableDialog
         open={showDisableConfirm}
         onOpenChange={setShowDisableConfirm}
-        title={t('customizableForm.confirmDisableDialog.title')}
-        message={t('customizableForm.confirmDisableDialog.message')}
-        cancelLabel={t('customizableForm.confirmDisableDialog.cancel')}
-        disableLabel={t('customizableForm.confirmDisableDialog.disable')}
-        onCancel={() => setShowDisableConfirm(false)}
-        onDisable={() => {
+        onConfirm={() => {
           setSectionTitle('');
           setForms([createForm(1)]);
           setNextFormId(2);
@@ -998,17 +992,15 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
           setIsEnabled(false);
           showDisableToast(t('customizableForm.title'));
         }}
+        title={t('customizableForm.confirmDisableDialog.title')}
+        description={t('customizableForm.confirmDisableDialog.message')}
+        confirmLabel={t('customizableForm.confirmDisableDialog.disable')}
       />
 
-      <DisableDialog
+      <StepDisableDialog
         open={showValidationModal}
         onOpenChange={setShowValidationModal}
-        title={t('customizableForm.validationModal.title')}
-        message={t('customizableForm.validationModal.message')}
-        cancelLabel={t('customizableForm.validationModal.cancel')}
-        disableLabel={t('customizableForm.validationModal.disable')}
-        onCancel={() => setShowValidationModal(false)}
-        onDisable={() => {
+        onConfirm={() => {
           setSectionTitle('');
           setForms([createForm(1)]);
           setNextFormId(2);
@@ -1024,19 +1016,17 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
             },
           });
         }}
+        title={t('customizableForm.validationModal.title')}
+        description={t('customizableForm.validationModal.message')}
+        confirmLabel={t('customizableForm.validationModal.disable')}
       />
 
-      <DisableDialog
+      <StepDisableDialog
         open={pendingQuestionDelete !== null}
         onOpenChange={open => {
           if (!open) setPendingQuestionDelete(null);
         }}
-        title={t('customizableForm.deleteQuestionModal.title')}
-        message={t('customizableForm.deleteQuestionModal.message')}
-        cancelLabel={t('customizableForm.deleteQuestionModal.cancel')}
-        disableLabel={t('customizableForm.deleteQuestionModal.delete')}
-        onCancel={() => setPendingQuestionDelete(null)}
-        onDisable={() => {
+        onConfirm={() => {
           if (pendingQuestionDelete) {
             removeQuestion(
               pendingQuestionDelete.formId,
@@ -1045,24 +1035,25 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
           }
           setPendingQuestionDelete(null);
         }}
+        title={t('customizableForm.deleteQuestionModal.title')}
+        description={t('customizableForm.deleteQuestionModal.message')}
+        confirmLabel={t('customizableForm.deleteQuestionModal.delete')}
       />
 
-      <DisableDialog
+      <StepDisableDialog
         open={pendingFormDelete !== null}
         onOpenChange={open => {
           if (!open) setPendingFormDelete(null);
         }}
-        title={t('customizableForm.deleteFormModal.title')}
-        message={t('customizableForm.deleteFormModal.message')}
-        cancelLabel={t('customizableForm.deleteFormModal.cancel')}
-        disableLabel={t('customizableForm.deleteFormModal.delete')}
-        onCancel={() => setPendingFormDelete(null)}
-        onDisable={() => {
+        onConfirm={() => {
           if (pendingFormDelete !== null) {
             removeForm(pendingFormDelete);
           }
           setPendingFormDelete(null);
         }}
+        title={t('customizableForm.deleteFormModal.title')}
+        description={t('customizableForm.deleteFormModal.message')}
+        confirmLabel={t('customizableForm.deleteFormModal.delete')}
       />
 
       <div className="sticky bottom-0 mt-auto flex items-center justify-end gap-4 bg-white px-6 py-7 shadow-[0px_-8px_6.8px_0px_rgba(0,0,0,0.04)]">
