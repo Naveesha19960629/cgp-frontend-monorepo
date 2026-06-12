@@ -34,6 +34,7 @@ vi.mock('@/views/vacancies/hooks', () => ({
   useHobbiesQuery: mockUseHobbiesQuery,
   useDisableSuccessToast: () => mockSuccessToast,
   useCreateHobbyMutation: () => ({ mutateAsync: vi.fn() }),
+  useStepGuard: vi.fn(),
 }));
 
 vi.mock('@/views/vacancies/services', () => ({
@@ -237,6 +238,8 @@ function makeForm(
         ...overrides,
       },
     },
+    setForm: vi.fn(),
+    stepPersistRef: { current: null },
   };
 }
 

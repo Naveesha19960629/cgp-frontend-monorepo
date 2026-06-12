@@ -37,6 +37,7 @@ vi.mock('@/views/vacancies/hooks', () => ({
   useDisableSuccessToast: () => mockSuccessToast,
   useCreateCareerPathMutation: () => ({ mutateAsync: vi.fn() }),
   useCreateSkillCareerPathMutation: () => ({ mutateAsync: vi.fn() }),
+  useStepGuard: vi.fn(),
 }));
 
 vi.mock('@/views/vacancies/services', () => ({
@@ -266,6 +267,8 @@ function makeForm(
         ...overrides,
       },
     },
+    setForm: vi.fn(),
+    stepPersistRef: { current: null },
   };
 }
 

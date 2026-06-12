@@ -35,6 +35,7 @@ vi.mock('@/views/vacancies/hooks', () => ({
     data: mockLocationsData,
     isLoading: false,
   }),
+  useStepGuard: vi.fn(),
 }));
 
 // ── Mock message box ────────────────────────────────────────────────────────

@@ -215,6 +215,10 @@ vi.mock('iconsax-reactjs', () => ({
   ArrowLeft2: () => <span data-testid="arrow-left-icon" />,
 }));
 
+vi.mock('@/views/vacancies/hooks', () => ({
+  useStepGuard: vi.fn(),
+}));
+
 vi.mock('@/views/vacancies/utils', () => ({
   formatDate: (date: string) => {
     if (!date) return '';

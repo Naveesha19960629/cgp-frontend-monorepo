@@ -114,6 +114,7 @@ vi.mock('@/views/vacancies/context/vacancy-form-context', () => {
       showCancelDialog: false,
       setShowCancelDialog: vi.fn(),
       OnSaveAsDraft: vi.fn(),
+      stepPersistRef: { current: null },
     }),
   };
 });

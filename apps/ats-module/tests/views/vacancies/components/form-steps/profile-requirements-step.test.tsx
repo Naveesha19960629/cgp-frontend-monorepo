@@ -24,6 +24,8 @@ const mockUseVacancyForm = vi.hoisted(() =>
       },
     },
     onCancel: vi.fn(),
+    setStepGuard: vi.fn(),
+    stepPersistRef: { current: null },
   }))
 );
 
@@ -137,6 +139,7 @@ vi.mock('@/views/vacancies/hooks', async () => {
     usePlacesCityQuery: mockUsePlacesCityQuery,
     usePlacesStateQuery: mockUsePlacesStateQuery,
     usePlacesCountryQuery: mockUsePlacesCountryQuery,
+    useStepGuard: vi.fn(),
   };
 });
 
@@ -291,6 +294,9 @@ function makeForm(
       },
     },
     onCancel: vi.fn(),
+    setForm: vi.fn(),
+    setStepGuard: vi.fn(),
+    stepPersistRef: { current: null },
   };
 }
 
