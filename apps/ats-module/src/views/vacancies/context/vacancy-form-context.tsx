@@ -230,6 +230,7 @@ interface VacancyFormContextValue {
   currentStepIndex: number;
   setCurrentStepIndex: (index: number) => void;
   completedSteps: Set<number>;
+  removeCompletedStep: (index: number) => void;
   isInitialStep: boolean;
   onNext: (data?: Partial<VacancyForm>, completed?: boolean) => void;
   onBack: () => void;
@@ -260,6 +261,14 @@ function VacancyFormProvider({ children }: { children: React.ReactNode }) {
     _setCurrentStepIndex(index);
     setForm(prev => ({ ...prev, lastActiveStep: VACANCY_STEPS[index].key }));
     setStepGuard(false);
+  };
+
+  const removeCompletedStep = (index: number) => {
+    setCompletedSteps(prev => {
+      const next = new Set(prev);
+      next.delete(index);
+      return next;
+    });
   };
 
   const isStepEnabled = (
@@ -296,6 +305,8 @@ function VacancyFormProvider({ children }: { children: React.ReactNode }) {
         currentStepIndex === 0 || isStepEnabled(data, completed);
       if (shouldComplete) {
         setCompletedSteps(prev => new Set([...prev, currentStepIndex]));
+      } else if (currentStepIndex !== 0) {
+        removeCompletedStep(currentStepIndex);
       }
       setCurrentStepIndex(currentStepIndex + 1);
     }
@@ -329,6 +340,7 @@ function VacancyFormProvider({ children }: { children: React.ReactNode }) {
         currentStepIndex,
         setCurrentStepIndex,
         completedSteps,
+        removeCompletedStep,
         isInitialStep,
         onNext,
         onBack,

@@ -71,6 +71,7 @@ export default function VacancyCreateStepperForm() {
     currentStepIndex,
     setCurrentStepIndex,
     completedSteps,
+    removeCompletedStep,
     stepGuard,
     stepPersistRef,
     stepDisableRef,
@@ -219,6 +220,7 @@ export default function VacancyCreateStepperForm() {
           if (pendingTargetIndex !== null) {
             const sectionName = VACANCY_STEPS[currentStepIndex].label;
             stepDisableRef.current?.();
+            removeCompletedStep(currentStepIndex);
             SuccessToast({
               title: t('common.notifications.disable.title'),
               description: t('common.notifications.disable.message', {
