@@ -96,6 +96,7 @@ interface StepDisableDialogProps {
   onConfirm: () => void;
   title?: string;
   description?: string;
+  cancelLabel?: string;
   confirmLabel?: string;
 }
 

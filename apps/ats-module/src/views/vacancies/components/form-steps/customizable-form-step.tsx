@@ -994,6 +994,7 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
         }}
         title={t('customizableForm.confirmDisableDialog.title')}
         description={t('customizableForm.confirmDisableDialog.message')}
+        cancelLabel={t('customizableForm.confirmDisableDialog.cancel')}
         confirmLabel={t('customizableForm.confirmDisableDialog.disable')}
       />
 
@@ -1018,6 +1019,7 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
         }}
         title={t('customizableForm.validationModal.title')}
         description={t('customizableForm.validationModal.message')}
+        cancelLabel={t('customizableForm.validationModal.cancel')}
         confirmLabel={t('customizableForm.validationModal.disable')}
       />
 
@@ -1037,6 +1039,7 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
         }}
         title={t('customizableForm.deleteQuestionModal.title')}
         description={t('customizableForm.deleteQuestionModal.message')}
+        cancelLabel={t('customizableForm.deleteQuestionModal.cancel')}
         confirmLabel={t('customizableForm.deleteQuestionModal.delete')}
       />
 
@@ -1053,6 +1056,7 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
         }}
         title={t('customizableForm.deleteFormModal.title')}
         description={t('customizableForm.deleteFormModal.message')}
+        cancelLabel={t('customizableForm.deleteFormModal.cancel')}
         confirmLabel={t('customizableForm.deleteFormModal.delete')}
       />
 

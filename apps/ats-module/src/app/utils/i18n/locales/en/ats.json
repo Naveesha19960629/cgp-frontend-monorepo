@@ -18,6 +18,12 @@
     "noDataTitle": "No Data Found",
     "noDataDescription": "We couldn't find any matching data. Try adjusting your search data",
     "errorTitle": "Try Again",
+    "disableDialog": {
+      "title": "Are you sure?",
+      "description": "Are you sure you want to disable this section? Disabling this section will permanently remove all added data. This action cannot be undone",
+      "cancelButton": "Cancel",
+      "confirmButton": "Disable"
+    },
     "notifications": {
       "disable": {
         "title": "Successfully Disabled",

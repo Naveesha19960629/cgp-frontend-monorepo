@@ -295,6 +295,7 @@ export default function PreferredHobbiesStep({
         }}
         title={t('preferredHobbies.confirmDisableDialog.title')}
         description={t('preferredHobbies.confirmDisableDialog.message')}
+        cancelLabel={t('preferredHobbies.confirmDisableDialog.cancel')}
         confirmLabel={t('preferredHobbies.confirmDisableDialog.disable')}
       />
 
@@ -317,6 +318,7 @@ export default function PreferredHobbiesStep({
         }}
         title={t('preferredHobbies.emptyDisableDialog.title')}
         description={t('preferredHobbies.emptyDisableDialog.message')}
+        cancelLabel={t('preferredHobbies.emptyDisableDialog.cancel')}
         confirmLabel={t('preferredHobbies.emptyDisableDialog.disable')}
       />
 

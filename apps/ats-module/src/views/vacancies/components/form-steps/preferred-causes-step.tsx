@@ -295,6 +295,7 @@ export default function PreferredCausesStep({
         }}
         title={t('preferredCauses.confirmDisableDialog.title')}
         description={t('preferredCauses.confirmDisableDialog.message')}
+        cancelLabel={t('preferredCauses.confirmDisableDialog.cancel')}
         confirmLabel={t('preferredCauses.confirmDisableDialog.disable')}
       />
 
@@ -317,6 +318,7 @@ export default function PreferredCausesStep({
         }}
         title={t('preferredCauses.emptyDisableDialog.title')}
         description={t('preferredCauses.emptyDisableDialog.message')}
+        cancelLabel={t('preferredCauses.emptyDisableDialog.cancel')}
         confirmLabel={t('preferredCauses.emptyDisableDialog.disable')}
       />
 

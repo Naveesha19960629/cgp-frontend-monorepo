@@ -639,6 +639,7 @@ export default function PreferredSkillsStep({
         }}
         title={t('preferredSkills.confirmDisableDialog.title')}
         description={t('preferredSkills.confirmDisableDialog.message')}
+        cancelLabel={t('preferredSkills.confirmDisableDialog.cancel')}
         confirmLabel={t('preferredSkills.confirmDisableDialog.disable')}
       />
 
@@ -661,6 +662,7 @@ export default function PreferredSkillsStep({
         }}
         title={t('preferredSkills.emptyDisableDialog.title')}
         description={t('preferredSkills.emptyDisableDialog.message')}
+        cancelLabel={t('preferredSkills.emptyDisableDialog.cancel')}
         confirmLabel={t('preferredSkills.emptyDisableDialog.disable')}
       />
 

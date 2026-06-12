@@ -299,6 +299,7 @@ export default function PreferredLanguagesStep({
         }}
         title={t('preferredLanguages.confirmDisableDialog.title')}
         description={t('preferredLanguages.confirmDisableDialog.message')}
+        cancelLabel={t('preferredLanguages.confirmDisableDialog.cancel')}
         confirmLabel={t('preferredLanguages.confirmDisableDialog.disable')}
       />
 
@@ -321,6 +322,7 @@ export default function PreferredLanguagesStep({
         }}
         title={t('preferredLanguages.emptyDisableDialog.title')}
         description={t('preferredLanguages.emptyDisableDialog.message')}
+        cancelLabel={t('preferredLanguages.emptyDisableDialog.cancel')}
         confirmLabel={t('preferredLanguages.emptyDisableDialog.disable')}
       />
 
