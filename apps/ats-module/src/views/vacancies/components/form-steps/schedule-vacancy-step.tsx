@@ -2,6 +2,7 @@ import { ArrowLeft2 } from 'iconsax-reactjs';
 
 import { Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import {
@@ -24,6 +25,7 @@ export default function ScheduleVacancyStep({
   onSubmit,
 }: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
+  const navigate = useNavigate();
   const { form } = useVacancyForm();
 
   const {
@@ -39,12 +41,14 @@ export default function ScheduleVacancyStep({
 
   const onValid = async (values: ScheduleVacancyFormValues) => {
     try {
-      await createVacancy(toScheduleVacancyPayload(values));
+      const schedule = toScheduleVacancyPayload(values);
+      await createVacancy({ ...form, schedule });
       SuccessToast({
         title: t('scheduleVacancy.notifications.successTitle'),
         description: t('scheduleVacancy.notifications.successMessage'),
       });
       onSubmit();
+      navigate('/dashboard/ats/vacancies');
     } catch {
       ErrorToast({
         title: t('scheduleVacancy.notifications.apiErrorTitle'),

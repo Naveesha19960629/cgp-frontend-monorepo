@@ -300,7 +300,7 @@ interface CustomizableFormQuestion {
     | 'PARAGRAPH'
     | 'MULTIPLE_CHOICE'
     | 'CHECKBOXES'
-    | 'DROP_DOWN'
+    | 'DROPDOWN'
     | 'LINEAR_SCALE'
     | '';
   required: boolean;

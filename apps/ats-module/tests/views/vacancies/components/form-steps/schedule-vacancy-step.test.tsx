@@ -56,6 +56,9 @@ vi.mock('react-i18next', () => ({
     t: (key: string) => key,
   }),
 }));
+vi.mock('react-router-dom', () => ({
+  useNavigate: () => vi.fn(),
+}));
 vi.mock('@cgp/ui-kit/components/custom-toast', () => ({
   SuccessToast: vi.fn(),
   ErrorToast: vi.fn(),

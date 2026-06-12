@@ -37,7 +37,7 @@ type QuestionType =
   | 'PARAGRAPH'
   | 'MULTIPLE_CHOICE'
   | 'CHECKBOXES'
-  | 'DROP_DOWN'
+  | 'DROPDOWN'
   | 'LINEAR_SCALE';
 
 interface QuestionOption {
@@ -247,7 +247,7 @@ function QuestionCard({
               <SelectItem value="CHECKBOXES">
                 {t('customizableForm.question.types.checkboxes')}
               </SelectItem>
-              <SelectItem value="DROP_DOWN">
+              <SelectItem value="DROPDOWN">
                 {t('customizableForm.question.types.dropDown')}
               </SelectItem>
               <SelectItem value="LINEAR_SCALE">
@@ -367,7 +367,7 @@ function QuestionCard({
       )}
 
       {/* Drop Down options */}
-      {question.type === 'DROP_DOWN' && (
+      {question.type === 'DROPDOWN' && (
         <div className="mt-4 rounded-lg border border-neutral-200 bg-white">
           <div className="grid grid-cols-2">
             {question.options.map((opt, optIdx) => (
