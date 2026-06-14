@@ -8,12 +8,6 @@ type MockMutation<TArg = unknown> = {
   mutationFn: (arg: TArg) => Promise<unknown>;
 };
 
-type UpdateProfileResponse = {
-  requestId: string;
-  success: boolean;
-  message: string;
-};
-
 // -- Mock @tanstack/react-query -------------------------------------------
 
 const mockUseMutation = vi.fn();
@@ -85,7 +79,7 @@ describe('useUpdateCandidateProfileBasicInformationsMutation', () => {
         payload: unknown;
       }>;
 
-    const result = (await mutation.mutationFn({
+    const result = await mutation.mutationFn({
       candidateId: 'candidate-456',
       payload: {
         isEnabled: false,
@@ -94,7 +88,7 @@ describe('useUpdateCandidateProfileBasicInformationsMutation', () => {
         maritalStatus: { id: '', label: '' },
         addresses: [],
       },
-    })) as UpdateProfileResponse;
+    });
 
     expect(result).toEqual(mockResponse);
     expect(result.success).toBe(true);
