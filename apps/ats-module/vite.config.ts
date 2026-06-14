@@ -7,30 +7,37 @@ import tailwindcss from '@tailwindcss/vite';
 import path from 'path';
 
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   base: '/',
   plugins: [
     react(),
     tailwindcss(),
-    federation({
-      name: 'ats-module',
-      filename: 'remoteEntry.js',
-      exposes: {
-        './Vacancyies': './src/vacancyies.tsx',
-        './AtsRoutes': './src/app/router/index.tsx',
-      },
-      shared: [
-        'react',
-        'react-dom',
-        'react-router-dom',
-        'i18next',
-        'react-i18next',
-        '@tanstack/react-query',
-        'keycloak-js',
-        '@react-keycloak/web',
-        'nuqs',
-      ],
-    }),
+    // The federation plugin disables Vite's HMR in dev (serve) mode. It is only
+    // needed to emit remoteEntry.js for integration, so enable it on build only.
+    // Develop the module standalone with `nx serve` to get full HMR.
+    ...(command === 'build'
+      ? [
+          federation({
+            name: 'ats-module',
+            filename: 'remoteEntry.js',
+            exposes: {
+              './Vacancyies': './src/vacancyies.tsx',
+              './AtsRoutes': './src/app/router/index.tsx',
+            },
+            shared: [
+              'react',
+              'react-dom',
+              'react-router-dom',
+              'i18next',
+              'react-i18next',
+              '@tanstack/react-query',
+              'keycloak-js',
+              '@react-keycloak/web',
+              'nuqs',
+            ],
+          }),
+        ]
+      : []),
   ],
   resolve: {
     alias: {
@@ -65,4 +72,4 @@ export default defineConfig({
     target: 'esnext',
     minify: 'esbuild',
   },
-});
+}));
