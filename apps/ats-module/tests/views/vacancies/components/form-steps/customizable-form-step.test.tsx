@@ -26,6 +26,7 @@ vi.mock('react-i18next', () => ({
         'common.back': 'Back',
         'common.next': 'Next',
         'customizableForm.title': 'Customizable Form',
+        'customizableForm.untitledForm': 'Untitled Form',
         'customizableForm.sectionTitlePlaceholder': 'Section Title',
         'customizableForm.formBuilderTitle': 'Form Builder',
         'customizableForm.formTitlePlaceholder': 'Form Title',
@@ -318,6 +319,40 @@ describe('CustomizableFormStep', () => {
   });
 
   describe('Form Management', () => {
+    it('should show "Untitled Form" in the title area for a new form', async () => {
+      const user = userEvent.setup();
+      renderComponent();
+
+      const toggle = screen.getByRole('switch');
+      await user.click(toggle);
+
+      expect(screen.getByText('Untitled Form')).toBeInTheDocument();
+    });
+
+    it('should update the bold title area as form title changes and keep it when collapsed', async () => {
+      const user = userEvent.setup();
+      renderComponent();
+
+      const toggle = screen.getByRole('switch');
+      await user.click(toggle);
+
+      const formInput: HTMLInputElement =
+        screen.getByPlaceholderText('Form Title');
+      await user.type(formInput, 'Customer Screening');
+
+      expect(screen.getByText('Customer Screening')).toBeInTheDocument();
+
+      const collapseButton = screen.getByRole('button', {
+        name: 'Collapse form',
+      });
+      await user.click(collapseButton);
+
+      expect(screen.getByText('Customer Screening')).toBeInTheDocument();
+      expect(
+        screen.queryByPlaceholderText('Form Title')
+      ).not.toBeInTheDocument();
+    });
+
     it('should start with one empty form when enabled', async () => {
       const user = userEvent.setup();
       renderComponent();

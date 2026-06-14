@@ -190,6 +190,7 @@
 
   "customizableForm": {
     "title": "Customizable Form",
+    "untitledForm": "Untitled Form",
     "sectionTitlePlaceholder": "Section Title",
     "formBuilderTitle": "Form Builder",
     "formTitlePlaceholder": "Form Title",

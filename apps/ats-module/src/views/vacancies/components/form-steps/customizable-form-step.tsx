@@ -631,6 +631,13 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
 
   const isSectionTitleError = sectionTitle.length > 200;
 
+  const getDisplayFormTitle = (title: string) => {
+    const trimmedTitle = title.trim();
+    return trimmedTitle.length > 0
+      ? trimmedTitle
+      : t('customizableForm.untitledForm');
+  };
+
   // ── Form-level actions ──────────────────────────────────────────────────
 
   const addForm = () => {
@@ -865,13 +872,17 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
         <div className="flex flex-col gap-4">
           {forms.map(form => {
             const isFormTitleError = form.title.length > 150;
+            const displayFormTitle = getDisplayFormTitle(form.title);
             return (
               <div
                 key={form.id}
                 className="rounded-xl border border-neutral-300 bg-white p-5 shadow-[0px_4px_90px_0px_rgba(0,0,0,0.07)]"
               >
                 {/* Card action buttons */}
-                <div className="flex items-center justify-end">
+                <div className="flex items-center justify-between">
+                  <p className="text-base leading-6 font-bold text-slate-900">
+                    {displayFormTitle}
+                  </p>
                   <div className="flex items-center gap-3 text-slate-500">
                     <button
                       type="button"
@@ -917,7 +928,7 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
                         onChange={e =>
                           updateFormTitle(form.id, removeEmoji(e.target.value))
                         }
-                        className="w-full border-0 border-b border-slate-200 bg-transparent px-0 pb-3 text-[24px] leading-8 font-bold tracking-[-0.144px] text-slate-900 placeholder:text-slate-300 focus:border-slate-300 focus:ring-0 focus:outline-none"
+                        className="w-full border-0 border-b border-slate-200 bg-transparent px-0 pb-3 text-xl leading-6 font-bold text-slate-900 placeholder:text-slate-300 focus:border-slate-300 focus:ring-0 focus:outline-none"
                       />
                       {isFormTitleError && (
                         <p className="mt-3 text-[13px] text-[#FF4A55]">
