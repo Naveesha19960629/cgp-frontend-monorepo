@@ -187,13 +187,8 @@ function QuestionCard({
     });
   };
 
-  const questionLabel = `Question ${String(index + 1).padStart(2, '0')}`;
-
   return (
-    <div className="mt-4 rounded-xl border border-neutral-300 bg-neutral-100 p-5">
-      {/* Question header */}
-      <p className="mb-4 text-sm font-bold text-slate-900">{questionLabel}</p>
-
+    <div className="mt-4 rounded-xl border border-neutral-300 bg-neutral-100 p-6">
       {/* Question + Type row */}
       <div className="grid grid-cols-2 gap-4">
         {/* Question text */}
@@ -259,12 +254,12 @@ function QuestionCard({
 
       {/* Multiple Choice options */}
       {question.type === 'MULTIPLE_CHOICE' && (
-        <div className="mt-4 rounded-lg border border-neutral-200 bg-white">
-          <div className="grid grid-cols-2">
+        <div className="mt-4 rounded-xl border border-neutral-300 bg-white p-5">
+          <div className="grid grid-cols-2 gap-4">
             {question.options.map((opt, optIdx) => (
-              <div key={opt.id} className="p-2">
-                <div className="mb-2 flex items-center justify-between">
-                  <span className="text-sm font-medium text-slate-700">
+              <div key={opt.id} className="flex flex-col gap-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-semibold text-slate-900">
                     {`Option ${String(optIdx + 1).padStart(2, '0')}`}
                   </span>
                   <CharacterCount
@@ -298,7 +293,7 @@ function QuestionCard({
             ))}
           </div>
 
-          <div className="flex justify-end px-2 py-2">
+          <div className="mt-4 flex justify-end">
             <button
               type="button"
               className="inline-flex h-9 items-center gap-1 rounded-lg bg-neutral-200 px-8 text-sm font-semibold text-slate-700 transition-colors hover:bg-neutral-300"
@@ -313,12 +308,12 @@ function QuestionCard({
 
       {/* Checkboxes options */}
       {question.type === 'CHECKBOXES' && (
-        <div className="mt-4 rounded-lg border border-neutral-200 bg-white">
-          <div className="grid grid-cols-2">
+        <div className="mt-4 rounded-xl border border-neutral-300 bg-white p-5">
+          <div className="grid grid-cols-2 gap-4">
             {question.options.map((opt, optIdx) => (
-              <div key={opt.id} className="p-2">
-                <div className="mb-2 flex items-center justify-between">
-                  <span className="text-sm font-medium text-slate-700">
+              <div key={opt.id} className="flex flex-col gap-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-semibold text-slate-900">
                     {`Option ${String(optIdx + 1).padStart(2, '0')}`}
                   </span>
                   <CharacterCount
@@ -352,7 +347,7 @@ function QuestionCard({
             ))}
           </div>
 
-          <div className="flex justify-end px-2 py-2">
+          <div className="mt-4 flex justify-end">
             <button
               type="button"
               className="inline-flex h-9 items-center gap-1 rounded-lg bg-neutral-200 px-8 text-sm font-semibold text-slate-700 transition-colors hover:bg-neutral-300"
@@ -367,12 +362,12 @@ function QuestionCard({
 
       {/* Drop Down options */}
       {question.type === 'DROPDOWN' && (
-        <div className="mt-4 rounded-lg border border-neutral-200 bg-white">
-          <div className="grid grid-cols-2">
+        <div className="mt-4 rounded-xl border border-neutral-300 bg-white p-5">
+          <div className="grid grid-cols-2 gap-4">
             {question.options.map((opt, optIdx) => (
-              <div key={opt.id} className="p-2">
-                <div className="mb-2 flex items-center justify-between">
-                  <span className="text-sm font-medium text-slate-700">
+              <div key={opt.id} className="flex flex-col gap-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-semibold text-slate-900">
                     {`Option ${String(optIdx + 1).padStart(2, '0')}`}
                   </span>
                   <CharacterCount
@@ -406,7 +401,7 @@ function QuestionCard({
             ))}
           </div>
 
-          <div className="flex justify-end px-2 py-2">
+          <div className="mt-4 flex justify-end">
             <button
               type="button"
               className="inline-flex h-9 items-center gap-1 rounded-lg bg-neutral-200 px-8 text-sm font-semibold text-slate-700 transition-colors hover:bg-neutral-300"
