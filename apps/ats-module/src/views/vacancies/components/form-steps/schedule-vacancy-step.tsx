@@ -2,6 +2,7 @@ import { ArrowLeft2 } from 'iconsax-reactjs';
 
 import { Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
+import { useParams } from 'react-router-dom';
 
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import {
@@ -9,6 +10,7 @@ import {
   toScheduleVacancyPayload,
   useCreateVacancyMutation,
   useScheduleVacancyForm,
+  useUpdateVacancyMutation,
 } from '@/views/vacancies/hooks';
 import type { StepProps } from '@/views/vacancies/types';
 import { formatDisplayDateTime } from '@/views/vacancies/utils';
@@ -24,6 +26,7 @@ export default function ScheduleVacancyStep({
   onSubmit,
 }: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
+  const { id } = useParams<'id'>();
   const { form } = useVacancyForm();
 
   const {
@@ -36,10 +39,19 @@ export default function ScheduleVacancyStep({
   const publishDate = watch('schedulePublishDate');
 
   const { mutateAsync: createVacancy, isPending } = useCreateVacancyMutation();
+  const { mutateAsync: updateVacancy, isPending: isUpdating } =
+    useUpdateVacancyMutation();
 
   const onValid = async (values: ScheduleVacancyFormValues) => {
     try {
-      await createVacancy(toScheduleVacancyPayload(values));
+      const payload = toScheduleVacancyPayload(values);
+
+      if (id) {
+        await updateVacancy({ id, schedule: payload });
+      } else {
+        await createVacancy(payload);
+      }
+
       SuccessToast({
         title: t('scheduleVacancy.notifications.successTitle'),
         description: t('scheduleVacancy.notifications.successMessage'),
@@ -195,12 +207,12 @@ export default function ScheduleVacancyStep({
         <Button
           className="h-12 w-48"
           type="button"
-          disabled={isPending || !isValid}
+          disabled={isPending || isUpdating || !isValid}
           onClick={() => {
             handleSubmit(onValid)().catch(() => {});
           }}
         >
-          {t('scheduleVacancy.create')}
+          {id ? t('common.save') : t('scheduleVacancy.create')}
         </Button>
       </div>
     </div>

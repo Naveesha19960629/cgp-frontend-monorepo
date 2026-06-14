@@ -6,7 +6,7 @@ import { addAtsTranslations } from '@/app/utils/i18n';
 import {
   NewVacancyPage,
   VacanciesPage,
-  VacancyIdNewPage,
+  VacancyIdEditPage,
 } from '@/views/vacancies';
 
 // Register ATS translations into the shared i18n singleton at module-load time.
@@ -29,7 +29,7 @@ function AtsRoutes() {
         <Route index element={<VacanciesPage />} />
         <Route path="vacancies" element={<VacanciesPage />} />
         <Route path="vacancies/new" element={<NewVacancyPage />} />
-        <Route path="vacancies/:id/edit" element={<VacancyIdNewPage />} />
+        <Route path="vacancies/:id/edit" element={<VacancyIdEditPage />} />
         <Route path="find-candidate" element={<div>Find Candidate</div>} />
         <Route path="*" element={<Navigate to="/not-found" replace />} />
       </Routes>
@@ -51,7 +51,7 @@ function createStandaloneRouter() {
         { index: true, element: <VacanciesPage /> },
         { path: 'vacancies', element: <VacanciesPage /> },
         { path: 'vacancies/new', element: <NewVacancyPage /> },
-        { path: 'vacancies/:id/new', element: <VacancyIdNewPage /> },
+        { path: 'vacancies/:id/edit', element: <VacancyIdEditPage /> },
         { path: 'find-candidate', element: <div>Find Candidate</div> },
       ],
     },
