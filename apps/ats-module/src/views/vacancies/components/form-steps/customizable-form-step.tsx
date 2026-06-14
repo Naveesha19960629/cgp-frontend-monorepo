@@ -642,7 +642,60 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
   };
 
   const removeForm = (id: number) => {
-    setForms(prev => prev.filter(f => f.id !== id));
+    setForms(prev => {
+      const filtered = prev.filter(f => f.id !== id);
+
+      const copyOfPrefix = String(
+        t('customizableForm.copyOfTitle', { title: '' })
+      );
+      const prefix = copyOfPrefix.endsWith(' ')
+        ? copyOfPrefix
+        : `${copyOfPrefix} `;
+
+      const parseTitle = (title: string) => {
+        if (title.startsWith(prefix)) {
+          const remaining = title.slice(prefix.length);
+          const match = remaining.match(/^(.*?)(?:\s*\((\d+)\))?$/);
+          if (match) {
+            return {
+              baseTitle: prefix + match[1].trim(),
+              suffix: match[2] ? parseInt(match[2], 10) : null,
+            };
+          }
+        }
+        return {
+          baseTitle: prefix + title.trim(),
+          suffix: null,
+        };
+      };
+
+      // Count actual duplicates for each targetBaseTitle in the filtered list
+      const duplicateCounts = new Map<string, number>();
+      filtered.forEach(f => {
+        if (f.title.startsWith(prefix)) {
+          const { baseTitle } = parseTitle(f.title);
+          duplicateCounts.set(
+            baseTitle,
+            (duplicateCounts.get(baseTitle) || 0) + 1
+          );
+        }
+      });
+
+      // For any duplicate form whose baseTitle now has only 1 duplicate in the list:
+      // If it has a suffix, remove its suffix (rename to just baseTitle)
+      return filtered.map(f => {
+        if (f.title.startsWith(prefix)) {
+          const parsed = parseTitle(f.title);
+          if (
+            duplicateCounts.get(parsed.baseTitle) === 1 &&
+            parsed.suffix !== null
+          ) {
+            return { ...f, title: parsed.baseTitle };
+          }
+        }
+        return f;
+      });
+    });
   };
 
   const duplicateForm = (id: number) => {
@@ -656,12 +709,79 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
 
     const source = forms.find(f => f.id === id);
     if (!source) return;
-    const copiedTitle = String(
-      t('customizableForm.copyOfTitle', { title: source.title })
-    ).trim();
+
+    const copyOfPrefix = String(
+      t('customizableForm.copyOfTitle', { title: '' })
+    );
+    const prefix = copyOfPrefix.endsWith(' ')
+      ? copyOfPrefix
+      : `${copyOfPrefix} `;
+
+    const parseTitle = (title: string) => {
+      if (title.startsWith(prefix)) {
+        const remaining = title.slice(prefix.length);
+        const match = remaining.match(/^(.*?)(?:\s*\((\d+)\))?$/);
+        if (match) {
+          return {
+            baseTitle: prefix + match[1].trim(),
+            suffix: match[2] ? parseInt(match[2], 10) : null,
+          };
+        }
+      }
+      return {
+        baseTitle: prefix + title.trim(),
+        suffix: null,
+      };
+    };
+
+    const parsedSource = parseTitle(source.title);
+    const targetBaseTitle = parsedSource.baseTitle;
+
+    // Filter existing forms that are duplicates matching the targetBaseTitle
+    const matchingForms = forms.filter(f => {
+      if (!f.title.startsWith(prefix)) return false;
+      return parseTitle(f.title).baseTitle === targetBaseTitle;
+    });
+
+    const existingSuffixes = new Set<number>();
+    let unsuffixedFormId: number | null = null;
+
+    matchingForms.forEach(f => {
+      const parsed = parseTitle(f.title);
+      if (parsed.suffix !== null) {
+        existingSuffixes.add(parsed.suffix);
+      } else {
+        unsuffixedFormId = f.id;
+      }
+    });
+
+    let nextSuffix = 1;
+    if (unsuffixedFormId !== null) {
+      existingSuffixes.add(1);
+    }
+    while (existingSuffixes.has(nextSuffix)) {
+      nextSuffix++;
+    }
+
+    const copiedTitle =
+      matchingForms.length === 0
+        ? targetBaseTitle
+        : `${targetBaseTitle} (${nextSuffix})`;
+
     const copy: FormCard = { ...source, id: nextFormId, title: copiedTitle };
-    const idx = forms.findIndex(f => f.id === id);
-    setForms(prev => [...prev.slice(0, idx + 1), copy, ...prev.slice(idx + 1)]);
+
+    setForms(prev => {
+      // If we are adding a second duplicate, rename the first unsuffixed duplicate to have suffix (1)
+      const updated = prev.map(f => {
+        if (f.id === unsuffixedFormId && matchingForms.length > 0) {
+          return { ...f, title: `${targetBaseTitle} (1)` };
+        }
+        return f;
+      });
+      const idx = updated.findIndex(f => f.id === id);
+      return [...updated.slice(0, idx + 1), copy, ...updated.slice(idx + 1)];
+    });
+
     setNextFormId(n => n + 1);
   };
 

@@ -37,11 +37,16 @@ vi.mock('react-i18next', () => ({
         'customizableForm.errors.maxQuestionsExceeded':
           'Max questions exceeded',
         'customizableForm.errors.maxLengthExceeded': 'Max length exceeded',
-        'customizableForm.copyOfTitle': 'Copy of Title',
+        'customizableForm.copyOfTitle': 'Copy of {{title}}',
       };
-      const baseText = map[key] || key;
-      if (options && typeof options.max === 'number') {
-        return `${baseText} (max: ${String(options.max)})`;
+      let baseText = map[key] || key;
+      if (options) {
+        if (typeof options.title === 'string') {
+          baseText = baseText.replace('{{title}}', options.title);
+        }
+        if (typeof options.max === 'number') {
+          baseText = `${baseText} (max: ${String(options.max)})`;
+        }
       }
       return baseText;
     },
@@ -412,6 +417,70 @@ describe('CustomizableFormStep', () => {
 
       const formInputs = screen.getAllByPlaceholderText('Form Title');
       expect(formInputs.length).toBe(2);
+    });
+
+    it('should sequentially name duplicate forms correctly and rename the first one when adding more duplicates', async () => {
+      const user = userEvent.setup();
+      renderComponent();
+
+      const toggle = screen.getByRole('switch');
+      await user.click(toggle);
+
+      const formInput = screen.getByPlaceholderText('Form Title');
+      await user.type(formInput, 'sdfsdfsdf');
+
+      const duplicateButton = screen.getByRole('button', {
+        name: 'Duplicate form',
+      });
+
+      // 1. First duplicate
+      await user.click(duplicateButton);
+      expect(screen.getByText('sdfsdfsdf')).toBeInTheDocument();
+      expect(screen.getByText('Copy of sdfsdfsdf')).toBeInTheDocument();
+
+      // 2. Second duplicate (this should rename the first to 'Copy of sdfsdfsdf (1)')
+      await user.click(duplicateButton);
+      expect(screen.getByText('sdfsdfsdf')).toBeInTheDocument();
+      expect(screen.getByText('Copy of sdfsdfsdf (1)')).toBeInTheDocument();
+      expect(screen.getByText('Copy of sdfsdfsdf (2)')).toBeInTheDocument();
+
+      // 3. Third duplicate
+      await user.click(duplicateButton);
+      expect(screen.getByText('sdfsdfsdf')).toBeInTheDocument();
+      expect(screen.getByText('Copy of sdfsdfsdf (1)')).toBeInTheDocument();
+      expect(screen.getByText('Copy of sdfsdfsdf (2)')).toBeInTheDocument();
+      expect(screen.getByText('Copy of sdfsdfsdf (3)')).toBeInTheDocument();
+
+      // 4. Remove one duplicate (so 2 remain)
+      let deleteButtons = screen.getAllByRole('button', {
+        name: 'Delete form',
+      });
+      await user.click(deleteButtons[1]); // delete one of the form cards
+      let confirmButton = screen.getByRole('button', {
+        name: 'customizableForm.deleteFormModal.delete',
+      });
+      await user.click(confirmButton);
+
+      // We should still have two duplicates with suffixes
+      expect(screen.getByText('Copy of sdfsdfsdf (1)')).toBeInTheDocument();
+      expect(screen.getByText('Copy of sdfsdfsdf (2)')).toBeInTheDocument();
+
+      // 5. Remove another duplicate (so only 1 remains)
+      deleteButtons = screen.getAllByRole('button', { name: 'Delete form' });
+      await user.click(deleteButtons[1]); // delete 'Copy of sdfsdfsdf (2)'
+      confirmButton = screen.getByRole('button', {
+        name: 'customizableForm.deleteFormModal.delete',
+      });
+      await user.click(confirmButton);
+
+      // The sole remaining duplicate should rename back to 'Copy of sdfsdfsdf'
+      expect(screen.getByText('Copy of sdfsdfsdf')).toBeInTheDocument();
+      expect(
+        screen.queryByText('Copy of sdfsdfsdf (1)')
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByText('Copy of sdfsdfsdf (2)')
+      ).not.toBeInTheDocument();
     });
 
     it('should toggle form open/closed when collapse button is clicked', async () => {
