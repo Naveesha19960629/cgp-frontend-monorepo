@@ -228,7 +228,7 @@ function QuestionCard({
             value={question.type}
             onValueChange={val => set({ type: val as QuestionType })}
           >
-            <SelectTrigger className="h-11 w-full bg-white shadow-none">
+            <SelectTrigger className="!h-11 w-full bg-white shadow-none">
               <SelectValue
                 placeholder={t('customizableForm.question.typePlaceholder')}
               />
@@ -421,56 +421,50 @@ function QuestionCard({
 
       {/* Linear Scale fields */}
       {question.type === 'LINEAR_SCALE' && (
-        <div className="mt-4 space-y-4">
-          {/* From / To – sits in the left half of a 2-col grid */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="rounded-lg border border-neutral-200 bg-white p-4">
-              <div className="flex items-end gap-6">
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-sm font-semibold text-slate-900">
-                    {t('customizableForm.question.from')}
-                  </label>
-                  <Select
-                    value={String(question.from)}
-                    onValueChange={val => set({ from: Number(val) })}
-                  >
-                    <SelectTrigger className="h-9 w-24 shadow-none">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {SCALE_RANGE_START.map(n => (
-                        <SelectItem key={n} value={String(n)}>
-                          {String(n)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-sm font-semibold text-slate-900">
-                    {t('customizableForm.question.to')}
-                  </label>
-                  <Select
-                    value={String(question.to)}
-                    onValueChange={val => set({ to: Number(val) })}
-                  >
-                    <SelectTrigger className="h-9 w-24 shadow-none">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {SCALE_RANGE_END.map(n => (
-                        <SelectItem key={n} value={String(n)}>
-                          {String(n)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
+        <div className="mt-4 space-y-4 rounded-xl border border-neutral-300 bg-white p-5">
+          {/* From / To */}
+          <div className="flex gap-4">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-semibold text-slate-900">
+                {t('customizableForm.question.from')}
+              </label>
+              <Select
+                value={String(question.from)}
+                onValueChange={val => set({ from: Number(val) })}
+              >
+                <SelectTrigger className="!h-11 w-[68px] bg-white shadow-none">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {SCALE_RANGE_START.map(n => (
+                    <SelectItem key={n} value={String(n)}>
+                      {String(n)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-            {/* right half intentionally empty */}
-            <div />
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-semibold text-slate-900">
+                {t('customizableForm.question.to')}
+              </label>
+              <Select
+                value={String(question.to)}
+                onValueChange={val => set({ to: Number(val) })}
+              >
+                <SelectTrigger className="!h-11 w-[68px] bg-white shadow-none">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {SCALE_RANGE_END.map(n => (
+                    <SelectItem key={n} value={String(n)}>
+                      {String(n)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           {/* Start Label / End Label */}
