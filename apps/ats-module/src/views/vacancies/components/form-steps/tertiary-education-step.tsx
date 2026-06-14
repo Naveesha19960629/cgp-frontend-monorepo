@@ -2,8 +2,6 @@
 
 import { ArrowLeft2 } from 'iconsax-reactjs';
 
-import * as SwitchPrimitive from '@radix-ui/react-switch';
-
 import { useEffect, useRef, useState } from 'react';
 import type { RefObject } from 'react';
 import { Controller } from 'react-hook-form';
@@ -11,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 
 import MessageBox from '@/components/message-box';
 import { AddAwardingBodyDialog } from '@/views/vacancies/components/form-steps/add-awarding-body-dialog';
+import StepDisableDialog from '@/views/vacancies/components/step-disable-dialog';
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import {
   useAddBatchMutation,
@@ -37,20 +36,15 @@ import {
 import type { StepProps } from '@/views/vacancies/types';
 import { toTertiaryEducationPayload } from '@/views/vacancies/utils';
 
-import deleteConfirmAvatar from '@cgp/ui-kit/assets/images/delete-confirm-avator.svg';
 import { CharacterCount } from '@cgp/ui-kit/components/character-count';
 import { ErrorToast } from '@cgp/ui-kit/components/custom-toast';
 import MultipleSelector from '@cgp/ui-kit/components/multi-select';
 import type { MultipleSelectorRef } from '@cgp/ui-kit/components/multi-select';
 import { Button } from '@cgp/ui-kit/components/ui/button';
 import { Checkbox } from '@cgp/ui-kit/components/ui/checkbox';
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-} from '@cgp/ui-kit/components/ui/dialog';
 import { Input } from '@cgp/ui-kit/components/ui/input';
 import { Label } from '@cgp/ui-kit/components/ui/label';
+import { Switch } from '@cgp/ui-kit/components/ui/switch';
 import { cn } from '@cgp/ui-kit/lib/utils';
 
 const MAX_SELECTIONS = 10;
@@ -97,7 +91,7 @@ export default function TertiaryEducationStep({
     setValue('entry.grade', '');
   };
 
-  const checkHasFilledData = (): boolean => {
+  const hasEntryData = (): boolean => {
     const e = getValues('entry');
     return Boolean(
       e.qualificationName.length > 0 ||
@@ -111,12 +105,15 @@ export default function TertiaryEducationStep({
       e.batch.length > 0 ||
       e.department.length > 0 ||
       e.faculty.length > 0 ||
-      !!e.grade ||
-      getValues('dataTakenFromCandidate')
+      !!e.grade
     );
   };
 
-  useStepGuard(isEnabled && !dataTakenFromCandidate && !checkHasFilledData());
+  const checkHasFilledData = (): boolean => {
+    return hasEntryData() || getValues('dataTakenFromCandidate') === true;
+  };
+
+  useStepGuard(isEnabled && !dataTakenFromCandidate && !hasEntryData());
   useEffect(() => {
     stepPersistRef.current = () => {
       setForm(prev => ({
@@ -166,6 +163,7 @@ export default function TertiaryEducationStep({
 
   // ── Disable confirmation dialog state ───────────────────────────────
   const [confirmDisableOpen, setConfirmDisableOpen] = useState(false);
+  const [emptyDisableOpen, setEmptyDisableOpen] = useState(false);
 
   // ── Creatable input tracking (for character count) ───────────────────────
   const [qualificationInput, setQualificationInput] = useState('');
@@ -288,6 +286,11 @@ export default function TertiaryEducationStep({
     setValue('entry.tertiaryAwardingBody', resolved);
   };
   const handleNext = async () => {
+    if (isEnabled && !dataTakenFromCandidate && !hasEntryData()) {
+      setEmptyDisableOpen(true);
+      return;
+    }
+
     await resolveAndCommitTertiaryAwardingBodies();
     await resolveAndCommitField(
       qualificationRef,
@@ -355,8 +358,9 @@ export default function TertiaryEducationStep({
           control={control}
           name="isEnabled"
           render={({ field }) => (
-            <SwitchPrimitive.Root
+            <Switch
               checked={field.value}
+              size="lg"
               onCheckedChange={newValue => {
                 if (!newValue && checkHasFilledData()) {
                   setConfirmDisableOpen(true);
@@ -364,18 +368,7 @@ export default function TertiaryEducationStep({
                   field.onChange(newValue);
                 }
               }}
-              className={cn(
-                'focus-visible:ring-ring/50 inline-flex h-6 w-12 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent shadow-xs transition-colors outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50',
-                field.value ? 'bg-brand-primary-500' : 'bg-slate-300'
-              )}
-            >
-              <SwitchPrimitive.Thumb
-                className={cn(
-                  'pointer-events-none block h-5 w-5 rounded-full bg-white shadow-lg ring-0 transition-transform',
-                  field.value ? 'translate-x-6' : 'translate-x-0'
-                )}
-              />
-            </SwitchPrimitive.Root>
+            />
           )}
         />
       </div>
@@ -392,8 +385,9 @@ export default function TertiaryEducationStep({
                   id="tertiaryDataTakenFromCandidate"
                   checked={field.value}
                   onCheckedChange={newValue => {
-                    if (newValue) clearEntryData();
-                    field.onChange(newValue);
+                    const checked = newValue === true;
+                    if (checked) clearEntryData();
+                    field.onChange(checked);
                   }}
                   className="mt-0.5"
                 />
@@ -401,7 +395,7 @@ export default function TertiaryEducationStep({
             />
             <Label
               htmlFor="tertiaryDataTakenFromCandidate"
-              className="cursor-pointer leading-snug"
+              className="cursor-pointer leading-snug wrap-break-word"
             >
               {t('tertiaryEducation.collectFromCandidates')}
             </Label>
@@ -426,10 +420,12 @@ export default function TertiaryEducationStep({
             )}
           >
             {/* Row 1: Required Qualification(s) | Grade */}
-            <div className="grid grid-cols-4 gap-4">
-              <div className="col-span-2 flex flex-col gap-1">
-                <div className="flex items-center justify-between">
-                  <Label>{t('tertiaryEducation.qualificationName')}</Label>
+            <div className="grid grid-cols-1 gap-4 xl:grid-cols-4">
+              <div className="flex min-w-0 flex-col gap-1 xl:col-span-2">
+                <div className="flex min-w-0 items-center justify-between gap-2">
+                  <Label className="truncate pr-2">
+                    {t('tertiaryEducation.qualificationName')}
+                  </Label>
                   <CharacterCount
                     currentLength={qualificationInput.length}
                     maxLength={200}
@@ -495,9 +491,11 @@ export default function TertiaryEducationStep({
                 />
               </div>
 
-              <div className="flex flex-col gap-1">
-                <div className="flex items-center justify-between">
-                  <Label>{t('tertiaryEducation.grade')}</Label>
+              <div className="flex min-w-0 flex-col gap-1">
+                <div className="flex min-w-0 items-center justify-between gap-2">
+                  <Label className="truncate pr-2">
+                    {t('tertiaryEducation.grade')}
+                  </Label>
                   <Controller
                     control={control}
                     name="entry.grade"
@@ -525,7 +523,7 @@ export default function TertiaryEducationStep({
             </div>
 
             {/* Row 2: Location | Batch */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
               <div className="flex flex-col gap-1">
                 <div className="flex h-5 items-center">
                   <Label>
@@ -651,7 +649,7 @@ export default function TertiaryEducationStep({
             </div>
 
             {/* Row 3: Awarding Body | Level of Qualification */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
               <div className="flex flex-col gap-1">
                 <div className="flex h-5 items-center">
                   <Label>{t('tertiaryEducation.tertiaryAwardingBody')}</Label>
@@ -790,7 +788,7 @@ export default function TertiaryEducationStep({
             </div>
 
             {/* Row 4: Specialization | Mode of Study */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
               <div className="flex flex-col gap-1">
                 <div className="flex items-center justify-between">
                   <Label>{t('tertiaryEducation.specialization')}</Label>
@@ -917,7 +915,7 @@ export default function TertiaryEducationStep({
             </div>
 
             {/* Row 5: Study Pattern | Delivery Schedule */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
               <div className="flex flex-col gap-1">
                 <Label>{t('tertiaryEducation.studyPattern')}</Label>
                 <Controller
@@ -1028,7 +1026,7 @@ export default function TertiaryEducationStep({
             </div>
 
             {/* Row 6: Department | Faculty */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
               <div className="flex flex-col gap-1">
                 <div className="flex items-center justify-between">
                   <Label>{t('tertiaryEducation.department')}</Label>
@@ -1205,64 +1203,36 @@ export default function TertiaryEducationStep({
         }}
       />
 
-      {/* ── Disable confirmation dialog ─────────────────────────────────── */}
-      <Dialog
+      <StepDisableDialog
         open={confirmDisableOpen}
-        onOpenChange={open => {
-          if (!open) setConfirmDisableOpen(false);
+        onOpenChange={setConfirmDisableOpen}
+        title={t('tertiaryEducation.confirmDisableDialog.title')}
+        description={t('tertiaryEducation.confirmDisableDialog.message')}
+        confirmLabel={t('tertiaryEducation.confirmDisableDialog.disable')}
+        onConfirm={() => {
+          clearEntryData();
+          setValue('dataTakenFromCandidate', false);
+          setValue('isEnabled', false);
+          setConfirmDisableOpen(false);
         }}
-      >
-        <DialogContent
-          showCloseButton
-          className="max-w-99 overflow-hidden rounded-2xl border-0 p-7"
-          style={{
-            background:
-              'linear-gradient(90deg, rgb(254,244,238) 2%, rgb(248,242,236) 34%, rgb(233,244,240) 66%, rgb(238,247,245) 100%)',
-          }}
-        >
-          <div className="flex flex-col items-center gap-7">
-            {/* Avatar + text */}
-            <div className="flex w-full flex-col items-center gap-3">
-              <div className="h-25 w-25 overflow-hidden rounded-full">
-                <img
-                  src={deleteConfirmAvatar}
-                  className="h-full w-full object-cover"
-                  alt=""
-                />
-              </div>
-              <div className="flex w-full flex-col items-center gap-2">
-                <DialogTitle className="text-center text-xl font-bold text-slate-900">
-                  {t('tertiaryEducation.confirmDisableDialog.title')}
-                </DialogTitle>
-                <p className="text-center text-sm text-slate-900">
-                  {t('tertiaryEducation.confirmDisableDialog.message')}
-                </p>
-              </div>
-            </div>
+      />
 
-            {/* Buttons */}
-            <div className="flex w-full gap-3">
-              <Button
-                className="h-12 flex-1 rounded-lg bg-[#e5e5e5] font-bold text-[#525252] hover:bg-[#d4d4d4]"
-                onClick={() => setConfirmDisableOpen(false)}
-              >
-                {t('tertiaryEducation.confirmDisableDialog.cancel')}
-              </Button>
-              <Button
-                className="h-12 flex-1 rounded-lg bg-[#be123c] font-bold text-white hover:bg-[#9f1239]"
-                onClick={() => {
-                  clearEntryData();
-                  setValue('dataTakenFromCandidate', false);
-                  setValue('isEnabled', false);
-                  setConfirmDisableOpen(false);
-                }}
-              >
-                {t('tertiaryEducation.confirmDisableDialog.disable')}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <StepDisableDialog
+        open={emptyDisableOpen}
+        onOpenChange={setEmptyDisableOpen}
+        title={t('tertiaryEducation.emptyDisableDialog.title')}
+        description={t('tertiaryEducation.emptyDisableDialog.message')}
+        confirmLabel={t('tertiaryEducation.emptyDisableDialog.disable')}
+        onConfirm={() => {
+          clearEntryData();
+          setValue('dataTakenFromCandidate', false);
+          setValue('isEnabled', false);
+          setEmptyDisableOpen(false);
+          void handleSubmit(values => {
+            onNext({ tertiaryEducation: toTertiaryEducationPayload(values) });
+          })();
+        }}
+      />
 
       {/* ── Step footer ──────────────────────────────────────────────────── */}
       <div className="sticky bottom-0 flex items-center justify-end gap-4 bg-white px-6 py-7 shadow-[0px_-8px_6.8px_0px_rgba(0,0,0,0.04)]">

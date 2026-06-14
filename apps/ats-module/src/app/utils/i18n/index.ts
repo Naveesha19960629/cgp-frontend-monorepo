@@ -21,7 +21,8 @@ const ATS_NAMESPACE = 'ats';
 
 /**
  * Register ATS translations into the shared i18n instance.
- * Safe to call multiple times — skips if the bundle already exists.
+ * Safe to call multiple times — always overwrites existing keys
+ * to prevent stale strings in shell-powered HMR sessions.
  * Called at module-load time from the router so translations are ready
  * before any ATS component tries to use useTranslation('ats').
  *
@@ -33,9 +34,7 @@ const ATS_NAMESPACE = 'ats';
 function addAtsTranslations(): void {
   if (!i18n.isInitialized) return;
 
-  if (!i18n.hasResourceBundle('en', ATS_NAMESPACE)) {
-    i18n.addResourceBundle('en', ATS_NAMESPACE, atsEn);
-  }
+  i18n.addResourceBundle('en', ATS_NAMESPACE, atsEn, true, true);
 }
 
 /**

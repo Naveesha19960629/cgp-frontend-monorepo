@@ -1,6 +1,8 @@
 import { ArrowLeft2 } from 'iconsax-reactjs';
 
+import { useCallback, useEffect } from 'react';
 import { Controller } from 'react-hook-form';
+import type { FieldErrors } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
@@ -19,26 +21,117 @@ import { CalendarWithTime } from '@cgp/ui-kit/components/ui/calendar-with-time';
 import { Label } from '@cgp/ui-kit/components/ui/label';
 import { startOfToday } from 'date-fns';
 
+function to24HourTime(time: string): string {
+  const trimmed = time.trim();
+  if (/^\d{2}:\d{2}:\d{2}$/.test(trimmed)) return trimmed;
+  if (/^\d{2}:\d{2}$/.test(trimmed)) return `${trimmed}:00`;
+
+  const match = /^(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)$/i.exec(trimmed);
+  if (!match) return trimmed;
+
+  let hours = Number.parseInt(match[1], 10);
+  const minutes = match[2];
+  const seconds = match[3] ?? '00';
+  const period = match[4].toUpperCase();
+
+  if (period === 'AM' && hours === 12) hours = 0;
+  if (period === 'PM' && hours !== 12) hours += 12;
+
+  return `${String(hours).padStart(2, '0')}:${minutes}:${seconds}`;
+}
+
 export default function ScheduleVacancyStep({
   onBack,
   onSubmit,
 }: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
-  const { form } = useVacancyForm();
+  const { form, setForm, onCancel, stepPersistRef } = useVacancyForm();
 
   const {
     control,
     handleSubmit,
     watch,
-    formState: { errors, isValid },
+    formState: { errors },
   } = useScheduleVacancyForm(form.schedule);
 
   const publishDate = watch('schedulePublishDate');
+  const publishTime = watch('schedulePublishTime');
+  const expirationDate = watch('expirationDate');
+  const expirationTime = watch('expirationTime');
+
+  const hasRequiredFields = Boolean(
+    publishDate && publishTime && expirationDate && expirationTime
+  );
 
   const { mutateAsync: createVacancy, isPending } = useCreateVacancyMutation();
 
+  const persistScheduleToContext = useCallback(
+    (values?: ScheduleVacancyFormValues) => {
+      const currentValues = values ?? {
+        schedulePublishDate: publishDate,
+        schedulePublishTime: publishTime,
+        expirationDate,
+        expirationTime,
+      };
+
+      if (
+        currentValues.schedulePublishDate &&
+        currentValues.schedulePublishTime &&
+        currentValues.expirationDate &&
+        currentValues.expirationTime
+      ) {
+        setForm(prev => ({
+          ...prev,
+          schedule: toScheduleVacancyPayload(currentValues),
+        }));
+      }
+    },
+    [publishDate, publishTime, expirationDate, expirationTime, setForm]
+  );
+
+  useEffect(() => {
+    stepPersistRef.current = () => {
+      persistScheduleToContext();
+    };
+
+    return () => {
+      stepPersistRef.current = null;
+    };
+  }, [stepPersistRef, persistScheduleToContext]);
+
+  const onInvalid = (formErrors: FieldErrors<ScheduleVacancyFormValues>) => {
+    const expirationError = formErrors.expirationDate?.message;
+    if (
+      expirationError === 'scheduleVacancy.validation.expirationAfterPublish'
+    ) {
+      ErrorToast({
+        title: t('scheduleVacancy.notifications.validationErrorTitle'),
+        description: t(
+          'scheduleVacancy.notifications.expirationLessOrEqualMessage'
+        ),
+      });
+    }
+  };
+
   const onValid = async (values: ScheduleVacancyFormValues) => {
+    const publishAt = new Date(
+      `${values.schedulePublishDate}T${to24HourTime(values.schedulePublishTime)}`
+    );
+    const expirationAt = new Date(
+      `${values.expirationDate}T${to24HourTime(values.expirationTime)}`
+    );
+    const now = new Date();
+
+    if (publishAt < now || expirationAt < now) {
+      ErrorToast({
+        title: t('scheduleVacancy.notifications.validationErrorTitle'),
+        description: t('scheduleVacancy.notifications.pastDateTimeMessage'),
+      });
+      return;
+    }
+
     try {
+      persistScheduleToContext(values);
       await createVacancy(toScheduleVacancyPayload(values));
       SuccessToast({
         title: t('scheduleVacancy.notifications.successTitle'),
@@ -74,7 +167,7 @@ export default function ScheduleVacancyStep({
       <div className="flex-1 px-7 pb-6">
         <div className="flex flex-wrap gap-4">
           {/* ── Scheduled Publish Date & Time ── */}
-          <div className="flex w-[304px] flex-col gap-1">
+          <div className="flex w-76 flex-col gap-1">
             <Label className="text-sm font-semibold text-slate-700">
               {t('scheduleVacancy.publishDateLabel')}{' '}
               <span className="text-destructive">*</span>
@@ -126,7 +219,7 @@ export default function ScheduleVacancyStep({
           </div>
 
           {/* ── Expiration Date & Time ── */}
-          <div className="flex w-[304px] flex-col gap-1">
+          <div className="flex w-76 flex-col gap-1">
             <Label className="text-sm font-semibold text-slate-700">
               {t('scheduleVacancy.expirationDateLabel')}{' '}
               <span className="text-destructive">*</span>
@@ -151,10 +244,17 @@ export default function ScheduleVacancyStep({
                       timeInputPlaceholder={t(
                         'scheduleVacancy.timePlaceholder'
                       )}
-                      disabledDates={date =>
-                        date < startOfToday() ||
-                        (publishDate ? date < new Date(publishDate) : false)
-                      }
+                      disabledDates={date => {
+                        const localStr = [
+                          date.getFullYear(),
+                          String(date.getMonth() + 1).padStart(2, '0'),
+                          String(date.getDate()).padStart(2, '0'),
+                        ].join('-');
+                        return (
+                          date < startOfToday() ||
+                          (publishDate ? localStr < publishDate : false)
+                        );
+                      }}
                       formattedDateDisplay={
                         dateField.value
                           ? formatDisplayDateTime(
@@ -163,16 +263,18 @@ export default function ScheduleVacancyStep({
                             )
                           : undefined
                       }
-                      error={
-                        errors.expirationDate?.message ||
-                        errors.expirationTime?.message
-                          ? t(
-                              errors.expirationDate?.message ||
-                                errors.expirationTime?.message ||
-                                ''
-                            )
-                          : undefined
-                      }
+                      error={(() => {
+                        const msg =
+                          errors.expirationDate?.message ||
+                          errors.expirationTime?.message;
+                        if (
+                          !msg ||
+                          msg ===
+                            'scheduleVacancy.validation.expirationAfterPublish'
+                        )
+                          return undefined;
+                        return t(msg);
+                      })()}
                     />
                   )}
                 />
@@ -188,16 +290,16 @@ export default function ScheduleVacancyStep({
           variant="secondary"
           className="h-12 w-48"
           type="button"
-          onClick={onBack}
+          onClick={onCancel}
         >
           {t('scheduleVacancy.cancel')}
         </Button>
         <Button
           className="h-12 w-48"
           type="button"
-          disabled={isPending || !isValid}
+          disabled={isPending || !hasRequiredFields}
           onClick={() => {
-            handleSubmit(onValid)().catch(() => {});
+            handleSubmit(onValid, onInvalid)().catch(() => {});
           }}
         >
           {t('scheduleVacancy.create')}

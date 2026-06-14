@@ -42,6 +42,17 @@ describe('use-schedule-vacancy-form helpers', () => {
       // 99:99 PM matches the pattern and becomes 99+12:99:00 = 111:99:00
       expect(to24Hour('99:99 PM')).toBe('111:99:00');
     });
+
+    it('passes through already 24-hour HH:mm:ss format unchanged', () => {
+      expect(to24Hour('09:30:45')).toBe('09:30:45');
+      expect(to24Hour('17:27:10')).toBe('17:27:10');
+      expect(to24Hour('00:00:00')).toBe('00:00:00');
+    });
+
+    it('appends :00 to HH:mm 24-hour format', () => {
+      expect(to24Hour('09:30')).toBe('09:30:00');
+      expect(to24Hour('17:27')).toBe('17:27:00');
+    });
   });
 
   describe('toScheduleVacancyPayload', () => {
@@ -97,6 +108,30 @@ describe('use-schedule-vacancy-form helpers', () => {
         schedulePublishAt: '2026-06-25T12:30:00 AM',
         expirationAt: '2026-06-30T05:27:00 PM',
       });
+    });
+
+    it('converts midnight (00:xx) time to 12-hour AM format', () => {
+      const values = {
+        schedulePublishDate: '2026-06-25',
+        schedulePublishTime: '00:00:00',
+        expirationDate: '2026-06-30',
+        expirationTime: '00:30:00',
+      };
+      const result = toScheduleVacancyPayload(values);
+      expect(result.schedulePublishAt).toBe('2026-06-25T12:00:00 AM');
+      expect(result.expirationAt).toBe('2026-06-30T12:30:00 AM');
+    });
+
+    it('converts noon (12:xx) time to 12-hour PM format', () => {
+      const values = {
+        schedulePublishDate: '2026-06-25',
+        schedulePublishTime: '12:00:00',
+        expirationDate: '2026-06-30',
+        expirationTime: '12:30:00',
+      };
+      const result = toScheduleVacancyPayload(values);
+      expect(result.schedulePublishAt).toBe('2026-06-25T12:00:00 PM');
+      expect(result.expirationAt).toBe('2026-06-30T12:30:00 PM');
     });
   });
 });
