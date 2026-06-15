@@ -1,5 +1,5 @@
+import React, { forwardRef } from 'react';
 import type { ReactNode } from 'react';
-import { forwardRef } from 'react';
 
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -172,8 +172,10 @@ vi.mock('iconsax-reactjs', () => ({
 }));
 
 vi.mock('radix-ui/react-select', () => {
-  const React = require('react');
-  const SelectContext = React.createContext({});
+  const SelectContext = React.createContext<{
+    value?: string;
+    onValueChange?: (val: string) => void;
+  }>({});
   return {
     Select: ({
       children,
@@ -214,7 +216,9 @@ vi.mock('radix-ui/react-select', () => {
         <button
           type="button"
           role="option"
-          onClick={() => onValueChange?.(value || '')}
+          onClick={() => {
+            onValueChange?.(value || '');
+          }}
           data-value={value}
         >
           {children}
