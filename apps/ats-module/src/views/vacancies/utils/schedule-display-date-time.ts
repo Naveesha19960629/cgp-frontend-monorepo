@@ -6,6 +6,31 @@ import {
 
 import { format } from 'date-fns';
 
+function to24HourTime(time: string): string {
+  const trimmed = time.trim();
+
+  const twentyFourHourMatch = TWENTY_FOUR_HOUR_TIME_REGEX.exec(trimmed);
+  if (twentyFourHourMatch) {
+    const hours = twentyFourHourMatch[1];
+    const minutes = twentyFourHourMatch[2];
+    const seconds = twentyFourHourMatch[3] ?? '00';
+    return `${hours}:${minutes}:${seconds}`;
+  }
+
+  const match = TWELVE_HOUR_TIME_REGEX.exec(trimmed);
+  if (!match) return trimmed;
+
+  let hours = Number.parseInt(match[1], 10);
+  const minutes = match[2];
+  const seconds = match[3] ?? '00';
+  const period = match[4].toUpperCase();
+
+  if (period === 'AM' && hours === 12) hours = 0;
+  if (period === 'PM' && hours !== 12) hours += 12;
+
+  return `${String(hours).padStart(2, '0')}:${minutes}:${seconds}`;
+}
+
 function formatDisplayDateTime(dateValue?: string, timeValue?: string) {
   if (!dateValue) return undefined;
 
@@ -35,4 +60,4 @@ function formatDisplayDateTime(dateValue?: string, timeValue?: string) {
   return formattedDate;
 }
 
-export { formatDisplayDateTime };
+export { formatDisplayDateTime, to24HourTime };

@@ -277,6 +277,9 @@ vi.mock('@cgp/ui-kit/components/ui/dialog', () => ({
     <dialog>{children}</dialog>
   ),
   DialogTitle: ({ children }: { children?: ReactNode }) => <h2>{children}</h2>,
+  DialogDescription: ({ children }: { children?: ReactNode }) => (
+    <p>{children}</p>
+  ),
 }));
 
 vi.mock('@cgp/ui-kit/components/character-count', () => ({
@@ -546,7 +549,7 @@ describe('TertiaryEducationStep', () => {
       const user = await openConfirmDialog();
 
       await user.click(
-        screen.getByText('tertiaryEducation.confirmDisableDialog.cancel')
+        screen.getByText('preferredPatents.disableDialog.cancelButton')
       );
 
       await waitFor(() => {

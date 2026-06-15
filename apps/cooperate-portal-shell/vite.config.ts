@@ -6,6 +6,14 @@ import federation from '@originjs/vite-plugin-federation';
 import tailwindcss from '@tailwindcss/vite';
 import path from 'path';
 
+// singleton and eager are valid runtime options omitted from the published .d.ts
+declare module '@originjs/vite-plugin-federation' {
+  interface SharedConfig {
+    singleton?: boolean;
+    eager?: boolean;
+  }
+}
+
 export default defineConfig({
   plugins: [
     react(),
@@ -28,17 +36,26 @@ export default defineConfig({
         format: 'esm',
       },
 
-      shared: [
-        'react',
-        'react-dom',
-        'react-router-dom',
-        'i18next',
-        'react-i18next',
-        '@tanstack/react-query',
-        'keycloak-js',
-        '@react-keycloak/web',
-        'nuqs',
-      ],
+      shared: {
+        react: { singleton: true, eager: true, requiredVersion: '^19.0.0' },
+        'react-dom': {
+          singleton: true,
+          eager: true,
+          requiredVersion: '^19.0.0',
+        },
+        'react-router-dom': { singleton: true, eager: true },
+        i18next: { singleton: true, eager: true },
+        'react-i18next': { singleton: true, eager: true },
+        '@tanstack/react-query': { singleton: true, eager: true },
+        'keycloak-js': { singleton: true, eager: true },
+        '@react-keycloak/web': { singleton: true, eager: true },
+        nuqs: { singleton: true, eager: true },
+        '@base-ui/react': { singleton: true, eager: true },
+        cmdk: { singleton: true, eager: true },
+        '@radix-ui/react-dialog': { singleton: true, eager: true },
+        '@radix-ui/react-popover': { singleton: true, eager: true },
+        sonner: { singleton: true, eager: true },
+      },
     }),
   ],
 
@@ -56,6 +73,7 @@ export default defineConfig({
       'keycloak-js',
       '@react-keycloak/web',
       'nuqs',
+      '@radix-ui/react-dialog',
     ],
   },
 

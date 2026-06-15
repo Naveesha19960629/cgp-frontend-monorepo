@@ -201,6 +201,9 @@ vi.mock('@cgp/ui-kit/components/ui/dialog', () => ({
     <dialog open>{children}</dialog>
   ),
   DialogTitle: ({ children }: { children?: ReactNode }) => <h2>{children}</h2>,
+  DialogDescription: ({ children }: { children?: ReactNode }) => (
+    <p>{children}</p>
+  ),
 }));
 
 vi.mock('@cgp/ui-kit/components/ui/badge', () => ({
@@ -372,7 +375,7 @@ describe('PreferredIndustryStep', () => {
       const { user } = await openConfirmDialog();
 
       await user.click(
-        screen.getByText('preferredIndustries.confirmDisableDialog.cancel')
+        screen.getByText('preferredPatents.disableDialog.cancelButton')
       );
 
       expect(
@@ -447,7 +450,7 @@ describe('PreferredIndustryStep', () => {
       await user.click(screen.getByText('common.next'));
       await screen.findByText('preferredIndustries.emptyDisableDialog.title');
       await user.click(
-        screen.getByText('preferredIndustries.emptyDisableDialog.cancel')
+        screen.getByText('preferredPatents.disableDialog.cancelButton')
       );
 
       expect(
