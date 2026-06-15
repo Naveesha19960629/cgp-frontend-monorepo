@@ -15,32 +15,13 @@ import {
   useUpdateVacancyMutation,
 } from '@/views/vacancies/hooks';
 import type { StepProps } from '@/views/vacancies/types';
-import { formatDisplayDateTime } from '@/views/vacancies/utils';
+import { formatDisplayDateTime, to24HourTime } from '@/views/vacancies/utils';
 
 import { ErrorToast, SuccessToast } from '@cgp/ui-kit/components/custom-toast';
 import { Button } from '@cgp/ui-kit/components/ui/button';
 import { CalendarWithTime } from '@cgp/ui-kit/components/ui/calendar-with-time';
 import { Label } from '@cgp/ui-kit/components/ui/label';
 import { startOfToday } from 'date-fns';
-
-function to24HourTime(time: string): string {
-  const trimmed = time.trim();
-  if (/^\d{2}:\d{2}:\d{2}$/.test(trimmed)) return trimmed;
-  if (/^\d{2}:\d{2}$/.test(trimmed)) return `${trimmed}:00`;
-
-  const match = /^(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)$/i.exec(trimmed);
-  if (!match) return trimmed;
-
-  let hours = Number.parseInt(match[1], 10);
-  const minutes = match[2];
-  const seconds = match[3] ?? '00';
-  const period = match[4].toUpperCase();
-
-  if (period === 'AM' && hours === 12) hours = 0;
-  if (period === 'PM' && hours !== 12) hours += 12;
-
-  return `${String(hours).padStart(2, '0')}:${minutes}:${seconds}`;
-}
 
 export default function ScheduleVacancyStep({
   onBack,
