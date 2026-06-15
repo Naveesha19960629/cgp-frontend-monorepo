@@ -14,7 +14,6 @@ export default tseslint.config(
       '*.config.ts',
       'coverage',
       '.vite',
-      '**/public',
     ],
   },
   js.configs.recommended,
