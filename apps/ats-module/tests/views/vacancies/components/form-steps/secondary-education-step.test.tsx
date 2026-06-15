@@ -251,6 +251,9 @@ vi.mock('@cgp/ui-kit/components/ui/dialog', () => ({
     <dialog>{children}</dialog>
   ),
   DialogTitle: ({ children }: { children?: ReactNode }) => <h2>{children}</h2>,
+  DialogDescription: ({ children }: { children?: ReactNode }) => (
+    <p>{children}</p>
+  ),
 }));
 
 vi.mock('@cgp/ui-kit/components/ui/calendar', () => ({
@@ -409,7 +412,7 @@ describe('SecondaryEducationStep', () => {
       renderStep();
       expect(
         screen.getByRole('button', {
-          name: 'secondaryEducation.placeholders.startDate',
+          name: 'secondaryEducation.startDate',
         })
       ).toBeDisabled();
     });
@@ -418,7 +421,7 @@ describe('SecondaryEducationStep', () => {
       renderStep();
       expect(
         screen.getByRole('button', {
-          name: 'secondaryEducation.placeholders.endDate',
+          name: 'secondaryEducation.endDate',
         })
       ).toBeDisabled();
     });
@@ -429,7 +432,7 @@ describe('SecondaryEducationStep', () => {
       await enableSection(user);
       expect(
         screen.getByRole('button', {
-          name: 'secondaryEducation.placeholders.startDate',
+          name: 'secondaryEducation.startDate',
         })
       ).not.toBeDisabled();
     });
@@ -440,7 +443,7 @@ describe('SecondaryEducationStep', () => {
       await enableSection(user);
       expect(
         screen.getByRole('button', {
-          name: 'secondaryEducation.placeholders.endDate',
+          name: 'secondaryEducation.endDate',
         })
       ).not.toBeDisabled();
     });
@@ -454,12 +457,12 @@ describe('SecondaryEducationStep', () => {
       );
       expect(
         screen.getByRole('button', {
-          name: 'secondaryEducation.placeholders.startDate',
+          name: 'secondaryEducation.startDate',
         })
       ).toBeDisabled();
       expect(
         screen.getByRole('button', {
-          name: 'secondaryEducation.placeholders.endDate',
+          name: 'secondaryEducation.endDate',
         })
       ).toBeDisabled();
     });
@@ -514,7 +517,7 @@ describe('SecondaryEducationStep', () => {
       const user = await openConfirmDialog();
 
       await user.click(
-        screen.getByText('secondaryEducation.confirmDisableDialog.cancel')
+        screen.getByText('preferredPatents.disableDialog.cancelButton')
       );
 
       await waitFor(() => {
