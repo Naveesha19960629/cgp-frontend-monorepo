@@ -62,10 +62,10 @@
       "maxSelections": "Exceeded maximum of {{max}} selections.",
       "required": {
         "discipline": "Discipline is required",
-        "careerPath": "Career Path is required",
+        "careerPath": "Career path is required",
         "level": "Level is required",
         "role": "Role is required",
-        "jobTitle": "Job Title is required"
+        "jobTitle": "Job title is required"
       }
     },
     "dependencyHints": {
