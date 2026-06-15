@@ -96,3 +96,4 @@ export {
   useFacultiesSearch,
 } from '@/views/vacancies/hooks/queries/use-faculties-query';
 export { useVacanciesQuery } from '@/views/vacancies/hooks/queries/use-vacancies-query';
+export { useVacancyByIdQuery } from '@/views/vacancies/hooks/queries/use-vacancy-by-id-query';

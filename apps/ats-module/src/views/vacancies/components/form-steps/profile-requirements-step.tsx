@@ -498,6 +498,12 @@ export default function ProfileRequirementsStep({ onNext, onBack }: StepProps) {
       }
     }
 
+    // NOTE(Edit Profile Requirements): backend update API integration point
+    // Endpoint: /v1/candidates/{candidate_id}/profile-basic-informations
+    // Service scaffold: candidateProfileService.updateProfileBasicInformations(...)
+    // Mutation scaffold: useUpdateCandidateProfileBasicInformationsMutation()
+    // Keep runtime call disabled until candidate id source and payload mapping are finalized.
+
     onNext({
       profileRequirements: {
         isEnabled: data.isEnabled,

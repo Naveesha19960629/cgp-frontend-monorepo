@@ -4,6 +4,7 @@ import { useCallback, useEffect } from 'react';
 import { Controller } from 'react-hook-form';
 import type { FieldErrors } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
+import { useParams } from 'react-router-dom';
 
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import {
@@ -11,6 +12,7 @@ import {
   toScheduleVacancyPayload,
   useCreateVacancyMutation,
   useScheduleVacancyForm,
+  useUpdateVacancyMutation,
 } from '@/views/vacancies/hooks';
 import type { StepProps } from '@/views/vacancies/types';
 import { formatDisplayDateTime } from '@/views/vacancies/utils';
@@ -45,7 +47,8 @@ export default function ScheduleVacancyStep({
   onSubmit,
 }: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
-  const { form, setForm, onCancel, stepPersistRef } = useVacancyForm();
+  const { id } = useParams<'id'>();
+  const { form } = useVacancyForm();
 
   const {
     control,
@@ -64,6 +67,8 @@ export default function ScheduleVacancyStep({
   );
 
   const { mutateAsync: createVacancy, isPending } = useCreateVacancyMutation();
+  const { mutateAsync: updateVacancy, isPending: isUpdating } =
+    useUpdateVacancyMutation();
 
   const persistScheduleToContext = useCallback(
     (values?: ScheduleVacancyFormValues) => {
@@ -131,8 +136,14 @@ export default function ScheduleVacancyStep({
     }
 
     try {
-      persistScheduleToContext(values);
-      await createVacancy(toScheduleVacancyPayload(values));
+      const payload = toScheduleVacancyPayload(values);
+
+      if (id) {
+        await updateVacancy({ id, schedule: payload });
+      } else {
+        await createVacancy(payload);
+      }
+
       SuccessToast({
         title: t('scheduleVacancy.notifications.successTitle'),
         description: t('scheduleVacancy.notifications.successMessage'),
@@ -297,12 +308,12 @@ export default function ScheduleVacancyStep({
         <Button
           className="h-12 w-48"
           type="button"
-          disabled={isPending || !hasRequiredFields}
+          disabled={isPending || isUpdating || !isValid}
           onClick={() => {
             handleSubmit(onValid, onInvalid)().catch(() => {});
           }}
         >
-          {t('scheduleVacancy.create')}
+          {id ? t('common.save') : t('scheduleVacancy.create')}
         </Button>
       </div>
     </div>

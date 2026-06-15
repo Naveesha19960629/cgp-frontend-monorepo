@@ -1,5 +1,7 @@
 export { default as NewVacancyPage } from '@/views/vacancies/pages/new-vacancy-page';
 export { default as VacanciesPage } from '@/views/vacancies/pages/vacancies-page';
+export { default as VacancyIdEditPage } from '@/views/vacancies/pages/vacancy-id-edit-page';
+// Backwards compatibility alias
 export { default as VacancyIdNewPage } from '@/views/vacancies/pages/vacancy-id-new-page';
 
 // Services

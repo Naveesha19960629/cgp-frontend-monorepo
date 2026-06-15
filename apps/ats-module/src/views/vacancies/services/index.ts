@@ -27,3 +27,4 @@ export { employmentTypeService } from '@/views/vacancies/services/employment-typ
 export { workScheduleService } from '@/views/vacancies/services/work-schedule.service';
 export { engagementModelService } from '@/views/vacancies/services/engagement-model.service';
 export { jobLevelService } from '@/views/vacancies/services/job-level.service';
+export { candidateProfileService } from '@/views/vacancies/services/candidate-profile.service';
