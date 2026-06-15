@@ -34,7 +34,9 @@ const ATS_NAMESPACE = 'ats';
 function addAtsTranslations(): void {
   if (!i18n.isInitialized) return;
 
-  i18n.addResourceBundle('en', ATS_NAMESPACE, atsEn, true, true);
+  if (!i18n.hasResourceBundle('en', ATS_NAMESPACE)) {
+    i18n.addResourceBundle('en', ATS_NAMESPACE, atsEn);
+  }
 }
 
 /**
