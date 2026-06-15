@@ -88,7 +88,6 @@ describe('ScheduleVacancyStep', () => {
   const mockOnBack = vi.fn();
   const mockOnSubmit = vi.fn();
   const mockOnNext = vi.fn();
-  const mockOnCancel = vi.fn();
   const mockSetForm = vi.fn();
   const mockCreateVacancy = vi.fn();
   const mockStepPersistRef: { current: (() => void) | null } = {
@@ -110,7 +109,6 @@ describe('ScheduleVacancyStep', () => {
     vi.mocked(useVacancyForm).mockReturnValue({
       form: { schedule: undefined },
       setForm: mockSetForm,
-      onCancel: mockOnCancel,
       stepPersistRef: mockStepPersistRef,
       ...overrides,
     } as unknown as ReturnType<typeof useVacancyForm>);
@@ -219,16 +217,16 @@ describe('ScheduleVacancyStep', () => {
   });
 
   describe('button interactions', () => {
-    it('calls onCancel when Cancel is clicked', async () => {
+    it('calls onBack when Cancel is clicked', async () => {
       renderComponent();
       await userEvent.click(getCancelButton());
-      expect(mockOnCancel).toHaveBeenCalled();
+      expect(mockOnBack).toHaveBeenCalled();
     });
 
-    it('does not call onBack when Cancel is clicked', async () => {
+    it('does not call onSubmit when Cancel is clicked', async () => {
       renderComponent();
       await userEvent.click(getCancelButton());
-      expect(mockOnBack).not.toHaveBeenCalled();
+      expect(mockOnSubmit).not.toHaveBeenCalled();
     });
 
     it('calls onBack when the header back arrow is clicked', async () => {
@@ -389,9 +387,9 @@ describe('ScheduleVacancyStep', () => {
       fillPublish('2099-12-26', '10:00:00 AM');
       fillExpiration('2099-12-25', '10:00:00 AM');
 
-      // Wait for re-render
+      // Create stays disabled when expiration <= publish
       await waitFor(() => {
-        expect(getCreateButton()).not.toBeDisabled();
+        expect(getCreateButton()).toBeDisabled();
       });
 
       // The expirationAfterPublish error must NOT appear as inline text
@@ -406,49 +404,30 @@ describe('ScheduleVacancyStep', () => {
   });
 
   describe('validation toasts', () => {
-    it('shows ErrorToast when expiration datetime is before publish datetime', async () => {
+    it('disables Create when expiration datetime is before publish datetime', async () => {
       renderComponent();
 
       fillPublish('2099-12-26', '10:00:00 AM');
       fillExpiration('2099-12-25', '10:00:00 AM'); // before publish
 
       await waitFor(() => {
-        expect(getCreateButton()).not.toBeDisabled();
+        expect(getCreateButton()).toBeDisabled();
       });
 
-      await userEvent.click(getCreateButton());
-
-      await waitFor(() => {
-        expect(ErrorToast).toHaveBeenCalledWith(
-          expect.objectContaining({
-            title: 'scheduleVacancy.notifications.validationErrorTitle',
-            description:
-              'scheduleVacancy.notifications.expirationLessOrEqualMessage',
-          })
-        );
-      });
+      expect(ErrorToast).not.toHaveBeenCalled();
     });
 
-    it('shows ErrorToast when expiration equals publish datetime', async () => {
+    it('disables Create when expiration equals publish datetime', async () => {
       renderComponent();
 
       fillPublish('2099-12-25', '10:00:00 AM');
       fillExpiration('2099-12-25', '10:00:00 AM'); // same datetime
 
       await waitFor(() => {
-        expect(getCreateButton()).not.toBeDisabled();
+        expect(getCreateButton()).toBeDisabled();
       });
 
-      await userEvent.click(getCreateButton());
-
-      await waitFor(() => {
-        expect(ErrorToast).toHaveBeenCalledWith(
-          expect.objectContaining({
-            description:
-              'scheduleVacancy.notifications.expirationLessOrEqualMessage',
-          })
-        );
-      });
+      expect(ErrorToast).not.toHaveBeenCalled();
     });
 
     it('shows ErrorToast when publish datetime is in the past', async () => {

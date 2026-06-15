@@ -48,23 +48,19 @@ export default function ScheduleVacancyStep({
 }: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
   const { id } = useParams<'id'>();
-  const { form } = useVacancyForm();
+  const { form, setForm, stepPersistRef } = useVacancyForm();
 
   const {
     control,
     handleSubmit,
     watch,
-    formState: { errors },
+    formState: { errors, isValid },
   } = useScheduleVacancyForm(form.schedule);
 
   const publishDate = watch('schedulePublishDate');
   const publishTime = watch('schedulePublishTime');
   const expirationDate = watch('expirationDate');
   const expirationTime = watch('expirationTime');
-
-  const hasRequiredFields = Boolean(
-    publishDate && publishTime && expirationDate && expirationTime
-  );
 
   const { mutateAsync: createVacancy, isPending } = useCreateVacancyMutation();
   const { mutateAsync: updateVacancy, isPending: isUpdating } =
@@ -301,7 +297,7 @@ export default function ScheduleVacancyStep({
           variant="secondary"
           className="h-12 w-48"
           type="button"
-          onClick={onCancel}
+          onClick={onBack}
         >
           {t('scheduleVacancy.cancel')}
         </Button>
