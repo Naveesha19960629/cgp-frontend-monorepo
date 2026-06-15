@@ -28,3 +28,7 @@ export {
   formatDisplayDateTime,
   to24HourTime,
 } from '@/views/vacancies/utils/schedule-display-date-time';
+export {
+  toCreateVacancyPayload,
+  type CreateVacancyPayload,
+} from '@/views/vacancies/utils/vacancy-payload-helpers';

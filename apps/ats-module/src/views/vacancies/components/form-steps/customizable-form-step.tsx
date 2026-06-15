@@ -5,6 +5,7 @@ import { ArrowDown2, ArrowLeft2, Simcard2, Trash } from 'iconsax-reactjs';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { StepDisableDialog } from '@/views/vacancies';
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import { useStepGuard } from '@/views/vacancies/hooks';
 import { useDisableSuccessToast } from '@/views/vacancies/hooks';
@@ -28,8 +29,6 @@ import {
 import { Switch } from '@cgp/ui-kit/components/ui/switch';
 import { removeEmoji } from '@cgp/ui-kit/lib/utils';
 
-import DisableDialog from './disable-dialog';
-
 // ── UI-only state types (not API types) ──────────────────────────────────────
 
 type QuestionType =
@@ -37,7 +36,7 @@ type QuestionType =
   | 'PARAGRAPH'
   | 'MULTIPLE_CHOICE'
   | 'CHECKBOXES'
-  | 'DROP_DOWN'
+  | 'DROPDOWN'
   | 'LINEAR_SCALE';
 
 interface QuestionOption {
@@ -136,22 +135,22 @@ const MAX_OPTIONS = 5;
 
 interface QuestionCardProps {
   question: Question;
-  index: number;
   nextOptionId: number;
   onUpdate: (updated: Question) => void;
   onDuplicate: () => void;
   onRemove: () => void;
   onNextOptionId: (n: number) => void;
+  isDeleteDisabled: boolean;
 }
 
 function QuestionCard({
   question,
-  index,
   nextOptionId,
   onUpdate,
   onDuplicate,
   onRemove,
   onNextOptionId,
+  isDeleteDisabled,
 }: Readonly<QuestionCardProps>) {
   const { t } = useTranslation('ats');
 
@@ -188,13 +187,8 @@ function QuestionCard({
     });
   };
 
-  const questionLabel = `Question ${String(index + 1).padStart(2, '0')}`;
-
   return (
-    <div className="mt-4 rounded-xl border border-neutral-300 bg-neutral-100 p-5">
-      {/* Question header */}
-      <p className="mb-4 text-sm font-bold text-slate-900">{questionLabel}</p>
-
+    <div className="mt-4 rounded-xl border border-neutral-300 bg-neutral-100 p-6">
       {/* Question + Type row */}
       <div className="grid grid-cols-2 gap-4">
         {/* Question text */}
@@ -229,7 +223,7 @@ function QuestionCard({
             value={question.type}
             onValueChange={val => set({ type: val as QuestionType })}
           >
-            <SelectTrigger className="h-11 w-full bg-white shadow-none">
+            <SelectTrigger className="!h-11 w-full bg-white shadow-none">
               <SelectValue
                 placeholder={t('customizableForm.question.typePlaceholder')}
               />
@@ -247,7 +241,7 @@ function QuestionCard({
               <SelectItem value="CHECKBOXES">
                 {t('customizableForm.question.types.checkboxes')}
               </SelectItem>
-              <SelectItem value="DROP_DOWN">
+              <SelectItem value="DROPDOWN">
                 {t('customizableForm.question.types.dropDown')}
               </SelectItem>
               <SelectItem value="LINEAR_SCALE">
@@ -260,12 +254,12 @@ function QuestionCard({
 
       {/* Multiple Choice options */}
       {question.type === 'MULTIPLE_CHOICE' && (
-        <div className="mt-4 rounded-lg border border-neutral-200 bg-white">
-          <div className="grid grid-cols-2">
+        <div className="mt-4 rounded-xl border border-neutral-300 bg-white p-5">
+          <div className="grid grid-cols-2 gap-4">
             {question.options.map((opt, optIdx) => (
-              <div key={opt.id} className="p-2">
-                <div className="mb-2 flex items-center justify-between">
-                  <span className="text-sm font-medium text-slate-700">
+              <div key={opt.id} className="flex flex-col gap-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-semibold text-slate-900">
                     {`Option ${String(optIdx + 1).padStart(2, '0')}`}
                   </span>
                   <CharacterCount
@@ -299,7 +293,7 @@ function QuestionCard({
             ))}
           </div>
 
-          <div className="flex justify-end px-2 py-2">
+          <div className="mt-4 flex justify-end">
             <button
               type="button"
               className="inline-flex h-9 items-center gap-1 rounded-lg bg-neutral-200 px-8 text-sm font-semibold text-slate-700 transition-colors hover:bg-neutral-300"
@@ -314,12 +308,12 @@ function QuestionCard({
 
       {/* Checkboxes options */}
       {question.type === 'CHECKBOXES' && (
-        <div className="mt-4 rounded-lg border border-neutral-200 bg-white">
-          <div className="grid grid-cols-2">
+        <div className="mt-4 rounded-xl border border-neutral-300 bg-white p-5">
+          <div className="grid grid-cols-2 gap-4">
             {question.options.map((opt, optIdx) => (
-              <div key={opt.id} className="p-2">
-                <div className="mb-2 flex items-center justify-between">
-                  <span className="text-sm font-medium text-slate-700">
+              <div key={opt.id} className="flex flex-col gap-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-semibold text-slate-900">
                     {`Option ${String(optIdx + 1).padStart(2, '0')}`}
                   </span>
                   <CharacterCount
@@ -353,7 +347,7 @@ function QuestionCard({
             ))}
           </div>
 
-          <div className="flex justify-end px-2 py-2">
+          <div className="mt-4 flex justify-end">
             <button
               type="button"
               className="inline-flex h-9 items-center gap-1 rounded-lg bg-neutral-200 px-8 text-sm font-semibold text-slate-700 transition-colors hover:bg-neutral-300"
@@ -367,13 +361,13 @@ function QuestionCard({
       )}
 
       {/* Drop Down options */}
-      {question.type === 'DROP_DOWN' && (
-        <div className="mt-4 rounded-lg border border-neutral-200 bg-white">
-          <div className="grid grid-cols-2">
+      {question.type === 'DROPDOWN' && (
+        <div className="mt-4 rounded-xl border border-neutral-300 bg-white p-5">
+          <div className="grid grid-cols-2 gap-4">
             {question.options.map((opt, optIdx) => (
-              <div key={opt.id} className="p-2">
-                <div className="mb-2 flex items-center justify-between">
-                  <span className="text-sm font-medium text-slate-700">
+              <div key={opt.id} className="flex flex-col gap-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-semibold text-slate-900">
                     {`Option ${String(optIdx + 1).padStart(2, '0')}`}
                   </span>
                   <CharacterCount
@@ -407,7 +401,7 @@ function QuestionCard({
             ))}
           </div>
 
-          <div className="flex justify-end px-2 py-2">
+          <div className="mt-4 flex justify-end">
             <button
               type="button"
               className="inline-flex h-9 items-center gap-1 rounded-lg bg-neutral-200 px-8 text-sm font-semibold text-slate-700 transition-colors hover:bg-neutral-300"
@@ -422,56 +416,50 @@ function QuestionCard({
 
       {/* Linear Scale fields */}
       {question.type === 'LINEAR_SCALE' && (
-        <div className="mt-4 space-y-4">
-          {/* From / To – sits in the left half of a 2-col grid */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="rounded-lg border border-neutral-200 bg-white p-4">
-              <div className="flex items-end gap-6">
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-sm font-semibold text-slate-900">
-                    {t('customizableForm.question.from')}
-                  </label>
-                  <Select
-                    value={String(question.from)}
-                    onValueChange={val => set({ from: Number(val) })}
-                  >
-                    <SelectTrigger className="h-9 w-24 shadow-none">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {SCALE_RANGE_START.map(n => (
-                        <SelectItem key={n} value={String(n)}>
-                          {String(n)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-sm font-semibold text-slate-900">
-                    {t('customizableForm.question.to')}
-                  </label>
-                  <Select
-                    value={String(question.to)}
-                    onValueChange={val => set({ to: Number(val) })}
-                  >
-                    <SelectTrigger className="h-9 w-24 shadow-none">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {SCALE_RANGE_END.map(n => (
-                        <SelectItem key={n} value={String(n)}>
-                          {String(n)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
+        <div className="mt-4 space-y-4 rounded-xl border border-neutral-300 bg-white p-5">
+          {/* From / To */}
+          <div className="flex gap-4">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-semibold text-slate-900">
+                {t('customizableForm.question.from')}
+              </label>
+              <Select
+                value={String(question.from)}
+                onValueChange={val => set({ from: Number(val) })}
+              >
+                <SelectTrigger className="!h-11 w-[68px] bg-white shadow-none">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {SCALE_RANGE_START.map(n => (
+                    <SelectItem key={n} value={String(n)}>
+                      {String(n)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-            {/* right half intentionally empty */}
-            <div />
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-semibold text-slate-900">
+                {t('customizableForm.question.to')}
+              </label>
+              <Select
+                value={String(question.to)}
+                onValueChange={val => set({ to: Number(val) })}
+              >
+                <SelectTrigger className="!h-11 w-[68px] bg-white shadow-none">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {SCALE_RANGE_END.map(n => (
+                    <SelectItem key={n} value={String(n)}>
+                      {String(n)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           {/* Start Label / End Label */}
@@ -530,7 +518,12 @@ function QuestionCard({
         <button
           type="button"
           aria-label="Delete question"
-          className="text-slate-500 transition-colors hover:text-red-500"
+          className={
+            isDeleteDisabled
+              ? 'cursor-not-allowed text-slate-300'
+              : 'text-slate-500 transition-colors hover:text-red-500'
+          }
+          disabled={isDeleteDisabled}
           onClick={onRemove}
         >
           <Trash size={24} />
@@ -631,6 +624,38 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
     );
 
   const isSectionTitleError = sectionTitle.length > 200;
+  const hasFormTitleError = forms.some(form => form.title.length > 150);
+  const hasFormWithoutQuestions = forms.some(
+    form => form.questions.length === 0
+  );
+  const hasEmptyQuestionTextOrTypeOrOptions = forms.some(form =>
+    form.questions.some(q => {
+      const isQuestionTextEmpty = q.text.trim() === '';
+      const isTypeEmpty = q.type === '';
+      const isOptionBased =
+        q.type === 'MULTIPLE_CHOICE' ||
+        q.type === 'CHECKBOXES' ||
+        q.type === 'DROPDOWN';
+      const hasNoOptionWithText =
+        isOptionBased && !q.options.some(opt => opt.value.trim() !== '');
+
+      return isQuestionTextEmpty || isTypeEmpty || hasNoOptionWithText;
+    })
+  );
+
+  const hasValidationErrors =
+    isEnabled &&
+    (isSectionTitleError ||
+      hasFormTitleError ||
+      hasFormWithoutQuestions ||
+      hasEmptyQuestionTextOrTypeOrOptions);
+
+  const getDisplayFormTitle = (title: string) => {
+    const trimmedTitle = title.trim();
+    return trimmedTitle.length > 0
+      ? trimmedTitle
+      : t('customizableForm.untitledForm');
+  };
 
   // ── Form-level actions ──────────────────────────────────────────────────
 
@@ -647,7 +672,60 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
   };
 
   const removeForm = (id: number) => {
-    setForms(prev => prev.filter(f => f.id !== id));
+    setForms(prev => {
+      const filtered = prev.filter(f => f.id !== id);
+
+      const copyOfPrefix = String(
+        t('customizableForm.copyOfTitle', { title: '' })
+      );
+      const prefix = copyOfPrefix.endsWith(' ')
+        ? copyOfPrefix
+        : `${copyOfPrefix} `;
+
+      const parseTitle = (title: string) => {
+        if (title.startsWith(prefix)) {
+          const remaining = title.slice(prefix.length);
+          const match = remaining.match(/^(.*?)(?:\s*\((\d+)\))?$/);
+          if (match) {
+            return {
+              baseTitle: prefix + match[1].trim(),
+              suffix: match[2] ? parseInt(match[2], 10) : null,
+            };
+          }
+        }
+        return {
+          baseTitle: prefix + title.trim(),
+          suffix: null,
+        };
+      };
+
+      // Count actual duplicates for each targetBaseTitle in the filtered list
+      const duplicateCounts = new Map<string, number>();
+      filtered.forEach(f => {
+        if (f.title.startsWith(prefix)) {
+          const { baseTitle } = parseTitle(f.title);
+          duplicateCounts.set(
+            baseTitle,
+            (duplicateCounts.get(baseTitle) || 0) + 1
+          );
+        }
+      });
+
+      // For any duplicate form whose baseTitle now has only 1 duplicate in the list:
+      // If it has a suffix, remove its suffix (rename to just baseTitle)
+      return filtered.map(f => {
+        if (f.title.startsWith(prefix)) {
+          const parsed = parseTitle(f.title);
+          if (
+            duplicateCounts.get(parsed.baseTitle) === 1 &&
+            parsed.suffix !== null
+          ) {
+            return { ...f, title: parsed.baseTitle };
+          }
+        }
+        return f;
+      });
+    });
   };
 
   const duplicateForm = (id: number) => {
@@ -661,12 +739,79 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
 
     const source = forms.find(f => f.id === id);
     if (!source) return;
-    const copiedTitle = String(
-      t('customizableForm.copyOfTitle', { title: source.title })
-    ).trim();
+
+    const copyOfPrefix = String(
+      t('customizableForm.copyOfTitle', { title: '' })
+    );
+    const prefix = copyOfPrefix.endsWith(' ')
+      ? copyOfPrefix
+      : `${copyOfPrefix} `;
+
+    const parseTitle = (title: string) => {
+      if (title.startsWith(prefix)) {
+        const remaining = title.slice(prefix.length);
+        const match = remaining.match(/^(.*?)(?:\s*\((\d+)\))?$/);
+        if (match) {
+          return {
+            baseTitle: prefix + match[1].trim(),
+            suffix: match[2] ? parseInt(match[2], 10) : null,
+          };
+        }
+      }
+      return {
+        baseTitle: prefix + title.trim(),
+        suffix: null,
+      };
+    };
+
+    const parsedSource = parseTitle(source.title);
+    const targetBaseTitle = parsedSource.baseTitle;
+
+    // Filter existing forms that are duplicates matching the targetBaseTitle
+    const matchingForms = forms.filter(f => {
+      if (!f.title.startsWith(prefix)) return false;
+      return parseTitle(f.title).baseTitle === targetBaseTitle;
+    });
+
+    const existingSuffixes = new Set<number>();
+    let unsuffixedFormId: number | null = null;
+
+    matchingForms.forEach(f => {
+      const parsed = parseTitle(f.title);
+      if (parsed.suffix !== null) {
+        existingSuffixes.add(parsed.suffix);
+      } else {
+        unsuffixedFormId = f.id;
+      }
+    });
+
+    let nextSuffix = 1;
+    if (unsuffixedFormId !== null) {
+      existingSuffixes.add(1);
+    }
+    while (existingSuffixes.has(nextSuffix)) {
+      nextSuffix++;
+    }
+
+    const copiedTitle =
+      matchingForms.length === 0
+        ? targetBaseTitle
+        : `${targetBaseTitle} (${nextSuffix})`;
+
     const copy: FormCard = { ...source, id: nextFormId, title: copiedTitle };
-    const idx = forms.findIndex(f => f.id === id);
-    setForms(prev => [...prev.slice(0, idx + 1), copy, ...prev.slice(idx + 1)]);
+
+    setForms(prev => {
+      // If we are adding a second duplicate, rename the first unsuffixed duplicate to have suffix (1)
+      const updated = prev.map(f => {
+        if (f.id === unsuffixedFormId && matchingForms.length > 0) {
+          return { ...f, title: `${targetBaseTitle} (1)` };
+        }
+        return f;
+      });
+      const idx = updated.findIndex(f => f.id === id);
+      return [...updated.slice(0, idx + 1), copy, ...updated.slice(idx + 1)];
+    });
+
     setNextFormId(n => n + 1);
   };
 
@@ -778,6 +923,8 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
 
   const handleNext = () => {
     if (isEnabled) {
+      if (hasValidationErrors) return;
+
       const missingSectionTitle = sectionTitle.trim().length === 0;
       const missingRequiredFormData =
         forms.length === 0 || !hasAtLeastOneQuestion;
@@ -866,13 +1013,17 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
         <div className="flex flex-col gap-4">
           {forms.map(form => {
             const isFormTitleError = form.title.length > 150;
+            const displayFormTitle = getDisplayFormTitle(form.title);
             return (
               <div
                 key={form.id}
                 className="rounded-xl border border-neutral-300 bg-white p-5 shadow-[0px_4px_90px_0px_rgba(0,0,0,0.07)]"
               >
                 {/* Card action buttons */}
-                <div className="flex items-center justify-end">
+                <div className="flex items-center justify-between">
+                  <p className="text-base leading-6 font-bold text-slate-900">
+                    {displayFormTitle}
+                  </p>
                   <div className="flex items-center gap-3 text-slate-500">
                     <button
                       type="button"
@@ -886,7 +1037,12 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
                     <button
                       type="button"
                       aria-label="Delete form"
-                      className="transition-colors hover:text-red-600"
+                      className={
+                        forms.length === 1
+                          ? 'cursor-not-allowed text-slate-300'
+                          : 'transition-colors hover:text-red-600'
+                      }
+                      disabled={forms.length === 1}
                       onClick={() => setPendingFormDelete(form.id)}
                     >
                       <Trash size={24} />
@@ -918,7 +1074,7 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
                         onChange={e =>
                           updateFormTitle(form.id, removeEmoji(e.target.value))
                         }
-                        className="w-full border-0 border-b border-slate-200 bg-transparent px-0 pb-3 text-[24px] leading-8 font-bold tracking-[-0.144px] text-slate-900 placeholder:text-slate-300 focus:border-slate-300 focus:ring-0 focus:outline-none"
+                        className="w-full border-0 border-b border-slate-200 bg-transparent px-0 pb-3 text-xl leading-6 font-bold text-slate-900 placeholder:text-slate-300 focus:border-slate-300 focus:ring-0 focus:outline-none"
                       />
                       {isFormTitleError && (
                         <p className="mt-3 text-[13px] text-[#FF4A55]">
@@ -930,11 +1086,10 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
                     </div>
 
                     {/* Questions */}
-                    {form.questions.map((question, qIdx) => (
+                    {form.questions.map(question => (
                       <QuestionCard
                         key={question.id}
                         question={question}
-                        index={qIdx}
                         nextOptionId={form.nextOptionId}
                         onUpdate={updated => updateQuestion(form.id, updated)}
                         onDuplicate={() =>
@@ -947,6 +1102,7 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
                           })
                         }
                         onNextOptionId={n => setNextOptionId(form.id, n)}
+                        isDeleteDisabled={form.questions.length === 1}
                       />
                     ))}
 
@@ -982,15 +1138,10 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
         </div>
       </div>
 
-      <DisableDialog
+      <StepDisableDialog
         open={showDisableConfirm}
         onOpenChange={setShowDisableConfirm}
-        title={t('customizableForm.confirmDisableDialog.title')}
-        message={t('customizableForm.confirmDisableDialog.message')}
-        cancelLabel={t('customizableForm.confirmDisableDialog.cancel')}
-        disableLabel={t('customizableForm.confirmDisableDialog.disable')}
-        onCancel={() => setShowDisableConfirm(false)}
-        onDisable={() => {
+        onConfirm={() => {
           setSectionTitle('');
           setForms([createForm(1)]);
           setNextFormId(2);
@@ -998,17 +1149,16 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
           setIsEnabled(false);
           showDisableToast(t('customizableForm.title'));
         }}
+        title={t('customizableForm.confirmDisableDialog.title')}
+        description={t('customizableForm.confirmDisableDialog.message')}
+        cancelLabel={t('customizableForm.confirmDisableDialog.cancel')}
+        confirmLabel={t('customizableForm.confirmDisableDialog.disable')}
       />
 
-      <DisableDialog
+      <StepDisableDialog
         open={showValidationModal}
         onOpenChange={setShowValidationModal}
-        title={t('customizableForm.validationModal.title')}
-        message={t('customizableForm.validationModal.message')}
-        cancelLabel={t('customizableForm.validationModal.cancel')}
-        disableLabel={t('customizableForm.validationModal.disable')}
-        onCancel={() => setShowValidationModal(false)}
-        onDisable={() => {
+        onConfirm={() => {
           setSectionTitle('');
           setForms([createForm(1)]);
           setNextFormId(2);
@@ -1024,19 +1174,18 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
             },
           });
         }}
+        title={t('customizableForm.validationModal.title')}
+        description={t('customizableForm.validationModal.message')}
+        cancelLabel={t('customizableForm.validationModal.cancel')}
+        confirmLabel={t('customizableForm.validationModal.disable')}
       />
 
-      <DisableDialog
+      <StepDisableDialog
         open={pendingQuestionDelete !== null}
         onOpenChange={open => {
           if (!open) setPendingQuestionDelete(null);
         }}
-        title={t('customizableForm.deleteQuestionModal.title')}
-        message={t('customizableForm.deleteQuestionModal.message')}
-        cancelLabel={t('customizableForm.deleteQuestionModal.cancel')}
-        disableLabel={t('customizableForm.deleteQuestionModal.delete')}
-        onCancel={() => setPendingQuestionDelete(null)}
-        onDisable={() => {
+        onConfirm={() => {
           if (pendingQuestionDelete) {
             removeQuestion(
               pendingQuestionDelete.formId,
@@ -1045,31 +1194,38 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
           }
           setPendingQuestionDelete(null);
         }}
+        title={t('customizableForm.deleteQuestionModal.title')}
+        description={t('customizableForm.deleteQuestionModal.message')}
+        cancelLabel={t('customizableForm.deleteQuestionModal.cancel')}
+        confirmLabel={t('customizableForm.deleteQuestionModal.delete')}
       />
 
-      <DisableDialog
+      <StepDisableDialog
         open={pendingFormDelete !== null}
         onOpenChange={open => {
           if (!open) setPendingFormDelete(null);
         }}
-        title={t('customizableForm.deleteFormModal.title')}
-        message={t('customizableForm.deleteFormModal.message')}
-        cancelLabel={t('customizableForm.deleteFormModal.cancel')}
-        disableLabel={t('customizableForm.deleteFormModal.delete')}
-        onCancel={() => setPendingFormDelete(null)}
-        onDisable={() => {
+        onConfirm={() => {
           if (pendingFormDelete !== null) {
             removeForm(pendingFormDelete);
           }
           setPendingFormDelete(null);
         }}
+        title={t('customizableForm.deleteFormModal.title')}
+        description={t('customizableForm.deleteFormModal.message')}
+        cancelLabel={t('customizableForm.deleteFormModal.cancel')}
+        confirmLabel={t('customizableForm.deleteFormModal.delete')}
       />
 
       <div className="sticky bottom-0 mt-auto flex items-center justify-end gap-4 bg-white px-6 py-7 shadow-[0px_-8px_6.8px_0px_rgba(0,0,0,0.04)]">
         <Button variant="secondary" className="h-12 w-48" onClick={onCancel}>
           {t('common.cancel')}
         </Button>
-        <Button className="h-12 w-48" onClick={handleNext}>
+        <Button
+          className="h-12 w-48"
+          onClick={handleNext}
+          disabled={hasValidationErrors}
+        >
           {t('common.next')}
         </Button>
       </div>

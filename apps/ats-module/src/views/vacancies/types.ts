@@ -96,6 +96,7 @@ interface StepDisableDialogProps {
   onConfirm: () => void;
   title?: string;
   description?: string;
+  cancelLabel?: string;
   confirmLabel?: string;
 }
 
@@ -300,7 +301,7 @@ interface CustomizableFormQuestion {
     | 'PARAGRAPH'
     | 'MULTIPLE_CHOICE'
     | 'CHECKBOXES'
-    | 'DROP_DOWN'
+    | 'DROPDOWN'
     | 'LINEAR_SCALE'
     | '';
   required: boolean;

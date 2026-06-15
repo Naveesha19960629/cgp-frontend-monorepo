@@ -5,6 +5,7 @@ import * as SwitchPrimitive from '@radix-ui/react-switch';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { StepDisableDialog } from '@/views/vacancies';
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import {
   useCausesQuery,
@@ -21,8 +22,6 @@ import MultipleSelector from '@cgp/ui-kit/components/multi-select';
 import { Button } from '@cgp/ui-kit/components/ui/button';
 import { Checkbox } from '@cgp/ui-kit/components/ui/checkbox';
 import { cn } from '@cgp/ui-kit/lib/utils';
-
-import DisableDialog from './disable-dialog';
 
 const MAX_CAUSES = 10;
 const MAX_CAUSE_CHARS = 100;
@@ -282,36 +281,30 @@ export default function PreferredCausesStep({
         </div>
       </div>
 
-      <DisableDialog
+      <StepDisableDialog
         open={confirmDisableOpen}
         onOpenChange={open => {
           if (!open) setConfirmDisableOpen(false);
         }}
-        title={t('preferredCauses.confirmDisableDialog.title')}
-        message={t('preferredCauses.confirmDisableDialog.message')}
-        cancelLabel={t('preferredCauses.confirmDisableDialog.cancel')}
-        disableLabel={t('preferredCauses.confirmDisableDialog.disable')}
-        onCancel={() => setConfirmDisableOpen(false)}
-        onDisable={() => {
+        onConfirm={() => {
           setSelectedCauses([]);
           setDataTakenFromCandidate(false);
           setIsEnabled(false);
           setConfirmDisableOpen(false);
           showDisableToast(t('preferredCauses.title'));
         }}
+        title={t('preferredCauses.confirmDisableDialog.title')}
+        description={t('preferredCauses.confirmDisableDialog.message')}
+        cancelLabel={t('preferredCauses.confirmDisableDialog.cancel')}
+        confirmLabel={t('preferredCauses.confirmDisableDialog.disable')}
       />
 
-      <DisableDialog
+      <StepDisableDialog
         open={emptyDisableOpen}
         onOpenChange={open => {
           if (!open) setEmptyDisableOpen(false);
         }}
-        title={t('preferredCauses.emptyDisableDialog.title')}
-        message={t('preferredCauses.emptyDisableDialog.message')}
-        cancelLabel={t('preferredCauses.emptyDisableDialog.cancel')}
-        disableLabel={t('preferredCauses.emptyDisableDialog.disable')}
-        onCancel={() => setEmptyDisableOpen(false)}
-        onDisable={() => {
+        onConfirm={() => {
           setIsEnabled(false);
           setEmptyDisableOpen(false);
           showDisableToast(t('preferredCauses.title'));
@@ -323,6 +316,10 @@ export default function PreferredCausesStep({
             },
           });
         }}
+        title={t('preferredCauses.emptyDisableDialog.title')}
+        description={t('preferredCauses.emptyDisableDialog.message')}
+        cancelLabel={t('preferredCauses.emptyDisableDialog.cancel')}
+        confirmLabel={t('preferredCauses.emptyDisableDialog.disable')}
       />
 
       {/* ── Step footer ──────────────────────────────────────────────────── */}

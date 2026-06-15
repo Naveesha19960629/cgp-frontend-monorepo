@@ -18,6 +18,12 @@
     "noDataTitle": "No Data Found",
     "noDataDescription": "We couldn't find any matching data. Try adjusting your search data",
     "errorTitle": "Try Again",
+    "disableDialog": {
+      "title": "Are you sure?",
+      "description": "Are you sure you want to disable this section? Disabling this section will permanently remove all added data. This action cannot be undone",
+      "cancelButton": "Cancel",
+      "confirmButton": "Disable"
+    },
     "notifications": {
       "disable": {
         "title": "Successfully Disabled",
@@ -56,10 +62,10 @@
       "maxSelections": "Exceeded maximum of {{max}} selections.",
       "required": {
         "discipline": "Discipline is required",
-        "careerPath": "Career Path is required",
+        "careerPath": "Career path is required",
         "level": "Level is required",
         "role": "Role is required",
-        "jobTitle": "Job Title is required"
+        "jobTitle": "Job title is required"
       }
     },
     "dependencyHints": {
@@ -184,6 +190,7 @@
 
   "customizableForm": {
     "title": "Customizable Form",
+    "untitledForm": "Untitled Form",
     "sectionTitlePlaceholder": "Section Title",
     "formBuilderTitle": "Form Builder",
     "formTitlePlaceholder": "Form Title",
@@ -218,7 +225,9 @@
       "maxLengthExceeded": "Exceeded maximum character length of {{max}}",
       "maxFormsExceeded": "Exceeded maximum of 5 forms allowed",
       "maxQuestionsExceeded": "Exceeded maximum of 10 questions allowed per form",
-      "maxOptionsExceeded": "Exceeded maximum of 5 options allowed"
+      "maxOptionsExceeded": "Exceeded maximum of 5 options allowed",
+      "requiredQuestion": "Required question",
+      "requiredType": "Required type"
     },
     "question": {
       "questionLabel": "Question",

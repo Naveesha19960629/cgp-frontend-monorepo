@@ -5,6 +5,7 @@ import * as SwitchPrimitive from '@radix-ui/react-switch';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { StepDisableDialog } from '@/views/vacancies';
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import {
   useCreateLanguageMutation,
@@ -21,8 +22,6 @@ import MultipleSelector from '@cgp/ui-kit/components/multi-select';
 import { Button } from '@cgp/ui-kit/components/ui/button';
 import { Checkbox } from '@cgp/ui-kit/components/ui/checkbox';
 import { cn } from '@cgp/ui-kit/lib/utils';
-
-import DisableDialog from './disable-dialog';
 
 const MAX_LANGUAGES = 10;
 const MAX_LANG_CHARS = 100;
@@ -286,36 +285,30 @@ export default function PreferredLanguagesStep({
         </div>
       </div>
 
-      <DisableDialog
+      <StepDisableDialog
         open={confirmDisableOpen}
         onOpenChange={open => {
           if (!open) setConfirmDisableOpen(false);
         }}
-        title={t('preferredLanguages.confirmDisableDialog.title')}
-        message={t('preferredLanguages.confirmDisableDialog.message')}
-        cancelLabel={t('preferredLanguages.confirmDisableDialog.cancel')}
-        disableLabel={t('preferredLanguages.confirmDisableDialog.disable')}
-        onCancel={() => setConfirmDisableOpen(false)}
-        onDisable={() => {
+        onConfirm={() => {
           setSelectedLanguages([]);
           setDataTakenFromCandidate(false);
           setIsEnabled(false);
           setConfirmDisableOpen(false);
           showDisableToast(t('preferredLanguages.title'));
         }}
+        title={t('preferredLanguages.confirmDisableDialog.title')}
+        description={t('preferredLanguages.confirmDisableDialog.message')}
+        cancelLabel={t('preferredLanguages.confirmDisableDialog.cancel')}
+        confirmLabel={t('preferredLanguages.confirmDisableDialog.disable')}
       />
 
-      <DisableDialog
+      <StepDisableDialog
         open={emptyDisableOpen}
         onOpenChange={open => {
           if (!open) setEmptyDisableOpen(false);
         }}
-        title={t('preferredLanguages.emptyDisableDialog.title')}
-        message={t('preferredLanguages.emptyDisableDialog.message')}
-        cancelLabel={t('preferredLanguages.emptyDisableDialog.cancel')}
-        disableLabel={t('preferredLanguages.emptyDisableDialog.disable')}
-        onCancel={() => setEmptyDisableOpen(false)}
-        onDisable={() => {
+        onConfirm={() => {
           setIsEnabled(false);
           setEmptyDisableOpen(false);
           showDisableToast(t('preferredLanguages.title'));
@@ -327,6 +320,10 @@ export default function PreferredLanguagesStep({
             },
           });
         }}
+        title={t('preferredLanguages.emptyDisableDialog.title')}
+        description={t('preferredLanguages.emptyDisableDialog.message')}
+        cancelLabel={t('preferredLanguages.emptyDisableDialog.cancel')}
+        confirmLabel={t('preferredLanguages.emptyDisableDialog.disable')}
       />
 
       {/* ── Step footer ──────────────────────────────────────────────────── */}

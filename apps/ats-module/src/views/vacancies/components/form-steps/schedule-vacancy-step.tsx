@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo } from 'react';
 import { Controller } from 'react-hook-form';
 import type { FieldErrors } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import {
@@ -29,6 +29,7 @@ export default function ScheduleVacancyStep({
 }: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
   const { id } = useParams<'id'>();
+  const navigate = useNavigate();
   const { form, setForm, stepPersistRef } = useVacancyForm();
 
   const {
@@ -134,19 +135,19 @@ export default function ScheduleVacancyStep({
     }
 
     try {
-      const payload = toScheduleVacancyPayload(values);
+      const schedule = toScheduleVacancyPayload(values);
 
       if (id) {
-        await updateVacancy({ id, schedule: payload });
+        await updateVacancy({ id, schedule });
       } else {
-        await createVacancy(payload);
+        await createVacancy({ ...form, schedule });
       }
-
       SuccessToast({
         title: t('scheduleVacancy.notifications.successTitle'),
         description: t('scheduleVacancy.notifications.successMessage'),
       });
       onSubmit();
+      navigate('/dashboard/ats/vacancies');
     } catch {
       ErrorToast({
         title: t('scheduleVacancy.notifications.apiErrorTitle'),
