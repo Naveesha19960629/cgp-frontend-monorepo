@@ -135,7 +135,6 @@ const MAX_OPTIONS = 5;
 
 interface QuestionCardProps {
   question: Question;
-  index: number;
   nextOptionId: number;
   onUpdate: (updated: Question) => void;
   onDuplicate: () => void;
@@ -146,7 +145,6 @@ interface QuestionCardProps {
 
 function QuestionCard({
   question,
-  index,
   nextOptionId,
   onUpdate,
   onDuplicate,
@@ -1088,11 +1086,10 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
                     </div>
 
                     {/* Questions */}
-                    {form.questions.map((question, qIdx) => (
+                    {form.questions.map(question => (
                       <QuestionCard
                         key={question.id}
                         question={question}
-                        index={qIdx}
                         nextOptionId={form.nextOptionId}
                         onUpdate={updated => updateQuestion(form.id, updated)}
                         onDuplicate={() =>
