@@ -225,7 +225,9 @@
       "maxLengthExceeded": "Exceeded maximum character length of {{max}}",
       "maxFormsExceeded": "Exceeded maximum of 5 forms allowed",
       "maxQuestionsExceeded": "Exceeded maximum of 10 questions allowed per form",
-      "maxOptionsExceeded": "Exceeded maximum of 5 options allowed"
+      "maxOptionsExceeded": "Exceeded maximum of 5 options allowed",
+      "requiredQuestion": "Required question",
+      "requiredType": "Required type"
     },
     "question": {
       "questionLabel": "Question",

@@ -141,6 +141,7 @@ interface QuestionCardProps {
   onDuplicate: () => void;
   onRemove: () => void;
   onNextOptionId: (n: number) => void;
+  isDeleteDisabled: boolean;
 }
 
 function QuestionCard({
@@ -151,6 +152,7 @@ function QuestionCard({
   onDuplicate,
   onRemove,
   onNextOptionId,
+  isDeleteDisabled,
 }: Readonly<QuestionCardProps>) {
   const { t } = useTranslation('ats');
 
@@ -518,7 +520,12 @@ function QuestionCard({
         <button
           type="button"
           aria-label="Delete question"
-          className="text-slate-500 transition-colors hover:text-red-500"
+          className={
+            isDeleteDisabled
+              ? 'cursor-not-allowed text-slate-300'
+              : 'text-slate-500 transition-colors hover:text-red-500'
+          }
+          disabled={isDeleteDisabled}
           onClick={onRemove}
         >
           <Trash size={24} />
@@ -619,6 +626,31 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
     );
 
   const isSectionTitleError = sectionTitle.length > 200;
+  const hasFormTitleError = forms.some(form => form.title.length > 150);
+  const hasFormWithoutQuestions = forms.some(
+    form => form.questions.length === 0
+  );
+  const hasEmptyQuestionTextOrTypeOrOptions = forms.some(form =>
+    form.questions.some(q => {
+      const isQuestionTextEmpty = q.text.trim() === '';
+      const isTypeEmpty = q.type === '';
+      const isOptionBased =
+        q.type === 'MULTIPLE_CHOICE' ||
+        q.type === 'CHECKBOXES' ||
+        q.type === 'DROPDOWN';
+      const hasNoOptionWithText =
+        isOptionBased && !q.options.some(opt => opt.value.trim() !== '');
+
+      return isQuestionTextEmpty || isTypeEmpty || hasNoOptionWithText;
+    })
+  );
+
+  const hasValidationErrors =
+    isEnabled &&
+    (isSectionTitleError ||
+      hasFormTitleError ||
+      hasFormWithoutQuestions ||
+      hasEmptyQuestionTextOrTypeOrOptions);
 
   const getDisplayFormTitle = (title: string) => {
     const trimmedTitle = title.trim();
@@ -893,6 +925,8 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
 
   const handleNext = () => {
     if (isEnabled) {
+      if (hasValidationErrors) return;
+
       const missingSectionTitle = sectionTitle.trim().length === 0;
       const missingRequiredFormData =
         forms.length === 0 || !hasAtLeastOneQuestion;
@@ -1005,7 +1039,12 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
                     <button
                       type="button"
                       aria-label="Delete form"
-                      className="transition-colors hover:text-red-600"
+                      className={
+                        forms.length === 1
+                          ? 'cursor-not-allowed text-slate-300'
+                          : 'transition-colors hover:text-red-600'
+                      }
+                      disabled={forms.length === 1}
                       onClick={() => setPendingFormDelete(form.id)}
                     >
                       <Trash size={24} />
@@ -1066,6 +1105,7 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
                           })
                         }
                         onNextOptionId={n => setNextOptionId(form.id, n)}
+                        isDeleteDisabled={form.questions.length === 1}
                       />
                     ))}
 
@@ -1184,7 +1224,11 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
         <Button variant="secondary" className="h-12 w-48" onClick={onCancel}>
           {t('common.cancel')}
         </Button>
-        <Button className="h-12 w-48" onClick={handleNext}>
+        <Button
+          className="h-12 w-48"
+          onClick={handleNext}
+          disabled={hasValidationErrors}
+        >
           {t('common.next')}
         </Button>
       </div>
