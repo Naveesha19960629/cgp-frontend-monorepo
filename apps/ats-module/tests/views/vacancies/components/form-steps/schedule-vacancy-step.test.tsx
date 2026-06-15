@@ -214,6 +214,38 @@ describe('ScheduleVacancyStep', () => {
         expect(getCreateButton()).not.toBeDisabled();
       });
     });
+
+    it('disables Create when publish datetime is in the past relative to now', async () => {
+      const toDateInput = (date: Date) => {
+        const yyyy = date.getFullYear();
+        const mm = String(date.getMonth() + 1).padStart(2, '0');
+        const dd = String(date.getDate()).padStart(2, '0');
+        return `${yyyy}-${mm}-${dd}`;
+      };
+
+      const toTimeInput = (date: Date) => {
+        let hours = date.getHours();
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        const seconds = String(date.getSeconds()).padStart(2, '0');
+        const period = hours >= 12 ? 'PM' : 'AM';
+        hours %= 12;
+        if (hours === 0) hours = 12;
+        return `${hours}:${minutes}:${seconds} ${period}`;
+      };
+
+      const now = new Date();
+      const publishAt = new Date(now.getTime() - 60 * 60 * 1000);
+      const expirationAt = new Date(now.getTime() + 60 * 60 * 1000);
+
+      renderComponent();
+
+      fillPublish(toDateInput(publishAt), toTimeInput(publishAt));
+      fillExpiration(toDateInput(expirationAt), toTimeInput(expirationAt));
+
+      await waitFor(() => {
+        expect(getCreateButton()).toBeDisabled();
+      });
+    });
   });
 
   describe('button interactions', () => {
@@ -430,7 +462,7 @@ describe('ScheduleVacancyStep', () => {
       expect(ErrorToast).not.toHaveBeenCalled();
     });
 
-    it('shows ErrorToast when publish datetime is in the past', async () => {
+    it('disables Create when publish datetime is in the past', async () => {
       renderComponent();
 
       // 2020 dates are definitively in the past; expiration > publish so schema passes
@@ -438,19 +470,12 @@ describe('ScheduleVacancyStep', () => {
       fillExpiration('2020-01-02', '10:00:00 AM');
 
       await waitFor(() => {
-        expect(getCreateButton()).not.toBeDisabled();
+        expect(getCreateButton()).toBeDisabled();
       });
 
       await userEvent.click(getCreateButton());
 
-      await waitFor(() => {
-        expect(ErrorToast).toHaveBeenCalledWith(
-          expect.objectContaining({
-            title: 'scheduleVacancy.notifications.validationErrorTitle',
-            description: 'scheduleVacancy.notifications.pastDateTimeMessage',
-          })
-        );
-      });
+      expect(ErrorToast).not.toHaveBeenCalled();
     });
 
     it('does not call onSubmit when datetime is in the past', async () => {
@@ -460,14 +485,12 @@ describe('ScheduleVacancyStep', () => {
       fillExpiration('2020-01-02', '10:00:00 AM');
 
       await waitFor(() => {
-        expect(getCreateButton()).not.toBeDisabled();
+        expect(getCreateButton()).toBeDisabled();
       });
 
       await userEvent.click(getCreateButton());
 
-      await waitFor(() => {
-        expect(ErrorToast).toHaveBeenCalled();
-      });
+      expect(ErrorToast).not.toHaveBeenCalled();
 
       expect(mockOnSubmit).not.toHaveBeenCalled();
     });

@@ -1,6 +1,6 @@
 import { ArrowLeft2 } from 'iconsax-reactjs';
 
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { Controller } from 'react-hook-form';
 import type { FieldErrors } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -42,6 +42,27 @@ export default function ScheduleVacancyStep({
   const publishTime = watch('schedulePublishTime');
   const expirationDate = watch('expirationDate');
   const expirationTime = watch('expirationTime');
+
+  const hasPastScheduleDateTime = useMemo(() => {
+    if (!publishDate || !publishTime || !expirationDate || !expirationTime) {
+      return false;
+    }
+
+    const publishAt = new Date(`${publishDate}T${to24HourTime(publishTime)}`);
+    const expirationAt = new Date(
+      `${expirationDate}T${to24HourTime(expirationTime)}`
+    );
+
+    if (
+      Number.isNaN(publishAt.getTime()) ||
+      Number.isNaN(expirationAt.getTime())
+    ) {
+      return false;
+    }
+
+    const now = new Date();
+    return publishAt < now || expirationAt < now;
+  }, [publishDate, publishTime, expirationDate, expirationTime]);
 
   const { mutateAsync: createVacancy, isPending } = useCreateVacancyMutation();
   const { mutateAsync: updateVacancy, isPending: isUpdating } =
@@ -285,7 +306,9 @@ export default function ScheduleVacancyStep({
         <Button
           className="h-12 w-48"
           type="button"
-          disabled={isPending || isUpdating || !isValid}
+          disabled={
+            isPending || isUpdating || !isValid || hasPastScheduleDateTime
+          }
           onClick={() => {
             handleSubmit(onValid, onInvalid)().catch(() => {});
           }}
