@@ -1,9 +1,9 @@
 import type {
+  CreateVacancyPayload,
   ScheduleVacancyPayload,
   VacanciesApiResponse,
   VacancyQueryParams,
 } from '@/views/vacancies/types';
-import type { CreateVacancyPayload } from '@/views/vacancies/utils';
 
 import { httpClient } from '@cgp/data-access';
 
