@@ -544,10 +544,10 @@ export default function PreferredPublicationsStep({
         onOpenChange={open => {
           if (!open) setConfirmDisableOpen(false);
         }}
-        title="Are you sure?"
-        message="Are you sure you want to disable this section? Disabling this section will permanently remove all added data. This action cannot be undone"
-        cancelLabel="Cancel"
-        disableLabel="Disable"
+        title={t('preferredPublications.confirmDisableDialog.title')}
+        message={t('preferredPublications.confirmDisableDialog.message')}
+        cancelLabel={t('preferredPublications.confirmDisableDialog.cancel')}
+        disableLabel={t('preferredPublications.confirmDisableDialog.disable')}
         onCancel={() => setConfirmDisableOpen(false)}
         onDisable={handleDisable}
       />
@@ -567,10 +567,10 @@ export default function PreferredPublicationsStep({
             },
           });
         }}
-        title="Are you sure?"
-        description="You've enabled this section but haven't filled any fields. This section will be disabled for this vacancy and no data will be collected from candidates"
-        cancelLabel="Cancel"
-        confirmLabel="Disable"
+        title={t('preferredPublications.emptyDisableDialog.title')}
+        description={t('preferredPublications.emptyDisableDialog.message')}
+        cancelLabel={t('preferredPublications.emptyDisableDialog.cancel')}
+        confirmLabel={t('preferredPublications.emptyDisableDialog.disable')}
       />
     </>
   );

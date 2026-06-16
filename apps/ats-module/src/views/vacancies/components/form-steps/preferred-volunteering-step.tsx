@@ -720,10 +720,10 @@ export default function PreferredVolunteeringStep({
         onOpenChange={open => {
           if (!open) setConfirmDisableOpen(false);
         }}
-        title="Are you sure?"
-        message="Are you sure you want to disable this section? Disabling this section will permanently remove all added data. This action cannot be undone"
-        cancelLabel="Cancel"
-        disableLabel="Disable"
+        title={t('preferredVolunteering.confirmDisableDialog.title')}
+        message={t('preferredVolunteering.confirmDisableDialog.message')}
+        cancelLabel={t('preferredVolunteering.confirmDisableDialog.cancel')}
+        disableLabel={t('preferredVolunteering.confirmDisableDialog.disable')}
         onCancel={() => setConfirmDisableOpen(false)}
         onDisable={handleDisable}
       />
@@ -743,10 +743,10 @@ export default function PreferredVolunteeringStep({
             },
           });
         }}
-        title="Are you sure?"
-        description="You've enabled this section but haven't filled any fields. This section will be disabled for this vacancy and no data will be collected from candidates"
-        cancelLabel="Cancel"
-        confirmLabel="Disable"
+        title={t('preferredVolunteering.emptyDisableDialog.title')}
+        description={t('preferredVolunteering.emptyDisableDialog.message')}
+        cancelLabel={t('preferredVolunteering.emptyDisableDialog.cancel')}
+        confirmLabel={t('preferredVolunteering.emptyDisableDialog.disable')}
       />
     </>
   );

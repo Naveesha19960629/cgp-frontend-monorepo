@@ -688,10 +688,10 @@ export default function PreferredClubSocietiesStep({
         onOpenChange={open => {
           if (!open) setConfirmDisableOpen(false);
         }}
-        title="Are you sure?"
-        message="Are you sure you want to disable this section? Disabling this section will permanently remove all added data. This action cannot be undone"
-        cancelLabel="Cancel"
-        disableLabel="Disable"
+        title={t('preferredClubSocieties.confirmDisableDialog.title')}
+        message={t('preferredClubSocieties.confirmDisableDialog.message')}
+        cancelLabel={t('preferredClubSocieties.confirmDisableDialog.cancel')}
+        disableLabel={t('preferredClubSocieties.confirmDisableDialog.disable')}
         onCancel={() => setConfirmDisableOpen(false)}
         onDisable={handleDisable}
       />
@@ -711,10 +711,10 @@ export default function PreferredClubSocietiesStep({
             },
           });
         }}
-        title="Are you sure?"
-        description="You've enabled this section but haven't filled any fields. This section will be disabled for this vacancy and no data will be collected from candidates"
-        cancelLabel="Cancel"
-        confirmLabel="Disable"
+        title={t('preferredClubSocieties.emptyDisableDialog.title')}
+        description={t('preferredClubSocieties.emptyDisableDialog.message')}
+        cancelLabel={t('preferredClubSocieties.emptyDisableDialog.cancel')}
+        confirmLabel={t('preferredClubSocieties.emptyDisableDialog.disable')}
       />
     </>
   );
