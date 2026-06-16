@@ -21,7 +21,7 @@ describe('toSecondaryEducationPayload', () => {
     const result = toSecondaryEducationPayload({
       isEnabled: false,
       dataTakenFromCandidate: false,
-      entry: EMPTY_ENTRY,
+      entries: [EMPTY_ENTRY],
     });
 
     expect(result).toEqual([
@@ -33,7 +33,7 @@ describe('toSecondaryEducationPayload', () => {
     const result = toSecondaryEducationPayload({
       isEnabled: true,
       dataTakenFromCandidate: true,
-      entry: EMPTY_ENTRY,
+      entries: [EMPTY_ENTRY],
     });
 
     expect(result).toEqual([
@@ -45,20 +45,24 @@ describe('toSecondaryEducationPayload', () => {
     const result = toSecondaryEducationPayload({
       isEnabled: true,
       dataTakenFromCandidate: false,
-      entry: {
-        ...EMPTY_ENTRY,
-        schools: [
-          { value: 'school-uuid', label: 'Oxford High', source: 'MASTER' },
-        ],
-        examinations: [
-          { value: 'exam-uuid', label: 'O-Levels', source: 'MASTER' },
-        ],
-        awardingBodies: [{ value: 'ab-uuid', label: 'AQA', source: 'PENDING' }],
-        fieldsOfStudy: [
-          { value: 'fos-uuid', label: 'Science', source: 'MASTER' },
-        ],
-        schoolLocations: [{ value: 'loc-uuid', label: 'London' }],
-      },
+      entries: [
+        {
+          ...EMPTY_ENTRY,
+          schools: [
+            { value: 'school-uuid', label: 'Oxford High', source: 'MASTER' },
+          ],
+          examinations: [
+            { value: 'exam-uuid', label: 'O-Levels', source: 'MASTER' },
+          ],
+          awardingBodies: [
+            { value: 'ab-uuid', label: 'AQA', source: 'PENDING' },
+          ],
+          fieldsOfStudy: [
+            { value: 'fos-uuid', label: 'Science', source: 'MASTER' },
+          ],
+          schoolLocations: [{ value: 'loc-uuid', label: 'London' }],
+        },
+      ],
     });
 
     const content = result[0].content[0];
@@ -94,13 +98,15 @@ describe('toSecondaryEducationPayload', () => {
     const result = toSecondaryEducationPayload({
       isEnabled: true,
       dataTakenFromCandidate: false,
-      entry: {
-        ...EMPTY_ENTRY,
-        examinations: [
-          { value: 'exam-uuid', label: 'A-Levels', source: 'MASTER' },
-          { value: 'Custom Exam', label: 'Custom Exam', source: 'PENDING' },
-        ],
-      },
+      entries: [
+        {
+          ...EMPTY_ENTRY,
+          examinations: [
+            { value: 'exam-uuid', label: 'A-Levels', source: 'MASTER' },
+            { value: 'Custom Exam', label: 'Custom Exam', source: 'PENDING' },
+          ],
+        },
+      ],
     });
 
     expect(result[0].content[0].examinations).toHaveLength(1);
@@ -111,7 +117,7 @@ describe('toSecondaryEducationPayload', () => {
     const result = toSecondaryEducationPayload({
       isEnabled: true,
       dataTakenFromCandidate: false,
-      entry: { ...EMPTY_ENTRY, startDate: undefined, endDate: undefined },
+      entries: [{ ...EMPTY_ENTRY, startDate: undefined, endDate: undefined }],
     });
 
     expect(result[0].content[0].startDate).toBe('');
@@ -122,11 +128,13 @@ describe('toSecondaryEducationPayload', () => {
     const result = toSecondaryEducationPayload({
       isEnabled: true,
       dataTakenFromCandidate: false,
-      entry: {
-        ...EMPTY_ENTRY,
-        startDate: '2020-01-01T00:00:00.000Z',
-        endDate: '2022-06-30T00:00:00.000Z',
-      },
+      entries: [
+        {
+          ...EMPTY_ENTRY,
+          startDate: '2020-01-01T00:00:00.000Z',
+          endDate: '2022-06-30T00:00:00.000Z',
+        },
+      ],
     });
 
     expect(result[0].content[0].startDate).toBe('2020-01-01T00:00:00.000Z');
@@ -137,7 +145,7 @@ describe('toSecondaryEducationPayload', () => {
     const result = toSecondaryEducationPayload({
       isEnabled: true,
       dataTakenFromCandidate: false,
-      entry: { ...EMPTY_ENTRY, acceptsHomeSchooling: true },
+      entries: [{ ...EMPTY_ENTRY, acceptsHomeSchooling: true }],
     });
 
     expect(result[0].content[0].acceptsHomeSchooling).toBe(true);

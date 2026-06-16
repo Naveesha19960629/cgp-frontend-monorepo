@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+﻿import type { ReactNode } from 'react';
 
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -45,6 +45,11 @@ vi.mock('@/views/vacancies/hooks', async importOriginal => {
     await importOriginal<typeof import('@/views/vacancies/hooks')>();
   return {
     ...actual,
+    useSchoolsQuery: () => ({ data: undefined }),
+    useSchoolLocationsQuery: () => ({ data: undefined }),
+    useExaminationsQuery: () => ({ data: undefined }),
+    useSecondaryAwardingBodiesQuery: () => ({ data: undefined }),
+    useFieldsOfStudyQuery: () => ({ data: undefined }),
     useSchoolsSearch: () => vi.fn(() => Promise.resolve([])),
     useSchoolLocationsSearch: () => vi.fn(() => Promise.resolve([])),
     useExaminationsSearch: () => vi.fn(() => Promise.resolve([])),
@@ -104,7 +109,7 @@ vi.mock('@/views/vacancies/components/form-steps/add-school-dialog', () => ({
 
 // ── Mock message box ────────────────────────────────────────────────────────
 
-vi.mock('@/app/components/message-box', () => ({
+vi.mock('@/components/message-box', () => ({
   default: ({ title }: { title: string }) => <div>{title}</div>,
 }));
 
@@ -160,31 +165,28 @@ vi.mock('@cgp/ui-kit/components/multi-select', () => ({
 
 // ── Mock Radix-backed UI kit components ────────────────────────────────────
 
-vi.mock('radix-ui', () => ({
-  Switch: {
-    Root: ({
-      checked,
-      onCheckedChange,
-      children,
-      ...rest
-    }: {
-      checked: boolean;
-      onCheckedChange?: (v: boolean) => void;
-      children?: ReactNode;
-      [k: string]: unknown;
-    }) => (
-      <button
-        role="switch"
-        aria-checked={checked}
-        onClick={() => onCheckedChange?.(!checked)}
-        type="button"
-        {...rest}
-      >
-        {children}
-      </button>
-    ),
-    Thumb: () => null,
-  },
+vi.mock('@cgp/ui-kit/components/ui/switch', () => ({
+  Switch: ({
+    checked,
+    onCheckedChange,
+    children,
+    ...rest
+  }: {
+    checked: boolean;
+    onCheckedChange?: (v: boolean) => void;
+    children?: ReactNode;
+    [k: string]: unknown;
+  }) => (
+    <button
+      role="switch"
+      aria-checked={checked}
+      onClick={() => onCheckedChange?.(!checked)}
+      type="button"
+      {...rest}
+    >
+      {children}
+    </button>
+  ),
 }));
 
 vi.mock('@cgp/ui-kit/components/ui/checkbox', () => ({
