@@ -8,6 +8,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import MessageBox from '@/components/message-box';
+import StepDisableDialog from '@/views/vacancies/components/step-disable-dialog';
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import {
   useLocationsQuery,
@@ -46,6 +47,7 @@ const MAX_SELECTIONS = 10;
 interface ClubSocietyEntry {
   id: string;
   isOpen: boolean;
+
   clubSociety: Array<{ value: string; label: string; source: string }>;
   startDate?: string;
   endDate?: string;
@@ -398,6 +400,7 @@ export default function PreferredClubSocietiesStep({
     savedClubSocieties?.dataTakenFromCandidate ?? false
   );
   const [confirmDisableOpen, setConfirmDisableOpen] = useState(false);
+  const [emptyDisableOpen, setEmptyDisableOpen] = useState(false);
 
   const [entries, setEntries] = useState<ClubSocietyEntry[]>(
     savedClubSocieties?.clubSocieties &&
@@ -454,6 +457,16 @@ export default function PreferredClubSocietiesStep({
   }, [setForm, stepDisableRef]);
 
   const handleNext = () => {
+    const isEmptyEnabledSection =
+      isEnabled &&
+      !dataTakenFromCandidate &&
+      !entries.some(e => e.clubSociety.length > 0);
+
+    if (isEmptyEnabledSection) {
+      setEmptyDisableOpen(true);
+      return;
+    }
+
     onNext({
       preferredClubSocieties: {
         isEnabled,
@@ -675,12 +688,33 @@ export default function PreferredClubSocietiesStep({
         onOpenChange={open => {
           if (!open) setConfirmDisableOpen(false);
         }}
-        title="Are you sure?"
-        message="Are you sure you want to disable this section? Disabling this section will permanently remove all added data. This action cannot be undone"
-        cancelLabel="Cancel"
-        disableLabel="Disable"
+        title={t('preferredClubSocieties.confirmDisableDialog.title')}
+        message={t('preferredClubSocieties.confirmDisableDialog.message')}
+        cancelLabel={t('preferredClubSocieties.confirmDisableDialog.cancel')}
+        disableLabel={t('preferredClubSocieties.confirmDisableDialog.disable')}
         onCancel={() => setConfirmDisableOpen(false)}
         onDisable={handleDisable}
+      />
+
+      <StepDisableDialog
+        open={emptyDisableOpen}
+        onOpenChange={setEmptyDisableOpen}
+        onConfirm={() => {
+          setIsEnabled(false);
+          setDataTakenFromCandidate(false);
+          setEmptyDisableOpen(false);
+          onNext({
+            preferredClubSocieties: {
+              isEnabled: false,
+              dataTakenFromCandidate: false,
+              clubSocieties: [],
+            },
+          });
+        }}
+        title={t('preferredClubSocieties.emptyDisableDialog.title')}
+        description={t('preferredClubSocieties.emptyDisableDialog.message')}
+        cancelLabel={t('preferredClubSocieties.emptyDisableDialog.cancel')}
+        confirmLabel={t('preferredClubSocieties.emptyDisableDialog.disable')}
       />
     </>
   );

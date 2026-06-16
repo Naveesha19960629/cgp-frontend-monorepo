@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import MessageBox from '@/components/message-box';
+import StepDisableDialog from '@/views/vacancies/components/step-disable-dialog';
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import {
   useCreateIndustryMutation,
@@ -472,6 +473,7 @@ export default function ProjectsRequirementsStep({
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [confirmDisableOpen, setConfirmDisableOpen] = useState(false);
+  const [emptyDisableOpen, setEmptyDisableOpen] = useState(false);
 
   const [projects, setProjects] = useState<ProjectEntry[]>(
     savedProjects?.projects && savedProjects.projects.length > 0
@@ -623,6 +625,23 @@ export default function ProjectsRequirementsStep({
   };
 
   const handleNext = async () => {
+    const isEmptyEnabledSection =
+      isEnabled &&
+      !dataTakenFromCandidate &&
+      !projects.some(
+        p =>
+          p.relatedIndustry.length > 0 ||
+          p.organizations.length > 0 ||
+          p.organizationLocations.length > 0 ||
+          p.startDate != null ||
+          p.endDate != null
+      );
+
+    if (isEmptyEnabledSection) {
+      setEmptyDisableOpen(true);
+      return;
+    }
+
     // Check if any industries in any project are user-created
     const allIndustries = projects.flatMap(p => p.relatedIndustry);
     const hasUserCreated = allIndustries.some(i => i.source === 'USER_CREATED');
@@ -800,12 +819,33 @@ export default function ProjectsRequirementsStep({
         onOpenChange={open => {
           if (!open) setConfirmDisableOpen(false);
         }}
-        title="Are you sure?"
-        message="Are you sure you want to disable this section? Disabling this section will permanently remove all added data. This action cannot be undone"
-        cancelLabel="Cancel"
-        disableLabel="Disable"
+        title={t('projectsRequirements.confirmDisableDialog.title')}
+        message={t('projectsRequirements.confirmDisableDialog.message')}
+        cancelLabel={t('projectsRequirements.confirmDisableDialog.cancel')}
+        disableLabel={t('projectsRequirements.confirmDisableDialog.disable')}
         onCancel={() => setConfirmDisableOpen(false)}
         onDisable={handleDisable}
+      />
+
+      <StepDisableDialog
+        open={emptyDisableOpen}
+        onOpenChange={setEmptyDisableOpen}
+        onConfirm={() => {
+          setIsEnabled(false);
+          setDataTakenFromCandidate(false);
+          setEmptyDisableOpen(false);
+          onNext({
+            projectsRequirements: {
+              isEnabled: false,
+              dataTakenFromCandidate: false,
+              projects: [],
+            },
+          });
+        }}
+        title={t('projectsRequirements.emptyDisableDialog.title')}
+        description={t('projectsRequirements.emptyDisableDialog.message')}
+        cancelLabel={t('projectsRequirements.emptyDisableDialog.cancel')}
+        confirmLabel={t('projectsRequirements.emptyDisableDialog.disable')}
       />
     </>
   );

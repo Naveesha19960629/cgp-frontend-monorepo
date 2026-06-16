@@ -18,6 +18,9 @@
     "noDataTitle": "No Data Found",
     "noDataDescription": "We couldn't find any matching data. Try adjusting your search data",
     "errorTitle": "Try Again",
+    "error": {
+      "title": "Try Again"
+    },
     "disableDialog": {
       "title": "Are you sure?",
       "description": "Are you sure you want to disable this section? Disabling this section will permanently remove all added data. This action cannot be undone",
@@ -119,8 +122,13 @@
       "descriptionLine2": "Try adjusting your keywords or using broader search terms"
     },
     "editVacancy": "Edit Vacancy",
+    "addVacancy": "Add Vacancy",
+    "edit": {
+      "invalidId": "Invalid vacancy ID.",
+      "failedToLoadVacancy": "Failed to load vacancy details. Please try again."
+    },
     "createVacancy": {
-      "heading": "Create Vacancy",
+      "heading": "Add Vacancy",
       "formTitle": "Lets Begin with the Vacancy Title",
       "fieldTitle": "Title",
       "titlePlaceholder": "Enter title",
@@ -814,6 +822,55 @@
       "disable": "Disable"
     }
   },
+  "preferredSports": {
+    "title": "Preferred Sports",
+    "dataTakenFromCandidate": "If selected, no manual input is required, and data will be taken from the candidate profile",
+    "fieldList": {
+      "sport": "Name of the Sport",
+      "levelRepresented": "Level Represented",
+      "representedOrganization": "Represented Organization",
+      "organizationLocation": "Organization Location",
+      "position": "Position / Role Held",
+      "startDate": "Start Date",
+      "endDate": "End Date"
+    },
+    "confirmDisableDialog": {
+      "title": "Are you sure?",
+      "message": "Are you sure you want to disable this section? Disabling this section will permanently remove all added data. This action cannot be undone",
+      "cancel": "Cancel",
+      "disable": "Disable"
+    },
+    "emptyDisableDialog": {
+      "title": "Are you sure?",
+      "message": "You've enabled this section but haven't filled any fields. This section will be disabled for this vacancy and no data will be collected from candidates",
+      "cancel": "Cancel",
+      "disable": "Disable"
+    }
+  },
+  "preferredVolunteering": {
+    "title": "Preferred Volunteering",
+    "dataTakenFromCandidate": "If selected, no manual input is required, and data will be taken from the candidate profile",
+    "fieldList": {
+      "organization": "Organization Name",
+      "location": "Organization Location",
+      "cause": "Cause",
+      "position": "Position / Role Held",
+      "startDate": "Start Date",
+      "endDate": "End Date"
+    },
+    "confirmDisableDialog": {
+      "title": "Are you sure?",
+      "message": "Are you sure you want to disable this section? Disabling this section will permanently remove all added data. This action cannot be undone",
+      "cancel": "Cancel",
+      "disable": "Disable"
+    },
+    "emptyDisableDialog": {
+      "title": "Are you sure?",
+      "message": "You've enabled this section but haven't filled any fields. This section will be disabled for this vacancy and no data will be collected from candidates",
+      "cancel": "Cancel",
+      "disable": "Disable"
+    }
+  },
   "scheduleVacancy": {
     "title": "Schedule Vacancy",
     "publishDateLabel": "Scheduled Publish Date & Time",
@@ -839,6 +896,50 @@
       "apiErrorMessage": "Some changes could not be saved. Please try again.",
       "networkErrorTitle": "Try Again",
       "networkErrorMessage": "Some changes could not be saved. Please retry."
+    }
+  },
+  "preferredClubSocieties": {
+    "title": "Preferred Clubs and Societies",
+    "dataTakenFromCandidate": "If selected, no manual input is required, and data will be taken from the candidate profile",
+    "fieldList": {
+      "clubSociety": "Club / Society",
+      "position": "Position / Role Held",
+      "representedOrganization": "Represented Organization",
+      "startDate": "Start Date",
+      "endDate": "End Date"
+    },
+    "confirmDisableDialog": {
+      "title": "Are you sure?",
+      "message": "Are you sure you want to disable this section? Disabling this section will permanently remove all added data. This action cannot be undone",
+      "cancel": "Cancel",
+      "disable": "Disable"
+    },
+    "emptyDisableDialog": {
+      "title": "Are you sure?",
+      "message": "You've enabled this section but haven't filled any fields. This section will be disabled for this vacancy and no data will be collected from candidates",
+      "cancel": "Cancel",
+      "disable": "Disable"
+    }
+  },
+  "preferredPublications": {
+    "title": "Preferred Publications",
+    "dataTakenFromCandidate": "If selected, no manual input is required, and data will be taken from the candidate profile",
+    "fieldList": {
+      "publisher": "Accepted Publisher",
+      "publishedDateFrom": "Published Date From",
+      "publishedDateTo": "Published Date To"
+    },
+    "confirmDisableDialog": {
+      "title": "Are you sure?",
+      "message": "Are you sure you want to disable this section? Disabling this section will permanently remove all added data. This action cannot be undone",
+      "cancel": "Cancel",
+      "disable": "Disable"
+    },
+    "emptyDisableDialog": {
+      "title": "Are you sure?",
+      "message": "You've enabled this section but haven't filled any fields. This section will be disabled for this vacancy and no data will be collected from candidates",
+      "cancel": "Cancel",
+      "disable": "Disable"
     }
   },
   "projectsRequirements": {
@@ -879,12 +980,24 @@
       "noDataTitle": "No industries found",
       "noDataDescription": "Try searching with a different keyword or add a new industry"
     },
+    "fieldList": {
+      "startDate": "Start Date",
+      "endDate": "End Date",
+      "organization": "Organization Name",
+      "location": "Organization Location"
+    },
     "errors": {
       "maxIndustries": "Exceeded maximum of 10 selections."
     },
     "confirmDisableDialog": {
       "title": "Are you sure?",
       "message": "Are you sure you want to disable this section? Disabling this section will permanently remove all added data. This action cannot be undone",
+      "cancel": "Cancel",
+      "disable": "Disable"
+    },
+    "emptyDisableDialog": {
+      "title": "Are you sure?",
+      "message": "You've enabled this section but haven't filled any fields. This section will be disabled for this vacancy and no data will be collected from candidates",
       "cancel": "Cancel",
       "disable": "Disable"
     }

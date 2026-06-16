@@ -29,14 +29,14 @@ describe('AppBreadcrumb', () => {
     renderWithRouter('/dashboard/ats/vacancies/new');
 
     expect(screen.getByText('Vacancies')).toBeInTheDocument();
-    expect(screen.getByText('Create Vacancy')).toBeInTheDocument();
+    expect(screen.getByText('Add Vacancy')).toBeInTheDocument();
   });
 
-  it('renders items without anchor links when no link is configured', () => {
+  it('renders parent breadcrumb as a link and current item without a link', () => {
     renderWithRouter('/dashboard/ats/vacancies/new');
 
-    expect(screen.getByText('Vacancies').closest('a')).toBeNull();
-    expect(screen.getByText('Create Vacancy').closest('a')).toBeNull();
+    expect(screen.getByText('Vacancies').closest('a')).not.toBeNull();
+    expect(screen.getByText('Add Vacancy').closest('a')).toBeNull();
   });
 
   it('renders nothing for an unknown route', () => {

@@ -5,8 +5,10 @@ import { ArrowLeft2, Calendar as CalendarIcon } from 'iconsax-reactjs';
 import * as SwitchPrimitive from '@radix-ui/react-switch';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import MessageBox from '@/components/message-box';
+import StepDisableDialog from '@/views/vacancies/components/step-disable-dialog';
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import {
   useLocationsQuery,
@@ -516,8 +518,10 @@ function SportCard({
 
 export default function PreferredSportsStep({
   onNext,
+
   onBack,
 }: Readonly<StepProps>) {
+  const { t } = useTranslation('ats');
   const { form: contextForm, onCancel } = useVacancyForm();
   const savedSports = contextForm.preferredSports;
 
@@ -526,6 +530,7 @@ export default function PreferredSportsStep({
     savedSports?.dataTakenFromCandidate ?? false
   );
   const [confirmDisableOpen, setConfirmDisableOpen] = useState(false);
+  const [emptyDisableOpen, setEmptyDisableOpen] = useState(false);
 
   const [entries, setEntries] = useState<SportEntry[]>(
     savedSports?.sports && savedSports.sports.length > 0
@@ -566,6 +571,16 @@ export default function PreferredSportsStep({
   }, [setForm, stepDisableRef]);
 
   const handleNext = () => {
+    const isEmptyEnabledSection =
+      isEnabled &&
+      !dataTakenFromCandidate &&
+      !entries.some(e => e.sport.length > 0);
+
+    if (isEmptyEnabledSection) {
+      setEmptyDisableOpen(true);
+      return;
+    }
+
     onNext({
       preferredSports: {
         isEnabled,
@@ -767,12 +782,33 @@ export default function PreferredSportsStep({
         onOpenChange={open => {
           if (!open) setConfirmDisableOpen(false);
         }}
-        title="Are you sure?"
-        message="Are you sure you want to disable this section? Disabling this section will permanently remove all added data. This action cannot be undone"
-        cancelLabel="Cancel"
-        disableLabel="Disable"
+        title={t('preferredSports.confirmDisableDialog.title')}
+        message={t('preferredSports.confirmDisableDialog.message')}
+        cancelLabel={t('preferredSports.confirmDisableDialog.cancel')}
+        disableLabel={t('preferredSports.confirmDisableDialog.disable')}
         onCancel={() => setConfirmDisableOpen(false)}
         onDisable={handleDisable}
+      />
+
+      <StepDisableDialog
+        open={emptyDisableOpen}
+        onOpenChange={setEmptyDisableOpen}
+        onConfirm={() => {
+          setIsEnabled(false);
+          setDataTakenFromCandidate(false);
+          setEmptyDisableOpen(false);
+          onNext({
+            preferredSports: {
+              isEnabled: false,
+              dataTakenFromCandidate: false,
+              sports: [],
+            },
+          });
+        }}
+        title={t('preferredSports.emptyDisableDialog.title')}
+        description={t('preferredSports.emptyDisableDialog.message')}
+        cancelLabel={t('preferredSports.emptyDisableDialog.cancel')}
+        confirmLabel={t('preferredSports.emptyDisableDialog.disable')}
       />
     </>
   );

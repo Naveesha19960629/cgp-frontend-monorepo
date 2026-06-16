@@ -216,11 +216,15 @@ vi.mock('@cgp/ui-kit/components/character-count', () => ({
   ),
 }));
 
-vi.mock('lucide-react', () => ({
-  ChevronLeftIcon: () => <span data-testid="chevron-left-icon" />,
-  ChevronUpIcon: () => <span data-testid="chevron-up-icon" />,
-  PlusIcon: () => <span data-testid="plus-icon" />,
-}));
+vi.mock('lucide-react', async importOriginal => {
+  const actual = await importOriginal<typeof import('lucide-react')>();
+  return {
+    ...actual,
+    ChevronLeftIcon: () => <span data-testid="chevron-left-icon" />,
+    ChevronUpIcon: () => <span data-testid="chevron-up-icon" />,
+    PlusIcon: () => <span data-testid="plus-icon" />,
+  };
+});
 
 vi.mock('iconsax-reactjs', () => ({
   Calendar: () => <span data-testid="calendar-icon" />,
@@ -576,7 +580,9 @@ describe('PreferredPublicationsStep', () => {
       // Dialog should appear
       const dialog = screen.getByTestId('disable-dialog');
       expect(dialog).toBeInTheDocument();
-      expect(screen.getByText('Are you sure?')).toBeInTheDocument();
+      expect(
+        screen.getByText('preferredPublications.confirmDisableDialog.title')
+      ).toBeInTheDocument();
     });
 
     it('clears form data when disable is confirmed', async () => {

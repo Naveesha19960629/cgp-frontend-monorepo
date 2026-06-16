@@ -1,7 +1,7 @@
 import clsx from 'clsx';
 
 import * as React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, matchPath, useLocation } from 'react-router-dom';
 
 import type { BreadcrumbRoute } from '@/app/types';
 
@@ -21,7 +21,17 @@ const breadcrumbRoutes: BreadcrumbRoute[] = [
   },
   {
     url: '/dashboard/ats/vacancies/new',
-    items: [{ label: 'Vacancies' }, { label: 'Create Vacancy' }],
+    items: [
+      { label: 'Vacancies', link: '/dashboard/ats/vacancies' },
+      { label: 'Add Vacancy' },
+    ],
+  },
+  {
+    url: '/dashboard/ats/vacancies/:id/edit',
+    items: [
+      { label: 'Vacancies', link: '/dashboard/ats/vacancies' },
+      { label: 'Edit Vacancy' },
+    ],
   },
   {
     url: '/dashboard/ats/find-candidate',
@@ -32,7 +42,7 @@ const breadcrumbRoutes: BreadcrumbRoute[] = [
 export function AppBreadcrumb() {
   const { pathname } = useLocation();
 
-  const route = breadcrumbRoutes.find(r => r.url === pathname);
+  const route = breadcrumbRoutes.find(r => matchPath(r.url, pathname));
   const items = route?.items ?? [];
 
   return (
