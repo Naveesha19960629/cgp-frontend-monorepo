@@ -580,7 +580,9 @@ describe('PreferredPublicationsStep', () => {
       // Dialog should appear
       const dialog = screen.getByTestId('disable-dialog');
       expect(dialog).toBeInTheDocument();
-      expect(screen.getByText('Are you sure?')).toBeInTheDocument();
+      expect(
+        screen.getByText('preferredPublications.confirmDisableDialog.title')
+      ).toBeInTheDocument();
     });
 
     it('clears form data when disable is confirmed', async () => {

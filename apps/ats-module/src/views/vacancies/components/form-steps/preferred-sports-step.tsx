@@ -5,6 +5,7 @@ import { ArrowLeft2, Calendar as CalendarIcon } from 'iconsax-reactjs';
 import * as SwitchPrimitive from '@radix-ui/react-switch';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import MessageBox from '@/components/message-box';
 import StepDisableDialog from '@/views/vacancies/components/step-disable-dialog';
@@ -520,6 +521,7 @@ export default function PreferredSportsStep({
 
   onBack,
 }: Readonly<StepProps>) {
+  const { t } = useTranslation('ats');
   const { form: contextForm, onCancel } = useVacancyForm();
   const savedSports = contextForm.preferredSports;
 
