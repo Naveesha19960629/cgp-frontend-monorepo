@@ -1,5 +1,5 @@
 interface BreadcrumbItemConfig {
-  label: string;
+  labelKey: string;
   link?: string;
 }
 
