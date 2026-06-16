@@ -116,7 +116,7 @@ jobs:
       # VERSION
       # =========================
       - name: Get Application Version
-        id: application-version
+        id: version
         run: |
           # Extract version from package.json
           VERSION=$(node -p "require('./package.json').version")
