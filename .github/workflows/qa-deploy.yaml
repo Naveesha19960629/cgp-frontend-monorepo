@@ -1,11 +1,13 @@
 name: Deploy CGP Frontend Monorepo to QA Cloud Run
 
 on:
-  pull_request:
-    branches: [qa]
-    types: [closed]
-    paths-ignore:
-      - '.github/workflows/**'
+  push:
+    branches: [develop]
+  # pull_request:
+  #   branches: [qa]
+  #   types: [closed]
+  #   paths-ignore:
+  #     - '.github/workflows/**'
 
 env:
   PROJECT_ID: ${{ secrets.QA_GCP_PROJECT_ID }}
@@ -18,7 +20,7 @@ env:
 
 jobs:
   build-and-test:
-    if: github.event.pull_request.base.ref == 'qa' && github.event.pull_request.head.ref == 'develop' && github.event.pull_request.merged == true
+    # if: github.event.pull_request.base.ref == 'qa' && github.event.pull_request.head.ref == 'develop' && github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.application-version.outputs.version }}
@@ -83,7 +85,7 @@ jobs:
         run: pnpm nx run-many -t build
 
   deploy-to-qa-cloud-run:
-    if: github.event.pull_request.base.ref == 'qa' && github.event.pull_request.head.ref == 'develop' && github.event.pull_request.merged == true && needs.build-and-test.outputs.should_deploy == 'true'
+    # if: github.event.pull_request.base.ref == 'qa' && github.event.pull_request.head.ref == 'develop' && github.event.pull_request.merged == true && needs.build-and-test.outputs.should_deploy == 'true'
     runs-on: ubuntu-latest
     needs: [build-and-test]
 
@@ -115,7 +117,7 @@ jobs:
       # =========================
       # VERSION
       # =========================
-      - name: Get Application Version
+      - name: Get Version
         id: version
         run: |
           # Extract version from package.json
@@ -126,7 +128,7 @@ jobs:
       # =========================
       # BUILD ATS QA IMAGE
       # =========================
-      - name: Build ATS Image
+      - name: Build QA ATS Image
         run: |
           docker build  --no-cache \
             -f Dockerfile.ats \
@@ -156,7 +158,7 @@ jobs:
       # =========================
       # DEPLOY QA ATS FIRST
       # =========================
-      - name: Deploy ATS Module
+      - name: Deploy QA ATS Module
         id: deploy_ats
         run: |
           gcloud run deploy $ATS_SERVICE \
