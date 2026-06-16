@@ -25,7 +25,11 @@ const breadcrumbRoutes: BreadcrumbRoute[] = [
   },
   {
     url: '/dashboard/ats/find-candidate',
-    items: [{ label: 'Find Candidate' }],
+    items: [{ label: 'Find Candidates' }],
+  },
+  {
+    url: '/dashboard/ats/templates',
+    items: [{ label: 'Templates' }],
   },
 ];
 

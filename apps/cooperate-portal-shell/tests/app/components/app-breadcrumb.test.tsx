@@ -22,7 +22,13 @@ describe('AppBreadcrumb', () => {
   it('renders a single item for /dashboard/ats/find-candidate', () => {
     renderWithRouter('/dashboard/ats/find-candidate');
 
-    expect(screen.getByText('Find Candidate')).toBeInTheDocument();
+    expect(screen.getByText('Find Candidates')).toBeInTheDocument();
+  });
+
+  it('renders a single item for /dashboard/ats/templates', () => {
+    renderWithRouter('/dashboard/ats/templates');
+
+    expect(screen.getByText('Templates')).toBeInTheDocument();
   });
 
   it('renders two items for /dashboard/ats/vacancies/new', () => {
