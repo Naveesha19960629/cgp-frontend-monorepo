@@ -374,9 +374,7 @@ describe('PreferredIndustryStep', () => {
     it('closes without disabling when Cancel is clicked', async () => {
       const { user } = await openConfirmDialog();
 
-      await user.click(
-        screen.getByText('preferredPatents.disableDialog.cancelButton')
-      );
+      await user.click(screen.getByText('common.disableDialog.cancelButton'));
 
       expect(
         screen.queryByText('preferredIndustries.confirmDisableDialog.title')
@@ -449,9 +447,7 @@ describe('PreferredIndustryStep', () => {
 
       await user.click(screen.getByText('common.next'));
       await screen.findByText('preferredIndustries.emptyDisableDialog.title');
-      await user.click(
-        screen.getByText('preferredPatents.disableDialog.cancelButton')
-      );
+      await user.click(screen.getByText('common.disableDialog.cancelButton'));
 
       expect(
         screen.queryByText('preferredIndustries.emptyDisableDialog.title')

@@ -12,6 +12,55 @@ vi.mock('@cgp/data-access', () => ({
   },
 }));
 
+const mockCreateVacancyPayload = {
+  title: 'Test Vacancy',
+  status: 'UNPUBLISHED',
+  lastActiveStep: 'job-requirements',
+  data: {
+    jobRequirement: {
+      isEnabled: true,
+      dataTakenFromCandidate: false,
+      roles: [],
+      jobTitles: [],
+    },
+    industry: {
+      isEnabled: false,
+      dataTakenFromCandidate: false,
+      content: [],
+    },
+    patents: [
+      {
+        isEnabled: false,
+        dataTakenFromCandidate: false,
+        content: [],
+      },
+    ],
+    honoursAndAwards: [
+      {
+        isEnabled: false,
+        dataTakenFromCandidate: false,
+        content: [],
+      },
+    ],
+    projects: [
+      {
+        isEnabled: false,
+        dataTakenFromCandidate: false,
+        content: [],
+      },
+    ],
+    customizedForm: {
+      isEnabled: false,
+      sectionTitle: '',
+      forms: [],
+    },
+    schedule: {
+      schedulePublishAt: '2026-06-25T10:30:00 AM',
+      expirationAt: '2026-06-30T05:27:10 PM',
+    },
+  },
+};
+
 describe('vacancyService', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -28,16 +77,14 @@ describe('vacancyService', () => {
       };
       mockPost.mockResolvedValue(mockResponse);
 
-      const payload = {
-        schedule: {
-          schedulePublishAt: '2026-06-25T10:30:00 AM',
-          expirationAt: '2026-06-30T05:27:10 PM',
-        },
-      };
+      const result = await vacancyService.createVacancy(
+        mockCreateVacancyPayload
+      );
 
-      const result = await vacancyService.createVacancy(payload);
-
-      expect(mockPost).toHaveBeenCalledWith('/vacancies', payload);
+      expect(mockPost).toHaveBeenCalledWith(
+        '/vacancies',
+        mockCreateVacancyPayload
+      );
       expect(result).toEqual(mockResponse.data);
     });
 
@@ -51,12 +98,9 @@ describe('vacancyService', () => {
       };
       mockPost.mockResolvedValue(mockResponse);
 
-      const result = await vacancyService.createVacancy({
-        schedule: {
-          schedulePublishAt: '2026-06-25T10:30:00 AM',
-          expirationAt: '2026-06-30T05:27:10 PM',
-        },
-      });
+      const result = await vacancyService.createVacancy(
+        mockCreateVacancyPayload
+      );
 
       expect(result.success).toBe(true);
       expect(result.requestId).toBeDefined();
@@ -68,12 +112,7 @@ describe('vacancyService', () => {
       mockPost.mockRejectedValue(mockError);
 
       await expect(
-        vacancyService.createVacancy({
-          schedule: {
-            schedulePublishAt: '2026-06-25T10:30:00 AM',
-            expirationAt: '2026-06-30T05:27:10 PM',
-          },
-        })
+        vacancyService.createVacancy(mockCreateVacancyPayload)
       ).rejects.toThrow('Network error');
     });
 
@@ -88,9 +127,13 @@ describe('vacancyService', () => {
       mockPost.mockResolvedValue(mockResponse);
 
       const payload = {
-        schedule: {
-          schedulePublishAt: '2026-06-25T02:30:00 PM',
-          expirationAt: '2026-07-15T11:59:59 PM',
+        ...mockCreateVacancyPayload,
+        data: {
+          ...mockCreateVacancyPayload.data,
+          schedule: {
+            schedulePublishAt: '2026-06-25T02:30:00 PM',
+            expirationAt: '2026-07-15T11:59:59 PM',
+          },
         },
       };
 
@@ -99,10 +142,12 @@ describe('vacancyService', () => {
       expect(mockPost).toHaveBeenCalledWith(
         '/vacancies',
         expect.objectContaining({
-          schedule: {
-            schedulePublishAt: '2026-06-25T02:30:00 PM',
-            expirationAt: '2026-07-15T11:59:59 PM',
-          },
+          data: expect.objectContaining({
+            schedule: {
+              schedulePublishAt: '2026-06-25T02:30:00 PM',
+              expirationAt: '2026-07-15T11:59:59 PM',
+            },
+          }),
         })
       );
     });

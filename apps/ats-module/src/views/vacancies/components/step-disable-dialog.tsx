@@ -24,24 +24,26 @@ export default function StepDisableDialog({
   onConfirm,
   title,
   description,
+  cancelLabel,
   confirmLabel,
 }: StepDisableDialogProps) {
   const { t } = useTranslation('ats');
 
-  const resolvedTitle: string =
-    title ?? t('preferredPatents.disableDialog.title');
-  const resolvedDescription =
-    description ?? t('preferredPatents.disableDialog.description');
+  const defaultTitle = t('common.disableDialog.title');
+  const defaultDescription = t('common.disableDialog.description');
+
+  const resolvedTitle: string = title ?? defaultTitle;
+  const resolvedDescription = description ?? defaultDescription;
+  const resolvedCancelLabel =
+    cancelLabel ?? t('common.disableDialog.cancelButton');
   const resolvedConfirmLabel =
-    confirmLabel ?? t('preferredPatents.disableDialog.confirmButton');
+    confirmLabel ?? t('common.disableDialog.confirmButton');
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogTitle className="sr-only">
-        {t('preferredPatents.disableDialog.title')}
-      </DialogTitle>
+      <DialogTitle className="sr-only">{defaultTitle}</DialogTitle>
       <DialogDescription className="sr-only">
-        {t('preferredPatents.disableDialog.description')}
+        {defaultDescription}
       </DialogDescription>
       <DialogContent
         className="flex w-85.5 flex-col items-center gap-7 bg-white p-7 sm:w-99"
@@ -77,7 +79,7 @@ export default function StepDisableDialog({
               applyTypography('h5')
             )}
           >
-            {t('preferredPatents.disableDialog.cancelButton')}
+            {resolvedCancelLabel}
           </Button>
           <Button
             type="button"

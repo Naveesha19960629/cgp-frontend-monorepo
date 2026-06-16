@@ -96,6 +96,7 @@ interface StepDisableDialogProps {
   onConfirm: () => void;
   title?: string;
   description?: string;
+  cancelLabel?: string;
   confirmLabel?: string;
 }
 
@@ -300,7 +301,7 @@ interface CustomizableFormQuestion {
     | 'PARAGRAPH'
     | 'MULTIPLE_CHOICE'
     | 'CHECKBOXES'
-    | 'DROP_DOWN'
+    | 'DROPDOWN'
     | 'LINEAR_SCALE'
     | '';
   required: boolean;
@@ -995,7 +996,225 @@ interface VacancyStatusBadgeProps {
   status: string;
 }
 
+interface JobRequirementApiPayload {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  discipline?: MasterRef;
+  careerPath?: MasterRef;
+  level?: MasterRef;
+  roles: MasterRef[];
+  jobTitles: MasterRef[];
+  employmentTypes?: MasterRef[];
+  workSchedules?: MasterRef[];
+  engagementModels?: MasterRef[];
+  description?: string;
+}
+
+interface PatentContentApiPayload {
+  status?: string;
+  fromDate?: string;
+  toDate?: string;
+  relatedIndustry: MasterRef[];
+}
+
+interface PatentGroupApiPayload {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  content: PatentContentApiPayload[];
+}
+
+interface HonourContentApiPayload {
+  title: string;
+  issuedBy: string;
+  issuedDateFrom?: string;
+  issuedDateTo?: string;
+  associatedOrganizations: MasterRef[];
+  organizationLocations: MasterRef[];
+}
+
+interface HonoursGroupApiPayload {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  content: HonourContentApiPayload[];
+}
+
+interface ProjectContentApiPayload {
+  relatedIndustry: MasterRef[];
+  organization: MasterRef[];
+  organizationLocations: MasterRef[];
+  startDate: string;
+  endDate: string;
+}
+
+interface ProjectGroupApiPayload {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  content: ProjectContentApiPayload[];
+}
+
+interface PublicationContentApiPayload {
+  acceptedPublisher: string;
+  publishedDateFrom: string;
+  publishedDateTo: string;
+}
+
+interface PublicationGroupApiPayload {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  content: PublicationContentApiPayload[];
+}
+
+interface ClubSocietyContentApiPayload {
+  clubSociety: MasterRef[];
+  representedOrganization: MasterRef[];
+  organizationLocation?: MasterRef;
+  position: string;
+  startDate: string;
+  endDate: string;
+}
+
+interface ClubSocietiesGroupApiPayload {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  content: ClubSocietyContentApiPayload[];
+}
+
+interface SportContentApiPayload {
+  sport: MasterRef[];
+  levelRepresented: MasterRef[];
+  representedOrganization: MasterRef[];
+  organizationLocation?: MasterRef;
+  position: string;
+  startDate: string;
+  endDate: string;
+}
+
+interface SportsGroupApiPayload {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  content: SportContentApiPayload[];
+}
+
+interface VolunteeringContentApiPayload {
+  organizationName: MasterRef[];
+  organizationLocation?: MasterRef;
+  cause: MasterRef[];
+  position: string;
+  startDate: string;
+  endDate: string;
+}
+
+interface VolunteeringGroupApiPayload {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  content: VolunteeringContentApiPayload[];
+}
+
+interface CustomizedFormQuestionApiPayload {
+  questionText: string;
+  questionType: string;
+  required: boolean;
+  displayOrder: number;
+  options?: { value: string; displayOrder: number }[];
+  linearScale?: {
+    startValue: number;
+    endValue: number;
+    startLabel: string;
+    endLabel: string;
+  };
+}
+
+interface CustomizedFormApiPayload {
+  isEnabled: boolean;
+  sectionTitle: string;
+  forms: {
+    title: string;
+    displayOrder: number;
+    questions: CustomizedFormQuestionApiPayload[];
+  }[];
+}
+
+interface IndustryApiPayload {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  content: MasterRef[];
+}
+
+interface SkillsApiPayload {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  skills: { skillId: string; careerPathId?: string }[];
+}
+
+interface LanguagesApiPayload {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  languages: MasterRef[];
+}
+
+interface CausesApiPayload {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  causes: MasterRef[];
+}
+
+interface HobbiesApiPayload {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  hobbies: MasterRef[];
+}
+
+interface CreateVacancyPayload {
+  title: string;
+  status: string;
+  lastActiveStep: string;
+  data: {
+    jobRequirement: JobRequirementApiPayload;
+    profileRequirements?: VacancyForm['profileRequirements'];
+    secondaryEducation?: VacancyForm['secondaryEducation'];
+    tertiaryEducation?: VacancyForm['tertiaryEducation'];
+    licenseCertificates?: VacancyForm['licenseCertificates'];
+    patents: PatentGroupApiPayload[];
+    honoursAndAwards: HonoursGroupApiPayload[];
+    projects: ProjectGroupApiPayload[];
+    publications?: PublicationGroupApiPayload[];
+    clubSocieties?: ClubSocietiesGroupApiPayload[];
+    sports?: SportsGroupApiPayload[];
+    volunteering?: VolunteeringGroupApiPayload[];
+    preferredSkills?: SkillsApiPayload;
+    preferredLanguages?: LanguagesApiPayload;
+    preferredCauses?: CausesApiPayload;
+    preferredHobbies?: HobbiesApiPayload;
+    industry: IndustryApiPayload;
+    customizedForm: CustomizedFormApiPayload;
+    schedule: { schedulePublishAt: string; expirationAt: string };
+  };
+}
+
 export type {
+  CreateVacancyPayload,
+  JobRequirementApiPayload,
+  PatentContentApiPayload,
+  PatentGroupApiPayload,
+  HonourContentApiPayload,
+  HonoursGroupApiPayload,
+  ProjectContentApiPayload,
+  ProjectGroupApiPayload,
+  PublicationContentApiPayload,
+  PublicationGroupApiPayload,
+  ClubSocietyContentApiPayload,
+  ClubSocietiesGroupApiPayload,
+  SportContentApiPayload,
+  SportsGroupApiPayload,
+  VolunteeringContentApiPayload,
+  VolunteeringGroupApiPayload,
+  CustomizedFormQuestionApiPayload,
+  CustomizedFormApiPayload,
+  IndustryApiPayload,
+  SkillsApiPayload,
+  LanguagesApiPayload,
+  CausesApiPayload,
+  HobbiesApiPayload,
   StatusConfig,
   VacancyStatus,
   VacancyStatusBadgeProps,

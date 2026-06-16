@@ -203,6 +203,9 @@ vi.mock('@cgp/ui-kit/components/ui/dialog', () => ({
     <dialog open>{children}</dialog>
   ),
   DialogTitle: ({ children }: { children?: ReactNode }) => <h2>{children}</h2>,
+  DialogDescription: ({ children }: { children?: ReactNode }) => (
+    <p>{children}</p>
+  ),
 }));
 
 vi.mock('@cgp/ui-kit/components/ui/badge', () => ({

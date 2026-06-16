@@ -2,11 +2,10 @@ import { Plus, X } from 'lucide-react';
 
 import { ArrowLeft2 } from 'iconsax-reactjs';
 
-import * as SwitchPrimitive from '@radix-ui/react-switch';
-
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { StepDisableDialog } from '@/views/vacancies';
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import {
   useCareerPathsQuery,
@@ -33,9 +32,8 @@ import type {
 import { Badge } from '@cgp/ui-kit/components/ui/badge';
 import { Button } from '@cgp/ui-kit/components/ui/button';
 import { Checkbox } from '@cgp/ui-kit/components/ui/checkbox';
+import { Switch } from '@cgp/ui-kit/components/ui/switch';
 import { cn } from '@cgp/ui-kit/lib/utils';
-
-import DisableDialog from './disable-dialog';
 
 const MAX_SKILLS = 10;
 const MAX_SKILL_CHARS = 100;
@@ -389,7 +387,7 @@ export default function PreferredSkillsStep({
             {t('preferredSkills.title')}
           </h2>
         </div>
-        <SwitchPrimitive.Root
+        <Switch
           checked={isEnabled}
           onCheckedChange={newValue => {
             if (!newValue) {
@@ -402,18 +400,8 @@ export default function PreferredSkillsStep({
               setIsEnabled(true);
             }
           }}
-          className={cn(
-            'focus-visible:ring-ring/50 inline-flex h-6 w-12 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent shadow-xs transition-colors outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50',
-            isEnabled ? 'bg-brand-primary-500' : 'bg-slate-300'
-          )}
-        >
-          <SwitchPrimitive.Thumb
-            className={cn(
-              'pointer-events-none block h-5 w-5 rounded-full bg-white shadow-lg ring-0 transition-transform',
-              isEnabled ? 'translate-x-6' : 'translate-x-0'
-            )}
-          />
-        </SwitchPrimitive.Root>
+          size="lg"
+        />
       </div>
 
       {/* Body */}
@@ -626,36 +614,30 @@ export default function PreferredSkillsStep({
         </div>
       </div>
 
-      <DisableDialog
+      <StepDisableDialog
         open={confirmDisableOpen}
         onOpenChange={open => {
           if (!open) setConfirmDisableOpen(false);
         }}
-        title={t('preferredSkills.confirmDisableDialog.title')}
-        message={t('preferredSkills.confirmDisableDialog.message')}
-        cancelLabel={t('preferredSkills.confirmDisableDialog.cancel')}
-        disableLabel={t('preferredSkills.confirmDisableDialog.disable')}
-        onCancel={() => setConfirmDisableOpen(false)}
-        onDisable={() => {
+        onConfirm={() => {
           setSelectedSkills([]);
           setDataTakenFromCandidate(false);
           setIsEnabled(false);
           setConfirmDisableOpen(false);
           showDisableToast(t('preferredSkills.title'));
         }}
+        title={t('preferredSkills.confirmDisableDialog.title')}
+        description={t('preferredSkills.confirmDisableDialog.message')}
+        cancelLabel={t('preferredSkills.confirmDisableDialog.cancel')}
+        confirmLabel={t('preferredSkills.confirmDisableDialog.disable')}
       />
 
-      <DisableDialog
+      <StepDisableDialog
         open={emptyDisableOpen}
         onOpenChange={open => {
           if (!open) setEmptyDisableOpen(false);
         }}
-        title={t('preferredSkills.emptyDisableDialog.title')}
-        message={t('preferredSkills.emptyDisableDialog.message')}
-        cancelLabel={t('preferredSkills.emptyDisableDialog.cancel')}
-        disableLabel={t('preferredSkills.emptyDisableDialog.disable')}
-        onCancel={() => setEmptyDisableOpen(false)}
-        onDisable={() => {
+        onConfirm={() => {
           setIsEnabled(false);
           setEmptyDisableOpen(false);
           showDisableToast(t('preferredSkills.title'));
@@ -667,6 +649,10 @@ export default function PreferredSkillsStep({
             },
           });
         }}
+        title={t('preferredSkills.emptyDisableDialog.title')}
+        description={t('preferredSkills.emptyDisableDialog.message')}
+        cancelLabel={t('preferredSkills.emptyDisableDialog.cancel')}
+        confirmLabel={t('preferredSkills.emptyDisableDialog.disable')}
       />
 
       {/* Footer — sticky at bottom of the parent scroll container */}

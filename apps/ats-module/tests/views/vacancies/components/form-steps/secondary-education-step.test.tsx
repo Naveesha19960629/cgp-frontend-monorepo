@@ -1,4 +1,4 @@
-﻿import type { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -516,9 +516,7 @@ describe('SecondaryEducationStep', () => {
     it('closes the dialog without disabling when "Cancel" is clicked', async () => {
       const user = await openConfirmDialog();
 
-      await user.click(
-        screen.getByText('preferredPatents.disableDialog.cancelButton')
-      );
+      await user.click(screen.getByText('common.disableDialog.cancelButton'));
 
       await waitFor(() => {
         expect(

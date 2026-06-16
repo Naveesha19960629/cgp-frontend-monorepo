@@ -1,10 +1,9 @@
 import { ArrowLeft2 } from 'iconsax-reactjs';
 
-import * as SwitchPrimitive from '@radix-ui/react-switch';
-
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { StepDisableDialog } from '@/views/vacancies';
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import {
   useCreateHobbyMutation,
@@ -20,9 +19,8 @@ import { CharacterCount } from '@cgp/ui-kit/components/character-count';
 import MultipleSelector from '@cgp/ui-kit/components/multi-select';
 import { Button } from '@cgp/ui-kit/components/ui/button';
 import { Checkbox } from '@cgp/ui-kit/components/ui/checkbox';
+import { Switch } from '@cgp/ui-kit/components/ui/switch';
 import { cn } from '@cgp/ui-kit/lib/utils';
-
-import DisableDialog from './disable-dialog';
 
 const MAX_HOBBIES = 10;
 const MAX_HOBBY_CHARS = 100;
@@ -151,7 +149,7 @@ export default function PreferredHobbiesStep({
             {t('preferredHobbies.title')}
           </h2>
         </div>
-        <SwitchPrimitive.Root
+        <Switch
           checked={isEnabled}
           onCheckedChange={newValue => {
             if (!newValue) {
@@ -164,18 +162,8 @@ export default function PreferredHobbiesStep({
               setIsEnabled(true);
             }
           }}
-          className={cn(
-            'focus-visible:ring-ring/50 inline-flex h-6 w-12 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent shadow-xs transition-colors outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50',
-            isEnabled ? 'bg-brand-primary-500' : 'bg-slate-300'
-          )}
-        >
-          <SwitchPrimitive.Thumb
-            className={cn(
-              'pointer-events-none block h-5 w-5 rounded-full bg-white shadow-lg ring-0 transition-transform',
-              isEnabled ? 'translate-x-6' : 'translate-x-0'
-            )}
-          />
-        </SwitchPrimitive.Root>
+          size="lg"
+        />
       </div>
 
       {/* Body */}
@@ -282,36 +270,30 @@ export default function PreferredHobbiesStep({
         </div>
       </div>
 
-      <DisableDialog
+      <StepDisableDialog
         open={confirmDisableOpen}
         onOpenChange={open => {
           if (!open) setConfirmDisableOpen(false);
         }}
-        title={t('preferredHobbies.confirmDisableDialog.title')}
-        message={t('preferredHobbies.confirmDisableDialog.message')}
-        cancelLabel={t('preferredHobbies.confirmDisableDialog.cancel')}
-        disableLabel={t('preferredHobbies.confirmDisableDialog.disable')}
-        onCancel={() => setConfirmDisableOpen(false)}
-        onDisable={() => {
+        onConfirm={() => {
           setSelectedHobbies([]);
           setDataTakenFromCandidate(false);
           setIsEnabled(false);
           setConfirmDisableOpen(false);
           showDisableToast(t('preferredHobbies.title'));
         }}
+        title={t('preferredHobbies.confirmDisableDialog.title')}
+        description={t('preferredHobbies.confirmDisableDialog.message')}
+        cancelLabel={t('preferredHobbies.confirmDisableDialog.cancel')}
+        confirmLabel={t('preferredHobbies.confirmDisableDialog.disable')}
       />
 
-      <DisableDialog
+      <StepDisableDialog
         open={emptyDisableOpen}
         onOpenChange={open => {
           if (!open) setEmptyDisableOpen(false);
         }}
-        title={t('preferredHobbies.emptyDisableDialog.title')}
-        message={t('preferredHobbies.emptyDisableDialog.message')}
-        cancelLabel={t('preferredHobbies.emptyDisableDialog.cancel')}
-        disableLabel={t('preferredHobbies.emptyDisableDialog.disable')}
-        onCancel={() => setEmptyDisableOpen(false)}
-        onDisable={() => {
+        onConfirm={() => {
           setIsEnabled(false);
           setEmptyDisableOpen(false);
           showDisableToast(t('preferredHobbies.title'));
@@ -323,6 +305,10 @@ export default function PreferredHobbiesStep({
             },
           });
         }}
+        title={t('preferredHobbies.emptyDisableDialog.title')}
+        description={t('preferredHobbies.emptyDisableDialog.message')}
+        cancelLabel={t('preferredHobbies.emptyDisableDialog.cancel')}
+        confirmLabel={t('preferredHobbies.emptyDisableDialog.disable')}
       />
 
       {/* ── Step footer ──────────────────────────────────────────────────── */}
