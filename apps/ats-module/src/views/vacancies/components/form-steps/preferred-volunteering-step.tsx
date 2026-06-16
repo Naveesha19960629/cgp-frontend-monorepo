@@ -8,6 +8,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import MessageBox from '@/components/message-box';
+import StepDisableDialog from '@/views/vacancies/components/step-disable-dialog';
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import {
   useCausesQuery,
@@ -468,6 +469,7 @@ export default function PreferredVolunteeringStep({
     savedVolunteering?.dataTakenFromCandidate ?? false
   );
   const [confirmDisableOpen, setConfirmDisableOpen] = useState(false);
+  const [emptyDisableOpen, setEmptyDisableOpen] = useState(false);
 
   const [entries, setEntries] = useState<VolunteeringEntry[]>(
     savedVolunteering?.volunteering && savedVolunteering.volunteering.length > 0
@@ -476,6 +478,16 @@ export default function PreferredVolunteeringStep({
   );
 
   const handleNext = () => {
+    const isEmptyEnabledSection =
+      isEnabled &&
+      !dataTakenFromCandidate &&
+      !entries.some(e => e.organizationName.length > 0 || e.cause.length > 0);
+
+    if (isEmptyEnabledSection) {
+      setEmptyDisableOpen(true);
+      return;
+    }
+
     onNext({
       preferredVolunteering: {
         isEnabled,
@@ -708,12 +720,33 @@ export default function PreferredVolunteeringStep({
         onOpenChange={open => {
           if (!open) setConfirmDisableOpen(false);
         }}
-        title="Are you sure?"
-        message="Are you sure you want to disable this section? Disabling this section will permanently remove all added data. This action cannot be undone"
-        cancelLabel="Cancel"
-        disableLabel="Disable"
+        title={t('preferredVolunteering.confirmDisableDialog.title')}
+        message={t('preferredVolunteering.confirmDisableDialog.message')}
+        cancelLabel={t('preferredVolunteering.confirmDisableDialog.cancel')}
+        disableLabel={t('preferredVolunteering.confirmDisableDialog.disable')}
         onCancel={() => setConfirmDisableOpen(false)}
         onDisable={handleDisable}
+      />
+
+      <StepDisableDialog
+        open={emptyDisableOpen}
+        onOpenChange={setEmptyDisableOpen}
+        onConfirm={() => {
+          setIsEnabled(false);
+          setDataTakenFromCandidate(false);
+          setEmptyDisableOpen(false);
+          onNext({
+            preferredVolunteering: {
+              isEnabled: false,
+              dataTakenFromCandidate: false,
+              volunteering: [],
+            },
+          });
+        }}
+        title={t('preferredVolunteering.emptyDisableDialog.title')}
+        description={t('preferredVolunteering.emptyDisableDialog.message')}
+        cancelLabel={t('preferredVolunteering.emptyDisableDialog.cancel')}
+        confirmLabel={t('preferredVolunteering.emptyDisableDialog.disable')}
       />
     </>
   );

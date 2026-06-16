@@ -1,14 +1,11 @@
 import type {
+  CreateVacancyPayload,
   ScheduleVacancyPayload,
   VacanciesApiResponse,
   VacancyQueryParams,
 } from '@/views/vacancies/types';
 
 import { httpClient } from '@cgp/data-access';
-
-interface ScheduleVacancyRequest {
-  schedule: ScheduleVacancyPayload;
-}
 
 interface CreateVacancyResponse {
   requestId: string;
@@ -20,8 +17,8 @@ interface VacancyDetailResponse {
   requestId: string;
   success: boolean;
   message: string;
-  data: {
-    vacancy: Record<string, unknown>;
+  data: Record<string, unknown> & {
+    vacancy?: Record<string, unknown>;
   };
 }
 
@@ -36,12 +33,12 @@ export const vacancyService = {
   },
   getVacancyById: async (id: string): Promise<VacancyDetailResponse> => {
     const response = await httpClient.get<VacancyDetailResponse>(
-      `/v1/vacancies/${id}`
+      `/vacancies/${id}`
     );
     return response.data;
   },
   createVacancy: async (
-    payload: ScheduleVacancyRequest
+    payload: CreateVacancyPayload
   ): Promise<CreateVacancyResponse> => {
     const response = await httpClient.post<CreateVacancyResponse>(
       '/vacancies',
@@ -51,7 +48,7 @@ export const vacancyService = {
   },
   updateVacancy: async (
     id: string,
-    payload: ScheduleVacancyRequest
+    payload: { schedule: ScheduleVacancyPayload }
   ): Promise<CreateVacancyResponse> => {
     const response = await httpClient.put<CreateVacancyResponse>(
       `/vacancies/${id}`,

@@ -23,6 +23,10 @@ import {
 } from '@cgp/ui-kit/components/ui/tabs';
 import { cn } from '@cgp/ui-kit/lib/utils';
 
+interface VacancyCreateStepperFormProps {
+  mode?: 'create' | 'edit';
+}
+
 function StepIndicator({
   index,
   currentStepIndex,
@@ -64,9 +68,13 @@ function StepIndicator({
   );
 }
 
-export default function VacancyCreateStepperForm() {
+export default function VacancyCreateStepperForm({
+  mode = 'create',
+}: VacancyCreateStepperFormProps) {
   const { t } = useTranslation('ats');
   const navigate = useNavigate();
+  const stepperTitle =
+    mode === 'edit' ? t('vacancies.editVacancy') : t('vacancies.addVacancy');
   const {
     currentStepIndex,
     setCurrentStepIndex,
@@ -114,7 +122,7 @@ export default function VacancyCreateStepperForm() {
           <div className="flex min-h-0 w-76.75 shrink-0 flex-col border-r border-slate-200 bg-white">
             <div className="px-4 pt-7">
               <p className="mb-9 text-2xl/8 font-bold text-slate-900">
-                {t('vacancies.createVacancyButton')}
+                {stepperTitle}
               </p>
             </div>
 

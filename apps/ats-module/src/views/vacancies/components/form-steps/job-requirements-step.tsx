@@ -56,6 +56,11 @@ const MAX_SELECTIONS = 10;
 const dependencyTooltipClassName =
   'relative rounded-lg bg-slate-700 px-4 py-3 text-sm font-semibold text-white shadow-md [&>span:has([data-slot=tooltip-arrow])]:hidden after:absolute after:-bottom-1.5 after:left-8 after:size-3 after:rotate-45 after:bg-slate-700';
 
+const multiSelectInfoAvatar = new URL(
+  '../../../../assets/images/multi-select-info-avatar.svg',
+  import.meta.url
+).href;
+
 export default function JobRequirementsStep({
   onNext,
   onBack,
@@ -284,6 +289,12 @@ export default function JobRequirementsStep({
 
   return (
     <>
+      <style>{`
+        div[data-radix-popper-content-wrapper] img[alt="common.noData"],
+        div[data-radix-popper-content-wrapper] img[alt="No results found"] {
+          content: url("${multiSelectInfoAvatar}") !important;
+        }
+      `}</style>
       <Form {...form}>
         <form
           onSubmit={e => {
@@ -328,7 +339,7 @@ export default function JobRequirementsStep({
                 control={form.control}
                 name="discipline"
                 render={({ field }) => (
-                  <FormItem className="flex flex-col gap-1.5 space-y-0">
+                  <FormItem className="flex flex-col gap-1 space-y-0">
                     <FormLabel className="flex justify-between">
                       <span>
                         {t('jobRequirements.discipline')}
@@ -412,11 +423,11 @@ export default function JobRequirementsStep({
                 control={form.control}
                 name="careerPath"
                 render={({ field }) => (
-                  <FormItem className="flex flex-col gap-1.5 space-y-0">
+                  <FormItem className="flex flex-col gap-1 space-y-0">
                     {isCareerPathDisabled ? (
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <div className="flex flex-col gap-1.5">
+                          <div className="flex flex-col gap-1">
                             <FormLabel className="flex justify-between">
                               <span>
                                 {t('jobRequirements.careerPath')}
@@ -598,7 +609,7 @@ export default function JobRequirementsStep({
                 control={form.control}
                 name="level"
                 render={({ field }) => (
-                  <FormItem className="flex flex-col gap-1.5 space-y-0">
+                  <FormItem className="flex flex-col gap-1 space-y-0">
                     <FormLabel className="text-sm font-semibold text-slate-900">
                       {t('jobRequirements.level')}
                       <span className="text-destructive ml-0.5">*</span>
@@ -646,11 +657,11 @@ export default function JobRequirementsStep({
                 control={form.control}
                 name="role"
                 render={({ field }) => (
-                  <FormItem className="flex flex-col gap-1.5 space-y-0">
+                  <FormItem className="flex flex-col gap-1 space-y-0">
                     {isRoleDisabled ? (
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <div className="flex flex-col gap-1.5">
+                          <div className="flex flex-col gap-1">
                             <FormLabel className="flex justify-between">
                               <span>
                                 {t('jobRequirements.role')}
@@ -696,9 +707,26 @@ export default function JobRequirementsStep({
                                   </p>
                                 }
                                 emptyIndicator={
-                                  <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                                    {t('jobRequirements.noData')}
-                                  </p>
+                                  <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
+                                    <div className="flex flex-col items-start">
+                                      <img
+                                        src={multiSelectInfoAvatar}
+                                        alt={t('common.noData')}
+                                      />
+                                      <div className="mt-3 w-61 text-left">
+                                        <p className="font-bold text-slate-900">
+                                          {t('common.noDataTitle')}
+                                        </p>
+                                        <p className="text-sm font-semibold text-slate-700">
+                                          {roles.length === 0
+                                            ? t(
+                                                'jobRequirements.noAssociatedRoles'
+                                              )
+                                            : t('common.noDataDescription')}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  </div>
                                 }
                               />
                             </FormControl>
@@ -755,11 +783,24 @@ export default function JobRequirementsStep({
                               </p>
                             }
                             emptyIndicator={
-                              <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                                {roles.length === 0
-                                  ? t('jobRequirements.noAssociatedRoles')
-                                  : t('jobRequirements.noData')}
-                              </p>
+                              <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
+                                <div className="flex flex-col items-start">
+                                  <img
+                                    src={multiSelectInfoAvatar}
+                                    alt={t('common.noData')}
+                                  />
+                                  <div className="mt-3 w-61 text-left">
+                                    <p className="font-bold text-slate-900">
+                                      {t('common.noDataTitle')}
+                                    </p>
+                                    <p className="text-sm font-semibold text-slate-700">
+                                      {roles.length === 0
+                                        ? t('jobRequirements.noAssociatedRoles')
+                                        : t('common.noDataDescription')}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
                             }
                           />
                         </FormControl>
@@ -774,7 +815,7 @@ export default function JobRequirementsStep({
                 control={form.control}
                 name="jobTitle"
                 render={({ field }) => (
-                  <FormItem className="flex flex-col gap-1.5 space-y-0">
+                  <FormItem className="flex flex-col gap-1 space-y-0">
                     <FormLabel className="flex justify-between">
                       <span>
                         {t('jobRequirements.jobTitle')}
@@ -815,9 +856,22 @@ export default function JobRequirementsStep({
                           </p>
                         }
                         emptyIndicator={
-                          <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                            {t('jobRequirements.noData')}
-                          </p>
+                          <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
+                            <div className="flex flex-col items-start">
+                              <img
+                                src={multiSelectInfoAvatar}
+                                alt={t('common.noData')}
+                              />
+                              <div className="mt-3 w-61 text-left">
+                                <p className="font-bold text-slate-900">
+                                  {t('common.noDataTitle')}
+                                </p>
+                                <p className="text-sm font-semibold text-slate-700">
+                                  {t('common.noDataDescription')}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
                         }
                       />
                     </FormControl>
@@ -832,7 +886,7 @@ export default function JobRequirementsStep({
                 control={form.control}
                 name="employmentType"
                 render={({ field }) => (
-                  <FormItem className="flex flex-col gap-1.5 space-y-0">
+                  <FormItem className="flex flex-col gap-1 space-y-0">
                     <FormLabel className="text-sm font-semibold text-slate-900">
                       {t('jobRequirements.employmentType')}
                     </FormLabel>
@@ -866,9 +920,22 @@ export default function JobRequirementsStep({
                           </p>
                         }
                         emptyIndicator={
-                          <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                            {t('jobRequirements.noData')}
-                          </p>
+                          <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
+                            <div className="flex flex-col items-start">
+                              <img
+                                src={multiSelectInfoAvatar}
+                                alt={t('common.noData')}
+                              />
+                              <div className="mt-3 w-61 text-left">
+                                <p className="font-bold text-slate-900">
+                                  {t('common.noDataTitle')}
+                                </p>
+                                <p className="text-sm font-semibold text-slate-700">
+                                  {t('common.noDataDescription')}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
                         }
                       />
                     </FormControl>
@@ -881,7 +948,7 @@ export default function JobRequirementsStep({
                 control={form.control}
                 name="workSchedule"
                 render={({ field }) => (
-                  <FormItem className="flex flex-col gap-1.5 space-y-0">
+                  <FormItem className="flex flex-col gap-1 space-y-0">
                     <FormLabel className="text-sm font-semibold text-slate-900">
                       {t('jobRequirements.workSchedule')}
                     </FormLabel>
@@ -915,9 +982,22 @@ export default function JobRequirementsStep({
                           </p>
                         }
                         emptyIndicator={
-                          <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                            {t('jobRequirements.noData')}
-                          </p>
+                          <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
+                            <div className="flex flex-col items-start">
+                              <img
+                                src={multiSelectInfoAvatar}
+                                alt={t('common.noData')}
+                              />
+                              <div className="mt-3 w-61 text-left">
+                                <p className="font-bold text-slate-900">
+                                  {t('common.noDataTitle')}
+                                </p>
+                                <p className="text-sm font-semibold text-slate-700">
+                                  {t('common.noDataDescription')}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
                         }
                       />
                     </FormControl>
@@ -932,7 +1012,7 @@ export default function JobRequirementsStep({
                 control={form.control}
                 name="engagementModel"
                 render={({ field }) => (
-                  <FormItem className="flex flex-col gap-1.5 space-y-0">
+                  <FormItem className="flex flex-col gap-1 space-y-0">
                     <FormLabel className="text-sm font-semibold text-slate-900">
                       {t('jobRequirements.engagementModel')}
                     </FormLabel>
@@ -966,9 +1046,22 @@ export default function JobRequirementsStep({
                           </p>
                         }
                         emptyIndicator={
-                          <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                            {t('jobRequirements.noData')}
-                          </p>
+                          <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
+                            <div className="flex flex-col items-start">
+                              <img
+                                src={multiSelectInfoAvatar}
+                                alt={t('common.noData')}
+                              />
+                              <div className="mt-3 w-61 text-left">
+                                <p className="font-bold text-slate-900">
+                                  {t('common.noDataTitle')}
+                                </p>
+                                <p className="text-sm font-semibold text-slate-700">
+                                  {t('common.noDataDescription')}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
                         }
                       />
                     </FormControl>
@@ -981,7 +1074,7 @@ export default function JobRequirementsStep({
                 control={form.control}
                 name="description"
                 render={({ field }) => (
-                  <FormItem className="flex flex-col gap-1.5 space-y-0">
+                  <FormItem className="flex flex-col gap-1 space-y-0">
                     <FormLabel className="flex justify-between">
                       <span>{t('jobRequirements.description')}</span>
                       <CharacterCount

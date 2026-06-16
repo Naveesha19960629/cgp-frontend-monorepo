@@ -845,82 +845,84 @@ const MultipleSelector = React.forwardRef<
             {errorMessage}
           </p>
         )}
-        <div className="mt-2 flex flex-wrap gap-3">
-          {selected.map(option => {
-            const useChipStyle = Boolean(option.chipIcon);
-            const hasTooltip =
-              useChipStyle &&
-              (option.chipTooltipTitle || option.chipTooltipImage);
-            const badge = (
-              <Badge
-                key={option.value}
-                variant={useChipStyle ? 'chip' : undefined}
-                className={cn(
-                  useChipStyle
-                    ? 'animate-fadeIn flex cursor-default items-center gap-2 pe-2 text-sm font-semibold break-all text-slate-600'
-                    : 'box-border flex items-center gap-2 rounded-[8px] border border-neutral-200 bg-[linear-gradient(97deg,#E4F0F1,#F1F5F9_41.18%)] p-3 text-sm font-semibold break-all text-slate-600',
-                  'data-[disabled]:bg-muted-foreground data-[disabled]:text-muted data-[disabled]:hover:bg-muted-foreground',
-                  'data-[fixed]:bg-muted-foreground data-[fixed]:hover:bg-muted-foreground',
-                  badgeClassName
-                )}
-                data-fixed={option.fixed}
-                data-disabled={disabled || undefined}
-              >
-                {option.chipIcon ? (
-                  option.chipIcon === 'import' ? (
-                    <ImportCurve size={24} color="#475569" variant="Bold" />
-                  ) : (
-                    <Edit2 size={24} color="#475569" variant="Bold" />
-                  )
-                ) : null}
-                <span className={cn('min-w-0', useChipStyle && 'capitalize')}>
-                  {option.label}
-                </span>
-                <button
-                  type="button"
+        {selected.length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-3">
+            {selected.map(option => {
+              const useChipStyle = Boolean(option.chipIcon);
+              const hasTooltip =
+                useChipStyle &&
+                (option.chipTooltipTitle || option.chipTooltipImage);
+              const badge = (
+                <Badge
+                  key={option.value}
+                  variant={useChipStyle ? 'chip' : undefined}
                   className={cn(
-                    'ring-offset-background focus:ring-ring ml-0 cursor-pointer rounded-full outline-none focus:ring-2 focus:ring-offset-2',
-                    (disabled || option.fixed) && 'hidden'
+                    useChipStyle
+                      ? 'animate-fadeIn flex cursor-default items-center gap-2 pe-2 text-sm font-semibold break-all text-slate-600'
+                      : 'box-border flex items-center gap-2 rounded-[8px] border border-neutral-200 bg-[linear-gradient(97deg,#E4F0F1,#F1F5F9_41.18%)] p-3 text-sm font-semibold break-all text-slate-600',
+                    'data-[disabled]:bg-muted-foreground data-[disabled]:text-muted data-[disabled]:hover:bg-muted-foreground',
+                    'data-[fixed]:bg-muted-foreground data-[fixed]:hover:bg-muted-foreground',
+                    badgeClassName
                   )}
-                  onKeyDown={e => {
-                    if (e.key === 'Enter') {
-                      handleUnselect(option);
-                    }
-                  }}
-                  onMouseDown={e => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                  }}
-                  onClick={e => {
-                    e.stopPropagation();
-                    handleUnselect(option);
-                  }}
+                  data-fixed={option.fixed}
+                  data-disabled={disabled || undefined}
                 >
-                  <X className="text-muted-foreground hover:text-foreground size-4" />
-                </button>
-              </Badge>
-            );
-            return hasTooltip ? (
-              <FieldTooltip
-                key={option.value}
-                title={option.chipTooltipTitle}
-                image={
-                  option.chipIcon === 'manual'
-                    ? undefined
-                    : option.chipTooltipImage
-                }
-                triggerClassName="inline-flex"
-                contentClassName="w-fit whitespace-nowrap"
-                align="start"
-                alignOffset={0}
-              >
-                {badge}
-              </FieldTooltip>
-            ) : (
-              badge
-            );
-          })}
-        </div>
+                  {option.chipIcon ? (
+                    option.chipIcon === 'import' ? (
+                      <ImportCurve size={24} color="#475569" variant="Bold" />
+                    ) : (
+                      <Edit2 size={24} color="#475569" variant="Bold" />
+                    )
+                  ) : null}
+                  <span className={cn('min-w-0', useChipStyle && 'capitalize')}>
+                    {option.label}
+                  </span>
+                  <button
+                    type="button"
+                    className={cn(
+                      'ring-offset-background focus:ring-ring ml-0 cursor-pointer rounded-full outline-none focus:ring-2 focus:ring-offset-2',
+                      (disabled || option.fixed) && 'hidden'
+                    )}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') {
+                        handleUnselect(option);
+                      }
+                    }}
+                    onMouseDown={e => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }}
+                    onClick={e => {
+                      e.stopPropagation();
+                      handleUnselect(option);
+                    }}
+                  >
+                    <X className="text-muted-foreground hover:text-foreground size-4" />
+                  </button>
+                </Badge>
+              );
+              return hasTooltip ? (
+                <FieldTooltip
+                  key={option.value}
+                  title={option.chipTooltipTitle}
+                  image={
+                    option.chipIcon === 'manual'
+                      ? undefined
+                      : option.chipTooltipImage
+                  }
+                  triggerClassName="inline-flex"
+                  contentClassName="w-fit whitespace-nowrap"
+                  align="start"
+                  alignOffset={0}
+                >
+                  {badge}
+                </FieldTooltip>
+              ) : (
+                badge
+              );
+            })}
+          </div>
+        )}
       </>
     );
   }

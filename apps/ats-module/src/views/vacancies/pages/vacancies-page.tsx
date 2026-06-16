@@ -108,9 +108,11 @@ export default function VacanciesPage() {
         sortBy: params.sortBy,
         sortOrder: params.sortOrder,
         onSort: handleSort,
+        onEdit: (vacancyId: string) =>
+          void navigate(`/dashboard/ats/vacancies/${vacancyId}/edit`),
         t,
       }),
-    [params.sortBy, params.sortOrder, handleSort, t]
+    [params.sortBy, params.sortOrder, handleSort, navigate, t]
   );
 
   const table = useReactTable<VacancyTableColumn>({

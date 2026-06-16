@@ -1,4 +1,4 @@
-﻿import type { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -277,6 +277,9 @@ vi.mock('@cgp/ui-kit/components/ui/dialog', () => ({
     <dialog>{children}</dialog>
   ),
   DialogTitle: ({ children }: { children?: ReactNode }) => <h2>{children}</h2>,
+  DialogDescription: ({ children }: { children?: ReactNode }) => (
+    <p>{children}</p>
+  ),
 }));
 
 vi.mock('@cgp/ui-kit/components/character-count', () => ({
@@ -545,9 +548,7 @@ describe('TertiaryEducationStep', () => {
     it('closes the dialog without disabling when "Cancel" is clicked', async () => {
       const user = await openConfirmDialog();
 
-      await user.click(
-        screen.getByText('tertiaryEducation.confirmDisableDialog.cancel')
-      );
+      await user.click(screen.getByText('common.disableDialog.cancelButton'));
 
       await waitFor(() => {
         expect(

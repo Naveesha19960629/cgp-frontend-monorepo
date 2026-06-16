@@ -49,6 +49,11 @@ import { cn } from '@cgp/ui-kit/lib/utils';
 
 const MAX_ADDRESS_ENTRIES = 5;
 
+const multiSelectInfoAvatar = new URL(
+  '../../../../assets/images/multi-select-info-avatar.svg',
+  import.meta.url
+).href;
+
 function isDuplicateAddress(
   addresses: ProfileRequirementsFormValues['addresses'],
   newIndex: number
@@ -538,6 +543,12 @@ export default function ProfileRequirementsStep({ onNext, onBack }: StepProps) {
 
   return (
     <>
+      <style>{`
+        div[data-radix-popper-content-wrapper] img[alt="common.noData"],
+        div[data-radix-popper-content-wrapper] img[alt="No results found"] {
+          content: url("${multiSelectInfoAvatar}") !important;
+        }
+      `}</style>
       <Form {...form}>
         <form
           onSubmit={e => {
@@ -647,7 +658,7 @@ export default function ProfileRequirementsStep({ onNext, onBack }: StepProps) {
               control={form.control}
               name="gender"
               render={({ field }) => (
-                <FormItem className="flex flex-col gap-1.5 space-y-0">
+                <FormItem className="flex flex-col gap-1 space-y-0">
                   <FormLabel className="text-sm font-semibold text-slate-900">
                     {t('profileRequirements.gender')}
                   </FormLabel>
@@ -665,7 +676,7 @@ export default function ProfileRequirementsStep({ onNext, onBack }: StepProps) {
                       }}
                       disabled={isFieldsDisabled}
                     >
-                      <SelectTrigger className="h-9 w-full shadow-none">
+                      <SelectTrigger className="!h-11 w-full bg-white shadow-none">
                         <SelectValue
                           placeholder={t(
                             'profileRequirements.genderPlaceholder'
@@ -691,7 +702,7 @@ export default function ProfileRequirementsStep({ onNext, onBack }: StepProps) {
               control={form.control}
               name="maritalStatus"
               render={({ field }) => (
-                <FormItem className="flex flex-col gap-1.5 space-y-0">
+                <FormItem className="flex flex-col gap-1 space-y-0">
                   <FormLabel className="text-sm font-semibold text-slate-900">
                     {t('profileRequirements.maritalStatus')}
                   </FormLabel>
@@ -711,7 +722,7 @@ export default function ProfileRequirementsStep({ onNext, onBack }: StepProps) {
                       }}
                       disabled={isFieldsDisabled}
                     >
-                      <SelectTrigger className="h-9 w-full shadow-none">
+                      <SelectTrigger className="!h-11 w-full bg-white shadow-none">
                         <SelectValue
                           placeholder={t(
                             'profileRequirements.maritalStatusPlaceholder'

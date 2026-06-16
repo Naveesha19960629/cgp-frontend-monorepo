@@ -105,7 +105,11 @@ function NewVacancyContent() {
   const { isInitialStep } = useVacancyForm();
   return (
     <div className="flex min-h-0 flex-1">
-      {isInitialStep ? <VacancyTitleStep /> : <VacancyCreateStepperForm />}
+      {isInitialStep ? (
+        <VacancyTitleStep />
+      ) : (
+        <VacancyCreateStepperForm mode="create" />
+      )}
     </div>
   );
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { formatDisplayDateTime } from '@/views/vacancies/utils';
+import { formatDisplayDateTime, to24HourTime } from '@/views/vacancies/utils';
 
 describe('formatDisplayDateTime', () => {
   it('returns undefined when date is missing', () => {
@@ -51,5 +51,27 @@ describe('formatDisplayDateTime', () => {
     expect(formatDisplayDateTime('2026-06-25', '5:27 pm')).toBe(
       '25th Jun 2026 05:27:00 PM'
     );
+  });
+});
+
+describe('to24HourTime', () => {
+  it('keeps HH:mm:ss values unchanged', () => {
+    expect(to24HourTime('17:27:10')).toBe('17:27:10');
+  });
+
+  it('normalizes HH:mm values to include seconds', () => {
+    expect(to24HourTime('10:30')).toBe('10:30:00');
+  });
+
+  it('converts 12-hour PM input to 24-hour', () => {
+    expect(to24HourTime('5:27 PM')).toBe('17:27:00');
+  });
+
+  it('converts 12 AM to 00-hour', () => {
+    expect(to24HourTime('12:00 AM')).toBe('00:00:00');
+  });
+
+  it('keeps unrecognized input unchanged', () => {
+    expect(to24HourTime('invalid')).toBe('invalid');
   });
 });

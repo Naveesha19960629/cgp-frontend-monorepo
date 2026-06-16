@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
 import { VacancyCreateStepperForm } from '@/views/vacancies';
 import {
@@ -11,14 +11,85 @@ import {
 import { useVacancyByIdQuery } from '@/views/vacancies/hooks';
 import type { VacancyForm } from '@/views/vacancies/types';
 
+import { CharacterCount } from '@cgp/ui-kit/components/character-count';
+import { Button } from '@cgp/ui-kit/components/ui/button';
+import { Input } from '@cgp/ui-kit/components/ui/input';
+import { Label } from '@cgp/ui-kit/components/ui/label';
 import { Skeleton } from '@cgp/ui-kit/components/ui/skeleton';
+import { removeEmoji } from '@cgp/ui-kit/lib/utils';
 import { useKeycloak } from '@react-keycloak/web';
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function EditVacancyTitleStep() {
+  const navigate = useNavigate();
+  const { t } = useTranslation('ats');
+  const { form, setForm, onNext } = useVacancyForm();
+
+  const handleTitleChange = (value: string) => {
+    const sanitizedTitle = removeEmoji(value);
+    setForm(prev => ({ ...prev, title: sanitizedTitle }));
+  };
+
+  return (
+    <div className="flex flex-1 flex-col">
+      <header className="pt-7 pl-7">
+        <p className="text-2xl/8 font-bold text-slate-900">
+          {t('vacancies.editVacancy')}
+        </p>
+      </header>
+      <div className="flex flex-1 flex-col items-center justify-center">
+        <div className="w-99.5">
+          <p className="mb-4 text-xl font-bold text-slate-900">
+            {t('vacancies.createVacancy.formTitle')}
+          </p>
+          <div className="mb-1 flex items-center justify-between">
+            <Label
+              htmlFor="vacancy-title"
+              className="text-sm font-semibold text-slate-900"
+            >
+              {t('vacancies.createVacancy.fieldTitle')}
+            </Label>
+            <CharacterCount
+              maxLength={50}
+              currentLength={form.title.length}
+              className={'font-["Plus_Jakarta_Sans",sans-serif]'}
+            />
+          </div>
+          <Input
+            id="vacancy-title"
+            className="h-11 w-full"
+            maxLength={50}
+            placeholder={t('vacancies.createVacancy.titlePlaceholder')}
+            required
+            value={form.title}
+            onChange={e => handleTitleChange(e.target.value)}
+          />
+          <div className="mt-4 flex gap-4">
+            <Button
+              variant="secondary"
+              className="h-12 flex-1"
+              onClick={() => void navigate('/dashboard/ats/vacancies')}
+            >
+              {t('vacancies.createVacancy.cancelButton')}
+            </Button>
+            <Button className="h-12 flex-1" onClick={() => onNext()}>
+              {t('vacancies.createVacancy.nextButton')}
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function EditVacancyContent() {
   const { id } = useParams<'id'>();
   const { t } = useTranslation('ats');
   const { keycloak, initialized } = useKeycloak();
-  const { setForm, setCurrentStepIndex } = useVacancyForm();
+  const { isInitialStep, setForm, setCurrentStepIndex } = useVacancyForm();
   const isHydratedRef = useRef(false);
 
   const {
@@ -34,13 +105,33 @@ function EditVacancyContent() {
       return;
     }
 
-    const vacancy = vacancyResponse.data?.vacancy;
-    if (!vacancy || typeof vacancy !== 'object') {
+    const rawData = vacancyResponse.data;
+    const vacancyCandidate = rawData?.vacancy ?? rawData;
+    if (!isRecord(vacancyCandidate)) {
       return;
     }
 
-    const incomingForm = vacancy as Partial<VacancyForm>;
-    setForm(prev => ({ ...prev, ...incomingForm }));
+    const vacancyRecord = vacancyCandidate;
+    const normalizedTitle = [
+      vacancyRecord.title,
+      vacancyRecord.vacancyTitle,
+      vacancyRecord.vacancy_name,
+      vacancyRecord.name,
+    ].find(
+      (value): value is string =>
+        typeof value === 'string' && value.trim().length > 0
+    );
+
+    const incomingForm = vacancyRecord as Partial<VacancyForm>;
+    setForm(prev => ({
+      ...prev,
+      ...incomingForm,
+      title:
+        (typeof incomingForm.title === 'string' && incomingForm.title.trim()) ||
+        !normalizedTitle
+          ? (incomingForm.title ?? prev.title)
+          : normalizedTitle,
+    }));
 
     if (typeof incomingForm.lastActiveStep === 'string') {
       const stepIndex = VACANCY_STEPS.findIndex(
@@ -125,7 +216,11 @@ function EditVacancyContent() {
 
   return (
     <div className="flex min-h-0 flex-1">
-      <VacancyCreateStepperForm />
+      {isInitialStep ? (
+        <EditVacancyTitleStep />
+      ) : (
+        <VacancyCreateStepperForm mode="edit" />
+      )}
     </div>
   );
 }

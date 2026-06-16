@@ -127,9 +127,7 @@ describe('VacancyCreateStepperForm', () => {
   it('renders heading and step labels', () => {
     render(<VacancyCreateStepperForm />);
 
-    expect(
-      screen.getByText('vacancies.createVacancyButton')
-    ).toBeInTheDocument();
+    expect(screen.getByText('vacancies.addVacancy')).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'Step One' })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'Step Two' })).toBeInTheDocument();
     expect(screen.getByText('Step One Content')).toBeInTheDocument();

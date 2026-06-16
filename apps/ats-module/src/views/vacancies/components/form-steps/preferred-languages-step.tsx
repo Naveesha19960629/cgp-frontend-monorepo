@@ -1,10 +1,9 @@
 import { ArrowLeft2 } from 'iconsax-reactjs';
 
-import * as SwitchPrimitive from '@radix-ui/react-switch';
-
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import { StepDisableDialog } from '@/views/vacancies';
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import {
   useCreateLanguageMutation,
@@ -20,9 +19,8 @@ import { CharacterCount } from '@cgp/ui-kit/components/character-count';
 import MultipleSelector from '@cgp/ui-kit/components/multi-select';
 import { Button } from '@cgp/ui-kit/components/ui/button';
 import { Checkbox } from '@cgp/ui-kit/components/ui/checkbox';
+import { Switch } from '@cgp/ui-kit/components/ui/switch';
 import { cn } from '@cgp/ui-kit/lib/utils';
-
-import DisableDialog from './disable-dialog';
 
 const MAX_LANGUAGES = 10;
 const MAX_LANG_CHARS = 100;
@@ -155,7 +153,7 @@ export default function PreferredLanguagesStep({
             {t('preferredLanguages.title')}
           </h2>
         </div>
-        <SwitchPrimitive.Root
+        <Switch
           checked={isEnabled}
           onCheckedChange={newValue => {
             if (!newValue) {
@@ -168,18 +166,8 @@ export default function PreferredLanguagesStep({
               setIsEnabled(true);
             }
           }}
-          className={cn(
-            'focus-visible:ring-ring/50 inline-flex h-6 w-12 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent shadow-xs transition-colors outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50',
-            isEnabled ? 'bg-brand-primary-500' : 'bg-slate-300'
-          )}
-        >
-          <SwitchPrimitive.Thumb
-            className={cn(
-              'pointer-events-none block h-5 w-5 rounded-full bg-white shadow-lg ring-0 transition-transform',
-              isEnabled ? 'translate-x-6' : 'translate-x-0'
-            )}
-          />
-        </SwitchPrimitive.Root>
+          size="lg"
+        />
       </div>
 
       {/* Body */}
@@ -286,36 +274,30 @@ export default function PreferredLanguagesStep({
         </div>
       </div>
 
-      <DisableDialog
+      <StepDisableDialog
         open={confirmDisableOpen}
         onOpenChange={open => {
           if (!open) setConfirmDisableOpen(false);
         }}
-        title={t('preferredLanguages.confirmDisableDialog.title')}
-        message={t('preferredLanguages.confirmDisableDialog.message')}
-        cancelLabel={t('preferredLanguages.confirmDisableDialog.cancel')}
-        disableLabel={t('preferredLanguages.confirmDisableDialog.disable')}
-        onCancel={() => setConfirmDisableOpen(false)}
-        onDisable={() => {
+        onConfirm={() => {
           setSelectedLanguages([]);
           setDataTakenFromCandidate(false);
           setIsEnabled(false);
           setConfirmDisableOpen(false);
           showDisableToast(t('preferredLanguages.title'));
         }}
+        title={t('preferredLanguages.confirmDisableDialog.title')}
+        description={t('preferredLanguages.confirmDisableDialog.message')}
+        cancelLabel={t('preferredLanguages.confirmDisableDialog.cancel')}
+        confirmLabel={t('preferredLanguages.confirmDisableDialog.disable')}
       />
 
-      <DisableDialog
+      <StepDisableDialog
         open={emptyDisableOpen}
         onOpenChange={open => {
           if (!open) setEmptyDisableOpen(false);
         }}
-        title={t('preferredLanguages.emptyDisableDialog.title')}
-        message={t('preferredLanguages.emptyDisableDialog.message')}
-        cancelLabel={t('preferredLanguages.emptyDisableDialog.cancel')}
-        disableLabel={t('preferredLanguages.emptyDisableDialog.disable')}
-        onCancel={() => setEmptyDisableOpen(false)}
-        onDisable={() => {
+        onConfirm={() => {
           setIsEnabled(false);
           setEmptyDisableOpen(false);
           showDisableToast(t('preferredLanguages.title'));
@@ -327,6 +309,10 @@ export default function PreferredLanguagesStep({
             },
           });
         }}
+        title={t('preferredLanguages.emptyDisableDialog.title')}
+        description={t('preferredLanguages.emptyDisableDialog.message')}
+        cancelLabel={t('preferredLanguages.emptyDisableDialog.cancel')}
+        confirmLabel={t('preferredLanguages.emptyDisableDialog.disable')}
       />
 
       {/* ── Step footer ──────────────────────────────────────────────────── */}

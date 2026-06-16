@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import MessageBox from '@/components/message-box';
+import StepDisableDialog from '@/views/vacancies/components/step-disable-dialog';
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import { useStepGuard } from '@/views/vacancies/hooks';
 import type { StepProps } from '@/views/vacancies/types';
@@ -298,6 +299,7 @@ export default function PreferredPublicationsStep({
     savedPublications?.dataTakenFromCandidate ?? false
   );
   const [confirmDisableOpen, setConfirmDisableOpen] = useState(false);
+  const [emptyDisableOpen, setEmptyDisableOpen] = useState(false);
 
   const [publications, setPublications] = useState<PublicationEntry[]>(
     savedPublications?.publications && savedPublications.publications.length > 0
@@ -350,6 +352,16 @@ export default function PreferredPublicationsStep({
   }, [setForm, stepDisableRef]);
 
   const handleNext = () => {
+    const isEmptyEnabledSection =
+      isEnabled &&
+      !dataTakenFromCandidate &&
+      !publications.some(p => p.acceptedPublisher.trim().length > 0);
+
+    if (isEmptyEnabledSection) {
+      setEmptyDisableOpen(true);
+      return;
+    }
+
     onNext({
       preferredPublications: {
         isEnabled,
@@ -532,12 +544,33 @@ export default function PreferredPublicationsStep({
         onOpenChange={open => {
           if (!open) setConfirmDisableOpen(false);
         }}
-        title="Are you sure?"
-        message="Are you sure you want to disable this section? Disabling this section will permanently remove all added data. This action cannot be undone"
-        cancelLabel="Cancel"
-        disableLabel="Disable"
+        title={t('preferredPublications.confirmDisableDialog.title')}
+        message={t('preferredPublications.confirmDisableDialog.message')}
+        cancelLabel={t('preferredPublications.confirmDisableDialog.cancel')}
+        disableLabel={t('preferredPublications.confirmDisableDialog.disable')}
         onCancel={() => setConfirmDisableOpen(false)}
         onDisable={handleDisable}
+      />
+
+      <StepDisableDialog
+        open={emptyDisableOpen}
+        onOpenChange={setEmptyDisableOpen}
+        onConfirm={() => {
+          setIsEnabled(false);
+          setDataTakenFromCandidate(false);
+          setEmptyDisableOpen(false);
+          onNext({
+            preferredPublications: {
+              isEnabled: false,
+              dataTakenFromCandidate: false,
+              publications: [],
+            },
+          });
+        }}
+        title={t('preferredPublications.emptyDisableDialog.title')}
+        description={t('preferredPublications.emptyDisableDialog.message')}
+        cancelLabel={t('preferredPublications.emptyDisableDialog.cancel')}
+        confirmLabel={t('preferredPublications.emptyDisableDialog.disable')}
       />
     </>
   );
