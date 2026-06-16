@@ -188,22 +188,22 @@ jobs:
         run: |
           docker build --no-cache \
             -f Dockerfile.shell \
-            --build-arg VITE_ATS_MODULE_URL=${{ steps.deploy_ats.outputs.ats_url }} \
-            --build-arg COMMIT_SHA=${{ github.sha }} \
-            --build-arg BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') \
-            --build-arg VITE_PORTAL_LOGO=${{ secrets.QA_VITE_PORTAL_LOGO }} \
-            --build-arg VITE_API_BASE_URL=${{ secrets.QA_VITE_API_BASE_URL }} \
-            --build-arg VITE_API_URL=${{ secrets.QA_VITE_API_URL }} \
-            --build-arg VITE_FALLBACK_LANG=${{ secrets.QA_VITE_FALLBACK_LANG }} \
-            --build-arg VITE_LANG=${{ secrets.QA_VITE_LANG }} \
-            --build-arg VITE_KEYCLOAK_URL=${{ secrets.QA_VITE_KEYCLOAK_URL }} \
-            --build-arg VITE_KEYCLOAK_REALM=${{ secrets.QA_VITE_KEYCLOAK_REALM }} \
-            --build-arg VITE_KEYCLOAK_CLIENT_ID=${{ secrets.QA_VITE_KEYCLOAK_CLIENT_ID }} \
-            --build-arg VITE_BACKEND_API_URL=${{ secrets.QA_VITE_BACKEND_API_URL }} \
-            --build-arg VITE_BACKEND_API_VERSION=${{ secrets.QA_VITE_BACKEND_API_VERSION }} \
-            --build-arg VITE_WS_URL=${{ secrets.QA_VITE_WS_URL }} \
-            -t $AR_HOSTNAME/$PROJECT_ID/$REPOSITORY/$SHELL_SERVICE:${{ steps.version.outputs.version }} \
-            -t $AR_HOSTNAME/$PROJECT_ID/$REPOSITORY/$SHELL_SERVICE:latest \
+            --build-arg "VITE_ATS_MODULE_URL=${{ steps.deploy_ats.outputs.ats_url }}" \
+            --build-arg "COMMIT_SHA=${{ github.sha }}" \
+            --build-arg "BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" \
+            --build-arg "VITE_PORTAL_LOGO=${{ secrets.QA_VITE_PORTAL_LOGO }}" \
+            --build-arg "VITE_API_BASE_URL=${{ secrets.QA_VITE_API_BASE_URL }}" \
+            --build-arg "VITE_API_URL=${{ secrets.QA_VITE_API_URL }}" \
+            --build-arg "VITE_FALLBACK_LANG=${{ secrets.QA_VITE_FALLBACK_LANG }}" \
+            --build-arg "VITE_LANG=${{ secrets.QA_VITE_LANG }}" \
+            --build-arg "VITE_KEYCLOAK_URL=${{ secrets.QA_VITE_KEYCLOAK_URL }}" \
+            --build-arg "VITE_KEYCLOAK_REALM=${{ secrets.QA_VITE_KEYCLOAK_REALM }}" \
+            --build-arg "VITE_KEYCLOAK_CLIENT_ID=${{ secrets.QA_VITE_KEYCLOAK_CLIENT_ID }}" \
+            --build-arg "VITE_BACKEND_API_URL=${{ secrets.QA_VITE_BACKEND_API_URL }}" \
+            --build-arg "VITE_BACKEND_API_VERSION=${{ secrets.QA_VITE_BACKEND_API_VERSION }}" \
+            --build-arg "VITE_WS_URL=${{ secrets.QA_VITE_WS_URL }}" \
+            -t "$AR_HOSTNAME/$PROJECT_ID/$REPOSITORY/$SHELL_SERVICE:${{ steps.version.outputs.version }}" \
+            -t "$AR_HOSTNAME/$PROJECT_ID/$REPOSITORY/$SHELL_SERVICE:latest" \
             .
 
       - name: Push Shell Image
