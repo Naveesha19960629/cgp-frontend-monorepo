@@ -18,6 +18,9 @@
     "noDataTitle": "No Data Found",
     "noDataDescription": "We couldn't find any matching data. Try adjusting your search data",
     "errorTitle": "Try Again",
+    "error": {
+      "title": "Try Again"
+    },
     "disableDialog": {
       "title": "Are you sure?",
       "description": "Are you sure you want to disable this section? Disabling this section will permanently remove all added data. This action cannot be undone",
@@ -119,8 +122,13 @@
       "descriptionLine2": "Try adjusting your keywords or using broader search terms"
     },
     "editVacancy": "Edit Vacancy",
+    "addVacancy": "Add Vacancy",
+    "edit": {
+      "invalidId": "Invalid vacancy ID.",
+      "failedToLoadVacancy": "Failed to load vacancy details. Please try again."
+    },
     "createVacancy": {
-      "heading": "Create Vacancy",
+      "heading": "Add Vacancy",
       "formTitle": "Lets Begin with the Vacancy Title",
       "fieldTitle": "Title",
       "titlePlaceholder": "Enter title",

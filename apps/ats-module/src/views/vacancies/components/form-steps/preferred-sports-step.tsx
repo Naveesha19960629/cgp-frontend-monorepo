@@ -7,6 +7,7 @@ import * as SwitchPrimitive from '@radix-ui/react-switch';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import MessageBox from '@/components/message-box';
+import StepDisableDialog from '@/views/vacancies/components/step-disable-dialog';
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import {
   useLocationsQuery,
@@ -516,6 +517,7 @@ function SportCard({
 
 export default function PreferredSportsStep({
   onNext,
+
   onBack,
 }: Readonly<StepProps>) {
   const { form: contextForm, onCancel } = useVacancyForm();
@@ -526,6 +528,7 @@ export default function PreferredSportsStep({
     savedSports?.dataTakenFromCandidate ?? false
   );
   const [confirmDisableOpen, setConfirmDisableOpen] = useState(false);
+  const [emptyDisableOpen, setEmptyDisableOpen] = useState(false);
 
   const [entries, setEntries] = useState<SportEntry[]>(
     savedSports?.sports && savedSports.sports.length > 0
@@ -566,6 +569,16 @@ export default function PreferredSportsStep({
   }, [setForm, stepDisableRef]);
 
   const handleNext = () => {
+    const isEmptyEnabledSection =
+      isEnabled &&
+      !dataTakenFromCandidate &&
+      !entries.some(e => e.sport.length > 0);
+
+    if (isEmptyEnabledSection) {
+      setEmptyDisableOpen(true);
+      return;
+    }
+
     onNext({
       preferredSports: {
         isEnabled,
@@ -773,6 +786,27 @@ export default function PreferredSportsStep({
         disableLabel="Disable"
         onCancel={() => setConfirmDisableOpen(false)}
         onDisable={handleDisable}
+      />
+
+      <StepDisableDialog
+        open={emptyDisableOpen}
+        onOpenChange={setEmptyDisableOpen}
+        onConfirm={() => {
+          setIsEnabled(false);
+          setDataTakenFromCandidate(false);
+          setEmptyDisableOpen(false);
+          onNext({
+            preferredSports: {
+              isEnabled: false,
+              dataTakenFromCandidate: false,
+              sports: [],
+            },
+          });
+        }}
+        title="Are you sure?"
+        description="You've enabled this section but haven't filled any fields. This section will be disabled for this vacancy and no data will be collected from candidates"
+        cancelLabel="Cancel"
+        confirmLabel="Disable"
       />
     </>
   );

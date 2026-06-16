@@ -3,8 +3,14 @@ import userEvent from '@testing-library/user-event';
 
 import VacancyTableAction from '@/views/vacancies/components/vacancy-table-action';
 
+const mockNavigate = vi.fn();
+
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
+}));
+
+vi.mock('react-router-dom', () => ({
+  useNavigate: () => mockNavigate,
 }));
 
 describe('VacancyTableAction', () => {
@@ -121,7 +127,6 @@ describe('VacancyTableAction', () => {
     ],
     ['onCopyLink', 'vacancies.table.actions.copyLink', onCopyLink],
     ['onMakeACopy', 'vacancies.table.actions.makeACopy', onMakeACopy],
-    ['onEdit', 'vacancies.table.actions.edit', onEdit],
     ['onDelete', 'vacancies.table.actions.delete', onDelete],
   ])(
     'calls %s callback when its menu item is clicked',
@@ -133,6 +138,17 @@ describe('VacancyTableAction', () => {
       expect(callback).toHaveBeenCalledTimes(1);
     }
   );
+
+  it('navigates to edit page when edit menu item is clicked', async () => {
+    const user = userEvent.setup();
+    render(<VacancyTableAction {...defaultProps} />);
+    await user.click(screen.getByRole('button'));
+    await user.click(screen.getByText('vacancies.table.actions.edit'));
+
+    expect(mockNavigate).toHaveBeenCalledWith(
+      '/dashboard/ats/vacancies/test-vacancy-id/edit'
+    );
+  });
 
   it('calls onMatchCandidate callback when its menu item is clicked', async () => {
     const user = userEvent.setup();

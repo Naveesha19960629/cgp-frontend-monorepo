@@ -3,6 +3,7 @@ import { History, MoreVertical, UserSearch } from 'lucide-react';
 import { Edit2, Link21, Simcard2, Trash } from 'iconsax-reactjs';
 
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 
 import type { VacancyTableActionProps } from '@/views/vacancies/types';
 
@@ -20,10 +21,10 @@ export default function VacancyTableAction({
   onMatchCandidate,
   onCopyLink,
   onMakeACopy,
-  onEdit,
   onDelete,
 }: VacancyTableActionProps) {
   const { t } = useTranslation('ats');
+  const navigate = useNavigate();
 
   const { status, applicantCount } = vacancy;
   const hasApplicants = applicantCount > 0;
@@ -45,6 +46,10 @@ export default function VacancyTableAction({
     isUnpublished ||
     ((isLive || isExpired || isOnHold) && !hasApplicants);
 
+  const handleEdit = () => {
+    void navigate(`/dashboard/ats/vacancies/${vacancy.id}/edit`);
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -61,7 +66,7 @@ export default function VacancyTableAction({
       >
         <DropdownMenuItem
           className="gap-2 px-3 py-3 text-sm font-medium text-slate-500"
-          onClick={onEdit}
+          onSelect={handleEdit}
         >
           <Edit2 className="size-4 shrink-0" />
           {t('vacancies.table.actions.edit')}

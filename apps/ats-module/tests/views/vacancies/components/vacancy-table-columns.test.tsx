@@ -36,6 +36,7 @@ vi.mock('@/views/vacancies/components/vacancy-status-badge', () => ({
 
 const t = (key: string) => key;
 const onSort = vi.fn();
+const onEdit = vi.fn();
 
 const sampleRow: VacancyTableColumn = {
   vacancyId: 'f4e3d2c1-b0a9-8f7e-6d5c-4b3a2f1e0d9c',
@@ -69,7 +70,13 @@ function TableWrapper({
   sortBy?: string;
   sortOrder?: 'asc' | 'desc' | null;
 }) {
-  const columns = createVacancyColumns({ sortBy, sortOrder, onSort, t });
+  const columns = createVacancyColumns({
+    sortBy,
+    sortOrder,
+    onSort,
+    onEdit,
+    t,
+  });
   const table = useReactTable({
     data,
     columns,
@@ -117,6 +124,7 @@ describe('createVacancyColumns', () => {
       sortBy: '',
       sortOrder: null,
       onSort,
+      onEdit,
       t,
     });
     expect(cols).toHaveLength(17);
@@ -127,6 +135,7 @@ describe('createVacancyColumns', () => {
       sortBy: '',
       sortOrder: null,
       onSort,
+      onEdit,
       t,
     });
     const ids = cols.map(

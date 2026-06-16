@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import MessageBox from '@/components/message-box';
+import StepDisableDialog from '@/views/vacancies/components/step-disable-dialog';
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import {
   useCreateIndustryMutation,
@@ -472,6 +473,7 @@ export default function ProjectsRequirementsStep({
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [confirmDisableOpen, setConfirmDisableOpen] = useState(false);
+  const [emptyDisableOpen, setEmptyDisableOpen] = useState(false);
 
   const [projects, setProjects] = useState<ProjectEntry[]>(
     savedProjects?.projects && savedProjects.projects.length > 0
@@ -623,6 +625,23 @@ export default function ProjectsRequirementsStep({
   };
 
   const handleNext = async () => {
+    const isEmptyEnabledSection =
+      isEnabled &&
+      !dataTakenFromCandidate &&
+      !projects.some(
+        p =>
+          p.relatedIndustry.length > 0 ||
+          p.organizations.length > 0 ||
+          p.organizationLocations.length > 0 ||
+          p.startDate != null ||
+          p.endDate != null
+      );
+
+    if (isEmptyEnabledSection) {
+      setEmptyDisableOpen(true);
+      return;
+    }
+
     // Check if any industries in any project are user-created
     const allIndustries = projects.flatMap(p => p.relatedIndustry);
     const hasUserCreated = allIndustries.some(i => i.source === 'USER_CREATED');
@@ -806,6 +825,27 @@ export default function ProjectsRequirementsStep({
         disableLabel="Disable"
         onCancel={() => setConfirmDisableOpen(false)}
         onDisable={handleDisable}
+      />
+
+      <StepDisableDialog
+        open={emptyDisableOpen}
+        onOpenChange={setEmptyDisableOpen}
+        onConfirm={() => {
+          setIsEnabled(false);
+          setDataTakenFromCandidate(false);
+          setEmptyDisableOpen(false);
+          onNext({
+            projectsRequirements: {
+              isEnabled: false,
+              dataTakenFromCandidate: false,
+              projects: [],
+            },
+          });
+        }}
+        title="Are you sure?"
+        description="You've enabled this section but haven't filled any fields. This section will be disabled for this vacancy and no data will be collected from candidates"
+        cancelLabel="Cancel"
+        confirmLabel="Disable"
       />
     </>
   );

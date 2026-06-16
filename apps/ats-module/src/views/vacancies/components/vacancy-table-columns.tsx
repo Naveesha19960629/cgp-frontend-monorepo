@@ -49,6 +49,7 @@ const createVacancyColumns = ({
   sortBy,
   sortOrder,
   onSort,
+  onEdit,
   t,
 }: CreateColumnsOptions): ColumnDef<VacancyTableColumn>[] => [
   {
@@ -322,6 +323,7 @@ const createVacancyColumns = ({
           status: row.original.status,
           applicantCount: row.original.applicantCount,
         }}
+        onEdit={() => onEdit(row.original.vacancyId)}
       />
     ),
     size: 50,

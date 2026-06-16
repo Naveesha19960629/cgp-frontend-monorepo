@@ -17,8 +17,8 @@ interface VacancyDetailResponse {
   requestId: string;
   success: boolean;
   message: string;
-  data: {
-    vacancy: Record<string, unknown>;
+  data: Record<string, unknown> & {
+    vacancy?: Record<string, unknown>;
   };
 }
 
@@ -33,7 +33,7 @@ export const vacancyService = {
   },
   getVacancyById: async (id: string): Promise<VacancyDetailResponse> => {
     const response = await httpClient.get<VacancyDetailResponse>(
-      `/v1/vacancies/${id}`
+      `/vacancies/${id}`
     );
     return response.data;
   },

@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import MessageBox from '@/components/message-box';
+import StepDisableDialog from '@/views/vacancies/components/step-disable-dialog';
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import { useStepGuard } from '@/views/vacancies/hooks';
 import type { StepProps } from '@/views/vacancies/types';
@@ -298,6 +299,7 @@ export default function PreferredPublicationsStep({
     savedPublications?.dataTakenFromCandidate ?? false
   );
   const [confirmDisableOpen, setConfirmDisableOpen] = useState(false);
+  const [emptyDisableOpen, setEmptyDisableOpen] = useState(false);
 
   const [publications, setPublications] = useState<PublicationEntry[]>(
     savedPublications?.publications && savedPublications.publications.length > 0
@@ -350,6 +352,16 @@ export default function PreferredPublicationsStep({
   }, [setForm, stepDisableRef]);
 
   const handleNext = () => {
+    const isEmptyEnabledSection =
+      isEnabled &&
+      !dataTakenFromCandidate &&
+      !publications.some(p => p.acceptedPublisher.trim().length > 0);
+
+    if (isEmptyEnabledSection) {
+      setEmptyDisableOpen(true);
+      return;
+    }
+
     onNext({
       preferredPublications: {
         isEnabled,
@@ -538,6 +550,27 @@ export default function PreferredPublicationsStep({
         disableLabel="Disable"
         onCancel={() => setConfirmDisableOpen(false)}
         onDisable={handleDisable}
+      />
+
+      <StepDisableDialog
+        open={emptyDisableOpen}
+        onOpenChange={setEmptyDisableOpen}
+        onConfirm={() => {
+          setIsEnabled(false);
+          setDataTakenFromCandidate(false);
+          setEmptyDisableOpen(false);
+          onNext({
+            preferredPublications: {
+              isEnabled: false,
+              dataTakenFromCandidate: false,
+              publications: [],
+            },
+          });
+        }}
+        title="Are you sure?"
+        description="You've enabled this section but haven't filled any fields. This section will be disabled for this vacancy and no data will be collected from candidates"
+        cancelLabel="Cancel"
+        confirmLabel="Disable"
       />
     </>
   );

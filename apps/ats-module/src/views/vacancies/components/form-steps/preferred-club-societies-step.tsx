@@ -8,6 +8,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import MessageBox from '@/components/message-box';
+import StepDisableDialog from '@/views/vacancies/components/step-disable-dialog';
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import {
   useLocationsQuery,
@@ -46,6 +47,7 @@ const MAX_SELECTIONS = 10;
 interface ClubSocietyEntry {
   id: string;
   isOpen: boolean;
+
   clubSociety: Array<{ value: string; label: string; source: string }>;
   startDate?: string;
   endDate?: string;
@@ -398,6 +400,7 @@ export default function PreferredClubSocietiesStep({
     savedClubSocieties?.dataTakenFromCandidate ?? false
   );
   const [confirmDisableOpen, setConfirmDisableOpen] = useState(false);
+  const [emptyDisableOpen, setEmptyDisableOpen] = useState(false);
 
   const [entries, setEntries] = useState<ClubSocietyEntry[]>(
     savedClubSocieties?.clubSocieties &&
@@ -454,6 +457,16 @@ export default function PreferredClubSocietiesStep({
   }, [setForm, stepDisableRef]);
 
   const handleNext = () => {
+    const isEmptyEnabledSection =
+      isEnabled &&
+      !dataTakenFromCandidate &&
+      !entries.some(e => e.clubSociety.length > 0);
+
+    if (isEmptyEnabledSection) {
+      setEmptyDisableOpen(true);
+      return;
+    }
+
     onNext({
       preferredClubSocieties: {
         isEnabled,
@@ -681,6 +694,27 @@ export default function PreferredClubSocietiesStep({
         disableLabel="Disable"
         onCancel={() => setConfirmDisableOpen(false)}
         onDisable={handleDisable}
+      />
+
+      <StepDisableDialog
+        open={emptyDisableOpen}
+        onOpenChange={setEmptyDisableOpen}
+        onConfirm={() => {
+          setIsEnabled(false);
+          setDataTakenFromCandidate(false);
+          setEmptyDisableOpen(false);
+          onNext({
+            preferredClubSocieties: {
+              isEnabled: false,
+              dataTakenFromCandidate: false,
+              clubSocieties: [],
+            },
+          });
+        }}
+        title="Are you sure?"
+        description="You've enabled this section but haven't filled any fields. This section will be disabled for this vacancy and no data will be collected from candidates"
+        cancelLabel="Cancel"
+        confirmLabel="Disable"
       />
     </>
   );

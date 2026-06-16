@@ -975,6 +975,7 @@ interface CreateColumnsOptions {
   sortBy: string;
   sortOrder: 'asc' | 'desc' | null;
   onSort: (columnKey: string) => void;
+  onEdit: (vacancyId: string) => void;
   t: (key: string) => string;
 }
 
