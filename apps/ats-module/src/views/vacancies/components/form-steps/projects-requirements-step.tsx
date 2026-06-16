@@ -2,8 +2,6 @@ import { ChevronUpIcon, Loader2, PlusIcon } from 'lucide-react';
 
 import { ArrowLeft2, Calendar as CalendarIcon } from 'iconsax-reactjs';
 
-import * as SwitchPrimitive from '@radix-ui/react-switch';
-
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -36,6 +34,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@cgp/ui-kit/components/ui/popover';
+import { Switch } from '@cgp/ui-kit/components/ui/switch';
 import { applyTypography } from '@cgp/ui-kit/lib/typography';
 import { cn } from '@cgp/ui-kit/lib/utils';
 
@@ -715,21 +714,11 @@ export default function ProjectsRequirementsStep({
             </h2>
           </div>
 
-          <SwitchPrimitive.Root
+          <Switch
             checked={isEnabled}
             onCheckedChange={handleToggle}
-            className={cn(
-              'focus-visible:ring-ring/50 inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent shadow-xs transition-colors outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50',
-              isEnabled ? 'bg-brand-primary-500' : 'bg-slate-300'
-            )}
-          >
-            <SwitchPrimitive.Thumb
-              className={cn(
-                'pointer-events-none block h-5 w-5 rounded-full bg-white shadow-lg ring-0 transition-transform',
-                isEnabled ? 'translate-x-5' : 'translate-x-0'
-              )}
-            />
-          </SwitchPrimitive.Root>
+            size="lg"
+          />
         </div>
 
         {/* ── Checkbox: data from candidate profile ─────────────────────── */}

@@ -56,6 +56,11 @@ const MAX_SELECTIONS = 10;
 const dependencyTooltipClassName =
   'relative rounded-lg bg-slate-700 px-4 py-3 text-sm font-semibold text-white shadow-md [&>span:has([data-slot=tooltip-arrow])]:hidden after:absolute after:-bottom-1.5 after:left-8 after:size-3 after:rotate-45 after:bg-slate-700';
 
+const multiSelectInfoAvatar = new URL(
+  '../../../../assets/images/multi-select-info-avatar.svg',
+  import.meta.url
+).href;
+
 export default function JobRequirementsStep({
   onNext,
   onBack,
@@ -284,6 +289,12 @@ export default function JobRequirementsStep({
 
   return (
     <>
+      <style>{`
+        div[data-radix-popper-content-wrapper] img[alt="common.noData"],
+        div[data-radix-popper-content-wrapper] img[alt="No results found"] {
+          content: url("${multiSelectInfoAvatar}") !important;
+        }
+      `}</style>
       <Form {...form}>
         <form
           onSubmit={e => {
@@ -696,9 +707,26 @@ export default function JobRequirementsStep({
                                   </p>
                                 }
                                 emptyIndicator={
-                                  <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                                    {t('jobRequirements.noData')}
-                                  </p>
+                                  <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
+                                    <div className="flex flex-col items-start">
+                                      <img
+                                        src={multiSelectInfoAvatar}
+                                        alt={t('common.noData')}
+                                      />
+                                      <div className="mt-3 w-61 text-left">
+                                        <p className="font-bold text-slate-900">
+                                          {t('common.noDataTitle')}
+                                        </p>
+                                        <p className="text-sm font-semibold text-slate-700">
+                                          {roles.length === 0
+                                            ? t(
+                                                'jobRequirements.noAssociatedRoles'
+                                              )
+                                            : t('common.noDataDescription')}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  </div>
                                 }
                               />
                             </FormControl>
@@ -755,11 +783,24 @@ export default function JobRequirementsStep({
                               </p>
                             }
                             emptyIndicator={
-                              <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                                {roles.length === 0
-                                  ? t('jobRequirements.noAssociatedRoles')
-                                  : t('jobRequirements.noData')}
-                              </p>
+                              <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
+                                <div className="flex flex-col items-start">
+                                  <img
+                                    src={multiSelectInfoAvatar}
+                                    alt={t('common.noData')}
+                                  />
+                                  <div className="mt-3 w-61 text-left">
+                                    <p className="font-bold text-slate-900">
+                                      {t('common.noDataTitle')}
+                                    </p>
+                                    <p className="text-sm font-semibold text-slate-700">
+                                      {roles.length === 0
+                                        ? t('jobRequirements.noAssociatedRoles')
+                                        : t('common.noDataDescription')}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
                             }
                           />
                         </FormControl>
@@ -815,9 +856,22 @@ export default function JobRequirementsStep({
                           </p>
                         }
                         emptyIndicator={
-                          <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                            {t('jobRequirements.noData')}
-                          </p>
+                          <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
+                            <div className="flex flex-col items-start">
+                              <img
+                                src={multiSelectInfoAvatar}
+                                alt={t('common.noData')}
+                              />
+                              <div className="mt-3 w-61 text-left">
+                                <p className="font-bold text-slate-900">
+                                  {t('common.noDataTitle')}
+                                </p>
+                                <p className="text-sm font-semibold text-slate-700">
+                                  {t('common.noDataDescription')}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
                         }
                       />
                     </FormControl>
@@ -866,9 +920,22 @@ export default function JobRequirementsStep({
                           </p>
                         }
                         emptyIndicator={
-                          <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                            {t('jobRequirements.noData')}
-                          </p>
+                          <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
+                            <div className="flex flex-col items-start">
+                              <img
+                                src={multiSelectInfoAvatar}
+                                alt={t('common.noData')}
+                              />
+                              <div className="mt-3 w-61 text-left">
+                                <p className="font-bold text-slate-900">
+                                  {t('common.noDataTitle')}
+                                </p>
+                                <p className="text-sm font-semibold text-slate-700">
+                                  {t('common.noDataDescription')}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
                         }
                       />
                     </FormControl>
@@ -915,9 +982,22 @@ export default function JobRequirementsStep({
                           </p>
                         }
                         emptyIndicator={
-                          <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                            {t('jobRequirements.noData')}
-                          </p>
+                          <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
+                            <div className="flex flex-col items-start">
+                              <img
+                                src={multiSelectInfoAvatar}
+                                alt={t('common.noData')}
+                              />
+                              <div className="mt-3 w-61 text-left">
+                                <p className="font-bold text-slate-900">
+                                  {t('common.noDataTitle')}
+                                </p>
+                                <p className="text-sm font-semibold text-slate-700">
+                                  {t('common.noDataDescription')}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
                         }
                       />
                     </FormControl>
@@ -966,9 +1046,22 @@ export default function JobRequirementsStep({
                           </p>
                         }
                         emptyIndicator={
-                          <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                            {t('jobRequirements.noData')}
-                          </p>
+                          <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
+                            <div className="flex flex-col items-start">
+                              <img
+                                src={multiSelectInfoAvatar}
+                                alt={t('common.noData')}
+                              />
+                              <div className="mt-3 w-61 text-left">
+                                <p className="font-bold text-slate-900">
+                                  {t('common.noDataTitle')}
+                                </p>
+                                <p className="text-sm font-semibold text-slate-700">
+                                  {t('common.noDataDescription')}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
                         }
                       />
                     </FormControl>

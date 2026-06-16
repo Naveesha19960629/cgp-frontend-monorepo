@@ -49,6 +49,11 @@ import { cn } from '@cgp/ui-kit/lib/utils';
 
 const MAX_ADDRESS_ENTRIES = 5;
 
+const multiSelectInfoAvatar = new URL(
+  '../../../../assets/images/multi-select-info-avatar.svg',
+  import.meta.url
+).href;
+
 function isDuplicateAddress(
   addresses: ProfileRequirementsFormValues['addresses'],
   newIndex: number
@@ -538,6 +543,12 @@ export default function ProfileRequirementsStep({ onNext, onBack }: StepProps) {
 
   return (
     <>
+      <style>{`
+        div[data-radix-popper-content-wrapper] img[alt="common.noData"],
+        div[data-radix-popper-content-wrapper] img[alt="No results found"] {
+          content: url("${multiSelectInfoAvatar}") !important;
+        }
+      `}</style>
       <Form {...form}>
         <form
           onSubmit={e => {

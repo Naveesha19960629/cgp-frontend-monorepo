@@ -1,7 +1,5 @@
 import { ArrowLeft2 } from 'iconsax-reactjs';
 
-import * as SwitchPrimitive from '@radix-ui/react-switch';
-
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -21,6 +19,7 @@ import { CharacterCount } from '@cgp/ui-kit/components/character-count';
 import MultipleSelector from '@cgp/ui-kit/components/multi-select';
 import { Button } from '@cgp/ui-kit/components/ui/button';
 import { Checkbox } from '@cgp/ui-kit/components/ui/checkbox';
+import { Switch } from '@cgp/ui-kit/components/ui/switch';
 import { cn } from '@cgp/ui-kit/lib/utils';
 
 const MAX_HOBBIES = 10;
@@ -150,7 +149,7 @@ export default function PreferredHobbiesStep({
             {t('preferredHobbies.title')}
           </h2>
         </div>
-        <SwitchPrimitive.Root
+        <Switch
           checked={isEnabled}
           onCheckedChange={newValue => {
             if (!newValue) {
@@ -163,18 +162,8 @@ export default function PreferredHobbiesStep({
               setIsEnabled(true);
             }
           }}
-          className={cn(
-            'focus-visible:ring-ring/50 inline-flex h-6 w-12 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent shadow-xs transition-colors outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50',
-            isEnabled ? 'bg-brand-primary-500' : 'bg-slate-300'
-          )}
-        >
-          <SwitchPrimitive.Thumb
-            className={cn(
-              'pointer-events-none block h-5 w-5 rounded-full bg-white shadow-lg ring-0 transition-transform',
-              isEnabled ? 'translate-x-6' : 'translate-x-0'
-            )}
-          />
-        </SwitchPrimitive.Root>
+          size="lg"
+        />
       </div>
 
       {/* Body */}

@@ -37,6 +37,9 @@ function addAtsTranslations(): void {
   if (!i18n.hasResourceBundle('en', ATS_NAMESPACE)) {
     i18n.addResourceBundle('en', ATS_NAMESPACE, atsEn);
   }
+
+  // Also merge atsEn into 'translation' bundle so shared ui-kit components can resolve keys.
+  i18n.addResourceBundle('en', 'translation', atsEn, true, true);
 }
 
 /**
@@ -53,9 +56,12 @@ async function initAtsI18n(): Promise<void> {
   try {
     await i18n.use(initReactI18next).init({
       resources: {
-        en: { [ATS_NAMESPACE]: atsEn },
+        en: {
+          [ATS_NAMESPACE]: atsEn,
+          translation: atsEn,
+        },
       },
-      ns: [ATS_NAMESPACE],
+      ns: [ATS_NAMESPACE, 'translation'],
       defaultNS: ATS_NAMESPACE,
       lng: (import.meta.env.VITE_LANG as string) || 'en',
       fallbackLng: (import.meta.env.VITE_FALLBACK_LANG as string) || 'en',
