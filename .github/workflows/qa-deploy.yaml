@@ -177,7 +177,7 @@ jobs:
             --port=80 \
             --set-env-vars="NODE_ENV=production" \
             --revision-suffix=${{ github.sha }} \
-            --labels="commit=${{ github.sha }},branch=qa,app=cgp-frontend-monorepo" \
+            --labels="commit=${{ github.sha }},branch=qa,app=qa-cgp-frontend-monorepo" \
             --quiet
 
           # Get service URL
