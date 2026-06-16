@@ -142,8 +142,7 @@ jobs:
             --build-arg VITE_OXO_LOGO_WHITE_URL=${{ secrets.QA_VITE_OXO_LOGO_WHITE_URL }}
             --build-arg VITE_KEYCLOAK_URL=${{ secrets.QA_VITE_KEYCLOAK_URL }}
             --build-arg VITE_KEYCLOAK_REALM=${{ secrets.QA_VITE_KEYCLOAK_REALM }}
-            --build-arg VITE_KEYCLOAK_CLIENT_ID=${{ secrets.QA_VITE_KEYCLOAK_CLIENT_ID }}
-            --build-arg VITE_BACKEND_API_URL=${{ secrets.QA_VITE_BACKEND_API_URL }}
+            --build-arg VITE_KEYCLOAK_CLIENT_ID=${{ secrets.QA_VITE_KEYCLOAK_CLIENT_ID }} --build-arg VITE_BACKEND_API_URL=${{ secrets.QA_VITE_BACKEND_API_URL }}
             --build-arg VITE_BACKEND_API_VERSION=${{ secrets.QA_VITE_BACKEND_API_VERSION }}
             --build-arg VITE_WS_URL=${{ secrets.QA_VITE_WS_URL }}
             -t $AR_HOSTNAME/$PROJECT_ID/$REPOSITORY/$ATS_SERVICE:${{ steps.version.outputs.version }}
