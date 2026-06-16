@@ -58,7 +58,7 @@ export function AppBreadcrumb() {
           const isLast = index === items.length - 1;
 
           return (
-            <React.Fragment key={item.labelKey as string}>
+            <React.Fragment key={item.labelKey}>
               {index > 0 && <BreadcrumbSeparator className="hidden md:block" />}
               <BreadcrumbItem
                 className={clsx(
@@ -68,11 +68,11 @@ export function AppBreadcrumb() {
               >
                 {isLast || !item.link ? (
                   <BreadcrumbPage className="font-bold! text-slate-900">
-                    {t(item.labelKey as string)}
+                    {t(item.labelKey)}
                   </BreadcrumbPage>
                 ) : (
                   <BreadcrumbLink asChild className="font-bold!">
-                    <Link to={item.link}>{t(item.labelKey as string)}</Link>
+                    <Link to={item.link}>{t(item.labelKey)}</Link>
                   </BreadcrumbLink>
                 )}
               </BreadcrumbItem>
