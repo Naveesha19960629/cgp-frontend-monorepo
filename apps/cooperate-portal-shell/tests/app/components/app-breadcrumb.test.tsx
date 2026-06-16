@@ -3,6 +3,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { render, screen } from '@testing-library/react';
 
 import { AppBreadcrumb } from '@/app/components/app-breadcrumb';
+import { initI18n } from '@/app/utils/i18n';
 
 function renderWithRouter(pathname: string) {
   return render(
@@ -13,6 +14,10 @@ function renderWithRouter(pathname: string) {
 }
 
 describe('AppBreadcrumb', () => {
+  beforeAll(async () => {
+    await initI18n();
+  });
+
   it('renders no items for a route with empty breadcrumb config', () => {
     renderWithRouter('/dashboard/ats/vacancies');
 
