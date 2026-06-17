@@ -136,11 +136,16 @@ export default function ScheduleVacancyStep({
 
     try {
       const schedule = toScheduleVacancyPayload(values);
+      const payloadForm = { ...form, schedule };
 
       if (id) {
-        await updateVacancy({ id, schedule });
+        await updateVacancy({
+          id,
+          form: payloadForm,
+          existingStatus: form.status,
+        });
       } else {
-        await createVacancy({ ...form, schedule });
+        await createVacancy(payloadForm);
       }
       SuccessToast({
         title: t('scheduleVacancy.notifications.successTitle'),

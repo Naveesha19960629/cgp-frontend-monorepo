@@ -9,7 +9,7 @@ import {
   useVacancyForm,
 } from '@/views/vacancies/context/vacancy-form-context';
 import { useVacancyByIdQuery } from '@/views/vacancies/hooks';
-import type { VacancyForm } from '@/views/vacancies/types';
+import { toVacancyFormFromResponse } from '@/views/vacancies/utils';
 
 import { CharacterCount } from '@cgp/ui-kit/components/character-count';
 import { Button } from '@cgp/ui-kit/components/ui/button';
@@ -112,30 +112,12 @@ function EditVacancyContent() {
     }
 
     const vacancyRecord = vacancyCandidate;
-    const normalizedTitle = [
-      vacancyRecord.title,
-      vacancyRecord.vacancyTitle,
-      vacancyRecord.vacancy_name,
-      vacancyRecord.name,
-    ].find(
-      (value): value is string =>
-        typeof value === 'string' && value.trim().length > 0
-    );
 
-    const incomingForm = vacancyRecord as Partial<VacancyForm>;
-    setForm(prev => ({
-      ...prev,
-      ...incomingForm,
-      title:
-        (typeof incomingForm.title === 'string' && incomingForm.title.trim()) ||
-        !normalizedTitle
-          ? (incomingForm.title ?? prev.title)
-          : normalizedTitle,
-    }));
+    setForm(prev => toVacancyFormFromResponse(vacancyRecord, prev));
 
-    if (typeof incomingForm.lastActiveStep === 'string') {
+    if (typeof vacancyRecord.lastActiveStep === 'string') {
       const stepIndex = VACANCY_STEPS.findIndex(
-        step => step.key === incomingForm.lastActiveStep
+        step => step.key === vacancyRecord.lastActiveStep
       );
       if (stepIndex >= 0) {
         setCurrentStepIndex(stepIndex);

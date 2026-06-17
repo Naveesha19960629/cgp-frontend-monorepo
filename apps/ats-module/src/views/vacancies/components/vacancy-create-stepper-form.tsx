@@ -193,6 +193,7 @@ export default function VacancyCreateStepperForm({
                       onNext={onNext}
                       onBack={onBack}
                       onSubmit={onSubmit}
+                      mode={mode}
                     />
                   </TabsContent>
                 );

@@ -575,10 +575,13 @@ function mapTertiaryEducation(form: VacancyForm): TertiaryEducation[] {
   });
 }
 
-function toCreateVacancyPayload(form: VacancyForm): CreateVacancyPayload {
+function toVacancyPayload(
+  form: VacancyForm,
+  status: string
+): CreateVacancyPayload {
   return {
     title: form.title,
-    status: 'UNPUBLISHED',
+    status,
     lastActiveStep: form.lastActiveStep,
     data: {
       jobRequirement: mapJobRequirement(form),
@@ -604,4 +607,15 @@ function toCreateVacancyPayload(form: VacancyForm): CreateVacancyPayload {
   };
 }
 
-export { toCreateVacancyPayload };
+function toCreateVacancyPayload(form: VacancyForm): CreateVacancyPayload {
+  return toVacancyPayload(form, 'UNPUBLISHED');
+}
+
+function toUpdateVacancyPayload(
+  form: VacancyForm,
+  existingStatus: string
+): CreateVacancyPayload {
+  return toVacancyPayload(form, existingStatus);
+}
+
+export { toCreateVacancyPayload, toUpdateVacancyPayload };

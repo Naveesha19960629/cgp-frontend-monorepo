@@ -1,17 +1,30 @@
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { vacancyService } from '@/views/vacancies/services';
-import type { ScheduleVacancyPayload } from '@/views/vacancies/types';
+import type { VacancyForm } from '@/views/vacancies/types';
+import { toUpdateVacancyPayload } from '@/views/vacancies/utils';
 
-const useUpdateVacancyMutation = () =>
-  useMutation({
+const useUpdateVacancyMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
     mutationFn: ({
       id,
-      schedule,
+      form,
+      existingStatus,
     }: {
       id: string;
-      schedule: ScheduleVacancyPayload;
-    }) => vacancyService.updateVacancy(id, { schedule }),
+      form: VacancyForm;
+      existingStatus: string;
+    }) =>
+      vacancyService.updateVacancy(
+        id,
+        toUpdateVacancyPayload(form, existingStatus)
+      ),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['vacancies'] });
+    },
   });
+};
 
 export { useUpdateVacancyMutation };
