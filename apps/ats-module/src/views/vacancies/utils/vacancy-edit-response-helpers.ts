@@ -204,6 +204,16 @@ function normalizeTertiaryEducationSection(
   }));
 }
 
+// Explicit map from API enum values → form state values.
+// ONHOLD (no underscore) is the API enum; on_hold is the form/UI key.
+const API_STATUS_TO_FORM: Record<string, string> = {
+  DRAFT: 'draft',
+  UNPUBLISHED: 'unpublished',
+  LIVE: 'live',
+  EXPIRED: 'expired',
+  ONHOLD: 'on_hold',
+};
+
 function normalizeVacancyStatus(
   status: unknown,
   fallback: VacancyForm['status']
@@ -212,17 +222,12 @@ function normalizeVacancyStatus(
     return fallback;
   }
 
-  const normalized = status
-    .trim()
-    .toLowerCase()
-    .replace(/[\s-]+/g, '_');
-
-  const allowed = ['draft', 'unpublished', 'live', 'expired', 'on_hold'];
-  if (!allowed.includes(normalized)) {
+  const mapped = API_STATUS_TO_FORM[status.trim().toUpperCase()];
+  if (!mapped) {
     return fallback;
   }
 
-  return normalized;
+  return mapped;
 }
 
 function toVacancyFormFromResponse(

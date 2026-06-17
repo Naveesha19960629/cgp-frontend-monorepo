@@ -889,6 +889,8 @@
     "notifications": {
       "successTitle": "Successfully Created",
       "successMessage": "Vacancy has been successfully created.",
+      "updateSuccessTitle": "Successfully Updated",
+      "updateSuccessMessage": "Vacancy has been successfully updated.",
       "validationErrorTitle": "Error",
       "expirationLessOrEqualMessage": "Expiration Date & Time cannot be less than or equal to the Scheduled Publish Date & Time",
       "pastDateTimeMessage": "Scheduled Publish Date & Time and Expiration Date & Time cannot be in the past.",

@@ -148,8 +148,16 @@ export default function ScheduleVacancyStep({
         await createVacancy(payloadForm);
       }
       SuccessToast({
-        title: t('scheduleVacancy.notifications.successTitle'),
-        description: t('scheduleVacancy.notifications.successMessage'),
+        title: t(
+          id
+            ? 'scheduleVacancy.notifications.updateSuccessTitle'
+            : 'scheduleVacancy.notifications.successTitle'
+        ),
+        description: t(
+          id
+            ? 'scheduleVacancy.notifications.updateSuccessMessage'
+            : 'scheduleVacancy.notifications.successMessage'
+        ),
       });
       onSubmit();
       navigate('/dashboard/ats/vacancies');
