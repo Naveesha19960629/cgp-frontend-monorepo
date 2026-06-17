@@ -74,6 +74,8 @@ export default function SecondaryEducationStep({
     setForm,
     stepPersistRef,
     stepDisableRef,
+    currentStepIndex,
+    removeCompletedStep,
   } = useVacancyForm();
 
   const form = useSecondaryEducationForm(vacancyForm.secondaryEducation);
@@ -1049,6 +1051,7 @@ export default function SecondaryEducationStep({
             clearEntryData();
             setValue('dataTakenFromCandidate', false);
             setValue('isEnabled', false);
+            removeCompletedStep(currentStepIndex);
             setConfirmDisableOpen(false);
           }}
         />

@@ -36,7 +36,14 @@ export default function PreferredHobbiesStep({
 }: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
   const showDisableToast = useDisableSuccessToast();
-  const { form, setForm, stepPersistRef, stepDisableRef } = useVacancyForm();
+  const {
+    form,
+    setForm,
+    stepPersistRef,
+    stepDisableRef,
+    currentStepIndex,
+    removeCompletedStep,
+  } = useVacancyForm();
 
   const [isEnabled, setIsEnabled] = useState(
     form.preferredHobbies?.isEnabled ?? false
@@ -279,6 +286,7 @@ export default function PreferredHobbiesStep({
           setSelectedHobbies([]);
           setDataTakenFromCandidate(false);
           setIsEnabled(false);
+          removeCompletedStep(currentStepIndex);
           setConfirmDisableOpen(false);
           showDisableToast(t('preferredHobbies.title'));
         }}

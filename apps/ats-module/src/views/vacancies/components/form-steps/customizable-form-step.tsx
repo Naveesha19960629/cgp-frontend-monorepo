@@ -571,7 +571,13 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
     null
   );
 
-  const { setForm, stepPersistRef, stepDisableRef } = useVacancyForm();
+  const {
+    setForm,
+    stepPersistRef,
+    stepDisableRef,
+    currentStepIndex,
+    removeCompletedStep,
+  } = useVacancyForm();
   const _customizableRef = useRef<() => void>(() => {});
   useEffect(() => {
     _customizableRef.current = () => {
@@ -1145,8 +1151,9 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
           setSectionTitle('');
           setForms([createForm(1)]);
           setNextFormId(2);
-          setShowDisableConfirm(false);
           setIsEnabled(false);
+          removeCompletedStep(currentStepIndex);
+          setShowDisableConfirm(false);
           showDisableToast(t('customizableForm.title'));
         }}
         title={t('customizableForm.confirmDisableDialog.title')}

@@ -64,6 +64,8 @@ export default function TertiaryEducationStep({
     setForm,
     stepPersistRef,
     stepDisableRef,
+    currentStepIndex,
+    removeCompletedStep,
   } = useVacancyForm();
 
   const { control, watch, handleSubmit, setValue, getValues } =
@@ -1213,6 +1215,7 @@ export default function TertiaryEducationStep({
           clearEntryData();
           setValue('dataTakenFromCandidate', false);
           setValue('isEnabled', false);
+          removeCompletedStep(currentStepIndex);
           setConfirmDisableOpen(false);
         }}
       />

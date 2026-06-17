@@ -420,7 +420,13 @@ export default function PreferredClubSocietiesStep({
         ]
   );
 
-  const { setForm, stepPersistRef, stepDisableRef } = useVacancyForm();
+  const {
+    setForm,
+    stepPersistRef,
+    stepDisableRef,
+    currentStepIndex,
+    removeCompletedStep,
+  } = useVacancyForm();
   const _clubRef = useRef<() => void>(() => {});
   useEffect(() => {
     _clubRef.current = () => {
@@ -558,6 +564,7 @@ export default function PreferredClubSocietiesStep({
     ]);
     setDataTakenFromCandidate(false);
     setIsEnabled(false);
+    removeCompletedStep(currentStepIndex);
     setConfirmDisableOpen(false);
     SuccessToast({
       title: 'Section Disabled',

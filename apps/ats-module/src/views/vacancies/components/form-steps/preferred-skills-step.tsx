@@ -50,7 +50,14 @@ export default function PreferredSkillsStep({
 }: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
   const showDisableToast = useDisableSuccessToast();
-  const { form, setForm, stepPersistRef, stepDisableRef } = useVacancyForm();
+  const {
+    form,
+    setForm,
+    stepPersistRef,
+    stepDisableRef,
+    currentStepIndex,
+    removeCompletedStep,
+  } = useVacancyForm();
 
   const [isEnabled, setIsEnabled] = useState(
     form.preferredSkills?.isEnabled ?? false
@@ -623,6 +630,7 @@ export default function PreferredSkillsStep({
           setSelectedSkills([]);
           setDataTakenFromCandidate(false);
           setIsEnabled(false);
+          removeCompletedStep(currentStepIndex);
           setConfirmDisableOpen(false);
           showDisableToast(t('preferredSkills.title'));
         }}
