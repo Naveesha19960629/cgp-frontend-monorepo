@@ -54,6 +54,7 @@ jobs:
           VITE_KEYCLOAK_CLIENT_ID: ${{ secrets.VITE_KEYCLOAK_CLIENT_ID }}
           VITE_BACKEND_API_URL: ${{ secrets.VITE_BACKEND_API_URL }}
           VITE_BACKEND_API_VERSION: ${{ secrets.VITE_BACKEND_API_VERSION }}
+          VITE_FRONTEND_BASE_URL: ${{ secrets.VITE_FRONTEND_BASE_URL }}
         run: pnpm nx run-many -t build
 
   build-and-deploy:
@@ -110,6 +111,7 @@ jobs:
             --build-arg VITE_BACKEND_API_URL=${{ secrets.VITE_BACKEND_API_URL }} \
             --build-arg VITE_BACKEND_API_VERSION=${{ secrets.VITE_BACKEND_API_VERSION }} \
             --build-arg VITE_WS_URL=${{ secrets.VITE_WS_URL }} \
+            --build-arg VITE_FRONTEND_BASE_URL=${{ secrets.VITE_FRONTEND_BASE_URL }} \
             -t $AR_HOSTNAME/$PROJECT_ID/$REPOSITORY/$ATS_SERVICE:${{ steps.version.outputs.version }} \
             -t $AR_HOSTNAME/$PROJECT_ID/$REPOSITORY/$ATS_SERVICE:latest \
             .
@@ -165,6 +167,7 @@ jobs:
             --build-arg VITE_BACKEND_API_URL=${{ secrets.VITE_BACKEND_API_URL }} \
             --build-arg VITE_BACKEND_API_VERSION=${{ secrets.VITE_BACKEND_API_VERSION }} \
             --build-arg VITE_WS_URL=${{ secrets.VITE_WS_URL }} \
+            --build-arg VITE_FRONTEND_BASE_URL=${{ secrets.VITE_FRONTEND_BASE_URL }} \
             -t $AR_HOSTNAME/$PROJECT_ID/$REPOSITORY/$SHELL_SERVICE:${{ steps.version.outputs.version }} \
             -t $AR_HOSTNAME/$PROJECT_ID/$REPOSITORY/$SHELL_SERVICE:latest \
             .
