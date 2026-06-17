@@ -34,6 +34,11 @@ import {
   formatDate,
   toSecondaryEducationPayload,
 } from '@/views/vacancies/utils';
+import {
+  compareDates,
+  formatLocalDate,
+  parseLocalDate,
+} from '@/views/vacancies/utils/date-timezone-safe';
 
 import { CharacterCount } from '@cgp/ui-kit/components/character-count';
 import { ErrorToast } from '@cgp/ui-kit/components/custom-toast';
@@ -94,7 +99,8 @@ export default function SecondaryEducationStep({
 
   // -- Form field helpers ---------------------------------------
   const fieldsDisabled = !isEnabled || dataTakenFromCandidate;
-  const endDateDefaultMonth = new Date(endDateValue ?? startDateValue ?? 0);
+  const endDateDefaultMonth =
+    parseLocalDate(endDateValue ?? startDateValue) ?? new Date();
 
   const clearEntryData = () => {
     setValue('entries.0.schools', []);
@@ -788,15 +794,21 @@ export default function SecondaryEducationStep({
                               field.value ? new Date(field.value) : undefined
                             }
                             defaultMonth={
-                              field.value ? new Date(field.value) : new Date()
+                              field.value
+                                ? (parseLocalDate(field.value) ?? new Date())
+                                : new Date()
                             }
                             onSelect={date => {
                               field.onChange(
-                                date ? date.toISOString() : undefined
+                                date ? formatLocalDate(date) : undefined
                               );
                               setOpenDatePopover(null);
                               const endDate = getValues('entries.0.endDate');
-                              if (endDate && date && new Date(endDate) < date) {
+                              if (
+                                endDate &&
+                                date &&
+                                compareDates(endDate, date) < 0
+                              ) {
                                 resetField('entries.0.endDate', {
                                   defaultValue: undefined,
                                 });
@@ -874,14 +886,17 @@ export default function SecondaryEducationStep({
                             defaultMonth={endDateDefaultMonth}
                             onSelect={date => {
                               field.onChange(
-                                date ? date.toISOString() : undefined
+                                date ? formatLocalDate(date) : undefined
                               );
                               setOpenDatePopover(null);
                             }}
                             disabled={date =>
                               date < HUNDRED_YEARS_AGO ||
                               (startDateValue
-                                ? date < new Date(startDateValue)
+                                ? compareDates(
+                                    date,
+                                    parseLocalDate(startDateValue) ?? new Date()
+                                  ) < 0
                                 : false)
                             }
                             captionLayout="dropdown"

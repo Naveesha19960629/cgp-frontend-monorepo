@@ -117,7 +117,14 @@ describe('toSecondaryEducationPayload', () => {
     const result = toSecondaryEducationPayload({
       isEnabled: true,
       dataTakenFromCandidate: false,
-      entries: [{ ...EMPTY_ENTRY, startDate: undefined, endDate: undefined }],
+      entries: [
+        {
+          ...EMPTY_ENTRY,
+          grade: 'A',
+          startDate: undefined,
+          endDate: undefined,
+        },
+      ],
     });
 
     expect(result[0].content[0].startDate).toBe('');
@@ -137,8 +144,8 @@ describe('toSecondaryEducationPayload', () => {
       ],
     });
 
-    expect(result[0].content[0].startDate).toBe('2020-01-01T00:00:00.000Z');
-    expect(result[0].content[0].endDate).toBe('2022-06-30T00:00:00.000Z');
+    expect(result[0].content[0].startDate).toBe('2020-01-01');
+    expect(result[0].content[0].endDate).toBe('2022-06-30');
   });
 
   it('preserves acceptsHomeSchooling flag', () => {

@@ -75,8 +75,8 @@ const toSecondaryEducationPayload = (
       secondaryAwardingBody: toRefs(entry.awardingBodies),
       fieldsOfStudy: toRefs(entry.fieldsOfStudy),
       grade: entry.grade,
-      startDate: entry.startDate ?? '',
-      endDate: entry.endDate ?? '',
+      startDate: entry.startDate ? entry.startDate.split('T')[0] : '',
+      endDate: entry.endDate ? entry.endDate.split('T')[0] : '',
       result: entry.result,
     }));
 

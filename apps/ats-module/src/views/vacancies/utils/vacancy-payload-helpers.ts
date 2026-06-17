@@ -14,6 +14,7 @@ import type {
   PatentGroupApiPayload,
   ProjectGroupApiPayload,
   PublicationGroupApiPayload,
+  SecondaryEducation,
   SkillsApiPayload,
   SportsGroupApiPayload,
   VacancyForm,
@@ -46,6 +47,25 @@ function formatOptionalDate(
   if (!date) return undefined;
   if (date instanceof Date) return format(date, 'yyyy-MM-dd');
   return date;
+}
+
+function normalizeToDateOnly(value: string): string {
+  if (!value) return '';
+  const [datePart] = value.split('T');
+  return datePart || '';
+}
+
+function mapSecondaryEducation(
+  secondaryEducation: VacancyForm['secondaryEducation']
+): SecondaryEducation[] {
+  return secondaryEducation.map(group => ({
+    ...group,
+    content: group.content.map(entry => ({
+      ...entry,
+      startDate: normalizeToDateOnly(entry.startDate),
+      endDate: normalizeToDateOnly(entry.endDate),
+    })),
+  }));
 }
 
 function mapJobRequirement(form: VacancyForm): JobRequirementApiPayload {
@@ -368,7 +388,7 @@ function toCreateVacancyPayload(form: VacancyForm): CreateVacancyPayload {
     data: {
       jobRequirement: mapJobRequirement(form),
       profileRequirements: form.profileRequirements,
-      secondaryEducation: form.secondaryEducation,
+      secondaryEducation: mapSecondaryEducation(form.secondaryEducation),
       tertiaryEducation: form.tertiaryEducation,
       licenseCertificates: form.licenseCertificates,
       patents: mapPatents(form),

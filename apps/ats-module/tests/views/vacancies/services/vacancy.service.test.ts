@@ -2,13 +2,15 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { vacancyService } from '@/views/vacancies/services/vacancy.service';
 
-const { mockPost } = vi.hoisted(() => ({
+const { mockPost, mockPut } = vi.hoisted(() => ({
   mockPost: vi.fn(),
+  mockPut: vi.fn(),
 }));
 
 vi.mock('@cgp/data-access', () => ({
   httpClient: {
     post: mockPost,
+    put: mockPut,
   },
 }));
 
@@ -150,6 +152,60 @@ describe('vacancyService', () => {
           }),
         })
       );
+    });
+  });
+
+  describe('updateVacancy', () => {
+    it('sends PUT request to /vacancies/:id endpoint', async () => {
+      const vacancyId = 'vacancy-123';
+      const mockResponse = {
+        data: {
+          requestId: 'req-901',
+          success: true,
+          message: 'Vacancy updated successfully',
+        },
+      };
+      mockPut.mockResolvedValue(mockResponse);
+
+      const result = await vacancyService.updateVacancy(
+        vacancyId,
+        mockCreateVacancyPayload
+      );
+
+      expect(mockPut).toHaveBeenCalledWith(
+        `/vacancies/${vacancyId}`,
+        mockCreateVacancyPayload
+      );
+      expect(result).toEqual(mockResponse.data);
+    });
+
+    it('returns success response with correct structure', async () => {
+      const mockResponse = {
+        data: {
+          requestId: 'req-902',
+          success: true,
+          message: 'Updated',
+        },
+      };
+      mockPut.mockResolvedValue(mockResponse);
+
+      const result = await vacancyService.updateVacancy(
+        'vacancy-456',
+        mockCreateVacancyPayload
+      );
+
+      expect(result.success).toBe(true);
+      expect(result.requestId).toBeDefined();
+      expect(result.message).toBeDefined();
+    });
+
+    it('throws error when HTTP request fails', async () => {
+      const mockError = new Error('Update network error');
+      mockPut.mockRejectedValue(mockError);
+
+      await expect(
+        vacancyService.updateVacancy('vacancy-789', mockCreateVacancyPayload)
+      ).rejects.toThrow('Update network error');
     });
   });
 });
