@@ -1,6 +1,6 @@
 import { type VariantProps, cva } from 'class-variance-authority';
 
-const typographyVariants = cva('font-["Plus_Jakarta_Sans",_sans-serif]', {
+const typographyVariants = cva('font-sans', {
   variants: {
     variant: {
       h1: 'font-extrabold text-[48px] leading-[48px] tracking-[-0.576px]',
