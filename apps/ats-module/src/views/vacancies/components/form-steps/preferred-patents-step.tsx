@@ -728,6 +728,7 @@ export default function PreferredPatentsStep({ onNext, onBack }: StepProps) {
                 <Switch
                   checked={field.value}
                   size="lg"
+                  className="cursor-pointer"
                   onCheckedChange={checked => {
                     if (!checked) {
                       const hasChecked = form.getValues(
