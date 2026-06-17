@@ -31,6 +31,7 @@ function AtsRoutes() {
         <Route path="vacancies/new" element={<NewVacancyPage />} />
         <Route path="vacancies/:id/edit" element={<VacancyIdEditPage />} />
         <Route path="find-candidate" element={<div>Find Candidate</div>} />
+        <Route path="templates" element={<div>Templates</div>} />
         <Route path="*" element={<Navigate to="/not-found" replace />} />
       </Routes>
     </UserProvider>
@@ -53,6 +54,7 @@ function createStandaloneRouter() {
         { path: 'vacancies/new', element: <NewVacancyPage /> },
         { path: 'vacancies/:id/edit', element: <VacancyIdEditPage /> },
         { path: 'find-candidate', element: <div>Find Candidate</div> },
+        { path: 'templates', element: <div>Templates</div> },
       ],
     },
     {

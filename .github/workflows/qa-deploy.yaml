@@ -9,11 +9,12 @@ on:
 
 env:
   PROJECT_ID: ${{ secrets.QA_GCP_PROJECT_ID }}
-  SERVICE_NAME: qa-cgp-frontend-monorepo
   REGION: us-central1
   AR_HOSTNAME: us-central1-docker.pkg.dev
   REPOSITORY: cgp-qa-repo
   ENVIRONMENT: qa
+  SHELL_SERVICE: qa-cgp-shell
+  ATS_SERVICE: qa-ats-module
 
 jobs:
   build-and-test:
@@ -60,44 +61,26 @@ jobs:
           version: 10.13.1
           run_install: false
 
-      - name: Get pnpm store directory
-        shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_ENV
-
-      - name: Setup pnpm cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            ${{ env.STORE_PATH }}
-            ~/.cache/Cypress
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
-
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
 
-      #      - name: Run Linter
-      #        run: pnpm run lint --if-present
-
       - name: Run Tests
-        run: pnpm test --if-present
+        run: pnpm test
 
       - name: Build Application
         env:
+          VITE_PORTAL_LOGO: ${{ secrets.QA_VITE_PORTAL_LOGO }}
+          VITE_API_BASE_URL: ${{ secrets.QA_VITE_API_BASE_URL }}
           VITE_API_URL: ${{ secrets.QA_VITE_API_URL }}
           VITE_FALLBACK_LANG: ${{ secrets.QA_VITE_FALLBACK_LANG }}
           VITE_LANG: ${{ secrets.QA_VITE_LANG }}
-          VITE_OXO_LOGO_URL: ${{ secrets.QA_VITE_OXO_LOGO_URL }}
-          VITE_OXO_LOGO_WHITE_URL: ${{ secrets.QA_VITE_OXO_LOGO_WHITE_URL }}
           VITE_WS_URL: ${{ secrets.QA_VITE_WS_URL }}
           VITE_KEYCLOAK_URL: ${{ secrets.QA_VITE_KEYCLOAK_URL }}
           VITE_KEYCLOAK_REALM: ${{ secrets.QA_VITE_KEYCLOAK_REALM }}
           VITE_KEYCLOAK_CLIENT_ID: ${{ secrets.QA_VITE_KEYCLOAK_CLIENT_ID }}
           VITE_BACKEND_API_URL: ${{ secrets.QA_VITE_BACKEND_API_URL }}
           VITE_BACKEND_API_VERSION: ${{ secrets.QA_VITE_BACKEND_API_VERSION }}
-        run: pnpm run build
+        run: pnpm nx run-many -t build
 
   deploy-to-qa-cloud-run:
     if: github.event.pull_request.base.ref == 'qa' && github.event.pull_request.head.ref == 'develop' && github.event.pull_request.merged == true && needs.build-and-test.outputs.should_deploy == 'true'
@@ -110,6 +93,9 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.merge_commit_sha }}
 
+      # =========================
+      # AUTH GCP
+      # =========================
       - name: Google Cloud Auth
         uses: google-github-actions/auth@v2
         with:
@@ -126,45 +112,55 @@ jobs:
         run: |
           gcloud auth configure-docker $AR_HOSTNAME --quiet
 
-      - name: Get Application Version
-        id: application-version
+      # =========================
+      # VERSION
+      # =========================
+      - name: Get Version
+        id: version
         run: |
           # Extract version from package.json
           VERSION=$(node -p "require('./package.json').version")
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Extracted version: $VERSION"
 
-      - name: Build Docker Image
+      # =========================
+      # BUILD ATS QA IMAGE
+      # =========================
+      - name: Build QA ATS Image
         run: |
           docker build --no-cache \
-            --build-arg COMMIT_SHA=${{ github.sha }} \
-            --build-arg BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ') \
-            --build-arg VITE_API_URL=${{ secrets.QA_VITE_API_URL }} \
-            --build-arg VITE_FALLBACK_LANG=${{ secrets.VITE_FALLBACK_LANG }} \
-            --build-arg VITE_LANG=${{ secrets.VITE_LANG }} \
-            --build-arg VITE_OXO_LOGO_URL=${{ secrets.VITE_OXO_LOGO_URL }} \
-            --build-arg VITE_OXO_LOGO_WHITE_URL=${{ secrets.VITE_OXO_LOGO_WHITE_URL }} \
-            --build-arg VITE_KEYCLOAK_URL=${{ secrets.QA_VITE_KEYCLOAK_URL }} \
-            --build-arg VITE_KEYCLOAK_REALM=${{ secrets.QA_VITE_KEYCLOAK_REALM }} \
-            --build-arg VITE_KEYCLOAK_CLIENT_ID=${{ secrets.QA_VITE_KEYCLOAK_CLIENT_ID }} \
-            --build-arg VITE_BACKEND_API_URL=${{ secrets.QA_VITE_BACKEND_API_URL }} \
-            --build-arg VITE_BACKEND_API_VERSION=${{ secrets.QA_VITE_BACKEND_API_VERSION }} \
-            --build-arg VITE_WS_URL=${{ secrets.QA_VITE_WS_URL }} \
-            -t $AR_HOSTNAME/$PROJECT_ID/$REPOSITORY/$SERVICE_NAME:${{ steps.application-version.outputs.version }} \
-            -t $AR_HOSTNAME/$PROJECT_ID/$REPOSITORY/$SERVICE_NAME:latest \
+            -f Dockerfile.ats \
+            --build-arg "COMMIT_SHA=${{ github.sha }}" \
+            --build-arg "BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" \
+            --build-arg "VITE_API_BASE_URL=${{ secrets.QA_VITE_API_BASE_URL }}" \
+            --build-arg "VITE_API_URL=${{ secrets.QA_VITE_API_URL }}" \
+            --build-arg "VITE_FALLBACK_LANG=${{ secrets.QA_VITE_FALLBACK_LANG }}" \
+            --build-arg "VITE_LANG=${{ secrets.QA_VITE_LANG }}" \
+            --build-arg "VITE_OXO_LOGO_URL=${{ secrets.QA_VITE_OXO_LOGO_URL }}" \
+            --build-arg "VITE_OXO_LOGO_WHITE_URL=${{ secrets.QA_VITE_OXO_LOGO_WHITE_URL }}" \
+            --build-arg "VITE_KEYCLOAK_URL=${{ secrets.QA_VITE_KEYCLOAK_URL }}" \
+            --build-arg "VITE_KEYCLOAK_REALM=${{ secrets.QA_VITE_KEYCLOAK_REALM }}" \
+            --build-arg "VITE_KEYCLOAK_CLIENT_ID=${{ secrets.QA_VITE_KEYCLOAK_CLIENT_ID }}" \
+            --build-arg "VITE_BACKEND_API_URL=${{ secrets.QA_VITE_BACKEND_API_URL }}" \
+            --build-arg "VITE_BACKEND_API_VERSION=${{ secrets.QA_VITE_BACKEND_API_VERSION }}" \
+            --build-arg "VITE_WS_URL=${{ secrets.QA_VITE_WS_URL }}" \
+            -t "$AR_HOSTNAME/$PROJECT_ID/$REPOSITORY/$ATS_SERVICE:${{ steps.version.outputs.version }}" \
+            -t "$AR_HOSTNAME/$PROJECT_ID/$REPOSITORY/$ATS_SERVICE:latest" \
             .
 
-      - name: Push to Artifact Registry
+      - name: Push ATS Image
         run: |
-          docker push $AR_HOSTNAME/$PROJECT_ID/$REPOSITORY/$SERVICE_NAME:${{ steps.application-version.outputs.version }}
-          docker push $AR_HOSTNAME/$PROJECT_ID/$REPOSITORY/$SERVICE_NAME:latest
+          docker push $AR_HOSTNAME/$PROJECT_ID/$REPOSITORY/$ATS_SERVICE:${{ steps.version.outputs.version }}
 
-      - name: Deploy to Cloud Run
-        id: deploy
+
+      # =========================
+      # DEPLOY QA ATS FIRST
+      # =========================
+      - name: Deploy QA ATS Module
+        id: deploy_ats
         run: |
-          # Deploy the service
-          gcloud run deploy $SERVICE_NAME \
-            --image=$AR_HOSTNAME/$PROJECT_ID/$REPOSITORY/$SERVICE_NAME:${{ steps.application-version.outputs.version }} \
+          gcloud run deploy $ATS_SERVICE \
+            --image=$AR_HOSTNAME/$PROJECT_ID/$REPOSITORY/$ATS_SERVICE:${{ steps.version.outputs.version }} \
             --region=$REGION \
             --platform=managed \
             --allow-unauthenticated \
@@ -173,18 +169,76 @@ jobs:
             --port=80 \
             --set-env-vars="NODE_ENV=production" \
             --revision-suffix=${{ github.sha }} \
-            --labels="commit=${{ github.sha }},branch=qa,app=cgp-frontend-monorepo" \
+            --labels="commit=${{ github.sha }},branch=qa,app=qa-ats-module" \
             --quiet
 
-          # Get service URL
-          SERVICE_URL=$(gcloud run services describe $SERVICE_NAME \
+          ATS_URL=$(gcloud run services describe $ATS_SERVICE \
             --region=$REGION \
             --format='value(status.url)')
-          echo "url=$SERVICE_URL" >> $GITHUB_OUTPUT
-          echo "service_name=$SERVICE_NAME" >> $GITHUB_OUTPUT
 
-      - name: Show Deployment Info
+          echo "ats_url=$ATS_URL" >> $GITHUB_OUTPUT
+          echo "ATS URL: $ATS_URL"
+
+      # =========================
+      # BUILD QA SHELL IMAGE (with QA ATS URL injection)
+      # =========================
+      - name: Build Shell Image
         run: |
-          echo "QA Deployment Successful!"
-          echo "URL: ${{ steps.deploy.outputs.url }}"
-          echo "Image: $AR_HOSTNAME/$PROJECT_ID/$REPOSITORY/$SERVICE_NAME:${{ steps.application-version.outputs.version }}"
+          docker build --no-cache \
+            -f Dockerfile.shell \
+            --build-arg "VITE_ATS_MODULE_URL=${{ steps.deploy_ats.outputs.ats_url }}" \
+            --build-arg "COMMIT_SHA=${{ github.sha }}" \
+            --build-arg "BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" \
+            --build-arg "VITE_PORTAL_LOGO=${{ secrets.QA_VITE_PORTAL_LOGO }}" \
+            --build-arg "VITE_API_BASE_URL=${{ secrets.QA_VITE_API_BASE_URL }}" \
+            --build-arg "VITE_API_URL=${{ secrets.QA_VITE_API_URL }}" \
+            --build-arg "VITE_FALLBACK_LANG=${{ secrets.QA_VITE_FALLBACK_LANG }}" \
+            --build-arg "VITE_LANG=${{ secrets.QA_VITE_LANG }}" \
+            --build-arg "VITE_KEYCLOAK_URL=${{ secrets.QA_VITE_KEYCLOAK_URL }}" \
+            --build-arg "VITE_KEYCLOAK_REALM=${{ secrets.QA_VITE_KEYCLOAK_REALM }}" \
+            --build-arg "VITE_KEYCLOAK_CLIENT_ID=${{ secrets.QA_VITE_KEYCLOAK_CLIENT_ID }}" \
+            --build-arg "VITE_BACKEND_API_URL=${{ secrets.QA_VITE_BACKEND_API_URL }}" \
+            --build-arg "VITE_BACKEND_API_VERSION=${{ secrets.QA_VITE_BACKEND_API_VERSION }}" \
+            --build-arg "VITE_WS_URL=${{ secrets.QA_VITE_WS_URL }}" \
+            -t "$AR_HOSTNAME/$PROJECT_ID/$REPOSITORY/$SHELL_SERVICE:${{ steps.version.outputs.version }}" \
+            -t "$AR_HOSTNAME/$PROJECT_ID/$REPOSITORY/$SHELL_SERVICE:latest" \
+            .
+
+      - name: Push Shell Image
+        run: |
+          docker push $AR_HOSTNAME/$PROJECT_ID/$REPOSITORY/$SHELL_SERVICE:${{ steps.version.outputs.version }}
+
+      # =========================
+      # DEPLOY QA SHELL
+      # =========================
+      - name: Deploy Shell
+        id: deploy_shell
+        run: |
+          gcloud run deploy $SHELL_SERVICE \
+            --image=$AR_HOSTNAME/$PROJECT_ID/$REPOSITORY/$SHELL_SERVICE:${{ steps.version.outputs.version }} \
+            --region=$REGION \
+            --platform=managed \
+            --allow-unauthenticated \
+            --memory=1Gi \
+            --cpu=1 \
+            --port=80 \
+            --set-env-vars="NODE_ENV=production" \
+            --revision-suffix=${{ github.sha }} \
+            --labels="commit=${{ github.sha }},branch=qa,app=qa-cgp-shell" \
+            --quiet
+
+          SHELL_URL=$(gcloud run services describe $SHELL_SERVICE \
+            --region=$REGION \
+            --format='value(status.url)')
+
+          echo "shell_url=$SHELL_URL" >> $GITHUB_OUTPUT
+
+      # =========================
+      # QA SUMMARY
+      # =========================
+      - name: Deployment Summary
+        run: |
+          echo "===================================="
+          echo "ATS Module URL: ${{ steps.deploy_ats.outputs.ats_url }}"
+          echo "Shell URL: ${{ steps.deploy_shell.outputs.shell_url }}"
+          echo "===================================="
