@@ -196,11 +196,15 @@ export default function PreferredIndustryStep({
               checked={dataTakenFromCandidate}
               onCheckedChange={checked => {
                 if (checked) {
-                  updatePreferredIndustries({ industries: [] });
+                  updatePreferredIndustries({
+                    industries: [],
+                    dataTakenFromCandidate: true,
+                  });
                   setHasMaxError(false);
+                  return;
                 }
                 updatePreferredIndustries({
-                  dataTakenFromCandidate: checked === true,
+                  dataTakenFromCandidate: false,
                 });
               }}
               className="mt-0.5"

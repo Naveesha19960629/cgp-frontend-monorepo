@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { forwardRef, useState } from 'react';
+import { forwardRef, useRef, useState } from 'react';
 
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -250,7 +250,29 @@ function renderStep(formOverrides: Parameters<typeof makeForm>[0] = {}) {
   const onNext = vi.fn();
   const onBack = vi.fn();
   const onSubmit = vi.fn();
-  mockUseVacancyForm.mockReturnValue(makeForm(formOverrides));
+
+  mockUseVacancyForm.mockImplementation(() => {
+    const initial = makeForm(formOverrides).form;
+    const [formState, setFormState] = useState(initial);
+    const stepPersistRef = useRef<(() => void) | null>(null);
+    const stepDisableRef = useRef<(() => void) | null>(null);
+
+    return {
+      form: formState,
+      setForm: (
+        updater:
+          | typeof formState
+          | ((prev: typeof formState) => typeof formState)
+      ) => {
+        setFormState(prev =>
+          typeof updater === 'function' ? updater(prev) : updater
+        );
+      },
+      stepPersistRef,
+      stepDisableRef,
+    };
+  });
+
   render(
     <PreferredIndustryStep
       onNext={onNext}
