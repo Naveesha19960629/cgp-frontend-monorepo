@@ -24,6 +24,7 @@ import {
   formatDate,
   toLicenseCertificatesPayload,
 } from '@/views/vacancies/utils';
+import { formatLocalDate } from '@/views/vacancies/utils/date-timezone-safe';
 
 import { Combobox } from '@cgp/ui-kit/components/combobox';
 import { ErrorToast } from '@cgp/ui-kit/components/custom-toast';
@@ -596,7 +597,7 @@ export default function LicenseCertificatesStep({
                               }
                               onSelect={date => {
                                 field.onChange(
-                                  date ? date.toISOString() : undefined
+                                  date ? formatLocalDate(date) : undefined
                                 );
                                 setOpenDatePopover(null);
                                 const expDate = getValues(
@@ -689,7 +690,7 @@ export default function LicenseCertificatesStep({
                               }
                               onSelect={date => {
                                 field.onChange(
-                                  date ? date.toISOString() : undefined
+                                  date ? formatLocalDate(date) : undefined
                                 );
                                 setOpenDatePopover(null);
                               }}

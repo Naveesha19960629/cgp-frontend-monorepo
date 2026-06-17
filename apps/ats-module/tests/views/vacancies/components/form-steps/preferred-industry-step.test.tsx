@@ -615,6 +615,35 @@ describe('PreferredIndustryStep', () => {
       expect(screen.getAllByTestId('chip').length).toBeGreaterThan(0);
     });
 
+    it('prevents case-insensitive duplicate chips for custom values', async () => {
+      const user = userEvent.setup();
+      const { onNext } = renderStep();
+
+      const input = screen.getByPlaceholderText(
+        'preferredIndustries.input.placeholder'
+      );
+
+      await user.click(input);
+      await user.type(input, 'Marketing');
+      await user.click(screen.getByText('preferredIndustries.input.addNew'));
+
+      await user.click(input);
+      await user.type(input, 'mArKeTiNg');
+      await user.click(screen.getByText('preferredIndustries.input.addNew'));
+
+      await user.click(screen.getByText('common.next'));
+
+      expect(onNext).toHaveBeenCalledWith({
+        preferredIndustries: expect.objectContaining({
+          industries: [
+            expect.objectContaining({
+              label: 'Marketing',
+            }),
+          ],
+        }),
+      });
+    });
+
     it('selects an API industry chip when clicked in the dropdown', async () => {
       const user = userEvent.setup();
       renderStep();

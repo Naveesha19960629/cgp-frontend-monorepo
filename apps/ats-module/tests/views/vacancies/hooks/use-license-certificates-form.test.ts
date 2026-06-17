@@ -169,4 +169,78 @@ describe('useLicenseCertificatesForm — restoring from saved data', () => {
     expect(values.entry.issuingOrganization).toBeUndefined();
     expect(values.entry.organizationLocations).toEqual([]);
   });
+
+  it('accepts API object shape with licensesAndCertifications key', () => {
+    const { result } = renderHook(() =>
+      useLicenseCertificatesForm({
+        isEnabled: true,
+        dataTakenFromCandidate: false,
+        licensesAndCertifications: [
+          {
+            nameOfLicenseCert: [
+              { id: 'lc-obj-1', source: 'MASTER', label: 'PMP' },
+            ],
+            issuingOrganization: [
+              { id: 'org-obj-1', source: 'MASTER', label: 'PMI' },
+            ],
+            organizationLocations: [
+              { id: 'loc-obj-1', source: 'MASTER', label: 'Colombo' },
+            ],
+            internationallyAccepted: true,
+            issueDate: '2024-01-01',
+            expirationDate: '2027-01-01',
+          },
+        ],
+      })
+    );
+
+    const values = result.current.getValues();
+    expect(values.isEnabled).toBe(true);
+    expect(values.entry.nameOfLicenseCert).toEqual([
+      {
+        value: 'lc-obj-1',
+        label: 'PMP',
+        source: 'MASTER',
+        certType: undefined,
+      },
+    ]);
+    expect(values.entry.issuingOrganization).toEqual({
+      value: 'org-obj-1',
+      label: 'PMI',
+      source: 'MASTER',
+    });
+  });
+
+  it('falls back to id when name and label are missing in API object shape', () => {
+    const { result } = renderHook(() =>
+      useLicenseCertificatesForm({
+        isEnabled: true,
+        dataTakenFromCandidate: false,
+        content: [
+          {
+            nameOfLicenseCert: [{ id: 'lc-id-only', source: 'MASTER' }],
+            issuingOrganization: [{ id: 'org-id-only', source: 'MASTER' }],
+            organizationLocations: [{ id: 'loc-id-only', source: 'MASTER' }],
+            internationallyAccepted: false,
+            issueDate: '',
+            expirationDate: '',
+          },
+        ],
+      })
+    );
+
+    const values = result.current.getValues();
+    expect(values.entry.nameOfLicenseCert[0]).toMatchObject({
+      value: 'lc-id-only',
+      label: 'lc-id-only',
+    });
+    expect(values.entry.issuingOrganization).toMatchObject({
+      value: 'org-id-only',
+      label: 'org-id-only',
+    });
+    expect(values.entry.organizationLocations[0]).toMatchObject({
+      value: 'loc-id-only',
+      label: 'loc-id-only',
+    });
+  });
 });

@@ -222,6 +222,36 @@ describe('toLicenseCertificatesPayload — dates', () => {
     expect(result[0].content[0].expirationDate).toBe('2026-01-15');
   });
 
+  it('normalizes ISO datetime values to yyyy-MM-dd', () => {
+    const result = toLicenseCertificatesPayload({
+      isEnabled: true,
+      dataTakenFromCandidate: false,
+      entry: {
+        ...EMPTY_ENTRY,
+        issueDate: '2026-06-17T00:00:00.000Z',
+        expirationDate: '2027-12-25T13:45:00.000Z',
+      },
+    });
+
+    expect(result[0].content[0].issueDate).toBe('2026-06-17');
+    expect(result[0].content[0].expirationDate).toBe('2027-12-25');
+  });
+
+  it('normalizes ISO datetime values with local offset to yyyy-MM-dd', () => {
+    const result = toLicenseCertificatesPayload({
+      isEnabled: true,
+      dataTakenFromCandidate: false,
+      entry: {
+        ...EMPTY_ENTRY,
+        issueDate: '2026-06-17T05:30:00+05:30',
+        expirationDate: '2028-01-01T23:59:59+05:30',
+      },
+    });
+
+    expect(result[0].content[0].issueDate).toBe('2026-06-17');
+    expect(result[0].content[0].expirationDate).toBe('2028-01-01');
+  });
+
   it('uses empty strings when dates are undefined', () => {
     const result = toLicenseCertificatesPayload({
       isEnabled: true,

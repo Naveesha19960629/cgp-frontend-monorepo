@@ -6,6 +6,12 @@ import type {
   LicenseCertificates,
 } from '@/views/vacancies/types';
 
+function normalizeToDateOnly(value?: string): string {
+  if (!value) return '';
+  const [datePart] = value.split('T');
+  return datePart ?? '';
+}
+
 const toLicenseCertificatesPayload = (
   values: LicenseCertificatesFormValues
 ): LicenseCertificates[] => {
@@ -74,8 +80,8 @@ const toLicenseCertificatesPayload = (
         : [],
       organizationLocations: entry.organizationLocations.map(toLocationRef),
       internationallyAccepted: entry.internationallyAccepted,
-      issueDate: entry.issueDate ?? '',
-      expirationDate: entry.expirationDate ?? '',
+      issueDate: normalizeToDateOnly(entry.issueDate),
+      expirationDate: normalizeToDateOnly(entry.expirationDate),
     },
   ];
 
