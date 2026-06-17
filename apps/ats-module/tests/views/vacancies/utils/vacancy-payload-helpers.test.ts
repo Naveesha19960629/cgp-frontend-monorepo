@@ -68,7 +68,7 @@ describe('toCreateVacancyPayload', () => {
 
     expect(secondaryEducation).toBeDefined();
     expect(secondaryEducation).toHaveLength(1);
-    const entry = secondaryEducation![0].content[0];
+    const entry = secondaryEducation[0].content[0];
 
     expect(entry.startDate).toBe('2026-06-01');
     expect(entry.endDate).toBe('2026-06-02');
@@ -103,7 +103,7 @@ describe('toCreateVacancyPayload', () => {
 
     expect(secondaryEducation).toBeDefined();
     expect(secondaryEducation).toHaveLength(1);
-    const entry = secondaryEducation![0].content[0];
+    const entry = secondaryEducation[0].content[0];
 
     expect(entry.startDate).toBe('');
     expect(entry.endDate).toBe('');

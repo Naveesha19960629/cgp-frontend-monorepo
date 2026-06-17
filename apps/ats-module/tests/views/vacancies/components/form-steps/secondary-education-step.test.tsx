@@ -1,4 +1,4 @@
-﻿import type { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -13,16 +13,31 @@ vi.mock('react-i18next', () => ({
 
 // ── Mock vacancy form context ──────────────────────────────────────────────
 
+const {
+  stableForm,
+  mockSetForm,
+  mockSetStepGuard,
+  mockStepPersistRef,
+  mockStepDisableRef,
+} = vi.hoisted(() => ({
+  stableForm: {
+    secondaryEducation: [
+      { isEnabled: false, dataTakenFromCandidate: false, content: [] },
+    ],
+  },
+  mockSetForm: vi.fn(),
+  mockSetStepGuard: vi.fn(),
+  mockStepPersistRef: { current: null },
+  mockStepDisableRef: { current: null },
+}));
+
 vi.mock('@/views/vacancies/context/vacancy-form-context', () => ({
   useVacancyForm: () => ({
-    form: {
-      secondaryEducation: [
-        { isEnabled: false, dataTakenFromCandidate: false, content: [] },
-      ],
-    },
-    setStepGuard: vi.fn(),
-    stepPersistRef: { current: null },
-    stepDisableRef: { current: null },
+    form: stableForm,
+    setForm: mockSetForm,
+    setStepGuard: mockSetStepGuard,
+    stepPersistRef: mockStepPersistRef,
+    stepDisableRef: mockStepDisableRef,
   }),
 }));
 

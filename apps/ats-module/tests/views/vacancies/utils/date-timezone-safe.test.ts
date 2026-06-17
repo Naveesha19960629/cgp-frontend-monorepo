@@ -10,21 +10,17 @@ describe('date-timezone-safe utilities', () => {
   describe('parseLocalDate', () => {
     it('should parse date-only string (YYYY-MM-DD) in local timezone', () => {
       const result = parseLocalDate('2026-06-08');
-      expect(result).toBeDefined();
-      if (result) {
-        expect(result.getFullYear()).toBe(2026);
-        expect(result.getMonth()).toBe(5); // June is month 5 (0-indexed)
-        expect(result.getDate()).toBe(8);
-      }
+      expect(result).not.toBeNull();
+      expect(result!.getFullYear()).toBe(2026);
+      expect(result!.getMonth()).toBe(5); // June is month 5 (0-indexed)
+      expect(result!.getDate()).toBe(8);
     });
 
     it('should parse ISO date string correctly', () => {
       const result = parseLocalDate('2026-06-08T10:30:00Z');
-      expect(result).toBeDefined();
-      if (result) {
-        expect(result.getFullYear()).toBe(2026);
-        expect(result.getMonth()).toBe(5);
-      }
+      expect(result).not.toBeNull();
+      expect(result!.getFullYear()).toBe(2026);
+      expect(result!.getMonth()).toBe(5);
     });
 
     it('should return null for empty or undefined input', () => {
@@ -108,12 +104,11 @@ describe('date-timezone-safe utilities', () => {
     it('should not apply timezone offset to date-only strings', () => {
       const dateString = '2026-06-08';
       const parsed = parseLocalDate(dateString);
-      if (parsed) {
-        // The date should be exactly what was input, not offset by timezone
-        expect(parsed.getDate()).toBe(8);
-        expect(parsed.getMonth()).toBe(5);
-        expect(parsed.getFullYear()).toBe(2026);
-      }
+      expect(parsed).not.toBeNull();
+      // The date should be exactly what was input, not offset by timezone
+      expect(parsed!.getDate()).toBe(8);
+      expect(parsed!.getMonth()).toBe(5);
+      expect(parsed!.getFullYear()).toBe(2026);
     });
   });
 });

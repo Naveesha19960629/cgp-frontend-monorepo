@@ -1,6 +1,7 @@
 import { renderHook } from '@testing-library/react';
 
 import { useTertiaryEducationForm } from '@/views/vacancies/hooks/use-tertiary-education-form';
+import type { TertiaryEducation } from '@/views/vacancies/types';
 
 describe('useTertiaryEducationForm', () => {
   describe('buildDefaultValues — no initial data', () => {
@@ -27,61 +28,60 @@ describe('useTertiaryEducationForm', () => {
 
   describe('buildDefaultValues — restoring from saved data with name preserved', () => {
     it('uses name field as label when name is present (back-navigation shows real names)', () => {
+      const initialData: TertiaryEducation[] = [
+        {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          content: [
+            {
+              qualificationName: [
+                {
+                  id: 'q-uuid',
+                  source: 'MASTER',
+                  name: 'BSc Computer Science',
+                },
+              ],
+              tertiaryAwardingBody: [
+                {
+                  id: 'ab-uuid',
+                  source: 'MASTER',
+                  name: 'University of Moratuwa',
+                },
+              ],
+              tertiaryAwardingBodyLocations: [
+                { id: 'loc-uuid', source: 'MASTER', name: 'Colombo' },
+              ],
+              levelOfQualification: [
+                { id: 'l-uuid', source: 'MASTER', name: "Bachelor's" },
+              ],
+              specialization: [
+                { id: 's-uuid', source: 'PENDING', name: 'Data Science' },
+              ],
+              studyMode: [{ id: 'sm-uuid', source: 'MASTER', name: 'Online' }],
+              studyPattern: [
+                { id: 'sp-uuid', source: 'MASTER', name: 'Full-Time' },
+              ],
+              deliverySchedule: [
+                { id: 'ds-uuid', source: 'MASTER', name: 'Weekday' },
+              ],
+              batch: [{ id: 'b-uuid', source: 'MASTER', name: 'Batch 2020' }],
+              department: [
+                { id: 'd-uuid', source: 'MASTER', name: 'IT Department' },
+              ],
+              faculty: [
+                {
+                  id: 'f-uuid',
+                  source: 'PENDING',
+                  name: 'Faculty of Engineering',
+                },
+              ],
+              grade: 'GPA 3.8',
+            },
+          ],
+        },
+      ];
       const { result } = renderHook(() =>
-        useTertiaryEducationForm([
-          {
-            isEnabled: true,
-            dataTakenFromCandidate: false,
-            content: [
-              {
-                qualificationName: [
-                  {
-                    id: 'q-uuid',
-                    source: 'MASTER',
-                    name: 'BSc Computer Science',
-                  },
-                ],
-                tertiaryAwardingBody: [
-                  {
-                    id: 'ab-uuid',
-                    source: 'MASTER',
-                    name: 'University of Moratuwa',
-                  },
-                ],
-                tertiaryAwardingBodyLocations: [
-                  { id: 'loc-uuid', source: 'MASTER', name: 'Colombo' },
-                ],
-                levelOfQualification: [
-                  { id: 'l-uuid', source: 'MASTER', name: "Bachelor's" },
-                ],
-                specialization: [
-                  { id: 's-uuid', source: 'PENDING', name: 'Data Science' },
-                ],
-                studyMode: [
-                  { id: 'sm-uuid', source: 'MASTER', name: 'Online' },
-                ],
-                studyPattern: [
-                  { id: 'sp-uuid', source: 'MASTER', name: 'Full-Time' },
-                ],
-                deliverySchedule: [
-                  { id: 'ds-uuid', source: 'MASTER', name: 'Weekday' },
-                ],
-                batch: [{ id: 'b-uuid', source: 'MASTER', name: 'Batch 2020' }],
-                department: [
-                  { id: 'd-uuid', source: 'MASTER', name: 'IT Department' },
-                ],
-                faculty: [
-                  {
-                    id: 'f-uuid',
-                    source: 'PENDING',
-                    name: 'Faculty of Engineering',
-                  },
-                ],
-                grade: 'GPA 3.8',
-              },
-            ],
-          },
-        ])
+        useTertiaryEducationForm(initialData)
       );
 
       const values = result.current.getValues();
@@ -135,31 +135,32 @@ describe('useTertiaryEducationForm', () => {
     });
 
     it('falls back to id as label when name is absent (data loaded from API without name)', () => {
+      const initialData: TertiaryEducation[] = [
+        {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          content: [
+            {
+              qualificationName: [{ id: 'q-uuid', source: 'MASTER' }],
+              tertiaryAwardingBody: [{ id: 'ab-uuid', source: 'MASTER' }],
+              tertiaryAwardingBodyLocations: [
+                { id: 'loc-uuid', source: 'MASTER' },
+              ],
+              levelOfQualification: [{ id: 'l-uuid', source: 'MASTER' }],
+              specialization: [{ id: 's-uuid', source: 'PENDING' }],
+              studyMode: [{ id: 'sm-uuid', source: 'MASTER' }],
+              studyPattern: [{ id: 'sp-uuid', source: 'MASTER' }],
+              deliverySchedule: [{ id: 'ds-uuid', source: 'MASTER' }],
+              batch: [{ id: 'b-uuid', source: 'MASTER' }],
+              department: [{ id: 'd-uuid', source: 'MASTER' }],
+              faculty: [{ id: 'f-uuid', source: 'PENDING' }],
+              grade: '',
+            },
+          ],
+        },
+      ];
       const { result } = renderHook(() =>
-        useTertiaryEducationForm([
-          {
-            isEnabled: true,
-            dataTakenFromCandidate: false,
-            content: [
-              {
-                qualificationName: [{ id: 'q-uuid', source: 'MASTER' }],
-                tertiaryAwardingBody: [{ id: 'ab-uuid', source: 'MASTER' }],
-                tertiaryAwardingBodyLocations: [
-                  { id: 'loc-uuid', source: 'MASTER' },
-                ],
-                levelOfQualification: [{ id: 'l-uuid', source: 'MASTER' }],
-                specialization: [{ id: 's-uuid', source: 'PENDING' }],
-                studyMode: [{ id: 'sm-uuid', source: 'MASTER' }],
-                studyPattern: [{ id: 'sp-uuid', source: 'MASTER' }],
-                deliverySchedule: [{ id: 'ds-uuid', source: 'MASTER' }],
-                batch: [{ id: 'b-uuid', source: 'MASTER' }],
-                department: [{ id: 'd-uuid', source: 'MASTER' }],
-                faculty: [{ id: 'f-uuid', source: 'PENDING' }],
-                grade: '',
-              },
-            ],
-          },
-        ])
+        useTertiaryEducationForm(initialData)
       );
 
       const values = result.current.getValues();
@@ -172,10 +173,11 @@ describe('useTertiaryEducationForm', () => {
     });
 
     it('returns empty entry when content array is empty', () => {
+      const initialData: TertiaryEducation[] = [
+        { isEnabled: true, dataTakenFromCandidate: false, content: [] },
+      ];
       const { result } = renderHook(() =>
-        useTertiaryEducationForm([
-          { isEnabled: true, dataTakenFromCandidate: false, content: [] },
-        ])
+        useTertiaryEducationForm(initialData)
       );
 
       const values = result.current.getValues();
@@ -186,10 +188,11 @@ describe('useTertiaryEducationForm', () => {
     });
 
     it('sets dataTakenFromCandidate correctly', () => {
+      const initialData: TertiaryEducation[] = [
+        { isEnabled: true, dataTakenFromCandidate: true, content: [] },
+      ];
       const { result } = renderHook(() =>
-        useTertiaryEducationForm([
-          { isEnabled: true, dataTakenFromCandidate: true, content: [] },
-        ])
+        useTertiaryEducationForm(initialData)
       );
 
       const values = result.current.getValues();

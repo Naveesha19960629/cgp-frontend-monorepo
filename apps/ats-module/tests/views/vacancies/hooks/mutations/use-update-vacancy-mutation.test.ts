@@ -27,13 +27,14 @@ const mockToCreateVacancyPayload = vi.fn();
 
 vi.mock('@/views/vacancies/services', () => ({
   vacancyService: {
-    updateVacancy: (...args: unknown[]) => mockUpdateVacancy(...args),
+    updateVacancy: (...args: unknown[]) =>
+      mockUpdateVacancy(...args) as unknown,
   },
 }));
 
 vi.mock('@/views/vacancies/utils', () => ({
   toCreateVacancyPayload: (...args: unknown[]) =>
-    mockToCreateVacancyPayload(...args),
+    mockToCreateVacancyPayload(...args) as unknown,
 }));
 
 describe('useUpdateVacancyMutation', () => {

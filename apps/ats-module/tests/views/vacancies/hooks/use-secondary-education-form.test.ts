@@ -1,6 +1,7 @@
 import { act, renderHook } from '@testing-library/react';
 
 import { useSecondaryEducationForm } from '@/views/vacancies/hooks/use-secondary-education-form';
+import type { SecondaryEducation } from '@/views/vacancies/types';
 
 describe('useSecondaryEducationForm', () => {
   describe('buildDefaultValues — no initial data', () => {
@@ -19,37 +20,38 @@ describe('useSecondaryEducationForm', () => {
 
   describe('buildDefaultValues — array shape (name field)', () => {
     it('uses name field as label when name is present (back-navigation shows real names)', () => {
+      const initialData: SecondaryEducation[] = [
+        {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          content: [
+            {
+              acceptsHomeSchooling: false,
+              schools: [
+                { id: 'school-uuid', source: 'MASTER', name: 'Oxford High' },
+              ],
+              schoolLocations: [
+                { id: 'loc-uuid', source: 'MASTER', name: 'London' },
+              ],
+              examinations: [
+                { id: 'exam-uuid', source: 'MASTER', name: 'O-Levels' },
+              ],
+              secondaryAwardingBody: [
+                { id: 'ab-uuid', source: 'PENDING', name: 'AQA' },
+              ],
+              fieldsOfStudy: [
+                { id: 'fos-uuid', source: 'MASTER', name: 'Science' },
+              ],
+              grade: 'A',
+              startDate: '2018-09-01T00:00:00.000Z',
+              endDate: '2020-06-30T00:00:00.000Z',
+              result: 'Passed',
+            },
+          ],
+        },
+      ];
       const { result } = renderHook(() =>
-        useSecondaryEducationForm([
-          {
-            isEnabled: true,
-            dataTakenFromCandidate: false,
-            content: [
-              {
-                acceptsHomeSchooling: false,
-                schools: [
-                  { id: 'school-uuid', source: 'MASTER', name: 'Oxford High' },
-                ],
-                schoolLocations: [
-                  { id: 'loc-uuid', source: 'MASTER', name: 'London' },
-                ],
-                examinations: [
-                  { id: 'exam-uuid', source: 'MASTER', name: 'O-Levels' },
-                ],
-                secondaryAwardingBody: [
-                  { id: 'ab-uuid', source: 'PENDING', name: 'AQA' },
-                ],
-                fieldsOfStudy: [
-                  { id: 'fos-uuid', source: 'MASTER', name: 'Science' },
-                ],
-                grade: 'A',
-                startDate: '2018-09-01T00:00:00.000Z',
-                endDate: '2020-06-30T00:00:00.000Z',
-                result: 'Passed',
-              },
-            ],
-          },
-        ])
+        useSecondaryEducationForm(initialData)
       );
 
       const values = result.current.getValues();
@@ -82,27 +84,28 @@ describe('useSecondaryEducationForm', () => {
     });
 
     it('falls back to id as label when name is absent (data loaded from API without name)', () => {
+      const initialData: SecondaryEducation[] = [
+        {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          content: [
+            {
+              acceptsHomeSchooling: false,
+              schools: [{ id: 'school-uuid', source: 'MASTER' }],
+              schoolLocations: [{ id: 'loc-uuid', source: 'MASTER' }],
+              examinations: [{ id: 'exam-uuid', source: 'MASTER' }],
+              secondaryAwardingBody: [{ id: 'ab-uuid', source: 'PENDING' }],
+              fieldsOfStudy: [{ id: 'fos-uuid', source: 'MASTER' }],
+              grade: '',
+              startDate: '',
+              endDate: '',
+              result: '',
+            },
+          ],
+        },
+      ];
       const { result } = renderHook(() =>
-        useSecondaryEducationForm([
-          {
-            isEnabled: true,
-            dataTakenFromCandidate: false,
-            content: [
-              {
-                acceptsHomeSchooling: false,
-                schools: [{ id: 'school-uuid', source: 'MASTER' }],
-                schoolLocations: [{ id: 'loc-uuid', source: 'MASTER' }],
-                examinations: [{ id: 'exam-uuid', source: 'MASTER' }],
-                secondaryAwardingBody: [{ id: 'ab-uuid', source: 'PENDING' }],
-                fieldsOfStudy: [{ id: 'fos-uuid', source: 'MASTER' }],
-                grade: '',
-                startDate: '',
-                endDate: '',
-                result: '',
-              },
-            ],
-          },
-        ])
+        useSecondaryEducationForm(initialData)
       );
 
       const values = result.current.getValues();
@@ -114,10 +117,11 @@ describe('useSecondaryEducationForm', () => {
     });
 
     it('returns empty entry when content array is empty', () => {
+      const initialData: SecondaryEducation[] = [
+        { isEnabled: true, dataTakenFromCandidate: false, content: [] },
+      ];
       const { result } = renderHook(() =>
-        useSecondaryEducationForm([
-          { isEnabled: true, dataTakenFromCandidate: false, content: [] },
-        ])
+        useSecondaryEducationForm(initialData)
       );
 
       const values = result.current.getValues();
@@ -128,10 +132,11 @@ describe('useSecondaryEducationForm', () => {
     });
 
     it('honours dataTakenFromCandidate flag', () => {
+      const initialData: SecondaryEducation[] = [
+        { isEnabled: true, dataTakenFromCandidate: true, content: [] },
+      ];
       const { result } = renderHook(() =>
-        useSecondaryEducationForm([
-          { isEnabled: true, dataTakenFromCandidate: true, content: [] },
-        ])
+        useSecondaryEducationForm(initialData)
       );
 
       expect(result.current.getValues('dataTakenFromCandidate')).toBe(true);
@@ -345,7 +350,7 @@ describe('useSecondaryEducationForm', () => {
   });
 
   describe('form rehydration — reset when initialData changes', () => {
-    it('resets the form when initialData changes from undefined to populated (async edit load)', async () => {
+    it('resets the form when initialData changes from undefined to populated (async edit load)', () => {
       let initialData: Parameters<typeof useSecondaryEducationForm>[0] =
         undefined;
 
@@ -378,7 +383,7 @@ describe('useSecondaryEducationForm', () => {
         },
       ];
 
-      await act(async () => {
+      act(() => {
         rerender();
       });
 

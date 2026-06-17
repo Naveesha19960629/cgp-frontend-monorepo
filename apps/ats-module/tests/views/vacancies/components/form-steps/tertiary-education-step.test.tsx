@@ -1,5 +1,5 @@
 import { forwardRef, useImperativeHandle, useRef } from 'react';
-import type { ReactNode } from 'react';
+import type { ReactNode, Ref } from 'react';
 
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -240,7 +240,7 @@ vi.mock('@radix-ui/react-switch', () => ({
         aria-checked={checked}
         onClick={() => onCheckedChange?.(!checked)}
         type="button"
-        ref={ref}
+        ref={ref as Ref<HTMLButtonElement>}
         {...rest}
       >
         {children}
