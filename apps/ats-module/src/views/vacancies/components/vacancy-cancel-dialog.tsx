@@ -1,3 +1,5 @@
+import { Loader2 } from 'lucide-react';
+
 import { useTranslation } from 'react-i18next';
 
 import type { VacancyCancelDialogProps } from '@/views/vacancies/types';
@@ -23,6 +25,7 @@ export default function VacancyCancelDialog({
   onOpenChange,
   onDiscard,
   onSaveAsDraft,
+  isSavingDraft = false,
 }: VacancyCancelDialogProps) {
   const { t } = useTranslation('ats');
 
@@ -72,16 +75,18 @@ export default function VacancyCancelDialog({
           </Button>
           <Button
             type="button"
-            onClick={() => {
-              onSaveAsDraft();
-              onOpenChange(false);
-            }}
+            disabled={isSavingDraft}
+            onClick={onSaveAsDraft}
             className={cn(
               'h-12 flex-1 rounded-lg bg-[#be123c] text-white hover:bg-[#be123c]',
               applyTypography('h5')
             )}
           >
-            {t('vacancyCancelDialog.saveAsDraftButton')}
+            {isSavingDraft ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              t('vacancyCancelDialog.saveAsDraftButton')
+            )}
           </Button>
         </div>
       </DialogContent>
