@@ -43,6 +43,8 @@ const mockUseVacancyForm = vi.hoisted(() =>
     setStepGuard: vi.fn(),
     stepPersistRef: { current: null },
     stepDisableRef: { current: null },
+    currentStepIndex: 0,
+    removeCompletedStep: vi.fn(),
   }))
 );
 

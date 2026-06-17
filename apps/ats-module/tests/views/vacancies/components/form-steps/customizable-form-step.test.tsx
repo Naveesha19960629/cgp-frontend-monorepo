@@ -244,6 +244,8 @@ const renderComponent = (
     setStepGuard: vi.fn(),
     stepPersistRef: { current: null },
     stepDisableRef: { current: null },
+    currentStepIndex: 0,
+    removeCompletedStep: vi.fn(),
   });
 
   return render(<CustomizableFormStep {...props} />);
