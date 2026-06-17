@@ -315,7 +315,13 @@ export default function PreferredPublicationsStep({
         ]
   );
 
-  const { setForm, stepPersistRef, stepDisableRef } = useVacancyForm();
+  const {
+    setForm,
+    stepPersistRef,
+    stepDisableRef,
+    currentStepIndex,
+    removeCompletedStep,
+  } = useVacancyForm();
   const _publicationsRef = useRef<() => void>(() => {});
   useEffect(() => {
     _publicationsRef.current = () => {
@@ -422,6 +428,7 @@ export default function PreferredPublicationsStep({
     ]);
     setDataTakenFromCandidate(false);
     setIsEnabled(false);
+    removeCompletedStep(currentStepIndex);
     setConfirmDisableOpen(false);
     SuccessToast({
       title: 'Section Disabled',

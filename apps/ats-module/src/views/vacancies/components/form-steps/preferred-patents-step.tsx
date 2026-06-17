@@ -710,7 +710,7 @@ export default function PreferredPatentsStep({ onNext, onBack }: StepProps) {
               <button
                 type="button"
                 onClick={handleBack}
-                className="text-slate-700 transition-colors hover:text-slate-900"
+                className="cursor-pointer text-slate-700 transition-colors hover:text-slate-900"
                 aria-label={t('preferredPatents.back')}
               >
                 <ArrowLeft2 size={24} />
@@ -728,6 +728,7 @@ export default function PreferredPatentsStep({ onNext, onBack }: StepProps) {
                 <Switch
                   checked={field.value}
                   size="lg"
+                  className="cursor-pointer"
                   onCheckedChange={checked => {
                     if (!checked) {
                       const hasChecked = form.getValues(

@@ -36,7 +36,14 @@ export default function PreferredCausesStep({
 }: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
   const showDisableToast = useDisableSuccessToast();
-  const { form, setForm, stepPersistRef, stepDisableRef } = useVacancyForm();
+  const {
+    form,
+    setForm,
+    stepPersistRef,
+    stepDisableRef,
+    currentStepIndex,
+    removeCompletedStep,
+  } = useVacancyForm();
 
   const [isEnabled, setIsEnabled] = useState(
     form.preferredCauses?.isEnabled ?? false
@@ -279,6 +286,7 @@ export default function PreferredCausesStep({
           setSelectedCauses([]);
           setDataTakenFromCandidate(false);
           setIsEnabled(false);
+          removeCompletedStep(currentStepIndex);
           setConfirmDisableOpen(false);
           showDisableToast(t('preferredCauses.title'));
         }}

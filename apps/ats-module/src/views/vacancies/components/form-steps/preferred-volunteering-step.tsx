@@ -497,7 +497,13 @@ export default function PreferredVolunteeringStep({
     });
   };
 
-  const { setForm, stepPersistRef, stepDisableRef } = useVacancyForm();
+  const {
+    setForm,
+    stepPersistRef,
+    stepDisableRef,
+    currentStepIndex,
+    removeCompletedStep,
+  } = useVacancyForm();
   const _volunteeringRef = useRef<() => void>(() => {});
   useEffect(() => {
     _volunteeringRef.current = () => {
@@ -590,6 +596,7 @@ export default function PreferredVolunteeringStep({
     setEntries([createEmptyEntry('1')]);
     setDataTakenFromCandidate(false);
     setIsEnabled(false);
+    removeCompletedStep(currentStepIndex);
     setConfirmDisableOpen(false);
     SuccessToast({
       title: 'Section Disabled',

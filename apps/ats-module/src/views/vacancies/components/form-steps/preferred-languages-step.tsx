@@ -36,7 +36,14 @@ export default function PreferredLanguagesStep({
 }: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
   const showDisableToast = useDisableSuccessToast();
-  const { form, setForm, stepPersistRef, stepDisableRef } = useVacancyForm();
+  const {
+    form,
+    setForm,
+    stepPersistRef,
+    stepDisableRef,
+    currentStepIndex,
+    removeCompletedStep,
+  } = useVacancyForm();
 
   const [isEnabled, setIsEnabled] = useState(
     form.preferredLanguages?.isEnabled ?? false
@@ -283,6 +290,7 @@ export default function PreferredLanguagesStep({
           setSelectedLanguages([]);
           setDataTakenFromCandidate(false);
           setIsEnabled(false);
+          removeCompletedStep(currentStepIndex);
           setConfirmDisableOpen(false);
           showDisableToast(t('preferredLanguages.title'));
         }}
