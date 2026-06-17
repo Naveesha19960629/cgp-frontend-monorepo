@@ -3,6 +3,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { render, screen } from '@testing-library/react';
 
 import { AppBreadcrumb } from '@/app/components/app-breadcrumb';
+import { initI18n } from '@/app/utils/i18n';
 
 function renderWithRouter(pathname: string) {
   return render(
@@ -13,6 +14,10 @@ function renderWithRouter(pathname: string) {
 }
 
 describe('AppBreadcrumb', () => {
+  beforeAll(async () => {
+    await initI18n();
+  });
+
   it('renders no items for a route with empty breadcrumb config', () => {
     renderWithRouter('/dashboard/ats/vacancies');
 
@@ -22,7 +27,13 @@ describe('AppBreadcrumb', () => {
   it('renders a single item for /dashboard/ats/find-candidate', () => {
     renderWithRouter('/dashboard/ats/find-candidate');
 
-    expect(screen.getByText('Find Candidate')).toBeInTheDocument();
+    expect(screen.getByText('Find Candidates')).toBeInTheDocument();
+  });
+
+  it('renders a single item for /dashboard/ats/templates', () => {
+    renderWithRouter('/dashboard/ats/templates');
+
+    expect(screen.getByText('Templates')).toBeInTheDocument();
   });
 
   it('renders two items for /dashboard/ats/vacancies/new', () => {
