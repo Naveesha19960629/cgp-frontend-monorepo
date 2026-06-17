@@ -1,3 +1,5 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
@@ -27,13 +29,27 @@ vi.mock('@/views/vacancies', async importOriginal => {
   };
 });
 
+function makeQueryClient() {
+  return new QueryClient({
+    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+  });
+}
+
+function renderPage() {
+  return render(
+    <QueryClientProvider client={makeQueryClient()}>
+      <NewVacancyPage />
+    </QueryClientProvider>
+  );
+}
+
 describe('NewVacancyPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   it('renders vacancy title step initially', () => {
-    render(<NewVacancyPage />);
+    renderPage();
 
     expect(
       screen.getByText('vacancies.createVacancy.heading')
@@ -47,7 +63,7 @@ describe('NewVacancyPage', () => {
   it('shows validation message when title is empty and next is clicked', async () => {
     const user = userEvent.setup();
 
-    render(<NewVacancyPage />);
+    renderPage();
 
     await user.click(
       screen.getByRole('button', { name: 'vacancies.createVacancy.nextButton' })
@@ -61,7 +77,7 @@ describe('NewVacancyPage', () => {
   it('navigates back to vacancy list when cancel is clicked', async () => {
     const user = userEvent.setup();
 
-    render(<NewVacancyPage />);
+    renderPage();
 
     await user.click(
       screen.getByRole('button', {
@@ -75,7 +91,7 @@ describe('NewVacancyPage', () => {
   it('goes to stepper view after entering a title and clicking next', async () => {
     const user = userEvent.setup();
 
-    render(<NewVacancyPage />);
+    renderPage();
 
     await user.type(
       screen.getByPlaceholderText('vacancies.createVacancy.titlePlaceholder'),

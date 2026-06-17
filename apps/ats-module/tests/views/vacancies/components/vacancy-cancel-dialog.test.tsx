@@ -34,12 +34,14 @@ vi.mock('@cgp/ui-kit/components/ui/button', () => ({
     children,
     onClick,
     type,
+    disabled,
   }: {
     children: ReactNode;
     onClick?: () => void;
     type?: 'button' | 'submit' | 'reset';
+    disabled?: boolean;
   }) => (
-    <button type={type ?? 'button'} onClick={onClick}>
+    <button type={type ?? 'button'} onClick={onClick} disabled={disabled}>
       {children}
     </button>
   ),
@@ -123,7 +125,7 @@ describe('VacancyCancelDialog', () => {
     expect(onSaveAsDraft).not.toHaveBeenCalled();
   });
 
-  it('calls onSaveAsDraft and closes the dialog when Save as Draft is clicked', async () => {
+  it('calls onSaveAsDraft when Save as Draft is clicked', async () => {
     const user = userEvent.setup();
 
     render(
@@ -142,7 +144,60 @@ describe('VacancyCancelDialog', () => {
     );
 
     expect(onSaveAsDraft).toHaveBeenCalledTimes(1);
-    expect(onOpenChange).toHaveBeenCalledWith(false);
+    expect(onOpenChange).not.toHaveBeenCalled();
     expect(onDiscard).not.toHaveBeenCalled();
+  });
+
+  it('disables the Save as Draft button when isSavingDraft is true', () => {
+    render(
+      <VacancyCancelDialog
+        open={true}
+        onOpenChange={onOpenChange}
+        onDiscard={onDiscard}
+        onSaveAsDraft={onSaveAsDraft}
+        isSavingDraft={true}
+      />
+    );
+
+    const buttons = screen.getAllByRole('button');
+    const saveDraftButton = buttons[buttons.length - 1];
+    expect(saveDraftButton).toBeDisabled();
+  });
+
+  it('shows spinner and hides button text when isSavingDraft is true', () => {
+    render(
+      <VacancyCancelDialog
+        open={true}
+        onOpenChange={onOpenChange}
+        onDiscard={onDiscard}
+        onSaveAsDraft={onSaveAsDraft}
+        isSavingDraft={true}
+      />
+    );
+
+    expect(
+      screen.queryByText('vacancyCancelDialog.saveAsDraftButton')
+    ).not.toBeInTheDocument();
+
+    const buttons = screen.getAllByRole('button');
+    const saveDraftButton = buttons[buttons.length - 1];
+    expect(saveDraftButton.querySelector('svg')).toBeInTheDocument();
+  });
+
+  it('shows Save as Draft text and enables button when isSavingDraft is false', () => {
+    render(
+      <VacancyCancelDialog
+        open={true}
+        onOpenChange={onOpenChange}
+        onDiscard={onDiscard}
+        onSaveAsDraft={onSaveAsDraft}
+        isSavingDraft={false}
+      />
+    );
+
+    const saveBtn = screen.getByRole('button', {
+      name: 'vacancyCancelDialog.saveAsDraftButton',
+    });
+    expect(saveBtn).not.toBeDisabled();
   });
 });

@@ -145,7 +145,7 @@ export default function ScheduleVacancyStep({
           existingStatus: form.status,
         });
       } else {
-        await createVacancy(payloadForm);
+        await createVacancy({ form: { ...form, schedule } });
       }
       SuccessToast({
         title: t(

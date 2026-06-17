@@ -26,11 +26,20 @@ export default function LoadingPage() {
         alt={'Oxo Careers Logo'}
         className="mt-12 h-11.5 w-83.5"
       />
-      <div className="mt-13.5 flex items-center justify-center space-x-1.25">
+      <div className="mt-13.5 flex items-center justify-center gap-1.5">
         <span className="sr-only">Loading...</span>
-        <div className="bg-brand-primary-500 animate-bounce-8px size-2 rounded-full"></div>
-        <div className="animate-bounce-8px-delay-2 size-2 rounded-full bg-[#CA9239]"></div>
-        <div className="bg-brand-primary-500 animate-bounce-8px-delay-1 size-2 rounded-full"></div>
+        <div
+          className="bg-brand-primary-500 size-2 animate-bounce rounded-full"
+          style={{ animationDelay: '0ms' }}
+        ></div>
+        <div
+          className="size-2 animate-bounce rounded-full bg-[#CA9239]"
+          style={{ animationDelay: '150ms' }}
+        ></div>
+        <div
+          className="bg-brand-primary-500 size-2 animate-bounce rounded-full"
+          style={{ animationDelay: '300ms' }}
+        ></div>
       </div>
     </div>
   );

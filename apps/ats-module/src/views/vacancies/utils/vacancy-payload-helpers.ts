@@ -621,8 +621,11 @@ function toVacancyPayload(
   };
 }
 
-function toCreateVacancyPayload(form: VacancyForm): CreateVacancyPayload {
-  return toVacancyPayload(form, 'UNPUBLISHED');
+function toCreateVacancyPayload(
+  form: VacancyForm,
+  status = 'UNPUBLISHED'
+): CreateVacancyPayload {
+  return toVacancyPayload(form, status);
 }
 
 function toUpdateVacancyPayload(

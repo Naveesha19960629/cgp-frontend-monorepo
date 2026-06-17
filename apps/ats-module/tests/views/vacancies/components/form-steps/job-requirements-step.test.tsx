@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import JobRequirementsStep from '@/views/vacancies/components/form-steps/job-requirements-step';
@@ -47,6 +47,10 @@ const mockAddJobTitleMutation = vi.hoisted(() =>
   vi.fn(() => ({ mutateAsync: vi.fn() }))
 );
 
+const mockStepDraftSaveRef = {
+  current: null as (() => Promise<unknown>) | null,
+};
+
 const mockUseVacancyForm = vi.hoisted(() =>
   vi.fn(() => ({
     form: {
@@ -67,6 +71,7 @@ const mockUseVacancyForm = vi.hoisted(() =>
       ],
     },
     onCancel: vi.fn(),
+    stepDraftSaveRef: mockStepDraftSaveRef,
   }))
 );
 
@@ -83,6 +88,8 @@ const mockFormWatch = vi.hoisted(() =>
 );
 
 const mockFormHandleSubmit = vi.hoisted(() => vi.fn((fn: () => void) => fn));
+
+const mockFormTrigger = vi.hoisted(() => vi.fn(() => Promise.resolve(true)));
 
 const mockJobRequirementsForm = vi.hoisted(() =>
   vi.fn(() => ({
@@ -103,6 +110,7 @@ const mockJobRequirementsForm = vi.hoisted(() =>
       engagementModel: [],
       description: '',
     })),
+    trigger: mockFormTrigger,
     formState: { errors: {} },
   }))
 );
@@ -253,6 +261,8 @@ describe('JobRequirementsStep', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockStepDraftSaveRef.current = null;
+    mockFormTrigger.mockResolvedValue(true);
   });
 
   it('renders the heading', () => {
@@ -322,5 +332,105 @@ describe('JobRequirementsStep', () => {
     );
 
     expect(screen.getByText('common.cancel')).toBeInTheDocument();
+  });
+
+  describe('stepDraftSaveRef', () => {
+    it('registers stepDraftSaveRef.current as a function on mount', async () => {
+      render(
+        <JobRequirementsStep
+          onNext={onNext}
+          onBack={onBack}
+          onSubmit={onSubmit}
+        />
+      );
+
+      await waitFor(() => {
+        expect(mockStepDraftSaveRef.current).toBeTypeOf('function');
+      });
+    });
+
+    it('clears stepDraftSaveRef.current on unmount', async () => {
+      const { unmount } = render(
+        <JobRequirementsStep
+          onNext={onNext}
+          onBack={onBack}
+          onSubmit={onSubmit}
+        />
+      );
+
+      await waitFor(() => {
+        expect(mockStepDraftSaveRef.current).toBeTypeOf('function');
+      });
+
+      unmount();
+      expect(mockStepDraftSaveRef.current).toBeNull();
+    });
+
+    it('returns null when required fields fail form.trigger', async () => {
+      mockFormTrigger.mockResolvedValueOnce(false);
+
+      render(
+        <JobRequirementsStep
+          onNext={onNext}
+          onBack={onBack}
+          onSubmit={onSubmit}
+        />
+      );
+
+      await waitFor(() => {
+        expect(mockStepDraftSaveRef.current).toBeTypeOf('function');
+      });
+
+      const result = await mockStepDraftSaveRef.current!();
+      expect(result).toBeNull();
+    });
+
+    it('returns jobRequirements payload when required fields pass form.trigger', async () => {
+      render(
+        <JobRequirementsStep
+          onNext={onNext}
+          onBack={onBack}
+          onSubmit={onSubmit}
+        />
+      );
+
+      await waitFor(() => {
+        expect(mockStepDraftSaveRef.current).toBeTypeOf('function');
+      });
+
+      const result = await mockStepDraftSaveRef.current!();
+      expect(result).toMatchObject({
+        jobRequirements: expect.arrayContaining([
+          expect.objectContaining({
+            isEnabled: true,
+            dataTakenFromCandidate: false,
+          }),
+        ]),
+      });
+    });
+
+    it('calls form.trigger with all required field names', async () => {
+      render(
+        <JobRequirementsStep
+          onNext={onNext}
+          onBack={onBack}
+          onSubmit={onSubmit}
+        />
+      );
+
+      await waitFor(() => {
+        expect(mockStepDraftSaveRef.current).toBeTypeOf('function');
+      });
+
+      await mockStepDraftSaveRef.current!();
+
+      expect(mockFormTrigger).toHaveBeenCalledWith([
+        'discipline',
+        'careerPath',
+        'level',
+        'role',
+        'jobTitle',
+      ]);
+    });
   });
 });
