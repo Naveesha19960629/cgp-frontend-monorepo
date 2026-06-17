@@ -225,14 +225,14 @@ export default function PreferredHobbiesStep({
               options={apiHobbies.map(h => ({
                 value: h.id,
                 label: h.label,
-                source: 'MASTER',
+                source: h.source ?? 'MASTER',
               }))}
               onSearchSync={value => {
                 setHobbySearch(value);
                 return apiHobbies.map(h => ({
                   value: h.id,
                   label: h.label,
-                  source: 'MASTER',
+                  source: h.source ?? 'MASTER',
                 }));
               }}
               keepSelectedInList

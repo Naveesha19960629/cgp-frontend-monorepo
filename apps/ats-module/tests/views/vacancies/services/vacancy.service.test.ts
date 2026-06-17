@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { vacancyService } from '@/views/vacancies/services/vacancy.service';
+import type { CreateVacancyPayload } from '@/views/vacancies/types';
 
 const { mockPost } = vi.hoisted(() => ({
   mockPost: vi.fn(),
@@ -12,7 +13,7 @@ vi.mock('@cgp/data-access', () => ({
   },
 }));
 
-const mockCreateVacancyPayload = {
+const mockCreateVacancyPayload: CreateVacancyPayload = {
   title: 'Test Vacancy',
   status: 'UNPUBLISHED',
   lastActiveStep: 'job-requirements',
@@ -23,6 +24,33 @@ const mockCreateVacancyPayload = {
       roles: [],
       jobTitles: [],
     },
+    profileRequirement: [
+      {
+        isEnabled: false,
+        dataTakenFromCandidate: false,
+        content: { gender: '', maritalStatus: '', addresses: [] },
+      },
+    ],
+    secondaryEducation: [
+      { isEnabled: false, dataTakenFromCandidate: false, content: [] },
+    ],
+    tertiaryEducation: [
+      { isEnabled: false, dataTakenFromCandidate: false, content: [] },
+    ],
+    skills: {
+      isEnabled: false,
+      dataTakenFromCandidate: false,
+      content: [],
+    },
+    languages: {
+      isEnabled: false,
+      dataTakenFromCandidate: false,
+      content: [],
+    },
+    causes: [{ isEnabled: false, dataTakenFromCandidate: false, content: [] }],
+    hobbyList: [
+      { isEnabled: false, dataTakenFromCandidate: false, content: [] },
+    ],
     industry: {
       isEnabled: false,
       dataTakenFromCandidate: false,
@@ -48,6 +76,19 @@ const mockCreateVacancyPayload = {
         dataTakenFromCandidate: false,
         content: [],
       },
+    ],
+    publications: [
+      { isEnabled: false, dataTakenFromCandidate: false, content: [] },
+    ],
+    clubsAndSocieties: [
+      { isEnabled: false, dataTakenFromCandidate: false, content: [] },
+    ],
+    sports: [{ isEnabled: false, dataTakenFromCandidate: false, content: [] }],
+    volunteering: [
+      { isEnabled: false, dataTakenFromCandidate: false, content: [] },
+    ],
+    licensesAndCertifications: [
+      { isEnabled: false, dataTakenFromCandidate: false, content: [] },
     ],
     customizedForm: {
       isEnabled: false,

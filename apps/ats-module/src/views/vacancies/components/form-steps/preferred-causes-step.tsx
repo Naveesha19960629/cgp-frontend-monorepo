@@ -225,14 +225,14 @@ export default function PreferredCausesStep({
               options={apiCauses.map(c => ({
                 value: c.id,
                 label: c.label,
-                source: 'MASTER',
+                source: c.source ?? 'MASTER',
               }))}
               onSearchSync={value => {
                 setCauseSearch(value);
                 return apiCauses.map(c => ({
                   value: c.id,
                   label: c.label,
-                  source: 'MASTER',
+                  source: c.source ?? 'MASTER',
                 }));
               }}
               keepSelectedInList
