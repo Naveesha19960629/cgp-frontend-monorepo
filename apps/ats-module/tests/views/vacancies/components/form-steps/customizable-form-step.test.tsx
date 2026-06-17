@@ -483,7 +483,7 @@ describe('CustomizableFormStep', () => {
     });
 
     it('should sequentially name duplicate forms correctly and rename the first one when adding more duplicates', async () => {
-      const user = userEvent.setup();
+      const user = userEvent.setup({ delay: null });
       renderComponent();
 
       const toggle = screen.getByRole('switch');
@@ -702,7 +702,9 @@ describe('CustomizableFormStep', () => {
 
       // Type in the question text
       const questionInput = screen.getByPlaceholderText('Question');
-      await user.type(questionInput, 'What is your experience?');
+      fireEvent.change(questionInput, {
+        target: { value: 'What is your experience?' },
+      });
       expect(nextButton).toBeDisabled();
 
       // Select type "Short Answer"
@@ -712,7 +714,9 @@ describe('CustomizableFormStep', () => {
       await user.click(shortAnswerOption);
 
       // Now it has valid text and type (non-option based), so Next button should be enabled
-      expect(nextButton).toBeEnabled();
+      await waitFor(() => {
+        expect(nextButton).toBeEnabled();
+      });
 
       // Change type to "Multiple Choice" (option-based)
       await user.click(typeTrigger);
@@ -720,14 +724,18 @@ describe('CustomizableFormStep', () => {
       await user.click(mcOption);
 
       // Should be disabled because the default option value is empty
-      expect(nextButton).toBeDisabled();
+      await waitFor(() => {
+        expect(nextButton).toBeDisabled();
+      });
 
       // Type text in the first option
       const optionInput = screen.getByPlaceholderText('Enter option');
-      await user.type(optionInput, 'Option A');
+      fireEvent.change(optionInput, { target: { value: 'Option A' } });
 
       // Now at least one option is filled, Next button should be enabled
-      expect(nextButton).toBeEnabled();
+      await waitFor(() => {
+        expect(nextButton).toBeEnabled();
+      });
 
       // If we duplicate the question, we have 2 questions, so delete button should be enabled
       const duplicateQuestionButtons = screen.getAllByRole('button', {
