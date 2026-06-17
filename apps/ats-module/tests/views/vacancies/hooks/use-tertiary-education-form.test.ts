@@ -199,4 +199,182 @@ describe('useTertiaryEducationForm', () => {
       expect(values.dataTakenFromCandidate).toBe(true);
     });
   });
+
+  describe('buildDefaultValues — API object shape (get-by-id response)', () => {
+    it('accepts non-array object shape with tertiaryEducation key (edit mode API response)', () => {
+      const apiShape = {
+        isEnabled: true,
+        dataTakenFromCandidate: false,
+        tertiaryEducation: [
+          {
+            qualificationName: [
+              {
+                source: 'MASTER',
+                id: 'q-uuid-1',
+                label: 'BSc Computer Science',
+              },
+            ],
+            tertiaryAwardingBody: [
+              {
+                source: 'MASTER',
+                id: 'ab-uuid-1',
+                label: 'University of Colombo',
+              },
+            ],
+            tertiaryAwardingBodyLocations: [
+              {
+                source: 'MASTER',
+                id: 'loc-uuid-1',
+                label: 'Colombo',
+              },
+            ],
+            levelOfQualification: [
+              {
+                source: 'MASTER',
+                id: 'l-uuid-1',
+                label: "Bachelor's",
+              },
+            ],
+            specialization: [
+              {
+                source: 'MASTER',
+                id: 's-uuid-1',
+                label: 'Data Science',
+              },
+            ],
+            studyMode: [
+              { source: 'MASTER', id: 'sm-uuid-1', label: 'Full-time' },
+            ],
+            studyPattern: [
+              { source: 'MASTER', id: 'sp-uuid-1', label: 'Full-Time' },
+            ],
+            deliverySchedule: [
+              { source: 'MASTER', id: 'ds-uuid-1', label: 'Campus' },
+            ],
+            batch: [{ source: 'MASTER', id: 'b-uuid-1', label: 'Batch 2020' }],
+            department: [
+              { source: 'MASTER', id: 'd-uuid-1', label: 'CS Department' },
+            ],
+            faculty: [
+              { source: 'MASTER', id: 'f-uuid-1', label: 'Science & Tech' },
+            ],
+            grade: 'GPA 3.8',
+          },
+        ],
+      };
+
+      const { result } = renderHook(() =>
+        useTertiaryEducationForm(apiShape as never)
+      );
+
+      const values = result.current.getValues();
+
+      expect(values.isEnabled).toBe(true);
+      expect(values.dataTakenFromCandidate).toBe(false);
+      expect(values.entries).toHaveLength(1);
+      expect(values.entries[0].qualificationName[0]).toMatchObject({
+        value: 'q-uuid-1',
+        label: 'BSc Computer Science',
+      });
+      expect(values.entries[0].tertiaryAwardingBody[0]).toMatchObject({
+        value: 'ab-uuid-1',
+        label: 'University of Colombo',
+      });
+      expect(values.entries[0].grade).toBe('GPA 3.8');
+    });
+
+    it('uses label field from API response when name is absent', () => {
+      const apiShape = {
+        isEnabled: true,
+        dataTakenFromCandidate: false,
+        tertiaryEducation: [
+          {
+            qualificationName: [
+              { source: 'MASTER', id: 'q-id', label: 'BSc IT' },
+            ],
+            tertiaryAwardingBody: [
+              {
+                source: 'MASTER',
+                id: 'ab-id',
+                label: 'University of Peradeniya',
+              },
+            ],
+            tertiaryAwardingBodyLocations: [
+              { source: 'MASTER', id: 'loc-id', label: 'Kandy' },
+            ],
+            levelOfQualification: [
+              { source: 'MASTER', id: 'l-id', label: "Master's" },
+            ],
+            specialization: [
+              { source: 'MASTER', id: 's-id', label: 'AI & ML' },
+            ],
+            studyMode: [{ source: 'MASTER', id: 'sm-id', label: 'Part-time' }],
+            studyPattern: [
+              { source: 'MASTER', id: 'sp-id', label: 'Flexible' },
+            ],
+            deliverySchedule: [
+              { source: 'MASTER', id: 'ds-id', label: 'Evening' },
+            ],
+            batch: [{ source: 'MASTER', id: 'b-id', label: 'Batch 2021' }],
+            department: [{ source: 'MASTER', id: 'd-id', label: 'IT Dept' }],
+            faculty: [{ source: 'MASTER', id: 'f-id', label: 'Engineering' }],
+            grade: 'Distinction',
+          },
+        ],
+      };
+
+      const { result } = renderHook(() =>
+        useTertiaryEducationForm(apiShape as never)
+      );
+
+      const values = result.current.getValues();
+
+      // With label field from API, label should use the label value
+      expect(values.entries[0].qualificationName[0].label).toBe('BSc IT');
+      expect(values.entries[0].tertiaryAwardingBody[0].label).toBe(
+        'University of Peradeniya'
+      );
+      expect(values.entries[0].batch[0].label).toBe('Batch 2021');
+    });
+
+    it('normalizes content property when using default "content" key', () => {
+      const apiShape = {
+        isEnabled: true,
+        dataTakenFromCandidate: false,
+        content: [
+          {
+            qualificationName: [
+              { source: 'MASTER', id: 'q-id-2', label: 'Diploma' },
+            ],
+            tertiaryAwardingBody: [
+              { source: 'MASTER', id: 'ab-id-2', label: 'Institute XYZ' },
+            ],
+            tertiaryAwardingBodyLocations: [
+              { source: 'MASTER', id: 'loc-id-2', label: 'Bangkok' },
+            ],
+            levelOfQualification: [
+              { source: 'MASTER', id: 'l-id-2', label: 'Diploma' },
+            ],
+            specialization: [],
+            studyMode: [],
+            studyPattern: [],
+            deliverySchedule: [],
+            batch: [],
+            department: [],
+            faculty: [],
+            grade: '',
+          },
+        ],
+      };
+
+      const { result } = renderHook(() =>
+        useTertiaryEducationForm(apiShape as never)
+      );
+
+      const values = result.current.getValues();
+
+      expect(values.isEnabled).toBe(true);
+      expect(values.entries[0].qualificationName[0].label).toBe('Diploma');
+    });
+  });
 });

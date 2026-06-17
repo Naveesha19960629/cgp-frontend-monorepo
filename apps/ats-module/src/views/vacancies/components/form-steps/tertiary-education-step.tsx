@@ -19,17 +19,28 @@ import {
   useAddQualificationMutation,
   useAddSpecializationMutation,
   useAddTertiaryAwardingBodyMutation,
+  useBatchesQuery,
   useBatchesSearch,
+  useDeliverySchedulesQuery,
   useDeliverySchedulesSearch,
+  useDepartmentsQuery,
   useDepartmentsSearch,
+  useFacultiesQuery,
   useFacultiesSearch,
+  useLevelOfQualificationsQuery,
   useLevelOfQualificationsSearch,
+  useQualificationsQuery,
   useQualificationsSearch,
+  useSpecializationsQuery,
   useSpecializationsSearch,
   useStepGuard,
+  useStudyModesQuery,
   useStudyModesSearch,
+  useStudyPatternsQuery,
   useStudyPatternsSearch,
+  useTertiaryAwardingBodiesQuery,
   useTertiaryAwardingBodiesSearch,
+  useTertiaryAwardingBodyLocationsQuery,
   useTertiaryAwardingBodyLocationsSearch,
   useTertiaryEducationForm,
 } from '@/views/vacancies/hooks';
@@ -180,6 +191,7 @@ export default function TertiaryEducationStep({
   const batchRef = useRef<MultipleSelectorRef>(null);
   const departmentRef = useRef<MultipleSelectorRef>(null);
   const facultyRef = useRef<MultipleSelectorRef>(null);
+  const attemptedLabelHydrationRef = useRef<Set<string>>(new Set());
 
   // -- Max-selection tracking -----------------------------------------------
   const [maxReachedFields, setMaxReachedFields] = useState<Set<string>>(
@@ -206,6 +218,186 @@ export default function TertiaryEducationStep({
   const searchBatches = useBatchesSearch();
   const searchDepartments = useDepartmentsSearch();
   const searchFaculties = useFacultiesSearch();
+
+  // Preload lookup data for edit mode to populate cache for search results
+  useQualificationsQuery('');
+  useTertiaryAwardingBodiesQuery('');
+  useTertiaryAwardingBodyLocationsQuery('');
+  useLevelOfQualificationsQuery('');
+  useSpecializationsQuery('');
+  useStudyModesQuery();
+  useStudyPatternsQuery();
+  useDeliverySchedulesQuery();
+  useBatchesQuery('');
+  useDepartmentsQuery('');
+  useFacultiesQuery('');
+
+  const findMatchedOption = <T extends { value: string }>(
+    options: T[],
+    value: string
+  ) => options.find(option => option.value === value);
+
+  // Resolve labels for edit-mode ID-only values (payload may not include names).
+  useEffect(() => {
+    const shouldResolveLabel = (label: string, value: string) =>
+      label.trim() === value.trim();
+
+    const resolveSelectionsWithSource = async (
+      fieldName:
+        | 'entries.0.qualificationName'
+        | 'entries.0.tertiaryAwardingBody'
+        | 'entries.0.levelOfQualification'
+        | 'entries.0.specialization'
+        | 'entries.0.studyMode'
+        | 'entries.0.studyPattern'
+        | 'entries.0.deliverySchedule'
+        | 'entries.0.batch'
+        | 'entries.0.department'
+        | 'entries.0.faculty',
+      searchFn: (
+        search: string
+      ) => Promise<Array<{ value: string; label: string; source: string }>>
+    ) => {
+      const current = getValues(fieldName);
+      let changed = false;
+      const resolved = [...current];
+
+      for (let index = 0; index < current.length; index += 1) {
+        const item = current[index];
+        if (!shouldResolveLabel(item.label, item.value)) {
+          continue;
+        }
+
+        const hydrationKey = `${fieldName}:${item.value}`;
+        if (attemptedLabelHydrationRef.current.has(hydrationKey)) {
+          continue;
+        }
+        attemptedLabelHydrationRef.current.add(hydrationKey);
+
+        let options = await searchFn(item.value);
+        let match = findMatchedOption(options, item.value);
+
+        if (!match) {
+          options = await searchFn('');
+          match = findMatchedOption(options, item.value);
+        }
+
+        if (!match || shouldResolveLabel(match.label, item.value)) {
+          continue;
+        }
+
+        changed = true;
+        resolved[index] = {
+          ...item,
+          label: match.label,
+        };
+      }
+
+      if (changed) {
+        setValue(fieldName, resolved, {
+          shouldDirty: false,
+          shouldTouch: false,
+          shouldValidate: false,
+        });
+      }
+    };
+
+    const resolveLocationSelections = async () => {
+      const fieldName = 'entries.0.tertiaryAwardingBodyLocations' as const;
+      const current = getValues(fieldName);
+      let changed = false;
+      const resolved = [...current];
+
+      for (let index = 0; index < current.length; index += 1) {
+        const item = current[index];
+        if (!shouldResolveLabel(item.label, item.value)) {
+          continue;
+        }
+
+        const hydrationKey = `${fieldName}:${item.value}`;
+        if (attemptedLabelHydrationRef.current.has(hydrationKey)) {
+          continue;
+        }
+        attemptedLabelHydrationRef.current.add(hydrationKey);
+
+        let options = await searchLocations(item.value);
+        let match = findMatchedOption(options, item.value);
+
+        if (!match) {
+          options = await searchLocations('');
+          match = findMatchedOption(options, item.value);
+        }
+
+        if (!match || shouldResolveLabel(match.label, item.value)) {
+          continue;
+        }
+
+        changed = true;
+        resolved[index] = {
+          ...item,
+          label: match.label,
+        };
+      }
+
+      if (changed) {
+        setValue(fieldName, resolved, {
+          shouldDirty: false,
+          shouldTouch: false,
+          shouldValidate: false,
+        });
+      }
+    };
+
+    const resolveAllLabels = async () => {
+      await Promise.all([
+        resolveSelectionsWithSource(
+          'entries.0.qualificationName',
+          searchQualifications
+        ),
+        resolveSelectionsWithSource(
+          'entries.0.tertiaryAwardingBody',
+          searchAwardingBodies
+        ),
+        resolveLocationSelections(),
+        resolveSelectionsWithSource(
+          'entries.0.levelOfQualification',
+          searchLevels
+        ),
+        resolveSelectionsWithSource(
+          'entries.0.specialization',
+          searchSpecializations
+        ),
+        resolveSelectionsWithSource('entries.0.studyMode', searchStudyModes),
+        resolveSelectionsWithSource(
+          'entries.0.studyPattern',
+          searchStudyPatterns
+        ),
+        resolveSelectionsWithSource(
+          'entries.0.deliverySchedule',
+          searchDeliverySchedules
+        ),
+        resolveSelectionsWithSource('entries.0.batch', searchBatches),
+        resolveSelectionsWithSource('entries.0.department', searchDepartments),
+        resolveSelectionsWithSource('entries.0.faculty', searchFaculties),
+      ]);
+    };
+
+    void resolveAllLabels();
+  }, [
+    getValues,
+    searchAwardingBodies,
+    searchBatches,
+    searchDeliverySchedules,
+    searchDepartments,
+    searchFaculties,
+    searchLevels,
+    searchLocations,
+    searchQualifications,
+    searchSpecializations,
+    searchStudyModes,
+    searchStudyPatterns,
+    setValue,
+  ]);
 
   // -- Add-Now handler ------------------------------------------------------
   type CreatableField =

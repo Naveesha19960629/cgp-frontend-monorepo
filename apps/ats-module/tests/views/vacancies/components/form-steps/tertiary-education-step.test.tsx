@@ -5,6 +5,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import TertiaryEducationStep from '@/views/vacancies/components/form-steps/tertiary-education-step';
+import type { TertiaryEducation } from '@/views/vacancies/types';
 
 // ── Mock AddAwardingBodyDialog ─────────────────────────────────────────────
 
@@ -62,23 +63,59 @@ vi.mock('react-i18next', () => ({
 
 // ── Mock vacancy form context ──────────────────────────────────────────────
 
+type TertiaryEducationApiRef = {
+  source: 'MASTER' | 'PENDING';
+  id: string;
+  name?: string;
+  label?: string;
+};
+
+type TertiaryEducationApiEntry = {
+  qualificationName: TertiaryEducationApiRef[];
+  tertiaryAwardingBody: TertiaryEducationApiRef[];
+  tertiaryAwardingBodyLocations: TertiaryEducationApiRef[];
+  levelOfQualification: TertiaryEducationApiRef[];
+  specialization: TertiaryEducationApiRef[];
+  studyMode: TertiaryEducationApiRef[];
+  studyPattern: TertiaryEducationApiRef[];
+  deliverySchedule: TertiaryEducationApiRef[];
+  batch: TertiaryEducationApiRef[];
+  department: TertiaryEducationApiRef[];
+  faculty: TertiaryEducationApiRef[];
+  grade: string;
+};
+
+type TertiaryEducationApiShape = {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  tertiaryEducation: TertiaryEducationApiEntry[];
+};
+
+type MockVacancyForm = {
+  tertiaryEducation: TertiaryEducation[] | TertiaryEducationApiShape;
+};
+
 const {
   stableForm,
   mockSetForm,
   mockSetStepGuard,
   mockStepPersistRef,
   mockStepDisableRef,
-} = vi.hoisted(() => ({
-  stableForm: {
+} = vi.hoisted(() => {
+  const stableForm: MockVacancyForm = {
     tertiaryEducation: [
       { isEnabled: false, dataTakenFromCandidate: false, content: [] },
     ],
-  },
-  mockSetForm: vi.fn(),
-  mockSetStepGuard: vi.fn(),
-  mockStepPersistRef: { current: null },
-  mockStepDisableRef: { current: null },
-}));
+  };
+
+  return {
+    stableForm,
+    mockSetForm: vi.fn(),
+    mockSetStepGuard: vi.fn(),
+    mockStepPersistRef: { current: null },
+    mockStepDisableRef: { current: null },
+  };
+});
 
 vi.mock('@/views/vacancies/context/vacancy-form-context', () => ({
   useVacancyForm: () => ({
@@ -116,6 +153,19 @@ vi.mock('@/views/vacancies/hooks', async importOriginal => {
     await importOriginal<typeof import('@/views/vacancies/hooks')>();
   return {
     ...actual,
+    // Query hooks
+    useQualificationsQuery: () => ({ data: undefined }),
+    useTertiaryAwardingBodiesQuery: () => ({ data: undefined }),
+    useTertiaryAwardingBodyLocationsQuery: () => ({ data: undefined }),
+    useLevelOfQualificationsQuery: () => ({ data: undefined }),
+    useSpecializationsQuery: () => ({ data: undefined }),
+    useStudyModesQuery: () => ({ data: undefined }),
+    useStudyPatternsQuery: () => ({ data: undefined }),
+    useDeliverySchedulesQuery: () => ({ data: undefined }),
+    useBatchesQuery: () => ({ data: undefined }),
+    useDepartmentsQuery: () => ({ data: undefined }),
+    useFacultiesQuery: () => ({ data: undefined }),
+    // Search hooks
     useQualificationsSearch: () => vi.fn(() => Promise.resolve([])),
     useTertiaryAwardingBodiesSearch: () => vi.fn(() => Promise.resolve([])),
     useTertiaryAwardingBodyLocationsSearch: () =>
@@ -128,6 +178,7 @@ vi.mock('@/views/vacancies/hooks', async importOriginal => {
     useBatchesSearch: () => vi.fn(() => Promise.resolve([])),
     useDepartmentsSearch: () => vi.fn(() => Promise.resolve([])),
     useFacultiesSearch: () => vi.fn(() => Promise.resolve([])),
+    // Mutation hooks
     useAddQualificationMutation: () => ({
       mutateAsync: mockQualificationMutate,
     }),
@@ -986,6 +1037,171 @@ describe('TertiaryEducationStep', () => {
         screen.queryByTestId('add-awarding-body-dialog')
       ).not.toBeInTheDocument();
       expect(mockAddAwardingBodyMutate).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('pre-population from edit mode (data from form context)', () => {
+    it('initializes with empty form when tertiaryEducation is disabled and empty', () => {
+      stableForm.tertiaryEducation = [
+        { isEnabled: false, dataTakenFromCandidate: false, content: [] },
+      ];
+      renderStep();
+
+      expect(screen.getByRole('switch')).toHaveAttribute(
+        'aria-checked',
+        'false'
+      );
+      expect(
+        screen.getByLabelText('tertiaryEducation.collectFromCandidates')
+      ).not.toBeChecked();
+    });
+
+    it('restores isEnabled and dataTakenFromCandidate flags from context', () => {
+      stableForm.tertiaryEducation = [
+        { isEnabled: true, dataTakenFromCandidate: true, content: [] },
+      ];
+      renderStep();
+
+      expect(screen.getByRole('switch')).toHaveAttribute(
+        'aria-checked',
+        'true'
+      );
+      expect(
+        screen.getByLabelText('tertiaryEducation.collectFromCandidates')
+      ).toBeChecked();
+    });
+
+    it('receives TertiaryEducation array with populated content from form context', () => {
+      stableForm.tertiaryEducation = [
+        {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          content: [
+            {
+              qualificationName: [
+                { id: 'q-id-1', source: 'MASTER', name: 'BSc IT' },
+              ],
+              tertiaryAwardingBody: [
+                {
+                  id: 'ab-id-1',
+                  source: 'MASTER',
+                  name: 'University of Colombo',
+                },
+              ],
+              tertiaryAwardingBodyLocations: [
+                { id: 'loc-id-1', source: 'MASTER', name: 'Colombo' },
+              ],
+              levelOfQualification: [
+                { id: 'l-id-1', source: 'MASTER', name: "Master's" },
+              ],
+              specialization: [{ id: 's-id-1', source: 'MASTER', name: 'AI' }],
+              studyMode: [
+                { id: 'sm-id-1', source: 'MASTER', name: 'Full-time' },
+              ],
+              studyPattern: [
+                { id: 'sp-id-1', source: 'MASTER', name: 'Full-Time' },
+              ],
+              deliverySchedule: [
+                { id: 'ds-id-1', source: 'MASTER', name: 'Campus' },
+              ],
+              batch: [{ id: 'b-id-1', source: 'MASTER', name: 'Batch 2021' }],
+              department: [{ id: 'd-id-1', source: 'MASTER', name: 'CS Dept' }],
+              faculty: [{ id: 'f-id-1', source: 'MASTER', name: 'Science' }],
+              grade: 'GPA 3.8',
+            },
+          ],
+        },
+      ];
+      renderStep();
+
+      // Verify section is enabled
+      expect(screen.getByRole('switch')).toHaveAttribute(
+        'aria-checked',
+        'true'
+      );
+
+      // Verify grade field is pre-populated
+      const gradeInput = screen.getByPlaceholderText(
+        'tertiaryEducation.placeholders.grade'
+      );
+      expect(gradeInput).toHaveValue('GPA 3.8');
+    });
+
+    it('normalizes API object shape with tertiaryEducation key (from get-by-id)', () => {
+      stableForm.tertiaryEducation = {
+        isEnabled: true,
+        dataTakenFromCandidate: false,
+        tertiaryEducation: [
+          {
+            qualificationName: [
+              { id: 'q-id-2', source: 'MASTER', label: 'BSc CS' },
+            ],
+            tertiaryAwardingBody: [
+              { id: 'ab-id-2', source: 'MASTER', label: 'University X' },
+            ],
+            tertiaryAwardingBodyLocations: [
+              { id: 'loc-id-2', source: 'MASTER', label: 'Bangkok' },
+            ],
+            levelOfQualification: [
+              { id: 'l-id-2', source: 'MASTER', label: "Bachelor's" },
+            ],
+            specialization: [],
+            studyMode: [],
+            studyPattern: [],
+            deliverySchedule: [],
+            batch: [],
+            department: [],
+            faculty: [],
+            grade: 'A+',
+          },
+        ],
+      };
+      renderStep();
+
+      // Verify section is enabled
+      expect(screen.getByRole('switch')).toHaveAttribute(
+        'aria-checked',
+        'true'
+      );
+
+      // Verify grade field shows the pre-populated value
+      const gradeInput = screen.getByPlaceholderText(
+        'tertiaryEducation.placeholders.grade'
+      );
+      expect(gradeInput).toHaveValue('A+');
+    });
+
+    it('accepts both array and object formats for pre-populated data', () => {
+      stableForm.tertiaryEducation = [
+        {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          content: [
+            {
+              qualificationName: [
+                { id: 'q-id-3', source: 'MASTER', name: 'BSc' },
+              ],
+              tertiaryAwardingBody: [],
+              tertiaryAwardingBodyLocations: [],
+              levelOfQualification: [],
+              specialization: [],
+              studyMode: [],
+              studyPattern: [],
+              deliverySchedule: [],
+              batch: [],
+              department: [],
+              faculty: [],
+              grade: 'High Distinction',
+            },
+          ],
+        },
+      ];
+      renderStep();
+
+      const gradeInput = screen.getByPlaceholderText(
+        'tertiaryEducation.placeholders.grade'
+      );
+      expect(gradeInput).toHaveValue('High Distinction');
     });
   });
 });
