@@ -89,6 +89,7 @@ export default function VacancyCreateStepperForm({
     showCancelDialog,
     setShowCancelDialog,
     OnSaveAsDraft,
+    isSavingDraft,
   } = useVacancyForm();
 
   const currentStepKey = VACANCY_STEPS[currentStepIndex].key;
@@ -214,6 +215,7 @@ export default function VacancyCreateStepperForm({
           void navigate('/dashboard/ats/vacancies');
         }}
         onSaveAsDraft={OnSaveAsDraft}
+        isSavingDraft={isSavingDraft}
       />
 
       <StepDisableDialog

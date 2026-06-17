@@ -2,7 +2,7 @@ import { Loader2 } from 'lucide-react';
 
 import { ArrowLeft2 } from 'iconsax-reactjs';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { getApiErrorMessage } from '@/app/utils/api-error';
@@ -66,7 +66,7 @@ export default function JobRequirementsStep({
   onBack,
 }: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
-  const { onCancel } = useVacancyForm();
+  const { onCancel, stepDraftSaveRef } = useVacancyForm();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -176,6 +176,42 @@ export default function JobRequirementsStep({
   const handleCancel = () => {
     onCancel();
   };
+
+  useEffect(() => {
+    stepDraftSaveRef.current = async () => {
+      const isValid = await form.trigger([
+        'discipline',
+        'careerPath',
+        'level',
+        'role',
+        'jobTitle',
+      ]);
+      if (!isValid) return null;
+
+      const data = form.getValues();
+      return {
+        jobRequirements: [
+          {
+            isEnabled: true,
+            dataTakenFromCandidate: false,
+            discipline: toPayloadOptions(data.discipline),
+            careerPath: toPayloadOptions(data.careerPath),
+            level: toPayloadOptions(data.level),
+            role: toPayloadOptions(data.role),
+            jobTitle: toPayloadOptions(data.jobTitle),
+            employmentType: toPayloadOptions(data.employmentType),
+            workSchedule: toPayloadOptions(data.workSchedule),
+            engagementModel: toPayloadOptions(data.engagementModel),
+            description: data.description,
+          },
+        ],
+      };
+    };
+
+    return () => {
+      stepDraftSaveRef.current = null;
+    };
+  }, [form, stepDraftSaveRef]);
 
   const handleSubmit = async () => {
     const data = form.getValues();

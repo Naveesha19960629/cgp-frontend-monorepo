@@ -509,7 +509,7 @@ const MultipleSelector = React.forwardRef<
             groupKey,
             items.map(item => selectedByValue.get(item.value) ?? item),
           ])
-        ) as GroupOption;
+        );
 
         const allValues = new Set(
           Object.values(normalizedOptions)
@@ -709,7 +709,7 @@ const MultipleSelector = React.forwardRef<
                 }
               }}
             >
-              <div className="bg-popover text-popover-foreground animate-in z-10 w-full rounded-md border shadow-md outline-none">
+              <div className="bg-popover text-popover-foreground animate-in z-10 w-full overflow-hidden rounded-md border shadow-md outline-none">
                 {CreatableItem(showLoading)}
                 <CommandList
                   className="max-h-none overflow-visible"
@@ -731,7 +731,7 @@ const MultipleSelector = React.forwardRef<
 
                   <ScrollArea
                     className={cn(
-                      '[&_[data-radix-scroll-area-viewport]]:max-h-[228px] [&_[data-radix-scroll-area-viewport]>div]:max-w-full',
+                      '**:data-radix-scroll-area-viewport:overflow-x-hidden [&_[data-radix-scroll-area-viewport]]:max-h-[228px] [&_[data-radix-scroll-area-viewport]>div]:max-w-full',
                       !CreatableItem() &&
                         '[&_[data-radix-scroll-area-viewport]]:max-h-[272px]'
                     )}
@@ -823,7 +823,7 @@ const MultipleSelector = React.forwardRef<
                                         <Check className="bg-brand-primary-500 size-3.5 text-white" />
                                       </div>
                                     )}
-                                    <span className="truncate">
+                                    <span className="min-w-0 break-all">
                                       {option.label}
                                     </span>
                                   </CommandItem>
