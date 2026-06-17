@@ -80,6 +80,7 @@ const useJobRequirementsForm = () => {
 
   return useForm<JobRequirementsFormValues>({
     resolver: zodResolver(jobRequirementsSchema),
+    mode: 'onChange',
     defaultValues: {
       isEnabled: true,
       dataTakenFromCandidate: false,

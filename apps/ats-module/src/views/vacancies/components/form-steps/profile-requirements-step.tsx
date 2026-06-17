@@ -357,6 +357,8 @@ export default function ProfileRequirementsStep({ onNext, onBack }: StepProps) {
     onCancel,
     stepPersistRef,
     stepDisableRef,
+    currentStepIndex,
+    removeCompletedStep,
   } = useVacancyForm();
   const { form, fields, append, remove, replace } = useProfileRequirementsForm(
     contextForm.profileRequirements
@@ -443,6 +445,7 @@ export default function ProfileRequirementsStep({ onNext, onBack }: StepProps) {
         isOpen: true,
       },
     ]);
+    removeCompletedStep(currentStepIndex);
     setShowDisableConfirm(false);
     showDisableToast(t('profileRequirements.title'));
   };

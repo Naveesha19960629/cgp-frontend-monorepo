@@ -80,6 +80,7 @@ jobs:
           VITE_KEYCLOAK_CLIENT_ID: ${{ secrets.QA_VITE_KEYCLOAK_CLIENT_ID }}
           VITE_BACKEND_API_URL: ${{ secrets.QA_VITE_BACKEND_API_URL }}
           VITE_BACKEND_API_VERSION: ${{ secrets.QA_VITE_BACKEND_API_VERSION }}
+          VITE_ATS_MODULE_FRONTEND_BASE_URL: ${{ secrets.QA_VITE_ATS_MODULE_FRONTEND_BASE_URL }}
         run: pnpm nx run-many -t build
 
   deploy-to-qa-cloud-run:
@@ -144,6 +145,7 @@ jobs:
             --build-arg "VITE_BACKEND_API_URL=${{ secrets.QA_VITE_BACKEND_API_URL }}" \
             --build-arg "VITE_BACKEND_API_VERSION=${{ secrets.QA_VITE_BACKEND_API_VERSION }}" \
             --build-arg "VITE_WS_URL=${{ secrets.QA_VITE_WS_URL }}" \
+            --build-arg "VITE_ATS_MODULE_FRONTEND_BASE_URL=${{ secrets.QA_VITE_ATS_MODULE_FRONTEND_BASE_URL }}" \
             -t "$AR_HOSTNAME/$PROJECT_ID/$REPOSITORY/$ATS_SERVICE:${{ steps.version.outputs.version }}" \
             -t "$AR_HOSTNAME/$PROJECT_ID/$REPOSITORY/$ATS_SERVICE:latest" \
             .
@@ -200,6 +202,7 @@ jobs:
             --build-arg "VITE_BACKEND_API_URL=${{ secrets.QA_VITE_BACKEND_API_URL }}" \
             --build-arg "VITE_BACKEND_API_VERSION=${{ secrets.QA_VITE_BACKEND_API_VERSION }}" \
             --build-arg "VITE_WS_URL=${{ secrets.QA_VITE_WS_URL }}" \
+            --build-arg "VITE_ATS_MODULE_FRONTEND_BASE_URL=${{ secrets.QA_VITE_ATS_MODULE_FRONTEND_BASE_URL }}" \
             -t "$AR_HOSTNAME/$PROJECT_ID/$REPOSITORY/$SHELL_SERVICE:${{ steps.version.outputs.version }}" \
             -t "$AR_HOSTNAME/$PROJECT_ID/$REPOSITORY/$SHELL_SERVICE:latest" \
             .

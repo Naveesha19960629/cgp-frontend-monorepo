@@ -66,6 +66,8 @@ export default function LicenseCertificatesStep({
     setForm,
     stepPersistRef,
     stepDisableRef,
+    currentStepIndex,
+    removeCompletedStep,
   } = useVacancyForm();
 
   const form = useLicenseCertificatesForm(vacancyForm.licenseCertificates);
@@ -801,6 +803,7 @@ export default function LicenseCertificatesStep({
             clearEntryData();
             setValue('dataTakenFromCandidate', false);
             setValue('isEnabled', false);
+            removeCompletedStep(currentStepIndex);
             setLicenseCertSelectorKey(k => k + 1);
             setConfirmDisableOpen(false);
           }}

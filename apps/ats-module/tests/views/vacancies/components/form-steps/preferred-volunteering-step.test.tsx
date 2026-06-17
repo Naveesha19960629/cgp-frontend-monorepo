@@ -13,6 +13,8 @@ vi.mock('@/views/vacancies/context/vacancy-form-context', () => ({
     setForm: vi.fn(),
     stepPersistRef: { current: null },
     stepDisableRef: { current: null },
+    currentStepIndex: 0,
+    removeCompletedStep: vi.fn(),
   }),
 }));
 

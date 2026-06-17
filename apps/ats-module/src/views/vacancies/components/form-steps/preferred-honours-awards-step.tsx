@@ -630,6 +630,8 @@ export default function PreferredHonoursAwardsStep({
     onCancel,
     stepPersistRef,
     stepDisableRef,
+    currentStepIndex,
+    removeCompletedStep,
   } = useVacancyForm();
   const { form, fields, append, remove, replace } =
     usePreferredHonoursAwardsForm(contextForm.preferredHonoursAwards);
@@ -712,6 +714,7 @@ export default function PreferredHonoursAwardsStep({
         isOpen: true,
       },
     ]);
+    removeCompletedStep(currentStepIndex);
     setShowDisableConfirm(false);
     SuccessToast({
       title: t('preferredHonoursAwards.notifications.disable.title'),

@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 
 import {
   CustomizableFormStep,
@@ -21,7 +23,10 @@ import {
   SecondaryEducationStep,
   TertiaryEducationStep,
 } from '@/views/vacancies';
+import { useCreateVacancyMutation } from '@/views/vacancies/hooks';
 import type { VacancyForm, VacancyStep } from '@/views/vacancies/types';
+
+import { ErrorToast, SuccessToast } from '@cgp/ui-kit/components/custom-toast';
 
 const VACANCY_STEPS: readonly VacancyStep[] = [
   {
@@ -237,25 +242,36 @@ interface VacancyFormContextValue {
   onCancel: () => void;
   onSubmit: () => void;
   OnSaveAsDraft: () => void;
+  isSavingDraft: boolean;
   showCancelDialog: boolean;
   setShowCancelDialog: (open: boolean) => void;
   stepGuard: boolean;
   setStepGuard: (guard: boolean) => void;
   stepPersistRef: React.MutableRefObject<(() => void) | null>;
   stepDisableRef: React.MutableRefObject<(() => void) | null>;
+  stepDraftSaveRef: React.MutableRefObject<
+    (() => Promise<Partial<VacancyForm> | null>) | null
+  >;
 }
 
 const VacancyFormContext = createContext<VacancyFormContextValue | null>(null);
 
 function VacancyFormProvider({ children }: { children: React.ReactNode }) {
+  const { t } = useTranslation('ats');
+  const navigate = useNavigate();
+  const { mutateAsync: createVacancy } = useCreateVacancyMutation();
   const [form, setForm] = useState<VacancyForm>(DEFAULT_FORM);
   const [currentStepIndex, _setCurrentStepIndex] = useState(0);
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
   const [isInitialStep, setIsInitialStep] = useState(true);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [stepGuard, setStepGuard] = useState(false);
+  const [isSavingDraft, setIsSavingDraft] = useState(false);
   const stepPersistRef = useRef<(() => void) | null>(null);
   const stepDisableRef = useRef<(() => void) | null>(null);
+  const stepDraftSaveRef = useRef<
+    (() => Promise<Partial<VacancyForm> | null>) | null
+  >(null);
 
   const setCurrentStepIndex = (index: number) => {
     _setCurrentStepIndex(index);
@@ -321,6 +337,7 @@ function VacancyFormProvider({ children }: { children: React.ReactNode }) {
   };
 
   const onCancel = () => {
+    stepPersistRef.current?.();
     setShowCancelDialog(true);
   };
 
@@ -329,7 +346,39 @@ function VacancyFormProvider({ children }: { children: React.ReactNode }) {
   };
 
   const OnSaveAsDraft = () => {
-    // Implement the payload convertion
+    void (async () => {
+      setIsSavingDraft(true);
+      try {
+        let draftForm = form;
+
+        if (stepDraftSaveRef.current) {
+          const stepValues = await stepDraftSaveRef.current();
+          if (!stepValues) {
+            setShowCancelDialog(false);
+            return;
+          }
+          draftForm = { ...form, ...stepValues };
+        }
+
+        await createVacancy({ form: draftForm, status: 'DRAFT' });
+        SuccessToast({
+          title: t('vacancyCancelDialog.notifications.saveAsDraft.title'),
+          description: t(
+            'vacancyCancelDialog.notifications.saveAsDraft.message'
+          ),
+        });
+        void navigate('/dashboard/ats/vacancies');
+      } catch {
+        ErrorToast({
+          title: t('vacancyCancelDialog.notifications.saveAsDraft.errorTitle'),
+          description: t(
+            'vacancyCancelDialog.notifications.saveAsDraft.errorMessage'
+          ),
+        });
+      } finally {
+        setIsSavingDraft(false);
+      }
+    })();
   };
 
   return (
@@ -347,12 +396,14 @@ function VacancyFormProvider({ children }: { children: React.ReactNode }) {
         onCancel,
         onSubmit,
         OnSaveAsDraft,
+        isSavingDraft,
         showCancelDialog,
         setShowCancelDialog,
         stepGuard,
         setStepGuard,
         stepPersistRef,
         stepDisableRef,
+        stepDraftSaveRef,
       }}
     >
       {children}

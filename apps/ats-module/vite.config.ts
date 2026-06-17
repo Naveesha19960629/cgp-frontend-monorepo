@@ -19,7 +19,7 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
 
   return {
-    base: env.VITE_FRONTEND_BASE_URL || '/',
+    base: env.VITE_ATS_MODULE_FRONTEND_BASE_URL || '/',
     plugins: [
       react(),
       tailwindcss(),

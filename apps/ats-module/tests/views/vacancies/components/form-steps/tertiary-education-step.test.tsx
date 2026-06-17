@@ -124,6 +124,8 @@ vi.mock('@/views/vacancies/context/vacancy-form-context', () => ({
     setStepGuard: mockSetStepGuard,
     stepPersistRef: mockStepPersistRef,
     stepDisableRef: mockStepDisableRef,
+    currentStepIndex: 0,
+    removeCompletedStep: vi.fn(),
   }),
 }));
 

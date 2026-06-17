@@ -43,6 +43,8 @@ const mockUseVacancyForm = vi.hoisted(() =>
     setStepGuard: vi.fn(),
     stepPersistRef: { current: null },
     stepDisableRef: { current: null },
+    currentStepIndex: 0,
+    removeCompletedStep: vi.fn(),
   }))
 );
 
@@ -64,19 +66,12 @@ vi.mock('@/views/vacancies', async importOriginal => {
   };
 });
 
-vi.mock(
-  '@/views/vacancies/context/vacancy-form-context',
-  async importOriginal => {
-    const actual =
-      await importOriginal<
-        typeof import('@/views/vacancies/context/vacancy-form-context')
-      >();
-    return {
-      ...actual,
-      useVacancyForm: mockUseVacancyForm,
-    };
-  }
-);
+vi.mock('@/views/vacancies/context/vacancy-form-context', () => ({
+  useVacancyForm: mockUseVacancyForm,
+  VACANCY_STEPS: [],
+  VacancyFormProvider: ({ children }: { children: React.ReactNode }) =>
+    children,
+}));
 
 vi.mock('@/views/vacancies/components/dialogs', () => ({
   AddOrganizationFormDialog: () => null,

@@ -36,7 +36,14 @@ export default function PreferredIndustryStep({
 }: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
   const showDisableToast = useDisableSuccessToast();
-  const { form, setForm, stepPersistRef, stepDisableRef } = useVacancyForm();
+  const {
+    form,
+    setForm,
+    stepPersistRef,
+    stepDisableRef,
+    currentStepIndex,
+    removeCompletedStep,
+  } = useVacancyForm();
 
   const preferredIndustries = form.preferredIndustries ?? {
     isEnabled: false,
@@ -330,6 +337,7 @@ export default function PreferredIndustryStep({
             dataTakenFromCandidate: false,
             isEnabled: false,
           });
+          removeCompletedStep?.(currentStepIndex ?? 0);
           setConfirmDisableOpen(false);
           showDisableToast(t('preferredIndustries.title'));
         }}

@@ -141,7 +141,7 @@ export default function ScheduleVacancyStep({
       if (id) {
         await updateVacancy({ id, form: nextForm });
       } else {
-        await createVacancy(nextForm);
+        await createVacancy({ form: { ...form, schedule } });
       }
       SuccessToast({
         title: t('scheduleVacancy.notifications.successTitle'),

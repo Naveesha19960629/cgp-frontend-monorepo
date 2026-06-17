@@ -861,6 +861,7 @@ interface VacancyCancelDialogProps {
   onOpenChange: (open: boolean) => void;
   onDiscard: () => void;
   onSaveAsDraft: () => void;
+  isSavingDraft?: boolean;
 }
 
 interface VacancyTableColumn {

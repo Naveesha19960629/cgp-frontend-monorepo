@@ -272,6 +272,12 @@
       "discard": {
         "title": "Successfully Discarded",
         "message": "Vacancy creation discarded successfully."
+      },
+      "saveAsDraft": {
+        "title": "Successfully Saved",
+        "message": "Saved as a draft successfully.",
+        "errorTitle": "Try Again",
+        "errorMessage": "Some changes could not be loaded. Please try again."
       }
     }
   },

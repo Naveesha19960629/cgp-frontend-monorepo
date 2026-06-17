@@ -538,7 +538,13 @@ export default function PreferredSportsStep({
       : [createEmptyEntry('1')]
   );
 
-  const { setForm, stepPersistRef, stepDisableRef } = useVacancyForm();
+  const {
+    setForm,
+    stepPersistRef,
+    stepDisableRef,
+    currentStepIndex,
+    removeCompletedStep,
+  } = useVacancyForm();
   const _sportsRef = useRef<() => void>(() => {});
   useEffect(() => {
     _sportsRef.current = () => {
@@ -650,6 +656,7 @@ export default function PreferredSportsStep({
     setEntries([createEmptyEntry('1')]);
     setDataTakenFromCandidate(false);
     setIsEnabled(false);
+    removeCompletedStep(currentStepIndex);
     setConfirmDisableOpen(false);
     SuccessToast({
       title: 'Section Disabled',
