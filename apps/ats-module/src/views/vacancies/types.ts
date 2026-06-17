@@ -1026,11 +1026,11 @@ interface PatentGroupApiPayload {
 
 interface HonourContentApiPayload {
   title: string;
-  issuedBy: string;
-  issuedDateFrom?: string;
-  issuedDateTo?: string;
   associatedOrganizations: MasterRef[];
   organizationLocations: MasterRef[];
+  issuedBy: string;
+  issuedFromDate?: string;
+  issuedToDate?: string;
 }
 
 interface HonoursGroupApiPayload {
@@ -1054,7 +1054,7 @@ interface ProjectGroupApiPayload {
 }
 
 interface PublicationContentApiPayload {
-  acceptedPublisher: string;
+  acceptedPublisherName: string;
   publishedDateFrom: string;
   publishedDateTo: string;
 }
@@ -1067,9 +1067,9 @@ interface PublicationGroupApiPayload {
 
 interface ClubSocietyContentApiPayload {
   clubSociety: MasterRef[];
-  representedOrganization: MasterRef[];
-  organizationLocation?: MasterRef;
-  position: string;
+  organization: MasterRef[];
+  organizationLocations: MasterRef[];
+  positionRoleHeld: string;
   startDate: string;
   endDate: string;
 }
@@ -1081,11 +1081,11 @@ interface ClubSocietiesGroupApiPayload {
 }
 
 interface SportContentApiPayload {
-  sport: MasterRef[];
-  levelRepresented: MasterRef[];
+  nameOfSport: MasterRef[];
   representedOrganization: MasterRef[];
-  organizationLocation?: MasterRef;
-  position: string;
+  organizationLocations: MasterRef[];
+  levelRepresented: MasterRef[];
+  positionRoleHeld: string;
   startDate: string;
   endDate: string;
 }
@@ -1097,10 +1097,10 @@ interface SportsGroupApiPayload {
 }
 
 interface VolunteeringContentApiPayload {
-  organizationName: MasterRef[];
-  organizationLocation?: MasterRef;
+  organization: MasterRef[];
+  organizationLocations: MasterRef[];
+  positionRole: string;
   cause: MasterRef[];
-  position: string;
   startDate: string;
   endDate: string;
 }
@@ -1144,25 +1144,44 @@ interface IndustryApiPayload {
 interface SkillsApiPayload {
   isEnabled: boolean;
   dataTakenFromCandidate: boolean;
-  skills: { skillId: string; careerPathId?: string }[];
+  content: MasterRef[];
 }
 
 interface LanguagesApiPayload {
   isEnabled: boolean;
   dataTakenFromCandidate: boolean;
-  languages: MasterRef[];
+  content: MasterRef[];
 }
 
 interface CausesApiPayload {
   isEnabled: boolean;
   dataTakenFromCandidate: boolean;
-  causes: MasterRef[];
+  content: MasterRef[];
 }
 
 interface HobbiesApiPayload {
   isEnabled: boolean;
   dataTakenFromCandidate: boolean;
-  hobbies: MasterRef[];
+  content: MasterRef[];
+}
+
+interface ProfileRequirementAddressApiPayload {
+  cityRefId: string;
+  stateRefId: string;
+  countryRefId: string;
+  postalCode: string;
+}
+
+interface ProfileRequirementContentApiPayload {
+  gender: string;
+  maritalStatus: string;
+  addresses: ProfileRequirementAddressApiPayload[];
+}
+
+interface ProfileRequirementApiPayload {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  content: ProfileRequirementContentApiPayload;
 }
 
 interface CreateVacancyPayload {
@@ -1171,24 +1190,24 @@ interface CreateVacancyPayload {
   lastActiveStep: string;
   data: {
     jobRequirement: JobRequirementApiPayload;
-    profileRequirements?: VacancyForm['profileRequirements'];
-    secondaryEducation?: VacancyForm['secondaryEducation'];
-    tertiaryEducation?: VacancyForm['tertiaryEducation'];
-    licenseCertificates?: VacancyForm['licenseCertificates'];
+    profileRequirement: ProfileRequirementApiPayload[];
+    secondaryEducation: VacancyForm['secondaryEducation'];
+    tertiaryEducation: VacancyForm['tertiaryEducation'];
+    skills: SkillsApiPayload;
+    languages: LanguagesApiPayload;
+    causes: CausesApiPayload[];
+    hobbyList: HobbiesApiPayload[];
+    industry: IndustryApiPayload;
+    schedule: { schedulePublishAt: string; expirationAt: string };
+    customizedForm: CustomizedFormApiPayload;
+    projects: ProjectGroupApiPayload[];
+    publications: PublicationGroupApiPayload[];
+    clubsAndSocieties: ClubSocietiesGroupApiPayload[];
+    sports: SportsGroupApiPayload[];
+    volunteering: VolunteeringGroupApiPayload[];
     patents: PatentGroupApiPayload[];
     honoursAndAwards: HonoursGroupApiPayload[];
-    projects: ProjectGroupApiPayload[];
-    publications?: PublicationGroupApiPayload[];
-    clubSocieties?: ClubSocietiesGroupApiPayload[];
-    sports?: SportsGroupApiPayload[];
-    volunteering?: VolunteeringGroupApiPayload[];
-    preferredSkills?: SkillsApiPayload;
-    preferredLanguages?: LanguagesApiPayload;
-    preferredCauses?: CausesApiPayload;
-    preferredHobbies?: HobbiesApiPayload;
-    industry: IndustryApiPayload;
-    customizedForm: CustomizedFormApiPayload;
-    schedule: { schedulePublishAt: string; expirationAt: string };
+    licensesAndCertifications: LicenseCertificates[];
   };
 }
 
@@ -1216,6 +1235,9 @@ export type {
   LanguagesApiPayload,
   CausesApiPayload,
   HobbiesApiPayload,
+  ProfileRequirementApiPayload,
+  ProfileRequirementContentApiPayload,
+  ProfileRequirementAddressApiPayload,
   StatusConfig,
   VacancyStatus,
   VacancyStatusBadgeProps,

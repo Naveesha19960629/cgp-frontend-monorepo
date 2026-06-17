@@ -140,7 +140,7 @@ export default function PreferredSkillsStep({
     const apiOptions: Option[] = apiSkills.map(s => ({
       value: s.id,
       label: s.label,
-      source: 'MASTER',
+      source: s.source ?? 'MASTER',
     }));
 
     const optionsByValue = new Map<string, Option>();

@@ -9,13 +9,17 @@ import type {
   IndustryApiPayload,
   JobRequirementApiPayload,
   LanguagesApiPayload,
+  LicenseCertificates,
   MasterRef,
   OptionWithSource,
   PatentGroupApiPayload,
+  ProfileRequirementApiPayload,
   ProjectGroupApiPayload,
   PublicationGroupApiPayload,
+  SecondaryEducation,
   SkillsApiPayload,
   SportsGroupApiPayload,
+  TertiaryEducation,
   VacancyForm,
   VolunteeringGroupApiPayload,
 } from '@/views/vacancies/types';
@@ -59,6 +63,15 @@ function mapJobRequirement(form: VacancyForm): JobRequirementApiPayload {
     };
   }
 
+  if (jobReq.dataTakenFromCandidate) {
+    return {
+      isEnabled: jobReq.isEnabled,
+      dataTakenFromCandidate: true,
+      roles: [],
+      jobTitles: [],
+    };
+  }
+
   return {
     isEnabled: jobReq.isEnabled,
     dataTakenFromCandidate: jobReq.dataTakenFromCandidate,
@@ -80,9 +93,56 @@ function mapJobRequirement(form: VacancyForm): JobRequirementApiPayload {
   };
 }
 
+function mapProfileRequirement(
+  form: VacancyForm
+): ProfileRequirementApiPayload[] {
+  const pr = form.profileRequirements;
+
+  if (pr.dataTakenFromCandidate) {
+    return [
+      {
+        isEnabled: pr.isEnabled,
+        dataTakenFromCandidate: true,
+        content: {
+          gender: '',
+          maritalStatus: '',
+          addresses: [],
+        },
+      },
+    ];
+  }
+
+  return [
+    {
+      isEnabled: pr.isEnabled,
+      dataTakenFromCandidate: pr.dataTakenFromCandidate,
+      content: {
+        gender: pr.gender?.id ?? '',
+        maritalStatus: pr.maritalStatus?.id ?? '',
+        addresses: pr.addresses.map(addr => ({
+          cityRefId: addr.city?.id ?? '',
+          stateRefId: addr.stateProvince?.id ?? '',
+          countryRefId: addr.country?.id ?? '',
+          postalCode: addr.postalCode ?? '',
+        })),
+      },
+    },
+  ];
+}
+
 function mapPatents(form: VacancyForm): PatentGroupApiPayload[] {
   if (!form.patents) {
     return [{ isEnabled: false, dataTakenFromCandidate: false, content: [] }];
+  }
+
+  if (form.patents.dataTakenFromCandidate) {
+    return [
+      {
+        isEnabled: form.patents.isEnabled,
+        dataTakenFromCandidate: true,
+        content: [],
+      },
+    ];
   }
 
   return [
@@ -107,6 +167,16 @@ function mapHonoursAndAwards(form: VacancyForm): HonoursGroupApiPayload[] {
     return [{ isEnabled: false, dataTakenFromCandidate: false, content: [] }];
   }
 
+  if (form.preferredHonoursAwards.dataTakenFromCandidate) {
+    return [
+      {
+        isEnabled: form.preferredHonoursAwards.isEnabled,
+        dataTakenFromCandidate: true,
+        content: [],
+      },
+    ];
+  }
+
   return [
     {
       isEnabled: form.preferredHonoursAwards.isEnabled,
@@ -114,9 +184,6 @@ function mapHonoursAndAwards(form: VacancyForm): HonoursGroupApiPayload[] {
         form.preferredHonoursAwards.dataTakenFromCandidate,
       content: form.preferredHonoursAwards.honoursAndAwards.map(h => ({
         title: h.title,
-        issuedBy: h.issuedBy,
-        issuedDateFrom: formatOptionalDate(h.issuedDateFrom),
-        issuedDateTo: formatOptionalDate(h.issuedDateTo),
         associatedOrganizations: h.associatedOrganizations.map(o => ({
           source: o.source,
           id: o.value,
@@ -125,6 +192,9 @@ function mapHonoursAndAwards(form: VacancyForm): HonoursGroupApiPayload[] {
           source: 'MASTER' as const,
           id: l.value,
         })),
+        issuedBy: h.issuedBy,
+        issuedFromDate: formatOptionalDate(h.issuedDateFrom),
+        issuedToDate: formatOptionalDate(h.issuedDateTo),
       })),
     },
   ];
@@ -133,6 +203,16 @@ function mapHonoursAndAwards(form: VacancyForm): HonoursGroupApiPayload[] {
 function mapProjects(form: VacancyForm): ProjectGroupApiPayload[] {
   if (!form.projectsRequirements) {
     return [{ isEnabled: false, dataTakenFromCandidate: false, content: [] }];
+  }
+
+  if (form.projectsRequirements.dataTakenFromCandidate) {
+    return [
+      {
+        isEnabled: form.projectsRequirements.isEnabled,
+        dataTakenFromCandidate: true,
+        content: [],
+      },
+    ];
   }
 
   return [
@@ -153,17 +233,27 @@ function mapProjects(form: VacancyForm): ProjectGroupApiPayload[] {
   ];
 }
 
-function mapPublications(
-  form: VacancyForm
-): PublicationGroupApiPayload[] | undefined {
-  if (!form.preferredPublications) return undefined;
+function mapPublications(form: VacancyForm): PublicationGroupApiPayload[] {
+  if (!form.preferredPublications) {
+    return [{ isEnabled: false, dataTakenFromCandidate: false, content: [] }];
+  }
+
+  if (form.preferredPublications.dataTakenFromCandidate) {
+    return [
+      {
+        isEnabled: form.preferredPublications.isEnabled,
+        dataTakenFromCandidate: true,
+        content: [],
+      },
+    ];
+  }
 
   return [
     {
       isEnabled: form.preferredPublications.isEnabled,
       dataTakenFromCandidate: form.preferredPublications.dataTakenFromCandidate,
       content: form.preferredPublications.publications.map(p => ({
-        acceptedPublisher: p.acceptedPublisher,
+        acceptedPublisherName: p.acceptedPublisher,
         publishedDateFrom: p.publishedDateFrom ?? '',
         publishedDateTo: p.publishedDateTo ?? '',
       })),
@@ -171,10 +261,20 @@ function mapPublications(
   ];
 }
 
-function mapClubSocieties(
-  form: VacancyForm
-): ClubSocietiesGroupApiPayload[] | undefined {
-  if (!form.preferredClubSocieties) return undefined;
+function mapClubSocieties(form: VacancyForm): ClubSocietiesGroupApiPayload[] {
+  if (!form.preferredClubSocieties) {
+    return [{ isEnabled: false, dataTakenFromCandidate: false, content: [] }];
+  }
+
+  if (form.preferredClubSocieties.dataTakenFromCandidate) {
+    return [
+      {
+        isEnabled: form.preferredClubSocieties.isEnabled,
+        dataTakenFromCandidate: true,
+        content: [],
+      },
+    ];
+  }
 
   return [
     {
@@ -183,14 +283,12 @@ function mapClubSocieties(
         form.preferredClubSocieties.dataTakenFromCandidate,
       content: form.preferredClubSocieties.clubSocieties.map(e => ({
         clubSociety: e.clubSociety.map(c => toRef(c)),
-        representedOrganization: e.representedOrganization.map(o => toRef(o)),
-        organizationLocation: e.organizationLocations[0]
-          ? {
-              source: 'MASTER' as const,
-              id: e.organizationLocations[0].value,
-            }
-          : undefined,
-        position: e.position,
+        organization: e.representedOrganization.map(o => toRef(o)),
+        organizationLocations: e.organizationLocations.map(l => ({
+          source: 'MASTER' as const,
+          id: l.value,
+        })),
+        positionRoleHeld: e.position,
         startDate: e.startDate ?? '',
         endDate: e.endDate ?? '',
       })),
@@ -198,24 +296,34 @@ function mapClubSocieties(
   ];
 }
 
-function mapSports(form: VacancyForm): SportsGroupApiPayload[] | undefined {
-  if (!form.preferredSports) return undefined;
+function mapSports(form: VacancyForm): SportsGroupApiPayload[] {
+  if (!form.preferredSports) {
+    return [{ isEnabled: false, dataTakenFromCandidate: false, content: [] }];
+  }
+
+  if (form.preferredSports.dataTakenFromCandidate) {
+    return [
+      {
+        isEnabled: form.preferredSports.isEnabled,
+        dataTakenFromCandidate: true,
+        content: [],
+      },
+    ];
+  }
 
   return [
     {
       isEnabled: form.preferredSports.isEnabled,
       dataTakenFromCandidate: form.preferredSports.dataTakenFromCandidate,
       content: form.preferredSports.sports.map(e => ({
-        sport: e.sport.map(s => toRef(s)),
-        levelRepresented: e.levelRepresented.map(l => toRef(l)),
+        nameOfSport: e.sport.map(s => toRef(s)),
         representedOrganization: e.representedOrganization.map(o => toRef(o)),
-        organizationLocation: e.organizationLocations[0]
-          ? {
-              source: 'MASTER' as const,
-              id: e.organizationLocations[0].value,
-            }
-          : undefined,
-        position: e.position,
+        organizationLocations: e.organizationLocations.map(l => ({
+          source: 'MASTER' as const,
+          id: l.value,
+        })),
+        levelRepresented: e.levelRepresented.map(l => toRef(l)),
+        positionRoleHeld: e.position,
         startDate: e.startDate ?? '',
         endDate: e.endDate ?? '',
       })),
@@ -223,25 +331,33 @@ function mapSports(form: VacancyForm): SportsGroupApiPayload[] | undefined {
   ];
 }
 
-function mapVolunteering(
-  form: VacancyForm
-): VolunteeringGroupApiPayload[] | undefined {
-  if (!form.preferredVolunteering) return undefined;
+function mapVolunteering(form: VacancyForm): VolunteeringGroupApiPayload[] {
+  if (!form.preferredVolunteering) {
+    return [{ isEnabled: false, dataTakenFromCandidate: false, content: [] }];
+  }
+
+  if (form.preferredVolunteering.dataTakenFromCandidate) {
+    return [
+      {
+        isEnabled: form.preferredVolunteering.isEnabled,
+        dataTakenFromCandidate: true,
+        content: [],
+      },
+    ];
+  }
 
   return [
     {
       isEnabled: form.preferredVolunteering.isEnabled,
       dataTakenFromCandidate: form.preferredVolunteering.dataTakenFromCandidate,
       content: form.preferredVolunteering.volunteering.map(e => ({
-        organizationName: e.organizationName.map(o => toRef(o)),
-        organizationLocation: e.organizationLocations[0]
-          ? {
-              source: 'MASTER' as const,
-              id: e.organizationLocations[0].value,
-            }
-          : undefined,
+        organization: e.organizationName.map(o => toRef(o)),
+        organizationLocations: e.organizationLocations.map(l => ({
+          source: 'MASTER' as const,
+          id: l.value,
+        })),
+        positionRole: e.position,
         cause: e.cause.map(c => toRef(c)),
-        position: e.position,
         startDate: e.startDate ?? '',
         endDate: e.endDate ?? '',
       })),
@@ -249,63 +365,117 @@ function mapVolunteering(
   ];
 }
 
-function mapPreferredSkills(form: VacancyForm): SkillsApiPayload | undefined {
-  if (!form.preferredSkills) return undefined;
+function mapPreferredSkills(form: VacancyForm): SkillsApiPayload {
+  if (!form.preferredSkills) {
+    return { isEnabled: false, dataTakenFromCandidate: false, content: [] };
+  }
+
+  if (form.preferredSkills.dataTakenFromCandidate) {
+    return {
+      isEnabled: form.preferredSkills.isEnabled,
+      dataTakenFromCandidate: true,
+      content: [],
+    };
+  }
 
   return {
     isEnabled: form.preferredSkills.isEnabled,
     dataTakenFromCandidate: form.preferredSkills.dataTakenFromCandidate,
-    skills: form.preferredSkills.skills.map(s => ({
-      skillId: s.skillId,
-      careerPathId: s.careerPathId,
+    content: form.preferredSkills.skills.map(s => ({
+      source: s.source ?? 'MASTER',
+      id: s.skillId,
     })),
   };
 }
 
-function mapPreferredLanguages(
-  form: VacancyForm
-): LanguagesApiPayload | undefined {
-  if (!form.preferredLanguages) return undefined;
+function mapPreferredLanguages(form: VacancyForm): LanguagesApiPayload {
+  if (!form.preferredLanguages) {
+    return { isEnabled: false, dataTakenFromCandidate: false, content: [] };
+  }
+
+  if (form.preferredLanguages.dataTakenFromCandidate) {
+    return {
+      isEnabled: form.preferredLanguages.isEnabled,
+      dataTakenFromCandidate: true,
+      content: [],
+    };
+  }
 
   return {
     isEnabled: form.preferredLanguages.isEnabled,
     dataTakenFromCandidate: form.preferredLanguages.dataTakenFromCandidate,
-    languages: form.preferredLanguages.languages.map(l => ({
+    content: form.preferredLanguages.languages.map(l => ({
       source: l.source ?? 'MASTER',
       id: l.id,
     })),
   };
 }
 
-function mapPreferredCauses(form: VacancyForm): CausesApiPayload | undefined {
-  if (!form.preferredCauses) return undefined;
+function mapPreferredCauses(form: VacancyForm): CausesApiPayload[] {
+  if (!form.preferredCauses) {
+    return [{ isEnabled: false, dataTakenFromCandidate: false, content: [] }];
+  }
 
-  return {
-    isEnabled: form.preferredCauses.isEnabled,
-    dataTakenFromCandidate: form.preferredCauses.dataTakenFromCandidate,
-    causes: form.preferredCauses.causes.map(c => ({
-      source: c.source ?? 'MASTER',
-      id: c.id,
-    })),
-  };
+  if (form.preferredCauses.dataTakenFromCandidate) {
+    return [
+      {
+        isEnabled: form.preferredCauses.isEnabled,
+        dataTakenFromCandidate: true,
+        content: [],
+      },
+    ];
+  }
+
+  return [
+    {
+      isEnabled: form.preferredCauses.isEnabled,
+      dataTakenFromCandidate: form.preferredCauses.dataTakenFromCandidate,
+      content: form.preferredCauses.causes.map(c => ({
+        source: c.source ?? 'MASTER',
+        id: c.id,
+      })),
+    },
+  ];
 }
 
-function mapPreferredHobbies(form: VacancyForm): HobbiesApiPayload | undefined {
-  if (!form.preferredHobbies) return undefined;
+function mapPreferredHobbies(form: VacancyForm): HobbiesApiPayload[] {
+  if (!form.preferredHobbies) {
+    return [{ isEnabled: false, dataTakenFromCandidate: false, content: [] }];
+  }
 
-  return {
-    isEnabled: form.preferredHobbies.isEnabled,
-    dataTakenFromCandidate: form.preferredHobbies.dataTakenFromCandidate,
-    hobbies: form.preferredHobbies.hobbies.map(h => ({
-      source: h.source ?? 'MASTER',
-      id: h.id,
-    })),
-  };
+  if (form.preferredHobbies.dataTakenFromCandidate) {
+    return [
+      {
+        isEnabled: form.preferredHobbies.isEnabled,
+        dataTakenFromCandidate: true,
+        content: [],
+      },
+    ];
+  }
+
+  return [
+    {
+      isEnabled: form.preferredHobbies.isEnabled,
+      dataTakenFromCandidate: form.preferredHobbies.dataTakenFromCandidate,
+      content: form.preferredHobbies.hobbies.map(h => ({
+        source: h.source ?? 'MASTER',
+        id: h.id,
+      })),
+    },
+  ];
 }
 
 function mapIndustry(form: VacancyForm): IndustryApiPayload {
   if (!form.preferredIndustries) {
     return { isEnabled: false, dataTakenFromCandidate: false, content: [] };
+  }
+
+  if (form.preferredIndustries.dataTakenFromCandidate) {
+    return {
+      isEnabled: form.preferredIndustries.isEnabled,
+      dataTakenFromCandidate: true,
+      content: [],
+    };
   }
 
   return {
@@ -360,6 +530,51 @@ function mapCustomizedForm(form: VacancyForm): CustomizedFormApiPayload {
   };
 }
 
+function mapLicensesAndCertifications(
+  form: VacancyForm
+): LicenseCertificates[] {
+  if (!form.licenseCertificates) {
+    return [{ isEnabled: false, dataTakenFromCandidate: false, content: [] }];
+  }
+
+  return form.licenseCertificates.map(lc => {
+    if (lc.dataTakenFromCandidate) {
+      return {
+        isEnabled: lc.isEnabled,
+        dataTakenFromCandidate: true,
+        content: [],
+      };
+    }
+    return lc;
+  });
+}
+
+function mapSecondaryEducation(form: VacancyForm): SecondaryEducation[] {
+  return form.secondaryEducation.map(se => {
+    if (se.dataTakenFromCandidate) {
+      return {
+        isEnabled: se.isEnabled,
+        dataTakenFromCandidate: true,
+        content: [],
+      };
+    }
+    return se;
+  });
+}
+
+function mapTertiaryEducation(form: VacancyForm): TertiaryEducation[] {
+  return form.tertiaryEducation.map(te => {
+    if (te.dataTakenFromCandidate) {
+      return {
+        isEnabled: te.isEnabled,
+        dataTakenFromCandidate: true,
+        content: [],
+      };
+    }
+    return te;
+  });
+}
+
 function toCreateVacancyPayload(form: VacancyForm): CreateVacancyPayload {
   return {
     title: form.title,
@@ -367,24 +582,24 @@ function toCreateVacancyPayload(form: VacancyForm): CreateVacancyPayload {
     lastActiveStep: form.lastActiveStep,
     data: {
       jobRequirement: mapJobRequirement(form),
-      profileRequirements: form.profileRequirements,
-      secondaryEducation: form.secondaryEducation,
-      tertiaryEducation: form.tertiaryEducation,
-      licenseCertificates: form.licenseCertificates,
-      patents: mapPatents(form),
-      honoursAndAwards: mapHonoursAndAwards(form),
+      profileRequirement: mapProfileRequirement(form),
+      secondaryEducation: mapSecondaryEducation(form),
+      tertiaryEducation: mapTertiaryEducation(form),
+      skills: mapPreferredSkills(form),
+      languages: mapPreferredLanguages(form),
+      causes: mapPreferredCauses(form),
+      hobbyList: mapPreferredHobbies(form),
+      industry: mapIndustry(form),
+      schedule: form.schedule ?? { schedulePublishAt: '', expirationAt: '' },
+      customizedForm: mapCustomizedForm(form),
       projects: mapProjects(form),
       publications: mapPublications(form),
-      clubSocieties: mapClubSocieties(form),
+      clubsAndSocieties: mapClubSocieties(form),
       sports: mapSports(form),
       volunteering: mapVolunteering(form),
-      preferredSkills: mapPreferredSkills(form),
-      preferredLanguages: mapPreferredLanguages(form),
-      preferredCauses: mapPreferredCauses(form),
-      preferredHobbies: mapPreferredHobbies(form),
-      industry: mapIndustry(form),
-      customizedForm: mapCustomizedForm(form),
-      schedule: form.schedule ?? { schedulePublishAt: '', expirationAt: '' },
+      patents: mapPatents(form),
+      honoursAndAwards: mapHonoursAndAwards(form),
+      licensesAndCertifications: mapLicensesAndCertifications(form),
     },
   };
 }

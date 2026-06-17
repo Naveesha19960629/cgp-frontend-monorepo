@@ -229,14 +229,14 @@ export default function PreferredLanguagesStep({
               options={apiLanguages.map(l => ({
                 value: l.id,
                 label: l.label,
-                source: 'MASTER',
+                source: l.source ?? 'MASTER',
               }))}
               onSearchSync={value => {
                 setLangSearch(value);
                 return apiLanguages.map(l => ({
                   value: l.id,
                   label: l.label,
-                  source: 'MASTER',
+                  source: l.source ?? 'MASTER',
                 }));
               }}
               keepSelectedInList
