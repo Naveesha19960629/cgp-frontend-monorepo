@@ -4,12 +4,15 @@ import type {
   SecondaryEducationRef,
 } from '@/views/vacancies/types';
 import { DATE_DISPLAY_FORMAT } from '@/views/vacancies/utils/constants';
+import { parseLocalDate } from '@/views/vacancies/utils/date-timezone-safe';
 
 import { format } from 'date-fns';
 
 function formatDate(iso?: string): string {
   if (!iso) return '';
-  return format(new Date(iso), DATE_DISPLAY_FORMAT);
+  const date = parseLocalDate(iso);
+  if (!date) return '';
+  return format(date, DATE_DISPLAY_FORMAT);
 }
 
 const toSecondaryEducationPayload = (

@@ -1,5 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import type { UseFormReturn } from 'react-hook-form';
 
@@ -36,7 +37,7 @@ const tertiaryEducationEntrySchema = z.object({
 const tertiaryEducationFormSchema = z.object({
   isEnabled: z.boolean(),
   dataTakenFromCandidate: z.boolean(),
-  entry: tertiaryEducationEntrySchema,
+  entries: z.array(tertiaryEducationEntrySchema).min(1),
 });
 
 type TertiaryEducationFormValues = z.infer<typeof tertiaryEducationFormSchema>;
@@ -56,6 +57,10 @@ const DEFAULT_ENTRY: z.infer<typeof tertiaryEducationEntrySchema> = {
   grade: '',
 };
 
+const createEmptyTertiaryEducationEntry = (): z.infer<
+  typeof tertiaryEducationEntrySchema
+> => ({ ...DEFAULT_ENTRY });
+
 function buildDefaultValues(
   initialData?: TertiaryEducation[]
 ): TertiaryEducationFormValues {
@@ -63,87 +68,107 @@ function buildDefaultValues(
     return {
       isEnabled: false,
       dataTakenFromCandidate: false,
-      entry: DEFAULT_ENTRY,
+      entries: [createEmptyTertiaryEducationEntry()],
     };
   }
 
   const first = initialData[0];
-  const firstEntry = first.content[0];
 
-  return {
-    isEnabled: first.isEnabled,
-    dataTakenFromCandidate: first.dataTakenFromCandidate,
-    entry: firstEntry
-      ? {
+  const entries =
+    first.content.length > 0
+      ? first.content.map(firstEntry => ({
           qualificationName: firstEntry.qualificationName.map(r => ({
             value: r.id,
-            label: r.name ?? r.id,
+            label:
+              ('name' in r && typeof r.name === 'string' && r.name) || r.id,
             source: r.source,
           })),
           tertiaryAwardingBody: firstEntry.tertiaryAwardingBody.map(r => ({
             value: r.id,
-            label: r.name ?? r.id,
+            label:
+              ('name' in r && typeof r.name === 'string' && r.name) || r.id,
             source: r.source,
           })),
           tertiaryAwardingBodyLocations:
             firstEntry.tertiaryAwardingBodyLocations.map(r => ({
               value: r.id,
-              label: r.name ?? r.id,
+              label:
+                ('name' in r && typeof r.name === 'string' && r.name) || r.id,
             })),
           levelOfQualification: firstEntry.levelOfQualification.map(r => ({
             value: r.id,
-            label: r.name ?? r.id,
+            label:
+              ('name' in r && typeof r.name === 'string' && r.name) || r.id,
             source: r.source,
           })),
           specialization: firstEntry.specialization.map(r => ({
             value: r.id,
-            label: r.name ?? r.id,
+            label:
+              ('name' in r && typeof r.name === 'string' && r.name) || r.id,
             source: r.source,
           })),
           studyMode: firstEntry.studyMode.map(r => ({
             value: r.id,
-            label: r.name ?? r.id,
+            label:
+              ('name' in r && typeof r.name === 'string' && r.name) || r.id,
             source: r.source,
           })),
           studyPattern: firstEntry.studyPattern.map(r => ({
             value: r.id,
-            label: r.name ?? r.id,
+            label:
+              ('name' in r && typeof r.name === 'string' && r.name) || r.id,
             source: r.source,
           })),
           deliverySchedule: firstEntry.deliverySchedule.map(r => ({
             value: r.id,
-            label: r.name ?? r.id,
+            label:
+              ('name' in r && typeof r.name === 'string' && r.name) || r.id,
             source: r.source,
           })),
           batch: firstEntry.batch.map(r => ({
             value: r.id,
-            label: r.name ?? r.id,
+            label:
+              ('name' in r && typeof r.name === 'string' && r.name) || r.id,
             source: r.source,
           })),
           department: firstEntry.department.map(r => ({
             value: r.id,
-            label: r.name ?? r.id,
+            label:
+              ('name' in r && typeof r.name === 'string' && r.name) || r.id,
             source: r.source,
           })),
           faculty: firstEntry.faculty.map(r => ({
             value: r.id,
-            label: r.name ?? r.id,
+            label:
+              ('name' in r && typeof r.name === 'string' && r.name) || r.id,
             source: r.source,
           })),
           grade: firstEntry.grade,
-        }
-      : DEFAULT_ENTRY,
+        }))
+      : [createEmptyTertiaryEducationEntry()];
+
+  return {
+    isEnabled: first.isEnabled,
+    dataTakenFromCandidate: first.dataTakenFromCandidate,
+    entries,
   };
 }
 
 const useTertiaryEducationForm = (
   initialData?: TertiaryEducation[]
 ): UseFormReturn<TertiaryEducationFormValues> => {
-  return useForm<TertiaryEducationFormValues>({
+  const form = useForm<TertiaryEducationFormValues>({
     resolver: zodResolver(tertiaryEducationFormSchema),
     defaultValues: buildDefaultValues(initialData),
   });
+  const { reset } = form;
+
+  useEffect(() => {
+    reset(buildDefaultValues(initialData));
+  }, [initialData, reset]);
+
+  return form;
 };
 
 export type { TertiaryEducationFormValues };
-export { useTertiaryEducationForm };
+export { createEmptyTertiaryEducationEntry, useTertiaryEducationForm };

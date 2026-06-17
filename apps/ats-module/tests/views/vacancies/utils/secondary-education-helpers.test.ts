@@ -168,6 +168,14 @@ describe('formatDate', () => {
     expect(formatDate('')).toBe('');
   });
 
+  it('formats a date-only string (yyyy-MM-dd) correctly — timezone safe', () => {
+    expect(formatDate('2020-01-01')).toBe('1st Jan 2020');
+  });
+
+  it('formats a mid-month date-only string correctly', () => {
+    expect(formatDate('2022-06-15')).toBe('15th Jun 2022');
+  });
+
   it('formats an ISO date string using the display format', () => {
     expect(formatDate('2020-01-01T00:00:00.000Z')).toBe('1st Jan 2020');
   });

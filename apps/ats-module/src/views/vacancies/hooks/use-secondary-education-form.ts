@@ -169,10 +169,11 @@ const useSecondaryEducationForm = (
     resolver: zodResolver(secondaryEducationFormSchema),
     defaultValues: buildDefaultValues(initialData),
   });
+  const { reset } = form;
 
   useEffect(() => {
-    form.reset(buildDefaultValues(initialData));
-  }, [form, initialData]);
+    reset(buildDefaultValues(initialData));
+  }, [initialData, reset]);
 
   return form;
 };

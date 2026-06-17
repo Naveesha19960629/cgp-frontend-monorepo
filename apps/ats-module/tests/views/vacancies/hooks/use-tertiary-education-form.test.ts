@@ -10,18 +10,18 @@ describe('useTertiaryEducationForm', () => {
       const values = result.current.getValues();
       expect(values.isEnabled).toBe(false);
       expect(values.dataTakenFromCandidate).toBe(false);
-      expect(values.entry.qualificationName).toEqual([]);
-      expect(values.entry.tertiaryAwardingBody).toEqual([]);
-      expect(values.entry.tertiaryAwardingBodyLocations).toEqual([]);
-      expect(values.entry.levelOfQualification).toEqual([]);
-      expect(values.entry.specialization).toEqual([]);
-      expect(values.entry.studyMode).toEqual([]);
-      expect(values.entry.studyPattern).toEqual([]);
-      expect(values.entry.deliverySchedule).toEqual([]);
-      expect(values.entry.batch).toEqual([]);
-      expect(values.entry.department).toEqual([]);
-      expect(values.entry.faculty).toEqual([]);
-      expect(values.entry.grade).toBe('');
+      expect(values.entries[0].qualificationName).toEqual([]);
+      expect(values.entries[0].tertiaryAwardingBody).toEqual([]);
+      expect(values.entries[0].tertiaryAwardingBodyLocations).toEqual([]);
+      expect(values.entries[0].levelOfQualification).toEqual([]);
+      expect(values.entries[0].specialization).toEqual([]);
+      expect(values.entries[0].studyMode).toEqual([]);
+      expect(values.entries[0].studyPattern).toEqual([]);
+      expect(values.entries[0].deliverySchedule).toEqual([]);
+      expect(values.entries[0].batch).toEqual([]);
+      expect(values.entries[0].department).toEqual([]);
+      expect(values.entries[0].faculty).toEqual([]);
+      expect(values.entries[0].grade).toBe('');
     });
   });
 
@@ -87,51 +87,51 @@ describe('useTertiaryEducationForm', () => {
       const values = result.current.getValues();
 
       expect(values.isEnabled).toBe(true);
-      expect(values.entry.qualificationName[0]).toMatchObject({
+      expect(values.entries[0].qualificationName[0]).toMatchObject({
         value: 'q-uuid',
         label: 'BSc Computer Science',
       });
-      expect(values.entry.tertiaryAwardingBody[0]).toMatchObject({
+      expect(values.entries[0].tertiaryAwardingBody[0]).toMatchObject({
         value: 'ab-uuid',
         label: 'University of Moratuwa',
       });
-      expect(values.entry.tertiaryAwardingBodyLocations[0]).toMatchObject({
+      expect(values.entries[0].tertiaryAwardingBodyLocations[0]).toMatchObject({
         value: 'loc-uuid',
         label: 'Colombo',
       });
-      expect(values.entry.levelOfQualification[0]).toMatchObject({
+      expect(values.entries[0].levelOfQualification[0]).toMatchObject({
         value: 'l-uuid',
         label: "Bachelor's",
       });
-      expect(values.entry.specialization[0]).toMatchObject({
+      expect(values.entries[0].specialization[0]).toMatchObject({
         value: 's-uuid',
         label: 'Data Science',
       });
-      expect(values.entry.studyMode[0]).toMatchObject({
+      expect(values.entries[0].studyMode[0]).toMatchObject({
         value: 'sm-uuid',
         label: 'Online',
       });
-      expect(values.entry.studyPattern[0]).toMatchObject({
+      expect(values.entries[0].studyPattern[0]).toMatchObject({
         value: 'sp-uuid',
         label: 'Full-Time',
       });
-      expect(values.entry.deliverySchedule[0]).toMatchObject({
+      expect(values.entries[0].deliverySchedule[0]).toMatchObject({
         value: 'ds-uuid',
         label: 'Weekday',
       });
-      expect(values.entry.batch[0]).toMatchObject({
+      expect(values.entries[0].batch[0]).toMatchObject({
         value: 'b-uuid',
         label: 'Batch 2020',
       });
-      expect(values.entry.department[0]).toMatchObject({
+      expect(values.entries[0].department[0]).toMatchObject({
         value: 'd-uuid',
         label: 'IT Department',
       });
-      expect(values.entry.faculty[0]).toMatchObject({
+      expect(values.entries[0].faculty[0]).toMatchObject({
         value: 'f-uuid',
         label: 'Faculty of Engineering',
       });
-      expect(values.entry.grade).toBe('GPA 3.8');
+      expect(values.entries[0].grade).toBe('GPA 3.8');
     });
 
     it('falls back to id as label when name is absent (data loaded from API without name)', () => {
@@ -164,11 +164,11 @@ describe('useTertiaryEducationForm', () => {
 
       const values = result.current.getValues();
 
-      expect(values.entry.qualificationName[0].label).toBe('q-uuid');
-      expect(values.entry.tertiaryAwardingBody[0].label).toBe('ab-uuid');
-      expect(values.entry.levelOfQualification[0].label).toBe('l-uuid');
-      expect(values.entry.specialization[0].label).toBe('s-uuid');
-      expect(values.entry.batch[0].label).toBe('b-uuid');
+      expect(values.entries[0].qualificationName[0].label).toBe('q-uuid');
+      expect(values.entries[0].tertiaryAwardingBody[0].label).toBe('ab-uuid');
+      expect(values.entries[0].levelOfQualification[0].label).toBe('l-uuid');
+      expect(values.entries[0].specialization[0].label).toBe('s-uuid');
+      expect(values.entries[0].batch[0].label).toBe('b-uuid');
     });
 
     it('returns empty entry when content array is empty', () => {
@@ -181,8 +181,8 @@ describe('useTertiaryEducationForm', () => {
       const values = result.current.getValues();
 
       expect(values.isEnabled).toBe(true);
-      expect(values.entry.qualificationName).toEqual([]);
-      expect(values.entry.grade).toBe('');
+      expect(values.entries[0].qualificationName).toEqual([]);
+      expect(values.entries[0].grade).toBe('');
     });
 
     it('sets dataTakenFromCandidate correctly', () => {

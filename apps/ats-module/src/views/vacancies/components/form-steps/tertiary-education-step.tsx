@@ -1,4 +1,4 @@
-﻿import { ChevronUpIcon, Plus } from 'lucide-react';
+import { ChevronUpIcon, Plus } from 'lucide-react';
 
 import { ArrowLeft2 } from 'iconsax-reactjs';
 
@@ -71,28 +71,28 @@ export default function TertiaryEducationStep({
 
   const isEnabled = watch('isEnabled');
   const dataTakenFromCandidate = watch('dataTakenFromCandidate');
-  const entryValue = watch('entry');
+  const entryValue = watch('entries.0');
 
-  // ── Form field helpers ───────────────────────────────────────────────────
+  // -- Form field helpers ---------------------------------------------------
   const fieldsDisabled = !isEnabled || dataTakenFromCandidate;
 
   const clearEntryData = () => {
-    setValue('entry.qualificationName', []);
-    setValue('entry.tertiaryAwardingBody', []);
-    setValue('entry.tertiaryAwardingBodyLocations', []);
-    setValue('entry.levelOfQualification', []);
-    setValue('entry.specialization', []);
-    setValue('entry.studyMode', []);
-    setValue('entry.studyPattern', []);
-    setValue('entry.deliverySchedule', []);
-    setValue('entry.batch', []);
-    setValue('entry.department', []);
-    setValue('entry.faculty', []);
-    setValue('entry.grade', '');
+    setValue('entries.0.qualificationName', []);
+    setValue('entries.0.tertiaryAwardingBody', []);
+    setValue('entries.0.tertiaryAwardingBodyLocations', []);
+    setValue('entries.0.levelOfQualification', []);
+    setValue('entries.0.specialization', []);
+    setValue('entries.0.studyMode', []);
+    setValue('entries.0.studyPattern', []);
+    setValue('entries.0.deliverySchedule', []);
+    setValue('entries.0.batch', []);
+    setValue('entries.0.department', []);
+    setValue('entries.0.faculty', []);
+    setValue('entries.0.grade', '');
   };
 
   const hasEntryData = (): boolean => {
-    const e = getValues('entry');
+    const e = getValues('entries.0');
     return Boolean(
       e.qualificationName.length > 0 ||
       e.tertiaryAwardingBody.length > 0 ||
@@ -139,7 +139,7 @@ export default function TertiaryEducationStep({
     };
   }, [setForm, stepDisableRef]);
 
-  // ── Add-Now mutations ────────────────────────────────────────────────────
+  // -- Add-Now mutations ----------------------------------------------------
   const addQualificationMutation = useAddQualificationMutation();
   const addLevelOfQualificationMutation = useAddLevelOfQualificationMutation();
   const addSpecializationMutation = useAddSpecializationMutation();
@@ -147,7 +147,7 @@ export default function TertiaryEducationStep({
   const addDepartmentMutation = useAddDepartmentMutation();
   const addFacultyMutation = useAddFacultyMutation();
 
-  // ── Awarding body dialog state ───────────────────────────────────────────
+  // -- Awarding body dialog state -------------------------------------------
   const awardingBodyValue = entryValue.tertiaryAwardingBody;
   const addTertiaryAwardingBodyMutation = useAddTertiaryAwardingBodyMutation();
   const pendingAwardingBodiesDataRef = useRef<
@@ -161,11 +161,11 @@ export default function TertiaryEducationStep({
   const [pendingAwardingBodyLabel, setPendingAwardingBodyLabel] = useState('');
   const [awardingBodySelectorKey, setAwardingBodySelectorKey] = useState(0);
 
-  // ── Disable confirmation dialog state ───────────────────────────────
+  // -- Disable confirmation dialog state -------------------------------
   const [confirmDisableOpen, setConfirmDisableOpen] = useState(false);
   const [emptyDisableOpen, setEmptyDisableOpen] = useState(false);
 
-  // ── Creatable input tracking (for character count) ───────────────────────
+  // -- Creatable input tracking (for character count) -----------------------
   const [qualificationInput, setQualificationInput] = useState('');
   const [levelInput, setLevelInput] = useState('');
   const [specializationInput, setSpecializationInput] = useState('');
@@ -173,7 +173,7 @@ export default function TertiaryEducationStep({
   const [departmentInput, setDepartmentInput] = useState('');
   const [facultyInput, setFacultyInput] = useState('');
 
-  // ── Refs for creatable selectors (used to commit pending input on Next) ──
+  // -- Refs for creatable selectors (used to commit pending input on Next) --
   const qualificationRef = useRef<MultipleSelectorRef>(null);
   const levelRef = useRef<MultipleSelectorRef>(null);
   const specializationRef = useRef<MultipleSelectorRef>(null);
@@ -181,7 +181,7 @@ export default function TertiaryEducationStep({
   const departmentRef = useRef<MultipleSelectorRef>(null);
   const facultyRef = useRef<MultipleSelectorRef>(null);
 
-  // ── Max-selection tracking ───────────────────────────────────────────────
+  // -- Max-selection tracking -----------------------------------------------
   const [maxReachedFields, setMaxReachedFields] = useState<Set<string>>(
     new Set()
   );
@@ -194,7 +194,7 @@ export default function TertiaryEducationStep({
       return s;
     });
 
-  // ── Async search hooks ───────────────────────────────────────────────────
+  // -- Async search hooks ---------------------------------------------------
   const searchQualifications = useQualificationsSearch();
   const searchAwardingBodies = useTertiaryAwardingBodiesSearch();
   const searchLocations = useTertiaryAwardingBodyLocationsSearch();
@@ -207,14 +207,14 @@ export default function TertiaryEducationStep({
   const searchDepartments = useDepartmentsSearch();
   const searchFaculties = useFacultiesSearch();
 
-  // ── Add-Now handler ──────────────────────────────────────────────────────
+  // -- Add-Now handler ------------------------------------------------------
   type CreatableField =
-    | 'entry.qualificationName'
-    | 'entry.levelOfQualification'
-    | 'entry.specialization'
-    | 'entry.batch'
-    | 'entry.department'
-    | 'entry.faculty';
+    | 'entries.0.qualificationName'
+    | 'entries.0.levelOfQualification'
+    | 'entries.0.specialization'
+    | 'entries.0.batch'
+    | 'entries.0.department'
+    | 'entries.0.faculty';
 
   const resolveItem = async (
     label: string,
@@ -263,7 +263,7 @@ export default function TertiaryEducationStep({
   };
 
   const resolveAndCommitTertiaryAwardingBodies = async () => {
-    const current = getValues('entry.tertiaryAwardingBody');
+    const current = getValues('entries.0.tertiaryAwardingBody');
     const resolved: { value: string; label: string; source: string }[] = [];
     for (const body of current) {
       if (body.source === 'PENDING_TEMP') {
@@ -283,7 +283,7 @@ export default function TertiaryEducationStep({
         resolved.push(body);
       }
     }
-    setValue('entry.tertiaryAwardingBody', resolved);
+    setValue('entries.0.tertiaryAwardingBody', resolved);
   };
   const handleNext = async () => {
     if (isEnabled && !dataTakenFromCandidate && !hasEntryData()) {
@@ -294,24 +294,26 @@ export default function TertiaryEducationStep({
     await resolveAndCommitTertiaryAwardingBodies();
     await resolveAndCommitField(
       qualificationRef,
-      'entry.qualificationName',
+      'entries.0.qualificationName',
       label => addQualificationMutation.mutateAsync(label)
     );
-    await resolveAndCommitField(levelRef, 'entry.levelOfQualification', label =>
-      addLevelOfQualificationMutation.mutateAsync(label)
+    await resolveAndCommitField(
+      levelRef,
+      'entries.0.levelOfQualification',
+      label => addLevelOfQualificationMutation.mutateAsync(label)
     );
     await resolveAndCommitField(
       specializationRef,
-      'entry.specialization',
+      'entries.0.specialization',
       label => addSpecializationMutation.mutateAsync(label)
     );
-    await resolveAndCommitField(batchRef, 'entry.batch', label =>
+    await resolveAndCommitField(batchRef, 'entries.0.batch', label =>
       addBatchMutation.mutateAsync(label)
     );
-    await resolveAndCommitField(departmentRef, 'entry.department', label =>
+    await resolveAndCommitField(departmentRef, 'entries.0.department', label =>
       addDepartmentMutation.mutateAsync(label)
     );
-    await resolveAndCommitField(facultyRef, 'entry.faculty', label =>
+    await resolveAndCommitField(facultyRef, 'entries.0.faculty', label =>
       addFacultyMutation.mutateAsync(label)
     );
     void handleSubmit(values => {
@@ -321,7 +323,7 @@ export default function TertiaryEducationStep({
 
   return (
     <div className="flex flex-col">
-      {/* ── Informational Banner ────────────────────────────────────────── */}
+      {/* -- Informational Banner ------------------------------------------ */}
       <MessageBox
         fields={[
           t('tertiaryEducation.qualificationName'),
@@ -339,7 +341,7 @@ export default function TertiaryEducationStep({
         ]}
       />
 
-      {/* ── Section Header ──────────────────────────────────────────── */}
+      {/* -- Section Header -------------------------------------------- */}
       <div className="flex items-center justify-between px-7 py-8">
         <div className="flex items-center gap-2">
           <button
@@ -374,7 +376,7 @@ export default function TertiaryEducationStep({
       </div>
 
       <div className="flex flex-col gap-4 px-6">
-        {/* dataTakenFromCandidate — grayed when toggle off */}
+        {/* dataTakenFromCandidate � grayed when toggle off */}
         <div className={cn(!isEnabled && 'pointer-events-none opacity-60')}>
           <div className="flex items-start gap-2">
             <Controller
@@ -402,7 +404,7 @@ export default function TertiaryEducationStep({
           </div>
         </div>
 
-        {/* ── Education Card ──────────────────────────────────────────── */}
+        {/* -- Education Card -------------------------------------------- */}
         <div className="rounded-xl border border-neutral-300 bg-white shadow-[0px_4px_90px_0px_rgba(0,0,0,0.07)]">
           {/* Card header */}
           <div className="flex items-center justify-between px-5 py-5">
@@ -433,7 +435,7 @@ export default function TertiaryEducationStep({
                 </div>
                 <Controller
                   control={control}
-                  name="entry.qualificationName"
+                  name="entries.0.qualificationName"
                   render={({ field }) => (
                     <MultipleSelector
                       ref={qualificationRef}
@@ -498,7 +500,7 @@ export default function TertiaryEducationStep({
                   </Label>
                   <Controller
                     control={control}
-                    name="entry.grade"
+                    name="entries.0.grade"
                     render={({ field }) => (
                       <CharacterCount
                         currentLength={field.value.length}
@@ -509,7 +511,7 @@ export default function TertiaryEducationStep({
                 </div>
                 <Controller
                   control={control}
-                  name="entry.grade"
+                  name="entries.0.grade"
                   render={({ field }) => (
                     <Input
                       {...field}
@@ -532,7 +534,7 @@ export default function TertiaryEducationStep({
                 </div>
                 <Controller
                   control={control}
-                  name="entry.tertiaryAwardingBodyLocations"
+                  name="entries.0.tertiaryAwardingBodyLocations"
                   render={({ field }) => (
                     <MultipleSelector
                       value={field.value}
@@ -592,7 +594,7 @@ export default function TertiaryEducationStep({
                 </div>
                 <Controller
                   control={control}
-                  name="entry.batch"
+                  name="entries.0.batch"
                   render={({ field }) => (
                     <MultipleSelector
                       ref={batchRef}
@@ -656,7 +658,7 @@ export default function TertiaryEducationStep({
                 </div>
                 <Controller
                   control={control}
-                  name="entry.tertiaryAwardingBody"
+                  name="entries.0.tertiaryAwardingBody"
                   render={({ field }) => (
                     <MultipleSelector
                       key={awardingBodySelectorKey}
@@ -668,7 +670,7 @@ export default function TertiaryEducationStep({
                         const newItem = options.find(o => o.value === o.label);
                         if (newItem) {
                           awardingBodiesSnapshotRef.current = getValues(
-                            'entry.tertiaryAwardingBody'
+                            'entries.0.tertiaryAwardingBody'
                           );
                           setPendingAwardingBodyLabel(newItem.label);
                           setAddAwardingBodyDialogOpen(true);
@@ -728,7 +730,7 @@ export default function TertiaryEducationStep({
                 </div>
                 <Controller
                   control={control}
-                  name="entry.levelOfQualification"
+                  name="entries.0.levelOfQualification"
                   render={({ field }) => (
                     <MultipleSelector
                       ref={levelRef}
@@ -799,7 +801,7 @@ export default function TertiaryEducationStep({
                 </div>
                 <Controller
                   control={control}
-                  name="entry.specialization"
+                  name="entries.0.specialization"
                   render={({ field }) => (
                     <MultipleSelector
                       ref={specializationRef}
@@ -863,7 +865,7 @@ export default function TertiaryEducationStep({
                 </div>
                 <Controller
                   control={control}
-                  name="entry.studyMode"
+                  name="entries.0.studyMode"
                   render={({ field }) => (
                     <MultipleSelector
                       value={field.value}
@@ -920,7 +922,7 @@ export default function TertiaryEducationStep({
                 <Label>{t('tertiaryEducation.studyPattern')}</Label>
                 <Controller
                   control={control}
-                  name="entry.studyPattern"
+                  name="entries.0.studyPattern"
                   render={({ field }) => (
                     <MultipleSelector
                       value={field.value}
@@ -974,7 +976,7 @@ export default function TertiaryEducationStep({
                 <Label>{t('tertiaryEducation.deliverySchedule')}</Label>
                 <Controller
                   control={control}
-                  name="entry.deliverySchedule"
+                  name="entries.0.deliverySchedule"
                   render={({ field }) => (
                     <MultipleSelector
                       value={field.value}
@@ -1037,7 +1039,7 @@ export default function TertiaryEducationStep({
                 </div>
                 <Controller
                   control={control}
-                  name="entry.department"
+                  name="entries.0.department"
                   render={({ field }) => (
                     <MultipleSelector
                       ref={departmentRef}
@@ -1105,7 +1107,7 @@ export default function TertiaryEducationStep({
                 </div>
                 <Controller
                   control={control}
-                  name="entry.faculty"
+                  name="entries.0.faculty"
                   render={({ field }) => (
                     <MultipleSelector
                       ref={facultyRef}
@@ -1164,7 +1166,7 @@ export default function TertiaryEducationStep({
           </div>
         </div>
 
-        {/* ── Add Entry button (outside card, bottom-right) ─────────── */}
+        {/* -- Add Entry button (outside card, bottom-right) ----------- */}
         <div
           className={cn(
             'flex justify-end py-4',
@@ -1181,7 +1183,7 @@ export default function TertiaryEducationStep({
         </div>
       </div>
 
-      {/* ── Add Awarding Body dialog ─────────────────────────────────────── */}
+      {/* -- Add Awarding Body dialog --------------------------------------- */}
       <AddAwardingBodyDialog
         open={addAwardingBodyDialogOpen}
         initialName={pendingAwardingBodyLabel}
@@ -1195,7 +1197,7 @@ export default function TertiaryEducationStep({
             locationId: option.locationId,
             url: option.url,
           });
-          setValue('entry.tertiaryAwardingBody', [
+          setValue('entries.0.tertiaryAwardingBody', [
             ...awardingBodyValue,
             { value: option.value, label: option.label, source: option.source },
           ]);
@@ -1234,7 +1236,7 @@ export default function TertiaryEducationStep({
         }}
       />
 
-      {/* ── Step footer ──────────────────────────────────────────────────── */}
+      {/* -- Step footer ---------------------------------------------------- */}
       <div className="sticky bottom-0 flex items-center justify-end gap-4 bg-white px-6 py-7 shadow-[0px_-8px_6.8px_0px_rgba(0,0,0,0.04)]">
         <Button variant="secondary" className="h-12 w-48" onClick={onBack}>
           {t('tertiaryEducation.cancel')}
