@@ -131,6 +131,69 @@ function normalizeJobRequirementsSection(
   return fallback;
 }
 
+function normalizeSelectOption(raw: unknown): { id: string; label: string } {
+  if (isRecord(raw)) {
+    return {
+      id: toSafeString(raw.id),
+      label:
+        toSafeString(raw.label) ||
+        toSafeString(raw.displayValue) ||
+        toSafeString(raw.name) ||
+        toSafeString(raw.id),
+    };
+  }
+  return { id: '', label: '' };
+}
+
+function normalizeAddress(raw: unknown): {
+  city: { id: string; label: string };
+  stateProvince: { id: string; label: string };
+  country: { id: string; label: string };
+  postalCode: string;
+  isOpen: boolean;
+} {
+  const empty = { id: '', label: '' };
+  if (!isRecord(raw)) {
+    return {
+      city: empty,
+      stateProvince: empty,
+      country: empty,
+      postalCode: '',
+      isOpen: true,
+    };
+  }
+
+  // GET response shape: { cityRefId, cityLabel, stateRefId, stateLabel, countryRefId, countryLabel, postalCode }
+  // Form/POST shape:    { city: { id, label }, stateProvince: { id, label }, country: { id, label }, postalCode }
+  const city = isRecord(raw.city)
+    ? normalizeSelectOption(raw.city)
+    : { id: toSafeString(raw.cityRefId), label: toSafeString(raw.cityLabel) };
+
+  const stateProvince = isRecord(raw.stateProvince)
+    ? normalizeSelectOption(raw.stateProvince)
+    : isRecord(raw.state)
+      ? normalizeSelectOption(raw.state)
+      : {
+          id: toSafeString(raw.stateRefId),
+          label: toSafeString(raw.stateLabel),
+        };
+
+  const country = isRecord(raw.country)
+    ? normalizeSelectOption(raw.country)
+    : {
+        id: toSafeString(raw.countryRefId),
+        label: toSafeString(raw.countryLabel),
+      };
+
+  return {
+    city,
+    stateProvince,
+    country,
+    postalCode: toSafeString(raw.postalCode),
+    isOpen: true,
+  };
+}
+
 function normalizeProfileRequirementsSection(
   source: Record<string, unknown>,
   fallback: VacancyForm['profileRequirements']
@@ -141,35 +204,32 @@ function normalizeProfileRequirementsSection(
     'profileRequirement'
   );
 
-  if (Array.isArray(rawSection)) {
-    const first: unknown = rawSection[0];
-    if (!isRecord(first)) {
-      return fallback;
-    }
+  // The GET response sends profileRequirement as a flat object:
+  // { isEnabled, dataTakenFromCandidate, gender: null|{}, maritalStatus: null|{}, addresses: [] }
+  // or wrapped in an array from the POST payload shape.
+  const entry: unknown = Array.isArray(rawSection) ? rawSection[0] : rawSection;
 
-    const content = isRecord(first.content) ? first.content : first;
-    return {
-      ...fallback,
-      ...content,
-      isEnabled:
-        typeof first.isEnabled === 'boolean'
-          ? first.isEnabled
-          : fallback.isEnabled,
-      dataTakenFromCandidate:
-        typeof first.dataTakenFromCandidate === 'boolean'
-          ? first.dataTakenFromCandidate
-          : fallback.dataTakenFromCandidate,
-    };
+  if (!isRecord(entry)) {
+    return fallback;
   }
 
-  if (isRecord(rawSection)) {
-    return {
-      ...fallback,
-      ...rawSection,
-    };
-  }
+  const addresses = Array.isArray(entry.addresses)
+    ? entry.addresses.map(normalizeAddress)
+    : [];
 
-  return fallback;
+  return {
+    isEnabled:
+      typeof entry.isEnabled === 'boolean'
+        ? entry.isEnabled
+        : fallback.isEnabled,
+    dataTakenFromCandidate:
+      typeof entry.dataTakenFromCandidate === 'boolean'
+        ? entry.dataTakenFromCandidate
+        : fallback.dataTakenFromCandidate,
+    gender: normalizeSelectOption(entry.gender),
+    maritalStatus: normalizeSelectOption(entry.maritalStatus),
+    addresses,
+  };
 }
 
 function normalizeSecondaryEducationSection(

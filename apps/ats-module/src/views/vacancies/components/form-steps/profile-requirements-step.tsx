@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next';
 
 import MessageBox from '@/components/message-box';
 import { StepDisableDialog } from '@/views/vacancies';
+import VacancyStatusBadge from '@/views/vacancies/components/vacancy-status-badge';
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import {
   useDisableSuccessToast,
@@ -347,7 +348,11 @@ function AddressCard({
   );
 }
 
-export default function ProfileRequirementsStep({ onNext, onBack }: StepProps) {
+export default function ProfileRequirementsStep({
+  onNext,
+  onBack,
+  mode = 'create',
+}: StepProps) {
   const { t } = useTranslation('ats');
   const showDisableToast = useDisableSuccessToast();
 
@@ -358,6 +363,7 @@ export default function ProfileRequirementsStep({ onNext, onBack }: StepProps) {
     stepPersistRef,
     stepDisableRef,
   } = useVacancyForm();
+  const vacancyStatus = contextForm.status;
   const { form, fields, append, remove, replace } = useProfileRequirementsForm(
     contextForm.profileRequirements
   );
@@ -583,6 +589,9 @@ export default function ProfileRequirementsStep({ onNext, onBack }: StepProps) {
               <h2 className="text-xl font-bold tracking-tight text-slate-900">
                 {t('profileRequirements.title')}
               </h2>
+              {mode === 'edit' && vacancyStatus ? (
+                <VacancyStatusBadge status={vacancyStatus} />
+              ) : null}
             </div>
 
             {/* Toggle switch */}
