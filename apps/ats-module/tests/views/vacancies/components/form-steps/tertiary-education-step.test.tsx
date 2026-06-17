@@ -1,3 +1,4 @@
+import { forwardRef, useImperativeHandle, useRef } from 'react';
 import type { ReactNode } from 'react';
 
 import { render, screen, waitFor } from '@testing-library/react';
@@ -61,16 +62,31 @@ vi.mock('react-i18next', () => ({
 
 // ── Mock vacancy form context ──────────────────────────────────────────────
 
+const {
+  stableForm,
+  mockSetForm,
+  mockSetStepGuard,
+  mockStepPersistRef,
+  mockStepDisableRef,
+} = vi.hoisted(() => ({
+  stableForm: {
+    tertiaryEducation: [
+      { isEnabled: false, dataTakenFromCandidate: false, content: [] },
+    ],
+  },
+  mockSetForm: vi.fn(),
+  mockSetStepGuard: vi.fn(),
+  mockStepPersistRef: { current: null },
+  mockStepDisableRef: { current: null },
+}));
+
 vi.mock('@/views/vacancies/context/vacancy-form-context', () => ({
   useVacancyForm: () => ({
-    form: {
-      tertiaryEducation: [
-        { isEnabled: false, dataTakenFromCandidate: false, content: [] },
-      ],
-    },
-    setStepGuard: vi.fn(),
-    stepPersistRef: { current: null },
-    stepDisableRef: { current: null },
+    form: stableForm,
+    setForm: mockSetForm,
+    setStepGuard: mockSetStepGuard,
+    stepPersistRef: mockStepPersistRef,
+    stepDisableRef: mockStepDisableRef,
   }),
 }));
 
@@ -147,76 +163,91 @@ vi.mock('@cgp/ui-kit/components/autocomplete-combobox', () => ({
 // ── Mock MultipleSelector ───────────────────────────────────────────────────
 
 vi.mock('@cgp/ui-kit/components/multi-select', () => ({
-  default: ({
-    placeholder,
-    onMaxSelected,
-    errorMessage,
-    onChange,
-    loadingIndicator,
-    emptyIndicator,
-  }: {
-    placeholder: string;
-    onMaxSelected?: () => void;
-    errorMessage?: string;
-    onChange?: (options: { value: string; label: string }[]) => void;
-    loadingIndicator?: ReactNode;
-    emptyIndicator?: ReactNode;
-    keepSelectedInList?: boolean;
-  }) => (
-    <>
-      <input placeholder={placeholder} readOnly />
-      {onChange && (
-        <button
-          type="button"
-          data-testid={`add-new-${placeholder}`}
-          onClick={() => onChange([{ value: 'new-val', label: 'new-val' }])}
-        />
-      )}
-      {onMaxSelected && (
-        <button
-          type="button"
-          data-testid={`max-trigger-${placeholder}`}
-          onClick={() => onMaxSelected()}
-        />
-      )}
-      {errorMessage && <p>{errorMessage}</p>}
-      {loadingIndicator && (
-        <div data-testid={`loading-${placeholder}`}>{loadingIndicator}</div>
-      )}
-      {emptyIndicator && (
-        <div data-testid={`empty-${placeholder}`}>{emptyIndicator}</div>
-      )}
-    </>
+  default: forwardRef(
+    (
+      {
+        placeholder,
+        onMaxSelected,
+        errorMessage,
+        onChange,
+        loadingIndicator,
+        emptyIndicator,
+      }: {
+        placeholder: string;
+        onMaxSelected?: () => void;
+        errorMessage?: string;
+        onChange?: (options: { value: string; label: string }[]) => void;
+        loadingIndicator?: ReactNode;
+        emptyIndicator?: ReactNode;
+        keepSelectedInList?: boolean;
+      },
+      ref
+    ) => {
+      const inputRef = useRef(null);
+      useImperativeHandle(ref, () => ({
+        input: inputRef.current,
+      }));
+      return (
+        <>
+          <input placeholder={placeholder} readOnly ref={inputRef} />
+          {onChange && (
+            <button
+              type="button"
+              data-testid={`add-new-${placeholder}`}
+              onClick={() => onChange([{ value: 'new-val', label: 'new-val' }])}
+            />
+          )}
+          {onMaxSelected && (
+            <button
+              type="button"
+              data-testid={`max-trigger-${placeholder}`}
+              onClick={() => onMaxSelected()}
+            />
+          )}
+          {errorMessage && <p>{errorMessage}</p>}
+          {loadingIndicator && (
+            <div data-testid={`loading-${placeholder}`}>{loadingIndicator}</div>
+          )}
+          {emptyIndicator && (
+            <div data-testid={`empty-${placeholder}`}>{emptyIndicator}</div>
+          )}
+        </>
+      );
+    }
   ),
 }));
 
 // ── Mock Radix-backed UI kit components ────────────────────────────────────
 
-vi.mock('radix-ui', () => ({
-  Switch: {
-    Root: ({
-      checked,
-      onCheckedChange,
-      children,
-      ...rest
-    }: {
-      checked: boolean;
-      onCheckedChange?: (v: boolean) => void;
-      children?: ReactNode;
-      [k: string]: unknown;
-    }) => (
+vi.mock('@radix-ui/react-switch', () => ({
+  Root: forwardRef(
+    (
+      {
+        checked,
+        onCheckedChange,
+        children,
+        ...rest
+      }: {
+        checked?: boolean;
+        onCheckedChange?: (v: boolean) => void;
+        children?: ReactNode;
+        [k: string]: unknown;
+      },
+      ref
+    ) => (
       <button
         role="switch"
         aria-checked={checked}
         onClick={() => onCheckedChange?.(!checked)}
         type="button"
+        ref={ref}
         {...rest}
       >
         {children}
       </button>
-    ),
-    Thumb: () => null,
-  },
+    )
+  ),
+  Thumb: () => null,
 }));
 
 vi.mock('@cgp/ui-kit/components/ui/checkbox', () => ({

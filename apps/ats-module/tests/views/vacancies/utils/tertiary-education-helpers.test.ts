@@ -20,7 +20,7 @@ describe('toTertiaryEducationPayload', () => {
     const result = toTertiaryEducationPayload({
       isEnabled: false,
       dataTakenFromCandidate: false,
-      entry: EMPTY_ENTRY,
+      entries: [EMPTY_ENTRY],
     });
 
     expect(result).toEqual([
@@ -32,7 +32,7 @@ describe('toTertiaryEducationPayload', () => {
     const result = toTertiaryEducationPayload({
       isEnabled: true,
       dataTakenFromCandidate: true,
-      entry: EMPTY_ENTRY,
+      entries: [EMPTY_ENTRY],
     });
 
     expect(result).toEqual([
@@ -44,39 +44,48 @@ describe('toTertiaryEducationPayload', () => {
     const result = toTertiaryEducationPayload({
       isEnabled: true,
       dataTakenFromCandidate: false,
-      entry: {
-        ...EMPTY_ENTRY,
-        qualificationName: [
-          { value: 'q-uuid', label: 'BSc Computer Science', source: 'MASTER' },
-        ],
-        tertiaryAwardingBody: [
-          {
-            value: 'ab-uuid',
-            label: 'University of Moratuwa',
-            source: 'MASTER',
-          },
-        ],
-        levelOfQualification: [
-          { value: 'l-uuid', label: "Bachelor's", source: 'MASTER' },
-        ],
-        specialization: [
-          { value: 's-uuid', label: 'Data Science', source: 'PENDING' },
-        ],
-        tertiaryAwardingBodyLocations: [
-          { value: 'loc-uuid', label: 'Colombo, Western Province, Sri Lanka' },
-        ],
-        batch: [{ value: 'b-uuid', label: 'Batch 2020', source: 'MASTER' }],
-        department: [
-          { value: 'd-uuid', label: 'IT Department', source: 'MASTER' },
-        ],
-        faculty: [
-          {
-            value: 'f-uuid',
-            label: 'Faculty of Engineering',
-            source: 'PENDING',
-          },
-        ],
-      },
+      entries: [
+        {
+          ...EMPTY_ENTRY,
+          qualificationName: [
+            {
+              value: 'q-uuid',
+              label: 'BSc Computer Science',
+              source: 'MASTER',
+            },
+          ],
+          tertiaryAwardingBody: [
+            {
+              value: 'ab-uuid',
+              label: 'University of Moratuwa',
+              source: 'MASTER',
+            },
+          ],
+          levelOfQualification: [
+            { value: 'l-uuid', label: "Bachelor's", source: 'MASTER' },
+          ],
+          specialization: [
+            { value: 's-uuid', label: 'Data Science', source: 'PENDING' },
+          ],
+          tertiaryAwardingBodyLocations: [
+            {
+              value: 'loc-uuid',
+              label: 'Colombo, Western Province, Sri Lanka',
+            },
+          ],
+          batch: [{ value: 'b-uuid', label: 'Batch 2020', source: 'MASTER' }],
+          department: [
+            { value: 'd-uuid', label: 'IT Department', source: 'MASTER' },
+          ],
+          faculty: [
+            {
+              value: 'f-uuid',
+              label: 'Faculty of Engineering',
+              source: 'PENDING',
+            },
+          ],
+        },
+      ],
     });
 
     const content = result[0].content[0];
@@ -127,17 +136,19 @@ describe('toTertiaryEducationPayload', () => {
     const result = toTertiaryEducationPayload({
       isEnabled: true,
       dataTakenFromCandidate: false,
-      entry: {
-        ...EMPTY_ENTRY,
-        qualificationName: [
-          { value: 'q-uuid', label: 'MBA', source: 'MASTER' },
-          {
-            value: 'Custom Qualification',
-            label: 'Custom Qualification',
-            source: 'PENDING',
-          },
-        ],
-      },
+      entries: [
+        {
+          ...EMPTY_ENTRY,
+          qualificationName: [
+            { value: 'q-uuid', label: 'MBA', source: 'MASTER' },
+            {
+              value: 'Custom Qualification',
+              label: 'Custom Qualification',
+              source: 'PENDING',
+            },
+          ],
+        },
+      ],
     });
 
     expect(result[0].content[0].qualificationName).toHaveLength(1);
@@ -148,7 +159,7 @@ describe('toTertiaryEducationPayload', () => {
     const result = toTertiaryEducationPayload({
       isEnabled: true,
       dataTakenFromCandidate: false,
-      entry: { ...EMPTY_ENTRY, grade: 'GPA 3.8' },
+      entries: [{ ...EMPTY_ENTRY, grade: 'GPA 3.8' }],
     });
 
     expect(result[0].content[0].grade).toBe('GPA 3.8');
@@ -158,16 +169,18 @@ describe('toTertiaryEducationPayload', () => {
     const result = toTertiaryEducationPayload({
       isEnabled: true,
       dataTakenFromCandidate: false,
-      entry: {
-        ...EMPTY_ENTRY,
-        studyMode: [{ value: 'sm-uuid', label: 'Online', source: 'MASTER' }],
-        studyPattern: [
-          { value: 'sp-uuid', label: 'Full-Time', source: 'MASTER' },
-        ],
-        deliverySchedule: [
-          { value: 'ds-uuid', label: 'Weekday', source: 'MASTER' },
-        ],
-      },
+      entries: [
+        {
+          ...EMPTY_ENTRY,
+          studyMode: [{ value: 'sm-uuid', label: 'Online', source: 'MASTER' }],
+          studyPattern: [
+            { value: 'sp-uuid', label: 'Full-Time', source: 'MASTER' },
+          ],
+          deliverySchedule: [
+            { value: 'ds-uuid', label: 'Weekday', source: 'MASTER' },
+          ],
+        },
+      ],
     });
 
     const content = result[0].content[0];

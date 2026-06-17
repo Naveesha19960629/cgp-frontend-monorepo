@@ -52,6 +52,12 @@ function formatOptionalDate(
   return date;
 }
 
+function normalizeToDateOnly(value: string): string {
+  if (!value) return '';
+  const [datePart] = value.split('T');
+  return datePart || '';
+}
+
 function mapJobRequirement(form: VacancyForm): JobRequirementApiPayload {
   const jobReq = form.jobRequirements[0];
   if (!jobReq) {
@@ -558,7 +564,14 @@ function mapSecondaryEducation(form: VacancyForm): SecondaryEducation[] {
         content: [],
       };
     }
-    return se;
+    return {
+      ...se,
+      content: se.content.map(entry => ({
+        ...entry,
+        startDate: normalizeToDateOnly(entry.startDate),
+        endDate: normalizeToDateOnly(entry.endDate),
+      })),
+    };
   });
 }
 

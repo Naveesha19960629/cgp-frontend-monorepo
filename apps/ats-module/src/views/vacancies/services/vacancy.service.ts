@@ -1,6 +1,5 @@
 import type {
   CreateVacancyPayload,
-  ScheduleVacancyPayload,
   VacanciesApiResponse,
   VacancyQueryParams,
 } from '@/views/vacancies/types';
@@ -48,7 +47,7 @@ export const vacancyService = {
   },
   updateVacancy: async (
     id: string,
-    payload: { schedule: ScheduleVacancyPayload }
+    payload: CreateVacancyPayload
   ): Promise<CreateVacancyResponse> => {
     const response = await httpClient.put<CreateVacancyResponse>(
       `/vacancies/${id}`,

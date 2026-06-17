@@ -4,12 +4,15 @@ import type {
   SecondaryEducationRef,
 } from '@/views/vacancies/types';
 import { DATE_DISPLAY_FORMAT } from '@/views/vacancies/utils/constants';
+import { parseLocalDate } from '@/views/vacancies/utils/date-timezone-safe';
 
 import { format } from 'date-fns';
 
 function formatDate(iso?: string): string {
   if (!iso) return '';
-  return format(new Date(iso), DATE_DISPLAY_FORMAT);
+  const date = parseLocalDate(iso);
+  if (!date) return '';
+  return format(date, DATE_DISPLAY_FORMAT);
 }
 
 const toSecondaryEducationPayload = (
@@ -23,7 +26,19 @@ const toSecondaryEducationPayload = (
     return [{ isEnabled: true, dataTakenFromCandidate: true, content: [] }];
   }
 
-  const { entry } = values;
+  const isEntryEmpty = (
+    entry: SecondaryEducationFormValues['entries'][number]
+  ) =>
+    !entry.acceptsHomeSchooling &&
+    entry.schools.length === 0 &&
+    entry.schoolLocations.length === 0 &&
+    entry.examinations.length === 0 &&
+    entry.awardingBodies.length === 0 &&
+    entry.fieldsOfStudy.length === 0 &&
+    !entry.grade.trim() &&
+    !entry.startDate &&
+    !entry.endDate &&
+    !entry.result.trim();
 
   const toRef = (item: {
     value?: string;
@@ -53,26 +68,22 @@ const toSecondaryEducationPayload = (
     name: item.label,
   });
 
-  return [
-    {
-      isEnabled: true,
-      dataTakenFromCandidate: false,
-      content: [
-        {
-          acceptsHomeSchooling: entry.acceptsHomeSchooling,
-          schools: toRefs(entry.schools),
-          schoolLocations: entry.schoolLocations.map(toLocationRef),
-          examinations: toRefs(entry.examinations),
-          secondaryAwardingBody: toRefs(entry.awardingBodies),
-          fieldsOfStudy: toRefs(entry.fieldsOfStudy),
-          grade: entry.grade,
-          startDate: entry.startDate ?? '',
-          endDate: entry.endDate ?? '',
-          result: entry.result,
-        },
-      ],
-    },
-  ];
+  const content = values.entries
+    .filter(entry => !isEntryEmpty(entry))
+    .map(entry => ({
+      acceptsHomeSchooling: entry.acceptsHomeSchooling,
+      schools: toRefs(entry.schools),
+      schoolLocations: entry.schoolLocations.map(toLocationRef),
+      examinations: toRefs(entry.examinations),
+      secondaryAwardingBody: toRefs(entry.awardingBodies),
+      fieldsOfStudy: toRefs(entry.fieldsOfStudy),
+      grade: entry.grade,
+      startDate: entry.startDate ? entry.startDate.split('T')[0] : '',
+      endDate: entry.endDate ? entry.endDate.split('T')[0] : '',
+      result: entry.result,
+    }));
+
+  return [{ isEnabled: true, dataTakenFromCandidate: false, content }];
 };
 
 export { toSecondaryEducationPayload, formatDate };
