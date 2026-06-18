@@ -140,6 +140,9 @@ export default function PreferredCausesStep({
     });
   };
 
+  const isStepActionDisabled =
+    isEnabled && !dataTakenFromCandidate && selectedCauses.length === 0;
+
   return (
     <div>
       {/* ── Section Header ──────────────────────────────────────────── */}
@@ -148,8 +151,12 @@ export default function PreferredCausesStep({
           <button
             type="button"
             aria-label={t('common.back')}
-            className="text-slate-700 transition-colors hover:text-slate-900"
+            className={cn(
+              'text-slate-700 transition-colors hover:text-slate-900',
+              isStepActionDisabled && 'cursor-not-allowed opacity-50'
+            )}
             onClick={onBack}
+            disabled={isStepActionDisabled}
           >
             <ArrowLeft2 size={24} />
           </button>
@@ -331,7 +338,11 @@ export default function PreferredCausesStep({
         <Button variant="secondary" className="h-12 w-48" onClick={onCancel}>
           {t('common.cancel')}
         </Button>
-        <Button className="h-12 w-48" onClick={() => void handleNext()}>
+        <Button
+          className="h-12 w-48"
+          onClick={() => void handleNext()}
+          disabled={isStepActionDisabled}
+        >
           {t('common.next')}
         </Button>
       </div>
