@@ -238,7 +238,7 @@ interface CreatePendingApiResponse {
 
 // ─── License and Certificates ─────────────────────────────────────────────────
 
-type LicenseCertType = 'LICENSE' | 'CERTIFICATION';
+type LicenseCertType = 'LICENSE' | 'CERTIFICATION' | 'CERTIFICATE';
 
 interface LicenseCertRef {
   source: 'MASTER' | 'PENDING';
@@ -458,6 +458,7 @@ interface StepProps {
   onNext: (data?: Partial<VacancyForm>, completed?: boolean) => void;
   onBack: () => void;
   onSubmit: () => void;
+  mode?: 'create' | 'edit';
 }
 
 interface GenderItem {

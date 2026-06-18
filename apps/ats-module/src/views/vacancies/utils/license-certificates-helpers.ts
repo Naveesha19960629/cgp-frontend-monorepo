@@ -2,7 +2,6 @@ import type { LicenseCertificatesFormValues } from '@/views/vacancies/hooks/use-
 import type {
   LicenseCertEntry,
   LicenseCertRef,
-  LicenseCertType,
   LicenseCertificates,
 } from '@/views/vacancies/types';
 
@@ -12,15 +11,23 @@ function normalizeToDateOnly(value?: string): string {
   return datePart ?? '';
 }
 
+function normalizeLicenseSource(source?: string): 'MASTER' | 'PENDING' {
+  if (source === 'PENDING' || source === 'PENDING_TEMP') {
+    return 'PENDING';
+  }
+
+  return 'MASTER';
+}
+
+function isTemporaryLicenseId(id: string): boolean {
+  return id.startsWith('__pending_license_cert_');
+}
+
 const toLicenseCertificatesPayload = (
   values: LicenseCertificatesFormValues
 ): LicenseCertificates[] => {
   if (!values.isEnabled) {
     return [{ isEnabled: false, dataTakenFromCandidate: false, content: [] }];
-  }
-
-  if (values.dataTakenFromCandidate) {
-    return [{ isEnabled: true, dataTakenFromCandidate: true, content: [] }];
   }
 
   const { entry } = values;
@@ -31,13 +38,25 @@ const toLicenseCertificatesPayload = (
     source: string;
     certType?: string;
   }): LicenseCertRef | null => {
-    if (!item.value || item.value === item.label) return null;
-    return {
-      source: item.source as 'MASTER' | 'PENDING',
+    if (
+      !item.value ||
+      item.value === item.label ||
+      isTemporaryLicenseId(item.value)
+    ) {
+      return null;
+    }
+    const ref: LicenseCertRef = {
+      source: normalizeLicenseSource(item.source),
       id: item.value,
       name: item.label,
-      type: item.certType as LicenseCertType | undefined,
+      type:
+        item.certType === 'LICENSE' ||
+        item.certType === 'CERTIFICATION' ||
+        item.certType === 'CERTIFICATE'
+          ? item.certType
+          : 'CERTIFICATE',
     };
+    return ref;
   };
 
   const toRefs = (
@@ -88,7 +107,7 @@ const toLicenseCertificatesPayload = (
   return [
     {
       isEnabled: true,
-      dataTakenFromCandidate: false,
+      dataTakenFromCandidate: values.dataTakenFromCandidate,
       content,
     },
   ];

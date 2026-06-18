@@ -3,7 +3,7 @@ import type { VacancyForm } from '@/views/vacancies/types';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
-type MutationArgs = { id: string; form: VacancyForm };
+type MutationArgs = { id: string; form: VacancyForm; existingStatus: string };
 
 type MockMutation = {
   mutationFn: (arg: MutationArgs) => Promise<unknown>;
@@ -23,7 +23,7 @@ vi.mock('@tanstack/react-query', () => ({
 // ── Mock services and utils ────────────────────────────────────────────────
 
 const mockUpdateVacancy = vi.fn();
-const mockToCreateVacancyPayload = vi.fn();
+const mockToUpdateVacancyPayload = vi.fn();
 
 vi.mock('@/views/vacancies/services', () => ({
   vacancyService: {
@@ -33,8 +33,8 @@ vi.mock('@/views/vacancies/services', () => ({
 }));
 
 vi.mock('@/views/vacancies/utils', () => ({
-  toCreateVacancyPayload: (...args: unknown[]) =>
-    mockToCreateVacancyPayload(...args) as unknown,
+  toUpdateVacancyPayload: (...args: unknown[]) =>
+    mockToUpdateVacancyPayload(...args) as unknown,
 }));
 
 describe('useUpdateVacancyMutation', () => {
@@ -44,7 +44,7 @@ describe('useUpdateVacancyMutation', () => {
     vi.clearAllMocks();
     mockUseMutation.mockImplementation((options: unknown) => options);
     mockInvalidateQueries.mockResolvedValue(undefined);
-    mockToCreateVacancyPayload.mockReturnValue({
+    mockToUpdateVacancyPayload.mockReturnValue({
       title: 'Mapped Payload',
       status: 'UNPUBLISHED',
       lastActiveStep: 'schedule-vacancy',
@@ -60,9 +60,13 @@ describe('useUpdateVacancyMutation', () => {
   it('mutationFn maps form and calls updateVacancy with id + mapped payload', async () => {
     const mutation = useUpdateVacancyMutation() as unknown as MockMutation;
 
-    await mutation.mutationFn({ id: 'vacancy-1', form: mockForm });
+    await mutation.mutationFn({
+      id: 'vacancy-1',
+      form: mockForm,
+      existingStatus: 'LIVE',
+    });
 
-    expect(mockToCreateVacancyPayload).toHaveBeenCalledWith(mockForm);
+    expect(mockToUpdateVacancyPayload).toHaveBeenCalledWith(mockForm, 'LIVE');
     expect(mockUpdateVacancy).toHaveBeenCalledWith('vacancy-1', {
       title: 'Mapped Payload',
       status: 'UNPUBLISHED',
@@ -71,15 +75,22 @@ describe('useUpdateVacancyMutation', () => {
     });
   });
 
-  it('onSuccess invalidates both vacancies list and vacancy detail queries', () => {
+  it('onSuccess invalidates vacancies list and vacancy-by-id queries', async () => {
     const mutation = useUpdateVacancyMutation() as unknown as MockMutation;
 
-    mutation.onSuccess({}, { id: 'vacancy-99', form: mockForm });
+    await mutation.onSuccess(
+      {},
+      {
+        id: 'vacancy-99',
+        form: mockForm,
+        existingStatus: 'UNPUBLISHED',
+      }
+    );
 
-    expect(mockInvalidateQueries).toHaveBeenNthCalledWith(1, {
+    expect(mockInvalidateQueries).toHaveBeenCalledWith({
       queryKey: ['vacancies'],
     });
-    expect(mockInvalidateQueries).toHaveBeenNthCalledWith(2, {
+    expect(mockInvalidateQueries).toHaveBeenCalledWith({
       queryKey: ['vacancy', 'vacancy-99'],
     });
   });
