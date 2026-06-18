@@ -93,7 +93,7 @@ type TertiaryEducationApiShape = {
 
 type MockVacancyForm = {
   tertiaryEducation: TertiaryEducation[] | TertiaryEducationApiShape;
-  status?: string;
+  status: string | undefined;
 };
 
 const {

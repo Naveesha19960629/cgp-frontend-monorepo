@@ -236,7 +236,7 @@ function makeForm(
     isEnabled: boolean;
     dataTakenFromCandidate: boolean;
     industries: { id: string; label: string; source?: string }[];
-    status: string;
+    status?: string | undefined;
   }> = {}
 ) {
   const { status, ...preferredIndustriesOverrides } = overrides;
