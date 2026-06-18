@@ -1015,7 +1015,7 @@ interface JobRequirementApiPayload {
 }
 
 interface PatentContentApiPayload {
-  status?: string;
+  statuses?: string[];
   fromDate?: string;
   toDate?: string;
   relatedIndustry: MasterRef[];

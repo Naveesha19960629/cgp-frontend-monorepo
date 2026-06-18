@@ -150,7 +150,7 @@ function mapPatents(form: VacancyForm): PatentGroupApiPayload[] {
       isEnabled: form.patents.isEnabled,
       dataTakenFromCandidate: form.patents.dataTakenFromCandidate,
       content: form.patents.patents.map(p => ({
-        status: p.statuses[0]?.value,
+        statuses: p.statuses.map(s => s.value),
         fromDate: formatOptionalDate(p.fromDate),
         toDate: formatOptionalDate(p.toDate),
         relatedIndustry: p.relatedIndustries.map(i => ({
