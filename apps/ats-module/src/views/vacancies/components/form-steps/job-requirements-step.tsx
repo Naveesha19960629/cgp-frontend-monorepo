@@ -1,7 +1,5 @@
 import { Loader2 } from 'lucide-react';
 
-import { ArrowLeft2 } from 'iconsax-reactjs';
-
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -64,7 +62,6 @@ const multiSelectInfoAvatar = new URL(
 
 export default function JobRequirementsStep({
   onNext,
-  onBack,
   mode = 'create',
 }: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
@@ -357,14 +354,6 @@ export default function JobRequirementsStep({
 
           <div className="flex items-center justify-between px-7 py-8">
             <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={onBack}
-                className="text-slate-700 transition-colors hover:text-slate-900"
-                aria-label={t('common.back')}
-              >
-                <ArrowLeft2 size={24} />
-              </button>
               <h2 className="text-xl font-bold tracking-tight text-slate-900">
                 {t('jobRequirements.sectionTitle')}
               </h2>
