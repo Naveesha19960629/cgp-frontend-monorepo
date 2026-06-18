@@ -7,7 +7,7 @@ type MutationArgs = { id: string; form: VacancyForm; existingStatus: string };
 
 type MockMutation = {
   mutationFn: (arg: MutationArgs) => Promise<unknown>;
-  onSuccess: (_data: unknown, variables: MutationArgs) => void;
+  onSuccess: (_data: unknown, variables: MutationArgs) => Promise<void>;
 };
 
 // ── Mock @tanstack/react-query ─────────────────────────────────────────────
@@ -75,10 +75,10 @@ describe('useUpdateVacancyMutation', () => {
     });
   });
 
-  it('onSuccess invalidates vacancies list and vacancy-by-id queries', () => {
+  it('onSuccess invalidates vacancies list and vacancy-by-id queries', async () => {
     const mutation = useUpdateVacancyMutation() as unknown as MockMutation;
 
-    mutation.onSuccess(
+    await mutation.onSuccess(
       {},
       {
         id: 'vacancy-99',
