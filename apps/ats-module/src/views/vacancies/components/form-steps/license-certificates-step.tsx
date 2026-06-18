@@ -10,6 +10,7 @@ import MessageBox from '@/components/message-box';
 import { AddOrganizationFormDialog } from '@/views/vacancies/components/dialogs';
 import { AddLicenseCertDialog } from '@/views/vacancies/components/form-steps/add-license-certificate-dialog';
 import StepDisableDialog from '@/views/vacancies/components/step-disable-dialog';
+import VacancyStatusBadge from '@/views/vacancies/components/vacancy-status-badge';
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import {
   useAddLicenseCertificateMutation,
@@ -59,11 +60,13 @@ const multiSelectInfoAvatar = new URL(
 export default function LicenseCertificatesStep({
   onNext,
   onBack,
+  mode = 'create',
 }: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
   const {
     form: vacancyForm,
     setForm,
+    onCancel,
     stepPersistRef,
     stepDisableRef,
     currentStepIndex,
@@ -358,6 +361,9 @@ export default function LicenseCertificatesStep({
             <h2 className="text-xl font-bold tracking-tight text-slate-900">
               {t('licenseCertificates.title')}
             </h2>
+            {mode === 'edit' && vacancyForm.status ? (
+              <VacancyStatusBadge status={vacancyForm.status} />
+            ) : null}
           </div>
           <Controller
             control={control}
@@ -914,7 +920,7 @@ export default function LicenseCertificatesStep({
 
         {/* ── Step footer ───────────────────────────────────────────────────── */}
         <div className="sticky bottom-0 flex items-center justify-end gap-4 bg-white px-6 py-7 shadow-[0px_-8px_6.8px_0px_rgba(0,0,0,0.04)]">
-          <Button variant="secondary" className="h-12 w-48" onClick={onBack}>
+          <Button variant="secondary" className="h-12 w-48" onClick={onCancel}>
             {t('licenseCertificates.cancel')}
           </Button>
           <Button className="h-12 w-48" onClick={() => void handleNext()}>

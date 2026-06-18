@@ -93,6 +93,7 @@ type TertiaryEducationApiShape = {
 
 type MockVacancyForm = {
   tertiaryEducation: TertiaryEducation[] | TertiaryEducationApiShape;
+  status?: string;
 };
 
 const {
@@ -101,11 +102,13 @@ const {
   mockSetStepGuard,
   mockStepPersistRef,
   mockStepDisableRef,
+  mockOnCancel,
 } = vi.hoisted(() => {
   const stableForm: MockVacancyForm = {
     tertiaryEducation: [
       { isEnabled: false, dataTakenFromCandidate: false, content: [] },
     ],
+    status: undefined,
   };
 
   return {
@@ -114,6 +117,7 @@ const {
     mockSetStepGuard: vi.fn(),
     mockStepPersistRef: { current: null },
     mockStepDisableRef: { current: null },
+    mockOnCancel: vi.fn(),
   };
 });
 
@@ -122,11 +126,18 @@ vi.mock('@/views/vacancies/context/vacancy-form-context', () => ({
     form: stableForm,
     setForm: mockSetForm,
     setStepGuard: mockSetStepGuard,
+    onCancel: mockOnCancel,
     stepPersistRef: mockStepPersistRef,
     stepDisableRef: mockStepDisableRef,
     currentStepIndex: 0,
     removeCompletedStep: vi.fn(),
   }),
+}));
+
+vi.mock('@/views/vacancies/components/vacancy-status-badge', () => ({
+  default: ({ status }: { status: string }) => (
+    <div data-testid="vacancy-status-badge">{status}</div>
+  ),
 }));
 
 // ── Mock hooks barrel — keep real useTertiaryEducationForm ─────────────────
@@ -372,7 +383,7 @@ vi.mock('@cgp/ui-kit/components/character-count', () => ({
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
-function renderStep() {
+function renderStep(mode: 'create' | 'edit' = 'create') {
   const onNext = vi.fn();
   const onBack = vi.fn();
   const onSubmit = vi.fn();
@@ -381,6 +392,7 @@ function renderStep() {
       onNext={onNext}
       onBack={onBack}
       onSubmit={onSubmit}
+      mode={mode}
     />
   );
   return { onNext, onBack, onSubmit };
@@ -409,6 +421,7 @@ async function openConfirmDialog() {
 describe('TertiaryEducationStep', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    stableForm.status = undefined;
     mockQualificationMutate.mockResolvedValue({
       data: { pendingId: 'qual-id' },
     });
@@ -428,6 +441,24 @@ describe('TertiaryEducationStep', () => {
     it('renders the section heading', () => {
       renderStep();
       expect(screen.getByText('tertiaryEducation.title')).toBeInTheDocument();
+    });
+
+    it('renders vacancy status badge in edit mode when status exists', () => {
+      stableForm.status = 'ON_HOLD';
+      renderStep('edit');
+
+      expect(screen.getByTestId('vacancy-status-badge')).toHaveTextContent(
+        'ON_HOLD'
+      );
+    });
+
+    it('does not render vacancy status badge in create mode', () => {
+      stableForm.status = 'ON_HOLD';
+      renderStep('create');
+
+      expect(
+        screen.queryByTestId('vacancy-status-badge')
+      ).not.toBeInTheDocument();
     });
 
     it('renders the enable/disable toggle (initially off)', () => {

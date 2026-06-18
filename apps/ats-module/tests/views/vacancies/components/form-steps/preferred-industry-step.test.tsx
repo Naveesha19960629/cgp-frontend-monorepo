@@ -11,6 +11,7 @@ import PreferredIndustryStep from '@/views/vacancies/components/form-steps/prefe
 const mockSuccessToast = vi.hoisted(() => vi.fn());
 const mockUseVacancyForm = vi.hoisted(() => vi.fn());
 const mockUseIndustriesQuery = vi.hoisted(() => vi.fn());
+const mockOnCancel = vi.hoisted(() => vi.fn());
 
 // ── Module mocks ─────────────────────────────────────────────────────────────
 
@@ -39,6 +40,12 @@ vi.mock('@/views/vacancies/hooks', () => ({
 
 vi.mock('@/views/vacancies/services', () => ({
   industryService: { getIndustries: vi.fn() },
+}));
+
+vi.mock('@/views/vacancies/components/vacancy-status-badge', () => ({
+  default: ({ status }: { status: string }) => (
+    <div data-testid="vacancy-status-badge">{status}</div>
+  ),
 }));
 
 vi.mock('@/views/vacancies/utils', () => ({
@@ -229,18 +236,22 @@ function makeForm(
     isEnabled: boolean;
     dataTakenFromCandidate: boolean;
     industries: { id: string; label: string; source?: string }[];
+    status: string;
   }> = {}
 ) {
+  const { status, ...preferredIndustriesOverrides } = overrides;
   return {
     form: {
       preferredIndustries: {
         isEnabled: true,
         dataTakenFromCandidate: false,
         industries: [],
-        ...overrides,
+        ...preferredIndustriesOverrides,
       },
+      ...(status ? { status } : {}),
     },
     setForm: vi.fn(),
+    onCancel: mockOnCancel,
     stepPersistRef: { current: null },
     stepDisableRef: { current: null },
     currentStepIndex: 0,
@@ -248,13 +259,17 @@ function makeForm(
   };
 }
 
-function renderStep(formOverrides: Parameters<typeof makeForm>[0] = {}) {
+function renderStep(
+  formOverrides: Parameters<typeof makeForm>[0] = {},
+  mode: 'create' | 'edit' = 'create'
+) {
   const onNext = vi.fn();
   const onBack = vi.fn();
   const onSubmit = vi.fn();
 
   mockUseVacancyForm.mockImplementation(() => {
-    const initial = makeForm(formOverrides).form;
+    const initialState = makeForm(formOverrides);
+    const initial = initialState.form;
     const [formState, setFormState] = useState(initial);
     const stepPersistRef = useRef<(() => void) | null>(null);
     const stepDisableRef = useRef<(() => void) | null>(null);
@@ -270,8 +285,11 @@ function renderStep(formOverrides: Parameters<typeof makeForm>[0] = {}) {
           typeof updater === 'function' ? updater(prev) : updater
         );
       },
+      onCancel: initialState.onCancel,
       stepPersistRef,
       stepDisableRef,
+      currentStepIndex: initialState.currentStepIndex,
+      removeCompletedStep: initialState.removeCompletedStep,
     };
   });
 
@@ -280,6 +298,7 @@ function renderStep(formOverrides: Parameters<typeof makeForm>[0] = {}) {
       onNext={onNext}
       onBack={onBack}
       onSubmit={onSubmit}
+      mode={mode}
     />
   );
   return { onNext, onBack, onSubmit };
@@ -290,6 +309,7 @@ function renderStep(formOverrides: Parameters<typeof makeForm>[0] = {}) {
 describe('PreferredIndustryStep', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockOnCancel.mockReset();
     mockUseIndustriesQuery.mockReturnValue(makeQueryData());
   });
 
@@ -297,6 +317,22 @@ describe('PreferredIndustryStep', () => {
     it('renders the section heading', () => {
       renderStep();
       expect(screen.getByText('preferredIndustries.title')).toBeInTheDocument();
+    });
+
+    it('renders vacancy status badge in edit mode when status exists', () => {
+      renderStep({ status: 'LIVE' }, 'edit');
+
+      expect(screen.getByTestId('vacancy-status-badge')).toHaveTextContent(
+        'LIVE'
+      );
+    });
+
+    it('does not render vacancy status badge in create mode', () => {
+      renderStep({ status: 'LIVE' }, 'create');
+
+      expect(
+        screen.queryByTestId('vacancy-status-badge')
+      ).not.toBeInTheDocument();
     });
 
     it('renders the toggle switch as enabled by default', () => {
@@ -800,13 +836,13 @@ describe('PreferredIndustryStep', () => {
   });
 
   describe('footer navigation', () => {
-    it('calls onBack when Cancel is clicked', async () => {
+    it('calls onCancel when Cancel is clicked', async () => {
       const user = userEvent.setup();
-      const { onBack } = renderStep();
+      renderStep();
 
       await user.click(screen.getByText('common.cancel'));
 
-      expect(onBack).toHaveBeenCalledTimes(1);
+      expect(mockOnCancel).toHaveBeenCalledTimes(1);
     });
 
     it('calls onBack when the header back button is clicked', async () => {
