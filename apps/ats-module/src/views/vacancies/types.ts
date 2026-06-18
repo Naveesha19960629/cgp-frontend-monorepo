@@ -458,6 +458,7 @@ interface StepProps {
   onNext: (data?: Partial<VacancyForm>, completed?: boolean) => void;
   onBack: () => void;
   onSubmit: () => void;
+  mode?: 'create' | 'edit';
 }
 
 interface GenderItem {

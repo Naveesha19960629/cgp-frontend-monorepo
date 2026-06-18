@@ -575,9 +575,23 @@ function mapTertiaryEducation(form: VacancyForm): TertiaryEducation[] {
   });
 }
 
-function toCreateVacancyPayload(
+// Explicit map from form state values → API enum values.
+// on_hold (form) maps to ONHOLD (API enum, no underscore).
+const FORM_STATUS_TO_API: Record<string, string> = {
+  draft: 'DRAFT',
+  unpublished: 'UNPUBLISHED',
+  live: 'LIVE',
+  expired: 'EXPIRED',
+  on_hold: 'ONHOLD',
+};
+
+function toApiStatus(formStatus: string): string {
+  return FORM_STATUS_TO_API[formStatus.trim().toLowerCase()] ?? 'UNPUBLISHED';
+}
+
+function toVacancyPayload(
   form: VacancyForm,
-  status = 'UNPUBLISHED'
+  status: string
 ): CreateVacancyPayload {
   return {
     title: form.title,
@@ -607,4 +621,18 @@ function toCreateVacancyPayload(
   };
 }
 
-export { toCreateVacancyPayload };
+function toCreateVacancyPayload(
+  form: VacancyForm,
+  status = 'UNPUBLISHED'
+): CreateVacancyPayload {
+  return toVacancyPayload(form, status);
+}
+
+function toUpdateVacancyPayload(
+  form: VacancyForm,
+  existingStatus: string
+): CreateVacancyPayload {
+  return toVacancyPayload(form, toApiStatus(existingStatus));
+}
+
+export { toCreateVacancyPayload, toUpdateVacancyPayload };

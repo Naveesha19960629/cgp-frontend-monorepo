@@ -136,15 +136,28 @@ export default function ScheduleVacancyStep({
 
     try {
       const schedule = toScheduleVacancyPayload(values);
+      const payloadForm = { ...form, schedule };
 
       if (id) {
-        await updateVacancy({ id, schedule });
+        await updateVacancy({
+          id,
+          form: payloadForm,
+          existingStatus: form.status,
+        });
       } else {
         await createVacancy({ form: { ...form, schedule } });
       }
       SuccessToast({
-        title: t('scheduleVacancy.notifications.successTitle'),
-        description: t('scheduleVacancy.notifications.successMessage'),
+        title: t(
+          id
+            ? 'scheduleVacancy.notifications.updateSuccessTitle'
+            : 'scheduleVacancy.notifications.successTitle'
+        ),
+        description: t(
+          id
+            ? 'scheduleVacancy.notifications.updateSuccessMessage'
+            : 'scheduleVacancy.notifications.successMessage'
+        ),
       });
       onSubmit();
       navigate('/dashboard/ats/vacancies');
