@@ -53,6 +53,7 @@ export default function PreferredSkillsStep({
   const {
     form,
     setForm,
+    onCancel,
     stepPersistRef,
     stepDisableRef,
     currentStepIndex,
@@ -419,9 +420,16 @@ export default function PreferredSkillsStep({
             <Checkbox
               id="data-from-candidate"
               checked={dataTakenFromCandidate}
-              onCheckedChange={checked =>
-                setDataTakenFromCandidate(checked === true)
-              }
+              onCheckedChange={checked => {
+                if (checked) {
+                  setSelectedSkills([]);
+                  setUserCreatedSkillOptions([]);
+                  setHasMaxError(false);
+                  setDataTakenFromCandidate(true);
+                } else {
+                  setDataTakenFromCandidate(false);
+                }
+              }}
               className="mt-0.5"
             />
             <label
@@ -666,7 +674,7 @@ export default function PreferredSkillsStep({
       {/* Footer — sticky at bottom of the parent scroll container */}
       {/* ── Step footer ──────────────────────────────────────────────────── */}
       <div className="sticky bottom-0 flex items-center justify-end gap-4 bg-white px-6 py-7 shadow-[0px_-8px_6.8px_0px_rgba(0,0,0,0.04)]">
-        <Button variant="secondary" className="h-12 w-48" onClick={onBack}>
+        <Button variant="secondary" className="h-12 w-48" onClick={onCancel}>
           {t('common.cancel')}
         </Button>
         <Button className="h-12 w-48" onClick={() => void handleNext()}>
