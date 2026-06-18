@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import type { UseFormReturn } from 'react-hook-form';
 
@@ -150,7 +150,18 @@ const useLicenseCertificatesForm = (
 
   const { reset } = form;
 
+  const previousInitialDataSignatureRef = useRef<string | null>(null);
+
   useEffect(() => {
+    // Prevent redundant resets when callers pass a new object reference
+    // with the same data on each render.
+    const initialDataSignature = JSON.stringify(initialData ?? null);
+
+    if (previousInitialDataSignatureRef.current === initialDataSignature) {
+      return;
+    }
+
+    previousInitialDataSignatureRef.current = initialDataSignature;
     reset(buildDefaultValues(initialData));
   }, [initialData, reset]);
 

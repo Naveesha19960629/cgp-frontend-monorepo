@@ -1,4 +1,4 @@
-import { renderHook } from '@testing-library/react';
+import { act, renderHook } from '@testing-library/react';
 
 import { useLicenseCertificatesForm } from '@/views/vacancies/hooks/use-license-certificates-form';
 
@@ -19,6 +19,36 @@ describe('useLicenseCertificatesForm — no initial data', () => {
 });
 
 describe('useLicenseCertificatesForm — restoring from saved data', () => {
+  it('does not reset form values when rerendered with equivalent initial data', () => {
+    const initialData = {
+      isEnabled: true,
+      dataTakenFromCandidate: false,
+      content: [
+        {
+          nameOfLicenseCert: [],
+          issuingOrganization: [],
+          organizationLocations: [],
+          internationallyAccepted: false,
+          issueDate: '',
+          expirationDate: '',
+        },
+      ],
+    };
+
+    const { result, rerender } = renderHook(
+      ({ data }) => useLicenseCertificatesForm(data),
+      { initialProps: { data: initialData } }
+    );
+
+    act(() => {
+      result.current.setValue('entry.issueDate', '2025-05-10');
+    });
+
+    rerender({ data: { ...initialData } });
+
+    expect(result.current.getValues().entry.issueDate).toBe('2025-05-10');
+  });
+
   it('maps isEnabled and dataTakenFromCandidate from first record', () => {
     const { result } = renderHook(() =>
       useLicenseCertificatesForm([
