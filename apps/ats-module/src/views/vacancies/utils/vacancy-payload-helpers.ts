@@ -33,6 +33,26 @@ function toRef(item: OptionWithSource): MasterRef {
   };
 }
 
+function normalizeLicenseSource(source?: string): 'MASTER' | 'PENDING' {
+  if (source === 'PENDING' || source === 'PENDING_TEMP') {
+    return 'PENDING';
+  }
+
+  return 'MASTER';
+}
+
+function isTemporaryLicenseId(id: string): boolean {
+  return id.startsWith('__pending_license_cert_');
+}
+
+function normalizeLicenseType(type?: string): 'LICENSE' | 'CERTIFICATE' {
+  if (type === 'LICENSE') {
+    return 'LICENSE';
+  }
+
+  return 'CERTIFICATE';
+}
+
 function toRefFromAddOrSelect(item: {
   source?: string;
   id?: string;
@@ -50,6 +70,12 @@ function formatOptionalDate(
   if (!date) return undefined;
   if (date instanceof Date) return format(date, 'yyyy-MM-dd');
   return date;
+}
+
+function normalizeToDateOnly(value: string): string {
+  if (!value) return '';
+  const [datePart] = value.split('T');
+  return datePart || '';
 }
 
 function mapJobRequirement(form: VacancyForm): JobRequirementApiPayload {
@@ -538,14 +564,36 @@ function mapLicensesAndCertifications(
   }
 
   return form.licenseCertificates.map(lc => {
-    if (lc.dataTakenFromCandidate) {
-      return {
-        isEnabled: lc.isEnabled,
-        dataTakenFromCandidate: true,
-        content: [],
-      };
-    }
-    return lc;
+    return {
+      isEnabled: lc.isEnabled,
+      dataTakenFromCandidate: lc.dataTakenFromCandidate,
+      content: (lc.content ?? []).map(entry => ({
+        nameOfLicenseCert: (entry.nameOfLicenseCert ?? [])
+          .filter(
+            ref => ref?.source && ref?.id && !isTemporaryLicenseId(ref.id)
+          )
+          .map(ref => ({
+            source: normalizeLicenseSource(ref.source),
+            id: ref.id,
+            type: normalizeLicenseType(ref.type),
+          })),
+        issuingOrganization: (entry.issuingOrganization ?? [])
+          .filter(ref => ref?.source && ref?.id)
+          .map(ref => ({
+            source: ref.source,
+            id: ref.id,
+          })),
+        organizationLocations: (entry.organizationLocations ?? [])
+          .filter(ref => ref?.source && ref?.id)
+          .map(ref => ({
+            source: ref.source,
+            id: ref.id,
+          })),
+        internationallyAccepted: entry.internationallyAccepted,
+        issueDate: entry.issueDate,
+        expirationDate: entry.expirationDate,
+      })),
+    };
   });
 }
 
@@ -558,7 +606,14 @@ function mapSecondaryEducation(form: VacancyForm): SecondaryEducation[] {
         content: [],
       };
     }
-    return se;
+    return {
+      ...se,
+      content: se.content.map(entry => ({
+        ...entry,
+        startDate: normalizeToDateOnly(entry.startDate),
+        endDate: normalizeToDateOnly(entry.endDate),
+      })),
+    };
   });
 }
 

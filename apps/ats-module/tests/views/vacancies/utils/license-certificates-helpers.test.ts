@@ -26,15 +26,57 @@ describe('toLicenseCertificatesPayload — disabled', () => {
     ]);
   });
 
-  it('returns dataTakenFromCandidate payload when flag is true', () => {
+  it('preserves content when dataTakenFromCandidate is true', () => {
     const result = toLicenseCertificatesPayload({
       isEnabled: true,
       dataTakenFromCandidate: true,
-      entry: EMPTY_ENTRY,
+      entry: {
+        nameOfLicenseCert: [
+          {
+            value: 'lc-1',
+            label: 'AWS Cert',
+            source: 'MASTER',
+            certType: 'CERTIFICATION',
+          },
+        ],
+        issuingOrganization: {
+          value: 'org-1',
+          label: 'Amazon',
+          source: 'MASTER',
+        },
+        organizationLocations: [{ value: 'loc-1', label: 'Colombo' }],
+        internationallyAccepted: true,
+        issueDate: '2026-06-01',
+        expirationDate: '2027-06-01',
+      },
     });
 
     expect(result).toEqual([
-      { isEnabled: true, dataTakenFromCandidate: true, content: [] },
+      {
+        isEnabled: true,
+        dataTakenFromCandidate: true,
+        content: [
+          {
+            nameOfLicenseCert: [
+              {
+                source: 'MASTER',
+                id: 'lc-1',
+                name: 'AWS Cert',
+                type: 'CERTIFICATION',
+              },
+            ],
+            issuingOrganization: [
+              { source: 'MASTER', id: 'org-1', name: 'Amazon' },
+            ],
+            organizationLocations: [
+              { source: 'MASTER', id: 'loc-1', name: 'Colombo' },
+            ],
+            internationallyAccepted: true,
+            issueDate: '2026-06-01',
+            expirationDate: '2027-06-01',
+          },
+        ],
+      },
     ]);
   });
 });
@@ -117,6 +159,46 @@ describe('toLicenseCertificatesPayload — nameOfLicenseCert', () => {
 
     expect(result[0].content[0].nameOfLicenseCert[0].source).toBe('PENDING');
     expect(result[0].content[0].nameOfLicenseCert[0].id).toBe('pending-uuid');
+  });
+
+  it('keeps CERTIFICATE type when provided', () => {
+    const result = toLicenseCertificatesPayload({
+      isEnabled: true,
+      dataTakenFromCandidate: false,
+      entry: {
+        ...EMPTY_ENTRY,
+        nameOfLicenseCert: [
+          {
+            value: 'cert-uuid',
+            label: 'Custom Certificate',
+            source: 'MASTER',
+            certType: 'CERTIFICATE',
+          },
+        ],
+      },
+    });
+
+    expect(result[0].content[0].nameOfLicenseCert[0].type).toBe('CERTIFICATE');
+  });
+
+  it('drops unresolved PENDING_TEMP items with temporary ids', () => {
+    const result = toLicenseCertificatesPayload({
+      isEnabled: true,
+      dataTakenFromCandidate: false,
+      entry: {
+        ...EMPTY_ENTRY,
+        nameOfLicenseCert: [
+          {
+            value: '__pending_license_cert_123',
+            label: 'Custom Cert',
+            source: 'PENDING_TEMP',
+            certType: 'CERTIFICATION',
+          },
+        ],
+      },
+    });
+
+    expect(result[0].content[0].nameOfLicenseCert).toEqual([]);
   });
 });
 
@@ -220,6 +302,36 @@ describe('toLicenseCertificatesPayload — dates', () => {
 
     expect(result[0].content[0].issueDate).toBe('2023-01-15');
     expect(result[0].content[0].expirationDate).toBe('2026-01-15');
+  });
+
+  it('normalizes ISO datetime values to yyyy-MM-dd', () => {
+    const result = toLicenseCertificatesPayload({
+      isEnabled: true,
+      dataTakenFromCandidate: false,
+      entry: {
+        ...EMPTY_ENTRY,
+        issueDate: '2026-06-17T00:00:00.000Z',
+        expirationDate: '2027-12-25T13:45:00.000Z',
+      },
+    });
+
+    expect(result[0].content[0].issueDate).toBe('2026-06-17');
+    expect(result[0].content[0].expirationDate).toBe('2027-12-25');
+  });
+
+  it('normalizes ISO datetime values with local offset to yyyy-MM-dd', () => {
+    const result = toLicenseCertificatesPayload({
+      isEnabled: true,
+      dataTakenFromCandidate: false,
+      entry: {
+        ...EMPTY_ENTRY,
+        issueDate: '2026-06-17T05:30:00+05:30',
+        expirationDate: '2028-01-01T23:59:59+05:30',
+      },
+    });
+
+    expect(result[0].content[0].issueDate).toBe('2026-06-17');
+    expect(result[0].content[0].expirationDate).toBe('2028-01-01');
   });
 
   it('uses empty strings when dates are undefined', () => {

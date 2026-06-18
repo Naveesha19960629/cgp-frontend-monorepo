@@ -238,7 +238,7 @@ interface CreatePendingApiResponse {
 
 // ─── License and Certificates ─────────────────────────────────────────────────
 
-type LicenseCertType = 'LICENSE' | 'CERTIFICATION';
+type LicenseCertType = 'LICENSE' | 'CERTIFICATION' | 'CERTIFICATE';
 
 interface LicenseCertRef {
   source: 'MASTER' | 'PENDING';

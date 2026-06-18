@@ -1,4 +1,4 @@
-﻿import { ChevronUpIcon, Plus } from 'lucide-react';
+import { ChevronUpIcon, Plus } from 'lucide-react';
 
 import { ArrowLeft2, Calendar as CalendarIcon } from 'iconsax-reactjs';
 
@@ -17,10 +17,15 @@ import {
   useAddFieldOfStudyMutation,
   useAddSchoolMutation,
   useAwardingBodiesSearch,
+  useExaminationsQuery,
   useExaminationsSearch,
+  useFieldsOfStudyQuery,
   useFieldsOfStudySearch,
+  useSchoolLocationsQuery,
   useSchoolLocationsSearch,
+  useSchoolsQuery,
   useSchoolsSearch,
+  useSecondaryAwardingBodiesQuery,
   useSecondaryEducationForm,
   useStepGuard,
 } from '@/views/vacancies/hooks';
@@ -29,6 +34,11 @@ import {
   formatDate,
   toSecondaryEducationPayload,
 } from '@/views/vacancies/utils';
+import {
+  compareDates,
+  formatLocalDate,
+  parseLocalDate,
+} from '@/views/vacancies/utils/date-timezone-safe';
 
 import { CharacterCount } from '@cgp/ui-kit/components/character-count';
 import { ErrorToast } from '@cgp/ui-kit/components/custom-toast';
@@ -84,30 +94,31 @@ export default function SecondaryEducationStep({
 
   const isEnabled = watch('isEnabled');
   const dataTakenFromCandidate = watch('dataTakenFromCandidate');
-  const entryValue = watch('entry');
+  const entryValue = watch('entries.0');
   const startDateValue = entryValue.startDate;
   const endDateValue = entryValue.endDate;
   const schoolsValue = entryValue.schools;
 
-  // ── Form field helpers ───────────────────────────────────────
+  // -- Form field helpers ---------------------------------------
   const fieldsDisabled = !isEnabled || dataTakenFromCandidate;
-  const endDateDefaultMonth = new Date(endDateValue ?? startDateValue ?? 0);
+  const endDateDefaultMonth =
+    parseLocalDate(endDateValue ?? startDateValue) ?? new Date();
 
   const clearEntryData = () => {
-    setValue('entry.schools', []);
-    setValue('entry.schoolLocations', []);
-    setValue('entry.examinations', []);
-    setValue('entry.awardingBodies', []);
-    setValue('entry.fieldsOfStudy', []);
-    setValue('entry.grade', '');
-    resetField('entry.startDate', { defaultValue: undefined });
-    resetField('entry.endDate', { defaultValue: undefined });
-    setValue('entry.result', '');
-    setValue('entry.acceptsHomeSchooling', false);
+    setValue('entries.0.schools', []);
+    setValue('entries.0.schoolLocations', []);
+    setValue('entries.0.examinations', []);
+    setValue('entries.0.awardingBodies', []);
+    setValue('entries.0.fieldsOfStudy', []);
+    setValue('entries.0.grade', '');
+    resetField('entries.0.startDate', { defaultValue: undefined });
+    resetField('entries.0.endDate', { defaultValue: undefined });
+    setValue('entries.0.result', '');
+    setValue('entries.0.acceptsHomeSchooling', false);
   };
 
   const hasEntryData = (): boolean => {
-    const e = getValues('entry');
+    const e = getValues('entries.0');
     return Boolean(
       e.schools.length > 0 ||
       e.schoolLocations.length > 0 ||
@@ -152,12 +163,12 @@ export default function SecondaryEducationStep({
     };
   }, [setForm, stepDisableRef]);
 
-  // ── Add-Now mutations ────────────────────────────────────────────────────
+  // -- Add-Now mutations ----------------------------------------------------
   const addExaminationMutation = useAddExaminationMutation();
   const addAwardingBodyMutation = useAddAwardingBodyMutation();
   const addFieldOfStudyMutation = useAddFieldOfStudyMutation();
 
-  // ── Add School dialog state ──────────────────────────────────────────
+  // -- Add School dialog state ------------------------------------------
   const addSchoolMutation = useAddSchoolMutation();
   const pendingSchoolsDataRef = useRef<
     Map<string, { displayValue: string; locationId?: string; url?: string }>
@@ -169,24 +180,25 @@ export default function SecondaryEducationStep({
   const [pendingSchoolLabel, setPendingSchoolLabel] = useState('');
   const [schoolsSelectorKey, setSchoolsSelectorKey] = useState(0);
 
-  // ── Disable confirmation dialog state ───────────────────────────────
+  // -- Disable confirmation dialog state -------------------------------
   const [confirmDisableOpen, setConfirmDisableOpen] = useState(false);
   const [emptyDisableOpen, setEmptyDisableOpen] = useState(false);
   const [openDatePopover, setOpenDatePopover] = useState<
     'startDate' | 'endDate' | null
   >(null);
 
-  // ── Creatable input tracking (for character count) ────────────────────────
+  // -- Creatable input tracking (for character count) ------------------------
   const [examinationInput, setExaminationInput] = useState('');
   const [awardingBodyInput, setAwardingBodyInput] = useState('');
   const [fieldOfStudyInput, setFieldOfStudyInput] = useState('');
 
-  // ── Refs for creatable selectors (used to commit pending input on Next) ──
+  // -- Refs for creatable selectors (used to commit pending input on Next) --
   const examinationRef = useRef<MultipleSelectorRef>(null);
   const awardingBodyRef = useRef<MultipleSelectorRef>(null);
   const fieldOfStudyRef = useRef<MultipleSelectorRef>(null);
+  const attemptedLabelHydrationRef = useRef<Set<string>>(new Set());
 
-  // ── Max-selection tracking ───────────────────────────────────────────────
+  // -- Max-selection tracking -----------------------------------------------
   const [maxReachedFields, setMaxReachedFields] = useState<Set<string>>(
     new Set()
   );
@@ -199,14 +211,151 @@ export default function SecondaryEducationStep({
       return s;
     });
 
-  // ── Async search via React Query hooks (gender pattern) ──────────────────
+  // -- Async search via React Query hooks (gender pattern) ------------------
   const searchSchools = useSchoolsSearch();
   const searchLocations = useSchoolLocationsSearch();
   const searchExaminations = useExaminationsSearch();
   const searchAwardingBodies = useAwardingBodiesSearch();
   const searchFieldsOfStudy = useFieldsOfStudySearch();
 
-  // ── Add-Now handler ──────────────────────────────────────────────────────
+  // Preload lookup data for edit mode to populate cache for search results
+  useSchoolsQuery('');
+  useSchoolLocationsQuery('');
+  useExaminationsQuery('');
+  useSecondaryAwardingBodiesQuery('');
+  useFieldsOfStudyQuery('');
+
+  const findMatchedOption = <T extends { value: string }>(
+    options: T[],
+    value: string
+  ) => options.find(option => option.value === value);
+
+  // Resolve labels for edit-mode ID-only values (payload may not include names).
+  useEffect(() => {
+    const shouldResolveLabel = (label: string, value: string) =>
+      label.trim() === value.trim();
+
+    const resolveSelectionsWithSource = async (
+      fieldName:
+        | 'entries.0.schools'
+        | 'entries.0.examinations'
+        | 'entries.0.awardingBodies'
+        | 'entries.0.fieldsOfStudy',
+      searchFn: (
+        search: string
+      ) => Promise<Array<{ value: string; label: string; source: string }>>
+    ) => {
+      const current = getValues(fieldName);
+      let changed = false;
+      const resolved = [...current];
+
+      for (let index = 0; index < current.length; index += 1) {
+        const item = current[index];
+        if (!shouldResolveLabel(item.label, item.value)) {
+          continue;
+        }
+
+        const hydrationKey = `${fieldName}:${item.value}`;
+        if (attemptedLabelHydrationRef.current.has(hydrationKey)) {
+          continue;
+        }
+        attemptedLabelHydrationRef.current.add(hydrationKey);
+
+        const options = await searchFn(item.value);
+        const match = findMatchedOption(options, item.value);
+
+        if (!match || shouldResolveLabel(match.label, item.value)) {
+          continue;
+        }
+
+        changed = true;
+        resolved[index] = {
+          ...item,
+          label: match.label,
+        };
+      }
+
+      if (changed) {
+        setValue(fieldName, resolved, {
+          shouldDirty: false,
+          shouldTouch: false,
+          shouldValidate: false,
+        });
+      }
+    };
+
+    const resolveLocationSelections = async () => {
+      const fieldName = 'entries.0.schoolLocations' as const;
+      const current = getValues(fieldName);
+      let changed = false;
+      const resolved = [...current];
+
+      for (let index = 0; index < current.length; index += 1) {
+        const item = current[index];
+        if (!shouldResolveLabel(item.label, item.value)) {
+          continue;
+        }
+
+        const hydrationKey = `${fieldName}:${item.value}`;
+        if (attemptedLabelHydrationRef.current.has(hydrationKey)) {
+          continue;
+        }
+        attemptedLabelHydrationRef.current.add(hydrationKey);
+
+        const options = await searchLocations(item.value);
+        const match = findMatchedOption(options, item.value);
+
+        if (!match || shouldResolveLabel(match.label, item.value)) {
+          continue;
+        }
+
+        changed = true;
+        resolved[index] = {
+          ...item,
+          label: match.label,
+        };
+      }
+
+      if (changed) {
+        setValue(fieldName, resolved, {
+          shouldDirty: false,
+          shouldTouch: false,
+          shouldValidate: false,
+        });
+      }
+    };
+
+    const resolveAllLabels = async () => {
+      await Promise.all([
+        resolveSelectionsWithSource('entries.0.schools', searchSchools),
+        resolveLocationSelections(),
+        resolveSelectionsWithSource(
+          'entries.0.examinations',
+          searchExaminations
+        ),
+        resolveSelectionsWithSource(
+          'entries.0.awardingBodies',
+          searchAwardingBodies
+        ),
+        resolveSelectionsWithSource(
+          'entries.0.fieldsOfStudy',
+          searchFieldsOfStudy
+        ),
+      ]);
+    };
+
+    void resolveAllLabels();
+  }, [
+    getValues,
+    searchAwardingBodies,
+    searchExaminations,
+    searchFieldsOfStudy,
+    searchLocations,
+    searchSchools,
+    setValue,
+  ]);
+
+  // -- Add-Now handler ------------------------------------------------------
   const resolveItem = async (
     label: string,
     addMutation: (label: string) => Promise<{ data: { pendingId: string } }>
@@ -234,9 +383,9 @@ export default function SecondaryEducationStep({
   const resolveAndCommitField = async (
     ref: RefObject<MultipleSelectorRef | null>,
     fieldName:
-      | 'entry.examinations'
-      | 'entry.awardingBodies'
-      | 'entry.fieldsOfStudy',
+      | 'entries.0.examinations'
+      | 'entries.0.awardingBodies'
+      | 'entries.0.fieldsOfStudy',
     addMutation: (label: string) => Promise<{ data: { pendingId: string } }>
   ) => {
     const input = ref.current?.input.value.trim();
@@ -257,7 +406,7 @@ export default function SecondaryEducationStep({
   };
 
   const resolveAndCommitSchools = async () => {
-    const current = getValues('entry.schools');
+    const current = getValues('entries.0.schools');
     const resolved: { value: string; label: string; source: string }[] = [];
     for (const school of current) {
       if (school.source === 'PENDING_TEMP') {
@@ -275,7 +424,7 @@ export default function SecondaryEducationStep({
         resolved.push(school);
       }
     }
-    setValue('entry.schools', resolved);
+    setValue('entries.0.schools', resolved);
   };
   const handleNext = async () => {
     if (isEnabled && !dataTakenFromCandidate && !hasEntryData()) {
@@ -284,16 +433,20 @@ export default function SecondaryEducationStep({
     }
 
     await resolveAndCommitSchools();
-    await resolveAndCommitField(examinationRef, 'entry.examinations', label =>
-      addExaminationMutation.mutateAsync(label)
+    await resolveAndCommitField(
+      examinationRef,
+      'entries.0.examinations',
+      label => addExaminationMutation.mutateAsync(label)
     );
     await resolveAndCommitField(
       awardingBodyRef,
-      'entry.awardingBodies',
+      'entries.0.awardingBodies',
       label => addAwardingBodyMutation.mutateAsync(label)
     );
-    await resolveAndCommitField(fieldOfStudyRef, 'entry.fieldsOfStudy', label =>
-      addFieldOfStudyMutation.mutateAsync(label)
+    await resolveAndCommitField(
+      fieldOfStudyRef,
+      'entries.0.fieldsOfStudy',
+      label => addFieldOfStudyMutation.mutateAsync(label)
     );
     void handleSubmit(values => {
       onNext({ secondaryEducation: toSecondaryEducationPayload(values) });
@@ -303,7 +456,7 @@ export default function SecondaryEducationStep({
   return (
     <Form {...form}>
       <div className="flex flex-col">
-        {/* ── Informational Banner ────────────────────────────────────────── */}
+        {/* -- Informational Banner ------------------------------------------ */}
         <MessageBox
           fields={[
             t('secondaryEducation.schoolName'),
@@ -318,7 +471,7 @@ export default function SecondaryEducationStep({
           ]}
         />
 
-        {/* ── Section Header ──────────────────────────────────────────── */}
+        {/* -- Section Header -------------------------------------------- */}
         <div className="flex items-center justify-between px-7 py-8">
           <div className="flex items-center gap-2">
             <button
@@ -353,7 +506,7 @@ export default function SecondaryEducationStep({
         </div>
 
         <div className="flex flex-col gap-4 px-6">
-          {/* dataTakenFromCandidate — grayed when toggle off */}
+          {/* dataTakenFromCandidate � grayed when toggle off */}
           <div className={cn(!isEnabled && 'pointer-events-none opacity-60')}>
             <div className="flex items-start gap-2">
               <Controller
@@ -381,9 +534,9 @@ export default function SecondaryEducationStep({
             </div>
           </div>
 
-          {/* ── Education Card ──────────────────────────────────────────── */}
+          {/* -- Education Card -------------------------------------------- */}
           <div className="rounded-xl border border-neutral-300 bg-white shadow-[0px_4px_90px_0px_rgba(0,0,0,0.07)]">
-            {/* Card header — always active, chevron always muted */}
+            {/* Card header � always active, chevron always muted */}
             <div className="flex items-center justify-between px-5 py-5">
               <h3 className="text-sm font-semibold text-slate-900">
                 {t('secondaryEducation.sectionTitle')} 01
@@ -391,7 +544,7 @@ export default function SecondaryEducationStep({
               <ChevronUpIcon className="h-5 w-5 text-slate-300" />
             </div>
 
-            {/* Card body — always visible, disabled when toggle off or dataTakenFromCandidate */}
+            {/* Card body � always visible, disabled when toggle off or dataTakenFromCandidate */}
             <div
               className={cn(
                 'flex flex-col gap-5 px-6 py-5',
@@ -402,7 +555,7 @@ export default function SecondaryEducationStep({
               <div className="flex items-center gap-2">
                 <Controller
                   control={control}
-                  name="entry.acceptsHomeSchooling"
+                  name="entries.0.acceptsHomeSchooling"
                   render={({ field }) => (
                     <Checkbox
                       id="acceptsHomeSchooling"
@@ -429,7 +582,7 @@ export default function SecondaryEducationStep({
                   </Label>
                   <Controller
                     control={control}
-                    name="entry.schools"
+                    name="entries.0.schools"
                     render={({ field }) => (
                       <MultipleSelector
                         key={schoolsSelectorKey}
@@ -443,7 +596,7 @@ export default function SecondaryEducationStep({
                           );
                           if (newItem) {
                             schoolsSnapshotRef.current =
-                              getValues('entry.schools');
+                              getValues('entries.0.schools');
                             setPendingSchoolLabel(newItem.label);
                             setAddSchoolDialogOpen(true);
                           } else {
@@ -498,7 +651,7 @@ export default function SecondaryEducationStep({
                   </Label>
                   <Controller
                     control={control}
-                    name="entry.schoolLocations"
+                    name="entries.0.schoolLocations"
                     render={({ field }) => (
                       <MultipleSelector
                         value={field.value}
@@ -558,7 +711,7 @@ export default function SecondaryEducationStep({
                     </Label>
                     <Controller
                       control={control}
-                      name="entry.grade"
+                      name="entries.0.grade"
                       render={({ field }) => (
                         <CharacterCount
                           currentLength={field.value.length}
@@ -569,7 +722,7 @@ export default function SecondaryEducationStep({
                   </div>
                   <Controller
                     control={control}
-                    name="entry.grade"
+                    name="entries.0.grade"
                     render={({ field }) => (
                       <Input
                         {...field}
@@ -583,7 +736,7 @@ export default function SecondaryEducationStep({
 
                 <FormField
                   control={control}
-                  name="entry.startDate"
+                  name="entries.0.startDate"
                   render={({ field }) => (
                     <FormItem className="flex w-full flex-col gap-1 space-y-0">
                       <div className="flex h-5 items-center">
@@ -643,16 +796,22 @@ export default function SecondaryEducationStep({
                               field.value ? new Date(field.value) : undefined
                             }
                             defaultMonth={
-                              field.value ? new Date(field.value) : new Date()
+                              field.value
+                                ? (parseLocalDate(field.value) ?? new Date())
+                                : new Date()
                             }
                             onSelect={date => {
                               field.onChange(
-                                date ? date.toISOString() : undefined
+                                date ? formatLocalDate(date) : undefined
                               );
                               setOpenDatePopover(null);
-                              const endDate = getValues('entry.endDate');
-                              if (endDate && date && new Date(endDate) < date) {
-                                resetField('entry.endDate', {
+                              const endDate = getValues('entries.0.endDate');
+                              if (
+                                endDate &&
+                                date &&
+                                compareDates(endDate, date) < 0
+                              ) {
+                                resetField('entries.0.endDate', {
                                   defaultValue: undefined,
                                 });
                               }
@@ -671,7 +830,7 @@ export default function SecondaryEducationStep({
 
                 <FormField
                   control={control}
-                  name="entry.endDate"
+                  name="entries.0.endDate"
                   render={({ field }) => (
                     <FormItem className="flex w-full flex-col gap-1 space-y-0">
                       <div className="flex h-5 items-center">
@@ -729,14 +888,17 @@ export default function SecondaryEducationStep({
                             defaultMonth={endDateDefaultMonth}
                             onSelect={date => {
                               field.onChange(
-                                date ? date.toISOString() : undefined
+                                date ? formatLocalDate(date) : undefined
                               );
                               setOpenDatePopover(null);
                             }}
                             disabled={date =>
                               date < HUNDRED_YEARS_AGO ||
                               (startDateValue
-                                ? date < new Date(startDateValue)
+                                ? compareDates(
+                                    date,
+                                    parseLocalDate(startDateValue) ?? new Date()
+                                  ) < 0
                                 : false)
                             }
                             captionLayout="dropdown"
@@ -763,7 +925,7 @@ export default function SecondaryEducationStep({
                   </div>
                   <Controller
                     control={control}
-                    name="entry.examinations"
+                    name="entries.0.examinations"
                     render={({ field }) => (
                       <MultipleSelector
                         ref={examinationRef}
@@ -833,7 +995,7 @@ export default function SecondaryEducationStep({
                   </div>
                   <Controller
                     control={control}
-                    name="entry.awardingBodies"
+                    name="entries.0.awardingBodies"
                     render={({ field }) => (
                       <MultipleSelector
                         ref={awardingBodyRef}
@@ -906,7 +1068,7 @@ export default function SecondaryEducationStep({
                   </div>
                   <Controller
                     control={control}
-                    name="entry.fieldsOfStudy"
+                    name="entries.0.fieldsOfStudy"
                     render={({ field }) => (
                       <MultipleSelector
                         ref={fieldOfStudyRef}
@@ -971,7 +1133,7 @@ export default function SecondaryEducationStep({
                     </Label>
                     <Controller
                       control={control}
-                      name="entry.result"
+                      name="entries.0.result"
                       render={({ field }) => (
                         <CharacterCount
                           currentLength={field.value.length}
@@ -982,7 +1144,7 @@ export default function SecondaryEducationStep({
                   </div>
                   <Controller
                     control={control}
-                    name="entry.result"
+                    name="entries.0.result"
                     render={({ field }) => (
                       <Textarea
                         {...field}
@@ -999,7 +1161,7 @@ export default function SecondaryEducationStep({
             </div>
           </div>
 
-          {/* ── Add Entry button (outside card, bottom-right) ─────────── */}
+          {/* -- Add Entry button (outside card, bottom-right) ----------- */}
           <div
             className={cn(
               'flex justify-end py-4',
@@ -1029,7 +1191,7 @@ export default function SecondaryEducationStep({
               locationId: option.locationId,
               url: option.url,
             });
-            setValue('entry.schools', [
+            setValue('entries.0.schools', [
               ...schoolsValue,
               {
                 value: option.value,
@@ -1075,7 +1237,7 @@ export default function SecondaryEducationStep({
           }}
         />
 
-        {/* ── Step footer ──────────────────────────────────────────────────── */}
+        {/* -- Step footer ---------------------------------------------------- */}
         <div className="sticky bottom-0 flex items-center justify-end gap-4 bg-white px-6 py-7 shadow-[0px_-8px_6.8px_0px_rgba(0,0,0,0.04)]">
           <Button variant="secondary" className="h-12 w-48" onClick={onBack}>
             {t('secondaryEducation.cancel')}

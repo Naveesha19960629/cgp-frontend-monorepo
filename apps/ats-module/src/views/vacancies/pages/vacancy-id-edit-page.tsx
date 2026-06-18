@@ -9,7 +9,8 @@ import {
   useVacancyForm,
 } from '@/views/vacancies/context/vacancy-form-context';
 import { useVacancyByIdQuery } from '@/views/vacancies/hooks';
-import { toVacancyFormFromResponse } from '@/views/vacancies/utils';
+import type { VacancyForm } from '@/views/vacancies/types';
+import { toVacancyFormFromResponse } from '@/views/vacancies/utils/vacancy-edit-response-helpers';
 
 import { CharacterCount } from '@cgp/ui-kit/components/character-count';
 import { Button } from '@cgp/ui-kit/components/ui/button';
@@ -95,13 +96,20 @@ function EditVacancyContent() {
   const {
     data: vacancyResponse,
     isLoading,
+    isFetching,
     error,
   } = useVacancyByIdQuery(id || '', {
     enabled: initialized && !!keycloak?.authenticated && !!id,
   });
 
   useEffect(() => {
-    if (!vacancyResponse?.success || isHydratedRef.current) {
+    if (
+      !vacancyResponse?.success ||
+      isHydratedRef.current ||
+      isLoading ||
+      isFetching ||
+      !!error
+    ) {
       return;
     }
 
@@ -113,7 +121,10 @@ function EditVacancyContent() {
 
     const vacancyRecord = vacancyCandidate;
 
-    setForm(prev => toVacancyFormFromResponse(vacancyRecord, prev));
+    setForm((prev: VacancyForm): VacancyForm => {
+      const nextForm = toVacancyFormFromResponse(vacancyRecord, prev);
+      return nextForm;
+    });
 
     if (typeof vacancyRecord.lastActiveStep === 'string') {
       const stepIndex = VACANCY_STEPS.findIndex(
@@ -125,7 +136,14 @@ function EditVacancyContent() {
     }
 
     isHydratedRef.current = true;
-  }, [vacancyResponse, setCurrentStepIndex, setForm]);
+  }, [
+    error,
+    isFetching,
+    isLoading,
+    setCurrentStepIndex,
+    setForm,
+    vacancyResponse,
+  ]);
 
   if (!id) {
     return (

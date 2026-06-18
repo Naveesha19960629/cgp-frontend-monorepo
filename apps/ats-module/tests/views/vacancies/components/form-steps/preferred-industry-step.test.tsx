@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { forwardRef, useState } from 'react';
+import { forwardRef, useRef, useState } from 'react';
 
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -252,7 +252,29 @@ function renderStep(formOverrides: Parameters<typeof makeForm>[0] = {}) {
   const onNext = vi.fn();
   const onBack = vi.fn();
   const onSubmit = vi.fn();
-  mockUseVacancyForm.mockReturnValue(makeForm(formOverrides));
+
+  mockUseVacancyForm.mockImplementation(() => {
+    const initial = makeForm(formOverrides).form;
+    const [formState, setFormState] = useState(initial);
+    const stepPersistRef = useRef<(() => void) | null>(null);
+    const stepDisableRef = useRef<(() => void) | null>(null);
+
+    return {
+      form: formState,
+      setForm: (
+        updater:
+          | typeof formState
+          | ((prev: typeof formState) => typeof formState)
+      ) => {
+        setFormState(prev =>
+          typeof updater === 'function' ? updater(prev) : updater
+        );
+      },
+      stepPersistRef,
+      stepDisableRef,
+    };
+  });
+
   render(
     <PreferredIndustryStep
       onNext={onNext}
@@ -615,6 +637,35 @@ describe('PreferredIndustryStep', () => {
       await user.click(screen.getByText('preferredIndustries.input.addNew'));
 
       expect(screen.getAllByTestId('chip').length).toBeGreaterThan(0);
+    });
+
+    it('prevents case-insensitive duplicate chips for custom values', async () => {
+      const user = userEvent.setup();
+      const { onNext } = renderStep();
+
+      const input = screen.getByPlaceholderText(
+        'preferredIndustries.input.placeholder'
+      );
+
+      await user.click(input);
+      await user.type(input, 'Marketing');
+      await user.click(screen.getByText('preferredIndustries.input.addNew'));
+
+      await user.click(input);
+      await user.type(input, 'mArKeTiNg');
+      await user.click(screen.getByText('preferredIndustries.input.addNew'));
+
+      await user.click(screen.getByText('common.next'));
+
+      expect(onNext).toHaveBeenCalledWith({
+        preferredIndustries: expect.objectContaining({
+          industries: [
+            expect.objectContaining({
+              label: 'Marketing',
+            }),
+          ],
+        }),
+      });
     });
 
     it('selects an API industry chip when clicked in the dropdown', async () => {

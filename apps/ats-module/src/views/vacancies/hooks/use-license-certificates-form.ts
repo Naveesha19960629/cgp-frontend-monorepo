@@ -1,5 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 
+import { useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import type { UseFormReturn } from 'react-hook-form';
 
@@ -54,9 +55,35 @@ const DEFAULT_ENTRY: z.infer<typeof licenseCertEntrySchema> = {
 };
 
 function buildDefaultValues(
-  initialData?: LicenseCertificates[]
+  initialData?: LicenseCertificates[] | Record<string, unknown>
 ): LicenseCertificatesFormValues {
-  if (!initialData?.length) {
+  let normalizedInitialData: LicenseCertificates[] = [];
+
+  if (Array.isArray(initialData)) {
+    normalizedInitialData = initialData;
+  } else if (typeof initialData === 'object' && initialData !== null) {
+    let content: LicenseCertificates['content'] = [];
+
+    if (Array.isArray(initialData.content)) {
+      content = initialData.content as LicenseCertificates['content'];
+    } else if (Array.isArray(initialData.licenseCertificates)) {
+      content =
+        initialData.licenseCertificates as LicenseCertificates['content'];
+    } else if (Array.isArray(initialData.licensesAndCertifications)) {
+      content =
+        initialData.licensesAndCertifications as LicenseCertificates['content'];
+    }
+
+    normalizedInitialData = [
+      {
+        isEnabled: Boolean(initialData.isEnabled),
+        dataTakenFromCandidate: Boolean(initialData.dataTakenFromCandidate),
+        content,
+      },
+    ];
+  }
+
+  if (!normalizedInitialData.length) {
     return {
       isEnabled: false,
       dataTakenFromCandidate: false,
@@ -64,7 +91,23 @@ function buildDefaultValues(
     };
   }
 
-  const first = initialData[0];
+  const getRefLabel = (ref: { id: string; name?: string }): string => {
+    if (typeof ref.name === 'string' && ref.name.trim().length > 0) {
+      return ref.name;
+    }
+
+    const candidate = ref as { label?: unknown };
+    if (
+      typeof candidate.label === 'string' &&
+      candidate.label.trim().length > 0
+    ) {
+      return candidate.label;
+    }
+
+    return ref.id;
+  };
+
+  const first = normalizedInitialData[0];
   const firstEntry = first.content[0];
 
   return {
@@ -74,22 +117,20 @@ function buildDefaultValues(
       ? {
           nameOfLicenseCert: firstEntry.nameOfLicenseCert.map(r => ({
             value: r.id,
-            label: r.name ?? r.id,
+            label: getRefLabel(r),
             source: r.source,
             certType: r.type,
           })),
           issuingOrganization: firstEntry.issuingOrganization[0]
             ? {
                 value: firstEntry.issuingOrganization[0].id,
-                label:
-                  firstEntry.issuingOrganization[0].name ??
-                  firstEntry.issuingOrganization[0].id,
+                label: getRefLabel(firstEntry.issuingOrganization[0]),
                 source: firstEntry.issuingOrganization[0].source,
               }
             : undefined,
           organizationLocations: firstEntry.organizationLocations.map(r => ({
             value: r.id,
-            label: r.name ?? r.id,
+            label: getRefLabel(r),
           })),
           internationallyAccepted: firstEntry.internationallyAccepted,
           issueDate: firstEntry.issueDate || undefined,
@@ -100,12 +141,31 @@ function buildDefaultValues(
 }
 
 const useLicenseCertificatesForm = (
-  initialData?: LicenseCertificates[]
+  initialData?: LicenseCertificates[] | Record<string, unknown>
 ): UseFormReturn<LicenseCertificatesFormValues> => {
-  return useForm<LicenseCertificatesFormValues>({
+  const form = useForm<LicenseCertificatesFormValues>({
     resolver: zodResolver(licenseCertificatesFormSchema),
     defaultValues: buildDefaultValues(initialData),
   });
+
+  const { reset } = form;
+
+  const previousInitialDataSignatureRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    // Prevent redundant resets when callers pass a new object reference
+    // with the same data on each render.
+    const initialDataSignature = JSON.stringify(initialData ?? null);
+
+    if (previousInitialDataSignatureRef.current === initialDataSignature) {
+      return;
+    }
+
+    previousInitialDataSignatureRef.current = initialDataSignature;
+    reset(buildDefaultValues(initialData));
+  }, [initialData, reset]);
+
+  return form;
 };
 
 export type { LicenseCertificatesFormValues };

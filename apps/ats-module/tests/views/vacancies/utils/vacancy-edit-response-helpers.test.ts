@@ -685,3 +685,245 @@ describe('toVacancyFormFromResponse — full GET response round-trip', () => {
     expect(result.preferredSkills).toEqual(formWithSkills.preferredSkills);
   });
 });
+
+// ─── Education + License + Industry hydration coverage ───────────────────────
+
+describe('toVacancyFormFromResponse — secondary/tertiary/license/industry', () => {
+  it('hydrates secondary and tertiary sections from data envelope', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        data: {
+          secondaryEducation: [
+            {
+              isEnabled: true,
+              dataTakenFromCandidate: false,
+              content: [
+                {
+                  schools: [
+                    {
+                      source: 'MASTER',
+                      id: 'school-1',
+                      name: 'Royal College',
+                    },
+                  ],
+                  examinations: [],
+                  fieldsOfStudy: [],
+                  secondaryAwardingBody: [],
+                  schoolLocations: [],
+                  acceptsHomeSchooling: false,
+                  grade: 'A',
+                  startDate: '2020-01-01',
+                  endDate: '2021-01-01',
+                  result: 'PASS',
+                },
+              ],
+            },
+          ],
+          tertiaryEducation: [
+            {
+              isEnabled: true,
+              dataTakenFromCandidate: false,
+              content: [
+                {
+                  qualificationName: [
+                    {
+                      source: 'MASTER',
+                      id: 'qual-1',
+                      name: 'BSc',
+                    },
+                  ],
+                  tertiaryAwardingBody: [],
+                  tertiaryAwardingBodyLocations: [],
+                  levelOfQualification: [],
+                  specialization: [],
+                  studyMode: [],
+                  studyPattern: [],
+                  deliverySchedule: [],
+                  batch: [],
+                  department: [],
+                  faculty: [],
+                  grade: 'A',
+                },
+              ],
+            },
+          ],
+        },
+      },
+      { ...FALLBACK_FORM }
+    );
+
+    expect(result.secondaryEducation[0].isEnabled).toBe(true);
+    expect(result.secondaryEducation[0].content).toHaveLength(1);
+    expect(result.tertiaryEducation[0].isEnabled).toBe(true);
+    expect(result.tertiaryEducation[0].content).toHaveLength(1);
+  });
+
+  it('hydrates licensesAndCertifications into licenseCertificates', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        data: {
+          licensesAndCertifications: [
+            {
+              isEnabled: true,
+              dataTakenFromCandidate: false,
+              content: [
+                {
+                  nameOfLicenseCert: [
+                    {
+                      source: 'MASTER',
+                      id: 'lc-1',
+                      name: 'AWS Developer',
+                      type: 'CERTIFICATION',
+                    },
+                  ],
+                  issuingOrganization: [
+                    {
+                      source: 'MASTER',
+                      id: 'org-1',
+                      label: 'Amazon',
+                    },
+                  ],
+                  organizationLocations: [
+                    {
+                      source: 'MASTER',
+                      id: 'loc-1',
+                      displayValue: 'Colombo',
+                    },
+                  ],
+                  internationallyAccepted: true,
+                  issueDate: '2024-01-01',
+                  expirationDate: '2026-01-01',
+                },
+              ],
+            },
+          ],
+        },
+      },
+      { ...FALLBACK_FORM }
+    );
+
+    expect(result.licenseCertificates?.[0].isEnabled).toBe(true);
+    expect(
+      result.licenseCertificates?.[0].content[0].nameOfLicenseCert[0]
+    ).toEqual(
+      expect.objectContaining({
+        id: 'lc-1',
+        source: 'MASTER',
+        name: 'AWS Developer',
+        type: 'CERTIFICATION',
+      })
+    );
+    expect(
+      result.licenseCertificates?.[0].content[0].issuingOrganization[0]
+    ).toEqual(expect.objectContaining({ id: 'org-1', name: 'Amazon' }));
+    expect(
+      result.licenseCertificates?.[0].content[0].organizationLocations[0]
+    ).toEqual(expect.objectContaining({ id: 'loc-1', name: 'Colombo' }));
+  });
+
+  it('hydrates industry.content into preferredIndustries.industries', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        data: {
+          industry: {
+            isEnabled: true,
+            dataTakenFromCandidate: false,
+            content: [
+              { source: 'MASTER', id: 'ind-1', label: 'Healthcare' },
+              { source: 'PENDING', id: 'ind-2', name: 'Technology' },
+            ],
+          },
+        },
+      },
+      { ...FALLBACK_FORM }
+    );
+
+    expect(result.preferredIndustries?.isEnabled).toBe(true);
+    expect(result.preferredIndustries?.industries).toEqual([
+      { id: 'ind-1', label: 'Healthcare', source: 'MASTER' },
+      { id: 'ind-2', label: 'Technology', source: 'PENDING' },
+    ]);
+  });
+
+  it('hydrates object wrapper with licensesAndCertifications without recursion', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        data: {
+          licensesAndCertifications: {
+            isEnabled: true,
+            dataTakenFromCandidate: false,
+            licensesAndCertifications: [
+              {
+                nameOfLicenseCert: [
+                  {
+                    source: 'MASTER',
+                    id: 'lc-obj-1',
+                    name: 'Scrum Master',
+                    type: 'CERTIFICATION',
+                  },
+                ],
+                issuingOrganization: [
+                  { source: 'MASTER', id: 'org-obj-1', name: 'Scrum Org' },
+                ],
+                organizationLocations: [
+                  { source: 'MASTER', id: 'loc-obj-1', name: 'Colombo' },
+                ],
+                internationallyAccepted: true,
+                issueDate: '2023-01-01',
+                expirationDate: '2026-01-01',
+              },
+            ],
+          },
+        },
+      },
+      { ...FALLBACK_FORM }
+    );
+
+    expect(result.licenseCertificates?.[0].isEnabled).toBe(true);
+    expect(
+      result.licenseCertificates?.[0].content[0].nameOfLicenseCert[0]
+    ).toEqual(
+      expect.objectContaining({
+        id: 'lc-obj-1',
+        name: 'Scrum Master',
+        source: 'MASTER',
+      })
+    );
+  });
+
+  it('hydrates single group object under licenseCertificates key', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        data: {
+          licenseCertificates: {
+            isEnabled: true,
+            dataTakenFromCandidate: false,
+            content: [
+              {
+                nameOfLicenseCert: [
+                  {
+                    source: 'MASTER',
+                    id: 'lc-group-1',
+                    name: 'AWS SA',
+                    type: 'CERTIFICATION',
+                  },
+                ],
+                issuingOrganization: [],
+                organizationLocations: [],
+                internationallyAccepted: false,
+                issueDate: '2024-01-01',
+                expirationDate: '2027-01-01',
+              },
+            ],
+          },
+        },
+      },
+      { ...FALLBACK_FORM }
+    );
+
+    expect(result.licenseCertificates?.[0].isEnabled).toBe(true);
+    expect(
+      result.licenseCertificates?.[0].content[0].nameOfLicenseCert[0].id
+    ).toBe('lc-group-1');
+  });
+});

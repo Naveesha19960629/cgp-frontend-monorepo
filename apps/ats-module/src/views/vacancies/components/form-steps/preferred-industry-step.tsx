@@ -1,6 +1,6 @@
 import { ArrowLeft2 } from 'iconsax-reactjs';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import StepDisableDialog from '@/views/vacancies/components/step-disable-dialog';
@@ -45,23 +45,39 @@ export default function PreferredIndustryStep({
     removeCompletedStep,
   } = useVacancyForm();
 
-  const [isEnabled, setIsEnabled] = useState(
-    form.preferredIndustries?.isEnabled ?? false
-  );
-  const [dataTakenFromCandidate, setDataTakenFromCandidate] = useState(
-    form.preferredIndustries?.dataTakenFromCandidate ?? false
-  );
-  const [selectedIndustries, setSelectedIndustries] = useState<IndustryEntry[]>(
-    form.preferredIndustries?.industries ?? []
-  );
+  const preferredIndustries = form.preferredIndustries ?? {
+    isEnabled: false,
+    dataTakenFromCandidate: false,
+    industries: [],
+  };
+  const isEnabled = preferredIndustries.isEnabled;
+  const dataTakenFromCandidate = preferredIndustries.dataTakenFromCandidate;
+  const selectedIndustries = preferredIndustries.industries;
+
+  const updatePreferredIndustries = (
+    patch: Partial<{
+      isEnabled: boolean;
+      dataTakenFromCandidate: boolean;
+      industries: IndustryEntry[];
+    }>
+  ) => {
+    setForm(prev => ({
+      ...prev,
+      preferredIndustries: {
+        isEnabled,
+        dataTakenFromCandidate,
+        industries: selectedIndustries,
+        ...patch,
+      },
+    }));
+  };
 
   useStepGuard(
     isEnabled && !dataTakenFromCandidate && selectedIndustries.length === 0
   );
 
-  const _industriesRef = useRef<() => void>(() => {});
   useEffect(() => {
-    _industriesRef.current = () => {
+    stepPersistRef.current = () => {
       setForm(prev => ({
         ...prev,
         preferredIndustries: {
@@ -71,13 +87,17 @@ export default function PreferredIndustryStep({
         },
       }));
     };
-  }, [isEnabled, dataTakenFromCandidate, selectedIndustries, setForm]);
-  useEffect(() => {
-    stepPersistRef.current = () => _industriesRef.current();
+
     return () => {
       stepPersistRef.current = null;
     };
-  }, [stepPersistRef]);
+  }, [
+    dataTakenFromCandidate,
+    isEnabled,
+    selectedIndustries,
+    setForm,
+    stepPersistRef,
+  ]);
   useEffect(() => {
     stepDisableRef.current = () => {
       setForm(prev => ({
@@ -127,7 +147,7 @@ export default function PreferredIndustryStep({
         createIndustry,
         (search: string) => industryService.getIndustries(search)
       );
-      setSelectedIndustries(resolvedIndustries);
+      updatePreferredIndustries({ industries: resolvedIndustries });
     }
 
     onNext({
@@ -164,10 +184,10 @@ export default function PreferredIndustryStep({
               if (selectedIndustries.length > 0 || dataTakenFromCandidate) {
                 setConfirmDisableOpen(true);
               } else {
-                setIsEnabled(false);
+                updatePreferredIndustries({ isEnabled: false });
               }
             } else {
-              setIsEnabled(true);
+              updatePreferredIndustries({ isEnabled: true });
             }
           }}
         />
@@ -183,10 +203,16 @@ export default function PreferredIndustryStep({
               checked={dataTakenFromCandidate}
               onCheckedChange={checked => {
                 if (checked) {
-                  setSelectedIndustries([]);
+                  updatePreferredIndustries({
+                    industries: [],
+                    dataTakenFromCandidate: true,
+                  });
                   setHasMaxError(false);
+                  return;
                 }
-                setDataTakenFromCandidate(checked === true);
+                updatePreferredIndustries({
+                  dataTakenFromCandidate: false,
+                });
               }}
               className="mt-0.5"
             />
@@ -223,12 +249,23 @@ export default function PreferredIndustryStep({
               }))}
               onMaxSelected={() => setHasMaxError(true)}
               onChange={options => {
-                const entries: IndustryEntry[] = options.map(opt => ({
-                  id: opt.value,
-                  label: opt.label,
-                  source: (opt.source as string) ?? 'USER_CREATED',
-                }));
-                setSelectedIndustries(entries);
+                const dedupedByLabel = new Map<string, IndustryEntry>();
+
+                for (const opt of options) {
+                  const normalizedLabel = opt.label.trim().toLowerCase();
+                  if (!normalizedLabel || dedupedByLabel.has(normalizedLabel)) {
+                    continue;
+                  }
+
+                  dedupedByLabel.set(normalizedLabel, {
+                    id: opt.value,
+                    label: opt.label,
+                    source: (opt.source as string) ?? 'USER_CREATED',
+                  });
+                }
+
+                const entries = Array.from(dedupedByLabel.values());
+                updatePreferredIndustries({ industries: entries });
                 if (entries.length < MAX_INDUSTRIES) {
                   setHasMaxError(false);
                 }
@@ -295,10 +332,12 @@ export default function PreferredIndustryStep({
         description={t('preferredIndustries.confirmDisableDialog.message')}
         confirmLabel={t('preferredIndustries.confirmDisableDialog.disable')}
         onConfirm={() => {
-          setSelectedIndustries([]);
-          setDataTakenFromCandidate(false);
-          setIsEnabled(false);
-          removeCompletedStep(currentStepIndex);
+          updatePreferredIndustries({
+            industries: [],
+            dataTakenFromCandidate: false,
+            isEnabled: false,
+          });
+          removeCompletedStep?.(currentStepIndex ?? 0);
           setConfirmDisableOpen(false);
           showDisableToast(t('preferredIndustries.title'));
         }}
@@ -311,7 +350,7 @@ export default function PreferredIndustryStep({
         description={t('preferredIndustries.emptyDisableDialog.message')}
         confirmLabel={t('preferredIndustries.emptyDisableDialog.disable')}
         onConfirm={() => {
-          setIsEnabled(false);
+          updatePreferredIndustries({ isEnabled: false });
           setEmptyDisableOpen(false);
           showDisableToast(t('preferredIndustries.title'));
           onNext({

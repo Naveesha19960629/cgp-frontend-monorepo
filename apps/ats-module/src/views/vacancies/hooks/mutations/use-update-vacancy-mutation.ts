@@ -21,8 +21,11 @@ const useUpdateVacancyMutation = () => {
         id,
         toUpdateVacancyPayload(form, existingStatus)
       ),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['vacancies'] });
+    onSuccess: async (_data, variables) => {
+      await queryClient.invalidateQueries({ queryKey: ['vacancies'] });
+      await queryClient.invalidateQueries({
+        queryKey: ['vacancy', variables.id],
+      });
     },
   });
 };
