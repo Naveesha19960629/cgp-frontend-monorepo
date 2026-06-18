@@ -8,7 +8,7 @@ import { useTranslation } from 'react-i18next';
 
 import { getApiErrorMessage } from '@/app/utils/api-error';
 import MessageBox from '@/components/message-box';
-import { StepDisableDialog } from '@/views/vacancies';
+import { StepDisableDialog, VacancyStatusBadge } from '@/views/vacancies';
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import {
   useCreateIndustryMutation,
@@ -505,8 +505,8 @@ export default function PreferredPatentsStep({ onNext, onBack }: StepProps) {
     !dataTakenFromCandidate &&
     !patentEntries.some(
       p =>
-        p.relatedIndustries.length > 0 ||
-        p.statuses.length > 0 ||
+        (p.relatedIndustries?.length ?? 0) > 0 ||
+        (p.statuses?.length ?? 0) > 0 ||
         p.fromDate != null ||
         p.toDate != null
     );
@@ -718,6 +718,10 @@ export default function PreferredPatentsStep({ onNext, onBack }: StepProps) {
               <h2 className="text-xl font-bold tracking-tight text-slate-900">
                 {t('preferredPatents.title')}
               </h2>
+              <VacancyStatusBadge
+                status={contextForm.status}
+                applicantCount={contextForm.applicantCount}
+              />
             </div>
 
             {/* Toggle switch */}

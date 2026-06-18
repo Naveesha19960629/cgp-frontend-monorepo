@@ -23,7 +23,10 @@ import {
   SecondaryEducationStep,
   TertiaryEducationStep,
 } from '@/views/vacancies';
-import { useCreateVacancyMutation } from '@/views/vacancies/hooks';
+import {
+  useCreateVacancyMutation,
+  useUpdateDraftVacancyMutation,
+} from '@/views/vacancies/hooks';
 import type { VacancyForm, VacancyStep } from '@/views/vacancies/types';
 
 import { ErrorToast, SuccessToast } from '@cgp/ui-kit/components/custom-toast';
@@ -237,6 +240,7 @@ interface VacancyFormContextValue {
   completedSteps: Set<number>;
   removeCompletedStep: (index: number) => void;
   isInitialStep: boolean;
+  setIsInitialStep: (val: boolean) => void;
   onNext: (data?: Partial<VacancyForm>, completed?: boolean) => void;
   onBack: () => void;
   onCancel: () => void;
@@ -256,10 +260,17 @@ interface VacancyFormContextValue {
 
 const VacancyFormContext = createContext<VacancyFormContextValue | null>(null);
 
-function VacancyFormProvider({ children }: { children: React.ReactNode }) {
+function VacancyFormProvider({
+  children,
+  vacancyId,
+}: {
+  children: React.ReactNode;
+  vacancyId?: string;
+}) {
   const { t } = useTranslation('ats');
   const navigate = useNavigate();
   const { mutateAsync: createVacancy } = useCreateVacancyMutation();
+  const { mutateAsync: updateDraftVacancy } = useUpdateDraftVacancyMutation();
   const [form, setForm] = useState<VacancyForm>(DEFAULT_FORM);
   const [currentStepIndex, _setCurrentStepIndex] = useState(0);
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
@@ -360,7 +371,15 @@ function VacancyFormProvider({ children }: { children: React.ReactNode }) {
           draftForm = { ...form, ...stepValues };
         }
 
-        await createVacancy({ form: draftForm, status: 'DRAFT' });
+        if (vacancyId) {
+          await updateDraftVacancy({
+            id: vacancyId,
+            form: draftForm,
+            status: 'DRAFT',
+          });
+        } else {
+          await createVacancy({ form: draftForm, status: 'DRAFT' });
+        }
         SuccessToast({
           title: t('vacancyCancelDialog.notifications.saveAsDraft.title'),
           description: t(
@@ -391,6 +410,7 @@ function VacancyFormProvider({ children }: { children: React.ReactNode }) {
         completedSteps,
         removeCompletedStep,
         isInitialStep,
+        setIsInitialStep,
         onNext,
         onBack,
         onCancel,

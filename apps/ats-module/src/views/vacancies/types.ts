@@ -429,6 +429,7 @@ interface VacancyForm {
   title: string;
   status: string;
   lastActiveStep: string;
+  applicantCount?: number;
   jobRequirements: JobRequirement[];
   profileRequirements: ProfileRequirements;
   secondaryEducation: SecondaryEducation[];
@@ -996,6 +997,7 @@ type VacancyStatus = 'draft' | 'unpublished' | 'live' | 'expired' | 'on_hold';
 
 interface VacancyStatusBadgeProps {
   status: string;
+  applicantCount?: number;
 }
 
 interface JobRequirementApiPayload {

@@ -7,7 +7,7 @@ import { type UseFormReturn } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
 import MessageBox from '@/components/message-box';
-import { StepDisableDialog } from '@/views/vacancies';
+import { StepDisableDialog, VacancyStatusBadge } from '@/views/vacancies';
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import {
   useDisableSuccessToast,
@@ -586,6 +586,10 @@ export default function ProfileRequirementsStep({ onNext, onBack }: StepProps) {
               <h2 className="text-xl font-bold tracking-tight text-slate-900">
                 {t('profileRequirements.title')}
               </h2>
+              <VacancyStatusBadge
+                status={contextForm.status}
+                applicantCount={contextForm.applicantCount}
+              />
             </div>
 
             {/* Toggle switch */}

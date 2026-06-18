@@ -85,11 +85,11 @@ function EditVacancyTitleStep() {
   );
 }
 
-function EditVacancyContent() {
-  const { id } = useParams<'id'>();
+function EditVacancyContent({ id }: { id: string | undefined }) {
   const { t } = useTranslation('ats');
   const { keycloak, initialized } = useKeycloak();
-  const { isInitialStep, setForm, setCurrentStepIndex } = useVacancyForm();
+  const { isInitialStep, setIsInitialStep, setForm, setCurrentStepIndex } =
+    useVacancyForm();
   const isHydratedRef = useRef(false);
 
   const {
@@ -139,11 +139,18 @@ function EditVacancyContent() {
       );
       if (stepIndex >= 0) {
         setCurrentStepIndex(stepIndex);
+        // Draft vacancies land directly on their last active step
+        if (
+          typeof incomingForm.status === 'string' &&
+          incomingForm.status.toLowerCase() === 'draft'
+        ) {
+          setIsInitialStep(false);
+        }
       }
     }
 
     isHydratedRef.current = true;
-  }, [vacancyResponse, setCurrentStepIndex, setForm]);
+  }, [vacancyResponse, setCurrentStepIndex, setForm, setIsInitialStep]);
 
   if (!id) {
     return (
@@ -226,10 +233,11 @@ function EditVacancyContent() {
 }
 
 export default function VacancyIdEditPage() {
+  const { id } = useParams<'id'>();
   return (
-    <VacancyFormProvider>
+    <VacancyFormProvider vacancyId={id}>
       <section className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        <EditVacancyContent />
+        <EditVacancyContent id={id} />
       </section>
     </VacancyFormProvider>
   );

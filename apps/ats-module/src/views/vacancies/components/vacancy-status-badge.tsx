@@ -10,13 +10,20 @@ import { cn } from '@cgp/ui-kit/lib/utils';
 
 export default function VacancyStatusBadge({
   status,
+  applicantCount,
 }: VacancyStatusBadgeProps) {
   const { t } = useTranslation('ats');
   const key = status.toLowerCase();
+  if (key === 'new') return null;
   const config =
     VACANCY_STATUS_CONFIG[key as keyof typeof VACANCY_STATUS_CONFIG] ??
     VACANCY_STATUS_FALLBACK_CONFIG;
-  const label = config.labelKey ? t(config.labelKey) : status;
+  const statusLabel = config.labelKey ? t(config.labelKey) : status;
+  const isDraft = key === 'draft';
+  const label =
+    !isDraft && applicantCount !== undefined
+      ? `${statusLabel} (${applicantCount} ${t('vacancies.stepBadge.applied')})`
+      : statusLabel;
 
   return (
     <span

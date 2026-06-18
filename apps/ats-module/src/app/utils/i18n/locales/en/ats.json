@@ -111,6 +111,9 @@
   },
   "vacancies": {
     "title": "Vacancies",
+    "stepBadge": {
+      "applied": "Applied"
+    },
     "createVacancyButton": "Create Vacancy",
     "emptyState": {
       "title": "No Vacancies Available",

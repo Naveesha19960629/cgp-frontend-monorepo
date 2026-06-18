@@ -56,4 +56,14 @@ export const vacancyService = {
     );
     return response.data;
   },
+  updateDraftVacancy: async (
+    id: string,
+    payload: CreateVacancyPayload
+  ): Promise<CreateVacancyResponse> => {
+    const response = await httpClient.put<CreateVacancyResponse>(
+      `/vacancies/${id}`,
+      payload
+    );
+    return response.data;
+  },
 };
