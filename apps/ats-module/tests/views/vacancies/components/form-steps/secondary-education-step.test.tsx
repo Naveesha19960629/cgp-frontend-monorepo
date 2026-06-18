@@ -19,16 +19,19 @@ const {
   mockSetStepGuard,
   mockStepPersistRef,
   mockStepDisableRef,
+  mockOnCancel,
 } = vi.hoisted(() => ({
   stableForm: {
     secondaryEducation: [
       { isEnabled: false, dataTakenFromCandidate: false, content: [] },
     ],
+    status: undefined,
   },
   mockSetForm: vi.fn(),
   mockSetStepGuard: vi.fn(),
   mockStepPersistRef: { current: null },
   mockStepDisableRef: { current: null },
+  mockOnCancel: vi.fn(),
 }));
 
 vi.mock('@/views/vacancies/context/vacancy-form-context', () => ({
@@ -36,11 +39,18 @@ vi.mock('@/views/vacancies/context/vacancy-form-context', () => ({
     form: stableForm,
     setForm: mockSetForm,
     setStepGuard: mockSetStepGuard,
+    onCancel: mockOnCancel,
     stepPersistRef: mockStepPersistRef,
     stepDisableRef: mockStepDisableRef,
     currentStepIndex: 0,
     removeCompletedStep: vi.fn(),
   }),
+}));
+
+vi.mock('@/views/vacancies/components/vacancy-status-badge', () => ({
+  default: ({ status }: { status: string }) => (
+    <div data-testid="vacancy-status-badge">{status}</div>
+  ),
 }));
 
 // ── Mock hooks barrel — keep real useSecondaryEducationForm ─────────────────
@@ -285,7 +295,7 @@ vi.mock('@cgp/ui-kit/components/character-count', () => ({
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
-function renderStep() {
+function renderStep(mode: 'create' | 'edit' = 'create') {
   const onNext = vi.fn();
   const onBack = vi.fn();
   const onSubmit = vi.fn();
@@ -294,6 +304,7 @@ function renderStep() {
       onNext={onNext}
       onBack={onBack}
       onSubmit={onSubmit}
+      mode={mode}
     />
   );
   return { onNext, onBack, onSubmit };
@@ -322,6 +333,7 @@ async function openConfirmDialog() {
 describe('SecondaryEducationStep', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    stableForm.status = undefined;
     mockExaminationMutate.mockResolvedValue({ data: { pendingId: 'exam-id' } });
     mockAwardingBodyMutate.mockResolvedValue({
       data: { pendingId: 'body-id' },
@@ -336,6 +348,24 @@ describe('SecondaryEducationStep', () => {
     it('renders the section heading', () => {
       renderStep();
       expect(screen.getByText('secondaryEducation.title')).toBeInTheDocument();
+    });
+
+    it('renders vacancy status badge in edit mode when status exists', () => {
+      stableForm.status = 'LIVE';
+      renderStep('edit');
+
+      expect(screen.getByTestId('vacancy-status-badge')).toHaveTextContent(
+        'LIVE'
+      );
+    });
+
+    it('does not render vacancy status badge in create mode', () => {
+      stableForm.status = 'LIVE';
+      renderStep('create');
+
+      expect(
+        screen.queryByTestId('vacancy-status-badge')
+      ).not.toBeInTheDocument();
     });
 
     it('renders the enable/disable toggle (initially off)', () => {
