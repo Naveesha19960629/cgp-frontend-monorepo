@@ -7,7 +7,7 @@ type MutationArgs = { id: string; form: VacancyForm; existingStatus: string };
 
 type MockMutation = {
   mutationFn: (arg: MutationArgs) => Promise<unknown>;
-  onSuccess: (_data: unknown, variables: MutationArgs) => void;
+  onSuccess: (_data: unknown, variables: MutationArgs) => Promise<void>;
 };
 
 // ── Mock @tanstack/react-query ─────────────────────────────────────────────
