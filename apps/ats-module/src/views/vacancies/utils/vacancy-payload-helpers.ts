@@ -69,7 +69,7 @@ function formatOptionalDate(
 ): string | undefined {
   if (!date) return undefined;
   if (date instanceof Date) return format(date, 'yyyy-MM-dd');
-  return date;
+  return normalizeToDateOnly(date);
 }
 
 function normalizeToDateOnly(value: string): string {
@@ -252,8 +252,8 @@ function mapProjects(form: VacancyForm): ProjectGroupApiPayload[] {
           source: 'MASTER' as const,
           id: l.value,
         })),
-        startDate: p.startDate ?? '',
-        endDate: p.endDate ?? '',
+        startDate: formatOptionalDate(p.startDate) ?? '',
+        endDate: formatOptionalDate(p.endDate) ?? '',
       })),
     },
   ];
@@ -280,8 +280,8 @@ function mapPublications(form: VacancyForm): PublicationGroupApiPayload[] {
       dataTakenFromCandidate: form.preferredPublications.dataTakenFromCandidate,
       content: form.preferredPublications.publications.map(p => ({
         acceptedPublisherName: p.acceptedPublisher,
-        publishedDateFrom: p.publishedDateFrom ?? '',
-        publishedDateTo: p.publishedDateTo ?? '',
+        publishedDateFrom: formatOptionalDate(p.publishedDateFrom) ?? '',
+        publishedDateTo: formatOptionalDate(p.publishedDateTo) ?? '',
       })),
     },
   ];
@@ -315,8 +315,8 @@ function mapClubSocieties(form: VacancyForm): ClubSocietiesGroupApiPayload[] {
           id: l.value,
         })),
         positionRoleHeld: e.position,
-        startDate: e.startDate ?? '',
-        endDate: e.endDate ?? '',
+        startDate: formatOptionalDate(e.startDate) ?? '',
+        endDate: formatOptionalDate(e.endDate) ?? '',
       })),
     },
   ];
@@ -350,8 +350,8 @@ function mapSports(form: VacancyForm): SportsGroupApiPayload[] {
         })),
         levelRepresented: e.levelRepresented.map(l => toRef(l)),
         positionRoleHeld: e.position,
-        startDate: e.startDate ?? '',
-        endDate: e.endDate ?? '',
+        startDate: formatOptionalDate(e.startDate) ?? '',
+        endDate: formatOptionalDate(e.endDate) ?? '',
       })),
     },
   ];
@@ -384,8 +384,8 @@ function mapVolunteering(form: VacancyForm): VolunteeringGroupApiPayload[] {
         })),
         positionRole: e.position,
         cause: e.cause.map(c => toRef(c)),
-        startDate: e.startDate ?? '',
-        endDate: e.endDate ?? '',
+        startDate: formatOptionalDate(e.startDate) ?? '',
+        endDate: formatOptionalDate(e.endDate) ?? '',
       })),
     },
   ];

@@ -237,7 +237,7 @@ describe('toCreateVacancyPayload', () => {
               {
                 nameOfLicenseCert: [
                   {
-                    source: 'PENDING_TEMP' as any,
+                    source: 'PENDING',
                     id: '__pending_license_cert_123',
                     type: 'CERTIFICATION',
                     name: 'Custom Cert',

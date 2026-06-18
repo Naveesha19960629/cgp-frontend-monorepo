@@ -13,6 +13,10 @@ import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import { useStepGuard } from '@/views/vacancies/hooks';
 import type { StepProps } from '@/views/vacancies/types';
 import { formatDate } from '@/views/vacancies/utils';
+import {
+  formatLocalDate,
+  parseLocalDate,
+} from '@/views/vacancies/utils/date-timezone-safe';
 
 import { CharacterCount } from '@cgp/ui-kit/components/character-count';
 import { SuccessToast } from '@cgp/ui-kit/components/custom-toast';
@@ -160,28 +164,27 @@ function PublicationCard({
                     <Calendar
                       mode="single"
                       selected={
-                        publication.publishedDateFrom
-                          ? new Date(publication.publishedDateFrom)
-                          : undefined
+                        parseLocalDate(publication.publishedDateFrom) ??
+                        undefined
                       }
                       defaultMonth={
-                        (publication.publishedDateFrom &&
-                          new Date(publication.publishedDateFrom)) ||
-                        (publication.publishedDateTo &&
-                          new Date(publication.publishedDateTo)) ||
+                        parseLocalDate(publication.publishedDateFrom) ||
+                        parseLocalDate(publication.publishedDateTo) ||
                         new Date()
                       }
                       onSelect={date => {
                         onUpdate(index, {
                           publishedDateFrom: date
-                            ? date.toISOString()
+                            ? formatLocalDate(date)
                             : undefined,
                         });
                         onUpdate(index, { openDatePopover: null });
 
                         if (publication.publishedDateTo && date) {
-                          const toDate = new Date(publication.publishedDateTo);
-                          if (toDate < date) {
+                          const toDate = parseLocalDate(
+                            publication.publishedDateTo
+                          );
+                          if (toDate != null && toDate < date) {
                             onUpdate(index, { publishedDateTo: undefined });
                           }
                         }
@@ -240,29 +243,25 @@ function PublicationCard({
                     <Calendar
                       mode="single"
                       selected={
-                        publication.publishedDateTo
-                          ? new Date(publication.publishedDateTo)
-                          : undefined
+                        parseLocalDate(publication.publishedDateTo) ?? undefined
                       }
                       defaultMonth={
-                        (publication.publishedDateTo &&
-                          new Date(publication.publishedDateTo)) ||
-                        (publication.publishedDateFrom &&
-                          new Date(publication.publishedDateFrom)) ||
+                        parseLocalDate(publication.publishedDateTo) ||
+                        parseLocalDate(publication.publishedDateFrom) ||
                         new Date()
                       }
                       onSelect={date => {
                         onUpdate(index, {
                           publishedDateTo: date
-                            ? date.toISOString()
+                            ? formatLocalDate(date)
                             : undefined,
                         });
                         onUpdate(index, { openDatePopover: null });
                       }}
                       disabled={date => {
-                        const fromDate = publication.publishedDateFrom
-                          ? new Date(publication.publishedDateFrom)
-                          : undefined;
+                        const fromDate = parseLocalDate(
+                          publication.publishedDateFrom
+                        );
                         return (
                           date < HUNDRED_YEARS_AGO ||
                           date > HUNDRED_YEARS_FROM_NOW ||

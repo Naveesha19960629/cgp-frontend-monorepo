@@ -18,6 +18,10 @@ import {
 } from '@/views/vacancies/hooks';
 import type { StepProps } from '@/views/vacancies/types';
 import { formatDate } from '@/views/vacancies/utils';
+import {
+  formatLocalDate,
+  parseLocalDate,
+} from '@/views/vacancies/utils/date-timezone-safe';
 
 import { CharacterCount } from '@cgp/ui-kit/components/character-count';
 import { SuccessToast } from '@cgp/ui-kit/components/custom-toast';
@@ -64,6 +68,9 @@ function ClubSocietyCard({
   index,
   entry,
   onUpdate,
+  onSocietiesSearch,
+  onOrganizationsSearch,
+  onLocationsSearch,
   fieldsDisabled,
   societies,
   isSocietiesLoading,
@@ -75,6 +82,9 @@ function ClubSocietyCard({
   index: number;
   entry: ClubSocietyEntry;
   onUpdate: (index: number, updates: Partial<ClubSocietyEntry>) => void;
+  onSocietiesSearch: (value: string) => void;
+  onOrganizationsSearch: (value: string) => void;
+  onLocationsSearch: (value: string) => void;
   fieldsDisabled: boolean;
   societies: Array<{
     id: string;
@@ -156,7 +166,8 @@ function ClubSocietyCard({
                     label: s.name || s.label || '',
                     source: s.source,
                   }))}
-                  onSearchSync={() => {
+                  onSearchSync={value => {
+                    onSocietiesSearch(value);
                     return societies.map(s => ({
                       value: s.id,
                       label: s.name || s.label || '',
@@ -211,12 +222,10 @@ function ClubSocietyCard({
                   <PopoverContent className="w-auto p-0" align="start">
                     <Calendar
                       mode="single"
-                      selected={
-                        entry.startDate ? new Date(entry.startDate) : undefined
-                      }
+                      selected={parseLocalDate(entry.startDate) ?? undefined}
                       onSelect={date =>
                         onUpdate(index, {
-                          startDate: date ? date.toISOString() : undefined,
+                          startDate: date ? formatLocalDate(date) : undefined,
                         })
                       }
                       disabled={date => date > new Date()}
@@ -257,17 +266,15 @@ function ClubSocietyCard({
                   <PopoverContent className="w-auto p-0" align="start">
                     <Calendar
                       mode="single"
-                      selected={
-                        entry.endDate ? new Date(entry.endDate) : undefined
-                      }
+                      selected={parseLocalDate(entry.endDate) ?? undefined}
                       onSelect={date =>
                         onUpdate(index, {
-                          endDate: date ? date.toISOString() : undefined,
+                          endDate: date ? formatLocalDate(date) : undefined,
                         })
                       }
                       disabled={date =>
                         entry.startDate
-                          ? date <= new Date(entry.startDate)
+                          ? date <= (parseLocalDate(entry.startDate) ?? date)
                           : false
                       }
                     />
@@ -304,7 +311,8 @@ function ClubSocietyCard({
                     label: o.name || o.label || '',
                     source: o.source || 'MASTER',
                   }))}
-                  onSearchSync={() => {
+                  onSearchSync={value => {
+                    onOrganizationsSearch(value);
                     return organizations.map(o => ({
                       value: o.id,
                       label: o.name || o.label || '',
@@ -342,7 +350,10 @@ function ClubSocietyCard({
                     });
                   }}
                   options={locationOptions}
-                  onSearchSync={() => locationOptions}
+                  onSearchSync={value => {
+                    onLocationsSearch(value);
+                    return locationOptions;
+                  }}
                   showArrow
                   keepSelectedInList
                   hideClearAllButton
@@ -401,6 +412,9 @@ export default function PreferredClubSocietiesStep({
   );
   const [confirmDisableOpen, setConfirmDisableOpen] = useState(false);
   const [emptyDisableOpen, setEmptyDisableOpen] = useState(false);
+  const [societiesSearchQuery, setSocietiesSearchQuery] = useState('');
+  const [organizationsSearchQuery, setOrganizationsSearchQuery] = useState('');
+  const [locationsSearchQuery, setLocationsSearchQuery] = useState('');
 
   const [entries, setEntries] = useState<ClubSocietyEntry[]>(
     savedClubSocieties?.clubSocieties &&
@@ -492,15 +506,24 @@ export default function PreferredClubSocietiesStep({
 
   // Societies API
   const { data: societiesData, isLoading: isSocietiesLoading } =
-    useSocietiesQuery('', isEnabled && !dataTakenFromCandidate);
+    useSocietiesQuery(
+      societiesSearchQuery,
+      isEnabled && !dataTakenFromCandidate
+    );
 
   // Organizations API
   const { data: organizationsData, isLoading: isOrganizationsLoading } =
-    useOrganizationsQuery('', isEnabled && !dataTakenFromCandidate);
+    useOrganizationsQuery(
+      organizationsSearchQuery,
+      isEnabled && !dataTakenFromCandidate
+    );
 
   // Locations API
   const { data: locationsData, isLoading: isLocationsLoading } =
-    useLocationsQuery('', isEnabled && !dataTakenFromCandidate);
+    useLocationsQuery(
+      locationsSearchQuery,
+      isEnabled && !dataTakenFromCandidate
+    );
 
   const societies = useMemo(
     () => societiesData?.data?.items?.content ?? [],
@@ -648,6 +671,9 @@ export default function PreferredClubSocietiesStep({
               index={index}
               entry={entry}
               onUpdate={updateEntry}
+              onSocietiesSearch={setSocietiesSearchQuery}
+              onOrganizationsSearch={setOrganizationsSearchQuery}
+              onLocationsSearch={setLocationsSearchQuery}
               fieldsDisabled={fieldsDisabled}
               societies={societies}
               isSocietiesLoading={isSocietiesLoading}

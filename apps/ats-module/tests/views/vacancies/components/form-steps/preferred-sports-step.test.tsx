@@ -40,9 +40,14 @@ const mockLocationsData = [
 
 vi.mock('@/views/vacancies/hooks', () => ({
   useSportsQuery: () => ({
-    data: {
-      data: { items: { content: mockSportsData } },
-    },
+    data: mockSportsData,
+    isLoading: false,
+  }),
+  useSportLevelsQuery: () => ({
+    data: [
+      { id: 'lvl-1', label: 'International Level', source: 'MASTER' },
+      { id: 'lvl-2', label: 'National Level', source: 'MASTER' },
+    ],
     isLoading: false,
   }),
   useOrganizationsQuery: () => ({
@@ -58,8 +63,8 @@ vi.mock('@/views/vacancies/hooks', () => ({
 
 // ── Mock message box ────────────────────────────────────────────────────────
 
-vi.mock('@/app/components/message-box', () => ({
-  default: ({ title }: { title: string }) => <div>{title}</div>,
+vi.mock('@/components/message-box', () => ({
+  default: () => <div>message-box</div>,
 }));
 
 // ── Mock DisableDialog ──────────────────────────────────────────────────────
@@ -174,9 +179,7 @@ describe('PreferredSportsStep', () => {
         onSubmit={vi.fn()}
       />
     );
-    expect(
-      screen.getByText('preferredPatents.bannerTitle')
-    ).toBeInTheDocument();
+    expect(screen.getByText('message-box')).toBeInTheDocument();
   });
 
   it('renders the first sport card by default', () => {

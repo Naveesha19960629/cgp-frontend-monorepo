@@ -75,10 +75,10 @@ describe('useUpdateVacancyMutation', () => {
     });
   });
 
-  it('onSuccess invalidates vacancies list and vacancy-by-id queries', async () => {
+  it('onSuccess invalidates vacancies list and vacancy-by-id queries', () => {
     const mutation = useUpdateVacancyMutation() as unknown as MockMutation;
 
-    await mutation.onSuccess(
+    mutation.onSuccess(
       {},
       {
         id: 'vacancy-99',

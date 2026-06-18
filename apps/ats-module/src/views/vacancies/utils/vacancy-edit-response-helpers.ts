@@ -599,6 +599,306 @@ function normalizeIndustryEntries(raw: unknown):
     );
 }
 
+function normalizeOptionWithSource(raw: unknown): {
+  value: string;
+  label: string;
+  source: string;
+} | null {
+  if (!isRecord(raw)) {
+    return null;
+  }
+
+  const value = toSafeString(raw.id) || toSafeString(raw.value);
+  const label =
+    toSafeString(raw.label) ||
+    toSafeString(raw.displayValue) ||
+    toSafeString(raw.name) ||
+    value;
+  const source = toSafeString(raw.source) || 'MASTER';
+
+  if (!value && !label) {
+    return null;
+  }
+
+  return { value, label, source };
+}
+
+function normalizeOptionWithSourceArray(raw: unknown): Array<{
+  value: string;
+  label: string;
+  source: string;
+}> {
+  if (!Array.isArray(raw)) {
+    return [];
+  }
+
+  return raw
+    .map(item => normalizeOptionWithSource(item))
+    .filter(
+      (
+        item
+      ): item is {
+        value: string;
+        label: string;
+        source: string;
+      } => item !== null
+    );
+}
+
+function normalizeOptionLabel(
+  raw: unknown
+): { value: string; label: string } | null {
+  if (!isRecord(raw)) {
+    return null;
+  }
+
+  const value = toSafeString(raw.id) || toSafeString(raw.value);
+  const label =
+    toSafeString(raw.label) ||
+    toSafeString(raw.displayValue) ||
+    toSafeString(raw.name) ||
+    value;
+
+  if (!value && !label) {
+    return null;
+  }
+
+  return { value, label };
+}
+
+function normalizeOptionLabelArray(
+  raw: unknown
+): Array<{ value: string; label: string }> {
+  if (!Array.isArray(raw)) {
+    return [];
+  }
+
+  return raw
+    .map(item => normalizeOptionLabel(item))
+    .filter(
+      (
+        item
+      ): item is {
+        value: string;
+        label: string;
+      } => item !== null
+    );
+}
+
+function normalizeProjectsRequirementsSection(
+  rawSection: unknown,
+  fallback: VacancyForm['projectsRequirements']
+): VacancyForm['projectsRequirements'] {
+  if (!isRecord(rawSection)) {
+    return fallback;
+  }
+
+  const projects = Array.isArray(rawSection.projects)
+    ? rawSection.projects
+    : [];
+
+  return {
+    isEnabled:
+      typeof rawSection.isEnabled === 'boolean'
+        ? rawSection.isEnabled
+        : (fallback?.isEnabled ?? false),
+    dataTakenFromCandidate:
+      typeof rawSection.dataTakenFromCandidate === 'boolean'
+        ? rawSection.dataTakenFromCandidate
+        : (fallback?.dataTakenFromCandidate ?? false),
+    projects: projects.filter(isRecord).map((item, index) => ({
+      id:
+        toSafeString(item.projectRequirementId) ||
+        toSafeString(item.id) ||
+        `project-${index + 1}`,
+      isOpen: true,
+      startDate: toSafeString(item.startDate) || undefined,
+      endDate: toSafeString(item.endDate) || undefined,
+      relatedIndustry: normalizeOptionWithSourceArray(item.relatedIndustry),
+      organizationLocations: normalizeOptionLabelArray(
+        item.organizationLocations
+      ),
+      organizations:
+        normalizeOptionWithSourceArray(item.organization).length > 0
+          ? normalizeOptionWithSourceArray(item.organization)
+          : normalizeOptionWithSourceArray(item.organizations),
+    })),
+  };
+}
+
+function normalizePreferredPublicationsSection(
+  rawSection: unknown,
+  fallback: VacancyForm['preferredPublications']
+): VacancyForm['preferredPublications'] {
+  if (!isRecord(rawSection)) {
+    return fallback;
+  }
+
+  const publications = Array.isArray(rawSection.publications)
+    ? rawSection.publications
+    : [];
+
+  return {
+    isEnabled:
+      typeof rawSection.isEnabled === 'boolean'
+        ? rawSection.isEnabled
+        : (fallback?.isEnabled ?? false),
+    dataTakenFromCandidate:
+      typeof rawSection.dataTakenFromCandidate === 'boolean'
+        ? rawSection.dataTakenFromCandidate
+        : (fallback?.dataTakenFromCandidate ?? false),
+    publications: publications.filter(isRecord).map((item, index) => ({
+      id:
+        toSafeString(item.publicationRequirementId) ||
+        toSafeString(item.id) ||
+        `publication-${index + 1}`,
+      isOpen: true,
+      acceptedPublisher:
+        toSafeString(item.acceptedPublisherName) ||
+        toSafeString(item.acceptedPublisher),
+      publishedDateFrom: toSafeString(item.publishedDateFrom) || undefined,
+      publishedDateTo: toSafeString(item.publishedDateTo) || undefined,
+      openDatePopover: null,
+    })),
+  };
+}
+
+function normalizePreferredClubSocietiesSection(
+  rawSection: unknown,
+  fallback: VacancyForm['preferredClubSocieties']
+): VacancyForm['preferredClubSocieties'] {
+  if (!isRecord(rawSection)) {
+    return fallback;
+  }
+
+  let entries: unknown[] = [];
+  if (Array.isArray(rawSection.clubsAndSocieties)) {
+    entries = rawSection.clubsAndSocieties;
+  } else if (Array.isArray(rawSection.clubSocieties)) {
+    entries = rawSection.clubSocieties;
+  }
+
+  return {
+    isEnabled:
+      typeof rawSection.isEnabled === 'boolean'
+        ? rawSection.isEnabled
+        : (fallback?.isEnabled ?? false),
+    dataTakenFromCandidate:
+      typeof rawSection.dataTakenFromCandidate === 'boolean'
+        ? rawSection.dataTakenFromCandidate
+        : (fallback?.dataTakenFromCandidate ?? false),
+    clubSocieties: entries.filter(isRecord).map((item, index) => ({
+      id:
+        toSafeString(item.clubSocietyRequirementId) ||
+        toSafeString(item.id) ||
+        `club-${index + 1}`,
+      isOpen: true,
+      clubSociety: normalizeOptionWithSourceArray(item.clubSociety),
+      startDate: toSafeString(item.startDate) || undefined,
+      endDate: toSafeString(item.endDate) || undefined,
+      representedOrganization:
+        normalizeOptionWithSourceArray(item.organization).length > 0
+          ? normalizeOptionWithSourceArray(item.organization)
+          : normalizeOptionWithSourceArray(item.representedOrganization),
+      organizationLocations: normalizeOptionLabelArray(
+        item.organizationLocations
+      ),
+      position:
+        toSafeString(item.positionRoleHeld) || toSafeString(item.position),
+    })),
+  };
+}
+
+function normalizePreferredSportsSection(
+  rawSection: unknown,
+  fallback: VacancyForm['preferredSports']
+): VacancyForm['preferredSports'] {
+  if (!isRecord(rawSection)) {
+    return fallback;
+  }
+
+  const entries = Array.isArray(rawSection.sports) ? rawSection.sports : [];
+
+  return {
+    isEnabled:
+      typeof rawSection.isEnabled === 'boolean'
+        ? rawSection.isEnabled
+        : (fallback?.isEnabled ?? false),
+    dataTakenFromCandidate:
+      typeof rawSection.dataTakenFromCandidate === 'boolean'
+        ? rawSection.dataTakenFromCandidate
+        : (fallback?.dataTakenFromCandidate ?? false),
+    sports: entries.filter(isRecord).map((item, index) => ({
+      id:
+        toSafeString(item.sportRequirementId) ||
+        toSafeString(item.id) ||
+        `sport-${index + 1}`,
+      isOpen: true,
+      sport:
+        normalizeOptionWithSourceArray(item.nameOfSport).length > 0
+          ? normalizeOptionWithSourceArray(item.nameOfSport)
+          : normalizeOptionWithSourceArray(item.sport),
+      sportSearch: '',
+      levelRepresented: normalizeOptionWithSourceArray(item.levelRepresented),
+      representedOrganization:
+        normalizeOptionWithSourceArray(item.representedOrganization).length > 0
+          ? normalizeOptionWithSourceArray(item.representedOrganization)
+          : normalizeOptionWithSourceArray(item.organization),
+      organizationLocations: normalizeOptionLabelArray(
+        item.organizationLocations
+      ),
+      position:
+        toSafeString(item.positionRoleHeld) || toSafeString(item.position),
+      startDate: toSafeString(item.startDate) || undefined,
+      endDate: toSafeString(item.endDate) || undefined,
+    })),
+  };
+}
+
+function normalizePreferredVolunteeringSection(
+  rawSection: unknown,
+  fallback: VacancyForm['preferredVolunteering']
+): VacancyForm['preferredVolunteering'] {
+  if (!isRecord(rawSection)) {
+    return fallback;
+  }
+
+  const entries = Array.isArray(rawSection.volunteering)
+    ? rawSection.volunteering
+    : [];
+
+  return {
+    isEnabled:
+      typeof rawSection.isEnabled === 'boolean'
+        ? rawSection.isEnabled
+        : (fallback?.isEnabled ?? false),
+    dataTakenFromCandidate:
+      typeof rawSection.dataTakenFromCandidate === 'boolean'
+        ? rawSection.dataTakenFromCandidate
+        : (fallback?.dataTakenFromCandidate ?? false),
+    volunteering: entries.filter(isRecord).map((item, index) => ({
+      id:
+        toSafeString(item.volunteeringRequirementId) ||
+        toSafeString(item.id) ||
+        `volunteering-${index + 1}`,
+      isOpen: true,
+      organizationName:
+        normalizeOptionWithSourceArray(item.organization).length > 0
+          ? normalizeOptionWithSourceArray(item.organization)
+          : normalizeOptionWithSourceArray(item.organizationName),
+      organizationLocations: normalizeOptionLabelArray(
+        item.organizationLocations
+      ),
+      cause: normalizeOptionWithSourceArray(item.cause),
+      causeSearch: '',
+      position: toSafeString(item.positionRole) || toSafeString(item.position),
+      startDate: toSafeString(item.startDate) || undefined,
+      endDate: toSafeString(item.endDate) || undefined,
+      openDatePopover: null,
+    })),
+  };
+}
+
 function normalizePreferredIndustriesSection(
   rawSection: unknown,
   fallback: VacancyForm['preferredIndustries']
@@ -683,6 +983,30 @@ function toVacancyFormFromResponse(
     sectionSource,
     ['preferredIndustries', 'industry']
   );
+  const projectsRequirementsSection = readSectionValue(
+    rawVacancy,
+    sectionSource,
+    ['projectsRequirements', 'projects']
+  );
+  const preferredPublicationsSection = readSectionValue(
+    rawVacancy,
+    sectionSource,
+    ['preferredPublications', 'publications']
+  );
+  const preferredClubSocietiesSection = readSectionValue(
+    rawVacancy,
+    sectionSource,
+    ['preferredClubSocieties', 'clubsAndSocieties']
+  );
+  const preferredSportsSection = readSectionValue(rawVacancy, sectionSource, [
+    'preferredSports',
+    'sports',
+  ]);
+  const preferredVolunteeringSection = readSectionValue(
+    rawVacancy,
+    sectionSource,
+    ['preferredVolunteering', 'volunteering']
+  );
 
   // Explicit whitelist: only pick known scalar top-level form fields.
   // Avoids carrying unknown API keys into context state.
@@ -725,6 +1049,26 @@ function toVacancyFormFromResponse(
     tertiaryEducation: normalizeTertiaryEducationSection(
       tertiaryEducationSection,
       previousForm.tertiaryEducation
+    ),
+    projectsRequirements: normalizeProjectsRequirementsSection(
+      projectsRequirementsSection,
+      previousForm.projectsRequirements
+    ),
+    preferredPublications: normalizePreferredPublicationsSection(
+      preferredPublicationsSection,
+      previousForm.preferredPublications
+    ),
+    preferredClubSocieties: normalizePreferredClubSocietiesSection(
+      preferredClubSocietiesSection,
+      previousForm.preferredClubSocieties
+    ),
+    preferredSports: normalizePreferredSportsSection(
+      preferredSportsSection,
+      previousForm.preferredSports
+    ),
+    preferredVolunteering: normalizePreferredVolunteeringSection(
+      preferredVolunteeringSection,
+      previousForm.preferredVolunteering
     ),
     licenseCertificates: normalizeLicenseCertificatesSection(
       licenseCertificatesSection,

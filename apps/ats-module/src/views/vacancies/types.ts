@@ -65,7 +65,9 @@ interface EngagementModelItem {
 
 interface JobLevelItem {
   id: string;
-  name: string;
+  name?: string;
+  label?: string;
+  source?: string;
 }
 
 interface MasterRef {

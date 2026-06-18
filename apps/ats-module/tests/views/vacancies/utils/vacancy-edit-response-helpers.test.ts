@@ -927,3 +927,229 @@ describe('toVacancyFormFromResponse — secondary/tertiary/license/industry', ()
     ).toBe('lc-group-1');
   });
 });
+
+describe('toVacancyFormFromResponse — projects/publications/clubs/sports/volunteering hydration', () => {
+  it('hydrates all added form sections from GET payload values', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        data: {
+          projects: {
+            isEnabled: true,
+            dataTakenFromCandidate: false,
+            projects: [
+              {
+                projectRequirementId: 'project-req-1',
+                startDate: '2026-06-03',
+                endDate: '2026-06-19',
+                relatedIndustry: [
+                  {
+                    source: 'MASTER',
+                    id: 'ind-1',
+                    label: 'Information Technology',
+                  },
+                ],
+                organization: [
+                  {
+                    source: 'MASTER',
+                    id: 'org-1',
+                    label: 'OXO Labs',
+                  },
+                ],
+                organizationLocations: [
+                  {
+                    source: 'MASTER',
+                    id: 'loc-1',
+                    label: 'Aachen, North Rhine-Westphalia, Germany',
+                  },
+                ],
+              },
+            ],
+          },
+          publications: {
+            isEnabled: true,
+            dataTakenFromCandidate: false,
+            publications: [
+              {
+                publicationRequirementId: 'pub-1',
+                acceptedPublisherName: 'Publisher A',
+                publishedDateFrom: '2026-06-02',
+                publishedDateTo: '2026-06-12',
+              },
+            ],
+          },
+          clubsAndSocieties: {
+            isEnabled: true,
+            dataTakenFromCandidate: false,
+            clubsAndSocieties: [
+              {
+                clubSocietyRequirementId: 'club-1',
+                positionRoleHeld: 'Leader',
+                startDate: '2026-06-03',
+                endDate: '2026-06-10',
+                clubSociety: [
+                  {
+                    source: 'MASTER',
+                    id: 'club-opt-1',
+                    label: 'Business Club',
+                  },
+                ],
+                organization: [
+                  {
+                    source: 'MASTER',
+                    id: 'org-1',
+                    label: 'OXO Labs',
+                  },
+                ],
+                organizationLocations: [
+                  {
+                    source: 'MASTER',
+                    id: 'loc-1',
+                    label: 'Aachen, North Rhine-Westphalia, Germany',
+                  },
+                ],
+              },
+            ],
+          },
+          sports: {
+            isEnabled: true,
+            dataTakenFromCandidate: false,
+            sports: [
+              {
+                sportRequirementId: 'sport-1',
+                positionRoleHeld: 'Captain',
+                startDate: '2026-06-10',
+                endDate: '2026-06-24',
+                nameOfSport: [
+                  {
+                    source: 'MASTER',
+                    id: 'sport-opt-1',
+                    label: 'Badminton',
+                  },
+                ],
+                representedOrganization: [
+                  {
+                    source: 'MASTER',
+                    id: 'org-1',
+                    label: 'OXO Labs',
+                  },
+                ],
+                organizationLocations: [
+                  {
+                    source: 'MASTER',
+                    id: 'loc-2',
+                    label: 'Aalborg, Denmark',
+                  },
+                ],
+                levelRepresented: [
+                  {
+                    source: 'MASTER',
+                    id: 'level-1',
+                    label: 'International Level',
+                  },
+                ],
+              },
+            ],
+          },
+          volunteering: {
+            isEnabled: true,
+            dataTakenFromCandidate: false,
+            volunteering: [
+              {
+                volunteeringRequirementId: 'vol-1',
+                positionRole: 'Coordinator',
+                startDate: '2026-06-10',
+                endDate: '2026-06-27',
+                organization: [
+                  {
+                    source: 'MASTER',
+                    id: 'org-1',
+                    label: 'OXO Labs',
+                  },
+                ],
+                organizationLocations: [
+                  {
+                    source: 'MASTER',
+                    id: 'loc-1',
+                    label: 'Aachen, North Rhine-Westphalia, Germany',
+                  },
+                ],
+                cause: [
+                  {
+                    source: 'MASTER',
+                    id: 'cause-1',
+                    label: 'Education',
+                  },
+                ],
+              },
+            ],
+          },
+        },
+      },
+      { ...FALLBACK_FORM }
+    );
+
+    expect(result.projectsRequirements?.isEnabled).toBe(true);
+    expect(result.projectsRequirements?.projects[0]).toEqual(
+      expect.objectContaining({
+        id: 'project-req-1',
+        startDate: '2026-06-03',
+        endDate: '2026-06-19',
+      })
+    );
+    expect(result.projectsRequirements?.projects[0].organizations[0]).toEqual(
+      expect.objectContaining({ value: 'org-1', label: 'OXO Labs' })
+    );
+
+    expect(result.preferredPublications?.isEnabled).toBe(true);
+    expect(result.preferredPublications?.publications[0]).toEqual(
+      expect.objectContaining({
+        id: 'pub-1',
+        acceptedPublisher: 'Publisher A',
+        publishedDateFrom: '2026-06-02',
+        publishedDateTo: '2026-06-12',
+      })
+    );
+
+    expect(result.preferredClubSocieties?.isEnabled).toBe(true);
+    expect(result.preferredClubSocieties?.clubSocieties[0]).toEqual(
+      expect.objectContaining({
+        id: 'club-1',
+        position: 'Leader',
+      })
+    );
+    expect(
+      result.preferredClubSocieties?.clubSocieties[0].representedOrganization[0]
+    ).toEqual(expect.objectContaining({ value: 'org-1', label: 'OXO Labs' }));
+
+    expect(result.preferredSports?.isEnabled).toBe(true);
+    expect(result.preferredSports?.sports[0]).toEqual(
+      expect.objectContaining({
+        id: 'sport-1',
+        position: 'Captain',
+      })
+    );
+    expect(result.preferredSports?.sports[0].sport[0]).toEqual(
+      expect.objectContaining({ value: 'sport-opt-1', label: 'Badminton' })
+    );
+    expect(result.preferredSports?.sports[0].levelRepresented[0]).toEqual(
+      expect.objectContaining({
+        value: 'level-1',
+        label: 'International Level',
+      })
+    );
+
+    expect(result.preferredVolunteering?.isEnabled).toBe(true);
+    expect(result.preferredVolunteering?.volunteering[0]).toEqual(
+      expect.objectContaining({
+        id: 'vol-1',
+        position: 'Coordinator',
+      })
+    );
+    expect(
+      result.preferredVolunteering?.volunteering[0].organizationName[0]
+    ).toEqual(expect.objectContaining({ value: 'org-1', label: 'OXO Labs' }));
+    expect(result.preferredVolunteering?.volunteering[0].cause[0]).toEqual(
+      expect.objectContaining({ value: 'cause-1', label: 'Education' })
+    );
+  });
+});

@@ -11,6 +11,7 @@ export {
 } from '@/views/vacancies/hooks/queries/use-places-query';
 export { useSocietiesQuery } from '@/views/vacancies/hooks/queries/use-societies-query';
 export { useSportsQuery } from '@/views/vacancies/hooks/queries/use-sports-query';
+export { useSportLevelsQuery } from '@/views/vacancies/hooks/queries/use-sport-levels-query';
 export { useSkillsQuery } from '@/views/vacancies/hooks/queries/use-skills-query';
 export { useCareerPathsQuery } from '@/views/vacancies/hooks/queries/use-career-paths-query';
 export { useLanguagesQuery } from '@/views/vacancies/hooks/queries/use-languages-query';
