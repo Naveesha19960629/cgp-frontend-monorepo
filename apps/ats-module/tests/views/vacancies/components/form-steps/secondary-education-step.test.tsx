@@ -25,7 +25,7 @@ const {
     secondaryEducation: [
       { isEnabled: false, dataTakenFromCandidate: false, content: [] },
     ],
-    status: undefined,
+    status: undefined as string | undefined,
   },
   mockSetForm: vi.fn(),
   mockSetStepGuard: vi.fn(),

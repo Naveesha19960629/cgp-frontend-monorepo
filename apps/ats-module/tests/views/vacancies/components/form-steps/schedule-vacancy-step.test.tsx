@@ -97,7 +97,7 @@ describe('ScheduleVacancyStep', () => {
   const mockOnBack = vi.fn();
   const mockOnSubmit = vi.fn();
   const mockOnNext = vi.fn();
-  const mockOnCancel = vi.fn();
+  const mockOnCancel = vi.fn() as ReturnType<typeof vi.fn>;
   const mockSetForm = vi.fn();
   const mockCreateVacancy = vi.fn();
   const mockStepPersistRef: { current: (() => void) | null } = {
