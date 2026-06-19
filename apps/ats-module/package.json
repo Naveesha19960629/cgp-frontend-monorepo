@@ -1,7 +1,7 @@
 {
   "name": "ats-module",
   "private": true,
-  "version": "0.1.67",
+  "version": "0.1.69",
   "type": "module",
   "nx": {
     "projectType": "application"
