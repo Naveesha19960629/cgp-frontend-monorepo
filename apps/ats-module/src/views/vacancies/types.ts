@@ -1008,12 +1008,64 @@ interface VacancyViewProfileRequirement {
   }[];
 }
 
+interface VacancyViewSecondaryEducation {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  content: {
+    acceptsHomeSchooling: boolean;
+    schools: string[];
+    schoolLocations: string[];
+    examinations: string[];
+    secondaryAwardingBody: string[];
+    fieldsOfStudy: string[];
+    grade: string;
+    startDate: string;
+    endDate: string;
+    result: string;
+  }[];
+}
+
+interface VacancyViewTertiaryEducation {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  content: {
+    qualificationName: string[];
+    tertiaryAwardingBody: string[];
+    tertiaryAwardingBodyLocations: string[];
+    levelOfQualification: string[];
+    specialization: string[];
+    studyMode: string[];
+    studyPattern: string[];
+    deliverySchedule: string[];
+    batch: string[];
+    department: string[];
+    faculty: string[];
+    grade: string;
+  }[];
+}
+
+interface VacancyViewLicenseCertificates {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  content: {
+    nameOfLicenseCert: string[];
+    issuingOrganization: string[];
+    organizationLocations: string[];
+    internationallyAccepted: boolean;
+    issueDate: string;
+    expirationDate: string;
+  }[];
+}
+
 interface VacancyViewModel {
   title: string;
   status: string;
   applicantCount: number;
   jobRequirement: VacancyViewJobRequirement;
   profileRequirement: VacancyViewProfileRequirement;
+  secondaryEducation?: VacancyViewSecondaryEducation;
+  tertiaryEducation?: VacancyViewTertiaryEducation;
+  licenseCertificates?: VacancyViewLicenseCertificates;
 }
 
 interface VacancyActiveToggleProps {

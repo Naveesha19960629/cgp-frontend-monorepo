@@ -117,6 +117,145 @@ function getAddressStateProvince(addr: Record<string, unknown>): string {
   return toLabel(addr.stateProvince ?? addr.state);
 }
 
+function readSectionValue(
+  rawVacancy: Record<string, unknown>,
+  sectionSource: Record<string, unknown>,
+  keys: string[]
+): unknown {
+  for (const key of keys) {
+    const inData = sectionSource[key];
+    if (inData !== undefined) {
+      return inData;
+    }
+
+    const inRoot = rawVacancy[key];
+    if (inRoot !== undefined) {
+      return inRoot;
+    }
+  }
+
+  return undefined;
+}
+
+function normalizeSecondaryEducation(raw: unknown) {
+  const entry: unknown = Array.isArray(raw) ? raw[0] : raw;
+  if (!isRecord(entry)) {
+    return undefined;
+  }
+
+  const isEnabled =
+    typeof entry.isEnabled === 'boolean' ? entry.isEnabled : false;
+  const dataTakenFromCandidate =
+    typeof entry.dataTakenFromCandidate === 'boolean'
+      ? entry.dataTakenFromCandidate
+      : false;
+  const rawContent = Array.isArray(entry.content)
+    ? entry.content
+    : Array.isArray(entry.secondaryEducation)
+      ? entry.secondaryEducation
+      : [];
+
+  const content = rawContent.filter(isRecord).map(item => ({
+    acceptsHomeSchooling: Boolean(item.acceptsHomeSchooling),
+    schools: toTagList(item.schools),
+    schoolLocations: toTagList(item.schoolLocations),
+    examinations: toTagList(item.examinations),
+    secondaryAwardingBody: toTagList(item.secondaryAwardingBody),
+    fieldsOfStudy: toTagList(item.fieldsOfStudy),
+    grade: toSafeString(item.grade),
+    startDate: toSafeString(item.startDate),
+    endDate: toSafeString(item.endDate),
+    result: toSafeString(item.result),
+  }));
+
+  return {
+    isEnabled,
+    dataTakenFromCandidate,
+    content,
+  };
+}
+
+function normalizeTertiaryEducation(raw: unknown) {
+  const entry: unknown = Array.isArray(raw) ? raw[0] : raw;
+  if (!isRecord(entry)) {
+    return undefined;
+  }
+
+  const isEnabled =
+    typeof entry.isEnabled === 'boolean' ? entry.isEnabled : false;
+  const dataTakenFromCandidate =
+    typeof entry.dataTakenFromCandidate === 'boolean'
+      ? entry.dataTakenFromCandidate
+      : false;
+  const rawContent = Array.isArray(entry.content)
+    ? entry.content
+    : Array.isArray(entry.tertiaryEducation)
+      ? entry.tertiaryEducation
+      : [];
+
+  const content = rawContent.filter(isRecord).map(item => ({
+    qualificationName: toTagList(item.qualificationName),
+    tertiaryAwardingBody: toTagList(item.tertiaryAwardingBody),
+    tertiaryAwardingBodyLocations: toTagList(
+      item.tertiaryAwardingBodyLocations
+    ),
+    levelOfQualification: toTagList(item.levelOfQualification),
+    specialization: toTagList(item.specialization),
+    studyMode: toTagList(item.studyMode),
+    studyPattern: toTagList(item.studyPattern),
+    deliverySchedule: toTagList(item.deliverySchedule),
+    batch: toTagList(item.batch),
+    department: toTagList(item.department),
+    faculty: toTagList(item.faculty),
+    grade: toSafeString(item.grade),
+  }));
+
+  return {
+    isEnabled,
+    dataTakenFromCandidate,
+    content,
+  };
+}
+
+function normalizeLicenseCertificates(raw: unknown) {
+  const entry: unknown = Array.isArray(raw) ? raw[0] : raw;
+  if (!isRecord(entry)) {
+    return undefined;
+  }
+
+  const isEnabled =
+    typeof entry.isEnabled === 'boolean' ? entry.isEnabled : false;
+  const dataTakenFromCandidate =
+    typeof entry.dataTakenFromCandidate === 'boolean'
+      ? entry.dataTakenFromCandidate
+      : false;
+  const rawContent = Array.isArray(entry.content)
+    ? entry.content
+    : Array.isArray(entry.licenseCertificates)
+      ? entry.licenseCertificates
+      : Array.isArray(entry.licensesAndCertifications)
+        ? entry.licensesAndCertifications
+        : [];
+
+  const content = rawContent.filter(isRecord).map(item => ({
+    nameOfLicenseCert: toTagList(item.nameOfLicenseCert),
+    issuingOrganization: toTagList(item.issuingOrganization),
+    organizationLocations: toTagList(item.organizationLocations),
+    internationallyAccepted:
+      typeof item.internationallyAccepted === 'boolean'
+        ? item.internationallyAccepted
+        : false,
+    issueDate: toSafeString(item.issueDate),
+    expirationDate: toSafeString(item.expirationDate),
+  }));
+
+  return {
+    isEnabled,
+    dataTakenFromCandidate,
+    content,
+  };
+}
+
 function toVacancyViewModel(
   rawVacancy: Record<string, unknown>
 ): VacancyViewModel {
@@ -160,6 +299,20 @@ function toVacancyViewModel(
     };
   });
 
+  const secondaryEducationSection = readSectionValue(
+    rawVacancy,
+    sectionSource,
+    ['secondaryEducation']
+  );
+  const tertiaryEducationSection = readSectionValue(rawVacancy, sectionSource, [
+    'tertiaryEducation',
+  ]);
+  const licenseCertificatesSection = readSectionValue(
+    rawVacancy,
+    sectionSource,
+    ['licenseCertificates', 'licensesAndCertifications']
+  );
+
   return {
     title,
     status: toSafeString(rawVacancy.status),
@@ -190,6 +343,11 @@ function toVacancyViewModel(
       maritalStatus: toLabel(prContent.maritalStatus),
       addresses,
     },
+    secondaryEducation: normalizeSecondaryEducation(secondaryEducationSection),
+    tertiaryEducation: normalizeTertiaryEducation(tertiaryEducationSection),
+    licenseCertificates: normalizeLicenseCertificates(
+      licenseCertificatesSection
+    ),
   };
 }
 
