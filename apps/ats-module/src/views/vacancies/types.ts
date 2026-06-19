@@ -943,6 +943,7 @@ interface DataTableFacetedFilterProps {
 interface VacancyDataTableProps<TData> {
   table: ReturnType<typeof useReactTable<TData>>;
   isLoading?: boolean;
+  onRowClick?: (row: TData) => void;
 }
 
 interface VacancyTableActionProps {
@@ -977,8 +978,28 @@ interface CreateColumnsOptions {
   sortBy: string;
   sortOrder: 'asc' | 'desc' | null;
   onSort: (columnKey: string) => void;
+  onView: (vacancyId: string) => void;
   onEdit: (vacancyId: string) => void;
   t: (key: string) => string;
+}
+
+interface VacancyViewJobRequirement {
+  discipline: string[];
+  careerPath: string[];
+  level: string[];
+  role: string[];
+  jobTitle: string[];
+  employmentType: string[];
+  workSchedule: string[];
+  engagementModel: string[];
+  description: string;
+}
+
+interface VacancyViewModel {
+  title: string;
+  status: string;
+  applicantCount: number;
+  jobRequirement: VacancyViewJobRequirement;
 }
 
 interface VacancyActiveToggleProps {
@@ -1245,6 +1266,8 @@ export type {
   VacancyStatusBadgeProps,
   VacancyActiveToggleProps,
   CreateColumnsOptions,
+  VacancyViewModel,
+  VacancyViewJobRequirement,
   VacancyTablePaginationProps,
   SortableHeaderProps,
   VacancyTableActionProps,

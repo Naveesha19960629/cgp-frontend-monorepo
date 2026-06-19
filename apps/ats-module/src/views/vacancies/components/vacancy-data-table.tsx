@@ -18,6 +18,7 @@ import { type Column, flexRender } from '@tanstack/react-table';
 export default function VacancyDataTable<TData>({
   table,
   isLoading,
+  onRowClick,
 }: VacancyDataTableProps<TData>) {
   const scrollRootRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -181,7 +182,26 @@ export default function VacancyDataTable<TData>({
                     <TableRow
                       key={row.id}
                       data-state={row.getIsSelected() && 'selected'}
-                      className="h-18 hover:bg-transparent"
+                      className={cn(
+                        'h-18 hover:bg-transparent',
+                        onRowClick && 'cursor-pointer'
+                      )}
+                      onClick={event => {
+                        if (!onRowClick) {
+                          return;
+                        }
+
+                        const target = event.target as HTMLElement;
+                        const isInteractive = target.closest(
+                          'button, input, a, label, [role="checkbox"], [data-row-click-ignore="true"]'
+                        );
+
+                        if (isInteractive) {
+                          return;
+                        }
+
+                        onRowClick(row.original);
+                      }}
                     >
                       {row.getVisibleCells().map(cell => (
                         <TableCell

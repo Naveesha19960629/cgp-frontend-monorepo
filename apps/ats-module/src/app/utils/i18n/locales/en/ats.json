@@ -127,6 +127,17 @@
       "invalidId": "Invalid vacancy ID.",
       "failedToLoadVacancy": "Failed to load vacancy details. Please try again."
     },
+    "view": {
+      "untitledVacancy": "Untitled Vacancy",
+      "applied": "Applied",
+      "sections": {
+        "jobRequirements": "Job Requirement"
+      },
+      "actions": {
+        "showMore": "Show More",
+        "showLess": "Show Less"
+      }
+    },
     "createVacancy": {
       "heading": "Add Vacancy",
       "formTitle": "Lets Begin with the Vacancy Title",
