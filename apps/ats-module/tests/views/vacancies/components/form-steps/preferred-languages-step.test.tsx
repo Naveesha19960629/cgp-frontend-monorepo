@@ -242,6 +242,7 @@ function makeForm(
       },
     },
     setForm: vi.fn(),
+    onCancel: vi.fn(),
     stepPersistRef: { current: null },
     stepDisableRef: { current: null },
     currentStepIndex: 0,
@@ -253,7 +254,8 @@ function renderStep(formOverrides: Parameters<typeof makeForm>[0] = {}) {
   const onNext = vi.fn();
   const onBack = vi.fn();
   const onSubmit = vi.fn();
-  mockUseVacancyForm.mockReturnValue(makeForm(formOverrides));
+  const vacancyFormState = makeForm(formOverrides);
+  mockUseVacancyForm.mockReturnValue(vacancyFormState);
   render(
     <PreferredLanguagesStep
       onNext={onNext}
@@ -261,7 +263,7 @@ function renderStep(formOverrides: Parameters<typeof makeForm>[0] = {}) {
       onSubmit={onSubmit}
     />
   );
-  return { onNext, onBack, onSubmit };
+  return { onNext, onBack, onSubmit, onCancel: vacancyFormState.onCancel };
 }
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
@@ -417,15 +419,18 @@ describe('PreferredLanguagesStep', () => {
   });
 
   describe('emptyDisableDialog', () => {
-    it('shows when Next is clicked with no items selected', async () => {
+    it('keeps Next disabled when enabled with no items selected', async () => {
       const user = userEvent.setup();
       const { onNext } = renderStep();
+      const nextButton = screen.getByText('common.next');
 
-      await user.click(screen.getByText('common.next'));
+      expect(nextButton).toBeDisabled();
+
+      await user.click(nextButton);
 
       expect(
-        screen.getByText('preferredLanguages.emptyDisableDialog.title')
-      ).toBeInTheDocument();
+        screen.queryByText('preferredLanguages.emptyDisableDialog.title')
+      ).not.toBeInTheDocument();
       expect(onNext).not.toHaveBeenCalled();
     });
 
@@ -444,15 +449,11 @@ describe('PreferredLanguagesStep', () => {
       expect(onNext).toHaveBeenCalledTimes(1);
     });
 
-    it('closes without changing state when Cancel is clicked', async () => {
+    it('does not open emptyDisableDialog while Next is disabled', async () => {
       const user = userEvent.setup();
       const { onNext } = renderStep();
 
       await user.click(screen.getByText('common.next'));
-      await screen.findByText('preferredLanguages.emptyDisableDialog.title');
-      await user.click(
-        screen.getByText('preferredLanguages.emptyDisableDialog.cancel')
-      );
 
       expect(
         screen.queryByText('preferredLanguages.emptyDisableDialog.title')
@@ -460,36 +461,28 @@ describe('PreferredLanguagesStep', () => {
       expect(onNext).not.toHaveBeenCalled();
     });
 
-    it('calls onNext with disabled payload when Disable is clicked', async () => {
+    it('does not call onNext with disabled payload while Next is disabled', async () => {
       const user = userEvent.setup();
       const { onNext } = renderStep();
 
       await user.click(screen.getByText('common.next'));
-      await screen.findByText('preferredLanguages.emptyDisableDialog.title');
-      await user.click(
-        screen.getByText('preferredLanguages.emptyDisableDialog.disable')
-      );
+      expect(
+        screen.queryByText('preferredLanguages.emptyDisableDialog.title')
+      ).not.toBeInTheDocument();
 
-      expect(onNext).toHaveBeenCalledWith({
-        preferredLanguages: {
-          isEnabled: false,
-          dataTakenFromCandidate: false,
-          languages: [],
-        },
-      });
+      expect(onNext).not.toHaveBeenCalled();
     });
 
-    it('fires SuccessToast when Disable is clicked', async () => {
+    it('does not fire SuccessToast while Next is disabled', async () => {
       const user = userEvent.setup();
       renderStep();
 
       await user.click(screen.getByText('common.next'));
-      await screen.findByText('preferredLanguages.emptyDisableDialog.title');
-      await user.click(
-        screen.getByText('preferredLanguages.emptyDisableDialog.disable')
-      );
+      expect(
+        screen.queryByText('preferredLanguages.emptyDisableDialog.title')
+      ).not.toBeInTheDocument();
 
-      expect(mockSuccessToast).toHaveBeenCalledWith('preferredLanguages.title');
+      expect(mockSuccessToast).not.toHaveBeenCalled();
     });
   });
 
@@ -636,18 +629,20 @@ describe('PreferredLanguagesStep', () => {
   });
 
   describe('footer navigation', () => {
-    it('calls onBack when Cancel is clicked', async () => {
+    it('calls onCancel from vacancy form context when Cancel is clicked', async () => {
       const user = userEvent.setup();
-      const { onBack } = renderStep();
+      const { onCancel } = renderStep();
 
       await user.click(screen.getByText('common.cancel'));
 
-      expect(onBack).toHaveBeenCalledTimes(1);
+      expect(onCancel).toHaveBeenCalledTimes(1);
     });
 
     it('calls onBack when the header back button is clicked', async () => {
       const user = userEvent.setup();
-      const { onBack } = renderStep();
+      const { onBack } = renderStep({
+        languages: [{ id: 'lang-1', label: 'English' }],
+      });
 
       await user.click(screen.getByRole('button', { name: 'common.back' }));
 

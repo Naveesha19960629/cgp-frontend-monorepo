@@ -271,6 +271,7 @@ function makeForm(
       },
     },
     setForm: vi.fn(),
+    onCancel: vi.fn(),
     stepPersistRef: { current: null },
     stepDisableRef: { current: null },
     currentStepIndex: 0,
@@ -282,11 +283,12 @@ function renderStep(formOverrides: Parameters<typeof makeForm>[0] = {}) {
   const onNext = vi.fn();
   const onBack = vi.fn();
   const onSubmit = vi.fn();
-  mockUseVacancyForm.mockReturnValue(makeForm(formOverrides));
+  const vacancyFormState = makeForm(formOverrides);
+  mockUseVacancyForm.mockReturnValue(vacancyFormState);
   render(
     <PreferredSkillsStep onNext={onNext} onBack={onBack} onSubmit={onSubmit} />
   );
-  return { onNext, onBack, onSubmit };
+  return { onNext, onBack, onSubmit, onCancel: vacancyFormState.onCancel };
 }
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
@@ -459,15 +461,18 @@ describe('PreferredSkillsStep', () => {
   });
 
   describe('emptyDisableDialog', () => {
-    it('shows when Next is clicked with no items selected', async () => {
+    it('keeps Next disabled when enabled with no items selected', async () => {
       const user = userEvent.setup();
       const { onNext } = renderStep();
+      const nextButton = screen.getByText('common.next');
 
-      await user.click(screen.getByText('common.next'));
+      expect(nextButton).toBeDisabled();
+
+      await user.click(nextButton);
 
       expect(
-        screen.getByText('preferredSkills.emptyDisableDialog.title')
-      ).toBeInTheDocument();
+        screen.queryByText('preferredSkills.emptyDisableDialog.title')
+      ).not.toBeInTheDocument();
       expect(onNext).not.toHaveBeenCalled();
     });
 
@@ -486,15 +491,11 @@ describe('PreferredSkillsStep', () => {
       expect(onNext).toHaveBeenCalledTimes(1);
     });
 
-    it('closes without changing state when Cancel is clicked', async () => {
+    it('does not open emptyDisableDialog while Next is disabled', async () => {
       const user = userEvent.setup();
       const { onNext } = renderStep();
 
       await user.click(screen.getByText('common.next'));
-      await screen.findByText('preferredSkills.emptyDisableDialog.title');
-      await user.click(
-        screen.getByText('preferredSkills.emptyDisableDialog.cancel')
-      );
 
       expect(
         screen.queryByText('preferredSkills.emptyDisableDialog.title')
@@ -502,36 +503,28 @@ describe('PreferredSkillsStep', () => {
       expect(onNext).not.toHaveBeenCalled();
     });
 
-    it('calls onNext with disabled payload when Disable is clicked', async () => {
+    it('does not call onNext with disabled payload while Next is disabled', async () => {
       const user = userEvent.setup();
       const { onNext } = renderStep();
 
       await user.click(screen.getByText('common.next'));
-      await screen.findByText('preferredSkills.emptyDisableDialog.title');
-      await user.click(
-        screen.getByText('preferredSkills.emptyDisableDialog.disable')
-      );
+      expect(
+        screen.queryByText('preferredSkills.emptyDisableDialog.title')
+      ).not.toBeInTheDocument();
 
-      expect(onNext).toHaveBeenCalledWith({
-        preferredSkills: {
-          isEnabled: false,
-          dataTakenFromCandidate: false,
-          skills: [],
-        },
-      });
+      expect(onNext).not.toHaveBeenCalled();
     });
 
-    it('fires SuccessToast when Disable is clicked', async () => {
+    it('does not fire SuccessToast while Next is disabled', async () => {
       const user = userEvent.setup();
       renderStep();
 
       await user.click(screen.getByText('common.next'));
-      await screen.findByText('preferredSkills.emptyDisableDialog.title');
-      await user.click(
-        screen.getByText('preferredSkills.emptyDisableDialog.disable')
-      );
+      expect(
+        screen.queryByText('preferredSkills.emptyDisableDialog.title')
+      ).not.toBeInTheDocument();
 
-      expect(mockSuccessToast).toHaveBeenCalledWith('preferredSkills.title');
+      expect(mockSuccessToast).not.toHaveBeenCalled();
     });
   });
 
@@ -721,18 +714,28 @@ describe('PreferredSkillsStep', () => {
   });
 
   describe('footer navigation', () => {
-    it('calls onBack when Cancel is clicked', async () => {
+    it('calls onCancel from vacancy form context when Cancel is clicked', async () => {
       const user = userEvent.setup();
-      const { onBack } = renderStep();
+      const { onCancel } = renderStep();
 
       await user.click(screen.getByText('common.cancel'));
 
-      expect(onBack).toHaveBeenCalledTimes(1);
+      expect(onCancel).toHaveBeenCalledTimes(1);
     });
 
     it('calls onBack when the header back button is clicked', async () => {
       const user = userEvent.setup();
-      const { onBack } = renderStep();
+      const { onBack } = renderStep({
+        skills: [
+          {
+            skillId: 'skill-1',
+            skillName: 'JavaScript',
+            careerPathId: 'cp-1',
+            careerPathName: 'Frontend',
+            displayValue: 'JavaScript - Frontend',
+          },
+        ],
+      });
 
       await user.click(screen.getByRole('button', { name: 'common.back' }));
 
