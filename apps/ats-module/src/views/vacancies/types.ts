@@ -995,11 +995,25 @@ interface VacancyViewJobRequirement {
   description: string;
 }
 
+interface VacancyViewProfileRequirement {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  gender: string;
+  maritalStatus: string;
+  addresses: {
+    city: string;
+    stateProvince: string;
+    country: string;
+    postalCode: string;
+  }[];
+}
+
 interface VacancyViewModel {
   title: string;
   status: string;
   applicantCount: number;
   jobRequirement: VacancyViewJobRequirement;
+  profileRequirement: VacancyViewProfileRequirement;
 }
 
 interface VacancyActiveToggleProps {

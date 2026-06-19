@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 import {
   VacancyJobRequirementsSection,
+  VacancyProfileRequirementsSection,
   VacancyStatusBadge,
   VacancyView,
 } from '@/views/vacancies/components';
@@ -120,6 +121,9 @@ export default function VacancyIdViewPage() {
       <VacancyView.Body>
         <VacancyJobRequirementsSection
           jobRequirement={viewModel.jobRequirement}
+        />
+        <VacancyProfileRequirementsSection
+          profileRequirement={viewModel.profileRequirement}
         />
       </VacancyView.Body>
     </VacancyView.Root>

@@ -131,7 +131,8 @@
       "untitledVacancy": "Untitled Vacancy",
       "applied": "Applied",
       "sections": {
-        "jobRequirements": "Job Requirement"
+        "jobRequirements": "Job Requirement",
+        "profileRequirements": "Profile Requirements"
       },
       "actions": {
         "showMore": "Show More",
