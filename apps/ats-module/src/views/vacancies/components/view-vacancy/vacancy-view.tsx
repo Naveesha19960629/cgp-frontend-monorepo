@@ -23,7 +23,7 @@ function Header({
   actions?: ReactNode;
 }) {
   return (
-    <header className="mb-5 flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-4">
+    <header className="mb-5 flex flex-wrap items-center justify-between gap-3">
       <div className="flex min-w-0 items-center gap-3">
         <h1 className="truncate text-2xl/8 font-bold text-slate-900">
           {title}
@@ -129,7 +129,7 @@ function BackHeader({
   onBack: () => void;
 }) {
   return (
-    <header className="mb-5 flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-4">
+    <header className="mb-5 flex flex-wrap items-center justify-between gap-3">
       <div className="flex min-w-0 items-center gap-2">
         <button
           type="button"
