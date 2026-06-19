@@ -25,10 +25,7 @@ import type {
 import { CharacterCount } from '@cgp/ui-kit/components/character-count';
 import { Combobox } from '@cgp/ui-kit/components/combobox';
 import MultipleSelector from '@cgp/ui-kit/components/multi-select';
-import type {
-  MultipleSelectorRef,
-  Option,
-} from '@cgp/ui-kit/components/multi-select';
+import type { Option } from '@cgp/ui-kit/components/multi-select';
 import { Badge } from '@cgp/ui-kit/components/ui/badge';
 import { Button } from '@cgp/ui-kit/components/ui/button';
 import { Checkbox } from '@cgp/ui-kit/components/ui/checkbox';
@@ -123,7 +120,6 @@ export default function PreferredSkillsStep({
   // Skill search state for the query
   const [skillSearch, setSkillSearch] = useState('');
   const [hasMaxError, setHasMaxError] = useState(false);
-  const skillSelectorRef = useRef<MultipleSelectorRef>(null);
 
   // Career path popover
   const [pendingSkillName, setPendingSkillName] = useState('');
@@ -390,7 +386,7 @@ export default function PreferredSkillsStep({
             type="button"
             aria-label={t('common.back')}
             className={cn(
-              'text-slate-700 transition-colors hover:text-slate-900',
+              'cursor-pointer text-slate-700 transition-colors hover:text-slate-900',
               isStepActionDisabled && 'cursor-not-allowed opacity-50'
             )}
             onClick={onBack}
@@ -465,7 +461,14 @@ export default function PreferredSkillsStep({
             </div>
 
             <MultipleSelector
-              ref={skillSelectorRef}
+              key={
+                isCareerPathPopoverOpen
+                  ? 'skills-selector-locked'
+                  : 'skills-selector-active'
+              }
+              className={cn(
+                isCareerPathPopoverOpen && 'pointer-events-none cursor-default'
+              )}
               value={selectedSkills.map(s => ({
                 value: s.skillId || s.skillName,
                 label: s.displayValue,
@@ -487,7 +490,11 @@ export default function PreferredSkillsStep({
               hideClearAllButton
               maxSelected={MAX_SKILLS}
               disabled={!isEnabled || dataTakenFromCandidate}
-              inputProps={{ maxLength: MAX_SKILL_CHARS }}
+              inputProps={{
+                maxLength: MAX_SKILL_CHARS,
+                readOnly: isCareerPathPopoverOpen,
+                tabIndex: isCareerPathPopoverOpen ? -1 : 0,
+              }}
               loading={isSkillsLoading}
               placeholder={t('preferredSkills.input.placeholder')}
               loadingIndicator={

@@ -152,7 +152,7 @@ export default function PreferredCausesStep({
             type="button"
             aria-label={t('common.back')}
             className={cn(
-              'text-slate-700 transition-colors hover:text-slate-900',
+              'cursor-pointer text-slate-700 transition-colors hover:text-slate-900',
               isStepActionDisabled && 'cursor-not-allowed opacity-50'
             )}
             onClick={onBack}

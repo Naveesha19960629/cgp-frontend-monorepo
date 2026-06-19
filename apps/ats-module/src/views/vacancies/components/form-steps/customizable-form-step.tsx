@@ -282,7 +282,7 @@ function QuestionCard({
                     <button
                       type="button"
                       onClick={() => removeOption(opt.id)}
-                      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md border border-slate-200 bg-white text-neutral-600 transition-colors hover:border-red-300 hover:text-red-500"
+                      className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-md border border-slate-200 bg-white text-neutral-600 transition-colors hover:border-red-300 hover:text-red-500"
                       aria-label="Remove option"
                     >
                       <X className="size-6" />
@@ -296,7 +296,7 @@ function QuestionCard({
           <div className="mt-4 flex justify-end">
             <button
               type="button"
-              className="inline-flex h-9 items-center gap-1 rounded-lg bg-neutral-200 px-8 text-sm font-semibold text-slate-700 transition-colors hover:bg-neutral-300"
+              className="inline-flex h-9 cursor-pointer items-center gap-1 rounded-lg bg-neutral-200 px-8 text-sm font-semibold text-slate-700 transition-colors hover:bg-neutral-300"
               onClick={addOption}
             >
               <Plus className="size-5" />
@@ -336,7 +336,7 @@ function QuestionCard({
                     <button
                       type="button"
                       onClick={() => removeOption(opt.id)}
-                      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md border border-slate-200 bg-white text-neutral-600 transition-colors hover:border-red-300 hover:text-red-500"
+                      className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-md border border-slate-200 bg-white text-neutral-600 transition-colors hover:border-red-300 hover:text-red-500"
                       aria-label="Remove option"
                     >
                       <X className="size-6" />
@@ -350,7 +350,7 @@ function QuestionCard({
           <div className="mt-4 flex justify-end">
             <button
               type="button"
-              className="inline-flex h-9 items-center gap-1 rounded-lg bg-neutral-200 px-8 text-sm font-semibold text-slate-700 transition-colors hover:bg-neutral-300"
+              className="inline-flex h-9 cursor-pointer items-center gap-1 rounded-lg bg-neutral-200 px-8 text-sm font-semibold text-slate-700 transition-colors hover:bg-neutral-300"
               onClick={addOption}
             >
               <Plus className="size-5" />
@@ -390,7 +390,7 @@ function QuestionCard({
                     <button
                       type="button"
                       onClick={() => removeOption(opt.id)}
-                      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md border border-slate-200 bg-white text-neutral-600 transition-colors hover:border-red-300 hover:text-red-500"
+                      className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-md border border-slate-200 bg-white text-neutral-600 transition-colors hover:border-red-300 hover:text-red-500"
                       aria-label="Remove option"
                     >
                       <X className="size-6" />
@@ -404,7 +404,7 @@ function QuestionCard({
           <div className="mt-4 flex justify-end">
             <button
               type="button"
-              className="inline-flex h-9 items-center gap-1 rounded-lg bg-neutral-200 px-8 text-sm font-semibold text-slate-700 transition-colors hover:bg-neutral-300"
+              className="inline-flex h-9 cursor-pointer items-center gap-1 rounded-lg bg-neutral-200 px-8 text-sm font-semibold text-slate-700 transition-colors hover:bg-neutral-300"
               onClick={addOption}
             >
               <Plus className="size-5" />
@@ -510,7 +510,7 @@ function QuestionCard({
         <button
           type="button"
           aria-label="Duplicate question"
-          className="text-slate-500 transition-colors hover:text-slate-700"
+          className="cursor-pointer text-slate-500 transition-colors hover:text-slate-700"
           onClick={onDuplicate}
         >
           <Simcard2 size={24} />
@@ -521,7 +521,7 @@ function QuestionCard({
           className={
             isDeleteDisabled
               ? 'cursor-not-allowed text-slate-300'
-              : 'text-slate-500 transition-colors hover:text-red-500'
+              : 'cursor-pointer text-slate-500 transition-colors hover:text-red-500'
           }
           disabled={isDeleteDisabled}
           onClick={onRemove}
@@ -971,7 +971,7 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
           <button
             type="button"
             onClick={onBack}
-            className="text-slate-700 transition-colors hover:text-slate-900"
+            className="cursor-pointer text-slate-700 transition-colors hover:text-slate-900"
             aria-label={t('common.back')}
           >
             <ArrowLeft2 size={24} />
@@ -1034,7 +1034,7 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
                     <button
                       type="button"
                       aria-label="Duplicate form"
-                      className="transition-colors hover:text-slate-700"
+                      className="cursor-pointer transition-colors hover:text-slate-700"
                       onClick={() => duplicateForm(form.id)}
                     >
                       <Simcard2 size={24} />
@@ -1046,7 +1046,7 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
                       className={
                         forms.length === 1
                           ? 'cursor-not-allowed text-slate-300'
-                          : 'transition-colors hover:text-red-600'
+                          : 'cursor-pointer transition-colors hover:text-red-600'
                       }
                       disabled={forms.length === 1}
                       onClick={() => setPendingFormDelete(form.id)}
@@ -1057,7 +1057,7 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
                     <button
                       type="button"
                       aria-label={form.isOpen ? 'Collapse form' : 'Expand form'}
-                      className="transition-colors hover:text-slate-700"
+                      className="cursor-pointer transition-colors hover:text-slate-700"
                       onClick={() => toggleOpen(form.id)}
                     >
                       <ArrowDown2
@@ -1116,7 +1116,7 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
                     <div className="mt-5 flex justify-end">
                       <button
                         type="button"
-                        className="inline-flex h-14 items-center gap-1 rounded-lg bg-neutral-200 px-8 text-sm font-semibold text-slate-700 transition-colors hover:bg-neutral-300"
+                        className="inline-flex h-14 cursor-pointer items-center gap-1 rounded-lg bg-neutral-200 px-8 text-sm font-semibold text-slate-700 transition-colors hover:bg-neutral-300"
                         onClick={() => addQuestion(form.id)}
                       >
                         <Plus className="size-5" />
