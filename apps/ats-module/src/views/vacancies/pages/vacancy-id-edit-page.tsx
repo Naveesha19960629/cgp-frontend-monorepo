@@ -105,8 +105,7 @@ function EditVacancyContent({ id }: { id: string | undefined }) {
       return;
     }
 
-    const rawData = vacancyResponse.data;
-    const vacancyCandidate = rawData?.vacancy ?? rawData;
+    const vacancyCandidate = vacancyResponse.data;
     if (!isRecord(vacancyCandidate)) {
       return;
     }

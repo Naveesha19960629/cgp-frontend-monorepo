@@ -1,26 +1,14 @@
 import type {
+  ApiResponse,
   CreateVacancyPayload,
   ScheduleVacancyPayload,
+  SingleRecordApiResponse,
   VacanciesApiResponse,
+  VacancyDetailData,
   VacancyQueryParams,
 } from '@/views/vacancies/types';
 
 import { httpClient } from '@cgp/data-access';
-
-interface CreateVacancyResponse {
-  requestId: string;
-  success: boolean;
-  message: string;
-}
-
-interface VacancyDetailResponse {
-  requestId: string;
-  success: boolean;
-  message: string;
-  data: Record<string, unknown> & {
-    vacancy?: Record<string, unknown>;
-  };
-}
 
 export const vacancyService = {
   getVacancies: async (
@@ -31,16 +19,18 @@ export const vacancyService = {
     });
     return response.data;
   },
-  getVacancyById: async (id: string): Promise<VacancyDetailResponse> => {
-    const response = await httpClient.get<VacancyDetailResponse>(
-      `/vacancies/${id}`
-    );
+  getVacancyById: async (
+    id: string
+  ): Promise<SingleRecordApiResponse<VacancyDetailData>> => {
+    const response = await httpClient.get<
+      SingleRecordApiResponse<VacancyDetailData>
+    >(`/vacancies/${id}`);
     return response.data;
   },
   createVacancy: async (
     payload: CreateVacancyPayload
-  ): Promise<CreateVacancyResponse> => {
-    const response = await httpClient.post<CreateVacancyResponse>(
+  ): Promise<ApiResponse<string>> => {
+    const response = await httpClient.post<ApiResponse<string>>(
       '/vacancies',
       payload
     );
@@ -49,8 +39,8 @@ export const vacancyService = {
   updateVacancy: async (
     id: string,
     payload: { schedule: ScheduleVacancyPayload }
-  ): Promise<CreateVacancyResponse> => {
-    const response = await httpClient.put<CreateVacancyResponse>(
+  ): Promise<ApiResponse<string>> => {
+    const response = await httpClient.put<ApiResponse<string>>(
       `/vacancies/${id}`,
       payload
     );
@@ -59,8 +49,8 @@ export const vacancyService = {
   updateDraftVacancy: async (
     id: string,
     payload: CreateVacancyPayload
-  ): Promise<CreateVacancyResponse> => {
-    const response = await httpClient.put<CreateVacancyResponse>(
+  ): Promise<ApiResponse<string>> => {
+    const response = await httpClient.put<ApiResponse<string>>(
       `/vacancies/${id}`,
       payload
     );
