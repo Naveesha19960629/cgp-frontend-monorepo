@@ -929,6 +929,7 @@
       "clubSociety": "Club / Society",
       "position": "Position / Role Held",
       "representedOrganization": "Represented Organization",
+      "organizationLocation": "Organization Location",
       "startDate": "Start Date",
       "endDate": "End Date"
     },

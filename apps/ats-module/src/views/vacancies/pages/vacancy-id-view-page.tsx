@@ -2,10 +2,21 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import {
+  VacancyCausesSection,
+  VacancyClubsSocietiesSection,
+  VacancyHobbiesSection,
+  VacancyHonoursAwardsSection,
+  VacancyIndustriesSection,
   VacancyJobRequirementsSection,
+  VacancyLanguagesSection,
+  VacancyLicensesCertificationsSection,
   VacancyProfileRequirementsSection,
+  VacancyPublicationsSection,
+  VacancySkillsSection,
+  VacancySportsSection,
   VacancyStatusBadge,
   VacancyView,
+  VacancyVolunteeringSection,
 } from '@/views/vacancies/components';
 import { useVacancyByIdQuery } from '@/views/vacancies/hooks';
 import { toVacancyViewModel } from '@/views/vacancies/utils/vacancy-view-response-helpers';
@@ -124,6 +135,31 @@ export default function VacancyIdViewPage() {
         />
         <VacancyProfileRequirementsSection
           profileRequirement={viewModel.profileRequirement}
+        />
+        <VacancyPublicationsSection
+          preferredPublications={viewModel.preferredPublications}
+        />
+        <VacancyClubsSocietiesSection
+          preferredClubSocieties={viewModel.preferredClubSocieties}
+        />
+        <VacancySportsSection preferredSports={viewModel.preferredSports} />
+        <VacancyVolunteeringSection
+          preferredVolunteering={viewModel.preferredVolunteering}
+        />
+        <VacancyHonoursAwardsSection
+          preferredHonoursAwards={viewModel.preferredHonoursAwards}
+        />
+        <VacancyLicensesCertificationsSection
+          licenseCertificates={viewModel.licenseCertificates}
+        />
+        <VacancySkillsSection preferredSkills={viewModel.preferredSkills} />
+        <VacancyLanguagesSection
+          preferredLanguages={viewModel.preferredLanguages}
+        />
+        <VacancyCausesSection preferredCauses={viewModel.preferredCauses} />
+        <VacancyHobbiesSection preferredHobbies={viewModel.preferredHobbies} />
+        <VacancyIndustriesSection
+          preferredIndustries={viewModel.preferredIndustries}
         />
       </VacancyView.Body>
     </VacancyView.Root>
