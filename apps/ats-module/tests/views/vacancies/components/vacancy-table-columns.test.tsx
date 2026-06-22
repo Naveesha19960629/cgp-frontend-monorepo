@@ -36,6 +36,7 @@ vi.mock('@/views/vacancies/components/vacancy-status-badge', () => ({
 
 const t = (key: string) => key;
 const onSort = vi.fn();
+const onView = vi.fn();
 const onEdit = vi.fn();
 
 const sampleRow: VacancyTableColumn = {
@@ -74,6 +75,7 @@ function TableWrapper({
     sortBy,
     sortOrder,
     onSort,
+    onView,
     onEdit,
     t,
   });
@@ -124,6 +126,7 @@ describe('createVacancyColumns', () => {
       sortBy: '',
       sortOrder: null,
       onSort,
+      onView,
       onEdit,
       t,
     });
@@ -135,6 +138,7 @@ describe('createVacancyColumns', () => {
       sortBy: '',
       sortOrder: null,
       onSort,
+      onView,
       onEdit,
       t,
     });
@@ -156,6 +160,15 @@ describe('createVacancyColumns', () => {
     expect(
       screen.getByText('DevOps Engineer - AWS/Kubernetes')
     ).toBeInTheDocument();
+  });
+
+  it('calls onView when title is clicked', async () => {
+    const user = userEvent.setup();
+    render(<TableWrapper data={[sampleRow]} />);
+
+    await user.click(screen.getByText('DevOps Engineer - AWS/Kubernetes'));
+
+    expect(onView).toHaveBeenCalledWith(sampleRow.vacancyId);
   });
 
   it('renders the status badge and active toggle in the status cell', () => {

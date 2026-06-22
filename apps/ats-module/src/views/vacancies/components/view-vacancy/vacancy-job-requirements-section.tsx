@@ -1,0 +1,90 @@
+import { BrifecaseTimer, ChartSquare, Routing2 } from 'iconsax-reactjs';
+
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+
+import { VacancyView } from '@/views/vacancies/components/view-vacancy/vacancy-view';
+import type { VacancyViewModel } from '@/views/vacancies/types';
+
+function VacancyJobRequirementsSection({
+  jobRequirement,
+}: {
+  jobRequirement: VacancyViewModel['jobRequirement'];
+}) {
+  const { t } = useTranslation('ats');
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+
+  return (
+    <VacancyView.Section title={t('vacancies.view.sections.jobRequirements')}>
+      {/* Top Metadata Info Rows */}
+      <div className="mb-2 flex flex-col gap-2">
+        <VacancyView.InfoRow
+          icon={
+            <BrifecaseTimer
+              size={20}
+              className="text-slate-600"
+              variant="Bold"
+            />
+          }
+          label={t('jobRequirements.discipline')}
+          value={jobRequirement.discipline}
+        />
+        <VacancyView.InfoRow
+          icon={
+            <Routing2 size={20} className="text-slate-600" variant="Bold" />
+          }
+          label={t('jobRequirements.careerPath')}
+          value={jobRequirement.careerPath}
+        />
+        <VacancyView.InfoRow
+          icon={
+            <ChartSquare size={20} className="text-slate-600" variant="Bold" />
+          }
+          label={t('jobRequirements.level')}
+          value={jobRequirement.level}
+        />
+      </div>
+
+      {/* Description Text */}
+      <div className="mb-4">
+        <VacancyView.Description
+          value={jobRequirement.description}
+          expanded={isDescriptionExpanded}
+          onToggle={() => setIsDescriptionExpanded(prev => !prev)}
+          toggleLabel={
+            isDescriptionExpanded
+              ? t('vacancies.view.actions.showLess')
+              : t('vacancies.view.actions.showMore')
+          }
+        />
+      </div>
+
+      {/* Grid of Chips inside a shaded box */}
+      <div className="rounded-lg border border-[#ebedf0] bg-[#f8fafc] p-4">
+        <VacancyView.Grid>
+          <VacancyView.Field label={t('jobRequirements.role')}>
+            <VacancyView.Tags values={jobRequirement.role} />
+          </VacancyView.Field>
+
+          <VacancyView.Field label={t('jobRequirements.jobTitle')}>
+            <VacancyView.Tags values={jobRequirement.jobTitle} />
+          </VacancyView.Field>
+
+          <VacancyView.Field label={t('jobRequirements.employmentType')}>
+            <VacancyView.Tags values={jobRequirement.employmentType} />
+          </VacancyView.Field>
+
+          <VacancyView.Field label={t('jobRequirements.workSchedule')}>
+            <VacancyView.Tags values={jobRequirement.workSchedule} />
+          </VacancyView.Field>
+
+          <VacancyView.Field label={t('jobRequirements.engagementModel')}>
+            <VacancyView.Tags values={jobRequirement.engagementModel} />
+          </VacancyView.Field>
+        </VacancyView.Grid>
+      </div>
+    </VacancyView.Section>
+  );
+}
+
+export { VacancyJobRequirementsSection };

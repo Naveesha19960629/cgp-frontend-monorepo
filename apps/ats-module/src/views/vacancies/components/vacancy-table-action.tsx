@@ -53,7 +53,11 @@ export default function VacancyTableAction({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="size-8 p-0">
+        <Button
+          variant="ghost"
+          className="size-8 p-0"
+          onClick={e => e.stopPropagation()}
+        >
           <span className="sr-only">
             {t('vacancies.table.actions.openMenu')}
           </span>
@@ -63,6 +67,7 @@ export default function VacancyTableAction({
       <DropdownMenuContent
         align="end"
         className="w-47.5 rounded-lg p-3 shadow-[0px_4px_30px_0px_rgba(0,0,0,0.16)]"
+        onClick={e => e.stopPropagation()}
       >
         <DropdownMenuItem
           className="gap-2 px-3 py-3 text-sm font-medium text-slate-500"

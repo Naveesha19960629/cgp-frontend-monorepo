@@ -49,6 +49,7 @@ const createVacancyColumns = ({
   sortBy,
   sortOrder,
   onSort,
+  onView,
   onEdit,
   t,
 }: CreateColumnsOptions): ColumnDef<VacancyTableColumn>[] => [
@@ -98,9 +99,13 @@ const createVacancyColumns = ({
       />
     ),
     cell: ({ row }) => (
-      <span className="text-sm font-medium text-slate-900">
+      <button
+        type="button"
+        className="cursor-pointer text-left text-sm font-medium text-slate-900 hover:underline"
+        onClick={() => onView(row.original.vacancyId)}
+      >
         {row.original.title}
-      </span>
+      </button>
     ),
     size: 317,
   },

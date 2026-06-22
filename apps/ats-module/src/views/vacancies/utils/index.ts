@@ -33,4 +33,5 @@ export {
   toUpdateVacancyPayload,
 } from '@/views/vacancies/utils/vacancy-payload-helpers';
 export { toVacancyFormFromResponse } from '@/views/vacancies/utils/vacancy-edit-response-helpers';
+export { toVacancyViewModel } from '@/views/vacancies/utils/vacancy-view-response-helpers';
 export type { CreateVacancyPayload } from '@/views/vacancies/types';
