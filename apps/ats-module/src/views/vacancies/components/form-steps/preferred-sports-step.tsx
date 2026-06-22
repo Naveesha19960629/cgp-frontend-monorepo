@@ -13,11 +13,16 @@ import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import {
   useLocationsQuery,
   useOrganizationsQuery,
+  useSportLevelsQuery,
   useSportsQuery,
   useStepGuard,
 } from '@/views/vacancies/hooks';
 import type { StepProps } from '@/views/vacancies/types';
 import { formatDate } from '@/views/vacancies/utils';
+import {
+  formatLocalDate,
+  parseLocalDate,
+} from '@/views/vacancies/utils/date-timezone-safe';
 
 import { CharacterCount } from '@cgp/ui-kit/components/character-count';
 import { SuccessToast } from '@cgp/ui-kit/components/custom-toast';
@@ -47,19 +52,6 @@ const MAX_POSITION_LENGTH = 100;
 const MAX_SELECTIONS = 10;
 const HUNDRED_YEARS_AGO = new Date(new Date().getFullYear() - 100, 0, 1);
 const HUNDRED_YEARS_FROM_NOW = new Date(new Date().getFullYear() + 100, 11, 31);
-
-const LEVEL_REPRESENTED_OPTIONS: Array<{
-  value: string;
-  label: string;
-  source: string;
-}> = [
-  { value: 'MEMBER', label: 'Member', source: 'MASTER' },
-  { value: 'LEADER', label: 'Leader', source: 'MASTER' },
-  { value: 'CAPTAIN', label: 'Captain', source: 'MASTER' },
-  { value: 'VICE_CAPTAIN', label: 'Vice Captain', source: 'MASTER' },
-  { value: 'COACH', label: 'Coach', source: 'MASTER' },
-  { value: 'PLAYER', label: 'Player', source: 'MASTER' },
-];
 
 interface SportEntry {
   id: string;
@@ -97,17 +89,27 @@ function SportCard({
   index,
   entry,
   onUpdate,
+  onSportsSearch,
+  onOrganizationsSearch,
+  onLocationsSearch,
+  onLevelRepresentedSearch,
   fieldsDisabled,
   sports,
   isSportsLoading,
   organizations,
   isOrganizationsLoading,
+  levelRepresentedOptions,
+  isLevelsLoading,
   locationOptions,
   isLocationsLoading,
 }: Readonly<{
   index: number;
   entry: SportEntry;
   onUpdate: (index: number, updates: Partial<SportEntry>) => void;
+  onSportsSearch: (value: string) => void;
+  onOrganizationsSearch: (value: string) => void;
+  onLocationsSearch: (value: string) => void;
+  onLevelRepresentedSearch: (value: string) => void;
   fieldsDisabled: boolean;
   sports: Array<{
     id: string;
@@ -123,6 +125,12 @@ function SportCard({
     source?: string;
   }>;
   isOrganizationsLoading: boolean;
+  levelRepresentedOptions: Array<{
+    value: string;
+    label: string;
+    source: string;
+  }>;
+  isLevelsLoading: boolean;
   locationOptions: Array<{ value: string; label: string }>;
   isLocationsLoading: boolean;
 }>) {
@@ -199,6 +207,7 @@ function SportCard({
                   }))}
                   onSearchSync={value => {
                     onUpdate(index, { sportSearch: value });
+                    onSportsSearch(value);
                     return sports.map(s => ({
                       value: s.id,
                       label: s.name || s.label || '',
@@ -236,7 +245,10 @@ function SportCard({
                     });
                   }}
                   options={locationOptions}
-                  onSearchSync={() => locationOptions}
+                  onSearchSync={value => {
+                    onLocationsSearch(value);
+                    return locationOptions;
+                  }}
                   showArrow
                   keepSelectedInList
                   hideClearAllButton
@@ -272,18 +284,21 @@ function SportCard({
                         .map(opt => ({
                           value: opt.value,
                           label: opt.label,
-                          source: (opt.source as string) ?? 'USER_CREATED',
+                          source: (opt.source as string) ?? 'MASTER',
                         })),
                     });
                   }}
-                  options={LEVEL_REPRESENTED_OPTIONS}
-                  onSearchSync={() => LEVEL_REPRESENTED_OPTIONS}
+                  options={levelRepresentedOptions}
+                  onSearchSync={value => {
+                    onLevelRepresentedSearch(value);
+                    return levelRepresentedOptions;
+                  }}
                   keepSelectedInList
-                  creatable
                   triggerSearchOnFocus
                   hideClearAllButton
                   maxSelected={MAX_SELECTIONS}
                   disabled={fieldsDisabled}
+                  loading={isLevelsLoading}
                   placeholder="Select level represented"
                   emptyIndicator={
                     <p className="px-3 pb-3 text-left text-sm text-slate-500">
@@ -319,7 +334,8 @@ function SportCard({
                     label: o.name || o.label || '',
                     source: o.source || 'MASTER',
                   }))}
-                  onSearchSync={() => {
+                  onSearchSync={value => {
+                    onOrganizationsSearch(value);
                     return organizations.map(o => ({
                       value: o.id,
                       label: o.name || o.label || '',
@@ -404,23 +420,21 @@ function SportCard({
                   <PopoverContent className="w-auto p-0" align="start">
                     <Calendar
                       mode="single"
-                      selected={
-                        entry.startDate ? new Date(entry.startDate) : undefined
-                      }
+                      selected={parseLocalDate(entry.startDate) ?? undefined}
                       defaultMonth={
-                        (entry.startDate && new Date(entry.startDate)) ||
-                        (entry.endDate && new Date(entry.endDate)) ||
+                        parseLocalDate(entry.startDate) ||
+                        parseLocalDate(entry.endDate) ||
                         new Date()
                       }
                       onSelect={date => {
                         onUpdate(index, {
-                          startDate: date ? date.toISOString() : undefined,
+                          startDate: date ? formatLocalDate(date) : undefined,
                         });
                         setOpenDatePopover(null);
 
                         if (entry.endDate && date) {
-                          const endDate = new Date(entry.endDate);
-                          if (endDate < date) {
+                          const endDate = parseLocalDate(entry.endDate);
+                          if (endDate != null && endDate < date) {
                             onUpdate(index, { endDate: undefined });
                           }
                         }
@@ -477,24 +491,20 @@ function SportCard({
                   <PopoverContent className="w-auto p-0" align="start">
                     <Calendar
                       mode="single"
-                      selected={
-                        entry.endDate ? new Date(entry.endDate) : undefined
-                      }
+                      selected={parseLocalDate(entry.endDate) ?? undefined}
                       defaultMonth={
-                        (entry.endDate && new Date(entry.endDate)) ||
-                        (entry.startDate && new Date(entry.startDate)) ||
+                        parseLocalDate(entry.endDate) ||
+                        parseLocalDate(entry.startDate) ||
                         new Date()
                       }
                       onSelect={date => {
                         onUpdate(index, {
-                          endDate: date ? date.toISOString() : undefined,
+                          endDate: date ? formatLocalDate(date) : undefined,
                         });
                         setOpenDatePopover(null);
                       }}
                       disabled={date => {
-                        const startDate = entry.startDate
-                          ? new Date(entry.startDate)
-                          : undefined;
+                        const startDate = parseLocalDate(entry.startDate);
                         return (
                           date < HUNDRED_YEARS_AGO ||
                           date > HUNDRED_YEARS_FROM_NOW ||
@@ -531,6 +541,11 @@ export default function PreferredSportsStep({
   );
   const [confirmDisableOpen, setConfirmDisableOpen] = useState(false);
   const [emptyDisableOpen, setEmptyDisableOpen] = useState(false);
+  const [sportsSearchQuery, setSportsSearchQuery] = useState('');
+  const [organizationsSearchQuery, setOrganizationsSearchQuery] = useState('');
+  const [locationsSearchQuery, setLocationsSearchQuery] = useState('');
+  const [levelRepresentedSearchQuery, setLevelRepresentedSearchQuery] =
+    useState('');
 
   const [entries, setEntries] = useState<SportEntry[]>(
     savedSports?.sports && savedSports.sports.length > 0
@@ -606,22 +621,29 @@ export default function PreferredSportsStep({
 
   // Sports API
   const { data: sportsData, isLoading: isSportsLoading } = useSportsQuery(
-    '',
+    sportsSearchQuery,
     isEnabled && !dataTakenFromCandidate
   );
 
   // Organizations API
   const { data: organizationsData, isLoading: isOrganizationsLoading } =
-    useOrganizationsQuery('', isEnabled && !dataTakenFromCandidate);
+    useOrganizationsQuery(
+      organizationsSearchQuery,
+      isEnabled && !dataTakenFromCandidate
+    );
 
   // Locations API
   const { data: locationsData, isLoading: isLocationsLoading } =
-    useLocationsQuery('', isEnabled && !dataTakenFromCandidate);
+    useLocationsQuery(
+      locationsSearchQuery,
+      isEnabled && !dataTakenFromCandidate
+    );
 
-  const sports = useMemo(
-    () => sportsData?.data?.items?.content ?? [],
-    [sportsData]
-  );
+  // Levels API (/v1/sport-levels)
+  const { data: levelsData, isLoading: isLevelsLoading } =
+    useSportLevelsQuery();
+
+  const sports = sportsData;
 
   const organizations = useMemo(
     () => organizationsData ?? [],
@@ -633,6 +655,26 @@ export default function PreferredSportsStep({
       (locationsData ?? []).map(loc => ({ value: loc.id, label: loc.label })),
     [locationsData]
   );
+
+  const fetchedLevelOptions = useMemo(
+    () =>
+      levelsData.map(level => ({
+        value: level.id,
+        label: level.label ?? level.name ?? '',
+        source: level.source ?? 'MASTER',
+      })),
+    [levelsData]
+  );
+
+  const levelRepresentedOptions = useMemo(() => {
+    if (!levelRepresentedSearchQuery) return fetchedLevelOptions;
+    const query = levelRepresentedSearchQuery.toLowerCase();
+    return fetchedLevelOptions.filter(
+      level =>
+        level.label.toLowerCase().includes(query) ||
+        level.value.toLowerCase().includes(query)
+    );
+  }, [fetchedLevelOptions, levelRepresentedSearchQuery]);
 
   const handleToggle = () => {
     if (isEnabled) {
@@ -742,11 +784,17 @@ export default function PreferredSportsStep({
               index={index}
               entry={entry}
               onUpdate={updateEntry}
+              onSportsSearch={setSportsSearchQuery}
+              onOrganizationsSearch={setOrganizationsSearchQuery}
+              onLocationsSearch={setLocationsSearchQuery}
+              onLevelRepresentedSearch={setLevelRepresentedSearchQuery}
               fieldsDisabled={fieldsDisabled}
               sports={sports}
               isSportsLoading={isSportsLoading}
               organizations={organizations}
               isOrganizationsLoading={isOrganizationsLoading}
+              levelRepresentedOptions={levelRepresentedOptions}
+              isLevelsLoading={isLevelsLoading}
               locationOptions={locationOptions}
               isLocationsLoading={isLocationsLoading}
             />

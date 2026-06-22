@@ -4,11 +4,16 @@ import { vacancyService } from '@/views/vacancies/services';
 
 const VACANCY_BY_ID_QUERY_KEY = (id: string) => ['vacancy', id] as const;
 
-const useVacancyByIdQuery = (id: string, options?: { enabled?: boolean }) =>
-  useQuery({
+const isValidVacancyId = (id: string) => id.trim().length > 0;
+
+const useVacancyByIdQuery = (id: string, options?: { enabled?: boolean }) => {
+  const isEnabled = (options?.enabled ?? true) && isValidVacancyId(id);
+
+  return useQuery({
     queryKey: VACANCY_BY_ID_QUERY_KEY(id),
     queryFn: () => vacancyService.getVacancyById(id),
-    enabled: options?.enabled ?? true,
+    enabled: isEnabled,
   });
+};
 
 export { useVacancyByIdQuery };

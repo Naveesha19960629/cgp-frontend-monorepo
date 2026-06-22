@@ -91,12 +91,16 @@ export default function JobRequirementsStep({
   const isRoleDisabled =
     selectedCareerPaths.length === 0 || selectedLevels.length === 0;
 
-  const roleDisabledMessage =
-    selectedCareerPaths.length === 0 && selectedLevels.length === 0
-      ? t('jobRequirements.dependencyHints.roleNeedCareerPathAndLevel')
-      : selectedCareerPaths.length === 0
-        ? t('jobRequirements.dependencyHints.roleNeedCareerPath')
-        : t('jobRequirements.dependencyHints.roleNeedLevel');
+  let roleDisabledMessage = t('jobRequirements.dependencyHints.roleNeedLevel');
+  if (selectedCareerPaths.length === 0 && selectedLevels.length === 0) {
+    roleDisabledMessage = t(
+      'jobRequirements.dependencyHints.roleNeedCareerPathAndLevel'
+    );
+  } else if (selectedCareerPaths.length === 0) {
+    roleDisabledMessage = t(
+      'jobRequirements.dependencyHints.roleNeedCareerPath'
+    );
+  }
 
   const maxSelectionError = t('jobRequirements.errors.maxSelections', {
     max: MAX_SELECTIONS,
@@ -649,7 +653,7 @@ export default function JobRequirementsStep({
                         value={field.value[0]?.value}
                         options={jobLevels.map(level => ({
                           value: level.id,
-                          label: level.name,
+                          label: level.label ?? level.name ?? '',
                         }))}
                         onValueChange={value => {
                           const selected = jobLevels.find(
@@ -660,7 +664,8 @@ export default function JobRequirementsStep({
                               ? [
                                   {
                                     value: selected.id,
-                                    label: selected.name,
+                                    label:
+                                      selected.label ?? selected.name ?? '',
                                     source: 'MASTER',
                                   },
                                 ]

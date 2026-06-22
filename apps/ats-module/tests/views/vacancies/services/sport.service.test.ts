@@ -67,7 +67,7 @@ describe('sport.service', () => {
       expect(mockGet).toHaveBeenCalledWith('/sports', {
         params: { search: 'cric', size: 50 },
       });
-      expect(result).toEqual(mockResponse);
+      expect(result).toEqual(mockResponse.data.items.content);
     });
 
     it('uses default size of 50 when not provided', async () => {
@@ -93,7 +93,7 @@ describe('sport.service', () => {
       expect(mockGet).toHaveBeenCalledWith('/sports', {
         params: { search: '', size: 50 },
       });
-      expect(result.data.items.content).toHaveLength(2);
+      expect(result).toHaveLength(2);
     });
   });
 });

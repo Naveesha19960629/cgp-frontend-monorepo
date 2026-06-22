@@ -18,6 +18,10 @@ import {
 } from '@/views/vacancies/hooks';
 import type { StepProps } from '@/views/vacancies/types';
 import { formatDate } from '@/views/vacancies/utils';
+import {
+  formatLocalDate,
+  parseLocalDate,
+} from '@/views/vacancies/utils/date-timezone-safe';
 
 import { CharacterCount } from '@cgp/ui-kit/components/character-count';
 import { SuccessToast } from '@cgp/ui-kit/components/custom-toast';
@@ -80,6 +84,9 @@ function VolunteeringCard({
   index,
   entry,
   onUpdate,
+  onOrganizationsSearch,
+  onLocationsSearch,
+  onCausesSearch,
   fieldsDisabled,
   organizations,
   isOrganizationsLoading,
@@ -91,6 +98,9 @@ function VolunteeringCard({
   index: number;
   entry: VolunteeringEntry;
   onUpdate: (index: number, updates: Partial<VolunteeringEntry>) => void;
+  onOrganizationsSearch: (value: string) => void;
+  onLocationsSearch: (value: string) => void;
+  onCausesSearch: (value: string) => void;
   fieldsDisabled: boolean;
   organizations: Array<{
     id: string;
@@ -167,7 +177,8 @@ function VolunteeringCard({
                     label: o.name || o.label || '',
                     source: o.source || 'MASTER',
                   }))}
-                  onSearchSync={() => {
+                  onSearchSync={value => {
+                    onOrganizationsSearch(value);
                     return organizations.map(o => ({
                       value: o.id,
                       label: o.name || o.label || '',
@@ -205,7 +216,10 @@ function VolunteeringCard({
                     });
                   }}
                   options={locationOptions}
-                  onSearchSync={() => locationOptions}
+                  onSearchSync={value => {
+                    onLocationsSearch(value);
+                    return locationOptions;
+                  }}
                   showArrow
                   keepSelectedInList
                   hideClearAllButton
@@ -256,6 +270,7 @@ function VolunteeringCard({
                   }))}
                   onSearchSync={value => {
                     onUpdate(index, { causeSearch: value });
+                    onCausesSearch(value);
                     return causes.map(c => ({
                       value: c.id,
                       label: c.label,
@@ -341,23 +356,21 @@ function VolunteeringCard({
                   <PopoverContent className="w-auto p-0" align="start">
                     <Calendar
                       mode="single"
-                      selected={
-                        entry.startDate ? new Date(entry.startDate) : undefined
-                      }
+                      selected={parseLocalDate(entry.startDate) ?? undefined}
                       defaultMonth={
-                        (entry.startDate && new Date(entry.startDate)) ||
-                        (entry.endDate && new Date(entry.endDate)) ||
+                        parseLocalDate(entry.startDate) ||
+                        parseLocalDate(entry.endDate) ||
                         new Date()
                       }
                       onSelect={date => {
                         onUpdate(index, {
-                          startDate: date ? date.toISOString() : undefined,
+                          startDate: date ? formatLocalDate(date) : undefined,
                         });
                         onUpdate(index, { openDatePopover: null });
 
                         if (entry.endDate && date) {
-                          const endDate = new Date(entry.endDate);
-                          if (endDate < date) {
+                          const endDate = parseLocalDate(entry.endDate);
+                          if (endDate != null && endDate < date) {
                             onUpdate(index, { endDate: undefined });
                           }
                         }
@@ -415,24 +428,20 @@ function VolunteeringCard({
                   <PopoverContent className="w-auto p-0" align="start">
                     <Calendar
                       mode="single"
-                      selected={
-                        entry.endDate ? new Date(entry.endDate) : undefined
-                      }
+                      selected={parseLocalDate(entry.endDate) ?? undefined}
                       defaultMonth={
-                        (entry.endDate && new Date(entry.endDate)) ||
-                        (entry.startDate && new Date(entry.startDate)) ||
+                        parseLocalDate(entry.endDate) ||
+                        parseLocalDate(entry.startDate) ||
                         new Date()
                       }
                       onSelect={date => {
                         onUpdate(index, {
-                          endDate: date ? date.toISOString() : undefined,
+                          endDate: date ? formatLocalDate(date) : undefined,
                         });
                         onUpdate(index, { openDatePopover: null });
                       }}
                       disabled={date => {
-                        const startDate = entry.startDate
-                          ? new Date(entry.startDate)
-                          : undefined;
+                        const startDate = parseLocalDate(entry.startDate);
                         return (
                           date < HUNDRED_YEARS_AGO ||
                           date > HUNDRED_YEARS_FROM_NOW ||
@@ -470,6 +479,9 @@ export default function PreferredVolunteeringStep({
   );
   const [confirmDisableOpen, setConfirmDisableOpen] = useState(false);
   const [emptyDisableOpen, setEmptyDisableOpen] = useState(false);
+  const [organizationsSearchQuery, setOrganizationsSearchQuery] = useState('');
+  const [locationsSearchQuery, setLocationsSearchQuery] = useState('');
+  const [causesSearchQuery, setCausesSearchQuery] = useState('');
 
   const [entries, setEntries] = useState<VolunteeringEntry[]>(
     savedVolunteering?.volunteering && savedVolunteering.volunteering.length > 0
@@ -549,14 +561,21 @@ export default function PreferredVolunteeringStep({
 
   // Organizations API
   const { data: organizationsData, isLoading: isOrganizationsLoading } =
-    useOrganizationsQuery('', isEnabled && !dataTakenFromCandidate);
+    useOrganizationsQuery(
+      organizationsSearchQuery,
+      isEnabled && !dataTakenFromCandidate
+    );
 
   // Causes API
-  const { data: causesData, isLoading: isCausesLoading } = useCausesQuery('');
+  const { data: causesData, isLoading: isCausesLoading } =
+    useCausesQuery(causesSearchQuery);
 
   // Locations API
   const { data: locationsData, isLoading: isLocationsLoading } =
-    useLocationsQuery('', isEnabled && !dataTakenFromCandidate);
+    useLocationsQuery(
+      locationsSearchQuery,
+      isEnabled && !dataTakenFromCandidate
+    );
 
   const organizations = useMemo(
     () => organizationsData ?? [],
@@ -680,6 +699,9 @@ export default function PreferredVolunteeringStep({
               index={index}
               entry={entry}
               onUpdate={updateEntry}
+              onOrganizationsSearch={setOrganizationsSearchQuery}
+              onLocationsSearch={setLocationsSearchQuery}
+              onCausesSearch={setCausesSearchQuery}
               fieldsDisabled={fieldsDisabled}
               organizations={organizations}
               isOrganizationsLoading={isOrganizationsLoading}

@@ -17,6 +17,10 @@ import {
 } from '@/views/vacancies/hooks';
 import type { StepProps } from '@/views/vacancies/types';
 import { formatDate } from '@/views/vacancies/utils';
+import {
+  formatLocalDate,
+  parseLocalDate,
+} from '@/views/vacancies/utils/date-timezone-safe';
 
 import { CharacterCount } from '@cgp/ui-kit/components/character-count';
 import { SuccessToast } from '@cgp/ui-kit/components/custom-toast';
@@ -59,6 +63,9 @@ function ProjectCard({
   index,
   project,
   onUpdate,
+  onIndustriesSearch,
+  onLocationsSearch,
+  onOrganizationsSearch,
   fieldsDisabled,
   industries,
   isIndustriesLoading,
@@ -70,6 +77,9 @@ function ProjectCard({
   index: number;
   project: ProjectEntry;
   onUpdate: (index: number, updates: Partial<ProjectEntry>) => void;
+  onIndustriesSearch: (value: string) => void;
+  onLocationsSearch: (value: string) => void;
+  onOrganizationsSearch: (value: string) => void;
   fieldsDisabled: boolean;
   industries: Array<{ id: string; label: string; source: string }>;
   isIndustriesLoading: boolean;
@@ -176,25 +186,21 @@ function ProjectCard({
                   <PopoverContent className="w-auto p-0" align="start">
                     <Calendar
                       mode="single"
-                      selected={
-                        project.startDate
-                          ? new Date(project.startDate)
-                          : undefined
-                      }
+                      selected={parseLocalDate(project.startDate) ?? undefined}
                       defaultMonth={
-                        (project.startDate && new Date(project.startDate)) ||
-                        (project.endDate && new Date(project.endDate)) ||
+                        parseLocalDate(project.startDate) ||
+                        parseLocalDate(project.endDate) ||
                         new Date()
                       }
                       onSelect={date => {
                         onUpdate(index, {
-                          startDate: date ? date.toISOString() : undefined,
+                          startDate: date ? formatLocalDate(date) : undefined,
                         });
                         setOpenDatePopover(null);
 
                         if (project.endDate && date) {
-                          const endDate = new Date(project.endDate);
-                          if (endDate < date) {
+                          const endDate = parseLocalDate(project.endDate);
+                          if (endDate != null && endDate < date) {
                             onUpdate(index, { endDate: undefined });
                           }
                         }
@@ -251,24 +257,20 @@ function ProjectCard({
                   <PopoverContent className="w-auto p-0" align="start">
                     <Calendar
                       mode="single"
-                      selected={
-                        project.endDate ? new Date(project.endDate) : undefined
-                      }
+                      selected={parseLocalDate(project.endDate) ?? undefined}
                       defaultMonth={
-                        (project.endDate && new Date(project.endDate)) ||
-                        (project.startDate && new Date(project.startDate)) ||
+                        parseLocalDate(project.endDate) ||
+                        parseLocalDate(project.startDate) ||
                         new Date()
                       }
                       onSelect={date => {
                         onUpdate(index, {
-                          endDate: date ? date.toISOString() : undefined,
+                          endDate: date ? formatLocalDate(date) : undefined,
                         });
                         setOpenDatePopover(null);
                       }}
                       disabled={date => {
-                        const startDate = project.startDate
-                          ? new Date(project.startDate)
-                          : undefined;
+                        const startDate = parseLocalDate(project.startDate);
                         return (
                           date < HUNDRED_YEARS_AGO ||
                           date > HUNDRED_YEARS_FROM_NOW ||
@@ -325,6 +327,7 @@ function ProjectCard({
                   }))}
                   onSearchSync={value => {
                     setIndustriesSearch(value);
+                    onIndustriesSearch(value);
                     return industries.map(i => ({
                       value: i.id,
                       label: i.label,
@@ -381,7 +384,10 @@ function ProjectCard({
                     });
                   }}
                   options={locationOptions}
-                  onSearchSync={() => locationOptions}
+                  onSearchSync={value => {
+                    onLocationsSearch(value);
+                    return locationOptions;
+                  }}
                   showArrow
                   keepSelectedInList
                   hideClearAllButton
@@ -424,7 +430,10 @@ function ProjectCard({
                     });
                   }}
                   options={organizationOptions}
-                  onSearchSync={() => organizationOptions}
+                  onSearchSync={value => {
+                    onOrganizationsSearch(value);
+                    return organizationOptions;
+                  }}
                   creatable
                   keepSelectedInList
                   triggerSearchOnFocus
@@ -474,6 +483,9 @@ export default function ProjectsRequirementsStep({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [confirmDisableOpen, setConfirmDisableOpen] = useState(false);
   const [emptyDisableOpen, setEmptyDisableOpen] = useState(false);
+  const [industrySearchQuery, setIndustrySearchQuery] = useState('');
+  const [locationSearchQuery, setLocationSearchQuery] = useState('');
+  const [organizationSearchQuery, setOrganizationSearchQuery] = useState('');
 
   const [projects, setProjects] = useState<ProjectEntry[]>(
     savedProjects?.projects && savedProjects.projects.length > 0
@@ -544,16 +556,22 @@ export default function ProjectsRequirementsStep({
 
   // Industry search (searchable, backed by industries API)
   const { data: industriesData, isLoading: isIndustriesLoading } =
-    useIndustriesQuery('');
+    useIndustriesQuery(industrySearchQuery);
   const { mutateAsync: createIndustry } = useCreateIndustryMutation();
 
   // Organization Location combobox (searchable, backed by locations API)
   const { data: locationsData, isLoading: isLocationsLoading } =
-    useLocationsQuery('', isEnabled && !dataTakenFromCandidate);
+    useLocationsQuery(
+      locationSearchQuery,
+      isEnabled && !dataTakenFromCandidate
+    );
 
   // Organization Name multi-select (searchable, backed by organizations API)
   const { data: organizationsData, isLoading: isOrganizationsLoading } =
-    useOrganizationsQuery('', isEnabled && !dataTakenFromCandidate);
+    useOrganizationsQuery(
+      organizationSearchQuery,
+      isEnabled && !dataTakenFromCandidate
+    );
 
   const fieldsDisabled = !isEnabled || dataTakenFromCandidate;
 
@@ -775,6 +793,9 @@ export default function ProjectsRequirementsStep({
               index={index}
               project={project}
               onUpdate={updateProject}
+              onIndustriesSearch={setIndustrySearchQuery}
+              onLocationsSearch={setLocationSearchQuery}
+              onOrganizationsSearch={setOrganizationSearchQuery}
               fieldsDisabled={fieldsDisabled}
               industries={industries}
               isIndustriesLoading={isIndustriesLoading}
