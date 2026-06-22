@@ -337,7 +337,7 @@
       "patentURL": "Patent URL"
     },
     "validation": {
-      "maxExceeded": "Exceeded maximum of {{max}} sections"
+      "maxExceeded": "Exceeded maximum of {{max}} selections."
     },
     "disableDialog": {
       "title": "Are you sure?",
