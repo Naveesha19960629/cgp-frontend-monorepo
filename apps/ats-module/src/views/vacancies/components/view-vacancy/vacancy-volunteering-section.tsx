@@ -76,14 +76,14 @@ function VacancyVolunteeringSection({
                     <VacancyView.Tags values={entry.organization} />
                   </VacancyView.Field>
                   <VacancyView.Field
-                    label={t('preferredVolunteering.fieldList.cause')}
-                  >
-                    <VacancyView.Tags values={entry.cause} />
-                  </VacancyView.Field>
-                  <VacancyView.Field
                     label={t('preferredVolunteering.fieldList.location')}
                   >
                     <VacancyView.Tags values={entry.organizationLocations} />
+                  </VacancyView.Field>
+                  <VacancyView.Field
+                    label={t('preferredVolunteering.fieldList.cause')}
+                  >
+                    <VacancyView.Tags values={entry.cause} />
                   </VacancyView.Field>
                 </VacancyView.Grid>
               </div>

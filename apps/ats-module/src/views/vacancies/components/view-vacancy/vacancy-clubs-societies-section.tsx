@@ -77,18 +77,18 @@ function VacancyClubsSocietiesSection({
                   </VacancyView.Field>
                   <VacancyView.Field
                     label={t(
-                      'preferredClubSocieties.fieldList.representedOrganization'
-                    )}
-                  >
-                    <VacancyView.Tags values={entry.organization} />
-                  </VacancyView.Field>
-                  <VacancyView.Field
-                    label={t(
                       'preferredClubSocieties.fieldList.organizationLocation',
                       'Organization Location'
                     )}
                   >
                     <VacancyView.Tags values={entry.organizationLocations} />
+                  </VacancyView.Field>
+                  <VacancyView.Field
+                    label={t(
+                      'preferredClubSocieties.fieldList.representedOrganization'
+                    )}
+                  >
+                    <VacancyView.Tags values={entry.organization} />
                   </VacancyView.Field>
                 </VacancyView.Grid>
               </div>

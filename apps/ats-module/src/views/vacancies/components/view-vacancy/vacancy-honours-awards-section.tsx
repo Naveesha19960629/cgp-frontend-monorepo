@@ -1,4 +1,4 @@
-import { Award, Clock, DocumentText } from 'iconsax-reactjs';
+import { Clock, DocumentText, Profile } from 'iconsax-reactjs';
 
 import { useTranslation } from 'react-i18next';
 
@@ -63,7 +63,7 @@ function VacancyHonoursAwardsSection({
                 />
                 <VacancyView.InfoRow
                   icon={
-                    <Award
+                    <Profile
                       size={20}
                       className="text-slate-600"
                       variant="Bold"

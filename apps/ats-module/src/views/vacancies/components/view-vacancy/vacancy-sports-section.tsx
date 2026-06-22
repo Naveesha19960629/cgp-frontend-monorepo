@@ -76,6 +76,11 @@ function VacancySportsSection({
                     <VacancyView.Tags values={entry.nameOfSport} />
                   </VacancyView.Field>
                   <VacancyView.Field
+                    label={t('preferredSports.fieldList.organizationLocation')}
+                  >
+                    <VacancyView.Tags values={entry.organizationLocations} />
+                  </VacancyView.Field>
+                  <VacancyView.Field
                     label={t('preferredSports.fieldList.levelRepresented')}
                   >
                     <VacancyView.Tags values={entry.levelRepresented} />
@@ -86,11 +91,6 @@ function VacancySportsSection({
                     )}
                   >
                     <VacancyView.Tags values={entry.representedOrganization} />
-                  </VacancyView.Field>
-                  <VacancyView.Field
-                    label={t('preferredSports.fieldList.organizationLocation')}
-                  >
-                    <VacancyView.Tags values={entry.organizationLocations} />
                   </VacancyView.Field>
                 </VacancyView.Grid>
               </div>
