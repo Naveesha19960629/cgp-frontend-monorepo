@@ -25,6 +25,7 @@ export default function LoginPage() {
     if (!initialized) return;
 
     if (!isLoggedIn) {
+      sessionStorage.setItem('cgp_login_pending', '1');
       void keycloak.login({
         redirectUri: `${window.location.origin}/auth/login`,
       });
