@@ -76,28 +76,42 @@ function to24Hour(time: string): string {
 }
 
 /**
- * Parse any of the four accepted backend formats into separate date and time
- * display strings so the form can be pre-populated from saved data.
+ * Parse backend datetime strings into separate date and time strings for the
+ * form. Handles both 24-hour ISO (from API) and 12-hour AM/PM (legacy).
  *
  * Accepted inputs:
- *   "2026-06-25T05:27:10.819 PM"  (date-time ISO with ms)
- *   "2026-06-25T05:27:10 PM"      (date-time ISO)
- *   "2026-06-25 05:27:10 PM"      (date-time space)
- *   "2026-06-25 05:27 PM"         (date-time space no seconds)
+ *   "2026-06-24T10:00:00"         (24-hour ISO — primary API format)
+ *   "2026-06-24T10:00:00.000"     (24-hour ISO with ms)
+ *   "2026-06-25T05:27:10 PM"      (12-hour with T separator)
+ *   "2026-06-25 05:27:10 PM"      (12-hour with space separator)
  */
 function parseBackendDatetime(value: string): { date: string; time: string } {
-  const match =
+  const trimmed = value.trim();
+
+  // 12-hour AM/PM formats (legacy)
+  const ampmMatch =
     /^(\d{4}-\d{2}-\d{2})[T ](\d{1,2}:\d{2}(?::\d{2})?)(?:\.\d+)?\s*(AM|PM)$/i.exec(
-      value.trim()
+      trimmed
     );
-  if (match) {
+  if (ampmMatch) {
     return {
-      date: match[1],
-      time: `${match[2]} ${match[3].toUpperCase()}`,
+      date: ampmMatch[1],
+      time: `${ampmMatch[2]} ${ampmMatch[3].toUpperCase()}`,
     };
   }
-  // Fallback: return whatever is before the separator as the date
-  return { date: value.split(/[T ]/)[0] ?? '', time: '' };
+
+  // 24-hour ISO format: "2026-06-24T10:00:00" or "2026-06-24T10:00:00.000"
+  const isoMatch =
+    /^(\d{4}-\d{2}-\d{2})[T ](\d{2}:\d{2}(?::\d{2})?)(?:\.\d+)?$/.exec(trimmed);
+  if (isoMatch) {
+    const timePart = isoMatch[2];
+    return {
+      date: isoMatch[1],
+      time: timePart.length === 5 ? `${timePart}:00` : timePart,
+    };
+  }
+
+  return { date: trimmed.split(/[T ]/)[0] ?? '', time: '' };
 }
 
 type ScheduleVacancyFormValues = z.infer<typeof scheduleVacancySchema>;

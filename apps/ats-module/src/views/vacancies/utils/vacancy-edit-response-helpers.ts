@@ -3,6 +3,7 @@ import type {
   JobRequirement,
   LicenseCertRef,
   PatentStatus,
+  ScheduleVacancy,
   VacancyForm,
   preferredPatentsSchema,
 } from '@/views/vacancies/types';
@@ -1024,6 +1025,14 @@ function normalizeVacancyStatus(
   return mapped;
 }
 
+function normalizeSchedule(raw: unknown): ScheduleVacancy | undefined {
+  if (!isRecord(raw)) return undefined;
+  const publishAt = toSafeString(raw.schedulePublishAt);
+  const expirationAt = toSafeString(raw.expirationAt);
+  if (!publishAt || !expirationAt) return undefined;
+  return { schedulePublishAt: publishAt, expirationAt };
+}
+
 function toVacancyFormFromResponse(
   rawVacancy: Record<string, unknown>,
   previousForm: VacancyForm
@@ -1076,6 +1085,10 @@ function toVacancyFormFromResponse(
   );
   const patentsSection = readSectionValue(rawVacancy, sectionSource, [
     'patents',
+  ]);
+  const scheduleSection = readSectionValue(rawVacancy, sectionSource, [
+    'schedule',
+    'scheduleRequirement',
   ]);
 
   // Explicit whitelist: only pick known scalar top-level form fields.
@@ -1149,6 +1162,7 @@ function toVacancyFormFromResponse(
       previousForm.preferredIndustries
     ),
     patents: normalizePatentsSection(patentsSection, previousForm.patents),
+    schedule: normalizeSchedule(scheduleSection) ?? previousForm.schedule,
   };
 }
 
