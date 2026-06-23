@@ -1059,6 +1059,99 @@ interface VacancyViewLicenseCertificates {
   }[];
 }
 
+interface VacancyViewPublications {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  content: {
+    acceptedPublisherName: string;
+    publishedDateFrom: string;
+    publishedDateTo: string;
+  }[];
+}
+
+interface VacancyViewClubSocieties {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  content: {
+    clubSociety: string[];
+    organization: string[];
+    organizationLocations: string[];
+    positionRoleHeld: string;
+    startDate: string;
+    endDate: string;
+  }[];
+}
+
+interface VacancyViewSports {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  content: {
+    nameOfSport: string[];
+    representedOrganization: string[];
+    organizationLocations: string[];
+    levelRepresented: string[];
+    positionRoleHeld: string;
+    startDate: string;
+    endDate: string;
+  }[];
+}
+
+interface VacancyViewVolunteering {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  content: {
+    organization: string[];
+    organizationLocations: string[];
+    positionRole: string;
+    cause: string[];
+    startDate: string;
+    endDate: string;
+  }[];
+}
+
+interface VacancyViewHonoursAwards {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  content: {
+    title: string;
+    associatedOrganizations: string[];
+    organizationLocations: string[];
+    issuedBy: string;
+    issuedFromDate: string;
+    issuedToDate: string;
+  }[];
+}
+
+interface VacancyViewSkills {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  content: string[];
+}
+
+interface VacancyViewLanguages {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  content: string[];
+}
+
+interface VacancyViewCauses {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  content: string[];
+}
+
+interface VacancyViewHobbies {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  content: string[];
+}
+
+interface VacancyViewIndustries {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  content: string[];
+}
+
 interface VacancyViewModel {
   title: string;
   status: string;
@@ -1068,6 +1161,16 @@ interface VacancyViewModel {
   secondaryEducation?: VacancyViewSecondaryEducation;
   tertiaryEducation?: VacancyViewTertiaryEducation;
   licenseCertificates?: VacancyViewLicenseCertificates;
+  preferredPublications?: VacancyViewPublications;
+  preferredClubSocieties?: VacancyViewClubSocieties;
+  preferredSports?: VacancyViewSports;
+  preferredVolunteering?: VacancyViewVolunteering;
+  preferredHonoursAwards?: VacancyViewHonoursAwards;
+  preferredSkills?: VacancyViewSkills;
+  preferredLanguages?: VacancyViewLanguages;
+  preferredCauses?: VacancyViewCauses;
+  preferredHobbies?: VacancyViewHobbies;
+  preferredIndustries?: VacancyViewIndustries;
 }
 
 interface VacancyActiveToggleProps {

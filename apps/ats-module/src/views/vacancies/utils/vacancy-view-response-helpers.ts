@@ -256,6 +256,275 @@ function normalizeLicenseCertificates(raw: unknown) {
   };
 }
 
+function normalizePublications(raw: unknown) {
+  const entry: unknown = Array.isArray(raw) ? raw[0] : raw;
+  if (!isRecord(entry)) return undefined;
+
+  const isEnabled =
+    typeof entry.isEnabled === 'boolean' ? entry.isEnabled : false;
+  const dataTakenFromCandidate =
+    typeof entry.dataTakenFromCandidate === 'boolean'
+      ? entry.dataTakenFromCandidate
+      : false;
+  const rawContent = Array.isArray(entry.content)
+    ? entry.content
+    : Array.isArray(entry.publications)
+      ? entry.publications
+      : [];
+
+  const content = rawContent.filter(isRecord).map(item => ({
+    acceptedPublisherName: toSafeString(
+      item.acceptedPublisherName || item.acceptedPublisher
+    ),
+    publishedDateFrom: toSafeString(item.publishedDateFrom),
+    publishedDateTo: toSafeString(item.publishedDateTo),
+  }));
+
+  return { isEnabled, dataTakenFromCandidate, content };
+}
+
+function normalizeClubsAndSocieties(raw: unknown) {
+  const entry: unknown = Array.isArray(raw) ? raw[0] : raw;
+  if (!isRecord(entry)) return undefined;
+
+  const isEnabled =
+    typeof entry.isEnabled === 'boolean' ? entry.isEnabled : false;
+  const dataTakenFromCandidate =
+    typeof entry.dataTakenFromCandidate === 'boolean'
+      ? entry.dataTakenFromCandidate
+      : false;
+  const rawContent = Array.isArray(entry.content)
+    ? entry.content
+    : Array.isArray(entry.clubsAndSocieties)
+      ? entry.clubsAndSocieties
+      : [];
+
+  const content = rawContent.filter(isRecord).map(item => ({
+    clubSociety: toTagList(item.clubSociety),
+    organization: toTagList(item.organization || item.representedOrganization),
+    organizationLocations: toTagList(item.organizationLocations),
+    positionRoleHeld: toSafeString(item.positionRoleHeld || item.position),
+    startDate: toSafeString(item.startDate),
+    endDate: toSafeString(item.endDate),
+  }));
+
+  return { isEnabled, dataTakenFromCandidate, content };
+}
+
+function normalizeSports(raw: unknown) {
+  const entry: unknown = Array.isArray(raw) ? raw[0] : raw;
+  if (!isRecord(entry)) return undefined;
+
+  const isEnabled =
+    typeof entry.isEnabled === 'boolean' ? entry.isEnabled : false;
+  const dataTakenFromCandidate =
+    typeof entry.dataTakenFromCandidate === 'boolean'
+      ? entry.dataTakenFromCandidate
+      : false;
+  const rawContent = Array.isArray(entry.content)
+    ? entry.content
+    : Array.isArray(entry.sports)
+      ? entry.sports
+      : [];
+
+  const content = rawContent.filter(isRecord).map(item => ({
+    nameOfSport: toTagList(item.nameOfSport || item.sport),
+    representedOrganization: toTagList(
+      item.representedOrganization || item.organization
+    ),
+    organizationLocations: toTagList(item.organizationLocations),
+    levelRepresented: toTagList(item.levelRepresented),
+    positionRoleHeld: toSafeString(item.positionRoleHeld || item.position),
+    startDate: toSafeString(item.startDate),
+    endDate: toSafeString(item.endDate),
+  }));
+
+  return { isEnabled, dataTakenFromCandidate, content };
+}
+
+function normalizeVolunteering(raw: unknown) {
+  const entry: unknown = Array.isArray(raw) ? raw[0] : raw;
+  if (!isRecord(entry)) return undefined;
+
+  const isEnabled =
+    typeof entry.isEnabled === 'boolean' ? entry.isEnabled : false;
+  const dataTakenFromCandidate =
+    typeof entry.dataTakenFromCandidate === 'boolean'
+      ? entry.dataTakenFromCandidate
+      : false;
+  const rawContent = Array.isArray(entry.content)
+    ? entry.content
+    : Array.isArray(entry.volunteering)
+      ? entry.volunteering
+      : [];
+
+  const content = rawContent.filter(isRecord).map(item => ({
+    organization: toTagList(item.organization || item.organizationName),
+    organizationLocations: toTagList(item.organizationLocations),
+    positionRole: toSafeString(item.positionRole || item.position),
+    cause: toTagList(item.cause),
+    startDate: toSafeString(item.startDate),
+    endDate: toSafeString(item.endDate),
+  }));
+
+  return { isEnabled, dataTakenFromCandidate, content };
+}
+
+function normalizeHonoursAwards(raw: unknown) {
+  const entry: unknown = Array.isArray(raw) ? raw[0] : raw;
+  if (!isRecord(entry)) return undefined;
+
+  const isEnabled =
+    typeof entry.isEnabled === 'boolean' ? entry.isEnabled : false;
+  const dataTakenFromCandidate =
+    typeof entry.dataTakenFromCandidate === 'boolean'
+      ? entry.dataTakenFromCandidate
+      : false;
+  const rawContent = Array.isArray(entry.content)
+    ? entry.content
+    : Array.isArray(entry.honoursAndAwards)
+      ? entry.honoursAndAwards
+      : [];
+
+  const content = rawContent.filter(isRecord).map(item => ({
+    title: toSafeString(item.title),
+    associatedOrganizations: toTagList(item.associatedOrganizations),
+    organizationLocations: toTagList(item.organizationLocations),
+    issuedBy: toSafeString(item.issuedBy),
+    issuedFromDate: toSafeString(item.issuedFromDate || item.issuedDateFrom),
+    issuedToDate: toSafeString(item.issuedToDate || item.issuedDateTo),
+  }));
+
+  return { isEnabled, dataTakenFromCandidate, content };
+}
+
+function normalizeSkills(raw: unknown) {
+  const entry: unknown = Array.isArray(raw) ? raw[0] : raw;
+  if (!isRecord(entry)) {
+    if (Array.isArray(raw))
+      return {
+        isEnabled: true,
+        dataTakenFromCandidate: false,
+        content: toTagList(raw),
+      };
+    return undefined;
+  }
+  const isEnabled =
+    typeof entry.isEnabled === 'boolean' ? entry.isEnabled : false;
+  const dataTakenFromCandidate =
+    typeof entry.dataTakenFromCandidate === 'boolean'
+      ? entry.dataTakenFromCandidate
+      : false;
+  const rawContent = Array.isArray(entry.content)
+    ? entry.content
+    : Array.isArray(entry.skills)
+      ? entry.skills
+      : [];
+  return { isEnabled, dataTakenFromCandidate, content: toTagList(rawContent) };
+}
+
+function normalizeLanguages(raw: unknown) {
+  const entry: unknown = Array.isArray(raw) ? raw[0] : raw;
+  if (!isRecord(entry)) {
+    if (Array.isArray(raw))
+      return {
+        isEnabled: true,
+        dataTakenFromCandidate: false,
+        content: toTagList(raw),
+      };
+    return undefined;
+  }
+  const isEnabled =
+    typeof entry.isEnabled === 'boolean' ? entry.isEnabled : false;
+  const dataTakenFromCandidate =
+    typeof entry.dataTakenFromCandidate === 'boolean'
+      ? entry.dataTakenFromCandidate
+      : false;
+  const rawContent = Array.isArray(entry.content)
+    ? entry.content
+    : Array.isArray(entry.languages)
+      ? entry.languages
+      : [];
+  return { isEnabled, dataTakenFromCandidate, content: toTagList(rawContent) };
+}
+
+function normalizeCauses(raw: unknown) {
+  const entry: unknown = Array.isArray(raw) ? raw[0] : raw;
+  if (!isRecord(entry)) {
+    if (Array.isArray(raw))
+      return {
+        isEnabled: true,
+        dataTakenFromCandidate: false,
+        content: toTagList(raw),
+      };
+    return undefined;
+  }
+  const isEnabled =
+    typeof entry.isEnabled === 'boolean' ? entry.isEnabled : false;
+  const dataTakenFromCandidate =
+    typeof entry.dataTakenFromCandidate === 'boolean'
+      ? entry.dataTakenFromCandidate
+      : false;
+  const rawContent = Array.isArray(entry.content)
+    ? entry.content
+    : Array.isArray(entry.causes)
+      ? entry.causes
+      : [];
+  return { isEnabled, dataTakenFromCandidate, content: toTagList(rawContent) };
+}
+
+function normalizeHobbies(raw: unknown) {
+  const entry: unknown = Array.isArray(raw) ? raw[0] : raw;
+  if (!isRecord(entry)) {
+    if (Array.isArray(raw))
+      return {
+        isEnabled: true,
+        dataTakenFromCandidate: false,
+        content: toTagList(raw),
+      };
+    return undefined;
+  }
+  const isEnabled =
+    typeof entry.isEnabled === 'boolean' ? entry.isEnabled : false;
+  const dataTakenFromCandidate =
+    typeof entry.dataTakenFromCandidate === 'boolean'
+      ? entry.dataTakenFromCandidate
+      : false;
+  const rawContent = Array.isArray(entry.content)
+    ? entry.content
+    : Array.isArray(entry.hobbies)
+      ? entry.hobbies
+      : Array.isArray(entry.hobbyList)
+        ? entry.hobbyList
+        : [];
+  return { isEnabled, dataTakenFromCandidate, content: toTagList(rawContent) };
+}
+
+function normalizeIndustries(raw: unknown) {
+  const entry: unknown = Array.isArray(raw) ? raw[0] : raw;
+  if (!isRecord(entry)) {
+    if (Array.isArray(raw))
+      return {
+        isEnabled: true,
+        dataTakenFromCandidate: false,
+        content: toTagList(raw),
+      };
+    return undefined;
+  }
+  const isEnabled =
+    typeof entry.isEnabled === 'boolean' ? entry.isEnabled : false;
+  const dataTakenFromCandidate =
+    typeof entry.dataTakenFromCandidate === 'boolean'
+      ? entry.dataTakenFromCandidate
+      : false;
+  const rawContent = Array.isArray(entry.content)
+    ? entry.content
+    : Array.isArray(entry.industries)
+      ? entry.industries
+      : [];
+  return { isEnabled, dataTakenFromCandidate, content: toTagList(rawContent) };
+}
+
 function toVacancyViewModel(
   rawVacancy: Record<string, unknown>
 ): VacancyViewModel {
@@ -312,6 +581,53 @@ function toVacancyViewModel(
     sectionSource,
     ['licenseCertificates', 'licensesAndCertifications']
   );
+  const preferredPublicationsSection = readSectionValue(
+    rawVacancy,
+    sectionSource,
+    ['preferredPublications', 'publications']
+  );
+  const preferredClubSocietiesSection = readSectionValue(
+    rawVacancy,
+    sectionSource,
+    ['preferredClubSocieties', 'clubsAndSocieties', 'clubSocieties']
+  );
+  const preferredSportsSection = readSectionValue(rawVacancy, sectionSource, [
+    'preferredSports',
+    'sports',
+  ]);
+  const preferredVolunteeringSection = readSectionValue(
+    rawVacancy,
+    sectionSource,
+    ['preferredVolunteering', 'volunteering']
+  );
+  const preferredHonoursAwardsSection = readSectionValue(
+    rawVacancy,
+    sectionSource,
+    ['preferredHonoursAwards', 'honoursAndAwards']
+  );
+  const preferredSkillsSection = readSectionValue(rawVacancy, sectionSource, [
+    'preferredSkills',
+    'skills',
+  ]);
+  const preferredLanguagesSection = readSectionValue(
+    rawVacancy,
+    sectionSource,
+    ['preferredLanguages', 'languages']
+  );
+  const preferredCausesSection = readSectionValue(rawVacancy, sectionSource, [
+    'preferredCauses',
+    'causes',
+  ]);
+  const preferredHobbiesSection = readSectionValue(rawVacancy, sectionSource, [
+    'preferredHobbies',
+    'hobbyList',
+    'hobbies',
+  ]);
+  const preferredIndustriesSection = readSectionValue(
+    rawVacancy,
+    sectionSource,
+    ['preferredIndustries', 'industry', 'industries']
+  );
 
   return {
     title,
@@ -348,6 +664,20 @@ function toVacancyViewModel(
     licenseCertificates: normalizeLicenseCertificates(
       licenseCertificatesSection
     ),
+    preferredPublications: normalizePublications(preferredPublicationsSection),
+    preferredClubSocieties: normalizeClubsAndSocieties(
+      preferredClubSocietiesSection
+    ),
+    preferredSports: normalizeSports(preferredSportsSection),
+    preferredVolunteering: normalizeVolunteering(preferredVolunteeringSection),
+    preferredHonoursAwards: normalizeHonoursAwards(
+      preferredHonoursAwardsSection
+    ),
+    preferredSkills: normalizeSkills(preferredSkillsSection),
+    preferredLanguages: normalizeLanguages(preferredLanguagesSection),
+    preferredCauses: normalizeCauses(preferredCausesSection),
+    preferredHobbies: normalizeHobbies(preferredHobbiesSection),
+    preferredIndustries: normalizeIndustries(preferredIndustriesSection),
   };
 }
 
