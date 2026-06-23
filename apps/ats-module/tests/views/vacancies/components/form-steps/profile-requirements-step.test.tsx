@@ -504,17 +504,14 @@ describe('ProfileRequirementsStep', () => {
   });
 
   describe('emptyDisableDialog', () => {
-    it('shows when Next is clicked with enabled step but no data', async () => {
-      const user = userEvent.setup();
+    it('keeps Next disabled when step is enabled but no data', () => {
       renderStep({ isEnabled: true });
 
-      await user.click(screen.getByText('profileRequirements.nextButton'));
+      expect(screen.getByText('profileRequirements.nextButton')).toBeDisabled();
 
-      await waitFor(() => {
-        expect(
-          screen.getByText('profileRequirements.emptyDisableDialog.title')
-        ).toBeInTheDocument();
-      });
+      expect(
+        screen.queryByText('profileRequirements.emptyDisableDialog.title')
+      ).not.toBeInTheDocument();
     });
 
     it('does not show when dataTakenFromCandidate is checked', async () => {
