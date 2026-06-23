@@ -284,8 +284,8 @@ interface ScheduleVacancy {
 }
 
 interface ScheduleVacancyPayload {
-  schedulePublishAt: string;
-  expirationAt: string;
+  schedulePublishAt: string | null;
+  expirationAt: string | null;
 }
 
 // ─── Customizable Form ──────────────────────────────────────────────────────
@@ -1524,7 +1524,7 @@ interface CreateVacancyPayload {
     causes: CausesApiPayload[];
     hobbyList: HobbiesApiPayload[];
     industry: IndustryApiPayload;
-    schedule: { schedulePublishAt: string; expirationAt: string };
+    schedule: ScheduleVacancyPayload;
     customizedForm: CustomizedFormApiPayload;
     projects: ProjectGroupApiPayload[];
     publications: PublicationGroupApiPayload[];

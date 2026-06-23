@@ -2,8 +2,11 @@ import type {
   AddOrSelectOption,
   JobRequirement,
   LicenseCertRef,
+  PatentStatus,
   VacancyForm,
+  preferredPatentsSchema,
 } from '@/views/vacancies/types';
+import { parseLocalDate } from '@/views/vacancies/utils/date-timezone-safe';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
@@ -931,6 +934,70 @@ function normalizePreferredIndustriesSection(
   };
 }
 
+const PATENT_STATUS_LABEL_MAP: Record<PatentStatus, string> = {
+  PATENT_PENDING: 'Patent Pending',
+  PATENT_ISSUED: 'Patent Issued',
+};
+
+function normalizePatentsSection(
+  rawSection: unknown,
+  fallback: VacancyForm['patents']
+): preferredPatentsSchema {
+  const fallbackValue: preferredPatentsSchema = fallback ?? {
+    isEnabled: false,
+    dataTakenFromCandidate: false,
+    patents: [],
+  };
+
+  if (!isRecord(rawSection)) {
+    return fallbackValue;
+  }
+
+  const entries = Array.isArray(rawSection.patents) ? rawSection.patents : [];
+
+  return {
+    isEnabled:
+      typeof rawSection.isEnabled === 'boolean'
+        ? rawSection.isEnabled
+        : fallbackValue.isEnabled,
+    dataTakenFromCandidate:
+      typeof rawSection.dataTakenFromCandidate === 'boolean'
+        ? rawSection.dataTakenFromCandidate
+        : fallbackValue.dataTakenFromCandidate,
+    patents: entries.filter(isRecord).map(item => {
+      const apiStatuses = Array.isArray(item.statuses) ? item.statuses : [];
+      const apiIndustries = Array.isArray(item.relatedIndustry)
+        ? item.relatedIndustry
+        : [];
+
+      return {
+        relatedIndustries: apiIndustries.filter(isRecord).map(ind => ({
+          value: toSafeString(ind.id),
+          label:
+            toSafeString(ind.label) ||
+            toSafeString(ind.displayValue) ||
+            toSafeString(ind.id),
+          source: toSafeString(ind.source) || 'MASTER',
+        })),
+        statuses: apiStatuses
+          .filter(
+            (s): s is PatentStatus =>
+              s === 'PATENT_PENDING' || s === 'PATENT_ISSUED'
+          )
+          .map(s => ({
+            value: s,
+            label: PATENT_STATUS_LABEL_MAP[s],
+          })),
+        fromDate:
+          parseLocalDate(toSafeString(item.fromDate) || undefined) ?? undefined,
+        toDate:
+          parseLocalDate(toSafeString(item.toDate) || undefined) ?? undefined,
+        isOpen: true,
+      };
+    }),
+  };
+}
+
 // Explicit map from API enum values → form state values.
 // ONHOLD (no underscore) is the API enum; on_hold is the form/UI key.
 const API_STATUS_TO_FORM: Record<string, string> = {
@@ -1007,6 +1074,9 @@ function toVacancyFormFromResponse(
     sectionSource,
     ['preferredVolunteering', 'volunteering']
   );
+  const patentsSection = readSectionValue(rawVacancy, sectionSource, [
+    'patents',
+  ]);
 
   // Explicit whitelist: only pick known scalar top-level form fields.
   // Avoids carrying unknown API keys into context state.
@@ -1078,6 +1148,7 @@ function toVacancyFormFromResponse(
       preferredIndustriesSection,
       previousForm.preferredIndustries
     ),
+    patents: normalizePatentsSection(patentsSection, previousForm.patents),
   };
 }
 

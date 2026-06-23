@@ -662,7 +662,10 @@ function toVacancyPayload(
       causes: mapPreferredCauses(form),
       hobbyList: mapPreferredHobbies(form),
       industry: mapIndustry(form),
-      schedule: form.schedule ?? { schedulePublishAt: '', expirationAt: '' },
+      schedule: {
+        schedulePublishAt: form.schedule?.schedulePublishAt || null,
+        expirationAt: form.schedule?.expirationAt || null,
+      },
       customizedForm: mapCustomizedForm(form),
       projects: mapProjects(form),
       publications: mapPublications(form),
