@@ -1,5 +1,9 @@
 {
   "test": "Welcome to React and react-i18next",
+  "auth": {
+    "loginSuccess": "Success",
+    "welcomeBack": "Logged in successfully."
+  },
   "sidebar": {
     "vacancies": "Vacancies",
     "viewVacancies": "View Vacancies",
