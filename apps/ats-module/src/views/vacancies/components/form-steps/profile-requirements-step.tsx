@@ -470,19 +470,6 @@ export default function ProfileRequirementsStep({
     dataTakenFromCandidate ||
     hasProfileRequirementsData(form.getValues());
 
-  const persistCurrentStepData = (data: ProfileRequirementsFormValues) => {
-    setForm(prev => ({
-      ...prev,
-      profileRequirements: {
-        isEnabled: data.isEnabled,
-        dataTakenFromCandidate: data.dataTakenFromCandidate,
-        gender: data.gender,
-        maritalStatus: data.maritalStatus,
-        addresses: data.addresses,
-      },
-    }));
-  };
-
   const isFieldsDisabled = !isEnabled || dataTakenFromCandidate;
 
   const handleConfirmDisable = () => {
@@ -582,7 +569,7 @@ export default function ProfileRequirementsStep({
       return;
     }
 
-    persistCurrentStepData(form.getValues());
+    stepPersistRef.current?.();
     onBack();
   };
 
