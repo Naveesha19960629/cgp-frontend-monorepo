@@ -4,8 +4,9 @@ import { httpClient } from '@cgp/data-access';
 
 export const genderService = {
   getGenders: async (): Promise<ApiResponse<GenderItem[]>> => {
-    const response =
-      await httpClient.get<ApiResponse<GenderItem[]>>('/genders');
+    const response = await httpClient.get<ApiResponse<GenderItem[]>>(
+      '/genders?context=VACANCY'
+    );
     return response.data;
   },
 };

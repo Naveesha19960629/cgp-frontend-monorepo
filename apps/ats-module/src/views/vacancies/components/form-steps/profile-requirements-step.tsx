@@ -85,7 +85,7 @@ function isDuplicateAddress(
 function sanitizePostalCode(value: string): string {
   // Remove emojis and special Unicode characters, keep only ASCII alphanumeric + common postal code chars
   return value
-    .replace(/[^\w\s.\-]/g, '') // Remove non-word characters except dots and hyphens
+    .replace(/[^\w\s.-]/g, '') // Remove non-word characters except dots and hyphens
     .replace(/[\u0080-\uFFFF]/g, ''); // Remove non-ASCII characters
 }
 
@@ -515,7 +515,7 @@ export default function ProfileRequirementsStep({
     });
   };
 
-  const handleSubmit = async (data: ProfileRequirementsFormValues) => {
+  const handleSubmit = (data: ProfileRequirementsFormValues) => {
     if (data.isEnabled && !data.dataTakenFromCandidate) {
       const hasData = hasProfileRequirementsData(data);
       if (!hasData) {
