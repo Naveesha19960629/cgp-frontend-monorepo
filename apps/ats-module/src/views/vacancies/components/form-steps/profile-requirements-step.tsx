@@ -132,12 +132,17 @@ function AddressCard({
     const addresses = form.getValues('addresses');
     if (isDuplicateAddress(addresses, index)) {
       ErrorToast({
-        title: t('common.errorTitle'),
+        title: 'Error',
         description: t(
           'profileRequirements.errors.duplicateEntry',
           'This entry already exists.'
         ),
       });
+      // Clear the duplicate entry fields
+      form.setValue(`addresses.${index}.city`, { id: '', label: '' });
+      form.setValue(`addresses.${index}.stateProvince`, { id: '', label: '' });
+      form.setValue(`addresses.${index}.country`, { id: '', label: '' });
+      form.setValue(`addresses.${index}.postalCode`, '');
     }
   };
 
@@ -527,12 +532,17 @@ export default function ProfileRequirementsStep({
       for (let i = 0; i < data.addresses.length; i++) {
         if (isDuplicateAddress(data.addresses, i)) {
           ErrorToast({
-            title: t('common.errorTitle'),
+            title: 'Error',
             description: t(
               'profileRequirements.errors.duplicateEntry',
               'This entry already exists.'
             ),
           });
+          // Clear all fields in the duplicate address entry
+          form.setValue(`addresses.${i}.city`, { id: '', label: '' });
+          form.setValue(`addresses.${i}.stateProvince`, { id: '', label: '' });
+          form.setValue(`addresses.${i}.country`, { id: '', label: '' });
+          form.setValue(`addresses.${i}.postalCode`, '');
           return;
         }
       }
@@ -838,7 +848,7 @@ export default function ProfileRequirementsStep({
               onClick={() => {
                 if (fields.length >= MAX_ADDRESS_ENTRIES) {
                   ErrorToast({
-                    title: t('common.errorTitle'),
+                    title: 'Error',
                     description: t(
                       'profileRequirements.errors.maxEntries',
                       'Exceeded maximum of {{max}} entries allowed.',
