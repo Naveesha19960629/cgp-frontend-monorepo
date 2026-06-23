@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   StepDisableDialog,
   VacancyCancelDialog,
+  VacancyEditCancelDialog,
 } from '@/views/vacancies/components';
 import {
   VACANCY_STEPS,
@@ -204,20 +205,39 @@ export default function VacancyCreateStepperForm({
         </Tabs>
       </div>
 
-      <VacancyCancelDialog
-        open={showCancelDialog}
-        onOpenChange={setShowCancelDialog}
-        onDiscard={() => {
-          setShowCancelDialog(false);
-          SuccessToast({
-            title: t('vacancyCancelDialog.notifications.discard.title'),
-            description: t('vacancyCancelDialog.notifications.discard.message'),
-          });
-          void navigate('/dashboard/ats/vacancies');
-        }}
-        onSaveAsDraft={OnSaveAsDraft}
-        isSavingDraft={isSavingDraft}
-      />
+      {mode === 'edit' ? (
+        <VacancyEditCancelDialog
+          open={showCancelDialog}
+          onOpenChange={setShowCancelDialog}
+          onConfirm={() => {
+            setShowCancelDialog(false);
+            SuccessToast({
+              title: t('vacancyEditCancelDialog.notifications.discard.title'),
+              description: t(
+                'vacancyEditCancelDialog.notifications.discard.message'
+              ),
+            });
+            void navigate('/dashboard/ats/vacancies');
+          }}
+        />
+      ) : (
+        <VacancyCancelDialog
+          open={showCancelDialog}
+          onOpenChange={setShowCancelDialog}
+          onDiscard={() => {
+            setShowCancelDialog(false);
+            SuccessToast({
+              title: t('vacancyCancelDialog.notifications.discard.title'),
+              description: t(
+                'vacancyCancelDialog.notifications.discard.message'
+              ),
+            });
+            void navigate('/dashboard/ats/vacancies');
+          }}
+          onSaveAsDraft={OnSaveAsDraft}
+          isSavingDraft={isSavingDraft}
+        />
+      )}
 
       <StepDisableDialog
         open={pendingTargetIndex !== null}

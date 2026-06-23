@@ -998,6 +998,12 @@ interface VacancyCancelDialogProps {
   isSavingDraft?: boolean;
 }
 
+interface VacancyEditCancelDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onConfirm: () => void;
+}
+
 interface VacancyTableColumn {
   vacancyId: string;
   title: string;
@@ -1676,6 +1682,7 @@ export type {
   PublicationApiData,
   PublicationResponse,
   VacancyCancelDialogProps,
+  VacancyEditCancelDialogProps,
   VacancyDetailJobRequirementData,
   VacancyDetailPatentEntry,
   VacancyDetailData,

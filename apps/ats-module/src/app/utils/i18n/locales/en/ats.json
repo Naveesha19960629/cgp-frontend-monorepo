@@ -301,6 +301,19 @@
     }
   },
 
+  "vacancyEditCancelDialog": {
+    "title": "Are you sure?",
+    "description": "Are you sure you want to leave without updating your changes? Any unsaved changes will be lost.",
+    "yesButton": "Yes",
+    "noButton": "No",
+    "notifications": {
+      "discard": {
+        "title": "Successfully Discarded",
+        "message": "Vacancy edits discarded successfully."
+      }
+    }
+  },
+
   "preferredPatents": {
     "title": "Preferred Patents",
     "back": "Back",
