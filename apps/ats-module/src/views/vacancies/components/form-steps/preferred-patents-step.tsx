@@ -376,9 +376,16 @@ function PatentCard({
                               );
                             }
                           }}
-                          disabled={date =>
-                            date > new Date() || date < HUNDRED_YEARS_AGO
-                          }
+                          disabled={date => {
+                            const toDate = form.getValues(
+                              `patents.${index}.toDate`
+                            );
+                            return (
+                              date > new Date() ||
+                              date < HUNDRED_YEARS_AGO ||
+                              (toDate != null && date > toDate)
+                            );
+                          }}
                           captionLayout="dropdown"
                           startMonth={HUNDRED_YEARS_AGO}
                           endMonth={new Date()}
