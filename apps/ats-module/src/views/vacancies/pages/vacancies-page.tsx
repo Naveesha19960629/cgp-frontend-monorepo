@@ -52,8 +52,8 @@ export default function VacanciesPage() {
     }
   );
 
-  const data = vacanciesResponse?.data.content ?? [];
-  const totalPages = vacanciesResponse?.data.totalPages ?? 0;
+  const data = vacanciesResponse?.data?.content ?? [];
+  const totalPages = vacanciesResponse?.data?.totalPages ?? 0;
   const hasActiveFilters = Boolean(
     params.search || params.careerPath || params.discipline || params.status
   );

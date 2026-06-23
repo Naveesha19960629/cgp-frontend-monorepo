@@ -12,6 +12,7 @@ import {
   VacancyLicensesCertificationsSection,
   VacancyProfileRequirementsSection,
   VacancyPublicationsSection,
+  VacancyScheduledVacancySection,
   VacancySkillsSection,
   VacancySportsSection,
   VacancyStatusBadge,
@@ -135,6 +136,9 @@ export default function VacancyIdViewPage() {
         />
         <VacancyProfileRequirementsSection
           profileRequirement={viewModel.profileRequirement}
+        />
+        <VacancyScheduledVacancySection
+          scheduledVacancy={viewModel.scheduledVacancy}
         />
         <VacancyPublicationsSection
           preferredPublications={viewModel.preferredPublications}

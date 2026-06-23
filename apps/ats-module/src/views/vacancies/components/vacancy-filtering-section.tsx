@@ -109,22 +109,29 @@ export default function VacancyFilteringSection({
   const { data: disciplinesData, isLoading: isDisciplinesLoading } =
     useDisciplinesQuery(disciplineSearch);
 
+  const careerPathItems = Array.isArray(careerPathsData?.data?.items?.content)
+    ? careerPathsData.data.items.content
+    : [];
+  const disciplineItems = Array.isArray(disciplinesData?.data?.items?.content)
+    ? disciplinesData.data.items.content
+    : [];
+
   const careerPathOptions = useMemo(
     () =>
-      careerPathsData?.data.items.content.map(item => ({
+      careerPathItems.map(item => ({
         value: item.id,
         label: item.label,
       })) ?? [],
-    [careerPathsData]
+    [careerPathItems]
   );
 
   const disciplineOptions = useMemo(
     () =>
-      disciplinesData?.data.items.content.map(item => ({
+      disciplineItems.map(item => ({
         value: item.id,
         label: item.label,
       })) ?? [],
-    [disciplinesData]
+    [disciplineItems]
   );
 
   const statusOptions = useMemo(
