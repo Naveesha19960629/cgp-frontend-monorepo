@@ -1,8 +1,9 @@
-import { Calendar, Link21 } from 'iconsax-reactjs';
+import { LinkSquare } from 'iconsax-reactjs';
 
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
+import calendarIcon from '@/assets/images/calender-with-time.svg';
 import type { VacancyViewModel } from '@/views/vacancies/types';
 import { parseLocalDate } from '@/views/vacancies/utils/date-timezone-safe';
 
@@ -66,22 +67,20 @@ function VacancyScheduledVacancySection({
       <article className="rounded-xl border border-[#E5E7EB] bg-[#F9FAFB] p-5">
         <div className="flex flex-col gap-2.5">
           <ScheduledRow
-            icon={
-              <Calendar size={20} className="text-slate-600" variant="Bold" />
-            }
+            icon={<img src={calendarIcon} alt="schedule" className="h-5 w-5" />}
             label={t('vacancies.view.scheduledVacancy.publishDateTime')}
             value={formatScheduleDateTime(scheduledVacancy.schedulePublishAt)}
           />
           <ScheduledRow
             icon={
-              <Calendar size={20} className="text-slate-600" variant="Bold" />
+              <img src={calendarIcon} alt="expiration" className="h-5 w-5" />
             }
             label={t('vacancies.view.scheduledVacancy.expirationDateTime')}
             value={formatScheduleDateTime(scheduledVacancy.expirationAt)}
           />
           <ScheduledRow
             icon={
-              <Link21 size={20} className="text-slate-600" variant="Bold" />
+              <LinkSquare size={20} className="text-slate-600" variant="Bold" />
             }
             label={t('vacancies.view.scheduledVacancy.vacancyLink')}
             value={scheduledVacancy.vacancyLink || '-'}
