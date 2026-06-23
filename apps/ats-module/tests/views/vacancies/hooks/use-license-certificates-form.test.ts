@@ -1,4 +1,4 @@
-import { renderHook } from '@testing-library/react';
+import { act, renderHook } from '@testing-library/react';
 
 import { useLicenseCertificatesForm } from '@/views/vacancies/hooks/use-license-certificates-form';
 
@@ -19,6 +19,36 @@ describe('useLicenseCertificatesForm — no initial data', () => {
 });
 
 describe('useLicenseCertificatesForm — restoring from saved data', () => {
+  it('does not reset form values when rerendered with equivalent initial data', () => {
+    const initialData = {
+      isEnabled: true,
+      dataTakenFromCandidate: false,
+      content: [
+        {
+          nameOfLicenseCert: [],
+          issuingOrganization: [],
+          organizationLocations: [],
+          internationallyAccepted: false,
+          issueDate: '',
+          expirationDate: '',
+        },
+      ],
+    };
+
+    const { result, rerender } = renderHook(
+      ({ data }) => useLicenseCertificatesForm(data),
+      { initialProps: { data: initialData } }
+    );
+
+    act(() => {
+      result.current.setValue('entry.issueDate', '2025-05-10');
+    });
+
+    rerender({ data: { ...initialData } });
+
+    expect(result.current.getValues().entry.issueDate).toBe('2025-05-10');
+  });
+
   it('maps isEnabled and dataTakenFromCandidate from first record', () => {
     const { result } = renderHook(() =>
       useLicenseCertificatesForm([
@@ -168,5 +198,79 @@ describe('useLicenseCertificatesForm — restoring from saved data', () => {
     expect(values.entry.nameOfLicenseCert).toEqual([]);
     expect(values.entry.issuingOrganization).toBeUndefined();
     expect(values.entry.organizationLocations).toEqual([]);
+  });
+
+  it('accepts API object shape with licensesAndCertifications key', () => {
+    const { result } = renderHook(() =>
+      useLicenseCertificatesForm({
+        isEnabled: true,
+        dataTakenFromCandidate: false,
+        licensesAndCertifications: [
+          {
+            nameOfLicenseCert: [
+              { id: 'lc-obj-1', source: 'MASTER', label: 'PMP' },
+            ],
+            issuingOrganization: [
+              { id: 'org-obj-1', source: 'MASTER', label: 'PMI' },
+            ],
+            organizationLocations: [
+              { id: 'loc-obj-1', source: 'MASTER', label: 'Colombo' },
+            ],
+            internationallyAccepted: true,
+            issueDate: '2024-01-01',
+            expirationDate: '2027-01-01',
+          },
+        ],
+      })
+    );
+
+    const values = result.current.getValues();
+    expect(values.isEnabled).toBe(true);
+    expect(values.entry.nameOfLicenseCert).toEqual([
+      {
+        value: 'lc-obj-1',
+        label: 'PMP',
+        source: 'MASTER',
+        certType: undefined,
+      },
+    ]);
+    expect(values.entry.issuingOrganization).toEqual({
+      value: 'org-obj-1',
+      label: 'PMI',
+      source: 'MASTER',
+    });
+  });
+
+  it('falls back to id when name and label are missing in API object shape', () => {
+    const { result } = renderHook(() =>
+      useLicenseCertificatesForm({
+        isEnabled: true,
+        dataTakenFromCandidate: false,
+        content: [
+          {
+            nameOfLicenseCert: [{ id: 'lc-id-only', source: 'MASTER' }],
+            issuingOrganization: [{ id: 'org-id-only', source: 'MASTER' }],
+            organizationLocations: [{ id: 'loc-id-only', source: 'MASTER' }],
+            internationallyAccepted: false,
+            issueDate: '',
+            expirationDate: '',
+          },
+        ],
+      })
+    );
+
+    const values = result.current.getValues();
+    expect(values.entry.nameOfLicenseCert[0]).toMatchObject({
+      value: 'lc-id-only',
+      label: 'lc-id-only',
+    });
+    expect(values.entry.issuingOrganization).toMatchObject({
+      value: 'org-id-only',
+      label: 'org-id-only',
+    });
+    expect(values.entry.organizationLocations[0]).toMatchObject({
+      value: 'loc-id-only',
+      label: 'loc-id-only',
+    });
   });
 });

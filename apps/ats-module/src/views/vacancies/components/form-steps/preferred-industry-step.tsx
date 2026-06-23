@@ -1,9 +1,10 @@
 import { ArrowLeft2 } from 'iconsax-reactjs';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import StepDisableDialog from '@/views/vacancies/components/step-disable-dialog';
+import VacancyStatusBadge from '@/views/vacancies/components/vacancy-status-badge';
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import {
   useCreateIndustryMutation,
@@ -33,35 +34,53 @@ const multiSelectInfoAvatar = new URL(
 export default function PreferredIndustryStep({
   onNext,
   onBack,
+  mode = 'create',
 }: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
   const showDisableToast = useDisableSuccessToast();
   const {
     form,
     setForm,
+    onCancel,
     stepPersistRef,
     stepDisableRef,
     currentStepIndex,
     removeCompletedStep,
   } = useVacancyForm();
 
-  const [isEnabled, setIsEnabled] = useState(
-    form.preferredIndustries?.isEnabled ?? false
-  );
-  const [dataTakenFromCandidate, setDataTakenFromCandidate] = useState(
-    form.preferredIndustries?.dataTakenFromCandidate ?? false
-  );
-  const [selectedIndustries, setSelectedIndustries] = useState<IndustryEntry[]>(
-    form.preferredIndustries?.industries ?? []
-  );
+  const preferredIndustries = form.preferredIndustries ?? {
+    isEnabled: false,
+    dataTakenFromCandidate: false,
+    industries: [],
+  };
+  const isEnabled = preferredIndustries.isEnabled;
+  const dataTakenFromCandidate = preferredIndustries.dataTakenFromCandidate;
+  const selectedIndustries = preferredIndustries.industries;
+
+  const updatePreferredIndustries = (
+    patch: Partial<{
+      isEnabled: boolean;
+      dataTakenFromCandidate: boolean;
+      industries: IndustryEntry[];
+    }>
+  ) => {
+    setForm(prev => ({
+      ...prev,
+      preferredIndustries: {
+        isEnabled,
+        dataTakenFromCandidate,
+        industries: selectedIndustries,
+        ...patch,
+      },
+    }));
+  };
 
   useStepGuard(
     isEnabled && !dataTakenFromCandidate && selectedIndustries.length === 0
   );
 
-  const _industriesRef = useRef<() => void>(() => {});
   useEffect(() => {
-    _industriesRef.current = () => {
+    stepPersistRef.current = () => {
       setForm(prev => ({
         ...prev,
         preferredIndustries: {
@@ -71,13 +90,17 @@ export default function PreferredIndustryStep({
         },
       }));
     };
-  }, [isEnabled, dataTakenFromCandidate, selectedIndustries, setForm]);
-  useEffect(() => {
-    stepPersistRef.current = () => _industriesRef.current();
+
     return () => {
       stepPersistRef.current = null;
     };
-  }, [stepPersistRef]);
+  }, [
+    dataTakenFromCandidate,
+    isEnabled,
+    selectedIndustries,
+    setForm,
+    stepPersistRef,
+  ]);
   useEffect(() => {
     stepDisableRef.current = () => {
       setForm(prev => ({
@@ -127,7 +150,7 @@ export default function PreferredIndustryStep({
         createIndustry,
         (search: string) => industryService.getIndustries(search)
       );
-      setSelectedIndustries(resolvedIndustries);
+      updatePreferredIndustries({ industries: resolvedIndustries });
     }
 
     onNext({
@@ -155,6 +178,9 @@ export default function PreferredIndustryStep({
           <h2 className="text-xl font-bold tracking-tight text-slate-900">
             {t('preferredIndustries.title')}
           </h2>
+          {mode === 'edit' && form.status ? (
+            <VacancyStatusBadge status={form.status} />
+          ) : null}
         </div>
         <Switch
           checked={isEnabled}
@@ -164,10 +190,10 @@ export default function PreferredIndustryStep({
               if (selectedIndustries.length > 0 || dataTakenFromCandidate) {
                 setConfirmDisableOpen(true);
               } else {
-                setIsEnabled(false);
+                updatePreferredIndustries({ isEnabled: false });
               }
             } else {
-              setIsEnabled(true);
+              updatePreferredIndustries({ isEnabled: true });
             }
           }}
         />
@@ -183,10 +209,16 @@ export default function PreferredIndustryStep({
               checked={dataTakenFromCandidate}
               onCheckedChange={checked => {
                 if (checked) {
-                  setSelectedIndustries([]);
+                  updatePreferredIndustries({
+                    industries: [],
+                    dataTakenFromCandidate: true,
+                  });
                   setHasMaxError(false);
+                  return;
                 }
-                setDataTakenFromCandidate(checked === true);
+                updatePreferredIndustries({
+                  dataTakenFromCandidate: false,
+                });
               }}
               className="mt-0.5"
             />
@@ -223,12 +255,23 @@ export default function PreferredIndustryStep({
               }))}
               onMaxSelected={() => setHasMaxError(true)}
               onChange={options => {
-                const entries: IndustryEntry[] = options.map(opt => ({
-                  id: opt.value,
-                  label: opt.label,
-                  source: (opt.source as string) ?? 'USER_CREATED',
-                }));
-                setSelectedIndustries(entries);
+                const dedupedByLabel = new Map<string, IndustryEntry>();
+
+                for (const opt of options) {
+                  const normalizedLabel = opt.label.trim().toLowerCase();
+                  if (!normalizedLabel || dedupedByLabel.has(normalizedLabel)) {
+                    continue;
+                  }
+
+                  dedupedByLabel.set(normalizedLabel, {
+                    id: opt.value,
+                    label: opt.label,
+                    source: (opt.source as string) ?? 'USER_CREATED',
+                  });
+                }
+
+                const entries = Array.from(dedupedByLabel.values());
+                updatePreferredIndustries({ industries: entries });
                 if (entries.length < MAX_INDUSTRIES) {
                   setHasMaxError(false);
                 }
@@ -295,10 +338,12 @@ export default function PreferredIndustryStep({
         description={t('preferredIndustries.confirmDisableDialog.message')}
         confirmLabel={t('preferredIndustries.confirmDisableDialog.disable')}
         onConfirm={() => {
-          setSelectedIndustries([]);
-          setDataTakenFromCandidate(false);
-          setIsEnabled(false);
-          removeCompletedStep(currentStepIndex);
+          updatePreferredIndustries({
+            industries: [],
+            dataTakenFromCandidate: false,
+            isEnabled: false,
+          });
+          removeCompletedStep?.(currentStepIndex ?? 0);
           setConfirmDisableOpen(false);
           showDisableToast(t('preferredIndustries.title'));
         }}
@@ -311,7 +356,7 @@ export default function PreferredIndustryStep({
         description={t('preferredIndustries.emptyDisableDialog.message')}
         confirmLabel={t('preferredIndustries.emptyDisableDialog.disable')}
         onConfirm={() => {
-          setIsEnabled(false);
+          updatePreferredIndustries({ isEnabled: false });
           setEmptyDisableOpen(false);
           showDisableToast(t('preferredIndustries.title'));
           onNext({
@@ -326,7 +371,7 @@ export default function PreferredIndustryStep({
 
       {/* ── Step footer ──────────────────────────────────────────────────── */}
       <div className="sticky bottom-0 flex items-center justify-end gap-4 bg-white px-6 py-7 shadow-[0px_-8px_6.8px_0px_rgba(0,0,0,0.04)]">
-        <Button variant="secondary" className="h-12 w-48" onClick={onBack}>
+        <Button variant="secondary" className="h-12 w-48" onClick={onCancel}>
           {t('common.cancel')}
         </Button>
         <Button className="h-12 w-48" onClick={() => void handleNext()}>

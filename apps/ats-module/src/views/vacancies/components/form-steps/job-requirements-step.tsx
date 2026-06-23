@@ -1,7 +1,5 @@
 import { Loader2 } from 'lucide-react';
 
-import { ArrowLeft2 } from 'iconsax-reactjs';
-
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -62,10 +60,7 @@ const multiSelectInfoAvatar = new URL(
   import.meta.url
 ).href;
 
-export default function JobRequirementsStep({
-  onNext,
-  onBack,
-}: Readonly<StepProps>) {
+export default function JobRequirementsStep({ onNext }: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
   const { form: contextForm, onCancel, stepDraftSaveRef } = useVacancyForm();
 
@@ -93,12 +88,16 @@ export default function JobRequirementsStep({
   const isRoleDisabled =
     selectedCareerPaths.length === 0 || selectedLevels.length === 0;
 
-  const roleDisabledMessage =
-    selectedCareerPaths.length === 0 && selectedLevels.length === 0
-      ? t('jobRequirements.dependencyHints.roleNeedCareerPathAndLevel')
-      : selectedCareerPaths.length === 0
-        ? t('jobRequirements.dependencyHints.roleNeedCareerPath')
-        : t('jobRequirements.dependencyHints.roleNeedLevel');
+  let roleDisabledMessage = t('jobRequirements.dependencyHints.roleNeedLevel');
+  if (selectedCareerPaths.length === 0 && selectedLevels.length === 0) {
+    roleDisabledMessage = t(
+      'jobRequirements.dependencyHints.roleNeedCareerPathAndLevel'
+    );
+  } else if (selectedCareerPaths.length === 0) {
+    roleDisabledMessage = t(
+      'jobRequirements.dependencyHints.roleNeedCareerPath'
+    );
+  }
 
   const maxSelectionError = t('jobRequirements.errors.maxSelections', {
     max: MAX_SELECTIONS,
@@ -356,14 +355,6 @@ export default function JobRequirementsStep({
 
           <div className="flex items-center justify-between px-7 py-8">
             <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={onBack}
-                className="text-slate-700 transition-colors hover:text-slate-900"
-                aria-label={t('common.back')}
-              >
-                <ArrowLeft2 size={24} />
-              </button>
               <h2 className="text-xl font-bold tracking-tight text-slate-900">
                 {t('jobRequirements.sectionTitle')}
               </h2>
@@ -660,7 +651,7 @@ export default function JobRequirementsStep({
                         value={field.value[0]?.value}
                         options={jobLevels.map(level => ({
                           value: level.id,
-                          label: level.name,
+                          label: level.label ?? level.name ?? '',
                         }))}
                         onValueChange={value => {
                           const selected = jobLevels.find(
@@ -671,7 +662,8 @@ export default function JobRequirementsStep({
                               ? [
                                   {
                                     value: selected.id,
-                                    label: selected.name,
+                                    label:
+                                      selected.label ?? selected.name ?? '',
                                     source: 'MASTER',
                                   },
                                 ]

@@ -51,6 +51,8 @@ const mockStepDraftSaveRef = {
   current: null as (() => Promise<unknown>) | null,
 };
 
+const mockOnCancel = vi.hoisted(() => vi.fn());
+
 const mockUseVacancyForm = vi.hoisted(() =>
   vi.fn(() => ({
     form: {
@@ -70,7 +72,7 @@ const mockUseVacancyForm = vi.hoisted(() =>
         },
       ],
     },
-    onCancel: vi.fn(),
+    onCancel: mockOnCancel,
     stepDraftSaveRef: mockStepDraftSaveRef,
   }))
 );
@@ -261,6 +263,7 @@ describe('JobRequirementsStep', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockOnCancel.mockClear();
     mockStepDraftSaveRef.current = null;
     mockFormTrigger.mockResolvedValue(true);
   });
@@ -279,7 +282,7 @@ describe('JobRequirementsStep', () => {
     ).toBeInTheDocument();
   });
 
-  it('renders Back and Next buttons', () => {
+  it('renders Cancel and Next buttons', () => {
     render(
       <JobRequirementsStep
         onNext={onNext}
@@ -288,12 +291,11 @@ describe('JobRequirementsStep', () => {
       />
     );
 
-    expect(screen.getByRole('button', { name: /back/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /cancel/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /next/i })).toBeInTheDocument();
   });
 
-  it('calls onBack when the Back button is clicked', async () => {
-    const user = userEvent.setup();
+  it('does not render a header Back button', () => {
     render(
       <JobRequirementsStep
         onNext={onNext}
@@ -302,12 +304,12 @@ describe('JobRequirementsStep', () => {
       />
     );
 
-    await user.click(screen.getByRole('button', { name: /back/i }));
-
-    expect(onBack).toHaveBeenCalledTimes(1);
+    expect(
+      screen.queryByRole('button', { name: /back/i })
+    ).not.toBeInTheDocument();
   });
 
-  it('does not call onNext when the Back button is clicked', async () => {
+  it('calls onCancel when Cancel button is clicked', async () => {
     const user = userEvent.setup();
     render(
       <JobRequirementsStep
@@ -317,7 +319,22 @@ describe('JobRequirementsStep', () => {
       />
     );
 
-    await user.click(screen.getByRole('button', { name: /back/i }));
+    await user.click(screen.getByRole('button', { name: /cancel/i }));
+
+    expect(mockOnCancel).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not call onNext when Cancel button is clicked', async () => {
+    const user = userEvent.setup();
+    render(
+      <JobRequirementsStep
+        onNext={onNext}
+        onBack={onBack}
+        onSubmit={onSubmit}
+      />
+    );
+
+    await user.click(screen.getByRole('button', { name: /cancel/i }));
 
     expect(onNext).not.toHaveBeenCalled();
   });

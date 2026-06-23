@@ -10,6 +10,7 @@ import MessageBox from '@/components/message-box';
 import { AddOrganizationFormDialog } from '@/views/vacancies/components/dialogs';
 import { AddLicenseCertDialog } from '@/views/vacancies/components/form-steps/add-license-certificate-dialog';
 import StepDisableDialog from '@/views/vacancies/components/step-disable-dialog';
+import VacancyStatusBadge from '@/views/vacancies/components/vacancy-status-badge';
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import {
   useAddLicenseCertificateMutation,
@@ -24,6 +25,7 @@ import {
   formatDate,
   toLicenseCertificatesPayload,
 } from '@/views/vacancies/utils';
+import { formatLocalDate } from '@/views/vacancies/utils/date-timezone-safe';
 
 import { Combobox } from '@cgp/ui-kit/components/combobox';
 import { ErrorToast } from '@cgp/ui-kit/components/custom-toast';
@@ -58,11 +60,13 @@ const multiSelectInfoAvatar = new URL(
 export default function LicenseCertificatesStep({
   onNext,
   onBack,
+  mode = 'create',
 }: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
   const {
     form: vacancyForm,
     setForm,
+    onCancel,
     stepPersistRef,
     stepDisableRef,
     currentStepIndex,
@@ -107,7 +111,61 @@ export default function LicenseCertificatesStep({
     return hasEntryData() || getValues('dataTakenFromCandidate') === true;
   };
 
-  useStepGuard(isEnabled && !dataTakenFromCandidate && !hasEntryData());
+  const hasUnresolvedPendingLicenses = (): boolean => {
+    return getValues('entry.nameOfLicenseCert').some(item => {
+      return (
+        item.source === 'PENDING_TEMP' ||
+        item.value.startsWith('__pending_license_cert_')
+      );
+    });
+  };
+
+  const extractPendingId = (result: unknown): string => {
+    const direct =
+      typeof result === 'object' && result !== null && 'pendingId' in result
+        ? (result as { pendingId?: unknown }).pendingId
+        : undefined;
+
+    if (typeof direct === 'string' && direct.trim().length > 0) {
+      return direct;
+    }
+
+    const level1 =
+      typeof result === 'object' && result !== null && 'data' in result
+        ? (result as { data?: unknown }).data
+        : undefined;
+
+    const level1Pending =
+      typeof level1 === 'object' && level1 !== null && 'pendingId' in level1
+        ? (level1 as { pendingId?: unknown }).pendingId
+        : undefined;
+
+    if (typeof level1Pending === 'string' && level1Pending.trim().length > 0) {
+      return level1Pending;
+    }
+
+    const level2 =
+      typeof level1 === 'object' && level1 !== null && 'data' in level1
+        ? (level1 as { data?: unknown }).data
+        : undefined;
+
+    const level2Pending =
+      typeof level2 === 'object' && level2 !== null && 'pendingId' in level2
+        ? (level2 as { pendingId?: unknown }).pendingId
+        : undefined;
+
+    if (typeof level2Pending === 'string' && level2Pending.trim().length > 0) {
+      return level2Pending;
+    }
+
+    return '';
+  };
+
+  useStepGuard(
+    isEnabled &&
+      !dataTakenFromCandidate &&
+      (!hasEntryData() || hasUnresolvedPendingLicenses())
+  );
   useEffect(() => {
     stepPersistRef.current = () => {
       setForm(prev => ({
@@ -187,7 +245,7 @@ export default function LicenseCertificatesStep({
   const searchLocations = useTertiaryAwardingBodyLocationsSearch();
 
   // ── Resolve pending license/cert and advance ─────────────────────────────
-  const resolveAndCommitLicenseCerts = async () => {
+  const resolveAndCommitLicenseCerts = async (): Promise<boolean> => {
     const current = getValues('entry.nameOfLicenseCert');
     const resolved: {
       value: string;
@@ -195,23 +253,44 @@ export default function LicenseCertificatesStep({
       source: string;
       certType?: string;
     }[] = [];
+    let hasResolutionError = false;
+
     for (const item of current) {
       if (item.source === 'PENDING_TEMP') {
-        const pendingData = pendingLicenseCertsDataRef.current.get(item.value);
+        const pendingData = pendingLicenseCertsDataRef.current.get(
+          item.value
+        ) ?? {
+          displayValue: item.label,
+          certType:
+            item.certType === 'LICENSE' ||
+            item.certType === 'CERTIFICATION' ||
+            item.certType === 'CERTIFICATE'
+              ? item.certType
+              : 'CERTIFICATE',
+        };
         if (pendingData) {
           try {
             const result = await addLicenseCertMutation.mutateAsync({
               type: pendingData.certType,
               displayValue: pendingData.displayValue,
             });
+
+            const pendingId = extractPendingId(result);
+
+            if (!pendingId) {
+              hasResolutionError = true;
+              continue;
+            }
+
             resolved.push({
-              value: result.data.pendingId,
+              value: pendingId,
               label: item.label,
               source: 'PENDING',
               certType: pendingData.certType,
             });
             pendingLicenseCertsDataRef.current.delete(item.value);
           } catch (error) {
+            hasResolutionError = true;
             ErrorToast({
               title: t(
                 error instanceof TypeError
@@ -231,18 +310,26 @@ export default function LicenseCertificatesStep({
       }
     }
     setValue('entry.nameOfLicenseCert', resolved);
+    return !hasResolutionError;
   };
 
   const handleNext = async () => {
+    const resolveSuccess = await resolveAndCommitLicenseCerts();
+    if (!resolveSuccess || hasUnresolvedPendingLicenses()) {
+      ErrorToast({
+        title: t('notifications.apiError.save.title'),
+        description: t('notifications.apiError.save.message'),
+      });
+      return;
+    }
+
     if (isEnabled && !dataTakenFromCandidate && !hasEntryData()) {
       setEmptyDisableOpen(true);
       return;
     }
 
-    await resolveAndCommitLicenseCerts();
-    void handleSubmit(values => {
-      onNext({ licenseCertificates: toLicenseCertificatesPayload(values) });
-    })();
+    const values = getValues();
+    onNext({ licenseCertificates: toLicenseCertificatesPayload(values) });
   };
 
   return (
@@ -274,6 +361,9 @@ export default function LicenseCertificatesStep({
             <h2 className="text-xl font-bold tracking-tight text-slate-900">
               {t('licenseCertificates.title')}
             </h2>
+            {mode === 'edit' && vacancyForm.status ? (
+              <VacancyStatusBadge status={vacancyForm.status} />
+            ) : null}
           </div>
           <Controller
             control={control}
@@ -598,7 +688,7 @@ export default function LicenseCertificatesStep({
                               }
                               onSelect={date => {
                                 field.onChange(
-                                  date ? date.toISOString() : undefined
+                                  date ? formatLocalDate(date) : undefined
                                 );
                                 setOpenDatePopover(null);
                                 const expDate = getValues(
@@ -691,7 +781,7 @@ export default function LicenseCertificatesStep({
                               }
                               onSelect={date => {
                                 field.onChange(
-                                  date ? date.toISOString() : undefined
+                                  date ? formatLocalDate(date) : undefined
                                 );
                                 setOpenDatePopover(null);
                               }}
@@ -830,7 +920,7 @@ export default function LicenseCertificatesStep({
 
         {/* ── Step footer ───────────────────────────────────────────────────── */}
         <div className="sticky bottom-0 flex items-center justify-end gap-4 bg-white px-6 py-7 shadow-[0px_-8px_6.8px_0px_rgba(0,0,0,0.04)]">
-          <Button variant="secondary" className="h-12 w-48" onClick={onBack}>
+          <Button variant="secondary" className="h-12 w-48" onClick={onCancel}>
             {t('licenseCertificates.cancel')}
           </Button>
           <Button className="h-12 w-48" onClick={() => void handleNext()}>

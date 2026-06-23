@@ -65,7 +65,9 @@ interface EngagementModelItem {
 
 interface JobLevelItem {
   id: string;
-  name: string;
+  name?: string;
+  label?: string;
+  source?: string;
 }
 
 interface MasterRef {
@@ -238,7 +240,7 @@ interface CreatePendingApiResponse {
 
 // ─── License and Certificates ─────────────────────────────────────────────────
 
-type LicenseCertType = 'LICENSE' | 'CERTIFICATION';
+type LicenseCertType = 'LICENSE' | 'CERTIFICATION' | 'CERTIFICATE';
 
 interface LicenseCertRef {
   source: 'MASTER' | 'PENDING';
@@ -459,6 +461,7 @@ interface StepProps {
   onNext: (data?: Partial<VacancyForm>, completed?: boolean) => void;
   onBack: () => void;
   onSubmit: () => void;
+  mode?: 'create' | 'edit';
 }
 
 interface GenderItem {
@@ -1073,6 +1076,7 @@ interface DataTableFacetedFilterProps {
 interface VacancyDataTableProps<TData> {
   table: ReturnType<typeof useReactTable<TData>>;
   isLoading?: boolean;
+  onRowClick?: (row: TData) => void;
 }
 
 interface VacancyTableActionProps {
@@ -1107,8 +1111,197 @@ interface CreateColumnsOptions {
   sortBy: string;
   sortOrder: 'asc' | 'desc' | null;
   onSort: (columnKey: string) => void;
+  onView: (vacancyId: string) => void;
   onEdit: (vacancyId: string) => void;
   t: (key: string) => string;
+}
+
+interface VacancyViewJobRequirement {
+  discipline: string[];
+  careerPath: string[];
+  level: string[];
+  role: string[];
+  jobTitle: string[];
+  employmentType: string[];
+  workSchedule: string[];
+  engagementModel: string[];
+  description: string;
+}
+
+interface VacancyViewProfileRequirement {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  gender: string;
+  maritalStatus: string;
+  addresses: {
+    city: string;
+    stateProvince: string;
+    country: string;
+    postalCode: string;
+  }[];
+}
+
+interface VacancyViewSecondaryEducation {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  content: {
+    acceptsHomeSchooling: boolean;
+    schools: string[];
+    schoolLocations: string[];
+    examinations: string[];
+    secondaryAwardingBody: string[];
+    fieldsOfStudy: string[];
+    grade: string;
+    startDate: string;
+    endDate: string;
+    result: string;
+  }[];
+}
+
+interface VacancyViewTertiaryEducation {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  content: {
+    qualificationName: string[];
+    tertiaryAwardingBody: string[];
+    tertiaryAwardingBodyLocations: string[];
+    levelOfQualification: string[];
+    specialization: string[];
+    studyMode: string[];
+    studyPattern: string[];
+    deliverySchedule: string[];
+    batch: string[];
+    department: string[];
+    faculty: string[];
+    grade: string;
+  }[];
+}
+
+interface VacancyViewLicenseCertificates {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  content: {
+    nameOfLicenseCert: string[];
+    issuingOrganization: string[];
+    organizationLocations: string[];
+    internationallyAccepted: boolean;
+    issueDate: string;
+    expirationDate: string;
+  }[];
+}
+
+interface VacancyViewPublications {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  content: {
+    acceptedPublisherName: string;
+    publishedDateFrom: string;
+    publishedDateTo: string;
+  }[];
+}
+
+interface VacancyViewClubSocieties {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  content: {
+    clubSociety: string[];
+    organization: string[];
+    organizationLocations: string[];
+    positionRoleHeld: string;
+    startDate: string;
+    endDate: string;
+  }[];
+}
+
+interface VacancyViewSports {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  content: {
+    nameOfSport: string[];
+    representedOrganization: string[];
+    organizationLocations: string[];
+    levelRepresented: string[];
+    positionRoleHeld: string;
+    startDate: string;
+    endDate: string;
+  }[];
+}
+
+interface VacancyViewVolunteering {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  content: {
+    organization: string[];
+    organizationLocations: string[];
+    positionRole: string;
+    cause: string[];
+    startDate: string;
+    endDate: string;
+  }[];
+}
+
+interface VacancyViewHonoursAwards {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  content: {
+    title: string;
+    associatedOrganizations: string[];
+    organizationLocations: string[];
+    issuedBy: string;
+    issuedFromDate: string;
+    issuedToDate: string;
+  }[];
+}
+
+interface VacancyViewSkills {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  content: string[];
+}
+
+interface VacancyViewLanguages {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  content: string[];
+}
+
+interface VacancyViewCauses {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  content: string[];
+}
+
+interface VacancyViewHobbies {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  content: string[];
+}
+
+interface VacancyViewIndustries {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  content: string[];
+}
+
+interface VacancyViewModel {
+  title: string;
+  status: string;
+  applicantCount: number;
+  jobRequirement: VacancyViewJobRequirement;
+  profileRequirement: VacancyViewProfileRequirement;
+  secondaryEducation?: VacancyViewSecondaryEducation;
+  tertiaryEducation?: VacancyViewTertiaryEducation;
+  licenseCertificates?: VacancyViewLicenseCertificates;
+  preferredPublications?: VacancyViewPublications;
+  preferredClubSocieties?: VacancyViewClubSocieties;
+  preferredSports?: VacancyViewSports;
+  preferredVolunteering?: VacancyViewVolunteering;
+  preferredHonoursAwards?: VacancyViewHonoursAwards;
+  preferredSkills?: VacancyViewSkills;
+  preferredLanguages?: VacancyViewLanguages;
+  preferredCauses?: VacancyViewCauses;
+  preferredHobbies?: VacancyViewHobbies;
+  preferredIndustries?: VacancyViewIndustries;
 }
 
 interface VacancyActiveToggleProps {
@@ -1376,6 +1569,8 @@ export type {
   VacancyStatusBadgeProps,
   VacancyActiveToggleProps,
   CreateColumnsOptions,
+  VacancyViewModel,
+  VacancyViewJobRequirement,
   VacancyTablePaginationProps,
   SortableHeaderProps,
   VacancyTableActionProps,

@@ -6,6 +6,7 @@ import type { FieldErrors } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 
+import VacancyStatusBadge from '@/views/vacancies/components/vacancy-status-badge';
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import {
   type ScheduleVacancyFormValues,
@@ -26,11 +27,12 @@ import { startOfToday } from 'date-fns';
 export default function ScheduleVacancyStep({
   onBack,
   onSubmit,
+  mode = 'create',
 }: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
   const { id } = useParams<'id'>();
   const navigate = useNavigate();
-  const { form, setForm, stepPersistRef } = useVacancyForm();
+  const { form, setForm, onCancel, stepPersistRef } = useVacancyForm();
 
   const {
     control,
@@ -136,15 +138,28 @@ export default function ScheduleVacancyStep({
 
     try {
       const schedule = toScheduleVacancyPayload(values);
+      const payloadForm = { ...form, schedule };
 
       if (id) {
-        await updateVacancy({ id, schedule });
+        await updateVacancy({
+          id,
+          form: payloadForm,
+          existingStatus: form.status,
+        });
       } else {
         await createVacancy({ form: { ...form, schedule } });
       }
       SuccessToast({
-        title: t('scheduleVacancy.notifications.successTitle'),
-        description: t('scheduleVacancy.notifications.successMessage'),
+        title: t(
+          id
+            ? 'scheduleVacancy.notifications.updateSuccessTitle'
+            : 'scheduleVacancy.notifications.successTitle'
+        ),
+        description: t(
+          id
+            ? 'scheduleVacancy.notifications.updateSuccessMessage'
+            : 'scheduleVacancy.notifications.successMessage'
+        ),
       });
       onSubmit();
       navigate('/dashboard/ats/vacancies');
@@ -171,6 +186,9 @@ export default function ScheduleVacancyStep({
         <h2 className="text-xl font-bold tracking-tight text-slate-900">
           {t('scheduleVacancy.title')}
         </h2>
+        {mode === 'edit' && form.status ? (
+          <VacancyStatusBadge status={form.status} />
+        ) : null}
       </div>
 
       {/* ── Body ────────────────────────────────────────────────────── */}
@@ -300,7 +318,7 @@ export default function ScheduleVacancyStep({
           variant="secondary"
           className="h-12 w-48"
           type="button"
-          onClick={onBack}
+          onClick={onCancel}
         >
           {t('scheduleVacancy.cancel')}
         </Button>

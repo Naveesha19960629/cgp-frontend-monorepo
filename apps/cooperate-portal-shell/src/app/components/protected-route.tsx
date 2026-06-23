@@ -24,6 +24,7 @@ export default function ProtectedRoute() {
   }
 
   if (!isAuthenticated) {
+    sessionStorage.setItem('cgp_login_pending', '1');
     void keycloak.login({
       redirectUri: `${window.location.origin}/auth/login`,
     });

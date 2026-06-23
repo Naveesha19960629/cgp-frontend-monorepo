@@ -10,6 +10,7 @@ import {
 } from '@/views/vacancies/context/vacancy-form-context';
 import { useVacancyByIdQuery } from '@/views/vacancies/hooks';
 import type { VacancyForm } from '@/views/vacancies/types';
+import { toVacancyFormFromResponse } from '@/views/vacancies/utils/vacancy-edit-response-helpers';
 
 import { CharacterCount } from '@cgp/ui-kit/components/character-count';
 import { Button } from '@cgp/ui-kit/components/ui/button';
@@ -95,13 +96,20 @@ function EditVacancyContent({ id }: { id: string | undefined }) {
   const {
     data: vacancyResponse,
     isLoading,
+    isFetching,
     error,
   } = useVacancyByIdQuery(id || '', {
     enabled: initialized && !!keycloak?.authenticated && !!id,
   });
 
   useEffect(() => {
-    if (!vacancyResponse?.success || isHydratedRef.current) {
+    if (
+      !vacancyResponse?.success ||
+      isHydratedRef.current ||
+      isLoading ||
+      isFetching ||
+      !!error
+    ) {
       return;
     }
 
@@ -111,37 +119,22 @@ function EditVacancyContent({ id }: { id: string | undefined }) {
     }
 
     const vacancyRecord = vacancyCandidate;
-    const normalizedTitle = [
-      vacancyRecord.title,
-      vacancyRecord.vacancyTitle,
-      vacancyRecord.vacancy_name,
-      vacancyRecord.name,
-    ].find(
-      (value): value is string =>
-        typeof value === 'string' && value.trim().length > 0
-    );
 
-    const incomingForm = vacancyRecord as Partial<VacancyForm>;
-    setForm(prev => ({
-      ...prev,
-      ...incomingForm,
-      title:
-        (typeof incomingForm.title === 'string' && incomingForm.title.trim()) ||
-        !normalizedTitle
-          ? (incomingForm.title ?? prev.title)
-          : normalizedTitle,
-    }));
+    setForm((prev: VacancyForm): VacancyForm => {
+      const nextForm = toVacancyFormFromResponse(vacancyRecord, prev);
+      return nextForm;
+    });
 
-    if (typeof incomingForm.lastActiveStep === 'string') {
+    if (typeof vacancyRecord.lastActiveStep === 'string') {
       const stepIndex = VACANCY_STEPS.findIndex(
-        step => step.key === incomingForm.lastActiveStep
+        step => step.key === vacancyRecord.lastActiveStep
       );
       if (stepIndex >= 0) {
         setCurrentStepIndex(stepIndex);
         // Draft vacancies land directly on their last active step
         if (
-          typeof incomingForm.status === 'string' &&
-          incomingForm.status.toLowerCase() === 'draft'
+          typeof vacancyRecord.status === 'string' &&
+          vacancyRecord.status.toLowerCase() === 'draft'
         ) {
           setIsInitialStep(false);
         }
@@ -149,7 +142,15 @@ function EditVacancyContent({ id }: { id: string | undefined }) {
     }
 
     isHydratedRef.current = true;
-  }, [vacancyResponse, setCurrentStepIndex, setForm, setIsInitialStep]);
+  }, [
+    error,
+    isFetching,
+    isLoading,
+    setCurrentStepIndex,
+    setForm,
+    setIsInitialStep,
+    vacancyResponse,
+  ]);
 
   if (!id) {
     return (

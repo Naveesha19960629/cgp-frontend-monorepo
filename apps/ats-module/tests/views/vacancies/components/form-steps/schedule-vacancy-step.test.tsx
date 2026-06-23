@@ -82,6 +82,12 @@ vi.mock('@cgp/ui-kit/components/custom-toast', () => ({
   ErrorToast: vi.fn(),
 }));
 
+vi.mock('@/views/vacancies/components/vacancy-status-badge', () => ({
+  default: ({ status }: { status: string }) => (
+    <div data-testid="vacancy-status-badge">{status}</div>
+  ),
+}));
+
 vi.mock('date-fns', () => ({
   format: (_date: Date, _format: string) => '10 Jun 2026',
   startOfToday: () => new Date('2026-06-08'),
@@ -91,6 +97,7 @@ describe('ScheduleVacancyStep', () => {
   const mockOnBack = vi.fn();
   const mockOnSubmit = vi.fn();
   const mockOnNext = vi.fn();
+  const mockOnCancel = vi.fn();
   const mockSetForm = vi.fn();
   const mockCreateVacancy = vi.fn();
   const mockStepPersistRef: { current: (() => void) | null } = {
@@ -105,6 +112,7 @@ describe('ScheduleVacancyStep', () => {
     onBack: mockOnBack,
     onSubmit: mockOnSubmit,
     onNext: mockOnNext,
+    mode: 'create' as const,
   };
 
   /** Helper — sets up the useVacancyForm mock with required fields + optional overrides. */
@@ -112,6 +120,7 @@ describe('ScheduleVacancyStep', () => {
     vi.mocked(useVacancyForm).mockReturnValue({
       form: { schedule: undefined },
       setForm: mockSetForm,
+      onCancel: mockOnCancel,
       stepPersistRef: mockStepPersistRef,
       ...overrides,
     } as unknown as ReturnType<typeof useVacancyForm>);
@@ -189,6 +198,28 @@ describe('ScheduleVacancyStep', () => {
       renderComponent();
       expect(screen.getAllByRole('button').length).toBeGreaterThanOrEqual(3);
     });
+
+    it('renders vacancy status badge in edit mode when status exists', () => {
+      mockVacancyForm({
+        form: { schedule: undefined, status: 'ON_HOLD' },
+      });
+      renderComponent({ mode: 'edit' as const });
+
+      expect(screen.getByTestId('vacancy-status-badge')).toHaveTextContent(
+        'ON_HOLD'
+      );
+    });
+
+    it('does not render vacancy status badge in create mode', () => {
+      mockVacancyForm({
+        form: { schedule: undefined, status: 'ON_HOLD' },
+      });
+      renderComponent({ mode: 'create' as const });
+
+      expect(
+        screen.queryByTestId('vacancy-status-badge')
+      ).not.toBeInTheDocument();
+    });
   });
 
   describe('button states', () => {
@@ -252,10 +283,10 @@ describe('ScheduleVacancyStep', () => {
   });
 
   describe('button interactions', () => {
-    it('calls onBack when Cancel is clicked', async () => {
+    it('calls onCancel when Cancel is clicked', async () => {
       renderComponent();
       await userEvent.click(getCancelButton());
-      expect(mockOnBack).toHaveBeenCalled();
+      expect(mockOnCancel).toHaveBeenCalled();
     });
 
     it('does not call onSubmit when Cancel is clicked', async () => {

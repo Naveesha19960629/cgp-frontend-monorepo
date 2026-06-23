@@ -578,7 +578,7 @@ export default function ProfileRequirementsStep({ onNext, onBack }: StepProps) {
               <button
                 type="button"
                 onClick={onBack}
-                className="text-slate-700 transition-colors hover:text-slate-900"
+                className="cursor-pointer text-slate-700 transition-colors hover:text-slate-900"
                 aria-label={t('profileRequirements.back')}
               >
                 <ArrowLeft2 size={24} />

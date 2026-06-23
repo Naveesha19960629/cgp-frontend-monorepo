@@ -710,7 +710,8 @@ export default function PreferredPatentsStep({ onNext, onBack }: StepProps) {
               <button
                 type="button"
                 onClick={handleBack}
-                className="cursor-pointer text-slate-700 transition-colors hover:text-slate-900"
+                disabled={shouldGuard}
+                className="cursor-pointer text-slate-700 transition-colors hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-40"
                 aria-label={t('preferredPatents.back')}
               >
                 <ArrowLeft2 size={24} />
@@ -844,7 +845,11 @@ export default function PreferredPatentsStep({ onNext, onBack }: StepProps) {
             >
               {t('preferredPatents.cancelButton')}
             </Button>
-            <Button type="submit" className="h-12 w-48" disabled={isSubmitting}>
+            <Button
+              type="submit"
+              className="h-12 w-48"
+              disabled={isSubmitting || shouldGuard}
+            >
               {isSubmitting ? (
                 <Loader2 className="size-4 animate-spin" />
               ) : (

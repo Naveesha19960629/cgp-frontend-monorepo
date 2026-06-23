@@ -125,13 +125,29 @@
       "descriptionLine2": "Try adjusting your keywords or using broader search terms"
     },
     "editVacancy": "Edit Vacancy",
-    "addVacancy": "Add Vacancy",
+    "addVacancy": "Create Vacancy",
     "edit": {
       "invalidId": "Invalid vacancy ID.",
       "failedToLoadVacancy": "Failed to load vacancy details. Please try again."
     },
+    "view": {
+      "untitledVacancy": "Untitled Vacancy",
+      "applied": "Applied",
+      "noDetails": {
+        "title": "No Details Added",
+        "description": "This section was enabled during vacancy setup, but no information has been added"
+      },
+      "sections": {
+        "jobRequirements": "Job Requirement",
+        "profileRequirements": "Profile Requirements"
+      },
+      "actions": {
+        "showMore": "Show More",
+        "showLess": "Show Less"
+      }
+    },
     "createVacancy": {
-      "heading": "Add Vacancy",
+      "heading": "Create Vacancy",
       "formTitle": "Lets Begin with the Vacancy Title",
       "fieldTitle": "Title",
       "titlePlaceholder": "Enter title",
@@ -324,7 +340,7 @@
       "patentURL": "Patent URL"
     },
     "validation": {
-      "maxExceeded": "Exceeded maximum of {{max}} sections"
+      "maxExceeded": "Exceeded maximum of {{max}} selections."
     },
     "disableDialog": {
       "title": "Are you sure?",
@@ -898,6 +914,8 @@
     "notifications": {
       "successTitle": "Successfully Created",
       "successMessage": "Vacancy has been successfully created.",
+      "updateSuccessTitle": "Successfully Updated",
+      "updateSuccessMessage": "Vacancy has been successfully updated.",
       "validationErrorTitle": "Error",
       "expirationLessOrEqualMessage": "Expiration Date & Time cannot be less than or equal to the Scheduled Publish Date & Time",
       "pastDateTimeMessage": "Scheduled Publish Date & Time and Expiration Date & Time cannot be in the past.",
@@ -914,6 +932,7 @@
       "clubSociety": "Club / Society",
       "position": "Position / Role Held",
       "representedOrganization": "Represented Organization",
+      "organizationLocation": "Organization Location",
       "startDate": "Start Date",
       "endDate": "End Date"
     },

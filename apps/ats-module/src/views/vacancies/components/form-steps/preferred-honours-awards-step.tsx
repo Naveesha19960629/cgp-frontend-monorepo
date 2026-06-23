@@ -849,7 +849,7 @@ export default function PreferredHonoursAwardsStep({
                 onClick={handleBack}
                 disabled={!canNavigate || isSubmitting}
                 className={cn(
-                  'text-slate-700 transition-colors hover:text-slate-900',
+                  'cursor-pointer text-slate-700 transition-colors hover:text-slate-900',
                   (!canNavigate || isSubmitting) &&
                     'cursor-not-allowed opacity-40 hover:text-slate-700'
                 )}

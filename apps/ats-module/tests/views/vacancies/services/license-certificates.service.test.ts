@@ -127,7 +127,7 @@ describe('licenseCertificatesService', () => {
       expect(result).toEqual(pendingResponse());
     });
 
-    it('POSTs to /certificates with type CERTIFICATE when adding a certification', async () => {
+    it('POSTs to /certificates with type CERTIFICATION when adding a certification', async () => {
       mockPost.mockResolvedValue({ data: pendingResponse() });
 
       const result = await licenseCertificatesService.addLicenseCertificate({
@@ -136,8 +136,29 @@ describe('licenseCertificatesService', () => {
       });
 
       expect(mockPost).toHaveBeenCalledWith('/certificates', {
-        type: 'CERTIFICATE',
+        type: 'CERTIFICATION',
         displayValue: 'Software Engineering certificates A',
+      });
+      expect(result).toEqual(pendingResponse());
+    });
+
+    it('falls back to CERTIFICATE payload when CERTIFICATION request fails', async () => {
+      mockPost
+        .mockRejectedValueOnce(new Error('Bad request'))
+        .mockResolvedValueOnce({ data: pendingResponse() });
+
+      const result = await licenseCertificatesService.addLicenseCertificate({
+        type: 'CERTIFICATION',
+        displayValue: 'Fallback Cert',
+      });
+
+      expect(mockPost).toHaveBeenNthCalledWith(1, '/certificates', {
+        type: 'CERTIFICATION',
+        displayValue: 'Fallback Cert',
+      });
+      expect(mockPost).toHaveBeenNthCalledWith(2, '/certificates', {
+        type: 'CERTIFICATE',
+        displayValue: 'Fallback Cert',
       });
       expect(result).toEqual(pendingResponse());
     });

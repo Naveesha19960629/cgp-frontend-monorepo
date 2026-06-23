@@ -108,6 +108,8 @@ export default function VacanciesPage() {
         sortBy: params.sortBy,
         sortOrder: params.sortOrder,
         onSort: handleSort,
+        onView: (vacancyId: string) =>
+          void navigate(`/dashboard/ats/vacancies/${vacancyId}/view`),
         onEdit: (vacancyId: string) =>
           void navigate(`/dashboard/ats/vacancies/${vacancyId}/edit`),
         t,
@@ -185,7 +187,13 @@ export default function VacanciesPage() {
             <VacancyTableEmptyState />
           )
         ) : (
-          <VacancyDataTable table={table} isLoading={false} />
+          <VacancyDataTable
+            table={table}
+            isLoading={false}
+            onRowClick={row =>
+              void navigate(`/dashboard/ats/vacancies/${row.vacancyId}/view`)
+            }
+          />
         )}
       </div>
       {!isLoading && data.length > 0 && (

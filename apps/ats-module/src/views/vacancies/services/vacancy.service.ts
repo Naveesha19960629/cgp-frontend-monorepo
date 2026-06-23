@@ -46,6 +46,7 @@ export const vacancyService = {
     );
     return response.data;
   },
+
   updateDraftVacancy: async (
     id: string,
     payload: CreateVacancyPayload

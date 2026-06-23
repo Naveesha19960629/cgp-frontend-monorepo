@@ -28,5 +28,10 @@ export {
   formatDisplayDateTime,
   to24HourTime,
 } from '@/views/vacancies/utils/schedule-display-date-time';
-export { toCreateVacancyPayload } from '@/views/vacancies/utils/vacancy-payload-helpers';
+export {
+  toCreateVacancyPayload,
+  toUpdateVacancyPayload,
+} from '@/views/vacancies/utils/vacancy-payload-helpers';
+export { toVacancyFormFromResponse } from '@/views/vacancies/utils/vacancy-edit-response-helpers';
+export { toVacancyViewModel } from '@/views/vacancies/utils/vacancy-view-response-helpers';
 export type { CreateVacancyPayload } from '@/views/vacancies/types';

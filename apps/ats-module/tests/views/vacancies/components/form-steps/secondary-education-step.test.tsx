@@ -13,19 +13,44 @@ vi.mock('react-i18next', () => ({
 
 // ── Mock vacancy form context ──────────────────────────────────────────────
 
+const {
+  stableForm,
+  mockSetForm,
+  mockSetStepGuard,
+  mockStepPersistRef,
+  mockStepDisableRef,
+  mockOnCancel,
+} = vi.hoisted(() => ({
+  stableForm: {
+    secondaryEducation: [
+      { isEnabled: false, dataTakenFromCandidate: false, content: [] },
+    ],
+    status: undefined as string | undefined,
+  },
+  mockSetForm: vi.fn(),
+  mockSetStepGuard: vi.fn(),
+  mockStepPersistRef: { current: null },
+  mockStepDisableRef: { current: null },
+  mockOnCancel: vi.fn(),
+}));
+
 vi.mock('@/views/vacancies/context/vacancy-form-context', () => ({
   useVacancyForm: () => ({
-    form: {
-      secondaryEducation: [
-        { isEnabled: false, dataTakenFromCandidate: false, content: [] },
-      ],
-    },
-    setStepGuard: vi.fn(),
-    stepPersistRef: { current: null },
-    stepDisableRef: { current: null },
+    form: stableForm,
+    setForm: mockSetForm,
+    setStepGuard: mockSetStepGuard,
+    onCancel: mockOnCancel,
+    stepPersistRef: mockStepPersistRef,
+    stepDisableRef: mockStepDisableRef,
     currentStepIndex: 0,
     removeCompletedStep: vi.fn(),
   }),
+}));
+
+vi.mock('@/views/vacancies/components/vacancy-status-badge', () => ({
+  default: ({ status }: { status: string }) => (
+    <div data-testid="vacancy-status-badge">{status}</div>
+  ),
 }));
 
 // ── Mock hooks barrel — keep real useSecondaryEducationForm ─────────────────
@@ -47,6 +72,11 @@ vi.mock('@/views/vacancies/hooks', async importOriginal => {
     await importOriginal<typeof import('@/views/vacancies/hooks')>();
   return {
     ...actual,
+    useSchoolsQuery: () => ({ data: undefined }),
+    useSchoolLocationsQuery: () => ({ data: undefined }),
+    useExaminationsQuery: () => ({ data: undefined }),
+    useSecondaryAwardingBodiesQuery: () => ({ data: undefined }),
+    useFieldsOfStudyQuery: () => ({ data: undefined }),
     useSchoolsSearch: () => vi.fn(() => Promise.resolve([])),
     useSchoolLocationsSearch: () => vi.fn(() => Promise.resolve([])),
     useExaminationsSearch: () => vi.fn(() => Promise.resolve([])),
@@ -106,7 +136,7 @@ vi.mock('@/views/vacancies/components/form-steps/add-school-dialog', () => ({
 
 // ── Mock message box ────────────────────────────────────────────────────────
 
-vi.mock('@/app/components/message-box', () => ({
+vi.mock('@/components/message-box', () => ({
   default: ({ title }: { title: string }) => <div>{title}</div>,
 }));
 
@@ -162,31 +192,28 @@ vi.mock('@cgp/ui-kit/components/multi-select', () => ({
 
 // ── Mock Radix-backed UI kit components ────────────────────────────────────
 
-vi.mock('radix-ui', () => ({
-  Switch: {
-    Root: ({
-      checked,
-      onCheckedChange,
-      children,
-      ...rest
-    }: {
-      checked: boolean;
-      onCheckedChange?: (v: boolean) => void;
-      children?: ReactNode;
-      [k: string]: unknown;
-    }) => (
-      <button
-        role="switch"
-        aria-checked={checked}
-        onClick={() => onCheckedChange?.(!checked)}
-        type="button"
-        {...rest}
-      >
-        {children}
-      </button>
-    ),
-    Thumb: () => null,
-  },
+vi.mock('@cgp/ui-kit/components/ui/switch', () => ({
+  Switch: ({
+    checked,
+    onCheckedChange,
+    children,
+    ...rest
+  }: {
+    checked: boolean;
+    onCheckedChange?: (v: boolean) => void;
+    children?: ReactNode;
+    [k: string]: unknown;
+  }) => (
+    <button
+      role="switch"
+      aria-checked={checked}
+      onClick={() => onCheckedChange?.(!checked)}
+      type="button"
+      {...rest}
+    >
+      {children}
+    </button>
+  ),
 }));
 
 vi.mock('@cgp/ui-kit/components/ui/checkbox', () => ({
@@ -268,7 +295,7 @@ vi.mock('@cgp/ui-kit/components/character-count', () => ({
 
 // ── Helpers ────────────────────────────────────────────────────────────────
 
-function renderStep() {
+function renderStep(mode: 'create' | 'edit' = 'create') {
   const onNext = vi.fn();
   const onBack = vi.fn();
   const onSubmit = vi.fn();
@@ -277,6 +304,7 @@ function renderStep() {
       onNext={onNext}
       onBack={onBack}
       onSubmit={onSubmit}
+      mode={mode}
     />
   );
   return { onNext, onBack, onSubmit };
@@ -305,6 +333,7 @@ async function openConfirmDialog() {
 describe('SecondaryEducationStep', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    stableForm.status = undefined;
     mockExaminationMutate.mockResolvedValue({ data: { pendingId: 'exam-id' } });
     mockAwardingBodyMutate.mockResolvedValue({
       data: { pendingId: 'body-id' },
@@ -319,6 +348,24 @@ describe('SecondaryEducationStep', () => {
     it('renders the section heading', () => {
       renderStep();
       expect(screen.getByText('secondaryEducation.title')).toBeInTheDocument();
+    });
+
+    it('renders vacancy status badge in edit mode when status exists', () => {
+      stableForm.status = 'LIVE';
+      renderStep('edit');
+
+      expect(screen.getByTestId('vacancy-status-badge')).toHaveTextContent(
+        'LIVE'
+      );
+    });
+
+    it('does not render vacancy status badge in create mode', () => {
+      stableForm.status = 'LIVE';
+      renderStep('create');
+
+      expect(
+        screen.queryByTestId('vacancy-status-badge')
+      ).not.toBeInTheDocument();
     });
 
     it('renders the enable/disable toggle (initially off)', () => {
