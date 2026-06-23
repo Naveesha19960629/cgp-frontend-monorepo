@@ -24,34 +24,48 @@ const createJobRequirementsSchema = (validationErrors: {
   role: string;
   jobTitle: string;
 }) =>
-  z.object({
-    isEnabled: z.boolean(),
-    dataTakenFromCandidate: z.boolean(),
-    discipline: z
-      .array(selectOptionSchema)
-      .min(1, { message: validationErrors.discipline })
-      .max(1),
-    careerPath: z
-      .array(selectOptionSchema)
-      .min(1, { message: validationErrors.careerPath })
-      .max(1),
-    level: z
-      .array(selectOptionSchema)
-      .min(1, { message: validationErrors.level })
-      .max(1),
-    role: z
-      .array(selectOptionSchema)
-      .min(1, { message: validationErrors.role })
-      .max(10),
-    jobTitle: z
-      .array(selectOptionSchema)
-      .min(1, { message: validationErrors.jobTitle })
-      .max(10),
-    employmentType: z.array(selectOptionSchema).max(10),
-    workSchedule: z.array(selectOptionSchema).max(10),
-    engagementModel: z.array(selectOptionSchema).max(10),
-    description: z.string().max(2000).optional(),
-  });
+  z
+    .object({
+      isEnabled: z.boolean(),
+      dataTakenFromCandidate: z.boolean(),
+      discipline: z
+        .array(selectOptionSchema)
+        .min(1, { message: validationErrors.discipline })
+        .max(1),
+      careerPath: z
+        .array(selectOptionSchema)
+        .min(1, { message: validationErrors.careerPath })
+        .max(1),
+      level: z.array(selectOptionSchema).max(1),
+      role: z.array(selectOptionSchema).max(10),
+      jobTitle: z
+        .array(selectOptionSchema)
+        .min(1, { message: validationErrors.jobTitle })
+        .max(10),
+      employmentType: z.array(selectOptionSchema).max(10),
+      workSchedule: z.array(selectOptionSchema).max(10),
+      engagementModel: z.array(selectOptionSchema).max(10),
+      description: z.string().max(2000).optional(),
+    })
+    .superRefine((data, ctx) => {
+      const isOther = data.discipline[0]?.label?.toLowerCase() === 'other';
+      if (!isOther) {
+        if (data.level.length === 0) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: validationErrors.level,
+            path: ['level'],
+          });
+        }
+        if (data.role.length === 0) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: validationErrors.role,
+            path: ['role'],
+          });
+        }
+      }
+    });
 
 const mapRefToFormOption = (
   refs?: Array<{ id: string; label: string; source: string }>
