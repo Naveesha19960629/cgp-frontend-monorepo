@@ -263,7 +263,7 @@ export default function ScheduleVacancyStep({
                       onDateChange={dateField.onChange}
                       timeValue={timeField.value}
                       onTimeChange={timeField.onChange}
-                      timeLabel="Expiration Time"
+                      timeLabel={t('scheduleVacancy.expirationTimeLabel')}
                       dateButtonPlaceholder={t(
                         'scheduleVacancy.expirationDatePlaceholder'
                       )}

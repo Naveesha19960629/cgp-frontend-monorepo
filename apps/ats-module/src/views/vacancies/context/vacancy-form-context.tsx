@@ -316,12 +316,6 @@ function VacancyFormProvider({
   };
 
   const onNext = (data?: Partial<VacancyForm>, completed?: boolean) => {
-    const stepKey =
-      VACANCY_STEPS[currentStepIndex]?.key ?? `step-${currentStepIndex}`;
-    console.group(`[Vacancy Wizard] Step payload — ${stepKey}`);
-    console.log('Step data:', data);
-    console.log('Full form after merge:', data ? { ...form, ...data } : form);
-    console.groupEnd();
     if (data) {
       setForm(prev => ({ ...prev, ...data }));
     }

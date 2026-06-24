@@ -2,7 +2,7 @@ import { Status } from 'iconsax-reactjs';
 
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 import {
   StepDisableDialog,
@@ -74,6 +74,8 @@ export default function VacancyCreateStepperForm({
 }: VacancyCreateStepperFormProps) {
   const { t } = useTranslation('ats');
   const navigate = useNavigate();
+  const location = useLocation();
+  const fromPath = (location.state as { from?: string } | null)?.from ?? '';
   const stepperTitle =
     mode === 'edit' ? t('vacancies.editVacancy') : t('vacancies.addVacancy');
   const {
@@ -220,7 +222,11 @@ export default function VacancyCreateStepperForm({
                 'vacancyEditCancelDialog.notifications.discard.message'
               ),
             });
-            navigate(-1);
+            if (fromPath.includes('/dashboard/ats/vacancies')) {
+              navigate(-1);
+            } else {
+              void navigate('/dashboard/ats/vacancies');
+            }
           }}
         />
       ) : (

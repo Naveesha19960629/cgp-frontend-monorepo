@@ -916,6 +916,7 @@
     "expirationDateLabel": "Expiration Date & Time",
     "expirationDatePlaceholder": "Expiration date & time",
     "timeLabel": "Schedule Time",
+    "expirationTimeLabel": "Expiration Time",
     "timePlaceholder": "hh:mm:ss AM/PM",
     "create": "Create",
     "cancel": "Cancel",

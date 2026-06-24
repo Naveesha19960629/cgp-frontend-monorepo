@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { VacancyCreateStepperForm } from '@/views/vacancies';
+import { VacancyStatusBadge } from '@/views/vacancies/components';
 import {
   VACANCY_STEPS,
   VacancyFormProvider,
@@ -26,8 +27,11 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function EditVacancyTitleStep() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { t } = useTranslation('ats');
   const { form, setForm, onNext } = useVacancyForm();
+  const showStatusBadge = form.status && form.status !== 'new';
+  const fromPath = (location.state as { from?: string } | null)?.from ?? '';
 
   const handleTitleChange = (value: string) => {
     const sanitizedTitle = removeEmoji(value);
@@ -36,10 +40,16 @@ function EditVacancyTitleStep() {
 
   return (
     <div className="flex flex-1 flex-col">
-      <header className="pt-7 pl-7">
+      <header className="flex items-center gap-3 pt-7 pl-7">
         <p className="text-2xl/8 font-bold text-slate-900">
           {t('vacancies.editVacancy')}
         </p>
+        {showStatusBadge && (
+          <VacancyStatusBadge
+            status={form.status}
+            applicantCount={form.applicantCount}
+          />
+        )}
       </header>
       <div className="flex flex-1 flex-col items-center justify-center">
         <div className="w-99.5">
@@ -72,7 +82,13 @@ function EditVacancyTitleStep() {
             <Button
               variant="secondary"
               className="h-12 flex-1"
-              onClick={() => navigate(-1)}
+              onClick={() => {
+                if (fromPath.includes('/dashboard/ats/vacancies')) {
+                  void navigate(-1);
+                } else {
+                  void navigate('/dashboard/ats/vacancies');
+                }
+              }}
             >
               {t('vacancies.createVacancy.cancelButton')}
             </Button>
@@ -141,6 +157,7 @@ function EditVacancyContent({ id }: { id: string | undefined }) {
     }
 
     isHydratedRef.current = true;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsHydrated(true);
   }, [
     error,
