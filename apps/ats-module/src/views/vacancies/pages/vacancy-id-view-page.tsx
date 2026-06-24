@@ -137,9 +137,6 @@ export default function VacancyIdViewPage() {
         <VacancyProfileRequirementsSection
           profileRequirement={viewModel.profileRequirement}
         />
-        <VacancyScheduledVacancySection
-          scheduledVacancy={viewModel.scheduledVacancy}
-        />
         <VacancyPublicationsSection
           preferredPublications={viewModel.preferredPublications}
         />
@@ -164,6 +161,9 @@ export default function VacancyIdViewPage() {
         <VacancyHobbiesSection preferredHobbies={viewModel.preferredHobbies} />
         <VacancyIndustriesSection
           preferredIndustries={viewModel.preferredIndustries}
+        />
+        <VacancyScheduledVacancySection
+          scheduledVacancy={viewModel.scheduledVacancy}
         />
       </VacancyView.Body>
     </VacancyView.Root>
