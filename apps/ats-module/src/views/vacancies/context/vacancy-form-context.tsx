@@ -239,6 +239,7 @@ interface VacancyFormContextValue {
   setCurrentStepIndex: (index: number) => void;
   completedSteps: Set<number>;
   removeCompletedStep: (index: number) => void;
+  initCompletedStepsFromForm: (loadedForm: VacancyForm) => void;
   isInitialStep: boolean;
   setIsInitialStep: (val: boolean) => void;
   onNext: (data?: Partial<VacancyForm>, completed?: boolean) => void;
@@ -298,6 +299,44 @@ function VacancyFormProvider({
       next.delete(index);
       return next;
     });
+  };
+
+  const initCompletedStepsFromForm = (loadedForm: VacancyForm) => {
+    const stepEnabledChecks: Array<() => boolean> = [
+      () =>
+        loadedForm.jobRequirements.length > 0 &&
+        loadedForm.jobRequirements[0].isEnabled,
+      () => loadedForm.profileRequirements.isEnabled,
+      () =>
+        loadedForm.secondaryEducation.length > 0 &&
+        loadedForm.secondaryEducation[0].isEnabled,
+      () =>
+        loadedForm.tertiaryEducation.length > 0 &&
+        loadedForm.tertiaryEducation[0].isEnabled,
+      () => Boolean(loadedForm.projectsRequirements?.isEnabled),
+      () => Boolean(loadedForm.preferredPublications?.isEnabled),
+      () => Boolean(loadedForm.preferredClubSocieties?.isEnabled),
+      () => Boolean(loadedForm.preferredSports?.isEnabled),
+      () => Boolean(loadedForm.preferredVolunteering?.isEnabled),
+      () => Boolean(loadedForm.patents?.isEnabled),
+      () => Boolean(loadedForm.preferredHonoursAwards?.isEnabled),
+      () =>
+        (loadedForm.licenseCertificates?.length ?? 0) > 0 &&
+        Boolean(loadedForm.licenseCertificates?.[0]?.isEnabled),
+      () => Boolean(loadedForm.preferredSkills?.isEnabled),
+      () => Boolean(loadedForm.preferredLanguages?.isEnabled),
+      () => Boolean(loadedForm.preferredCauses?.isEnabled),
+      () => Boolean(loadedForm.preferredHobbies?.isEnabled),
+      () => Boolean(loadedForm.preferredIndustries?.isEnabled),
+      () => Boolean(loadedForm.customizableForm?.isEnabled),
+      () => loadedForm.schedule !== undefined,
+    ];
+
+    const completed = new Set<number>();
+    stepEnabledChecks.forEach((check, index) => {
+      if (check()) completed.add(index);
+    });
+    setCompletedSteps(completed);
   };
 
   const isStepEnabled = (
@@ -410,6 +449,7 @@ function VacancyFormProvider({
         setCurrentStepIndex,
         completedSteps,
         removeCompletedStep,
+        initCompletedStepsFromForm,
         isInitialStep,
         setIsInitialStep,
         onNext,

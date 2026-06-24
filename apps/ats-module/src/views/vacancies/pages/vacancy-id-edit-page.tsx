@@ -105,8 +105,13 @@ function EditVacancyTitleStep() {
 function EditVacancyContent({ id }: { id: string | undefined }) {
   const { t } = useTranslation('ats');
   const { keycloak, initialized } = useKeycloak();
-  const { isInitialStep, setIsInitialStep, setForm, setCurrentStepIndex } =
-    useVacancyForm();
+  const {
+    isInitialStep,
+    setIsInitialStep,
+    setForm,
+    setCurrentStepIndex,
+    initCompletedStepsFromForm,
+  } = useVacancyForm();
   const isHydratedRef = useRef(false);
   const [isHydrated, setIsHydrated] = useState(false);
 
@@ -135,10 +140,14 @@ function EditVacancyContent({ id }: { id: string | undefined }) {
 
     const vacancyRecord = vacancyCandidate;
 
+    let resolvedForm: VacancyForm | undefined;
     setForm((prev: VacancyForm): VacancyForm => {
-      const nextForm = toVacancyFormFromResponse(vacancyRecord, prev);
-      return nextForm;
+      resolvedForm = toVacancyFormFromResponse(vacancyRecord, prev);
+      return resolvedForm;
     });
+    if (resolvedForm) {
+      initCompletedStepsFromForm(resolvedForm);
+    }
 
     if (typeof vacancyRecord.lastActiveStep === 'string') {
       const stepIndex = VACANCY_STEPS.findIndex(
@@ -161,6 +170,7 @@ function EditVacancyContent({ id }: { id: string | undefined }) {
     setIsHydrated(true);
   }, [
     error,
+    initCompletedStepsFromForm,
     isLoading,
     setCurrentStepIndex,
     setForm,
