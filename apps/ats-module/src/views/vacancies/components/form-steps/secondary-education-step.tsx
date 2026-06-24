@@ -491,6 +491,14 @@ export default function SecondaryEducationStep({
     })();
   };
 
+  const handleBack = () => {
+    setForm(prev => ({
+      ...prev,
+      secondaryEducation: toSecondaryEducationPayload(getValues()),
+    }));
+    onBack();
+  };
+
   return (
     <Form {...form}>
       <div className="flex flex-col">
@@ -513,7 +521,7 @@ export default function SecondaryEducationStep({
               aria-label={t('secondaryEducation.back')}
               disabled={shouldDisableNavigation}
               className="text-slate-700 transition-colors hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-40"
-              onClick={onBack}
+              onClick={handleBack}
             >
               <ArrowLeft2 size={24} />
             </button>

@@ -280,6 +280,7 @@ function renderStep(
   const onNext = vi.fn();
   const onBack = vi.fn();
   const onSubmit = vi.fn();
+  const setFormSpy = vi.fn();
 
   mockUseVacancyForm.mockImplementation(() => {
     const initialState = makeForm(formOverrides);
@@ -295,6 +296,7 @@ function renderStep(
           | typeof formState
           | ((prev: typeof formState) => typeof formState)
       ) => {
+        setFormSpy(updater);
         setFormState(prev =>
           typeof updater === 'function' ? updater(prev) : updater
         );
@@ -315,7 +317,7 @@ function renderStep(
       mode={mode}
     />
   );
-  return { onNext, onBack, onSubmit };
+  return { onNext, onBack, onSubmit, setFormSpy };
 }
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
@@ -821,14 +823,15 @@ describe('PreferredIndustryStep', () => {
       expect(mockOnCancel).toHaveBeenCalledTimes(1);
     });
 
-    it('calls onBack when the header back button is enabled and clicked', async () => {
+    it('persists form and calls onBack when the header back button is enabled and clicked', async () => {
       const user = userEvent.setup();
-      const { onBack } = renderStep({
+      const { onBack, setFormSpy } = renderStep({
         industries: [{ id: 'ind-1', label: 'Healthcare' }],
       });
 
       await user.click(screen.getByRole('button', { name: 'common.back' }));
 
+      expect(setFormSpy).toHaveBeenCalledTimes(1);
       expect(onBack).toHaveBeenCalledTimes(1);
     });
 

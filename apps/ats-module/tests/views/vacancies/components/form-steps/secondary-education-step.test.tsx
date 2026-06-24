@@ -645,7 +645,7 @@ describe('SecondaryEducationStep', () => {
   });
 
   describe('navigation', () => {
-    it('calls onBack when the back arrow is clicked', async () => {
+    it('persists form and calls onBack when the back arrow is clicked', async () => {
       const user = userEvent.setup();
       const { onBack } = renderStep();
 
@@ -653,6 +653,7 @@ describe('SecondaryEducationStep', () => {
         screen.getByRole('button', { name: 'secondaryEducation.back' })
       );
 
+      expect(mockSetForm).toHaveBeenCalledTimes(1);
       expect(onBack).toHaveBeenCalledTimes(1);
     });
   });

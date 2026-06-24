@@ -301,6 +301,21 @@ describe('ScheduleVacancyStep', () => {
       await userEvent.click(backButton);
       expect(mockOnBack).toHaveBeenCalled();
     });
+
+    it('persists filled schedule values when the header back arrow is clicked', async () => {
+      renderComponent();
+
+      fillPublish('2099-12-25', '10:00:00 AM');
+      fillExpiration('2099-12-26', '10:00:00 AM');
+
+      const backButton = screen.getAllByRole('button')[0];
+      await userEvent.click(backButton);
+
+      await waitFor(() => {
+        expect(mockSetForm).toHaveBeenCalled();
+      });
+      expect(mockOnBack).toHaveBeenCalled();
+    });
   });
 
   describe('step persistence', () => {
