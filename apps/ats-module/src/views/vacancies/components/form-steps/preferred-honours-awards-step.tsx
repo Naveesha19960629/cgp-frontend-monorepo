@@ -2,7 +2,7 @@ import { ChevronUp, Loader2, Plus, Trash2 } from 'lucide-react';
 
 import { ArrowLeft2, Calendar as CalenderIcon } from 'iconsax-reactjs';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { type UseFormReturn } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
@@ -55,9 +55,6 @@ import { applyTypography } from '@cgp/ui-kit/lib/typography';
 import { cn, removeEmoji } from '@cgp/ui-kit/lib/utils';
 import { format } from 'date-fns';
 
-const HUNDRED_YEARS_AGO = new Date(new Date().getFullYear() - 100, 0, 1);
-const HUNDRED_YEARS_FROM_NOW = new Date(new Date().getFullYear() + 100, 11, 31);
-
 const multiSelectInfoAvatar = new URL(
   '../../../../assets/images/multi-select-info-avatar.svg',
   import.meta.url
@@ -89,6 +86,26 @@ function HonoursAndAwardsCard({
   onOpenAddOrganizationDialog,
 }: Readonly<HonoursAndAwardsCardProps>) {
   const { t } = useTranslation('ats');
+  const today = useMemo(() => {
+    const d = new Date();
+    d.setHours(23, 59, 59, 999);
+    return d;
+  }, []);
+
+  const hundredYearsAgo = useMemo(() => {
+    const d = new Date();
+    d.setFullYear(d.getFullYear() - 100);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }, []);
+
+  const hundredYearsFromNow = useMemo(() => {
+    const d = new Date();
+    d.setFullYear(d.getFullYear() + 100);
+    d.setHours(23, 59, 59, 999);
+    return d;
+  }, []);
+
   const [hasOrganizationMaxError, setHasOrganizationMaxError] = useState(false);
   const [hasLocationMaxError, setHasLocationMaxError] = useState(false);
   const [organizationSearch, setOrganizationSearch] = useState('');
@@ -283,13 +300,7 @@ function HonoursAndAwardsCard({
                         <Calendar
                           mode="single"
                           selected={field.value}
-                          defaultMonth={
-                            field.value ??
-                            form.getValues(
-                              `honoursAndAwards.${index}.issuedDateTo`
-                            ) ??
-                            new Date()
-                          }
+                          defaultMonth={field.value ?? new Date()}
                           onSelect={date => {
                             field.onChange(date);
                             setOpenDatePopover(null);
@@ -304,10 +315,11 @@ function HonoursAndAwardsCard({
                             }
                           }}
                           disabled={date =>
-                            date > new Date() || date < HUNDRED_YEARS_AGO
+                            date > today || date < hundredYearsAgo
                           }
                           captionLayout="dropdown"
-                          startMonth={HUNDRED_YEARS_AGO}
+                          startMonth={hundredYearsAgo}
+                          endMonth={today}
                         />
                       </PopoverContent>
                     </Popover>
@@ -371,13 +383,7 @@ function HonoursAndAwardsCard({
                         <Calendar
                           mode="single"
                           selected={field.value}
-                          defaultMonth={
-                            field.value ??
-                            form.getValues(
-                              `honoursAndAwards.${index}.issuedDateFrom`
-                            ) ??
-                            new Date()
-                          }
+                          defaultMonth={field.value ?? new Date()}
                           onSelect={date => {
                             field.onChange(date);
                             setOpenDatePopover(null);
@@ -387,14 +393,14 @@ function HonoursAndAwardsCard({
                               `honoursAndAwards.${index}.issuedDateFrom`
                             );
                             return (
-                              date < HUNDRED_YEARS_AGO ||
-                              date > HUNDRED_YEARS_FROM_NOW ||
+                              date < hundredYearsAgo ||
+                              date > hundredYearsFromNow ||
                               (issuedDateFrom != null && date < issuedDateFrom)
                             );
                           }}
                           captionLayout="dropdown"
-                          startMonth={HUNDRED_YEARS_AGO}
-                          endMonth={HUNDRED_YEARS_FROM_NOW}
+                          startMonth={hundredYearsAgo}
+                          endMonth={hundredYearsFromNow}
                         />
                       </PopoverContent>
                     </Popover>
