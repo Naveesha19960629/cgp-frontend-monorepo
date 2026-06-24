@@ -99,6 +99,7 @@ export default function VacancyCreateStepperForm({
   const [pendingTargetIndex, setPendingTargetIndex] = useState<number | null>(
     null
   );
+  const [isNavigating, setIsNavigating] = useState(false);
 
   const handleTabChange = (value: string) => {
     const targetIndex = VACANCY_STEPS.findIndex(s => s.key === value);
@@ -134,7 +135,8 @@ export default function VacancyCreateStepperForm({
                 className="flex w-full flex-col items-start justify-start rounded-none border-none bg-transparent p-0"
               >
                 {VACANCY_STEPS.map((step, index) => {
-                  const isDisabled = index > 0 && !isStepNavigationEnabled;
+                  const isDisabled =
+                    mode === 'create' && index > 0 && !isStepNavigationEnabled;
                   return (
                     <div
                       key={step.key}
@@ -207,9 +209,10 @@ export default function VacancyCreateStepperForm({
 
       {mode === 'edit' ? (
         <VacancyEditCancelDialog
-          open={showCancelDialog}
+          open={showCancelDialog && !isNavigating}
           onOpenChange={setShowCancelDialog}
           onConfirm={() => {
+            setIsNavigating(true);
             setShowCancelDialog(false);
             SuccessToast({
               title: t('vacancyEditCancelDialog.notifications.discard.title'),
@@ -217,7 +220,7 @@ export default function VacancyCreateStepperForm({
                 'vacancyEditCancelDialog.notifications.discard.message'
               ),
             });
-            void navigate('/dashboard/ats/vacancies');
+            navigate(-1);
           }}
         />
       ) : (

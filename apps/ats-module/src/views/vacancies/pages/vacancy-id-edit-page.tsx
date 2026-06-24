@@ -72,7 +72,7 @@ function EditVacancyTitleStep() {
             <Button
               variant="secondary"
               className="h-12 flex-1"
-              onClick={() => void navigate('/dashboard/ats/vacancies')}
+              onClick={() => navigate(-1)}
             >
               {t('vacancies.createVacancy.cancelButton')}
             </Button>
@@ -96,7 +96,6 @@ function EditVacancyContent({ id }: { id: string | undefined }) {
   const {
     data: vacancyResponse,
     isLoading,
-    isFetching,
     error,
   } = useVacancyByIdQuery(id || '', {
     enabled: initialized && !!keycloak?.authenticated && !!id,
@@ -107,7 +106,6 @@ function EditVacancyContent({ id }: { id: string | undefined }) {
       !vacancyResponse?.success ||
       isHydratedRef.current ||
       isLoading ||
-      isFetching ||
       !!error
     ) {
       return;
@@ -144,7 +142,6 @@ function EditVacancyContent({ id }: { id: string | undefined }) {
     isHydratedRef.current = true;
   }, [
     error,
-    isFetching,
     isLoading,
     setCurrentStepIndex,
     setForm,

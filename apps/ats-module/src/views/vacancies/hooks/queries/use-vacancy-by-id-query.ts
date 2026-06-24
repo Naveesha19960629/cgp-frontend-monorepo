@@ -13,6 +13,8 @@ const useVacancyByIdQuery = (id: string, options?: { enabled?: boolean }) => {
     queryKey: VACANCY_BY_ID_QUERY_KEY(id),
     queryFn: () => vacancyService.getVacancyById(id),
     enabled: isEnabled,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 };
 

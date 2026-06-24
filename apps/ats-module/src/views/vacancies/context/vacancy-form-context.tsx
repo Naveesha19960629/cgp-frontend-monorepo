@@ -244,6 +244,7 @@ interface VacancyFormContextValue {
   onNext: (data?: Partial<VacancyForm>, completed?: boolean) => void;
   onBack: () => void;
   onCancel: () => void;
+  lockCancelDialog: () => void;
   onSubmit: () => void;
   OnSaveAsDraft: () => void;
   isSavingDraft: boolean;
@@ -283,6 +284,7 @@ function VacancyFormProvider({
   const stepDraftSaveRef = useRef<
     (() => Promise<Partial<VacancyForm> | null>) | null
   >(null);
+  const cancelLockRef = useRef(false);
 
   const setCurrentStepIndex = (index: number) => {
     _setCurrentStepIndex(index);
@@ -347,7 +349,12 @@ function VacancyFormProvider({
     }
   };
 
+  const lockCancelDialog = () => {
+    cancelLockRef.current = true;
+  };
+
   const onCancel = () => {
+    if (cancelLockRef.current) return;
     stepPersistRef.current?.();
     setShowCancelDialog(true);
   };
@@ -414,6 +421,7 @@ function VacancyFormProvider({
         onNext,
         onBack,
         onCancel,
+        lockCancelDialog,
         onSubmit,
         OnSaveAsDraft,
         isSavingDraft,
