@@ -447,16 +447,34 @@ export default function TertiaryEducationStep({
   ) => {
     const input = ref.current?.input.value.trim();
     let current = getValues(fieldName);
-    if (input) {
+    const maxFieldByName = {
+      'entries.0.qualificationName': 'qualificationName',
+      'entries.0.levelOfQualification': 'levelOfQualification',
+      'entries.0.specialization': 'specialization',
+      'entries.0.batch': 'batch',
+      'entries.0.department': 'department',
+      'entries.0.faculty': 'faculty',
+    } as const;
+
+    const maxField = maxFieldByName[fieldName];
+    const hasRoomForInput = !input || current.length < MAX_SELECTIONS;
+
+    if (!hasRoomForInput) {
+      setMax(maxField);
+    }
+
+    if (input && hasRoomForInput) {
       current = [...current, { value: input, label: input, source: '' }];
     }
     const resolved: { value: string; label: string; source: string }[] = [];
     for (const item of current) {
-      if (item.value === item.label) {
-        const created = await resolveItem(item.label, addMutation);
-        if (created) resolved.push(created);
-      } else {
-        resolved.push(item);
+      const nextItem =
+        item.value === item.label
+          ? await resolveItem(item.label, addMutation)
+          : item;
+
+      if (nextItem) {
+        resolved.push(nextItem);
       }
     }
     setValue(fieldName, resolved);
@@ -650,6 +668,10 @@ export default function TertiaryEducationStep({
                       value={field.value}
                       onSearch={searchQualifications}
                       onChange={options => {
+                        if (options.length > MAX_SELECTIONS) {
+                          setMax('qualificationName');
+                          return;
+                        }
                         if (options.length < MAX_SELECTIONS)
                           clearMax('qualificationName');
                         setQualificationInput('');
@@ -809,6 +831,10 @@ export default function TertiaryEducationStep({
                       value={field.value}
                       onSearch={searchBatches}
                       onChange={options => {
+                        if (options.length > MAX_SELECTIONS) {
+                          setMax('batch');
+                          return;
+                        }
                         if (options.length < MAX_SELECTIONS) clearMax('batch');
                         setBatchInput('');
                         field.onChange(options);
@@ -945,6 +971,10 @@ export default function TertiaryEducationStep({
                       value={field.value}
                       onSearch={searchLevels}
                       onChange={options => {
+                        if (options.length > MAX_SELECTIONS) {
+                          setMax('levelOfQualification');
+                          return;
+                        }
                         if (options.length < MAX_SELECTIONS)
                           clearMax('levelOfQualification');
                         setLevelInput('');
@@ -1016,6 +1046,10 @@ export default function TertiaryEducationStep({
                       value={field.value}
                       onSearch={searchSpecializations}
                       onChange={options => {
+                        if (options.length > MAX_SELECTIONS) {
+                          setMax('specialization');
+                          return;
+                        }
                         if (options.length < MAX_SELECTIONS)
                           clearMax('specialization');
                         setSpecializationInput('');
@@ -1254,6 +1288,10 @@ export default function TertiaryEducationStep({
                       value={field.value}
                       onSearch={searchDepartments}
                       onChange={options => {
+                        if (options.length > MAX_SELECTIONS) {
+                          setMax('department');
+                          return;
+                        }
                         if (options.length < MAX_SELECTIONS)
                           clearMax('department');
                         setDepartmentInput('');
@@ -1322,6 +1360,10 @@ export default function TertiaryEducationStep({
                       value={field.value}
                       onSearch={searchFaculties}
                       onChange={options => {
+                        if (options.length > MAX_SELECTIONS) {
+                          setMax('faculty');
+                          return;
+                        }
                         if (options.length < MAX_SELECTIONS)
                           clearMax('faculty');
                         setFacultyInput('');

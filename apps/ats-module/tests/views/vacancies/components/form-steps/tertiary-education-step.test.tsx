@@ -421,6 +421,9 @@ async function openConfirmDialog() {
 describe('TertiaryEducationStep', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    stableForm.tertiaryEducation = [
+      { isEnabled: false, dataTakenFromCandidate: false, content: [] },
+    ];
     stableForm.status = undefined;
     mockQualificationMutate.mockResolvedValue({
       data: { pendingId: 'qual-id' },
@@ -854,6 +857,38 @@ describe('TertiaryEducationStep', () => {
   });
 
   describe('creatable field items deferred to Next', () => {
+    const makeApiRefs = (prefix: string, count = 10) =>
+      Array.from({ length: count }, (_, index) => ({
+        id: `${prefix}-${index + 1}`,
+        source: 'MASTER' as const,
+        name: `${prefix} ${index + 1}`,
+      }));
+
+    const setMaxedTertiaryForm = () => {
+      stableForm.tertiaryEducation = [
+        {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          content: [
+            {
+              qualificationName: makeApiRefs('qualification'),
+              tertiaryAwardingBody: [],
+              tertiaryAwardingBodyLocations: [],
+              levelOfQualification: makeApiRefs('level'),
+              specialization: makeApiRefs('specialization'),
+              studyMode: [],
+              studyPattern: [],
+              deliverySchedule: [],
+              batch: makeApiRefs('batch'),
+              department: makeApiRefs('department'),
+              faculty: makeApiRefs('faculty'),
+              grade: '',
+            },
+          ],
+        },
+      ];
+    };
+
     it('does not call addQualificationMutation when a new qualification item is added', async () => {
       const user = userEvent.setup();
       renderStep();
@@ -1015,6 +1050,52 @@ describe('TertiaryEducationStep', () => {
         expect(mockFacultyMutate).toHaveBeenCalledWith('new-val');
       });
     });
+
+    it.each([
+      {
+        placeholder: 'tertiaryEducation.placeholders.qualificationName',
+        mutationSpy: mockQualificationMutate,
+      },
+      {
+        placeholder: 'tertiaryEducation.placeholders.batch',
+        mutationSpy: mockBatchMutate,
+      },
+      {
+        placeholder: 'tertiaryEducation.placeholders.levelOfQualification',
+        mutationSpy: mockLevelMutate,
+      },
+      {
+        placeholder: 'tertiaryEducation.placeholders.specialization',
+        mutationSpy: mockSpecializationMutate,
+      },
+      {
+        placeholder: 'tertiaryEducation.placeholders.department',
+        mutationSpy: mockDepartmentMutate,
+      },
+      {
+        placeholder: 'tertiaryEducation.placeholders.faculty',
+        mutationSpy: mockFacultyMutate,
+      },
+    ])(
+      'does not call deferred add mutation for %s when already at max and Next is clicked',
+      async ({ placeholder, mutationSpy }) => {
+        const user = userEvent.setup();
+        setMaxedTertiaryForm();
+        renderStep();
+
+        const input = screen.getByPlaceholderText(placeholder);
+        if (!(input instanceof HTMLInputElement)) {
+          throw new Error('Expected input element');
+        }
+        input.value = 'new-val';
+
+        await user.click(screen.getByText('tertiaryEducation.next'));
+
+        await waitFor(() => {
+          expect(mutationSpy).not.toHaveBeenCalledWith('new-val');
+        });
+      }
+    );
 
     it('does not call addTertiaryAwardingBodyMutation immediately when awarding body dialog Add Now is clicked', async () => {
       const user = userEvent.setup();

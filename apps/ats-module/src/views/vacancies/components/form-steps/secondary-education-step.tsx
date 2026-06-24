@@ -428,16 +428,31 @@ export default function SecondaryEducationStep({
   ) => {
     const input = ref.current?.input.value.trim();
     let current = getValues(fieldName);
-    if (input) {
+    const maxFieldByName = {
+      'entries.0.examinations': 'examinations',
+      'entries.0.awardingBodies': 'awardingBodies',
+      'entries.0.fieldsOfStudy': 'fieldsOfStudy',
+    } as const;
+
+    const maxField = maxFieldByName[fieldName];
+    const hasRoomForInput = !input || current.length < MAX_SELECTIONS;
+
+    if (!hasRoomForInput) {
+      setMax(maxField);
+    }
+
+    if (input && hasRoomForInput) {
       current = [...current, { value: input, label: input, source: '' }];
     }
     const resolved: { value: string; label: string; source: string }[] = [];
     for (const item of current) {
-      if (item.value === item.label) {
-        const created = await resolveItem(item.label, addMutation);
-        if (created) resolved.push(created);
-      } else {
-        resolved.push(item);
+      const nextItem =
+        item.value === item.label
+          ? await resolveItem(item.label, addMutation)
+          : item;
+
+      if (nextItem) {
+        resolved.push(nextItem);
       }
     }
     setValue(fieldName, resolved);
@@ -635,6 +650,10 @@ export default function SecondaryEducationStep({
                         value={field.value}
                         onSearch={searchSchools}
                         onChange={options => {
+                          if (options.length > MAX_SELECTIONS) {
+                            setMax('schools');
+                            return;
+                          }
                           if (options.length < MAX_SELECTIONS)
                             clearMax('schools');
                           const newItem = options.find(
@@ -978,6 +997,10 @@ export default function SecondaryEducationStep({
                         value={field.value}
                         onSearch={searchExaminations}
                         onChange={options => {
+                          if (options.length > MAX_SELECTIONS) {
+                            setMax('examinations');
+                            return;
+                          }
                           if (options.length < MAX_SELECTIONS)
                             clearMax('examinations');
                           setExaminationInput('');
@@ -1048,6 +1071,10 @@ export default function SecondaryEducationStep({
                         value={field.value}
                         onSearch={searchAwardingBodies}
                         onChange={options => {
+                          if (options.length > MAX_SELECTIONS) {
+                            setMax('awardingBodies');
+                            return;
+                          }
                           if (options.length < MAX_SELECTIONS)
                             clearMax('awardingBodies');
                           setAwardingBodyInput('');
@@ -1121,6 +1148,10 @@ export default function SecondaryEducationStep({
                         value={field.value}
                         onSearch={searchFieldsOfStudy}
                         onChange={options => {
+                          if (options.length > MAX_SELECTIONS) {
+                            setMax('fieldsOfStudy');
+                            return;
+                          }
                           if (options.length < MAX_SELECTIONS)
                             clearMax('fieldsOfStudy');
                           setFieldOfStudyInput('');
@@ -1232,6 +1263,13 @@ export default function SecondaryEducationStep({
             setAddSchoolDialogOpen(false);
           }}
           onAdded={option => {
+            const currentSchools = getValues('entries.0.schools');
+            if (currentSchools.length >= MAX_SELECTIONS) {
+              setMax('schools');
+              setSchoolsSelectorKey(k => k + 1);
+              setAddSchoolDialogOpen(false);
+              return;
+            }
             pendingSchoolsDataRef.current.set(option.value, {
               displayValue: option.label,
               locationId: option.locationId,

@@ -511,7 +511,11 @@ export default function LicenseCertificatesStep({
                         value={field.value}
                         onSearch={searchLicenseCerts}
                         onChange={options => {
-                          if (options.length < MAX_SELECTIONS)
+                          if (options.length > MAX_SELECTIONS) {
+                            setMax('nameOfLicenseCert');
+                            return;
+                          }
+                          if (options.length <= MAX_SELECTIONS)
                             clearMax('nameOfLicenseCert');
                           const newItem = options.find(
                             o => o.value === o.label
@@ -583,6 +587,10 @@ export default function LicenseCertificatesStep({
                         value={field.value}
                         onSearch={searchOrganizations}
                         onChange={options => {
+                          if (options.length > MAX_SELECTIONS) {
+                            setMax('issuingOrganization');
+                            return;
+                          }
                           if (options.length < MAX_SELECTIONS) {
                             clearMax('issuingOrganization');
                           }
@@ -660,7 +668,11 @@ export default function LicenseCertificatesStep({
                         value={field.value}
                         onSearch={searchLocations}
                         onChange={options => {
-                          if (options.length < MAX_SELECTIONS)
+                          if (options.length > MAX_SELECTIONS) {
+                            setMax('organizationLocations');
+                            return;
+                          }
+                          if (options.length <= MAX_SELECTIONS)
                             clearMax('organizationLocations');
                           field.onChange(options);
                         }}
@@ -961,6 +973,14 @@ export default function LicenseCertificatesStep({
               return item.label.trim().toLowerCase() !== normalizedNewLabel;
             });
 
+            if (deduped.length >= MAX_SELECTIONS) {
+              setMax('issuingOrganization');
+              organizationsSnapshotRef.current = [];
+              setOrganizationSelectorKey(k => k + 1);
+              setShowAddOrganizationDialog(false);
+              return;
+            }
+
             setValue('entry.issuingOrganization', [
               ...deduped,
               {
@@ -969,6 +989,8 @@ export default function LicenseCertificatesStep({
                 source: org.source,
               },
             ]);
+
+            clearMax('issuingOrganization');
 
             organizationsSnapshotRef.current = [];
             setOrganizationSelectorKey(k => k + 1);
@@ -986,11 +1008,6 @@ export default function LicenseCertificatesStep({
             setAddLicenseCertDialogOpen(false);
           }}
           onAdded={option => {
-            pendingLicenseCertsDataRef.current.set(option.value, {
-              displayValue: option.label,
-              certType: option.certType,
-            });
-
             const baseItems =
               licenseCertsSnapshotRef.current.length > 0
                 ? licenseCertsSnapshotRef.current
@@ -1011,6 +1028,20 @@ export default function LicenseCertificatesStep({
               return !(sameLabel && sameType);
             });
 
+            if (deduped.length >= MAX_SELECTIONS) {
+              setMax('nameOfLicenseCert');
+              pendingLicenseCertsDataRef.current.delete(option.value);
+              licenseCertsSnapshotRef.current = [];
+              setLicenseCertSelectorKey(k => k + 1);
+              setAddLicenseCertDialogOpen(false);
+              return;
+            }
+
+            pendingLicenseCertsDataRef.current.set(option.value, {
+              displayValue: option.label,
+              certType: option.certType,
+            });
+
             setValue('entry.nameOfLicenseCert', [
               ...deduped,
               {
@@ -1020,6 +1051,8 @@ export default function LicenseCertificatesStep({
                 certType: option.certType,
               },
             ]);
+
+            clearMax('nameOfLicenseCert');
 
             licenseCertsSnapshotRef.current = [];
             setLicenseCertSelectorKey(k => k + 1);
