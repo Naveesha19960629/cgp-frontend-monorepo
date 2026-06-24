@@ -1,4 +1,6 @@
-import { useQuery } from '@tanstack/react-query';
+import { useCallback } from 'react';
+
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 import {
   type OrganizationOption,
@@ -30,8 +32,26 @@ export function useOrganizationsQuery(
   };
 }
 
-export function useOrganizationsSearch(search: string = '') {
-  return useOrganizationsQuery(search);
+export function useOrganizationsSearch() {
+  const queryClient = useQueryClient();
+
+  return useCallback(
+    async (search: string) => {
+      const data = await queryClient.fetchQuery<OrganizationOption[]>({
+        queryKey: ORGANIZATIONS_QUERY_KEY(search),
+        queryFn: () => organizationService.getAllOrganizations(search),
+        staleTime: ORGANIZATIONS_STALE_TIME,
+        gcTime: ORGANIZATIONS_GC_TIME,
+      });
+
+      return data.map(item => ({
+        value: item.id,
+        label: item.name || item.label || '',
+        source: item.source ?? 'MASTER',
+      }));
+    },
+    [queryClient]
+  );
 }
 
 export type { OrganizationOption };

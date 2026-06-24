@@ -68,7 +68,21 @@ import { applyTypography } from '@cgp/ui-kit/lib/typography';
 import { cn } from '@cgp/ui-kit/lib/utils';
 
 const MAX_SELECTIONS = 10;
-const HUNDRED_YEARS_AGO = new Date(new Date().getFullYear() - 100, 0, 1);
+const TODAY = new Date(
+  new Date().getFullYear(),
+  new Date().getMonth(),
+  new Date().getDate()
+);
+const HUNDRED_YEARS_AGO = new Date(
+  TODAY.getFullYear() - 100,
+  TODAY.getMonth(),
+  TODAY.getDate()
+);
+const HUNDRED_YEARS_FROM_NOW = new Date(
+  TODAY.getFullYear() + 100,
+  TODAY.getMonth(),
+  TODAY.getDate()
+);
 
 const multiSelectInfoAvatar = new URL(
   '../../../../assets/images/multi-select-info-avatar.svg',
@@ -106,6 +120,24 @@ export default function SecondaryEducationStep({
   const fieldsDisabled = !isEnabled || dataTakenFromCandidate;
   const endDateDefaultMonth =
     parseLocalDate(endDateValue ?? startDateValue) ?? new Date();
+  let parsedStartDate: Date | null = null;
+  if (startDateValue) {
+    parsedStartDate = parseLocalDate(startDateValue);
+  }
+
+  let minEndDate: Date | null = null;
+  if (parsedStartDate) {
+    const startPlusOneDay = new Date(
+      parsedStartDate.getFullYear(),
+      parsedStartDate.getMonth(),
+      parsedStartDate.getDate() + 1
+    );
+
+    minEndDate =
+      compareDates(startPlusOneDay, TODAY) > 0 ? startPlusOneDay : TODAY;
+  } else {
+    minEndDate = TODAY;
+  }
 
   const clearEntryData = () => {
     setValue('entries.0.schools', []);
@@ -114,8 +146,8 @@ export default function SecondaryEducationStep({
     setValue('entries.0.awardingBodies', []);
     setValue('entries.0.fieldsOfStudy', []);
     setValue('entries.0.grade', '');
-    resetField('entries.0.startDate', { defaultValue: undefined });
-    resetField('entries.0.endDate', { defaultValue: undefined });
+    setValue('entries.0.startDate', undefined);
+    setValue('entries.0.endDate', undefined);
     setValue('entries.0.result', '');
     setValue('entries.0.acceptsHomeSchooling', false);
   };
@@ -140,7 +172,10 @@ export default function SecondaryEducationStep({
     return hasEntryData() || getValues('dataTakenFromCandidate') === true;
   };
 
-  useStepGuard(isEnabled && !dataTakenFromCandidate && !hasEntryData());
+  const shouldDisableNavigation =
+    isEnabled && !dataTakenFromCandidate && !hasEntryData();
+
+  useStepGuard(shouldDisableNavigation);
   useEffect(() => {
     stepPersistRef.current = () => {
       setForm(prev => ({
@@ -465,12 +500,8 @@ export default function SecondaryEducationStep({
             t('secondaryEducation.schoolName'),
             t('secondaryEducation.schoolLocation'),
             t('secondaryEducation.examination'),
-            t('secondaryEducation.awardingBody'),
-            t('secondaryEducation.fieldOfStudy'),
-            t('secondaryEducation.grade'),
             t('secondaryEducation.startDate'),
             t('secondaryEducation.endDate'),
-            t('secondaryEducation.results'),
           ]}
         />
 
@@ -480,7 +511,8 @@ export default function SecondaryEducationStep({
             <button
               type="button"
               aria-label={t('secondaryEducation.back')}
-              className="text-slate-700 transition-colors hover:text-slate-900"
+              disabled={shouldDisableNavigation}
+              className="text-slate-700 transition-colors hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-40"
               onClick={onBack}
             >
               <ArrowLeft2 size={24} />
@@ -712,7 +744,7 @@ export default function SecondaryEducationStep({
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
                 <div className="flex min-w-0 flex-col gap-1">
                   <div className="flex min-w-0 items-center justify-between gap-2">
-                    <Label className="truncate pr-2">
+                    <Label className="shrink-0">
                       {t('secondaryEducation.grade')}
                     </Label>
                     <Controller
@@ -815,7 +847,7 @@ export default function SecondaryEducationStep({
                               if (
                                 endDate &&
                                 date &&
-                                compareDates(endDate, date) < 0
+                                compareDates(endDate, date) <= 0
                               ) {
                                 resetField('entries.0.endDate', {
                                   defaultValue: undefined,
@@ -823,10 +855,11 @@ export default function SecondaryEducationStep({
                               }
                             }}
                             disabled={date =>
-                              date > new Date() || date < HUNDRED_YEARS_AGO
+                              date > TODAY || date < HUNDRED_YEARS_AGO
                             }
                             captionLayout="dropdown"
                             startMonth={HUNDRED_YEARS_AGO}
+                            endMonth={TODAY}
                           />
                         </PopoverContent>
                       </Popover>
@@ -899,16 +932,15 @@ export default function SecondaryEducationStep({
                               setOpenDatePopover(null);
                             }}
                             disabled={date =>
-                              date < HUNDRED_YEARS_AGO ||
-                              (startDateValue
-                                ? compareDates(
-                                    date,
-                                    parseLocalDate(startDateValue) ?? new Date()
-                                  ) < 0
+                              date < TODAY ||
+                              date > HUNDRED_YEARS_FROM_NOW ||
+                              (minEndDate
+                                ? compareDates(date, minEndDate) < 0
                                 : false)
                             }
                             captionLayout="dropdown"
-                            startMonth={HUNDRED_YEARS_AGO}
+                            startMonth={TODAY}
+                            endMonth={HUNDRED_YEARS_FROM_NOW}
                           />
                         </PopoverContent>
                       </Popover>
@@ -921,7 +953,7 @@ export default function SecondaryEducationStep({
               <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
                 <div className="flex min-w-0 flex-col gap-1">
                   <div className="flex min-w-0 items-center justify-between gap-2">
-                    <Label className="truncate pr-2">
+                    <Label className="shrink-0">
                       {t('secondaryEducation.examination')}
                     </Label>
                     <CharacterCount
@@ -991,7 +1023,7 @@ export default function SecondaryEducationStep({
 
                 <div className="flex min-w-0 flex-col gap-1">
                   <div className="flex min-w-0 items-center justify-between gap-2">
-                    <Label className="truncate pr-2">
+                    <Label className="shrink-0">
                       {t('secondaryEducation.awardingBody')}
                     </Label>
                     <CharacterCount
@@ -1064,7 +1096,7 @@ export default function SecondaryEducationStep({
               <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
                 <div className="flex min-w-0 flex-col gap-1">
                   <div className="flex min-w-0 items-center justify-between gap-2">
-                    <Label className="truncate pr-2">
+                    <Label className="shrink-0">
                       {t('secondaryEducation.fieldOfStudy')}
                     </Label>
                     <CharacterCount
@@ -1134,7 +1166,7 @@ export default function SecondaryEducationStep({
 
                 <div className="flex min-w-0 flex-col gap-1">
                   <div className="flex min-w-0 items-center justify-between gap-2">
-                    <Label className="truncate pr-2">
+                    <Label className="shrink-0">
                       {t('secondaryEducation.results')}
                     </Label>
                     <Controller
@@ -1248,7 +1280,11 @@ export default function SecondaryEducationStep({
           <Button variant="secondary" className="h-12 w-48" onClick={onCancel}>
             {t('secondaryEducation.cancel')}
           </Button>
-          <Button className="h-12 w-48" onClick={() => void handleNext()}>
+          <Button
+            className="h-12 w-48"
+            disabled={shouldDisableNavigation}
+            onClick={() => void handleNext()}
+          >
             {t('secondaryEducation.next')}
           </Button>
         </div>

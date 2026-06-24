@@ -547,6 +547,8 @@
     "studyMode": "Mode of Study",
     "studyPattern": "Study Pattern",
     "deliverySchedule": "Delivery Schedule",
+    "startDate": "Start Date",
+    "endDate": "End Date",
     "batch": "Batch",
     "department": "Department",
     "faculty": "Faculty",

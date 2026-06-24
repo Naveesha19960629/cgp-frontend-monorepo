@@ -75,9 +75,10 @@ export default function PreferredIndustryStep({
     }));
   };
 
-  useStepGuard(
-    isEnabled && !dataTakenFromCandidate && selectedIndustries.length === 0
-  );
+  const shouldDisableNavigation =
+    isEnabled && !dataTakenFromCandidate && selectedIndustries.length === 0;
+
+  useStepGuard(shouldDisableNavigation);
 
   useEffect(() => {
     stepPersistRef.current = () => {
@@ -170,7 +171,8 @@ export default function PreferredIndustryStep({
           <button
             type="button"
             aria-label={t('common.back')}
-            className="text-slate-700 transition-colors hover:text-slate-900"
+            disabled={shouldDisableNavigation}
+            className="text-slate-700 transition-colors hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-40"
             onClick={onBack}
           >
             <ArrowLeft2 size={24} />
@@ -374,7 +376,11 @@ export default function PreferredIndustryStep({
         <Button variant="secondary" className="h-12 w-48" onClick={onCancel}>
           {t('common.cancel')}
         </Button>
-        <Button className="h-12 w-48" onClick={() => void handleNext()}>
+        <Button
+          className="h-12 w-48"
+          disabled={shouldDisableNavigation}
+          onClick={() => void handleNext()}
+        >
           {t('common.next')}
         </Button>
       </div>

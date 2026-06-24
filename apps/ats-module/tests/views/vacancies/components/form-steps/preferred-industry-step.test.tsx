@@ -473,80 +473,34 @@ describe('PreferredIndustryStep', () => {
     });
   });
 
-  describe('emptyDisableDialog', () => {
-    it('shows when Next is clicked with no items selected', async () => {
+  describe('navigation guard', () => {
+    it('disables Next when no items are selected and dataTakenFromCandidate is false', () => {
+      renderStep();
+
+      expect(screen.getByText('common.next')).toBeDisabled();
+    });
+
+    it('does not render emptyDisableDialog when Next is disabled', async () => {
       const user = userEvent.setup();
       const { onNext } = renderStep();
 
       await user.click(screen.getByText('common.next'));
 
       expect(
-        screen.getByText('preferredIndustries.emptyDisableDialog.title')
-      ).toBeInTheDocument();
+        screen.queryByText('preferredIndustries.emptyDisableDialog.title')
+      ).not.toBeInTheDocument();
       expect(onNext).not.toHaveBeenCalled();
     });
 
-    it('does not show when dataTakenFromCandidate is checked', async () => {
+    it('enables Next when dataTakenFromCandidate is checked', async () => {
       const user = userEvent.setup();
-      const { onNext } = renderStep();
+      renderStep();
 
       await user.click(
         screen.getByLabelText('preferredIndustries.dataTakenFromCandidate')
       );
-      await user.click(screen.getByText('common.next'));
 
-      expect(
-        screen.queryByText('preferredIndustries.emptyDisableDialog.title')
-      ).not.toBeInTheDocument();
-      expect(onNext).toHaveBeenCalledTimes(1);
-    });
-
-    it('closes without changing state when Cancel is clicked', async () => {
-      const user = userEvent.setup();
-      const { onNext } = renderStep();
-
-      await user.click(screen.getByText('common.next'));
-      await screen.findByText('preferredIndustries.emptyDisableDialog.title');
-      await user.click(screen.getByText('common.disableDialog.cancelButton'));
-
-      expect(
-        screen.queryByText('preferredIndustries.emptyDisableDialog.title')
-      ).not.toBeInTheDocument();
-      expect(onNext).not.toHaveBeenCalled();
-    });
-
-    it('calls onNext with disabled payload when Disable is clicked', async () => {
-      const user = userEvent.setup();
-      const { onNext } = renderStep();
-
-      await user.click(screen.getByText('common.next'));
-      await screen.findByText('preferredIndustries.emptyDisableDialog.title');
-      await user.click(
-        screen.getByText('preferredIndustries.emptyDisableDialog.disable')
-      );
-
-      expect(onNext).toHaveBeenCalledWith({
-        preferredIndustries: {
-          isEnabled: false,
-          dataTakenFromCandidate: false,
-          industries: [],
-        },
-      });
-    });
-
-    it('fires SuccessToast when Disable is clicked', async () => {
-      const user = userEvent.setup();
-      renderStep();
-
-      await user.click(screen.getByText('common.next'));
-      await screen.findByText('preferredIndustries.emptyDisableDialog.title');
-      await user.click(
-        screen.getByText('preferredIndustries.emptyDisableDialog.disable')
-      );
-
-      expect(mockSuccessToast).toHaveBeenCalledWith(
-        'preferredIndustries.title'
-      );
+      expect(screen.getByText('common.next')).toBeEnabled();
     });
   });
 
@@ -845,9 +799,11 @@ describe('PreferredIndustryStep', () => {
       expect(mockOnCancel).toHaveBeenCalledTimes(1);
     });
 
-    it('calls onBack when the header back button is clicked', async () => {
+    it('calls onBack when the header back button is enabled and clicked', async () => {
       const user = userEvent.setup();
-      const { onBack } = renderStep();
+      const { onBack } = renderStep({
+        industries: [{ id: 'ind-1', label: 'Healthcare' }],
+      });
 
       await user.click(screen.getByRole('button', { name: 'common.back' }));
 

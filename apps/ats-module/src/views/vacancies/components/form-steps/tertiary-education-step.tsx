@@ -129,7 +129,10 @@ export default function TertiaryEducationStep({
     return hasEntryData() || getValues('dataTakenFromCandidate') === true;
   };
 
-  useStepGuard(isEnabled && !dataTakenFromCandidate && !hasEntryData());
+  const shouldDisableNavigation =
+    isEnabled && !dataTakenFromCandidate && !hasEntryData();
+
+  useStepGuard(shouldDisableNavigation);
   useEffect(() => {
     stepPersistRef.current = () => {
       setForm(prev => ({
@@ -527,14 +530,10 @@ export default function TertiaryEducationStep({
           t('tertiaryEducation.tertiaryAwardingBody'),
           t('tertiaryEducation.tertiaryAwardingBodyLocations'),
           t('tertiaryEducation.levelOfQualification'),
-          t('tertiaryEducation.specialization'),
-          t('tertiaryEducation.studyMode'),
           t('tertiaryEducation.studyPattern'),
           t('tertiaryEducation.deliverySchedule'),
-          t('tertiaryEducation.batch'),
-          t('tertiaryEducation.department'),
-          t('tertiaryEducation.faculty'),
-          t('tertiaryEducation.grade'),
+          t('tertiaryEducation.startDate'),
+          t('tertiaryEducation.endDate'),
         ]}
       />
 
@@ -544,7 +543,8 @@ export default function TertiaryEducationStep({
           <button
             type="button"
             aria-label={t('tertiaryEducation.back')}
-            className="text-slate-700 transition-colors hover:text-slate-900"
+            disabled={shouldDisableNavigation}
+            className="text-slate-700 transition-colors hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-40"
             onClick={onBack}
           >
             <ArrowLeft2 size={24} />
@@ -1442,7 +1442,11 @@ export default function TertiaryEducationStep({
         <Button variant="secondary" className="h-12 w-48" onClick={onCancel}>
           {t('tertiaryEducation.cancel')}
         </Button>
-        <Button className="h-12 w-48" onClick={() => void handleNext()}>
+        <Button
+          className="h-12 w-48"
+          disabled={shouldDisableNavigation}
+          onClick={() => void handleNext()}
+        >
           {t('tertiaryEducation.next')}
         </Button>
       </div>
