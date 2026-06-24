@@ -141,13 +141,23 @@ describe('VacancyTableAction', () => {
 
   it('navigates to edit page when edit menu item is clicked', async () => {
     const user = userEvent.setup();
-    render(<VacancyTableAction {...defaultProps} />);
+    const props = { ...defaultProps, onEdit: undefined };
+    render(<VacancyTableAction {...props} />);
     await user.click(screen.getByRole('button'));
     await user.click(screen.getByText('vacancies.table.actions.edit'));
 
     expect(mockNavigate).toHaveBeenCalledWith(
       '/dashboard/ats/vacancies/test-vacancy-id/edit'
     );
+  });
+
+  it('calls onEdit callback when its menu item is clicked', async () => {
+    const user = userEvent.setup();
+    render(<VacancyTableAction {...defaultProps} />);
+    await user.click(screen.getByRole('button'));
+    await user.click(screen.getByText('vacancies.table.actions.edit'));
+
+    expect(onEdit).toHaveBeenCalledTimes(1);
   });
 
   it('calls onMatchCandidate callback when its menu item is clicked', async () => {
@@ -163,5 +173,31 @@ describe('VacancyTableAction', () => {
       screen.getByText('vacancies.table.actions.matchCandidate')
     );
     expect(onMatchCandidate).toHaveBeenCalledTimes(1);
+  });
+
+  it('respects availableActions array when present', async () => {
+    const user = userEvent.setup();
+    render(
+      <VacancyTableAction
+        {...defaultProps}
+        vacancy={{
+          id: 'test',
+          status: 'live',
+          applicantCount: 3,
+          availableActions: ['DELETE', 'EDIT'],
+        }}
+      />
+    );
+    await user.click(screen.getByRole('button'));
+
+    expect(
+      screen.getByText('vacancies.table.actions.delete')
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('vacancies.table.actions.edit')
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText('vacancies.table.actions.makeACopy')
+    ).not.toBeInTheDocument();
   });
 });

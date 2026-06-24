@@ -55,4 +55,10 @@ export const vacancyService = {
     );
     return response.data;
   },
+  deleteVacancy: async (id: string): Promise<CreateVacancyResponse> => {
+    const response = await httpClient.delete<CreateVacancyResponse>(
+      `/vacancies/${id}`
+    );
+    return response.data;
+  },
 };

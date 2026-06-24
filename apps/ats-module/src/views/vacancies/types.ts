@@ -867,6 +867,13 @@ interface VacancyCancelDialogProps {
   isSavingDraft?: boolean;
 }
 
+interface VacancyDeleteDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onConfirm: () => void;
+  isDeleting?: boolean;
+}
+
 interface VacancyTableColumn {
   vacancyId: string;
   title: string;
@@ -953,6 +960,7 @@ interface VacancyTableActionProps {
     id: string;
     status: string;
     applicantCount: number;
+    availableActions?: string[];
   };
   onVersionHistory?: () => void;
   onMatchCandidate?: () => void;
@@ -982,6 +990,7 @@ interface CreateColumnsOptions {
   onSort: (columnKey: string) => void;
   onView: (vacancyId: string) => void;
   onEdit: (vacancyId: string) => void;
+  onDelete: (vacancyId: string) => void;
   t: (key: string) => string;
 }
 
@@ -1552,6 +1561,7 @@ export type {
   PublicationApiData,
   PublicationResponse,
   VacancyCancelDialogProps,
+  VacancyDeleteDialogProps,
   VacancyTableColumn,
   VacancyQueryParams,
   VacanciesPaginatedData,

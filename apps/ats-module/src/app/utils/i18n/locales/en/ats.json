@@ -129,6 +129,18 @@
       "invalidId": "Invalid vacancy ID.",
       "failedToLoadVacancy": "Failed to load vacancy details. Please try again."
     },
+    "deleteDialog": {
+      "title": "Are you sure?",
+      "message": "Are you sure you want to delete this vacancy? This action cannot be undone",
+      "confirm": "Yes",
+      "cancel": "No",
+      "notifications": {
+        "successTitle": "Successfully Deleted",
+        "successMessage": "Vacancy has been successfully deleted.",
+        "errorTitle": "Failed to Delete",
+        "errorMessage": "Some changes could not be saved. Please try again."
+      }
+    },
     "view": {
       "untitledVacancy": "Untitled Vacancy",
       "applied": "Applied",

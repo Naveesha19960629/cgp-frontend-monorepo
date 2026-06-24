@@ -25,3 +25,4 @@ export { useAddCareerPathMutation } from '@/views/vacancies/hooks/mutations/use-
 export { useAddRoleMutation } from '@/views/vacancies/hooks/mutations/use-add-role-mutation';
 export { useAddJobTitleMutation } from '@/views/vacancies/hooks/mutations/use-add-job-title-mutation';
 export { useUpdateCandidateProfileBasicInformationsMutation } from '@/views/vacancies/hooks/mutations/use-update-candidate-profile-basic-informations-mutation';
+export { useDeleteVacancyMutation } from '@/views/vacancies/hooks/mutations/use-delete-vacancy-mutation';
