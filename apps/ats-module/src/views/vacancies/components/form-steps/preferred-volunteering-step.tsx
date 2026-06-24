@@ -489,11 +489,19 @@ export default function PreferredVolunteeringStep({
       : [createEmptyEntry('1')]
   );
 
+  const hasVolunteeringData = entries.some(
+    e =>
+      e.organizationName.length > 0 ||
+      e.organizationLocations.length > 0 ||
+      e.cause.length > 0 ||
+      e.position.trim().length > 0 ||
+      e.startDate != null ||
+      e.endDate != null
+  );
+
   const handleNext = () => {
     const isEmptyEnabledSection =
-      isEnabled &&
-      !dataTakenFromCandidate &&
-      !entries.some(e => e.organizationName.length > 0 || e.cause.length > 0);
+      isEnabled && !dataTakenFromCandidate && !hasVolunteeringData;
 
     if (isEmptyEnabledSection) {
       setEmptyDisableOpen(true);
@@ -551,13 +559,11 @@ export default function PreferredVolunteeringStep({
     };
   }, [setForm, stepDisableRef]);
 
-  useStepGuard(
-    isEnabled &&
-      !dataTakenFromCandidate &&
-      !entries.some(e => e.organizationName.length > 0 || e.cause.length > 0)
-  );
+  useStepGuard(isEnabled && !dataTakenFromCandidate && !hasVolunteeringData);
 
   const fieldsDisabled = !isEnabled || dataTakenFromCandidate;
+  const canNavigate =
+    !isEnabled || dataTakenFromCandidate || hasVolunteeringData;
 
   // Organizations API
   const { data: organizationsData, isLoading: isOrganizationsLoading } =
@@ -624,6 +630,15 @@ export default function PreferredVolunteeringStep({
     });
   };
 
+  const handleBack = () => {
+    if (!canNavigate) {
+      return;
+    }
+
+    stepPersistRef.current?.();
+    onBack();
+  };
+
   return (
     <>
       <div className="flex flex-1 flex-col">
@@ -643,8 +658,13 @@ export default function PreferredVolunteeringStep({
             <button
               type="button"
               aria-label="Back"
-              className="text-slate-700 transition-colors hover:text-slate-900"
-              onClick={onBack}
+              className={cn(
+                'cursor-pointer text-slate-700 transition-colors hover:text-slate-900',
+                !canNavigate &&
+                  'cursor-not-allowed opacity-40 hover:text-slate-700'
+              )}
+              onClick={handleBack}
+              disabled={!canNavigate}
             >
               <ArrowLeft2 size={24} />
             </button>
@@ -737,7 +757,11 @@ export default function PreferredVolunteeringStep({
           <Button variant="secondary" className="h-12 w-48" onClick={onCancel}>
             Cancel
           </Button>
-          <Button className="h-12 w-48" onClick={handleNext}>
+          <Button
+            className="h-12 w-48"
+            onClick={handleNext}
+            disabled={!canNavigate}
+          >
             Next
           </Button>
         </div>

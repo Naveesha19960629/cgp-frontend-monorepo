@@ -976,8 +976,8 @@
     }
   },
   "projectsRequirements": {
-    "title": "Preferred Projects",
-    "sectionTitle": "Preferred Projects",
+    "title": "Project Requirements",
+    "sectionTitle": "Project Requirements",
     "dataTakenFromCandidate": "If selected, no manual input is required, and data will be taken from the candidate profile",
     "startDate": "Start Date",
     "endDate": "End Date",
@@ -1014,9 +1014,11 @@
       "noDataDescription": "Try searching with a different keyword or add a new industry"
     },
     "fieldList": {
-      "startDate": "Start Date",
-      "endDate": "End Date",
-      "organization": "Organization Name",
+      "projectName": "Project Name",
+      "relatedIndustry": "Related Industry",
+      "organization": "Organization",
+      "startDate": "Start Date of My Involvement",
+      "endDate": "End Date of My Involvement",
       "location": "Organization Location"
     },
     "errors": {

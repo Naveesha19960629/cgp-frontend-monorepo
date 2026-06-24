@@ -356,11 +356,16 @@ export default function PreferredPublicationsStep({
     };
   }, [setForm, stepDisableRef]);
 
+  const hasPublicationData = publications.some(
+    p =>
+      p.acceptedPublisher.trim().length > 0 ||
+      p.publishedDateFrom != null ||
+      p.publishedDateTo != null
+  );
+
   const handleNext = () => {
     const isEmptyEnabledSection =
-      isEnabled &&
-      !dataTakenFromCandidate &&
-      !publications.some(p => p.acceptedPublisher.trim().length > 0);
+      isEnabled && !dataTakenFromCandidate && !hasPublicationData;
 
     if (isEmptyEnabledSection) {
       setEmptyDisableOpen(true);
@@ -376,13 +381,11 @@ export default function PreferredPublicationsStep({
     });
   };
 
-  useStepGuard(
-    isEnabled &&
-      !dataTakenFromCandidate &&
-      !publications.some(p => p.acceptedPublisher.trim().length > 0)
-  );
+  useStepGuard(isEnabled && !dataTakenFromCandidate && !hasPublicationData);
 
   const fieldsDisabled = !isEnabled || dataTakenFromCandidate;
+  const canNavigate =
+    !isEnabled || dataTakenFromCandidate || hasPublicationData;
 
   const handleToggle = () => {
     if (isEnabled) {
@@ -436,6 +439,15 @@ export default function PreferredPublicationsStep({
     });
   };
 
+  const handleBack = () => {
+    if (!canNavigate) {
+      return;
+    }
+
+    stepPersistRef.current?.();
+    onBack();
+  };
+
   return (
     <>
       <div className="flex flex-1 flex-col">
@@ -454,8 +466,13 @@ export default function PreferredPublicationsStep({
             <button
               type="button"
               aria-label="Back"
-              className="text-slate-700 transition-colors hover:text-slate-900"
-              onClick={onBack}
+              className={cn(
+                'cursor-pointer text-slate-700 transition-colors hover:text-slate-900',
+                !canNavigate &&
+                  'cursor-not-allowed opacity-40 hover:text-slate-700'
+              )}
+              onClick={handleBack}
+              disabled={!canNavigate}
             >
               <ArrowLeft2 size={24} />
             </button>
@@ -538,7 +555,11 @@ export default function PreferredPublicationsStep({
           <Button variant="secondary" className="h-12 w-48" onClick={onCancel}>
             Cancel
           </Button>
-          <Button className="h-12 w-48" onClick={handleNext}>
+          <Button
+            className="h-12 w-48"
+            onClick={handleNext}
+            disabled={!canNavigate}
+          >
             Next
           </Button>
         </div>

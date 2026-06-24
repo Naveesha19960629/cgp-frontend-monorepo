@@ -574,6 +574,17 @@ export default function ProjectsRequirementsStep({
     );
 
   const fieldsDisabled = !isEnabled || dataTakenFromCandidate;
+  const canNavigate =
+    !isEnabled ||
+    dataTakenFromCandidate ||
+    projects.some(
+      p =>
+        p.relatedIndustry.length > 0 ||
+        p.organizations.length > 0 ||
+        p.organizationLocations.length > 0 ||
+        p.startDate != null ||
+        p.endDate != null
+    );
 
   const handleToggle = () => {
     if (isEnabled) {
@@ -647,6 +658,15 @@ export default function ProjectsRequirementsStep({
       description:
         'Projects Requirements section has been disabled successfully.',
     });
+  };
+
+  const handleBack = () => {
+    if (!canNavigate || isSubmitting) {
+      return;
+    }
+
+    stepPersistRef.current?.();
+    onBack();
   };
 
   const handleNext = async () => {
@@ -735,10 +755,11 @@ export default function ProjectsRequirementsStep({
         {/* ── Informational Banner ──────────────────────────────────────── */}
         <MessageBox
           fields={[
+            t('projectsRequirements.fieldList.projectName'),
+            t('projectsRequirements.fieldList.relatedIndustry'),
+            t('projectsRequirements.fieldList.organization'),
             t('projectsRequirements.fieldList.startDate'),
             t('projectsRequirements.fieldList.endDate'),
-            t('projectsRequirements.fieldList.organization'),
-            t('projectsRequirements.fieldList.location'),
           ]}
         />
 
@@ -748,8 +769,13 @@ export default function ProjectsRequirementsStep({
             <button
               type="button"
               aria-label="Back"
-              className="text-slate-700 transition-colors hover:text-slate-900"
-              onClick={onBack}
+              className={cn(
+                'cursor-pointer text-slate-700 transition-colors hover:text-slate-900',
+                (!canNavigate || isSubmitting) &&
+                  'cursor-not-allowed opacity-40 hover:text-slate-700'
+              )}
+              onClick={handleBack}
+              disabled={!canNavigate || isSubmitting}
             >
               <ArrowLeft2 size={24} />
             </button>
@@ -830,7 +856,7 @@ export default function ProjectsRequirementsStep({
             onClick={() => {
               void handleNext();
             }}
-            disabled={isSubmitting}
+            disabled={!canNavigate || isSubmitting}
           >
             {isSubmitting ? (
               <Loader2 className="size-4 animate-spin" />

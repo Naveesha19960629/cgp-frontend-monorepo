@@ -476,11 +476,19 @@ export default function PreferredClubSocietiesStep({
     };
   }, [setForm, stepDisableRef]);
 
+  const hasClubSocietyData = entries.some(
+    e =>
+      e.clubSociety.length > 0 ||
+      e.representedOrganization.length > 0 ||
+      e.organizationLocations.length > 0 ||
+      e.position.trim().length > 0 ||
+      e.startDate != null ||
+      e.endDate != null
+  );
+
   const handleNext = () => {
     const isEmptyEnabledSection =
-      isEnabled &&
-      !dataTakenFromCandidate &&
-      !entries.some(e => e.clubSociety.length > 0);
+      isEnabled && !dataTakenFromCandidate && !hasClubSocietyData;
 
     if (isEmptyEnabledSection) {
       setEmptyDisableOpen(true);
@@ -496,13 +504,11 @@ export default function PreferredClubSocietiesStep({
     });
   };
 
-  useStepGuard(
-    isEnabled &&
-      !dataTakenFromCandidate &&
-      !entries.some(e => e.clubSociety.length > 0)
-  );
+  useStepGuard(isEnabled && !dataTakenFromCandidate && !hasClubSocietyData);
 
   const fieldsDisabled = !isEnabled || dataTakenFromCandidate;
+  const canNavigate =
+    !isEnabled || dataTakenFromCandidate || hasClubSocietyData;
 
   // Societies API
   const { data: societiesData, isLoading: isSocietiesLoading } =
@@ -596,6 +602,15 @@ export default function PreferredClubSocietiesStep({
     });
   };
 
+  const handleBack = () => {
+    if (!canNavigate) {
+      return;
+    }
+
+    stepPersistRef.current?.();
+    onBack();
+  };
+
   return (
     <>
       <div className="flex flex-1 flex-col">
@@ -615,8 +630,13 @@ export default function PreferredClubSocietiesStep({
             <button
               type="button"
               aria-label="Back"
-              className="text-slate-700 transition-colors hover:text-slate-900"
-              onClick={onBack}
+              className={cn(
+                'cursor-pointer text-slate-700 transition-colors hover:text-slate-900',
+                !canNavigate &&
+                  'cursor-not-allowed opacity-40 hover:text-slate-700'
+              )}
+              onClick={handleBack}
+              disabled={!canNavigate}
             >
               <ArrowLeft2 size={24} />
             </button>
@@ -709,7 +729,11 @@ export default function PreferredClubSocietiesStep({
           <Button variant="secondary" className="h-12 w-48" onClick={onCancel}>
             Cancel
           </Button>
-          <Button className="h-12 w-48" onClick={handleNext}>
+          <Button
+            className="h-12 w-48"
+            onClick={handleNext}
+            disabled={!canNavigate}
+          >
             Next
           </Button>
         </div>

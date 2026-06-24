@@ -591,11 +591,20 @@ export default function PreferredSportsStep({
     };
   }, [setForm, stepDisableRef]);
 
+  const hasSportsData = entries.some(
+    e =>
+      e.sport.length > 0 ||
+      e.levelRepresented.length > 0 ||
+      e.representedOrganization.length > 0 ||
+      e.organizationLocations.length > 0 ||
+      e.position.trim().length > 0 ||
+      e.startDate != null ||
+      e.endDate != null
+  );
+
   const handleNext = () => {
     const isEmptyEnabledSection =
-      isEnabled &&
-      !dataTakenFromCandidate &&
-      !entries.some(e => e.sport.length > 0);
+      isEnabled && !dataTakenFromCandidate && !hasSportsData;
 
     if (isEmptyEnabledSection) {
       setEmptyDisableOpen(true);
@@ -611,13 +620,10 @@ export default function PreferredSportsStep({
     });
   };
 
-  useStepGuard(
-    isEnabled &&
-      !dataTakenFromCandidate &&
-      !entries.some(e => e.sport.length > 0)
-  );
+  useStepGuard(isEnabled && !dataTakenFromCandidate && !hasSportsData);
 
   const fieldsDisabled = !isEnabled || dataTakenFromCandidate;
+  const canNavigate = !isEnabled || dataTakenFromCandidate || hasSportsData;
 
   // Sports API
   const { data: sportsData, isLoading: isSportsLoading } = useSportsQuery(
@@ -706,6 +712,15 @@ export default function PreferredSportsStep({
     });
   };
 
+  const handleBack = () => {
+    if (!canNavigate) {
+      return;
+    }
+
+    stepPersistRef.current?.();
+    onBack();
+  };
+
   return (
     <>
       <div className="flex flex-1 flex-col">
@@ -728,8 +743,13 @@ export default function PreferredSportsStep({
             <button
               type="button"
               aria-label="Back"
-              className="text-slate-700 transition-colors hover:text-slate-900"
-              onClick={onBack}
+              className={cn(
+                'cursor-pointer text-slate-700 transition-colors hover:text-slate-900',
+                !canNavigate &&
+                  'cursor-not-allowed opacity-40 hover:text-slate-700'
+              )}
+              onClick={handleBack}
+              disabled={!canNavigate}
             >
               <ArrowLeft2 size={24} />
             </button>
@@ -825,7 +845,11 @@ export default function PreferredSportsStep({
           <Button variant="secondary" className="h-12 w-48" onClick={onCancel}>
             Cancel
           </Button>
-          <Button className="h-12 w-48" onClick={handleNext}>
+          <Button
+            className="h-12 w-48"
+            onClick={handleNext}
+            disabled={!canNavigate}
+          >
             Next
           </Button>
         </div>

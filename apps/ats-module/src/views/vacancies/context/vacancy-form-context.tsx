@@ -51,7 +51,7 @@ const VACANCY_STEPS: readonly VacancyStep[] = [
   },
   {
     key: 'projects-requirements',
-    label: 'Projects Requirements',
+    label: 'Project Requirements',
     component: ProjectsRequirementsStep,
   },
   {
