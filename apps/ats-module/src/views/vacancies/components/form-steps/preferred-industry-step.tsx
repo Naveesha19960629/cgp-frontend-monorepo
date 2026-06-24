@@ -255,7 +255,10 @@ export default function PreferredIndustryStep({
                 label: i.label,
                 source: i.source,
               }))}
-              onMaxSelected={() => setHasMaxError(true)}
+              errorMessage={t('preferredIndustries.validation.maxIndustries', {
+                max: MAX_INDUSTRIES,
+              })}
+              onErrorStateChange={setHasMaxError}
               onChange={options => {
                 const dedupedByLabel = new Map<string, IndustryEntry>();
 
@@ -274,9 +277,6 @@ export default function PreferredIndustryStep({
 
                 const entries = Array.from(dedupedByLabel.values());
                 updatePreferredIndustries({ industries: entries });
-                if (entries.length < MAX_INDUSTRIES) {
-                  setHasMaxError(false);
-                }
               }}
               options={apiIndustries.map(i => ({
                 value: i.id,
@@ -319,13 +319,6 @@ export default function PreferredIndustryStep({
                 </div>
               }
             />
-            {hasMaxError && (
-              <p className="text-destructive mt-2 text-sm">
-                {t('preferredIndustries.validation.maxIndustries', {
-                  max: MAX_INDUSTRIES,
-                })}
-              </p>
-            )}
           </div>
 
           {/* Bottom padding so dropdowns are never clipped */}
