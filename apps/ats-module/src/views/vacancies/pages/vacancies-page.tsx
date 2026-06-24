@@ -53,8 +53,8 @@ export default function VacanciesPage() {
     enabled: initialized && !!keycloak.authenticated,
   });
 
-  const data = vacanciesResponse?.data.content ?? [];
-  const totalPages = vacanciesResponse?.data.totalPages ?? 0;
+  const data = vacanciesResponse?.data?.content ?? [];
+  const totalPages = vacanciesResponse?.data?.totalPages ?? 0;
   const hasActiveFilters = Boolean(
     params.search || params.careerPath || params.discipline || params.status
   );

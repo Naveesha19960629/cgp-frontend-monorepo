@@ -35,6 +35,7 @@ interface ComboboxProps {
   placeholder?: string;
   searchPlaceholder?: string;
   emptyMessage?: string;
+  emptyTitle?: string;
   className?: string;
   disabled?: boolean;
   onAddNew?: (value: string) => void;
@@ -61,6 +62,8 @@ export function Combobox({
   onValueChange,
   placeholder = 'Select option...',
   searchPlaceholder: _searchPlaceholder = 'Search options...',
+  emptyMessage,
+  emptyTitle,
   className,
   disabled = false,
   onAddNew,
@@ -142,6 +145,11 @@ export function Combobox({
         option.label.toLowerCase().includes(trimmedSearch.toLowerCase()) ||
         option.value.toLowerCase().includes(trimmedSearch.toLowerCase())
     );
+  }, [options, searchValue]);
+
+  const searchValueExists = React.useMemo(() => {
+    const trimmed = searchValue.trim().toLowerCase();
+    return options.some(opt => opt.label.toLowerCase() === trimmed);
   }, [options, searchValue]);
 
   const handleSelect = (selectedValue: string) => {
@@ -264,38 +272,40 @@ export function Combobox({
           <CommandList className="max-h-none overflow-hidden">
             <ScrollArea className="p-3 [&_[data-slot=scroll-area-viewport]]:max-h-[272px] [&_[data-slot=scroll-area-viewport]>div]:!block [&_[data-slot=scroll-area-viewport]>div]:!w-full">
               <div className="w-full overflow-hidden">
-                {searchValue.trim().length > 0 && !hideAddNew && (
-                  <CommandGroup className="p-0">
-                    {errorMessage && (
-                      <p className="text-destructive px-3 py-1.5 text-xs font-medium">
-                        {errorMessage}
-                      </p>
-                    )}
-                    {addable && (
-                      <CommandItem
-                        onSelect={handleAddNew}
-                        className={clsx(
-                          'w-full cursor-pointer gap-1 overflow-hidden rounded-sm bg-neutral-200 p-3 text-slate-900',
-                          (loading || !!errorMessage) &&
-                            'cursor-not-allowed opacity-50'
-                        )}
-                        disabled={loading || !!errorMessage}
-                      >
-                        <Plus className="size-6 shrink-0" />
-                        <span className="flex min-w-0 flex-1 items-center gap-1 font-medium">
-                          <span className="shrink-0">Add</span>
-                          <span className="flex min-w-0 flex-1 items-center">
-                            <span className="shrink-0">&ldquo;</span>
-                            <span className="min-w-0 truncate">
-                              {searchValue}
+                {searchValue.trim().length > 0 &&
+                  !hideAddNew &&
+                  !searchValueExists && (
+                    <CommandGroup className="p-0">
+                      {errorMessage && (
+                        <p className="text-destructive px-3 py-1.5 text-xs font-medium">
+                          {errorMessage}
+                        </p>
+                      )}
+                      {addable && (
+                        <CommandItem
+                          onSelect={handleAddNew}
+                          className={clsx(
+                            'w-full cursor-pointer gap-1 overflow-hidden rounded-sm bg-neutral-200 p-3 text-slate-900',
+                            (loading || !!errorMessage) &&
+                              'cursor-not-allowed opacity-50'
+                          )}
+                          disabled={loading || !!errorMessage}
+                        >
+                          <Plus className="size-6 shrink-0" />
+                          <span className="flex min-w-0 flex-1 items-center gap-1 font-medium">
+                            <span className="shrink-0">Add</span>
+                            <span className="flex min-w-0 flex-1 items-center">
+                              <span className="shrink-0">&ldquo;</span>
+                              <span className="min-w-0 truncate">
+                                {searchValue}
+                              </span>
+                              <span className="shrink-0">&rdquo;</span>
                             </span>
-                            <span className="shrink-0">&rdquo;</span>
                           </span>
-                        </span>
-                      </CommandItem>
-                    )}
-                  </CommandGroup>
-                )}
+                        </CommandItem>
+                      )}
+                    </CommandGroup>
+                  )}
                 {loading && (
                   <CommandGroup className="p-0">
                     <CommandItem
@@ -324,10 +334,10 @@ export function Combobox({
                       />
                       <div className="mt-3 w-61 text-left">
                         <p className="font-bold text-slate-900">
-                          {t('common.noDataTitle')}
+                          {emptyTitle || t('common.noDataTitle')}
                         </p>
                         <p className="text-sm font-semibold text-slate-700">
-                          {t('common.noDataDescription')}
+                          {emptyMessage || t('common.noDataDescription')}
                         </p>
                       </div>
                     </div>

@@ -1289,12 +1289,19 @@ interface VacancyViewIndustries {
   content: string[];
 }
 
+interface VacancyViewScheduledVacancy {
+  schedulePublishAt: string;
+  expirationAt: string;
+  vacancyLink: string;
+}
+
 interface VacancyViewModel {
   title: string;
   status: string;
   applicantCount: number;
   jobRequirement: VacancyViewJobRequirement;
   profileRequirement: VacancyViewProfileRequirement;
+  scheduledVacancy?: VacancyViewScheduledVacancy;
   secondaryEducation?: VacancyViewSecondaryEducation;
   tertiaryEducation?: VacancyViewTertiaryEducation;
   licenseCertificates?: VacancyViewLicenseCertificates;
@@ -1576,6 +1583,7 @@ export type {
   VacancyActiveToggleProps,
   CreateColumnsOptions,
   VacancyViewModel,
+  VacancyViewScheduledVacancy,
   VacancyViewJobRequirement,
   VacancyTablePaginationProps,
   SortableHeaderProps,

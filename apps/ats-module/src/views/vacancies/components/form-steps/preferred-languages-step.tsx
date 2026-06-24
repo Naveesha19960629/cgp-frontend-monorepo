@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { StepDisableDialog } from '@/views/vacancies';
+import VacancyStatusBadge from '@/views/vacancies/components/vacancy-status-badge';
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import {
   useCreateLanguageMutation,
@@ -33,6 +34,7 @@ const multiSelectInfoAvatar = new URL(
 export default function PreferredLanguagesStep({
   onNext,
   onBack,
+  mode = 'create',
 }: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
   const showDisableToast = useDisableSuccessToast();
@@ -45,6 +47,7 @@ export default function PreferredLanguagesStep({
     currentStepIndex,
     removeCompletedStep,
   } = useVacancyForm();
+  const vacancyStatus = form.status;
 
   const [isEnabled, setIsEnabled] = useState(
     form.preferredLanguages?.isEnabled ?? false
@@ -167,6 +170,9 @@ export default function PreferredLanguagesStep({
           <h2 className="text-xl font-bold tracking-tight text-slate-900">
             {t('preferredLanguages.title')}
           </h2>
+          {mode === 'edit' && vacancyStatus ? (
+            <VacancyStatusBadge status={vacancyStatus} />
+          ) : null}
         </div>
         <Switch
           checked={isEnabled}

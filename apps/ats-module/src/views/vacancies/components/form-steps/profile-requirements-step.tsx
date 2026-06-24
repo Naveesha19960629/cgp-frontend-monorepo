@@ -1,4 +1,4 @@
-import { Plus, Trash2 } from 'lucide-react';
+import { Loader2, Plus, Trash2 } from 'lucide-react';
 
 import { ArrowLeft2 } from 'iconsax-reactjs';
 
@@ -76,6 +76,34 @@ function isDuplicateAddress(
   );
 }
 
+/**
+ * Sanitizes postal code to plain text only.
+ * Removes emojis, special characters, and non-ASCII characters.
+ * Keeps only: letters, numbers, spaces, hyphens, and dots.
+ */
+function sanitizePostalCode(value: string): string {
+  // Remove emojis and special Unicode characters, keep only ASCII alphanumeric + common postal code chars
+  return value
+    .replace(/[^\w\s.-]/g, '') // Remove non-word characters except dots and hyphens
+    .replace(/[\u0080-\uFFFF]/g, ''); // Remove non-ASCII characters
+}
+
+function hasProfileRequirementsData(
+  data: ProfileRequirementsFormValues
+): boolean {
+  return (
+    data.gender.id !== '' ||
+    data.maritalStatus.id !== '' ||
+    data.addresses.some(
+      a =>
+        a.city.id !== '' ||
+        a.stateProvince.id !== '' ||
+        a.country.id !== '' ||
+        a.postalCode.trim() !== ''
+    )
+  );
+}
+
 function AddressCard({
   index,
   displayNumber,
@@ -103,12 +131,17 @@ function AddressCard({
     const addresses = form.getValues('addresses');
     if (isDuplicateAddress(addresses, index)) {
       ErrorToast({
-        title: t('common.error', 'Error'),
+        title: 'Error',
         description: t(
           'profileRequirements.errors.duplicateEntry',
           'This entry already exists.'
         ),
       });
+      // Clear the duplicate entry fields
+      form.setValue(`addresses.${index}.city`, { id: '', label: '' });
+      form.setValue(`addresses.${index}.stateProvince`, { id: '', label: '' });
+      form.setValue(`addresses.${index}.country`, { id: '', label: '' });
+      form.setValue(`addresses.${index}.postalCode`, '');
     }
   };
 
@@ -330,7 +363,8 @@ function AddressCard({
                   className="h-9 shadow-none"
                   {...field}
                   onChange={e => {
-                    field.onChange(e.target.value.trimStart());
+                    const sanitized = sanitizePostalCode(e.target.value);
+                    field.onChange(sanitized.trimStart());
                   }}
                   onBlur={() => {
                     field.onBlur();
@@ -366,6 +400,7 @@ export default function ProfileRequirementsStep({ onNext, onBack }: StepProps) {
 
   const [showDisableConfirm, setShowDisableConfirm] = useState(false);
   const [showEmptyConfirm, setShowEmptyConfirm] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { data: gendersResponse } = useGendersQuery();
   const gendersData = gendersResponse?.data?.items?.content ?? [];
@@ -429,6 +464,11 @@ export default function ProfileRequirementsStep({ onNext, onBack }: StepProps) {
     };
   }, [setForm, stepDisableRef]);
 
+  const canNavigate =
+    !isEnabled ||
+    dataTakenFromCandidate ||
+    hasProfileRequirementsData(form.getValues());
+
   const isFieldsDisabled = !isEnabled || dataTakenFromCandidate;
 
   const handleConfirmDisable = () => {
@@ -476,16 +516,7 @@ export default function ProfileRequirementsStep({ onNext, onBack }: StepProps) {
 
   const handleSubmit = (data: ProfileRequirementsFormValues) => {
     if (data.isEnabled && !data.dataTakenFromCandidate) {
-      const hasData =
-        data.gender.id !== '' ||
-        data.maritalStatus.id !== '' ||
-        data.addresses.some(
-          a =>
-            a.city.id !== '' ||
-            a.stateProvince.id !== '' ||
-            a.country.id !== '' ||
-            a.postalCode !== ''
-        );
+      const hasData = hasProfileRequirementsData(data);
       if (!hasData) {
         setShowEmptyConfirm(true);
         return;
@@ -495,12 +526,17 @@ export default function ProfileRequirementsStep({ onNext, onBack }: StepProps) {
       for (let i = 0; i < data.addresses.length; i++) {
         if (isDuplicateAddress(data.addresses, i)) {
           ErrorToast({
-            title: t('common.error', 'Error'),
+            title: 'Error',
             description: t(
               'profileRequirements.errors.duplicateEntry',
               'This entry already exists.'
             ),
           });
+          // Clear all fields in the duplicate address entry
+          form.setValue(`addresses.${i}.city`, { id: '', label: '' });
+          form.setValue(`addresses.${i}.stateProvince`, { id: '', label: '' });
+          form.setValue(`addresses.${i}.country`, { id: '', label: '' });
+          form.setValue(`addresses.${i}.postalCode`, '');
           return;
         }
       }
@@ -512,19 +548,33 @@ export default function ProfileRequirementsStep({ onNext, onBack }: StepProps) {
     // Mutation scaffold: useUpdateCandidateProfileBasicInformationsMutation()
     // Keep runtime call disabled until candidate id source and payload mapping are finalized.
 
-    onNext({
-      profileRequirements: {
-        isEnabled: data.isEnabled,
-        dataTakenFromCandidate: data.dataTakenFromCandidate,
-        gender: data.gender,
-        maritalStatus: data.maritalStatus,
-        addresses: data.addresses,
-      },
-    });
+    setIsSubmitting(true);
+    try {
+      onNext({
+        profileRequirements: {
+          isEnabled: data.isEnabled,
+          dataTakenFromCandidate: data.dataTakenFromCandidate,
+          gender: data.gender,
+          maritalStatus: data.maritalStatus,
+          addresses: data.addresses,
+        },
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleCancel = () => {
     onCancel();
+  };
+
+  const handleBack = () => {
+    if (!canNavigate || isSubmitting) {
+      return;
+    }
+
+    stepPersistRef.current?.();
+    onBack();
   };
 
   const handleDataTakenFromCandidateChange = (checked: boolean) => {
@@ -577,8 +627,13 @@ export default function ProfileRequirementsStep({ onNext, onBack }: StepProps) {
             <div className="flex items-center gap-2">
               <button
                 type="button"
-                onClick={onBack}
-                className="cursor-pointer text-slate-700 transition-colors hover:text-slate-900"
+                onClick={handleBack}
+                disabled={!canNavigate || isSubmitting}
+                className={cn(
+                  'cursor-pointer text-slate-700 transition-colors hover:text-slate-900',
+                  (!canNavigate || isSubmitting) &&
+                    'cursor-not-allowed opacity-40 hover:text-slate-700'
+                )}
                 aria-label={t('profileRequirements.back')}
               >
                 <ArrowLeft2 size={24} />
@@ -788,7 +843,7 @@ export default function ProfileRequirementsStep({ onNext, onBack }: StepProps) {
               onClick={() => {
                 if (fields.length >= MAX_ADDRESS_ENTRIES) {
                   ErrorToast({
-                    title: t('common.error', 'Error'),
+                    title: 'Error',
                     description: t(
                       'profileRequirements.errors.maxEntries',
                       'Exceeded maximum of {{max}} entries allowed.',
@@ -821,8 +876,16 @@ export default function ProfileRequirementsStep({ onNext, onBack }: StepProps) {
             >
               {t('profileRequirements.cancelButton')}
             </Button>
-            <Button type="submit" className="h-12 w-48">
-              {t('profileRequirements.nextButton')}
+            <Button
+              type="submit"
+              className="h-12 w-48"
+              disabled={!canNavigate || isSubmitting}
+            >
+              {isSubmitting ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                t('profileRequirements.nextButton')
+              )}
             </Button>
           </div>
         </form>

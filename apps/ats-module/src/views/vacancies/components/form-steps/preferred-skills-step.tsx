@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { StepDisableDialog } from '@/views/vacancies';
+import VacancyStatusBadge from '@/views/vacancies/components/vacancy-status-badge';
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import {
   useCareerPathsQuery,
@@ -44,6 +45,7 @@ const multiSelectInfoAvatar = new URL(
 export default function PreferredSkillsStep({
   onNext,
   onBack,
+  mode = 'create',
 }: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
   const showDisableToast = useDisableSuccessToast();
@@ -56,6 +58,7 @@ export default function PreferredSkillsStep({
     currentStepIndex,
     removeCompletedStep,
   } = useVacancyForm();
+  const vacancyStatus = form.status;
 
   const [isEnabled, setIsEnabled] = useState(
     form.preferredSkills?.isEnabled ?? false
@@ -397,6 +400,9 @@ export default function PreferredSkillsStep({
           <h2 className="text-xl font-bold tracking-tight text-slate-900">
             {t('preferredSkills.title')}
           </h2>
+          {mode === 'edit' && vacancyStatus ? (
+            <VacancyStatusBadge status={vacancyStatus} />
+          ) : null}
         </div>
         <Switch
           checked={isEnabled}

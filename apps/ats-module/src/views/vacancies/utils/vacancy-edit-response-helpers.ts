@@ -4,6 +4,7 @@ import type {
   LicenseCertRef,
   PatentStatus,
   ScheduleVacancy,
+  SkillCareerPathEntry,
   VacancyForm,
   preferredPatentsSchema,
 } from '@/views/vacancies/types';
@@ -903,6 +904,73 @@ function normalizePreferredVolunteeringSection(
   };
 }
 
+function normalizeSkillEntry(raw: unknown): SkillCareerPathEntry | null {
+  if (!isRecord(raw)) {
+    return null;
+  }
+
+  const id = toSafeString(raw.id);
+  const label =
+    toSafeString(raw.label) ||
+    toSafeString(raw.displayValue) ||
+    toSafeString(raw.name) ||
+    id;
+  const source = toSafeString(raw.source) || 'MASTER';
+
+  // The API returns skills as { id, label/displayValue, source }
+  // The form expects SkillCareerPathEntry with skillId, skillName, etc.
+  // The displayValue from API looks like "SkillName - CareerPath"
+  const sepMatch = /\s[\u2013\u2014-]\s/.exec(label);
+  const skillName = sepMatch ? label.slice(0, sepMatch.index) : label;
+  const careerPathName = sepMatch
+    ? label.slice(sepMatch.index + sepMatch[0].length)
+    : '';
+
+  if (!id && !label) {
+    return null;
+  }
+
+  return {
+    skillId: id,
+    skillName,
+    careerPathId: toSafeString(raw.careerPathId) || undefined,
+    careerPathName,
+    displayValue: label,
+    source,
+  };
+}
+
+function normalizePreferredSkillsSection(
+  rawSection: unknown,
+  fallback: VacancyForm['preferredSkills']
+): VacancyForm['preferredSkills'] {
+  if (!isRecord(rawSection)) {
+    return fallback;
+  }
+
+  const contentRaw = Array.isArray(rawSection.content)
+    ? rawSection.content
+    : Array.isArray(rawSection.skills)
+      ? rawSection.skills
+      : [];
+
+  const skills = contentRaw
+    .map(item => normalizeSkillEntry(item))
+    .filter((item): item is SkillCareerPathEntry => item !== null);
+
+  return {
+    isEnabled:
+      typeof rawSection.isEnabled === 'boolean'
+        ? rawSection.isEnabled
+        : (fallback?.isEnabled ?? false),
+    dataTakenFromCandidate:
+      typeof rawSection.dataTakenFromCandidate === 'boolean'
+        ? rawSection.dataTakenFromCandidate
+        : (fallback?.dataTakenFromCandidate ?? false),
+    skills,
+  };
+}
+
 function normalizePreferredIndustriesSection(
   rawSection: unknown,
   fallback: VacancyForm['preferredIndustries']
@@ -999,6 +1067,93 @@ function normalizePatentsSection(
   };
 }
 
+function normalizePreferredLanguagesSection(
+  rawSection: unknown,
+  fallback: VacancyForm['preferredLanguages']
+): VacancyForm['preferredLanguages'] {
+  if (!isRecord(rawSection)) {
+    return fallback;
+  }
+
+  const contentEntries = normalizeIndustryEntries(
+    rawSection.content ?? rawSection.languages
+  );
+
+  return {
+    isEnabled:
+      typeof rawSection.isEnabled === 'boolean'
+        ? rawSection.isEnabled
+        : (fallback?.isEnabled ?? false),
+    dataTakenFromCandidate:
+      typeof rawSection.dataTakenFromCandidate === 'boolean'
+        ? rawSection.dataTakenFromCandidate
+        : (fallback?.dataTakenFromCandidate ?? false),
+    languages: contentEntries.map(e => ({
+      id: e.id,
+      label: e.label,
+      source: e.source,
+    })),
+  };
+}
+
+function normalizePreferredCausesSection(
+  rawSection: unknown,
+  fallback: VacancyForm['preferredCauses']
+): VacancyForm['preferredCauses'] {
+  if (!isRecord(rawSection)) {
+    return fallback;
+  }
+
+  const contentEntries = normalizeIndustryEntries(
+    rawSection.content ?? rawSection.causes
+  );
+
+  return {
+    isEnabled:
+      typeof rawSection.isEnabled === 'boolean'
+        ? rawSection.isEnabled
+        : (fallback?.isEnabled ?? false),
+    dataTakenFromCandidate:
+      typeof rawSection.dataTakenFromCandidate === 'boolean'
+        ? rawSection.dataTakenFromCandidate
+        : (fallback?.dataTakenFromCandidate ?? false),
+    causes: contentEntries.map(e => ({
+      id: e.id,
+      label: e.label,
+      source: e.source,
+    })),
+  };
+}
+
+function normalizePreferredHobbiesSection(
+  rawSection: unknown,
+  fallback: VacancyForm['preferredHobbies']
+): VacancyForm['preferredHobbies'] {
+  if (!isRecord(rawSection)) {
+    return fallback;
+  }
+
+  const contentEntries = normalizeIndustryEntries(
+    rawSection.content ?? rawSection.hobbies ?? rawSection.hobbyList
+  );
+
+  return {
+    isEnabled:
+      typeof rawSection.isEnabled === 'boolean'
+        ? rawSection.isEnabled
+        : (fallback?.isEnabled ?? false),
+    dataTakenFromCandidate:
+      typeof rawSection.dataTakenFromCandidate === 'boolean'
+        ? rawSection.dataTakenFromCandidate
+        : (fallback?.dataTakenFromCandidate ?? false),
+    hobbies: contentEntries.map(e => ({
+      id: e.id,
+      label: e.label,
+      source: e.source,
+    })),
+  };
+}
+
 // Explicit map from API enum values → form state values.
 // ONHOLD (no underscore) is the API enum; on_hold is the form/UI key.
 const API_STATUS_TO_FORM: Record<string, string> = {
@@ -1090,6 +1245,24 @@ function toVacancyFormFromResponse(
     'schedule',
     'scheduleRequirement',
   ]);
+  const preferredSkillsSection = readSectionValue(rawVacancy, sectionSource, [
+    'preferredSkills',
+    'skills',
+  ]);
+  const preferredLanguagesSection = readSectionValue(
+    rawVacancy,
+    sectionSource,
+    ['preferredLanguages', 'languages']
+  );
+  const preferredCausesSection = readSectionValue(rawVacancy, sectionSource, [
+    'preferredCauses',
+    'causes',
+  ]);
+  const preferredHobbiesSection = readSectionValue(rawVacancy, sectionSource, [
+    'preferredHobbies',
+    'hobbyList',
+    'hobbies',
+  ]);
 
   // Explicit whitelist: only pick known scalar top-level form fields.
   // Avoids carrying unknown API keys into context state.
@@ -1163,6 +1336,22 @@ function toVacancyFormFromResponse(
     ),
     patents: normalizePatentsSection(patentsSection, previousForm.patents),
     schedule: normalizeSchedule(scheduleSection) ?? previousForm.schedule,
+    preferredSkills: normalizePreferredSkillsSection(
+      preferredSkillsSection,
+      previousForm.preferredSkills
+    ),
+    preferredLanguages: normalizePreferredLanguagesSection(
+      preferredLanguagesSection,
+      previousForm.preferredLanguages
+    ),
+    preferredCauses: normalizePreferredCausesSection(
+      preferredCausesSection,
+      previousForm.preferredCauses
+    ),
+    preferredHobbies: normalizePreferredHobbiesSection(
+      preferredHobbiesSection,
+      previousForm.preferredHobbies
+    ),
   };
 }
 

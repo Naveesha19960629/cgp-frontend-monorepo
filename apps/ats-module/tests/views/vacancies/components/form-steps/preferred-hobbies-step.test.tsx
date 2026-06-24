@@ -214,6 +214,12 @@ vi.mock('@cgp/ui-kit/components/ui/badge', () => ({
   ),
 }));
 
+vi.mock('@/views/vacancies/components/vacancy-status-badge', () => ({
+  default: ({ status }: { status: string }) => (
+    <div data-testid="vacancy-status-badge">{status}</div>
+  ),
+}));
+
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 const API_HOBBIES = [
@@ -230,16 +236,19 @@ function makeForm(
     isEnabled: boolean;
     dataTakenFromCandidate: boolean;
     hobbies: { id: string; label: string }[];
+    status?: string;
   }> = {}
 ) {
+  const { status, ...hobbiesOverrides } = overrides;
   return {
     form: {
       preferredHobbies: {
         isEnabled: true,
         dataTakenFromCandidate: false,
         hobbies: [],
-        ...overrides,
+        ...hobbiesOverrides,
       },
+      status,
     },
     setForm: vi.fn(),
     onCancel: vi.fn(),
@@ -250,14 +259,22 @@ function makeForm(
   };
 }
 
-function renderStep(formOverrides: Parameters<typeof makeForm>[0] = {}) {
+function renderStep(
+  formOverrides: Parameters<typeof makeForm>[0] = {},
+  props: { mode?: 'create' | 'edit' } = {}
+) {
   const onNext = vi.fn();
   const onBack = vi.fn();
   const onSubmit = vi.fn();
   const vacancyFormState = makeForm(formOverrides);
   mockUseVacancyForm.mockReturnValue(vacancyFormState);
   render(
-    <PreferredHobbiesStep onNext={onNext} onBack={onBack} onSubmit={onSubmit} />
+    <PreferredHobbiesStep
+      onNext={onNext}
+      onBack={onBack}
+      onSubmit={onSubmit}
+      mode={props.mode}
+    />
   );
   return { onNext, onBack, onSubmit, onCancel: vacancyFormState.onCancel };
 }
@@ -662,6 +679,68 @@ describe('PreferredHobbiesStep', () => {
           ],
         },
       });
+    });
+  });
+
+  describe('edit mode', () => {
+    it('renders with mode="create" by default and does not show VacancyStatusBadge', () => {
+      renderStep({}, { mode: 'create' });
+
+      expect(
+        screen.queryByTestId('vacancy-status-badge')
+      ).not.toBeInTheDocument();
+    });
+
+    it('renders VacancyStatusBadge when mode="edit" and vacancyStatus exists', () => {
+      renderStep({ status: 'archived' }, { mode: 'edit' });
+
+      expect(screen.getByTestId('vacancy-status-badge')).toBeInTheDocument();
+      expect(screen.getByTestId('vacancy-status-badge')).toHaveTextContent(
+        'archived'
+      );
+    });
+
+    it('does not render VacancyStatusBadge when mode="edit" but vacancyStatus is undefined', () => {
+      renderStep({}, { mode: 'edit' });
+
+      expect(
+        screen.queryByTestId('vacancy-status-badge')
+      ).not.toBeInTheDocument();
+    });
+
+    it('does not render VacancyStatusBadge by default when no mode prop is provided', () => {
+      renderStep({});
+
+      expect(
+        screen.queryByTestId('vacancy-status-badge')
+      ).not.toBeInTheDocument();
+    });
+
+    it('preserves all functionality when mode="edit"', async () => {
+      const user = userEvent.setup();
+      const { onNext } = renderStep(
+        {
+          hobbies: [{ id: 'hobby-1', label: 'Reading' }],
+          status: 'archived',
+        },
+        { mode: 'edit' }
+      );
+
+      expect(screen.getByTestId('vacancy-status-badge')).toBeInTheDocument();
+
+      // Verify section heading and toggle are still present
+      expect(screen.getByText('preferredHobbies.title')).toBeInTheDocument();
+
+      // Verify selection works
+      await user.click(
+        screen.getByPlaceholderText('preferredHobbies.input.placeholder')
+      );
+      await user.click(screen.getByText('Hiking'));
+
+      // Verify navigation works
+      await user.click(screen.getByText('common.next'));
+
+      expect(onNext).toHaveBeenCalled();
     });
   });
 });

@@ -59,8 +59,10 @@
     "descriptionPlaceholder": "Enter description",
     "loading": "Loading...",
     "noData": "No results found",
+    "noAssociatedCareerPathsTitle": "Career Path Not Found",
     "noAssociatedCareerPaths": "No associated career paths with the selected discipline. Add a career path to continue.",
-    "noAssociatedRoles": "No associated roles with the selected career path. Add a role to continue.",
+    "noAssociatedRolesTitle": "Role Not Found",
+    "noAssociatedRoles": "No associated role with the selected career path. Add a role to continue.",
     "errors": {
       "maxSelections": "Exceeded maximum of {{max}} selections.",
       "required": {
@@ -72,10 +74,10 @@
       }
     },
     "dependencyHints": {
-      "careerPathNeedDiscipline": "Please select or add a discipline first",
-      "roleNeedCareerPath": "Please select or add a career path first",
-      "roleNeedLevel": "Please select a level first",
-      "roleNeedCareerPathAndLevel": "Please select or add a career path and select a level first"
+      "careerPathNeedDiscipline": "Please select or add a Discipline first.",
+      "roleNeedCareerPath": "Please select or add a Career Path first.",
+      "roleNeedLevel": "Please select a Level first.",
+      "roleNeedCareerPathAndLevel": "Please select or add a Career Path and select a Level first."
     },
     "dataTakenFromCandidate": "If selected, no manual input is required, and data will be taken from the candidate profile",
     "alwaysCollectedFields": {
@@ -139,7 +141,13 @@
       },
       "sections": {
         "jobRequirements": "Job Requirement",
-        "profileRequirements": "Profile Requirements"
+        "profileRequirements": "Profile Requirements",
+        "scheduledVacancy": "Scheduled Vacancy"
+      },
+      "scheduledVacancy": {
+        "publishDateTime": "Scheduled Publish Date & Time",
+        "expirationDateTime": "Expire Date and Time",
+        "vacancyLink": "Vacancy Link"
       },
       "actions": {
         "showMore": "Show More",
@@ -751,7 +759,7 @@
   "preferredLanguages": {
     "title": "Preferred Languages",
     "dataTakenFromCandidate": "If selected, no manual input is required, and data will be taken from the candidate profile",
-    "sectionLabel": "Name of the language",
+    "sectionLabel": "Language",
     "input": {
       "placeholder": "Select or add language",
       "addNew": "Add \"{{value}}\"",

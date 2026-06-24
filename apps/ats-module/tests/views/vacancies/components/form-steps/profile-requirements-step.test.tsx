@@ -322,7 +322,13 @@ function renderStep(
       onSubmit={onSubmit}
     />
   );
-  return { onNext, onBack, onSubmit, onCancel: formValue.onCancel };
+  return {
+    onNext,
+    onBack,
+    onSubmit,
+    onCancel: formValue.onCancel,
+    setForm: formValue.setForm,
+  };
 }
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
@@ -463,6 +469,80 @@ describe('ProfileRequirementsStep', () => {
       expect(onBack).toHaveBeenCalledTimes(1);
     });
 
+    it('persists profile requirements data before navigating back', async () => {
+      const user = userEvent.setup();
+      const { onBack, setForm } = renderStep({
+        isEnabled: true,
+        dataTakenFromCandidate: false,
+        gender: { id: 'male', label: 'Male' },
+        maritalStatus: { id: 'single', label: 'Single' },
+        addresses: [
+          {
+            city: { id: 'city-1', label: 'Aachen' },
+            stateProvince: { id: 'state-1', label: 'North Rhine-Westphalia' },
+            country: { id: 'country-1', label: 'Germany' },
+            postalCode: '52062',
+          },
+        ],
+      });
+
+      await user.click(
+        screen.getByRole('button', { name: 'profileRequirements.back' })
+      );
+
+      expect(setForm).toHaveBeenCalledTimes(1);
+      expect(onBack).toHaveBeenCalledTimes(1);
+
+      const updater = setForm.mock.calls[0]?.[0] as
+        | ((prev: {
+            profileRequirements?: {
+              isEnabled: boolean;
+              dataTakenFromCandidate: boolean;
+              gender: { id: string; label: string };
+              maritalStatus: { id: string; label: string };
+              addresses: Array<{
+                city: { id: string; label: string };
+                stateProvince: { id: string; label: string };
+                country: { id: string; label: string };
+                postalCode: string;
+              }>;
+            };
+          }) => unknown)
+        | undefined;
+
+      expect(typeof updater).toBe('function');
+
+      const result = updater?.({
+        profileRequirements: {
+          isEnabled: false,
+          dataTakenFromCandidate: false,
+          gender: { id: '', label: '' },
+          maritalStatus: { id: '', label: '' },
+          addresses: [],
+        },
+      });
+
+      expect(result).toMatchObject({
+        profileRequirements: {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          gender: { id: 'male', label: 'Male' },
+          maritalStatus: { id: 'single', label: 'Single' },
+          addresses: [
+            {
+              city: { id: 'city-1', label: 'Aachen' },
+              stateProvince: {
+                id: 'state-1',
+                label: 'North Rhine-Westphalia',
+              },
+              country: { id: 'country-1', label: 'Germany' },
+              postalCode: '52062',
+            },
+          ],
+        },
+      });
+    });
+
     it('calls onCancel from context when Cancel is clicked', async () => {
       const user = userEvent.setup();
       const { onCancel } = renderStep();
@@ -504,17 +584,14 @@ describe('ProfileRequirementsStep', () => {
   });
 
   describe('emptyDisableDialog', () => {
-    it('shows when Next is clicked with enabled step but no data', async () => {
-      const user = userEvent.setup();
+    it('keeps Next disabled when step is enabled but no data', () => {
       renderStep({ isEnabled: true });
 
-      await user.click(screen.getByText('profileRequirements.nextButton'));
+      expect(screen.getByText('profileRequirements.nextButton')).toBeDisabled();
 
-      await waitFor(() => {
-        expect(
-          screen.getByText('profileRequirements.emptyDisableDialog.title')
-        ).toBeInTheDocument();
-      });
+      expect(
+        screen.queryByText('profileRequirements.emptyDisableDialog.title')
+      ).not.toBeInTheDocument();
     });
 
     it('does not show when dataTakenFromCandidate is checked', async () => {
