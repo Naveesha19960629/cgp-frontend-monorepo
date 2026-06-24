@@ -79,6 +79,7 @@ export default function VacancyCreateStepperForm({
   const stepperTitle =
     mode === 'edit' ? t('vacancies.editVacancy') : t('vacancies.addVacancy');
   const {
+    form,
     currentStepIndex,
     setCurrentStepIndex,
     completedSteps,
@@ -94,6 +95,11 @@ export default function VacancyCreateStepperForm({
     OnSaveAsDraft,
     isSavingDraft,
   } = useVacancyForm();
+
+  const isEditCancelDialog =
+    mode === 'edit' &&
+    form.status.toLowerCase() !== 'new' &&
+    form.status.toLowerCase() !== 'draft';
 
   const currentStepKey = VACANCY_STEPS[currentStepIndex].key;
   const isStepNavigationEnabled = completedSteps.has(0);
@@ -209,7 +215,7 @@ export default function VacancyCreateStepperForm({
         </Tabs>
       </div>
 
-      {mode === 'edit' ? (
+      {isEditCancelDialog ? (
         <VacancyEditCancelDialog
           open={showCancelDialog && !isNavigating}
           onOpenChange={setShowCancelDialog}
