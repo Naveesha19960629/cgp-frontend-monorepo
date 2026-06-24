@@ -525,6 +525,53 @@ function normalizeIndustries(raw: unknown) {
   return { isEnabled, dataTakenFromCandidate, content: toTagList(rawContent) };
 }
 
+function normalizeScheduledVacancy(
+  rawVacancy: Record<string, unknown>,
+  sectionSource: Record<string, unknown>
+) {
+  const scheduleSection = readSectionValue(rawVacancy, sectionSource, [
+    'schedule',
+    'scheduleVacancy',
+    'scheduleRequirement',
+  ]);
+  const schedule = isRecord(scheduleSection) ? scheduleSection : {};
+
+  const schedulePublishAt = toSafeString(
+    schedule.schedulePublishAt ??
+      schedule.publishDateTime ??
+      schedule.publishAt ??
+      sectionSource.schedulePublishAt ??
+      rawVacancy.schedulePublishAt
+  );
+
+  const expirationAt = toSafeString(
+    schedule.expirationAt ??
+      schedule.expirationDateTime ??
+      schedule.expireAt ??
+      sectionSource.expirationAt ??
+      rawVacancy.expirationAt
+  );
+
+  const vacancyLink = toSafeString(
+    schedule.vacancyLink ??
+      schedule.link ??
+      rawVacancy.vacancyLink ??
+      rawVacancy.vacancyUrl ??
+      rawVacancy.jobPostingUrl ??
+      rawVacancy.link
+  );
+
+  if (!schedulePublishAt && !expirationAt && !vacancyLink) {
+    return undefined;
+  }
+
+  return {
+    schedulePublishAt,
+    expirationAt,
+    vacancyLink,
+  };
+}
+
 function toVacancyViewModel(
   rawVacancy: Record<string, unknown>
 ): VacancyViewModel {
@@ -659,6 +706,7 @@ function toVacancyViewModel(
       maritalStatus: toLabel(prContent.maritalStatus),
       addresses,
     },
+    scheduledVacancy: normalizeScheduledVacancy(rawVacancy, sectionSource),
     secondaryEducation: normalizeSecondaryEducation(secondaryEducationSection),
     tertiaryEducation: normalizeTertiaryEducation(tertiaryEducationSection),
     licenseCertificates: normalizeLicenseCertificates(

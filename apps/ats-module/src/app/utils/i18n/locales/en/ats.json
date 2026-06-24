@@ -138,7 +138,13 @@
       },
       "sections": {
         "jobRequirements": "Job Requirement",
-        "profileRequirements": "Profile Requirements"
+        "profileRequirements": "Profile Requirements",
+        "scheduledVacancy": "Scheduled Vacancy"
+      },
+      "scheduledVacancy": {
+        "publishDateTime": "Scheduled Publish Date & Time",
+        "expirationDateTime": "Expire Date and Time",
+        "vacancyLink": "Vacancy Link"
       },
       "actions": {
         "showMore": "Show More",

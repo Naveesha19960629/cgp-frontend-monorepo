@@ -69,4 +69,54 @@ describe('toVacancyViewModel', () => {
     expect(model.jobRequirement.role).toEqual(['Backend Engineer']);
     expect(model.jobRequirement.jobTitle).toEqual(['Senior Backend Engineer']);
   });
+
+  it('maps scheduled vacancy fields from nested schedule payload', () => {
+    const model = toVacancyViewModel({
+      title: 'Scheduled Vacancy',
+      data: {
+        schedule: {
+          schedulePublishAt: '2023-02-12T21:00:00',
+          expirationAt: '2023-02-13T21:00:00',
+          vacancyLink: 'example.com/job-posting',
+        },
+      },
+    });
+
+    expect(model.scheduledVacancy).toEqual({
+      schedulePublishAt: '2023-02-12T21:00:00',
+      expirationAt: '2023-02-13T21:00:00',
+      vacancyLink: 'example.com/job-posting',
+    });
+  });
+
+  it('falls back to root-level scheduled fields and link aliases', () => {
+    const model = toVacancyViewModel({
+      title: 'Scheduled Vacancy',
+      schedulePublishAt: '2024-01-02T09:30:00',
+      expirationAt: '2024-01-03T09:30:00',
+      vacancyUrl: 'https://example.org/jobs/123',
+    });
+
+    expect(model.scheduledVacancy).toEqual({
+      schedulePublishAt: '2024-01-02T09:30:00',
+      expirationAt: '2024-01-03T09:30:00',
+      vacancyLink: 'https://example.org/jobs/123',
+    });
+  });
+
+  it('maps scheduled fields from scheduleRequirement payload shape', () => {
+    const model = toVacancyViewModel({
+      title: 'Scheduled Vacancy',
+      scheduleRequirement: {
+        schedulePublishAt: '2026-06-24T02:33:33',
+        expirationAt: '2026-06-26T07:07:09',
+      },
+    });
+
+    expect(model.scheduledVacancy).toEqual({
+      schedulePublishAt: '2026-06-24T02:33:33',
+      expirationAt: '2026-06-26T07:07:09',
+      vacancyLink: '',
+    });
+  });
 });
