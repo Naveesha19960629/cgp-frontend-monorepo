@@ -42,6 +42,13 @@ import {
   FormLabel,
   FormMessage,
 } from '@cgp/ui-kit/components/ui/form';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@cgp/ui-kit/components/ui/select';
 import { Textarea } from '@cgp/ui-kit/components/ui/textarea';
 import {
   Tooltip,
@@ -87,9 +94,13 @@ export default function JobRequirementsStep({
   const selectedDiscipline = selectedDisciplines[0];
   const selectedCareerPath = selectedCareerPaths[0];
 
+  const isOtherDiscipline =
+    selectedDiscipline?.label?.toLowerCase() === 'other';
+
   const isCareerPathDisabled = selectedDisciplines.length === 0;
   const isRoleDisabled =
-    selectedCareerPaths.length === 0 || selectedLevels.length === 0;
+    !isOtherDiscipline &&
+    (selectedCareerPaths.length === 0 || selectedLevels.length === 0);
 
   let roleDisabledMessage = t('jobRequirements.dependencyHints.roleNeedLevel');
   if (selectedCareerPaths.length === 0 && selectedLevels.length === 0) {
@@ -368,276 +379,287 @@ export default function JobRequirementsStep({
           </div>
 
           <div className="flex flex-col gap-5 px-7 pb-6">
-            <div className="grid grid-cols-3 gap-x-5">
-              <FormField
-                control={form.control}
-                name="discipline"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col gap-1 space-y-0">
-                    <FormLabel className="flex justify-between">
-                      <span>
-                        {t('jobRequirements.discipline')}
-                        <span className="text-destructive ml-0.5">*</span>
-                      </span>
-                      <CharacterCount
-                        maxLength={MAX_CHAR}
-                        currentLength={disciplineSearch.length}
-                      />
-                    </FormLabel>
-                    <FormControl>
-                      <Combobox
-                        value={field.value[0]?.value}
-                        options={[
-                          ...disciplines.map(item => ({
-                            value: item.id,
-                            label: item.label,
-                          })),
-                          ...field.value
-                            .filter(
-                              item =>
-                                !disciplines.some(
-                                  master => master.id === item.value
-                                )
-                            )
-                            .map(item => ({
-                              value: item.value,
+            <div className="grid grid-cols-2 gap-x-5">
+              <div className="grid grid-cols-2 gap-x-5">
+                <FormField
+                  control={form.control}
+                  name="discipline"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col gap-1 space-y-0">
+                      <FormLabel className="flex justify-between">
+                        <span>
+                          {t('jobRequirements.discipline')}
+                          <span className="text-destructive ml-0.5">*</span>
+                        </span>
+                        <CharacterCount
+                          maxLength={MAX_CHAR}
+                          currentLength={disciplineSearch.length}
+                        />
+                      </FormLabel>
+                      <FormControl>
+                        <Combobox
+                          value={field.value[0]?.value}
+                          options={[
+                            ...disciplines.map(item => ({
+                              value: item.id,
                               label: item.label,
                             })),
-                        ]}
-                        onValueChange={value => {
-                          const master = disciplines.find(
-                            item => item.id === value
-                          );
-                          const existing = field.value[0];
-                          const label =
-                            master?.label ??
-                            (existing?.value === value
-                              ? existing.label
-                              : value);
-
-                          field.onChange([
-                            {
-                              value,
-                              label,
-                              source:
-                                master?.source ??
-                                (existing?.value === value
-                                  ? existing.source
-                                  : 'MASTER'),
-                            },
-                          ]);
-
-                          form.setValue('careerPath', []);
-                          form.setValue('role', []);
-                        }}
-                        onAddNew={label => {
-                          field.onChange([
-                            {
-                              value: label,
-                              label,
-                              source: 'USER_CREATED',
-                            },
-                          ]);
-                          form.setValue('careerPath', []);
-                          form.setValue('role', []);
-                        }}
-                        onSearchChange={value => setDisciplineSearch(value)}
-                        loading={isDisciplinesLoading}
-                        maxLength={MAX_CHAR}
-                        placeholder={t('jobRequirements.disciplinePlaceholder')}
-                        emptyMessage={t('jobRequirements.noData')}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="careerPath"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col gap-1 space-y-0">
-                    {isCareerPathDisabled ? (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <div className="flex flex-col gap-1">
-                            <FormLabel className="flex justify-between">
-                              <span>
-                                {t('jobRequirements.careerPath')}
-                                <span className="text-destructive ml-0.5">
-                                  *
-                                </span>
-                              </span>
-                              <CharacterCount
-                                maxLength={MAX_CHAR}
-                                currentLength={careerPathSearch.length}
-                              />
-                            </FormLabel>
-                            <FormControl>
-                              <Combobox
-                                value={field.value[0]?.value}
-                                options={[
-                                  ...careerPaths.map(item => ({
-                                    value: item.id,
-                                    label: item.label,
-                                  })),
-                                  ...field.value
-                                    .filter(
-                                      item =>
-                                        !careerPaths.some(
-                                          master => master.id === item.value
-                                        )
-                                    )
-                                    .map(item => ({
-                                      value: item.value,
-                                      label: item.label,
-                                    })),
-                                ]}
-                                onValueChange={value => {
-                                  const master = careerPaths.find(
-                                    item => item.id === value
-                                  );
-                                  const existing = field.value[0];
-                                  const label =
-                                    master?.label ??
-                                    (existing?.value === value
-                                      ? existing.label
-                                      : value);
-
-                                  field.onChange([
-                                    {
-                                      value,
-                                      label,
-                                      source:
-                                        master?.source ??
-                                        (existing?.value === value
-                                          ? existing.source
-                                          : 'MASTER'),
-                                    },
-                                  ]);
-                                  form.setValue('role', []);
-                                }}
-                                onAddNew={label => {
-                                  field.onChange([
-                                    {
-                                      value: label,
-                                      label,
-                                      source: 'USER_CREATED',
-                                    },
-                                  ]);
-                                  form.setValue('role', []);
-                                }}
-                                onSearchChange={value =>
-                                  setCareerPathSearch(value)
-                                }
-                                disabled
-                                loading={isCareerPathsLoading}
-                                maxLength={MAX_CHAR}
-                                placeholder={t(
-                                  'jobRequirements.careerPathPlaceholder'
-                                )}
-                                emptyMessage={t('jobRequirements.noData')}
-                              />
-                            </FormControl>
-                          </div>
-                        </TooltipTrigger>
-                        <TooltipContent
-                          side="top"
-                          align="start"
-                          sideOffset={10}
-                          className={dependencyTooltipClassName}
-                        >
-                          {t(
-                            'jobRequirements.dependencyHints.careerPathNeedDiscipline'
-                          )}
-                        </TooltipContent>
-                      </Tooltip>
-                    ) : (
-                      <>
-                        <FormLabel className="flex justify-between">
-                          <span>
-                            {t('jobRequirements.careerPath')}
-                            <span className="text-destructive ml-0.5">*</span>
-                          </span>
-                          <CharacterCount
-                            maxLength={MAX_CHAR}
-                            currentLength={careerPathSearch.length}
-                          />
-                        </FormLabel>
-                        <FormControl>
-                          <Combobox
-                            value={field.value[0]?.value}
-                            options={[
-                              ...careerPaths.map(item => ({
-                                value: item.id,
+                            ...field.value
+                              .filter(
+                                item =>
+                                  !disciplines.some(
+                                    master => master.id === item.value
+                                  )
+                              )
+                              .map(item => ({
+                                value: item.value,
                                 label: item.label,
                               })),
-                              ...field.value
-                                .filter(
-                                  item =>
-                                    !careerPaths.some(
-                                      master => master.id === item.value
-                                    )
-                                )
-                                .map(item => ({
-                                  value: item.value,
+                          ]}
+                          onValueChange={value => {
+                            const master = disciplines.find(
+                              item => item.id === value
+                            );
+                            const existing = field.value[0];
+                            const label =
+                              master?.label ??
+                              (existing?.value === value
+                                ? existing.label
+                                : value);
+
+                            field.onChange([
+                              {
+                                value,
+                                label,
+                                source:
+                                  master?.source ??
+                                  (existing?.value === value
+                                    ? existing.source
+                                    : 'MASTER'),
+                              },
+                            ]);
+
+                            form.setValue('careerPath', []);
+                            form.setValue('role', []);
+                          }}
+                          onAddNew={label => {
+                            field.onChange([
+                              {
+                                value: label,
+                                label,
+                                source: 'USER_CREATED',
+                              },
+                            ]);
+                            form.setValue('careerPath', []);
+                            form.setValue('role', []);
+                          }}
+                          onSearchChange={value => setDisciplineSearch(value)}
+                          loading={isDisciplinesLoading}
+                          maxLength={MAX_CHAR}
+                          placeholder={t(
+                            'jobRequirements.disciplinePlaceholder'
+                          )}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="careerPath"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col gap-1 space-y-0">
+                      {isCareerPathDisabled ? (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="flex flex-col gap-1">
+                              <FormLabel className="flex justify-between">
+                                <span>
+                                  {t('jobRequirements.careerPath')}
+                                  <span className="text-destructive ml-0.5">
+                                    *
+                                  </span>
+                                </span>
+                                <CharacterCount
+                                  maxLength={MAX_CHAR}
+                                  currentLength={careerPathSearch.length}
+                                />
+                              </FormLabel>
+                              <FormControl>
+                                <Combobox
+                                  value={field.value[0]?.value}
+                                  options={[
+                                    ...careerPaths.map(item => ({
+                                      value: item.id,
+                                      label: item.label,
+                                    })),
+                                    ...field.value
+                                      .filter(
+                                        item =>
+                                          !careerPaths.some(
+                                            master => master.id === item.value
+                                          )
+                                      )
+                                      .map(item => ({
+                                        value: item.value,
+                                        label: item.label,
+                                      })),
+                                  ]}
+                                  onValueChange={value => {
+                                    const master = careerPaths.find(
+                                      item => item.id === value
+                                    );
+                                    const existing = field.value[0];
+                                    const label =
+                                      master?.label ??
+                                      (existing?.value === value
+                                        ? existing.label
+                                        : value);
+
+                                    field.onChange([
+                                      {
+                                        value,
+                                        label,
+                                        source:
+                                          master?.source ??
+                                          (existing?.value === value
+                                            ? existing.source
+                                            : 'MASTER'),
+                                      },
+                                    ]);
+                                    form.setValue('role', []);
+                                  }}
+                                  onAddNew={label => {
+                                    field.onChange([
+                                      {
+                                        value: label,
+                                        label,
+                                        source: 'USER_CREATED',
+                                      },
+                                    ]);
+                                    form.setValue('role', []);
+                                  }}
+                                  onSearchChange={value =>
+                                    setCareerPathSearch(value)
+                                  }
+                                  disabled
+                                  loading={isCareerPathsLoading}
+                                  maxLength={MAX_CHAR}
+                                  placeholder={t(
+                                    'jobRequirements.careerPathPlaceholder'
+                                  )}
+                                  emptyMessage={t(
+                                    'jobRequirements.noAssociatedCareerPaths'
+                                  )}
+                                  emptyTitle={t(
+                                    'jobRequirements.noAssociatedCareerPathsTitle'
+                                  )}
+                                />
+                              </FormControl>
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent
+                            side="top"
+                            align="start"
+                            sideOffset={10}
+                            className={dependencyTooltipClassName}
+                          >
+                            {t(
+                              'jobRequirements.dependencyHints.careerPathNeedDiscipline'
+                            )}
+                          </TooltipContent>
+                        </Tooltip>
+                      ) : (
+                        <>
+                          <FormLabel className="flex justify-between">
+                            <span>
+                              {t('jobRequirements.careerPath')}
+                              <span className="text-destructive ml-0.5">*</span>
+                            </span>
+                            <CharacterCount
+                              maxLength={MAX_CHAR}
+                              currentLength={careerPathSearch.length}
+                            />
+                          </FormLabel>
+                          <FormControl>
+                            <Combobox
+                              value={field.value[0]?.value}
+                              options={[
+                                ...careerPaths.map(item => ({
+                                  value: item.id,
                                   label: item.label,
                                 })),
-                            ]}
-                            onValueChange={value => {
-                              const master = careerPaths.find(
-                                item => item.id === value
-                              );
-                              const existing = field.value[0];
-                              const label =
-                                master?.label ??
-                                (existing?.value === value
-                                  ? existing.label
-                                  : value);
+                                ...field.value
+                                  .filter(
+                                    item =>
+                                      !careerPaths.some(
+                                        master => master.id === item.value
+                                      )
+                                  )
+                                  .map(item => ({
+                                    value: item.value,
+                                    label: item.label,
+                                  })),
+                              ]}
+                              onValueChange={value => {
+                                const master = careerPaths.find(
+                                  item => item.id === value
+                                );
+                                const existing = field.value[0];
+                                const label =
+                                  master?.label ??
+                                  (existing?.value === value
+                                    ? existing.label
+                                    : value);
 
-                              field.onChange([
-                                {
-                                  value,
-                                  label,
-                                  source:
-                                    master?.source ??
-                                    (existing?.value === value
-                                      ? existing.source
-                                      : 'MASTER'),
-                                },
-                              ]);
-                              form.setValue('role', []);
-                            }}
-                            onAddNew={label => {
-                              field.onChange([
-                                {
-                                  value: label,
-                                  label,
-                                  source: 'USER_CREATED',
-                                },
-                              ]);
-                              form.setValue('role', []);
-                            }}
-                            onSearchChange={value => setCareerPathSearch(value)}
-                            loading={isCareerPathsLoading}
-                            maxLength={MAX_CHAR}
-                            placeholder={t(
-                              'jobRequirements.careerPathPlaceholder'
-                            )}
-                            emptyMessage={
-                              careerPaths.length === 0
-                                ? t('jobRequirements.noAssociatedCareerPaths')
-                                : t('jobRequirements.noData')
-                            }
-                          />
-                        </FormControl>
-                      </>
-                    )}
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                                field.onChange([
+                                  {
+                                    value,
+                                    label,
+                                    source:
+                                      master?.source ??
+                                      (existing?.value === value
+                                        ? existing.source
+                                        : 'MASTER'),
+                                  },
+                                ]);
+                                form.setValue('role', []);
+                              }}
+                              onAddNew={label => {
+                                field.onChange([
+                                  {
+                                    value: label,
+                                    label,
+                                    source: 'USER_CREATED',
+                                  },
+                                ]);
+                                form.setValue('role', []);
+                              }}
+                              onSearchChange={value =>
+                                setCareerPathSearch(value)
+                              }
+                              loading={isCareerPathsLoading}
+                              maxLength={MAX_CHAR}
+                              placeholder={t(
+                                'jobRequirements.careerPathPlaceholder'
+                              )}
+                              emptyMessage={t(
+                                'jobRequirements.noAssociatedCareerPaths'
+                              )}
+                              emptyTitle={t(
+                                'jobRequirements.noAssociatedCareerPathsTitle'
+                              )}
+                            />
+                          </FormControl>
+                        </>
+                      )}
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
               <FormField
                 control={form.control}
@@ -646,15 +668,13 @@ export default function JobRequirementsStep({
                   <FormItem className="flex flex-col gap-1 space-y-0">
                     <FormLabel className="text-sm font-semibold text-slate-900">
                       {t('jobRequirements.level')}
-                      <span className="text-destructive ml-0.5">*</span>
+                      {!isOtherDiscipline && (
+                        <span className="text-destructive ml-0.5">*</span>
+                      )}
                     </FormLabel>
                     <FormControl>
-                      <Combobox
-                        value={field.value[0]?.value}
-                        options={jobLevels.map(level => ({
-                          value: level.id,
-                          label: level.label ?? level.name ?? '',
-                        }))}
+                      <Select
+                        value={field.value[0]?.value ?? ''}
                         onValueChange={value => {
                           const selected = jobLevels.find(
                             level => level.id === value
@@ -673,13 +693,21 @@ export default function JobRequirementsStep({
                           );
                           form.setValue('role', []);
                         }}
-                        onSearchChange={() => undefined}
-                        addable={false}
-                        hideAddNew
-                        loading={isJobLevelsLoading}
-                        placeholder={t('jobRequirements.levelPlaceholder')}
-                        emptyMessage={t('jobRequirements.noData')}
-                      />
+                        disabled={isJobLevelsLoading}
+                      >
+                        <SelectTrigger className="!h-11 w-[304px] bg-white shadow-none">
+                          <SelectValue
+                            placeholder={t('jobRequirements.levelPlaceholder')}
+                          />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {jobLevels.map(level => (
+                            <SelectItem key={level.id} value={level.id}>
+                              {level.label ?? level.name ?? ''}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -700,9 +728,11 @@ export default function JobRequirementsStep({
                             <FormLabel className="flex justify-between">
                               <span>
                                 {t('jobRequirements.role')}
-                                <span className="text-destructive ml-0.5">
-                                  *
-                                </span>
+                                {!isOtherDiscipline && (
+                                  <span className="text-destructive ml-0.5">
+                                    *
+                                  </span>
+                                )}
                               </span>
                               <CharacterCount
                                 maxLength={MAX_CHAR}
@@ -750,7 +780,11 @@ export default function JobRequirementsStep({
                                       />
                                       <div className="mt-3 w-61 text-left">
                                         <p className="font-bold text-slate-900">
-                                          {t('common.noDataTitle')}
+                                          {roles.length === 0
+                                            ? t(
+                                                'jobRequirements.noAssociatedRolesTitle'
+                                              )
+                                            : t('common.noDataTitle')}
                                         </p>
                                         <p className="text-sm font-semibold text-slate-700">
                                           {roles.length === 0
@@ -781,7 +815,9 @@ export default function JobRequirementsStep({
                         <FormLabel className="flex justify-between">
                           <span>
                             {t('jobRequirements.role')}
-                            <span className="text-destructive ml-0.5">*</span>
+                            {!isOtherDiscipline && (
+                              <span className="text-destructive ml-0.5">*</span>
+                            )}
                           </span>
                           <CharacterCount
                             maxLength={MAX_CHAR}
@@ -826,7 +862,11 @@ export default function JobRequirementsStep({
                                   />
                                   <div className="mt-3 w-61 text-left">
                                     <p className="font-bold text-slate-900">
-                                      {t('common.noDataTitle')}
+                                      {roles.length === 0
+                                        ? t(
+                                            'jobRequirements.noAssociatedRolesTitle'
+                                          )
+                                        : t('common.noDataTitle')}
                                     </p>
                                     <p className="text-sm font-semibold text-slate-700">
                                       {roles.length === 0
@@ -932,6 +972,7 @@ export default function JobRequirementsStep({
                           label: employmentType.label,
                           source: employmentType.source,
                         }))}
+                        showArrow
                         onChange={opts =>
                           field.onChange(opts.map(toFormOption))
                         }
@@ -994,6 +1035,7 @@ export default function JobRequirementsStep({
                           label: workSchedule.label,
                           source: workSchedule.source,
                         }))}
+                        showArrow
                         onChange={opts =>
                           field.onChange(opts.map(toFormOption))
                         }
@@ -1058,6 +1100,7 @@ export default function JobRequirementsStep({
                           label: engagementModel.label,
                           source: engagementModel.source,
                         }))}
+                        showArrow
                         onChange={opts =>
                           field.onChange(opts.map(toFormOption))
                         }

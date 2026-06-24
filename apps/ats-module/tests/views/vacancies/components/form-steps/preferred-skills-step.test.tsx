@@ -237,6 +237,12 @@ vi.mock('@cgp/ui-kit/components/ui/badge', () => ({
   ),
 }));
 
+vi.mock('@/views/vacancies/components/vacancy-status-badge', () => ({
+  default: ({ status }: { status: string }) => (
+    <div data-testid="vacancy-status-badge">{status}</div>
+  ),
+}));
+
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 const API_SKILLS = [
@@ -259,16 +265,19 @@ function makeForm(
     isEnabled: boolean;
     dataTakenFromCandidate: boolean;
     skills: unknown[];
+    status?: string;
   }> = {}
 ) {
+  const { status, ...skillsOverrides } = overrides;
   return {
     form: {
       preferredSkills: {
         isEnabled: true,
         dataTakenFromCandidate: false,
         skills: [],
-        ...overrides,
+        ...skillsOverrides,
       },
+      status,
     },
     setForm: vi.fn(),
     onCancel: vi.fn(),
@@ -279,14 +288,22 @@ function makeForm(
   };
 }
 
-function renderStep(formOverrides: Parameters<typeof makeForm>[0] = {}) {
+function renderStep(
+  formOverrides: Parameters<typeof makeForm>[0] = {},
+  props: { mode?: 'create' | 'edit' } = {}
+) {
   const onNext = vi.fn();
   const onBack = vi.fn();
   const onSubmit = vi.fn();
   const vacancyFormState = makeForm(formOverrides);
   mockUseVacancyForm.mockReturnValue(vacancyFormState);
   render(
-    <PreferredSkillsStep onNext={onNext} onBack={onBack} onSubmit={onSubmit} />
+    <PreferredSkillsStep
+      onNext={onNext}
+      onBack={onBack}
+      onSubmit={onSubmit}
+      mode={props.mode}
+    />
   );
   return { onNext, onBack, onSubmit, onCancel: vacancyFormState.onCancel };
 }
@@ -764,6 +781,68 @@ describe('PreferredSkillsStep', () => {
           ],
         },
       });
+    });
+  });
+
+  describe('edit mode', () => {
+    it('renders with mode="create" by default and does not show VacancyStatusBadge', () => {
+      renderStep({}, { mode: 'create' });
+
+      expect(
+        screen.queryByTestId('vacancy-status-badge')
+      ).not.toBeInTheDocument();
+    });
+
+    it('renders VacancyStatusBadge when mode="edit" and vacancyStatus exists', () => {
+      renderStep({ status: 'published' }, { mode: 'edit' });
+
+      expect(screen.getByTestId('vacancy-status-badge')).toBeInTheDocument();
+      expect(screen.getByTestId('vacancy-status-badge')).toHaveTextContent(
+        'published'
+      );
+    });
+
+    it('does not render VacancyStatusBadge when mode="edit" but vacancyStatus is undefined', () => {
+      renderStep({}, { mode: 'edit' });
+
+      expect(
+        screen.queryByTestId('vacancy-status-badge')
+      ).not.toBeInTheDocument();
+    });
+
+    it('does not render VacancyStatusBadge by default when no mode prop is provided', () => {
+      renderStep({});
+
+      expect(
+        screen.queryByTestId('vacancy-status-badge')
+      ).not.toBeInTheDocument();
+    });
+
+    it('preserves all functionality when mode="edit"', async () => {
+      const user = userEvent.setup();
+      const { onNext } = renderStep(
+        {
+          skills: [{ skillId: 'skill-1', skillName: 'JavaScript' }],
+          status: 'published',
+        },
+        { mode: 'edit' }
+      );
+
+      expect(screen.getByTestId('vacancy-status-badge')).toBeInTheDocument();
+
+      // Verify section heading and toggle are still present
+      expect(screen.getByText('preferredSkills.title')).toBeInTheDocument();
+
+      // Verify selection works
+      await user.click(
+        screen.getByPlaceholderText('preferredSkills.input.placeholder')
+      );
+      await user.click(screen.getByText('TypeScript'));
+
+      // Verify navigation works
+      await user.click(screen.getByText('common.next'));
+
+      expect(onNext).toHaveBeenCalled();
     });
   });
 });

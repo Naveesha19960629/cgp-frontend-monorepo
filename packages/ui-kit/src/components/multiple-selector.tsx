@@ -89,6 +89,7 @@ interface MultipleSelectorProps {
   hideClearAllButton?: boolean;
   /** Inline error message displayed below the input and above the selected badges. */
   errorMessage?: string;
+  showArrow?: boolean;
 }
 
 export interface MultipleSelectorRef {
@@ -209,6 +210,7 @@ const MultipleSelector = React.forwardRef<
       inputProps,
       hideClearAllButton = false,
       errorMessage,
+      showArrow,
     }: MultipleSelectorProps,
     ref: React.Ref<MultipleSelectorRef>
   ) => {
@@ -224,6 +226,21 @@ const MultipleSelector = React.forwardRef<
     );
     const [inputValue, setInputValue] = React.useState('');
     const debouncedSearchTerm = useDebounce(inputValue, delay || 500);
+
+    const isExistCaseInsensitive = React.useCallback(
+      (input: string) => {
+        const trimmedLower = input.trim().toLowerCase();
+        for (const [, groupValues] of Object.entries(options)) {
+          if (
+            groupValues.some(opt => opt.label.toLowerCase() === trimmedLower)
+          ) {
+            return true;
+          }
+        }
+        return selected.some(s => s.label.toLowerCase() === trimmedLower);
+      },
+      [options, selected]
+    );
 
     React.useImperativeHandle(
       ref,
@@ -370,10 +387,7 @@ const MultipleSelector = React.forwardRef<
 
     const CreatableItem = () => {
       if (!creatable) return undefined;
-      if (
-        isOptionsExist(options, [{ id: undefined, label: inputValue }]) ||
-        selected.find(s => s.label === inputValue)
-      ) {
+      if (isExistCaseInsensitive(inputValue)) {
         return undefined;
       }
 
@@ -569,17 +583,15 @@ const MultipleSelector = React.forwardRef<
           >
             <X />
           </button>
-          <ChevronDownIcon
-            className={cn(
-              'text-muted-foreground/50 size-5',
-              (creatable ||
-                hideClearAllButton ||
-                disabled ||
-                selected.length >= 1 ||
-                selected.filter(s => s.fixed).length !== selected.length) &&
-                'hidden'
-            )}
-          />
+          {(showArrow ||
+            (!creatable && !disabled && selected.length === 0)) && (
+            <ChevronDownIcon
+              className={cn(
+                'text-muted-foreground/50 size-5 shrink-0',
+                disabled && 'opacity-50'
+              )}
+            />
+          )}
         </div>
         <div className="relative">
           {open && (
