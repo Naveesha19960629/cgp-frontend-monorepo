@@ -45,12 +45,13 @@ export default function VacanciesPage() {
     [params]
   );
 
-  const { data: vacanciesResponse, isLoading } = useVacanciesQuery(
-    queryParams,
-    {
-      enabled: initialized && !!keycloak.authenticated,
-    }
-  );
+  const {
+    data: vacanciesResponse,
+    isLoading,
+    isFetching,
+  } = useVacanciesQuery(queryParams, {
+    enabled: initialized && !!keycloak.authenticated,
+  });
 
   const data = vacanciesResponse?.data.content ?? [];
   const totalPages = vacanciesResponse?.data.totalPages ?? 0;
@@ -189,7 +190,7 @@ export default function VacanciesPage() {
         ) : (
           <VacancyDataTable
             table={table}
-            isLoading={false}
+            isLoading={isFetching}
             onRowClick={row =>
               void navigate(`/dashboard/ats/vacancies/${row.vacancyId}/view`)
             }

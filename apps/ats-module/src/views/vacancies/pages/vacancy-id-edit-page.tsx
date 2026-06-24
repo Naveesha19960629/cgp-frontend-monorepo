@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 
@@ -92,6 +92,7 @@ function EditVacancyContent({ id }: { id: string | undefined }) {
   const { isInitialStep, setIsInitialStep, setForm, setCurrentStepIndex } =
     useVacancyForm();
   const isHydratedRef = useRef(false);
+  const [isHydrated, setIsHydrated] = useState(false);
 
   const {
     data: vacancyResponse,
@@ -140,6 +141,7 @@ function EditVacancyContent({ id }: { id: string | undefined }) {
     }
 
     isHydratedRef.current = true;
+    setIsHydrated(true);
   }, [
     error,
     isLoading,
@@ -164,7 +166,10 @@ function EditVacancyContent({ id }: { id: string | undefined }) {
     );
   }
 
-  if (isLoading) {
+  if (
+    isLoading ||
+    (!isHydrated && !error && vacancyResponse?.success !== false)
+  ) {
     return (
       <div className="flex min-h-full flex-col overflow-hidden">
         <div className="flex min-h-0 flex-1">

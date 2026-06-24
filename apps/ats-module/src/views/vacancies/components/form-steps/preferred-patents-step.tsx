@@ -84,7 +84,6 @@ function PatentCard({
     useIndustriesQuery(industriesSearch);
   const industriesData = industriesResponse?.data?.items?.content ?? [];
 
-  const isOpen = form.watch(`patents.${index}.isOpen`);
   const isEnabled = form.watch('isEnabled');
 
   const STATUS_OPTIONS: Option[] = [
@@ -120,19 +119,11 @@ function PatentCard({
             <CollapsibleTrigger asChild>
               <button
                 type="button"
-                className="text-slate-400 transition-colors hover:text-slate-600"
-                aria-label={
-                  isOpen
-                    ? t('preferredPatents.collapse')
-                    : t('preferredPatents.expand')
-                }
+                disabled
+                className="text-slate-400"
+                aria-label={t('preferredPatents.expand')}
               >
-                <ChevronUp
-                  className={cn(
-                    'size-5 transition-transform',
-                    !isOpen && 'rotate-180'
-                  )}
-                />
+                <ChevronUp className="size-5 rotate-180" />
               </button>
             </CollapsibleTrigger>
           </div>
