@@ -370,8 +370,7 @@ describe('LicenseCertificatesStep', () => {
       ).toBeInTheDocument();
     });
 
-    it('should allow form submission and call onNext when step validation passes', async () => {
-      const user = userEvent.setup();
+    it('should allow form submission and call onNext when step validation passes', () => {
       const onNext = vi.fn();
 
       render(
