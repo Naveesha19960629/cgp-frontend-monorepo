@@ -34,7 +34,7 @@ vi.mock(
             onClick={() =>
               props.onAdded({
                 value: '__pending_awarding_body_123',
-                label: 'New Institute',
+                label: 'New Institute, Colombo',
                 source: 'PENDING_TEMP',
                 locationId: 'loc-1',
               })
@@ -1126,7 +1126,7 @@ describe('TertiaryEducationStep', () => {
       await waitFor(() => {
         expect(mockAddAwardingBodyMutate).toHaveBeenCalledWith(
           expect.objectContaining({
-            displayValue: 'New Institute',
+            displayValue: 'New Institute, Colombo',
             locationId: 'loc-1',
           })
         );

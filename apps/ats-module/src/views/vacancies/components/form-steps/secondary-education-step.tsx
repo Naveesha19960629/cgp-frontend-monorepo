@@ -648,7 +648,17 @@ export default function SecondaryEducationStep({
                       <MultipleSelector
                         key={schoolsSelectorKey}
                         value={field.value}
-                        onSearch={searchSchools}
+                        onSearch={async (search: string) => {
+                          const results = await searchSchools(search);
+                          // Filter out items already selected to prevent duplication
+                          const selectedValues = new Set(
+                            field.value.map(v => v.value.toLowerCase())
+                          );
+                          return results.filter(
+                            item =>
+                              !selectedValues.has(item.value.toLowerCase())
+                          );
+                        }}
                         onChange={options => {
                           if (options.length > MAX_SELECTIONS) {
                             setMax('schools');
@@ -1259,14 +1269,12 @@ export default function SecondaryEducationStep({
           open={addSchoolDialogOpen}
           initialName={pendingSchoolLabel}
           onClose={() => {
-            setSchoolsSelectorKey(k => k + 1);
             setAddSchoolDialogOpen(false);
           }}
           onAdded={option => {
             const currentSchools = getValues('entries.0.schools');
             if (currentSchools.length >= MAX_SELECTIONS) {
               setMax('schools');
-              setSchoolsSelectorKey(k => k + 1);
               setAddSchoolDialogOpen(false);
               return;
             }
@@ -1283,6 +1291,7 @@ export default function SecondaryEducationStep({
                 source: option.source,
               },
             ]);
+            setSchoolsSelectorKey(k => k + 1);
             setAddSchoolDialogOpen(false);
           }}
         />

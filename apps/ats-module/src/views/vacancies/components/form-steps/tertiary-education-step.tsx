@@ -897,7 +897,16 @@ export default function TertiaryEducationStep({
                     <MultipleSelector
                       key={awardingBodySelectorKey}
                       value={field.value}
-                      onSearch={searchAwardingBodies}
+                      onSearch={async (search: string) => {
+                        const results = await searchAwardingBodies(search);
+                        // Filter out items already selected to prevent duplication
+                        const selectedValues = new Set(
+                          field.value.map(v => v.value.toLowerCase())
+                        );
+                        return results.filter(
+                          item => !selectedValues.has(item.value.toLowerCase())
+                        );
+                      }}
                       onChange={options => {
                         if (options.length < MAX_SELECTIONS)
                           clearMax('awardingBody');
@@ -1438,7 +1447,6 @@ export default function TertiaryEducationStep({
         open={addAwardingBodyDialogOpen}
         initialName={pendingAwardingBodyLabel}
         onClose={() => {
-          setAwardingBodySelectorKey(k => k + 1);
           setAddAwardingBodyDialogOpen(false);
         }}
         onAdded={option => {
@@ -1451,6 +1459,7 @@ export default function TertiaryEducationStep({
             ...awardingBodyValue,
             { value: option.value, label: option.label, source: option.source },
           ]);
+          setAwardingBodySelectorKey(k => k + 1);
           setAddAwardingBodyDialogOpen(false);
         }}
       />

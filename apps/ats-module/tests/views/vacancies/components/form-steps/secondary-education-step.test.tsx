@@ -119,7 +119,7 @@ vi.mock('@/views/vacancies/components/form-steps/add-school-dialog', () => ({
           onClick={() =>
             props.onAdded({
               value: '__pending_school_123',
-              label: 'New School',
+              label: 'New School, Colombo',
               source: 'PENDING_TEMP',
               locationId: 'loc-1',
             })
@@ -939,7 +939,7 @@ describe('SecondaryEducationStep', () => {
       await waitFor(() => {
         expect(mockAddSchoolMutate).toHaveBeenCalledWith(
           expect.objectContaining({
-            displayValue: 'New School',
+            displayValue: 'New School, Colombo',
             locationId: 'loc-1',
           })
         );
