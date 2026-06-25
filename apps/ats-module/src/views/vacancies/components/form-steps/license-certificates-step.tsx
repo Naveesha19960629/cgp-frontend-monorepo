@@ -183,11 +183,7 @@ export default function LicenseCertificatesStep({
   const shouldDisableNavigation =
     isEnabled && !dataTakenFromCandidate && !hasEntryData();
 
-  useStepGuard(
-    isEnabled &&
-      !dataTakenFromCandidate &&
-      (!hasEntryData() || hasUnresolvedPendingLicenses())
-  );
+  useStepGuard(isEnabled && !dataTakenFromCandidate && !hasEntryData());
   useEffect(() => {
     stepPersistRef.current = () => {
       setForm(prev => ({
