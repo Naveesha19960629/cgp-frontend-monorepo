@@ -61,7 +61,7 @@ const VACANCY_STEPS: readonly VacancyStep[] = [
   },
   {
     key: 'preferred-club-societies',
-    label: 'Preferred Club & Societies',
+    label: 'Preferred Clubs & Societies',
     component: PreferredClubSocietiesStep,
   },
   {

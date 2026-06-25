@@ -42,6 +42,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@cgp/ui-kit/components/ui/popover';
+import { applyTypography } from '@cgp/ui-kit/lib/typography';
 import { cn } from '@cgp/ui-kit/lib/utils';
 
 import DisableDialog from './disable-dialog';
@@ -222,6 +223,7 @@ function ClubSocietyCard({
                         'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
                         'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
                         'dark:bg-input/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
+                        applyTypography('body-medium'),
                         'shadow-none!'
                       )}
                     >
@@ -266,6 +268,7 @@ function ClubSocietyCard({
                         'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
                         'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
                         'dark:bg-input/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
+                        applyTypography('body-medium'),
                         'shadow-none!'
                       )}
                     >
@@ -655,10 +658,10 @@ export default function PreferredClubSocietiesStep({
         {/* ── Informational Banner ──────────────────────────────────────── */}
         <MessageBox
           fields={[
-            t('preferredClubsSocieties.fieldList.clubSociety'),
-            t('preferredClubsSocieties.fieldList.position'),
-            t('preferredClubsSocieties.fieldList.representedOrganization'),
-            t('preferredClubsSocieties.fieldList.startDate'),
+            t('preferredClubSocieties.fieldList.clubSociety'),
+            t('preferredClubSocieties.fieldList.position'),
+            t('preferredClubSocieties.fieldList.representedOrganization'),
+            t('preferredClubSocieties.fieldList.startDate'),
           ]}
         />
 
