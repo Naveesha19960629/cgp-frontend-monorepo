@@ -541,7 +541,7 @@
     "collectFromCandidates": "If selected, no manual input is required, and data will be taken from the candidate profile",
     "qualificationName": "Required Qualification(s)",
     "tertiaryAwardingBody": "Preferred Awarding Body / Institute Name",
-    "tertiaryAwardingBodyLocations": "Desired Awarding Body / Institute Location",
+    "tertiaryAwardingBodyLocations": "Preferred Awarding Body / Institute Location",
     "levelOfQualification": "Level of the Qualification",
     "specialization": "Specialization",
     "studyMode": "Mode of Study",
