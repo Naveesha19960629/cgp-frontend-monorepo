@@ -54,6 +54,14 @@ vi.mock('@/views/vacancies/hooks', () => ({
     isLoading: false,
   }),
   useStepGuard: vi.fn(),
+  useOrganizationForm: () => ({
+    form: {
+      control: {},
+      setValue: vi.fn(),
+      reset: vi.fn(),
+    },
+    onSubmit: vi.fn(),
+  }),
 }));
 
 // ── Mock message box ────────────────────────────────────────────────────────

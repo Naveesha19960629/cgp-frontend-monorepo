@@ -8,6 +8,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import MessageBox from '@/components/message-box';
+import { AddOrganizationFormDialog } from '@/views/vacancies/components/dialogs';
 import StepDisableDialog from '@/views/vacancies/components/step-disable-dialog';
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import {
@@ -53,6 +54,17 @@ const MAX_SELECTIONS = 10;
 const HUNDRED_YEARS_AGO = new Date(new Date().getFullYear() - 100, 0, 1);
 const HUNDRED_YEARS_FROM_NOW = new Date(new Date().getFullYear() + 100, 11, 31);
 
+/**
+ * Sanitizes text input to plain text only.
+ * Removes emojis, special Unicode characters, and non-ASCII characters.
+ * Keeps only: letters, numbers, spaces, and common punctuation (hyphens, dots, commas, apostrophes, parentheses).
+ */
+function sanitizeText(value: string): string {
+  return value
+    .replace(/[^\w\s.,()'/&-]/g, '') // Remove special characters except common punctuation
+    .replace(/[\u0080-\uFFFF]/g, ''); // Remove non-ASCII (covers emojis and special Unicode)
+}
+
 interface SportEntry {
   id: string;
   isOpen: boolean;
@@ -93,6 +105,7 @@ function SportCard({
   onOrganizationsSearch,
   onLocationsSearch,
   onLevelRepresentedSearch,
+  onRequestAddOrganization,
   fieldsDisabled,
   sports,
   isSportsLoading,
@@ -110,6 +123,7 @@ function SportCard({
   onOrganizationsSearch: (value: string) => void;
   onLocationsSearch: (value: string) => void;
   onLevelRepresentedSearch: (value: string) => void;
+  onRequestAddOrganization: (index: number, name: string) => void;
   fieldsDisabled: boolean;
   sports: Array<{
     id: string;
@@ -137,6 +151,7 @@ function SportCard({
   const [openDatePopover, setOpenDatePopover] = useState<
     'startDate' | 'endDate' | null
   >(null);
+  const [locationsError, setLocationsError] = useState(false);
 
   return (
     <Collapsible
@@ -232,7 +247,11 @@ function SportCard({
 
               <div className="flex flex-col gap-1">
                 <div className="flex h-5 items-center">
-                  <Label>Organization Location</Label>
+                  <Label
+                    className={locationsError ? 'text-destructive' : undefined}
+                  >
+                    Organization Location
+                  </Label>
                 </div>
                 <MultipleSelector
                   value={entry.organizationLocations}
@@ -253,6 +272,8 @@ function SportCard({
                   keepSelectedInList
                   hideClearAllButton
                   maxSelected={MAX_SELECTIONS}
+                  errorMessage="Exceeded maximum of 10 selections"
+                  onErrorStateChange={setLocationsError}
                   disabled={fieldsDisabled}
                   loading={isLocationsLoading}
                   placeholder="Select location"
@@ -315,19 +336,24 @@ function SportCard({
                 <MultipleSelector
                   value={entry.representedOrganization}
                   onChange={options => {
-                    onUpdate(index, {
-                      representedOrganization: options
-                        .filter(
-                          opt =>
-                            typeof opt.value === 'string' &&
-                            opt.value.length > 0
-                        )
-                        .map(opt => ({
-                          value: opt.value,
-                          label: opt.label,
-                          source: (opt.source as string) ?? 'USER_CREATED',
-                        })),
-                    });
+                    const newItem = options.find(o => o.value === o.label);
+                    if (newItem) {
+                      onRequestAddOrganization(index, newItem.label);
+                    } else {
+                      onUpdate(index, {
+                        representedOrganization: options
+                          .filter(
+                            opt =>
+                              typeof opt.value === 'string' &&
+                              opt.value.length > 0
+                          )
+                          .map(opt => ({
+                            value: opt.value,
+                            label: opt.label,
+                            source: (opt.source as string) ?? 'USER_CREATED',
+                          })),
+                      });
+                    }
                   }}
                   options={organizations.map(o => ({
                     value: o.id,
@@ -371,7 +397,10 @@ function SportCard({
                 </div>
                 <Input
                   value={entry.position}
-                  onChange={e => onUpdate(index, { position: e.target.value })}
+                  onChange={e => {
+                    const sanitized = sanitizeText(e.target.value);
+                    onUpdate(index, { position: sanitized.trimStart() });
+                  }}
                   maxLength={MAX_POSITION_LENGTH}
                   placeholder="Enter position"
                   className="h-11"
@@ -546,6 +575,12 @@ export default function PreferredSportsStep({
   const [locationsSearchQuery, setLocationsSearchQuery] = useState('');
   const [levelRepresentedSearchQuery, setLevelRepresentedSearchQuery] =
     useState('');
+
+  // Organization dialog state
+  const [showAddOrganizationDialog, setShowAddOrganizationDialog] =
+    useState(false);
+  const [pendingOrganizationName, setPendingOrganizationName] = useState('');
+  const [activeCardIndex, setActiveCardIndex] = useState<number | null>(null);
 
   const [entries, setEntries] = useState<SportEntry[]>(
     savedSports?.sports && savedSports.sports.length > 0
@@ -784,7 +819,13 @@ export default function PreferredSportsStep({
           <Checkbox
             id="sportsDataTakenFromCandidate"
             checked={dataTakenFromCandidate}
-            onCheckedChange={value => setDataTakenFromCandidate(!!value)}
+            onCheckedChange={value => {
+              const checked = !!value;
+              setDataTakenFromCandidate(checked);
+              if (checked) {
+                setEntries([createEmptyEntry('1')]);
+              }
+            }}
             className="mt-0.5"
           />
           <Label
@@ -808,6 +849,11 @@ export default function PreferredSportsStep({
               onOrganizationsSearch={setOrganizationsSearchQuery}
               onLocationsSearch={setLocationsSearchQuery}
               onLevelRepresentedSearch={setLevelRepresentedSearchQuery}
+              onRequestAddOrganization={(cardIndex, name) => {
+                setActiveCardIndex(cardIndex);
+                setPendingOrganizationName(name);
+                setShowAddOrganizationDialog(true);
+              }}
               fieldsDisabled={fieldsDisabled}
               sports={sports}
               isSportsLoading={isSportsLoading}
@@ -854,6 +900,24 @@ export default function PreferredSportsStep({
           </Button>
         </div>
       </div>
+
+      {/* ── Add Organization dialog ──────────────────────────────────────── */}
+      <AddOrganizationFormDialog
+        open={showAddOrganizationDialog}
+        onOpenChange={setShowAddOrganizationDialog}
+        organizationName={pendingOrganizationName}
+        onOrganizationAdded={org => {
+          if (activeCardIndex !== null) {
+            updateEntry(activeCardIndex, {
+              representedOrganization: [
+                ...(entries[activeCardIndex]?.representedOrganization ?? []),
+                { value: org.id, label: org.name, source: org.source },
+              ],
+            });
+          }
+          setShowAddOrganizationDialog(false);
+        }}
+      />
 
       {/* ── Disable Confirmation Dialog ───────────────────────────────────── */}
       <DisableDialog

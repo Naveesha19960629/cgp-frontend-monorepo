@@ -44,6 +44,17 @@ const MAX_PUBLISHER_LENGTH = 250;
 const HUNDRED_YEARS_AGO = new Date(new Date().getFullYear() - 100, 0, 1);
 const HUNDRED_YEARS_FROM_NOW = new Date(new Date().getFullYear() + 100, 11, 31);
 
+/**
+ * Sanitizes text input to plain text only.
+ * Removes emojis, special Unicode characters, and non-ASCII characters.
+ * Keeps only: letters, numbers, spaces, and common punctuation (hyphens, dots, commas, apostrophes, parentheses).
+ */
+function sanitizeText(value: string): string {
+  return value
+    .replace(/[^\w\s.,()'/&-]/g, '') // Remove special characters except common punctuation
+    .replace(/[\u0080-\uFFFF]/g, ''); // Remove non-ASCII (covers emojis and special Unicode)
+}
+
 interface PublicationEntry {
   id: string;
   isOpen: boolean;
@@ -111,9 +122,12 @@ function PublicationCard({
                 </div>
                 <Input
                   value={publication.acceptedPublisher}
-                  onChange={e =>
-                    onUpdate(index, { acceptedPublisher: e.target.value })
-                  }
+                  onChange={e => {
+                    const sanitized = sanitizeText(e.target.value);
+                    onUpdate(index, {
+                      acceptedPublisher: sanitized.trimStart(),
+                    });
+                  }}
                   maxLength={MAX_PUBLISHER_LENGTH}
                   placeholder="Enter accepted publisher"
                   className="h-11"
@@ -507,7 +521,21 @@ export default function PreferredPublicationsStep({
           <Checkbox
             id="publicationsDataTakenFromCandidate"
             checked={dataTakenFromCandidate}
-            onCheckedChange={value => setDataTakenFromCandidate(!!value)}
+            onCheckedChange={value => {
+              const checked = !!value;
+              setDataTakenFromCandidate(checked);
+              if (checked) {
+                setPublications([
+                  {
+                    id: '1',
+                    isOpen: true,
+                    acceptedPublisher: '',
+                    publishedDateFrom: undefined,
+                    publishedDateTo: undefined,
+                  },
+                ]);
+              }
+            }}
             className="mt-0.5"
           />
           <Label

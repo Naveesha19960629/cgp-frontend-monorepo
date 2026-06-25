@@ -8,6 +8,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import MessageBox from '@/components/message-box';
+import { AddOrganizationFormDialog } from '@/views/vacancies/components/dialogs';
 import StepDisableDialog from '@/views/vacancies/components/step-disable-dialog';
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import {
@@ -53,6 +54,17 @@ const MAX_CAUSE_LENGTH = 100;
 const MAX_POSITION_LENGTH = 100;
 const MAX_SELECTIONS = 10;
 
+/**
+ * Sanitizes text input to plain text only.
+ * Removes emojis, special Unicode characters, and non-ASCII characters.
+ * Keeps only: letters, numbers, spaces, and common punctuation (hyphens, dots, commas, apostrophes, parentheses).
+ */
+function sanitizeText(value: string): string {
+  return value
+    .replace(/[^\w\s.,()'/&-]/g, '') // Remove special characters except common punctuation
+    .replace(/[\u0080-\uFFFF]/g, ''); // Remove non-ASCII (covers emojis and special Unicode)
+}
+
 interface VolunteeringEntry {
   id: string;
   isOpen: boolean;
@@ -87,6 +99,7 @@ function VolunteeringCard({
   onOrganizationsSearch,
   onLocationsSearch,
   onCausesSearch,
+  onRequestAddOrganization,
   fieldsDisabled,
   organizations,
   isOrganizationsLoading,
@@ -101,6 +114,7 @@ function VolunteeringCard({
   onOrganizationsSearch: (value: string) => void;
   onLocationsSearch: (value: string) => void;
   onCausesSearch: (value: string) => void;
+  onRequestAddOrganization: (index: number, name: string) => void;
   fieldsDisabled: boolean;
   organizations: Array<{
     id: string;
@@ -114,6 +128,8 @@ function VolunteeringCard({
   locationOptions: Array<{ value: string; label: string }>;
   isLocationsLoading: boolean;
 }>) {
+  const [locationsError, setLocationsError] = useState(false);
+
   return (
     <Collapsible
       open={entry.isOpen}
@@ -158,19 +174,24 @@ function VolunteeringCard({
                 <MultipleSelector
                   value={entry.organizationName}
                   onChange={options => {
-                    onUpdate(index, {
-                      organizationName: options
-                        .filter(
-                          opt =>
-                            typeof opt.value === 'string' &&
-                            opt.value.length > 0
-                        )
-                        .map(opt => ({
-                          value: opt.value,
-                          label: opt.label,
-                          source: (opt.source as string) ?? 'USER_CREATED',
-                        })),
-                    });
+                    const newItem = options.find(o => o.value === o.label);
+                    if (newItem) {
+                      onRequestAddOrganization(index, newItem.label);
+                    } else {
+                      onUpdate(index, {
+                        organizationName: options
+                          .filter(
+                            opt =>
+                              typeof opt.value === 'string' &&
+                              opt.value.length > 0
+                          )
+                          .map(opt => ({
+                            value: opt.value,
+                            label: opt.label,
+                            source: (opt.source as string) ?? 'USER_CREATED',
+                          })),
+                      });
+                    }
                   }}
                   options={organizations.map(o => ({
                     value: o.id,
@@ -203,7 +224,11 @@ function VolunteeringCard({
 
               <div className="flex flex-col gap-1">
                 <div className="flex h-5 items-center">
-                  <Label>Organization Location</Label>
+                  <Label
+                    className={locationsError ? 'text-destructive' : undefined}
+                  >
+                    Organization Location
+                  </Label>
                 </div>
                 <MultipleSelector
                   value={entry.organizationLocations}
@@ -224,6 +249,8 @@ function VolunteeringCard({
                   keepSelectedInList
                   hideClearAllButton
                   maxSelected={MAX_SELECTIONS}
+                  errorMessage="Exceeded maximum of 10 selections"
+                  onErrorStateChange={setLocationsError}
                   disabled={fieldsDisabled}
                   loading={isLocationsLoading}
                   placeholder="Select location"
@@ -306,7 +333,10 @@ function VolunteeringCard({
                 </div>
                 <Input
                   value={entry.position}
-                  onChange={e => onUpdate(index, { position: e.target.value })}
+                  onChange={e => {
+                    const sanitized = sanitizeText(e.target.value);
+                    onUpdate(index, { position: sanitized.trimStart() });
+                  }}
                   maxLength={MAX_POSITION_LENGTH}
                   placeholder="Enter position"
                   className="h-11"
@@ -482,6 +512,12 @@ export default function PreferredVolunteeringStep({
   const [organizationsSearchQuery, setOrganizationsSearchQuery] = useState('');
   const [locationsSearchQuery, setLocationsSearchQuery] = useState('');
   const [causesSearchQuery, setCausesSearchQuery] = useState('');
+
+  // Organization dialog state
+  const [showAddOrganizationDialog, setShowAddOrganizationDialog] =
+    useState(false);
+  const [pendingOrganizationName, setPendingOrganizationName] = useState('');
+  const [activeCardIndex, setActiveCardIndex] = useState<number | null>(null);
 
   const [entries, setEntries] = useState<VolunteeringEntry[]>(
     savedVolunteering?.volunteering && savedVolunteering.volunteering.length > 0
@@ -699,7 +735,13 @@ export default function PreferredVolunteeringStep({
           <Checkbox
             id="volunteeringDataTakenFromCandidate"
             checked={dataTakenFromCandidate}
-            onCheckedChange={value => setDataTakenFromCandidate(!!value)}
+            onCheckedChange={value => {
+              const checked = !!value;
+              setDataTakenFromCandidate(checked);
+              if (checked) {
+                setEntries([createEmptyEntry('1')]);
+              }
+            }}
             className="mt-0.5"
           />
           <Label
@@ -722,6 +764,11 @@ export default function PreferredVolunteeringStep({
               onOrganizationsSearch={setOrganizationsSearchQuery}
               onLocationsSearch={setLocationsSearchQuery}
               onCausesSearch={setCausesSearchQuery}
+              onRequestAddOrganization={(cardIndex, name) => {
+                setActiveCardIndex(cardIndex);
+                setPendingOrganizationName(name);
+                setShowAddOrganizationDialog(true);
+              }}
               fieldsDisabled={fieldsDisabled}
               organizations={organizations}
               isOrganizationsLoading={isOrganizationsLoading}
@@ -766,6 +813,24 @@ export default function PreferredVolunteeringStep({
           </Button>
         </div>
       </div>
+
+      {/* ── Add Organization dialog ──────────────────────────────────────── */}
+      <AddOrganizationFormDialog
+        open={showAddOrganizationDialog}
+        onOpenChange={setShowAddOrganizationDialog}
+        organizationName={pendingOrganizationName}
+        onOrganizationAdded={org => {
+          if (activeCardIndex !== null) {
+            updateEntry(activeCardIndex, {
+              organizationName: [
+                ...(entries[activeCardIndex]?.organizationName ?? []),
+                { value: org.id, label: org.name, source: org.source },
+              ],
+            });
+          }
+          setShowAddOrganizationDialog(false);
+        }}
+      />
 
       {/* ── Disable Confirmation Dialog ───────────────────────────────────── */}
       <DisableDialog
