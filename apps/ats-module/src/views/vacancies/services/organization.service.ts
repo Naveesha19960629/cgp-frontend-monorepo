@@ -11,6 +11,16 @@ export interface OrganizationOption {
   source?: 'MASTER' | 'PENDING' | 'USER_CREATED';
 }
 
+interface CreateOrganizationRequest {
+  type: 'ORGANIZATION';
+  displayValue: string;
+  payload?: {
+    name?: string;
+    url?: string;
+    location?: { id: string };
+  };
+}
+
 interface CreateOrganizationResponse {
   message: string[];
   statusCode: number;
@@ -43,14 +53,10 @@ export const organizationService = {
     displayValue: string;
     payload?: { name?: string; url?: string; location?: { id: string } };
   }): Promise<CreateOrganizationResponse> => {
-    const requestBody = {
+    const requestBody: CreateOrganizationRequest = {
       type: 'ORGANIZATION',
       displayValue: data.displayValue,
-      payload: {
-        additionalProp1: 'string',
-        additionalProp2: 'string',
-        additionalProp3: 'string',
-      },
+      payload: data.payload,
     };
 
     const response = await httpClient.post<CreateOrganizationResponse>(

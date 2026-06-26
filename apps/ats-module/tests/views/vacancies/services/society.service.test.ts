@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { societyService } from '@/views/vacancies/services/society.service';
 import type {
   ApiResponse,
-  CreatePendingItemResponse,
+  SocietyCreateResponse,
   SocietyItem,
 } from '@/views/vacancies/types';
 
@@ -161,11 +161,10 @@ describe('society.service', () => {
 
   describe('createSociety', () => {
     it('calls POST /societies with correct payload', async () => {
-      const mockResponse: CreatePendingItemResponse = {
-        pendingId: 'soc-123',
-        type: 'SOCIETY',
-        value: 'New Society',
-        status: 'PENDING',
+      const mockResponse: SocietyCreateResponse = {
+        id: 'soc-123',
+        name: 'New Society',
+        source: 'PENDING',
       };
 
       mockPost.mockResolvedValue({ data: { data: mockResponse } });
@@ -175,21 +174,16 @@ describe('society.service', () => {
       expect(mockPost).toHaveBeenCalledWith('/societies', {
         type: 'SOCIETY',
         displayValue: 'New Society',
-        payload: {
-          additionalProp1: 'string',
-          additionalProp2: 'string',
-          additionalProp3: 'string',
-        },
       });
       expect(result).toEqual(mockResponse);
     });
 
     it('returns response with pendingId when provided', async () => {
-      const mockResponse: CreatePendingItemResponse = {
+      const mockResponse: SocietyCreateResponse = {
+        id: 'soc-456',
         pendingId: 'pending-789',
-        type: 'SOCIETY',
-        value: 'Test Society',
-        status: 'PENDING',
+        name: 'Test Society',
+        source: 'PENDING',
       };
 
       mockPost.mockResolvedValue({ data: { data: mockResponse } });
@@ -197,15 +191,14 @@ describe('society.service', () => {
       const result = await societyService.createSociety('Test Society');
 
       expect(result.pendingId).toBe('pending-789');
-      expect(result.status).toBe('PENDING');
+      expect(result.source).toBe('PENDING');
     });
 
     it('handles society names with special characters', async () => {
-      const mockResponse: CreatePendingItemResponse = {
-        pendingId: 'soc-999',
-        type: 'SOCIETY',
-        value: 'Society & Club - 2024',
-        status: 'PENDING',
+      const mockResponse: SocietyCreateResponse = {
+        id: 'soc-999',
+        name: 'Society & Club - 2024',
+        source: 'USER_CREATED',
       };
 
       mockPost.mockResolvedValue({ data: { data: mockResponse } });
@@ -215,11 +208,6 @@ describe('society.service', () => {
       expect(mockPost).toHaveBeenCalledWith('/societies', {
         type: 'SOCIETY',
         displayValue: 'Society & Club - 2024',
-        payload: {
-          additionalProp1: 'string',
-          additionalProp2: 'string',
-          additionalProp3: 'string',
-        },
       });
     });
   });

@@ -58,30 +58,6 @@ vi.mock('@/views/vacancies/hooks', () => ({
     data: mockLocationsData,
     isLoading: false,
   }),
-  useCreateSportMutation: () => ({
-    mutateAsync: vi.fn((label: string) => ({
-      pendingId: 'pending-sport-123',
-      type: 'SPORT',
-      value: label,
-      status: 'PENDING',
-    })),
-  }),
-  useCreateSportLevelMutation: () => ({
-    mutateAsync: vi.fn((label: string) => ({
-      pendingId: 'pending-level-123',
-      type: 'SPORT_LEVEL',
-      value: label,
-      status: 'PENDING',
-    })),
-  }),
-  useCreateOrganizationMutation: () => ({
-    mutateAsync: vi.fn((label: string) => ({
-      pendingId: 'pending-org-123',
-      type: 'ORGANIZATION',
-      value: label,
-      status: 'PENDING',
-    })),
-  }),
   useStepGuard: vi.fn(),
   useOrganizationForm: () => ({
     form: {
