@@ -729,7 +729,7 @@
     "dataTakenFromCandidate": "If selected, no manual input is required, and data will be taken from the candidate profile",
     "sectionLabel": "Tools, Technologies, Skills and Frameworks",
     "input": {
-      "placeholder": "Select or add a skill",
+      "placeholder": "Select or add skill",
       "addNew": "Add \"{{value}}\"",
       "typeToSearch": "Type to search skills…"
     },
