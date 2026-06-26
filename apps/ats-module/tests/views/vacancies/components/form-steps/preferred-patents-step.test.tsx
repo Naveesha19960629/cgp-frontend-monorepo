@@ -17,6 +17,8 @@ const mockCreateIndustryMutation = vi.hoisted(() =>
 const mockUseVacancyForm = vi.hoisted(() =>
   vi.fn(() => ({
     form: {
+      status: 'draft',
+      applicantCount: 0,
       patents: {
         isEnabled: false,
         dataTakenFromCandidate: false,
@@ -24,6 +26,7 @@ const mockUseVacancyForm = vi.hoisted(() =>
       },
     },
     setForm: vi.fn(),
+    onCancel: vi.fn(),
     setStepGuard: vi.fn(),
     stepPersistRef: { current: null },
     stepDisableRef: { current: null },

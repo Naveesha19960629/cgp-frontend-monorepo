@@ -27,7 +27,6 @@ import { startOfToday } from 'date-fns';
 export default function ScheduleVacancyStep({
   onBack,
   onSubmit,
-  mode = 'create',
 }: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
   const { id } = useParams<'id'>();
