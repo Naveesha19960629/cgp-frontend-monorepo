@@ -176,7 +176,7 @@ function HonoursAndAwardsCard({
         {/* Collapsible body */}
         <CollapsibleContent>
           <div className="space-y-5 px-5 pb-5">
-            <div className="grid grid-cols-4 gap-3">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
               <FormField
                 control={form.control}
                 name={`honoursAndAwards.${index}.title`}
@@ -276,22 +276,21 @@ function HonoursAndAwardsCard({
                               'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
                               'dark:bg-input/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
                               applyTypography('body-medium'),
-                              'shadow-none!'
+                              'shadow-none!',
+                              'min-w-0'
                             )}
                           >
-                            {field.value ? (
-                              format(field.value, 'do MMM yyyy')
-                            ) : (
-                              <span>
-                                {t(
-                                  'preferredHonoursAwards.issuedDateFromPlaceholder'
-                                )}
-                              </span>
-                            )}
+                            <span className="mr-2 truncate">
+                              {field.value
+                                ? format(field.value, 'do MMM yyyy')
+                                : t(
+                                    'preferredHonoursAwards.issuedDateFromPlaceholder'
+                                  )}
+                            </span>
                             <CalenderIcon
                               variant="Linear"
                               size={20}
-                              className="text-zinc-800"
+                              className="shrink-0 text-zinc-800"
                             />
                           </Button>
                         </FormControl>
@@ -359,22 +358,21 @@ function HonoursAndAwardsCard({
                               'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
                               'dark:bg-input/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
                               applyTypography('body-medium'),
-                              'shadow-none!'
+                              'shadow-none!',
+                              'min-w-0'
                             )}
                           >
-                            {field.value ? (
-                              format(field.value, 'do MMM yyyy')
-                            ) : (
-                              <span>
-                                {t(
-                                  'preferredHonoursAwards.issuedDateToPlaceholder'
-                                )}
-                              </span>
-                            )}
+                            <span className="mr-2 truncate">
+                              {field.value
+                                ? format(field.value, 'do MMM yyyy')
+                                : t(
+                                    'preferredHonoursAwards.issuedDateToPlaceholder'
+                                  )}
+                            </span>
                             <CalenderIcon
                               variant="Linear"
                               size={20}
-                              className="text-zinc-800"
+                              className="shrink-0 text-zinc-800"
                             />
                           </Button>
                         </FormControl>
@@ -410,7 +408,7 @@ function HonoursAndAwardsCard({
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-x-5 gap-y-4 md:grid-cols-2">
               <FormField
                 control={form.control}
                 name={`honoursAndAwards.${index}.associatedOrganizations`}
