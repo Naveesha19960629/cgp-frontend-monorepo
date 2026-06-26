@@ -57,9 +57,10 @@ describe('secondary education mutation hooks', () => {
     mockAddFieldOfStudy.mockResolvedValue({ data: { pendingId: 'new-id' } });
     mockAddSchool.mockResolvedValue({ data: { pendingId: 'new-id' } });
     mockCreateSociety.mockResolvedValue({
-      id: 'soc-id',
-      name: 'Test Society',
-      source: 'PENDING',
+      pendingId: 'soc-id',
+      type: 'SOCIETY',
+      value: 'Test Society',
+      status: 'PENDING',
     });
   });
 
@@ -189,9 +190,10 @@ describe('secondary education mutation hooks', () => {
         useCreateSocietyMutation() as unknown as MockMutation<string>;
       const result = await mutation.mutationFn('Swimming Team');
       expect(result).toEqual({
-        id: 'soc-id',
-        name: 'Test Society',
-        source: 'PENDING',
+        pendingId: 'soc-id',
+        type: 'SOCIETY',
+        value: 'Test Society',
+        status: 'PENDING',
       });
     });
 
