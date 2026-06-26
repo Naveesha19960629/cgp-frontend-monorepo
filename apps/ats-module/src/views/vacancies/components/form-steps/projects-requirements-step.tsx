@@ -11,6 +11,7 @@ import StepDisableDialog from '@/views/vacancies/components/step-disable-dialog'
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import {
   useCreateIndustryMutation,
+  useCreateOrganizationMutation,
   useIndustriesQuery,
   useLocationsQuery,
   useOrganizationsQuery,
@@ -585,6 +586,7 @@ export default function ProjectsRequirementsStep({
   const { data: industriesData, isLoading: isIndustriesLoading } =
     useIndustriesQuery(industrySearchQuery);
   const { mutateAsync: createIndustry } = useCreateIndustryMutation();
+  const { mutateAsync: createOrganization } = useCreateOrganizationMutation();
 
   // Organization Location combobox (searchable, backed by locations API)
   const { data: locationsData, isLoading: isLocationsLoading } =
@@ -615,7 +617,22 @@ export default function ProjectsRequirementsStep({
 
   const handleToggle = () => {
     if (isEnabled) {
-      setConfirmDisableOpen(true);
+      const hasProjectData = projects.some(
+        p =>
+          p.relatedIndustry.length > 0 ||
+          p.organizations.length > 0 ||
+          p.organizationLocations.length > 0 ||
+          p.startDate != null ||
+          p.endDate != null
+      );
+
+      if (hasProjectData) {
+        setConfirmDisableOpen(true);
+      } else {
+        setIsEnabled(false);
+        setDataTakenFromCandidate(false);
+        removeCompletedStep(currentStepIndex);
+      }
     } else {
       setIsEnabled(true);
     }
@@ -713,43 +730,60 @@ export default function ProjectsRequirementsStep({
       return;
     }
 
-    // Check if any industries in any project are user-created
+    // Check if any industries or organizations in any project are user-created
     const allIndustries = projects.flatMap(p => p.relatedIndustry);
-    const hasUserCreated = allIndustries.some(i => i.source === 'USER_CREATED');
+    const hasUserCreatedIndustries = allIndustries.some(
+      i => i.source === 'USER_CREATED'
+    );
+    const allOrgs = projects.flatMap(p => p.organizations);
+    const hasUserCreatedOrgs = allOrgs.some(o => o.source === 'USER_CREATED');
 
     let resolvedProjects = projects;
 
-    if (hasUserCreated) {
+    if (hasUserCreatedIndustries || hasUserCreatedOrgs) {
       setIsSubmitting(true);
       try {
-        // Get unique user-created industries
-        const uniqueUserCreated = Array.from(
-          new Map(
-            allIndustries
-              .filter(i => i.source === 'USER_CREATED')
-              .map(i => [i.label, i])
-          ).values()
-        );
+        let industryResultMap = new Map();
+        if (hasUserCreatedIndustries) {
+          const uniqueUserCreated = Array.from(
+            new Map(
+              allIndustries
+                .filter(i => i.source === 'USER_CREATED')
+                .map(i => [i.label, i])
+            ).values()
+          );
+          const results = await Promise.all(
+            uniqueUserCreated.map(i => createIndustry(i.label))
+          );
+          industryResultMap = new Map(
+            uniqueUserCreated.map((i, idx) => [i.label, results[idx]])
+          );
+        }
 
-        // Create all user-created industries
-        const results = await Promise.all(
-          uniqueUserCreated.map(i => createIndustry(i.label))
-        );
+        let orgResultMap = new Map();
+        if (hasUserCreatedOrgs) {
+          const uniqueUserCreatedOrgs = Array.from(
+            new Map(
+              allOrgs
+                .filter(o => o.source === 'USER_CREATED')
+                .map(o => [o.label, o])
+            ).values()
+          );
+          const oResults = await Promise.all(
+            uniqueUserCreatedOrgs.map(o => createOrganization(o.label))
+          );
+          orgResultMap = new Map(
+            uniqueUserCreatedOrgs.map((o, idx) => [o.label, oResults[idx]])
+          );
+        }
 
-        // Create a map of label -> result
-        const resultMap = new Map(
-          uniqueUserCreated.map((i, idx) => [i.label, results[idx]])
-        );
-
-        // Update all projects with the resolved industry IDs
         resolvedProjects = projects.map(project => ({
           ...project,
           relatedIndustry: project.relatedIndustry.map(industry => {
             if (industry.source === 'USER_CREATED') {
-              const result = resultMap.get(industry.label);
+              const result = industryResultMap.get(industry.label);
               if (result) {
                 return {
-                  // fix the build failure
                   value: result.pendingId,
                   label: result.value,
                   source: result.status,
@@ -757,6 +791,19 @@ export default function ProjectsRequirementsStep({
               }
             }
             return industry;
+          }),
+          organizations: project.organizations.map(org => {
+            if (org.source === 'USER_CREATED') {
+              const result = orgResultMap.get(org.label);
+              if (result) {
+                return {
+                  value: result.pendingId,
+                  label: result.value,
+                  source: result.status,
+                };
+              }
+            }
+            return org;
           }),
         }));
 
@@ -896,7 +943,12 @@ export default function ProjectsRequirementsStep({
 
         {/* ── Step footer ───────────────────────────────────────────────── */}
         <div className="sticky bottom-0 mt-auto flex items-center justify-end gap-4 bg-white px-6 py-7 shadow-[0px_-8px_6.8px_0px_rgba(0,0,0,0.04)]">
-          <Button variant="secondary" className="h-12 w-48" onClick={onCancel}>
+          <Button
+            variant="secondary"
+            className="h-12 w-48"
+            disabled={isSubmitting}
+            onClick={onCancel}
+          >
             {t('projectsRequirements.cancel')}
           </Button>
           <Button
