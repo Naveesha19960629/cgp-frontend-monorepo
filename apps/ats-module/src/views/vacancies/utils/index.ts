@@ -34,4 +34,8 @@ export {
 } from '@/views/vacancies/utils/vacancy-payload-helpers';
 export { toVacancyFormFromResponse } from '@/views/vacancies/utils/vacancy-edit-response-helpers';
 export { toVacancyViewModel } from '@/views/vacancies/utils/vacancy-view-response-helpers';
+export {
+  sanitizePlainText,
+  sanitizePostalCodeText,
+} from '@/views/vacancies/utils/text-sanitizer';
 export type { CreateVacancyPayload } from '@/views/vacancies/types';

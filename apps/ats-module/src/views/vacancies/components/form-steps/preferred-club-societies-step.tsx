@@ -8,6 +8,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import MessageBox from '@/components/message-box';
+import { AddOrganizationFormDialog } from '@/views/vacancies/components/dialogs';
 import StepDisableDialog from '@/views/vacancies/components/step-disable-dialog';
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import {
@@ -17,7 +18,7 @@ import {
   useStepGuard,
 } from '@/views/vacancies/hooks';
 import type { StepProps } from '@/views/vacancies/types';
-import { formatDate } from '@/views/vacancies/utils';
+import { formatDate, sanitizePlainText } from '@/views/vacancies/utils';
 import {
   formatLocalDate,
   parseLocalDate,
@@ -41,6 +42,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@cgp/ui-kit/components/ui/popover';
+import { applyTypography } from '@cgp/ui-kit/lib/typography';
 import { cn } from '@cgp/ui-kit/lib/utils';
 
 import DisableDialog from './disable-dialog';
@@ -71,6 +73,7 @@ function ClubSocietyCard({
   onSocietiesSearch,
   onOrganizationsSearch,
   onLocationsSearch,
+  onRequestAddOrganization,
   fieldsDisabled,
   societies,
   isSocietiesLoading,
@@ -85,6 +88,7 @@ function ClubSocietyCard({
   onSocietiesSearch: (value: string) => void;
   onOrganizationsSearch: (value: string) => void;
   onLocationsSearch: (value: string) => void;
+  onRequestAddOrganization: (index: number, name: string) => void;
   fieldsDisabled: boolean;
   societies: Array<{
     id: string;
@@ -103,6 +107,8 @@ function ClubSocietyCard({
   locationOptions: Array<{ value: string; label: string }>;
   isLocationsLoading: boolean;
 }>) {
+  const [locationsError, setLocationsError] = useState(false);
+
   return (
     <Collapsible
       open={entry.isOpen}
@@ -206,6 +212,7 @@ function ClubSocietyCard({
                         'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
                         'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
                         'dark:bg-input/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
+                        applyTypography('body-medium'),
                         'shadow-none!'
                       )}
                     >
@@ -250,6 +257,7 @@ function ClubSocietyCard({
                         'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
                         'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
                         'dark:bg-input/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
+                        applyTypography('body-medium'),
                         'shadow-none!'
                       )}
                     >
@@ -292,19 +300,26 @@ function ClubSocietyCard({
                 <MultipleSelector
                   value={entry.representedOrganization}
                   onChange={options => {
-                    onUpdate(index, {
-                      representedOrganization: options
-                        .filter(
-                          opt =>
-                            typeof opt.value === 'string' &&
-                            opt.value.length > 0
-                        )
-                        .map(opt => ({
-                          value: opt.value,
-                          label: opt.label,
-                          source: (opt.source as string) ?? 'USER_CREATED',
-                        })),
-                    });
+                    // Detect newly typed item (value === label means creatable)
+                    const newItem = options.find(o => o.value === o.label);
+                    if (newItem) {
+                      onRequestAddOrganization(index, newItem.label);
+                      // Don't add yet — dialog will handle it
+                    } else {
+                      onUpdate(index, {
+                        representedOrganization: options
+                          .filter(
+                            opt =>
+                              typeof opt.value === 'string' &&
+                              opt.value.length > 0
+                          )
+                          .map(opt => ({
+                            value: opt.value,
+                            label: opt.label,
+                            source: (opt.source as string) ?? 'USER_CREATED',
+                          })),
+                      });
+                    }
                   }}
                   options={organizations.map(o => ({
                     value: o.id,
@@ -337,7 +352,11 @@ function ClubSocietyCard({
 
               <div className="flex flex-col gap-1">
                 <div className="flex h-5 items-center">
-                  <Label>Organization Location</Label>
+                  <Label
+                    className={locationsError ? 'text-destructive' : undefined}
+                  >
+                    Organization Location
+                  </Label>
                 </div>
                 <MultipleSelector
                   value={entry.organizationLocations}
@@ -358,6 +377,8 @@ function ClubSocietyCard({
                   keepSelectedInList
                   hideClearAllButton
                   maxSelected={MAX_SELECTIONS}
+                  errorMessage="Exceeded maximum of 10 selections"
+                  onErrorStateChange={setLocationsError}
                   disabled={fieldsDisabled}
                   loading={isLocationsLoading}
                   placeholder="Select location"
@@ -382,7 +403,10 @@ function ClubSocietyCard({
                 </div>
                 <Input
                   value={entry.position}
-                  onChange={e => onUpdate(index, { position: e.target.value })}
+                  onChange={e => {
+                    const sanitized = sanitizePlainText(e.target.value);
+                    onUpdate(index, { position: sanitized.trimStart() });
+                  }}
                   maxLength={MAX_POSITION_LENGTH}
                   placeholder="Enter position or role held"
                   className="h-11"
@@ -415,6 +439,12 @@ export default function PreferredClubSocietiesStep({
   const [societiesSearchQuery, setSocietiesSearchQuery] = useState('');
   const [organizationsSearchQuery, setOrganizationsSearchQuery] = useState('');
   const [locationsSearchQuery, setLocationsSearchQuery] = useState('');
+
+  // Organization dialog state
+  const [showAddOrganizationDialog, setShowAddOrganizationDialog] =
+    useState(false);
+  const [pendingOrganizationName, setPendingOrganizationName] = useState('');
+  const [activeCardIndex, setActiveCardIndex] = useState<number | null>(null);
 
   const [entries, setEntries] = useState<ClubSocietyEntry[]>(
     savedClubSocieties?.clubSocieties &&
@@ -476,11 +506,19 @@ export default function PreferredClubSocietiesStep({
     };
   }, [setForm, stepDisableRef]);
 
+  const hasClubSocietyData = entries.some(
+    e =>
+      e.clubSociety.length > 0 ||
+      e.representedOrganization.length > 0 ||
+      e.organizationLocations.length > 0 ||
+      e.position.trim().length > 0 ||
+      e.startDate != null ||
+      e.endDate != null
+  );
+
   const handleNext = () => {
     const isEmptyEnabledSection =
-      isEnabled &&
-      !dataTakenFromCandidate &&
-      !entries.some(e => e.clubSociety.length > 0);
+      isEnabled && !dataTakenFromCandidate && !hasClubSocietyData;
 
     if (isEmptyEnabledSection) {
       setEmptyDisableOpen(true);
@@ -496,13 +534,11 @@ export default function PreferredClubSocietiesStep({
     });
   };
 
-  useStepGuard(
-    isEnabled &&
-      !dataTakenFromCandidate &&
-      !entries.some(e => e.clubSociety.length > 0)
-  );
+  useStepGuard(isEnabled && !dataTakenFromCandidate && !hasClubSocietyData);
 
   const fieldsDisabled = !isEnabled || dataTakenFromCandidate;
+  const canNavigate =
+    !isEnabled || dataTakenFromCandidate || hasClubSocietyData;
 
   // Societies API
   const { data: societiesData, isLoading: isSocietiesLoading } =
@@ -596,16 +632,25 @@ export default function PreferredClubSocietiesStep({
     });
   };
 
+  const handleBack = () => {
+    if (!canNavigate) {
+      return;
+    }
+
+    stepPersistRef.current?.();
+    onBack();
+  };
+
   return (
     <>
       <div className="flex flex-1 flex-col">
         {/* ── Informational Banner ──────────────────────────────────────── */}
         <MessageBox
           fields={[
-            t('preferredClubsSocieties.fieldList.clubSociety'),
-            t('preferredClubsSocieties.fieldList.position'),
-            t('preferredClubsSocieties.fieldList.representedOrganization'),
-            t('preferredClubsSocieties.fieldList.startDate'),
+            t('preferredClubSocieties.fieldList.clubSociety'),
+            t('preferredClubSocieties.fieldList.position'),
+            t('preferredClubSocieties.fieldList.representedOrganization'),
+            t('preferredClubSocieties.fieldList.startDate'),
           ]}
         />
 
@@ -615,8 +660,13 @@ export default function PreferredClubSocietiesStep({
             <button
               type="button"
               aria-label="Back"
-              className="text-slate-700 transition-colors hover:text-slate-900"
-              onClick={onBack}
+              className={cn(
+                'cursor-pointer text-slate-700 transition-colors hover:text-slate-900',
+                !canNavigate &&
+                  'cursor-not-allowed opacity-40 hover:text-slate-700'
+              )}
+              onClick={handleBack}
+              disabled={!canNavigate}
             >
               <ArrowLeft2 size={24} />
             </button>
@@ -651,7 +701,24 @@ export default function PreferredClubSocietiesStep({
           <Checkbox
             id="clubSocietiesDataTakenFromCandidate"
             checked={dataTakenFromCandidate}
-            onCheckedChange={value => setDataTakenFromCandidate(!!value)}
+            onCheckedChange={value => {
+              const checked = !!value;
+              setDataTakenFromCandidate(checked);
+              if (checked) {
+                setEntries([
+                  {
+                    id: '1',
+                    isOpen: true,
+                    clubSociety: [],
+                    startDate: undefined,
+                    endDate: undefined,
+                    representedOrganization: [],
+                    organizationLocations: [],
+                    position: '',
+                  },
+                ]);
+              }
+            }}
             className="mt-0.5"
           />
           <Label
@@ -674,6 +741,11 @@ export default function PreferredClubSocietiesStep({
               onSocietiesSearch={setSocietiesSearchQuery}
               onOrganizationsSearch={setOrganizationsSearchQuery}
               onLocationsSearch={setLocationsSearchQuery}
+              onRequestAddOrganization={(cardIndex, name) => {
+                setActiveCardIndex(cardIndex);
+                setPendingOrganizationName(name);
+                setShowAddOrganizationDialog(true);
+              }}
               fieldsDisabled={fieldsDisabled}
               societies={societies}
               isSocietiesLoading={isSocietiesLoading}
@@ -709,11 +781,33 @@ export default function PreferredClubSocietiesStep({
           <Button variant="secondary" className="h-12 w-48" onClick={onCancel}>
             Cancel
           </Button>
-          <Button className="h-12 w-48" onClick={handleNext}>
+          <Button
+            className="h-12 w-48"
+            onClick={handleNext}
+            disabled={!canNavigate}
+          >
             Next
           </Button>
         </div>
       </div>
+
+      {/* ── Add Organization dialog ──────────────────────────────────────── */}
+      <AddOrganizationFormDialog
+        open={showAddOrganizationDialog}
+        onOpenChange={setShowAddOrganizationDialog}
+        organizationName={pendingOrganizationName}
+        onOrganizationAdded={org => {
+          if (activeCardIndex !== null) {
+            updateEntry(activeCardIndex, {
+              representedOrganization: [
+                ...(entries[activeCardIndex]?.representedOrganization ?? []),
+                { value: org.id, label: org.name, source: org.source },
+              ],
+            });
+          }
+          setShowAddOrganizationDialog(false);
+        }}
+      />
 
       {/* ── Disable Confirmation Dialog ───────────────────────────────────── */}
       <DisableDialog

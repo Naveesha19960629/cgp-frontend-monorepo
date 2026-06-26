@@ -22,6 +22,7 @@ import {
 } from '@/views/vacancies/hooks';
 import type { ProfileRequirementsFormValues } from '@/views/vacancies/hooks/use-profile-requirements-form';
 import type { StepProps } from '@/views/vacancies/types';
+import { sanitizePostalCodeText } from '@/views/vacancies/utils';
 
 import { CharacterCount } from '@cgp/ui-kit/components/character-count';
 import { Combobox } from '@cgp/ui-kit/components/combobox';
@@ -75,18 +76,6 @@ function isDuplicateAddress(
       addr.country.id === target.country.id &&
       addr.postalCode.trim() === target.postalCode.trim()
   );
-}
-
-/**
- * Sanitizes postal code to plain text only.
- * Removes emojis, special characters, and non-ASCII characters.
- * Keeps only: letters, numbers, spaces, hyphens, and dots.
- */
-function sanitizePostalCode(value: string): string {
-  // Remove emojis and special Unicode characters, keep only ASCII alphanumeric + common postal code chars
-  return value
-    .replace(/[^\w\s.-]/g, '') // Remove non-word characters except dots and hyphens
-    .replace(/[\u0080-\uFFFF]/g, ''); // Remove non-ASCII characters
 }
 
 function hasProfileRequirementsData(
@@ -364,7 +353,7 @@ function AddressCard({
                   className="h-9 shadow-none"
                   {...field}
                   onChange={e => {
-                    const sanitized = sanitizePostalCode(e.target.value);
+                    const sanitized = sanitizePostalCodeText(e.target.value);
                     field.onChange(sanitized.trimStart());
                   }}
                   onBlur={() => {

@@ -10,7 +10,7 @@ const URL_PATTERN =
 
 function isUrlProtocolValid(url: string): boolean {
   if (!url) return true;
-  return /^https?:\/\//i.test(url.trim());
+  return url.startsWith('http://') || url.startsWith('https://');
 }
 
 function isUrlFormatValid(url: string): boolean {
@@ -51,7 +51,6 @@ function createOrganizationFormSchema(
       }),
     organizationWebSite: z
       .string()
-      .min(2)
       .max(
         200,
         t(

@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import MessageBox from '@/components/message-box';
+import { AddOrganizationFormDialog } from '@/views/vacancies/components/dialogs';
 import StepDisableDialog from '@/views/vacancies/components/step-disable-dialog';
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import {
@@ -66,6 +67,8 @@ function ProjectCard({
   onIndustriesSearch,
   onLocationsSearch,
   onOrganizationsSearch,
+  onRequestAddOrganization,
+  orgSelectorKey,
   fieldsDisabled,
   industries,
   isIndustriesLoading,
@@ -80,6 +83,8 @@ function ProjectCard({
   onIndustriesSearch: (value: string) => void;
   onLocationsSearch: (value: string) => void;
   onOrganizationsSearch: (value: string) => void;
+  onRequestAddOrganization: (index: number, name: string) => void;
+  orgSelectorKey?: number;
   fieldsDisabled: boolean;
   industries: Array<{ id: string; label: string; source: string }>;
   isIndustriesLoading: boolean;
@@ -90,6 +95,7 @@ function ProjectCard({
 }>) {
   const { t } = useTranslation('ats');
   const [hasMaxError, setHasMaxError] = useState(false);
+  const [locationsError, setLocationsError] = useState(false);
   const [industriesSearch, setIndustriesSearch] = useState('');
   const [openDatePopover, setOpenDatePopover] = useState<
     'startDate' | 'endDate' | null
@@ -369,7 +375,9 @@ function ProjectCard({
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-1">
                 <div className="flex h-5 items-center">
-                  <Label>
+                  <Label
+                    className={locationsError ? 'text-destructive' : undefined}
+                  >
                     {t('projectsRequirements.organizationLocation')}
                   </Label>
                 </div>
@@ -392,6 +400,8 @@ function ProjectCard({
                   keepSelectedInList
                   hideClearAllButton
                   maxSelected={10}
+                  errorMessage="Exceeded maximum of 10 selections"
+                  onErrorStateChange={setLocationsError}
                   disabled={fieldsDisabled}
                   loading={isLocationsLoading}
                   placeholder={t(
@@ -419,15 +429,21 @@ function ProjectCard({
                   <Label>{t('projectsRequirements.organizationName')}</Label>
                 </div>
                 <MultipleSelector
+                  key={orgSelectorKey}
                   value={project.organizations}
                   onChange={options => {
-                    onUpdate(index, {
-                      organizations: options.map(opt => ({
-                        value: opt.value,
-                        label: opt.label,
-                        source: (opt.source as string) ?? 'USER_CREATED',
-                      })),
-                    });
+                    const newItem = options.find(o => o.value === o.label);
+                    if (newItem) {
+                      onRequestAddOrganization(index, newItem.label);
+                    } else {
+                      onUpdate(index, {
+                        organizations: options.map(opt => ({
+                          value: opt.value,
+                          label: opt.label,
+                          source: (opt.source as string) ?? 'USER_CREATED',
+                        })),
+                      });
+                    }
                   }}
                   options={organizationOptions}
                   onSearchSync={value => {
@@ -486,6 +502,13 @@ export default function ProjectsRequirementsStep({
   const [industrySearchQuery, setIndustrySearchQuery] = useState('');
   const [locationSearchQuery, setLocationSearchQuery] = useState('');
   const [organizationSearchQuery, setOrganizationSearchQuery] = useState('');
+
+  // Organization dialog state
+  const [showAddOrganizationDialog, setShowAddOrganizationDialog] =
+    useState(false);
+  const [pendingOrganizationName, setPendingOrganizationName] = useState('');
+  const [activeCardIndex, setActiveCardIndex] = useState<number | null>(null);
+  const [orgSelectorKey, setOrgSelectorKey] = useState(0);
 
   const [projects, setProjects] = useState<ProjectEntry[]>(
     savedProjects?.projects && savedProjects.projects.length > 0
@@ -574,6 +597,17 @@ export default function ProjectsRequirementsStep({
     );
 
   const fieldsDisabled = !isEnabled || dataTakenFromCandidate;
+  const canNavigate =
+    !isEnabled ||
+    dataTakenFromCandidate ||
+    projects.some(
+      p =>
+        p.relatedIndustry.length > 0 ||
+        p.organizations.length > 0 ||
+        p.organizationLocations.length > 0 ||
+        p.startDate != null ||
+        p.endDate != null
+    );
 
   const handleToggle = () => {
     if (isEnabled) {
@@ -647,6 +681,15 @@ export default function ProjectsRequirementsStep({
       description:
         'Projects Requirements section has been disabled successfully.',
     });
+  };
+
+  const handleBack = () => {
+    if (!canNavigate || isSubmitting) {
+      return;
+    }
+
+    stepPersistRef.current?.();
+    onBack();
   };
 
   const handleNext = async () => {
@@ -735,10 +778,11 @@ export default function ProjectsRequirementsStep({
         {/* ── Informational Banner ──────────────────────────────────────── */}
         <MessageBox
           fields={[
+            t('projectsRequirements.fieldList.projectName'),
+            t('projectsRequirements.fieldList.relatedIndustry'),
+            t('projectsRequirements.fieldList.organization'),
             t('projectsRequirements.fieldList.startDate'),
             t('projectsRequirements.fieldList.endDate'),
-            t('projectsRequirements.fieldList.organization'),
-            t('projectsRequirements.fieldList.location'),
           ]}
         />
 
@@ -748,8 +792,13 @@ export default function ProjectsRequirementsStep({
             <button
               type="button"
               aria-label="Back"
-              className="text-slate-700 transition-colors hover:text-slate-900"
-              onClick={onBack}
+              className={cn(
+                'cursor-pointer text-slate-700 transition-colors hover:text-slate-900',
+                (!canNavigate || isSubmitting) &&
+                  'cursor-not-allowed opacity-40 hover:text-slate-700'
+              )}
+              onClick={handleBack}
+              disabled={!canNavigate || isSubmitting}
             >
               <ArrowLeft2 size={24} />
             </button>
@@ -775,7 +824,23 @@ export default function ProjectsRequirementsStep({
           <Checkbox
             id="projectsDataTakenFromCandidate"
             checked={dataTakenFromCandidate}
-            onCheckedChange={value => setDataTakenFromCandidate(!!value)}
+            onCheckedChange={value => {
+              const checked = !!value;
+              setDataTakenFromCandidate(checked);
+              if (checked) {
+                setProjects([
+                  {
+                    id: '1',
+                    isOpen: true,
+                    startDate: undefined,
+                    endDate: undefined,
+                    relatedIndustry: [],
+                    organizationLocations: [],
+                    organizations: [],
+                  },
+                ]);
+              }
+            }}
           />
           <Label
             htmlFor="projectsDataTakenFromCandidate"
@@ -796,6 +861,12 @@ export default function ProjectsRequirementsStep({
               onIndustriesSearch={setIndustrySearchQuery}
               onLocationsSearch={setLocationSearchQuery}
               onOrganizationsSearch={setOrganizationSearchQuery}
+              onRequestAddOrganization={(cardIndex, name) => {
+                setActiveCardIndex(cardIndex);
+                setPendingOrganizationName(name);
+                setShowAddOrganizationDialog(true);
+              }}
+              orgSelectorKey={orgSelectorKey}
               fieldsDisabled={fieldsDisabled}
               industries={industries}
               isIndustriesLoading={isIndustriesLoading}
@@ -830,7 +901,7 @@ export default function ProjectsRequirementsStep({
             onClick={() => {
               void handleNext();
             }}
-            disabled={isSubmitting}
+            disabled={!canNavigate || isSubmitting}
           >
             {isSubmitting ? (
               <Loader2 className="size-4 animate-spin" />
@@ -840,6 +911,28 @@ export default function ProjectsRequirementsStep({
           </Button>
         </div>
       </div>
+
+      {/* ── Add Organization dialog ──────────────────────────────────────── */}
+      <AddOrganizationFormDialog
+        open={showAddOrganizationDialog}
+        onOpenChange={open => {
+          if (!open) setOrgSelectorKey(k => k + 1); // reset selector on cancel
+          setShowAddOrganizationDialog(open);
+        }}
+        organizationName={pendingOrganizationName}
+        onOrganizationAdded={org => {
+          if (activeCardIndex !== null) {
+            updateProject(activeCardIndex, {
+              organizations: [
+                ...(projects[activeCardIndex]?.organizations ?? []),
+                { value: org.id, label: org.name, source: org.source },
+              ],
+            });
+          }
+          setOrgSelectorKey(k => k + 1); // reset selector after adding
+          setShowAddOrganizationDialog(false);
+        }}
+      />
 
       {/* ── Disable Confirmation Dialog ───────────────────────────────────── */}
       <DisableDialog

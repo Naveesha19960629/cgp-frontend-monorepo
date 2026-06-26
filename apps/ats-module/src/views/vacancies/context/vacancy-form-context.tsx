@@ -51,7 +51,7 @@ const VACANCY_STEPS: readonly VacancyStep[] = [
   },
   {
     key: 'projects-requirements',
-    label: 'Projects Requirements',
+    label: 'Project Requirements',
     component: ProjectsRequirementsStep,
   },
   {
@@ -61,7 +61,7 @@ const VACANCY_STEPS: readonly VacancyStep[] = [
   },
   {
     key: 'preferred-club-societies',
-    label: 'Preferred Club & Societies',
+    label: 'Preferred Clubs & Societies',
     component: PreferredClubSocietiesStep,
   },
   {
