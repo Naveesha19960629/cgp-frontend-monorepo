@@ -174,6 +174,11 @@ describe('society.service', () => {
       expect(mockPost).toHaveBeenCalledWith('/societies', {
         type: 'SOCIETY',
         displayValue: 'New Society',
+        payload: {
+          additionalProp1: 'string',
+          additionalProp2: 'string',
+          additionalProp3: 'string',
+        },
       });
       expect(result).toEqual(mockResponse);
     });
@@ -208,6 +213,11 @@ describe('society.service', () => {
       expect(mockPost).toHaveBeenCalledWith('/societies', {
         type: 'SOCIETY',
         displayValue: 'Society & Club - 2024',
+        payload: {
+          additionalProp1: 'string',
+          additionalProp2: 'string',
+          additionalProp3: 'string',
+        },
       });
     });
   });

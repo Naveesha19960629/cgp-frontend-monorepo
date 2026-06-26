@@ -2,7 +2,6 @@ import type {
   ApiResponse,
   CreatePendingItemResponse,
   SingleRecordApiResponse,
-  SocietyCreateResponse,
   SocietyItem,
 } from '@/views/vacancies/types';
 
