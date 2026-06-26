@@ -156,6 +156,7 @@ vi.mock('@cgp/ui-kit/components/ui/calendar', () => ({
 
 vi.mock('@/views/vacancies/utils', () => ({
   formatDate: (date: string) => date,
+  sanitizePlainText: (value: string) => value,
 }));
 
 // ── Tests ───────────────────────────────────────────────────────────────────

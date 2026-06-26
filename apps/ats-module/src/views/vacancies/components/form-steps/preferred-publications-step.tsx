@@ -12,7 +12,7 @@ import StepDisableDialog from '@/views/vacancies/components/step-disable-dialog'
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import { useStepGuard } from '@/views/vacancies/hooks';
 import type { StepProps } from '@/views/vacancies/types';
-import { formatDate } from '@/views/vacancies/utils';
+import { formatDate, sanitizePlainText } from '@/views/vacancies/utils';
 import {
   formatLocalDate,
   parseLocalDate,
@@ -43,17 +43,6 @@ import DisableDialog from './disable-dialog';
 const MAX_PUBLISHER_LENGTH = 250;
 const HUNDRED_YEARS_AGO = new Date(new Date().getFullYear() - 100, 0, 1);
 const HUNDRED_YEARS_FROM_NOW = new Date(new Date().getFullYear() + 100, 11, 31);
-
-/**
- * Sanitizes text input to plain text only.
- * Removes emojis, special Unicode characters, and non-ASCII characters.
- * Keeps only: letters, numbers, spaces, and common punctuation (hyphens, dots, commas, apostrophes, parentheses).
- */
-function sanitizeText(value: string): string {
-  return value
-    .replace(/[^\w\s.,()'/&-]/g, '') // Remove special characters except common punctuation
-    .replace(/[\u0080-\uFFFF]/g, ''); // Remove non-ASCII (covers emojis and special Unicode)
-}
 
 interface PublicationEntry {
   id: string;
@@ -123,7 +112,7 @@ function PublicationCard({
                 <Input
                   value={publication.acceptedPublisher}
                   onChange={e => {
-                    const sanitized = sanitizeText(e.target.value);
+                    const sanitized = sanitizePlainText(e.target.value);
                     onUpdate(index, {
                       acceptedPublisher: sanitized.trimStart(),
                     });

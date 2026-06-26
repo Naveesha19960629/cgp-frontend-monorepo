@@ -246,6 +246,7 @@ vi.mock('@/views/vacancies/utils', () => ({
       day: 'numeric',
     });
   },
+  sanitizePlainText: (value: string) => value,
 }));
 
 // ── Helpers ──────────────────────────────────────────────────────────────────

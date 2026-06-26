@@ -19,7 +19,7 @@ import {
   useStepGuard,
 } from '@/views/vacancies/hooks';
 import type { StepProps } from '@/views/vacancies/types';
-import { formatDate } from '@/views/vacancies/utils';
+import { formatDate, sanitizePlainText } from '@/views/vacancies/utils';
 import {
   formatLocalDate,
   parseLocalDate,
@@ -53,17 +53,6 @@ const MAX_POSITION_LENGTH = 100;
 const MAX_SELECTIONS = 10;
 const HUNDRED_YEARS_AGO = new Date(new Date().getFullYear() - 100, 0, 1);
 const HUNDRED_YEARS_FROM_NOW = new Date(new Date().getFullYear() + 100, 11, 31);
-
-/**
- * Sanitizes text input to plain text only.
- * Removes emojis, special Unicode characters, and non-ASCII characters.
- * Keeps only: letters, numbers, spaces, and common punctuation (hyphens, dots, commas, apostrophes, parentheses).
- */
-function sanitizeText(value: string): string {
-  return value
-    .replace(/[^\w\s.,()'/&-]/g, '') // Remove special characters except common punctuation
-    .replace(/[\u0080-\uFFFF]/g, ''); // Remove non-ASCII (covers emojis and special Unicode)
-}
 
 interface SportEntry {
   id: string;
@@ -398,7 +387,7 @@ function SportCard({
                 <Input
                   value={entry.position}
                   onChange={e => {
-                    const sanitized = sanitizeText(e.target.value);
+                    const sanitized = sanitizePlainText(e.target.value);
                     onUpdate(index, { position: sanitized.trimStart() });
                   }}
                   maxLength={MAX_POSITION_LENGTH}
