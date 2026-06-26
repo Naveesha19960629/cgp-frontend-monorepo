@@ -86,6 +86,7 @@ function to24Hour(time: string): string {
  *   "2026-06-25 05:27 PM"         (date-time space no seconds)
  */
 function parseBackendDatetime(value: string): { date: string; time: string } {
+  // 12-hour AM/PM format (backend storage / toScheduleVacancyPayload output)
   const match =
     /^(\d{4}-\d{2}-\d{2})[T ](\d{1,2}:\d{2}(?::\d{2})?)(?:\.\d+)?\s*(AM|PM)$/i.exec(
       value.trim()
@@ -95,6 +96,13 @@ function parseBackendDatetime(value: string): { date: string; time: string } {
       date: match[1],
       time: `${match[2]} ${match[3].toUpperCase()}`,
     };
+  }
+  // 24-hour format (partial persist from schedule-vacancy-step)
+  const match24 = /^(\d{4}-\d{2}-\d{2})[T ](\d{2}:\d{2}(?::\d{2})?)$/.exec(
+    value.trim()
+  );
+  if (match24) {
+    return { date: match24[1], time: match24[2] };
   }
   // Fallback: return whatever is before the separator as the date
   return { date: value.split(/[T ]/)[0] ?? '', time: '' };
@@ -160,5 +168,10 @@ function useScheduleVacancyForm(defaults?: Partial<ScheduleVacancy>) {
   });
 }
 
-export { useScheduleVacancyForm, toScheduleVacancyPayload, to24Hour };
+export {
+  useScheduleVacancyForm,
+  toScheduleVacancyPayload,
+  to24Hour,
+  parseBackendDatetime,
+};
 export type { ScheduleVacancyFormValues };
