@@ -370,6 +370,33 @@ function normalizeVolunteering(raw: unknown) {
   return { isEnabled, dataTakenFromCandidate, content };
 }
 
+function normalizeProjects(raw: unknown) {
+  const entry: unknown = Array.isArray(raw) ? raw[0] : raw;
+  if (!isRecord(entry)) return undefined;
+
+  const isEnabled =
+    typeof entry.isEnabled === 'boolean' ? entry.isEnabled : false;
+  const dataTakenFromCandidate =
+    typeof entry.dataTakenFromCandidate === 'boolean'
+      ? entry.dataTakenFromCandidate
+      : false;
+  const rawContent = Array.isArray(entry.content)
+    ? entry.content
+    : Array.isArray(entry.projects)
+      ? entry.projects
+      : [];
+
+  const content = rawContent.filter(isRecord).map(item => ({
+    startDate: toSafeString(item.startDate),
+    endDate: toSafeString(item.endDate),
+    relatedIndustry: toTagList(item.relatedIndustry),
+    organizationLocations: toTagList(item.organizationLocations),
+    organization: toTagList(item.organization || item.organizations),
+  }));
+
+  return { isEnabled, dataTakenFromCandidate, content };
+}
+
 function normalizeHonoursAwards(raw: unknown) {
   const entry: unknown = Array.isArray(raw) ? raw[0] : raw;
   if (!isRecord(entry)) return undefined;
@@ -647,6 +674,11 @@ function toVacancyViewModel(
     sectionSource,
     ['preferredVolunteering', 'volunteering']
   );
+  const preferredProjectsSection = readSectionValue(rawVacancy, sectionSource, [
+    'preferredProjects',
+    'projectsRequirements',
+    'projects',
+  ]);
   const preferredHonoursAwardsSection = readSectionValue(
     rawVacancy,
     sectionSource,
@@ -718,6 +750,7 @@ function toVacancyViewModel(
     ),
     preferredSports: normalizeSports(preferredSportsSection),
     preferredVolunteering: normalizeVolunteering(preferredVolunteeringSection),
+    preferredProjects: normalizeProjects(preferredProjectsSection),
     preferredHonoursAwards: normalizeHonoursAwards(
       preferredHonoursAwardsSection
     ),

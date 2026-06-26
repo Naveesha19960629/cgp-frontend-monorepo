@@ -139,6 +139,7 @@
       "sections": {
         "jobRequirements": "Job Requirement",
         "profileRequirements": "Profile Requirements",
+        "projectRequirements": "Preferred Projects",
         "scheduledVacancy": "Scheduled Vacancy"
       },
       "scheduledVacancy": {

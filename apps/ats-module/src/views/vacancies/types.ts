@@ -1109,6 +1109,18 @@ interface VacancyViewVolunteering {
   }[];
 }
 
+interface VacancyViewProjects {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  content: {
+    startDate: string;
+    endDate: string;
+    relatedIndustry: string[];
+    organizationLocations: string[];
+    organization: string[];
+  }[];
+}
+
 interface VacancyViewHonoursAwards {
   isEnabled: boolean;
   dataTakenFromCandidate: boolean;
@@ -1172,6 +1184,7 @@ interface VacancyViewModel {
   preferredClubSocieties?: VacancyViewClubSocieties;
   preferredSports?: VacancyViewSports;
   preferredVolunteering?: VacancyViewVolunteering;
+  preferredProjects?: VacancyViewProjects;
   preferredHonoursAwards?: VacancyViewHonoursAwards;
   preferredSkills?: VacancyViewSkills;
   preferredLanguages?: VacancyViewLanguages;

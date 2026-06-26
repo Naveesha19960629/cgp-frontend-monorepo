@@ -11,6 +11,7 @@ import {
   VacancyLanguagesSection,
   VacancyLicensesCertificationsSection,
   VacancyProfileRequirementsSection,
+  VacancyProjectRequirementsSection,
   VacancyPublicationsSection,
   VacancyScheduledVacancySection,
   VacancySkillsSection,
@@ -137,8 +138,8 @@ export default function VacancyIdViewPage() {
         <VacancyProfileRequirementsSection
           profileRequirement={viewModel.profileRequirement}
         />
-        <VacancyScheduledVacancySection
-          scheduledVacancy={viewModel.scheduledVacancy}
+        <VacancyProjectRequirementsSection
+          preferredProjects={viewModel.preferredProjects}
         />
         <VacancyPublicationsSection
           preferredPublications={viewModel.preferredPublications}
@@ -149,6 +150,9 @@ export default function VacancyIdViewPage() {
         <VacancySportsSection preferredSports={viewModel.preferredSports} />
         <VacancyVolunteeringSection
           preferredVolunteering={viewModel.preferredVolunteering}
+        />
+        <VacancyScheduledVacancySection
+          scheduledVacancy={viewModel.scheduledVacancy}
         />
         <VacancyHonoursAwardsSection
           preferredHonoursAwards={viewModel.preferredHonoursAwards}
