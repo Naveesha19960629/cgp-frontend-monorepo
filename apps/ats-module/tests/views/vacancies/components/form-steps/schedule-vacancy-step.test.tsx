@@ -316,6 +316,34 @@ describe('ScheduleVacancyStep', () => {
       });
       expect(mockOnBack).toHaveBeenCalled();
     });
+
+    it('persists partial data when only publish fields are filled and back is clicked', async () => {
+      renderComponent();
+
+      fillPublish('2099-12-25', '10:00:00 AM');
+
+      const backButton = screen.getAllByRole('button')[0];
+      await userEvent.click(backButton);
+
+      await waitFor(() => {
+        expect(mockSetForm).toHaveBeenCalled();
+      });
+      expect(mockOnBack).toHaveBeenCalled();
+    });
+
+    it('persists partial data when only expiration fields are filled and back is clicked', async () => {
+      renderComponent();
+
+      fillExpiration('2099-12-26', '10:00:00 AM');
+
+      const backButton = screen.getAllByRole('button')[0];
+      await userEvent.click(backButton);
+
+      await waitFor(() => {
+        expect(mockSetForm).toHaveBeenCalled();
+      });
+      expect(mockOnBack).toHaveBeenCalled();
+    });
   });
 
   describe('step persistence', () => {
@@ -363,6 +391,38 @@ describe('ScheduleVacancyStep', () => {
       mockStepPersistRef.current?.();
 
       expect(mockSetForm).not.toHaveBeenCalled();
+    });
+
+    it('calls setForm when ref is invoked with only publish fields filled', async () => {
+      renderComponent();
+
+      fillPublish('2099-12-25', '10:00:00 AM');
+
+      await waitFor(() => {
+        expect(mockStepPersistRef.current).toBeTypeOf('function');
+      });
+
+      mockStepPersistRef.current?.();
+
+      await waitFor(() => {
+        expect(mockSetForm).toHaveBeenCalled();
+      });
+    });
+
+    it('calls setForm when ref is invoked with only expiration fields filled', async () => {
+      renderComponent();
+
+      fillExpiration('2099-12-26', '10:00:00 AM');
+
+      await waitFor(() => {
+        expect(mockStepPersistRef.current).toBeTypeOf('function');
+      });
+
+      mockStepPersistRef.current?.();
+
+      await waitFor(() => {
+        expect(mockSetForm).toHaveBeenCalled();
+      });
     });
   });
 
@@ -416,6 +476,54 @@ describe('ScheduleVacancyStep', () => {
 
       const publishCall = vi.mocked(CalendarWithTime).mock.calls[0]?.[0];
       expect(publishCall?.formattedDateDisplay).toBe('10 Jun 2026');
+    });
+
+    it('pre-populates publish fields from partial 24-hour schedule data', () => {
+      mockVacancyForm({
+        form: {
+          schedule: {
+            schedulePublishAt: '2099-12-25T10:30:00',
+            expirationAt: '',
+          },
+        },
+      });
+
+      renderComponent();
+
+      expect(
+        screen.getByRole('textbox', { name: `date-${PUBLISH_TIME_LABEL}` })
+      ).toHaveValue('2099-12-25');
+      expect(
+        screen.getByRole('textbox', { name: `time-${PUBLISH_TIME_LABEL}` })
+      ).toHaveValue('10:30:00');
+      // Expiration fields should be empty
+      expect(
+        screen.getByRole('textbox', { name: `date-${EXPIRATION_TIME_LABEL}` })
+      ).toHaveValue('');
+    });
+
+    it('pre-populates expiration fields from partial 24-hour schedule data', () => {
+      mockVacancyForm({
+        form: {
+          schedule: {
+            schedulePublishAt: '',
+            expirationAt: '2099-12-26T14:30:00',
+          },
+        },
+      });
+
+      renderComponent();
+
+      expect(
+        screen.getByRole('textbox', { name: `date-${EXPIRATION_TIME_LABEL}` })
+      ).toHaveValue('2099-12-26');
+      expect(
+        screen.getByRole('textbox', { name: `time-${EXPIRATION_TIME_LABEL}` })
+      ).toHaveValue('14:30:00');
+      // Publish fields should be empty
+      expect(
+        screen.getByRole('textbox', { name: `date-${PUBLISH_TIME_LABEL}` })
+      ).toHaveValue('');
     });
 
     it('passes a disabledDates function to the publish picker', () => {

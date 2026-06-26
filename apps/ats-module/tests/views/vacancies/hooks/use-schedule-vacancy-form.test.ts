@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  parseBackendDatetime,
   to24Hour,
   toScheduleVacancyPayload,
 } from '@/views/vacancies/hooks/use-schedule-vacancy-form';
@@ -132,6 +133,72 @@ describe('use-schedule-vacancy-form helpers', () => {
       const result = toScheduleVacancyPayload(values);
       expect(result.schedulePublishAt).toBe('2026-06-25T12:00:00 PM');
       expect(result.expirationAt).toBe('2026-06-30T12:30:00 PM');
+    });
+  });
+
+  describe('parseBackendDatetime', () => {
+    it('parses 12-hour AM/PM format with seconds', () => {
+      expect(parseBackendDatetime('2026-06-25T05:27:10 PM')).toEqual({
+        date: '2026-06-25',
+        time: '05:27:10 PM',
+      });
+      expect(parseBackendDatetime('2026-06-25T10:30:00 AM')).toEqual({
+        date: '2026-06-25',
+        time: '10:30:00 AM',
+      });
+    });
+
+    it('parses 12-hour AM/PM format without seconds', () => {
+      expect(parseBackendDatetime('2026-06-25T5:27 PM')).toEqual({
+        date: '2026-06-25',
+        time: '5:27 PM',
+      });
+    });
+
+    it('parses 12-hour AM/PM format with space separator', () => {
+      expect(parseBackendDatetime('2026-06-25 05:27:10 PM')).toEqual({
+        date: '2026-06-25',
+        time: '05:27:10 PM',
+      });
+    });
+
+    it('normalises AM/PM to uppercase', () => {
+      expect(parseBackendDatetime('2026-06-25T10:30:00 am')).toEqual({
+        date: '2026-06-25',
+        time: '10:30:00 AM',
+      });
+    });
+
+    it('parses 24-hour format with seconds (partial persist)', () => {
+      expect(parseBackendDatetime('2026-06-25T14:30:00')).toEqual({
+        date: '2026-06-25',
+        time: '14:30:00',
+      });
+    });
+
+    it('parses 24-hour format without seconds (partial persist)', () => {
+      expect(parseBackendDatetime('2026-06-25T10:30')).toEqual({
+        date: '2026-06-25',
+        time: '10:30',
+      });
+    });
+
+    it('parses 24-hour format with space separator', () => {
+      expect(parseBackendDatetime('2026-06-25 14:30:00')).toEqual({
+        date: '2026-06-25',
+        time: '14:30:00',
+      });
+    });
+
+    it('falls back to date-only when time is missing (date-only partial)', () => {
+      expect(parseBackendDatetime('2026-06-25T')).toEqual({
+        date: '2026-06-25',
+        time: '',
+      });
+    });
+
+    it('returns empty strings for an empty input', () => {
+      expect(parseBackendDatetime('')).toEqual({ date: '', time: '' });
     });
   });
 });
