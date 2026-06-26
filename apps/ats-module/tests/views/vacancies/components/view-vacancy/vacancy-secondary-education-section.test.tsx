@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 
 import { VacancySecondaryEducationSection } from '@/views/vacancies/components/view-vacancy/vacancy-secondary-education-section';
 
