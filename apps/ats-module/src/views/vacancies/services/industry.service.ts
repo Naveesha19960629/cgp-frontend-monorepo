@@ -22,15 +22,7 @@ export const industryService = {
   createIndustry: async (label: string): Promise<CreatePendingItemResponse> => {
     const response = await httpClient.post<CreatePendingApiResponse>(
       `/industries`,
-      {
-        type: 'INDUSTRY',
-        displayValue: label,
-        payload: {
-          additionalProp1: 'string',
-          additionalProp2: 'string',
-          additionalProp3: 'string',
-        },
-      }
+      { type: 'INDUSTRY', displayValue: label }
     );
     return response.data.data;
   },

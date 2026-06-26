@@ -1,4 +1,4 @@
-import { ChevronUpIcon, Loader2, PlusIcon } from 'lucide-react';
+import { ChevronUpIcon, PlusIcon } from 'lucide-react';
 
 import { ArrowLeft2, Calendar as CalendarIcon } from 'iconsax-reactjs';
 
@@ -12,9 +12,6 @@ import { AddOrganizationFormDialog } from '@/views/vacancies/components/dialogs'
 import StepDisableDialog from '@/views/vacancies/components/step-disable-dialog';
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import {
-  useCreateOrganizationMutation,
-  useCreateSportLevelMutation,
-  useCreateSportMutation,
   useLocationsQuery,
   useOrganizationsQuery,
   useSportLevelsQuery,
@@ -107,9 +104,7 @@ function SportCard({
   isLevelsLoading,
   locationOptions,
   isLocationsLoading,
-  orgSelectorKey,
 }: Readonly<{
-  orgSelectorKey: number;
   index: number;
   entry: SportEntry;
   onUpdate: (index: number, updates: Partial<SportEntry>) => void;
@@ -146,8 +141,6 @@ function SportCard({
     'startDate' | 'endDate' | null
   >(null);
   const [locationsError, setLocationsError] = useState(false);
-  const [sportsError, setSportsError] = useState(false);
-  const [organizationsError, setOrganizationsError] = useState(false);
 
   return (
     <Collapsible
@@ -188,11 +181,7 @@ function SportCard({
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-1">
                 <div className="flex items-center justify-between">
-                  <Label
-                    className={sportsError ? 'text-destructive' : undefined}
-                  >
-                    Name of the Sport
-                  </Label>
+                  <Label>Name of the Sport</Label>
                   <CharacterCount
                     currentLength={entry.sportSearch.length}
                     maxLength={MAX_SPORT_NAME_LENGTH}
@@ -234,8 +223,6 @@ function SportCard({
                   triggerSearchOnFocus
                   hideClearAllButton
                   maxSelected={MAX_SELECTIONS}
-                  errorMessage="Exceeded maximum of 10 selections"
-                  onErrorStateChange={setSportsError}
                   disabled={fieldsDisabled}
                   loading={isSportsLoading}
                   placeholder="Select or add sport name"
@@ -307,7 +294,7 @@ function SportCard({
                         .map(opt => ({
                           value: opt.value,
                           label: opt.label,
-                          source: (opt.source as string) ?? 'USER_CREATED',
+                          source: (opt.source as string) ?? 'MASTER',
                         })),
                     });
                   }}
@@ -317,7 +304,6 @@ function SportCard({
                     return levelRepresentedOptions;
                   }}
                   keepSelectedInList
-                  creatable
                   triggerSearchOnFocus
                   hideClearAllButton
                   maxSelected={MAX_SELECTIONS}
@@ -334,16 +320,9 @@ function SportCard({
 
               <div className="flex flex-col gap-1">
                 <div className="flex h-5 items-center">
-                  <Label
-                    className={
-                      organizationsError ? 'text-destructive' : undefined
-                    }
-                  >
-                    Represented Organization
-                  </Label>
+                  <Label>Represented Organization</Label>
                 </div>
                 <MultipleSelector
-                  key={orgSelectorKey}
                   value={entry.representedOrganization}
                   onChange={options => {
                     const newItem = options.find(o => o.value === o.label);
@@ -383,8 +362,6 @@ function SportCard({
                   triggerSearchOnFocus
                   hideClearAllButton
                   maxSelected={MAX_SELECTIONS}
-                  errorMessage="Exceeded maximum of 10 selections"
-                  onErrorStateChange={setOrganizationsError}
                   disabled={fieldsDisabled}
                   loading={isOrganizationsLoading}
                   placeholder="Select or add represented organization"
@@ -576,11 +553,6 @@ export default function PreferredSportsStep({
   const { form: contextForm, onCancel } = useVacancyForm();
   const savedSports = contextForm.preferredSports;
 
-  const { mutateAsync: createSport } = useCreateSportMutation();
-  const { mutateAsync: createSportLevel } = useCreateSportLevelMutation();
-  const { mutateAsync: createOrganization } = useCreateOrganizationMutation();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
   const [isEnabled, setIsEnabled] = useState(savedSports?.isEnabled ?? false);
   const [dataTakenFromCandidate, setDataTakenFromCandidate] = useState(
     savedSports?.dataTakenFromCandidate ?? false
@@ -598,7 +570,6 @@ export default function PreferredSportsStep({
     useState(false);
   const [pendingOrganizationName, setPendingOrganizationName] = useState('');
   const [activeCardIndex, setActiveCardIndex] = useState<number | null>(null);
-  const [orgSelectorKey, setOrgSelectorKey] = useState(0);
 
   const [entries, setEntries] = useState<SportEntry[]>(
     savedSports?.sports && savedSports.sports.length > 0
@@ -655,7 +626,7 @@ export default function PreferredSportsStep({
       e.endDate != null
   );
 
-  const handleNext = async () => {
+  const handleNext = () => {
     const isEmptyEnabledSection =
       isEnabled && !dataTakenFromCandidate && !hasSportsData;
 
@@ -664,134 +635,11 @@ export default function PreferredSportsStep({
       return;
     }
 
-    // Resolve user-created sports, levels & organizations
-    const allSports = entries.flatMap(e => e.sport);
-    const hasUserCreatedSports = allSports.some(
-      s => s.source === 'USER_CREATED'
-    );
-    const allLevels = entries.flatMap(e => e.levelRepresented);
-    const hasUserCreatedLevels = allLevels.some(
-      lvl => lvl.source === 'USER_CREATED'
-    );
-    const allOrgs = entries.flatMap(e => e.representedOrganization);
-    const hasUserCreatedOrgs = allOrgs.some(o => o.source === 'USER_CREATED');
-
-    let resolvedEntries = entries;
-
-    if (hasUserCreatedSports || hasUserCreatedLevels || hasUserCreatedOrgs) {
-      setIsSubmitting(true);
-      try {
-        let sportResultMap = new Map();
-        if (hasUserCreatedSports) {
-          const uniqueUserCreatedSports = Array.from(
-            new Map(
-              allSports
-                .filter(s => s.source === 'USER_CREATED')
-                .map(s => [s.label, s])
-            ).values()
-          );
-          const sResults = await Promise.all(
-            uniqueUserCreatedSports.map(s => createSport(s.label))
-          );
-          sportResultMap = new Map(
-            uniqueUserCreatedSports.map((s, idx) => [s.label, sResults[idx]])
-          );
-        }
-
-        let levelResultMap = new Map();
-        if (hasUserCreatedLevels) {
-          const uniqueUserCreatedLevels = Array.from(
-            new Map(
-              allLevels
-                .filter(lvl => lvl.source === 'USER_CREATED')
-                .map(lvl => [lvl.label, lvl])
-            ).values()
-          );
-          const lvlResults = await Promise.all(
-            uniqueUserCreatedLevels.map(lvl => createSportLevel(lvl.label))
-          );
-          levelResultMap = new Map(
-            uniqueUserCreatedLevels.map((lvl, idx) => [
-              lvl.label,
-              lvlResults[idx],
-            ])
-          );
-        }
-
-        let orgResultMap = new Map();
-        if (hasUserCreatedOrgs) {
-          const uniqueUserCreatedOrgs = Array.from(
-            new Map(
-              allOrgs
-                .filter(o => o.source === 'USER_CREATED')
-                .map(o => [o.label, o])
-            ).values()
-          );
-          const oResults = await Promise.all(
-            uniqueUserCreatedOrgs.map(o => createOrganization(o.label))
-          );
-          orgResultMap = new Map(
-            uniqueUserCreatedOrgs.map((o, idx) => [o.label, oResults[idx]])
-          );
-        }
-
-        resolvedEntries = entries.map(entry => ({
-          ...entry,
-          sport: entry.sport.map(s => {
-            if (s.source === 'USER_CREATED') {
-              const res = sportResultMap.get(s.label);
-              if (res) {
-                return {
-                  value: res.pendingId,
-                  label: res.value,
-                  source: res.status,
-                };
-              }
-            }
-            return s;
-          }),
-          levelRepresented: entry.levelRepresented.map(lvl => {
-            if (lvl.source === 'USER_CREATED') {
-              const res = levelResultMap.get(lvl.label);
-              if (res) {
-                return {
-                  value: res.pendingId,
-                  label: res.value,
-                  source: res.status,
-                };
-              }
-            }
-            return lvl;
-          }),
-          representedOrganization: entry.representedOrganization.map(o => {
-            if (o.source === 'USER_CREATED') {
-              const res = orgResultMap.get(o.label);
-              if (res) {
-                return {
-                  value: res.pendingId,
-                  label: res.value,
-                  source: res.status,
-                };
-              }
-            }
-            return o;
-          }),
-        }));
-
-        setEntries(resolvedEntries);
-      } catch (err) {
-        console.error(err);
-        return; // Stop execution on error
-      } finally {
-        setIsSubmitting(false);
-      }
-    }
-
     onNext({
       preferredSports: {
         isEnabled,
         dataTakenFromCandidate,
-        sports: resolvedEntries,
+        sports: entries,
       },
     });
   };
@@ -860,13 +708,7 @@ export default function PreferredSportsStep({
 
   const handleToggle = () => {
     if (isEnabled) {
-      if (hasSportsData) {
-        setConfirmDisableOpen(true);
-      } else {
-        setIsEnabled(false);
-        setDataTakenFromCandidate(false);
-        removeCompletedStep(currentStepIndex);
-      }
+      setConfirmDisableOpen(true);
     } else {
       setIsEnabled(true);
     }
@@ -895,7 +737,7 @@ export default function PreferredSportsStep({
   };
 
   const handleBack = () => {
-    if (!canNavigate || isSubmitting) {
+    if (!canNavigate) {
       return;
     }
 
@@ -911,7 +753,9 @@ export default function PreferredSportsStep({
           fields={[
             'Name of the Sport',
             'Level Represented',
-            'Position / Role',
+            'Represented Organization',
+            'Organization Location',
+            'Position / Role Held',
             'Start Date',
             'End Date',
           ]}
@@ -925,11 +769,11 @@ export default function PreferredSportsStep({
               aria-label="Back"
               className={cn(
                 'cursor-pointer text-slate-700 transition-colors hover:text-slate-900',
-                (!canNavigate || isSubmitting) &&
+                !canNavigate &&
                   'cursor-not-allowed opacity-40 hover:text-slate-700'
               )}
               onClick={handleBack}
-              disabled={!canNavigate || isSubmitting}
+              disabled={!canNavigate}
             >
               <ArrowLeft2 size={24} />
             </button>
@@ -1008,7 +852,6 @@ export default function PreferredSportsStep({
               isLevelsLoading={isLevelsLoading}
               locationOptions={locationOptions}
               isLocationsLoading={isLocationsLoading}
-              orgSelectorKey={orgSelectorKey}
             />
           ))}
         </div>
@@ -1034,26 +877,15 @@ export default function PreferredSportsStep({
 
         {/* ── Step footer ───────────────────────────────────────────────── */}
         <div className="sticky bottom-0 mt-auto flex items-center justify-end gap-4 bg-white px-6 py-7 shadow-[0px_-8px_6.8px_0px_rgba(0,0,0,0.04)]">
-          <Button
-            variant="secondary"
-            className="h-12 w-48"
-            disabled={isSubmitting}
-            onClick={onCancel}
-          >
+          <Button variant="secondary" className="h-12 w-48" onClick={onCancel}>
             Cancel
           </Button>
           <Button
             className="h-12 w-48"
-            onClick={() => {
-              void handleNext();
-            }}
-            disabled={!canNavigate || isSubmitting}
+            onClick={handleNext}
+            disabled={!canNavigate}
           >
-            {isSubmitting ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : (
-              'Next'
-            )}
+            Next
           </Button>
         </div>
       </div>
@@ -1061,10 +893,7 @@ export default function PreferredSportsStep({
       {/* ── Add Organization dialog ──────────────────────────────────────── */}
       <AddOrganizationFormDialog
         open={showAddOrganizationDialog}
-        onOpenChange={open => {
-          if (!open) setOrgSelectorKey(k => k + 1);
-          setShowAddOrganizationDialog(open);
-        }}
+        onOpenChange={setShowAddOrganizationDialog}
         organizationName={pendingOrganizationName}
         onOrganizationAdded={org => {
           if (activeCardIndex !== null) {
@@ -1075,7 +904,6 @@ export default function PreferredSportsStep({
               ],
             });
           }
-          setOrgSelectorKey(k => k + 1);
           setShowAddOrganizationDialog(false);
         }}
       />
