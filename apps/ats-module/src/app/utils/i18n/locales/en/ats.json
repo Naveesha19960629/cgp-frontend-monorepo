@@ -856,7 +856,47 @@
   },
   "preferredSports": {
     "title": "Preferred Sports",
+    "back": "Back",
+    "cardTitle": "Sports {{number}}",
+    "collapse": "Collapse",
+    "expand": "Expand",
+    "addEntry": "Add entry",
+    "cancel": "Cancel",
+    "next": "Next",
     "dataTakenFromCandidate": "If selected, no manual input is required, and data will be taken from the candidate profile",
+    "labels": {
+      "sport": "Name of the Sport",
+      "organizationLocation": "Organization Location",
+      "levelRepresented": "Level Represented",
+      "representedOrganization": "Represented Organization",
+      "position": "Position / Role Held",
+      "startDate": "Start Date",
+      "endDate": "End Date"
+    },
+    "placeholders": {
+      "sport": "Select or add sport name",
+      "organizationLocation": "Select location",
+      "levelRepresented": "Select level represented",
+      "representedOrganization": "Select or add represented organization",
+      "position": "Enter position",
+      "startDate": "Select start date",
+      "endDate": "Select end date"
+    },
+    "empty": {
+      "sports": "No sports found",
+      "locations": "No locations found",
+      "levels": "No levels found",
+      "organizations": "No organizations found"
+    },
+    "errors": {
+      "maxSelections": "Exceeded maximum of 10 selections"
+    },
+    "notifications": {
+      "disable": {
+        "title": "Section Disabled",
+        "message": "Preferred Sports section has been disabled successfully."
+      }
+    },
     "fieldList": {
       "sport": "Name of the Sport",
       "levelRepresented": "Level Represented",
@@ -881,7 +921,44 @@
   },
   "preferredVolunteering": {
     "title": "Preferred Volunteering",
+    "back": "Back",
+    "cardTitle": "Volunteering {{number}}",
+    "collapse": "Collapse",
+    "expand": "Expand",
+    "addEntry": "Add entry",
+    "cancel": "Cancel",
+    "next": "Next",
     "dataTakenFromCandidate": "If selected, no manual input is required, and data will be taken from the candidate profile",
+    "labels": {
+      "organizationName": "Organisation Name",
+      "organizationLocation": "Organization Location",
+      "cause": "Cause",
+      "position": "Position / Role",
+      "startDate": "Start Date",
+      "endDate": "End Date"
+    },
+    "placeholders": {
+      "organizationName": "Select or add organization name",
+      "organizationLocation": "Select location",
+      "cause": "Select or add cause",
+      "position": "Enter position",
+      "startDate": "Select start date",
+      "endDate": "Select end date"
+    },
+    "empty": {
+      "organizations": "No organizations found",
+      "locations": "No locations found",
+      "causes": "No causes found"
+    },
+    "errors": {
+      "maxSelections": "Exceeded maximum of 10 selections"
+    },
+    "notifications": {
+      "disable": {
+        "title": "Section Disabled",
+        "message": "Preferred Volunteering section has been disabled successfully."
+      }
+    },
     "fieldList": {
       "organization": "Organization Name",
       "location": "Organization Location",
@@ -934,7 +1011,45 @@
   },
   "preferredClubSocieties": {
     "title": "Preferred Clubs and Societies",
+    "back": "Back",
+    "cardTitle": "Clubs and societies {{number}}",
+    "collapse": "Collapse",
+    "expand": "Expand",
+    "addEntry": "Add entry",
+    "cancel": "Cancel",
+    "next": "Next",
     "dataTakenFromCandidate": "If selected, no manual input is required, and data will be taken from the candidate profile",
+    "labels": {
+      "clubSociety": "Club / Society",
+      "startDate": "Start Date",
+      "endDate": "End Date",
+      "representedOrganization": "Represented Organization",
+      "organizationLocation": "Organization Location",
+      "position": "Position / Role Held"
+    },
+    "placeholders": {
+      "clubSociety": "Select or add club or society",
+      "startDate": "Select start date",
+      "endDate": "Select end date",
+      "representedOrganization": "Select or add represented organization",
+      "organizationLocation": "Select location",
+      "position": "Enter position or role held"
+    },
+    "empty": {
+      "societies": "No societies found",
+      "organizations": "No organizations found",
+      "locations": "No locations found"
+    },
+    "errors": {
+      "maxSelections": "Exceeded maximum of 10 selections",
+      "maxCharacters": "Maximum 250 characters allowed"
+    },
+    "notifications": {
+      "disable": {
+        "title": "Section Disabled",
+        "message": "Preferred Clubs and Societies section has been disabled successfully."
+      }
+    },
     "fieldList": {
       "clubSociety": "Club / Society",
       "position": "Position / Role Held",
@@ -958,7 +1073,30 @@
   },
   "preferredPublications": {
     "title": "Preferred Publications",
+    "back": "Back",
+    "cardTitle": "Publication {{number}}",
+    "collapse": "Collapse",
+    "expand": "Expand",
+    "addEntry": "Add entry",
+    "cancel": "Cancel",
+    "next": "Next",
     "dataTakenFromCandidate": "If selected, no manual input is required, and data will be taken from the candidate profile",
+    "labels": {
+      "acceptedPublisher": "Accepted Publisher",
+      "publishedDateFrom": "Published Date From",
+      "publishedDateTo": "Published Date To"
+    },
+    "placeholders": {
+      "acceptedPublisher": "Enter accepted publisher",
+      "publishedDateFrom": "Select published date from",
+      "publishedDateTo": "Select published date to"
+    },
+    "notifications": {
+      "disable": {
+        "title": "Section Disabled",
+        "message": "Preferred Publications section has been disabled successfully."
+      }
+    },
     "fieldList": {
       "publisher": "Accepted Publisher",
       "publishedDateFrom": "Published Date From",
@@ -994,6 +1132,14 @@
     "back": "Back",
     "cancel": "Cancel",
     "next": "Next",
+    "collapse": "Collapse",
+    "expand": "Expand",
+    "notifications": {
+      "disable": {
+        "title": "Section Disabled",
+        "message": "Projects Requirements section has been disabled successfully."
+      }
+    },
     "placeholders": {
       "startDate": "Select start date",
       "endDate": "Select end date",
@@ -1024,7 +1170,8 @@
       "location": "Organization Location"
     },
     "errors": {
-      "maxIndustries": "Exceeded maximum of 10 selections."
+      "maxIndustries": "Exceeded maximum of 10 selections.",
+      "maxSelections": "Exceeded maximum of 10 selections"
     },
     "confirmDisableDialog": {
       "title": "Are you sure?",
