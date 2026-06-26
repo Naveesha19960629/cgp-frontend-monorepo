@@ -129,7 +129,10 @@ export default function TertiaryEducationStep({
     return hasEntryData() || getValues('dataTakenFromCandidate') === true;
   };
 
-  useStepGuard(isEnabled && !dataTakenFromCandidate && !hasEntryData());
+  const shouldDisableNavigation =
+    isEnabled && !dataTakenFromCandidate && !hasEntryData();
+
+  useStepGuard(shouldDisableNavigation);
   useEffect(() => {
     stepPersistRef.current = () => {
       setForm(prev => ({
@@ -444,16 +447,34 @@ export default function TertiaryEducationStep({
   ) => {
     const input = ref.current?.input.value.trim();
     let current = getValues(fieldName);
-    if (input) {
+    const maxFieldByName = {
+      'entries.0.qualificationName': 'qualificationName',
+      'entries.0.levelOfQualification': 'levelOfQualification',
+      'entries.0.specialization': 'specialization',
+      'entries.0.batch': 'batch',
+      'entries.0.department': 'department',
+      'entries.0.faculty': 'faculty',
+    } as const;
+
+    const maxField = maxFieldByName[fieldName];
+    const hasRoomForInput = !input || current.length < MAX_SELECTIONS;
+
+    if (!hasRoomForInput) {
+      setMax(maxField);
+    }
+
+    if (input && hasRoomForInput) {
       current = [...current, { value: input, label: input, source: '' }];
     }
     const resolved: { value: string; label: string; source: string }[] = [];
     for (const item of current) {
-      if (item.value === item.label) {
-        const created = await resolveItem(item.label, addMutation);
-        if (created) resolved.push(created);
-      } else {
-        resolved.push(item);
+      const nextItem =
+        item.value === item.label
+          ? await resolveItem(item.label, addMutation)
+          : item;
+
+      if (nextItem) {
+        resolved.push(nextItem);
       }
     }
     setValue(fieldName, resolved);
@@ -518,6 +539,14 @@ export default function TertiaryEducationStep({
     })();
   };
 
+  const handleBack = () => {
+    setForm(prev => ({
+      ...prev,
+      tertiaryEducation: toTertiaryEducationPayload(getValues()),
+    }));
+    onBack();
+  };
+
   return (
     <div className="flex flex-col">
       {/* -- Informational Banner ------------------------------------------ */}
@@ -527,14 +556,10 @@ export default function TertiaryEducationStep({
           t('tertiaryEducation.tertiaryAwardingBody'),
           t('tertiaryEducation.tertiaryAwardingBodyLocations'),
           t('tertiaryEducation.levelOfQualification'),
-          t('tertiaryEducation.specialization'),
-          t('tertiaryEducation.studyMode'),
           t('tertiaryEducation.studyPattern'),
           t('tertiaryEducation.deliverySchedule'),
-          t('tertiaryEducation.batch'),
-          t('tertiaryEducation.department'),
-          t('tertiaryEducation.faculty'),
-          t('tertiaryEducation.grade'),
+          t('tertiaryEducation.startDate'),
+          t('tertiaryEducation.endDate'),
         ]}
       />
 
@@ -544,8 +569,9 @@ export default function TertiaryEducationStep({
           <button
             type="button"
             aria-label={t('tertiaryEducation.back')}
-            className="text-slate-700 transition-colors hover:text-slate-900"
-            onClick={onBack}
+            disabled={shouldDisableNavigation}
+            className="text-slate-700 transition-colors hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-40"
+            onClick={handleBack}
           >
             <ArrowLeft2 size={24} />
           </button>
@@ -642,6 +668,10 @@ export default function TertiaryEducationStep({
                       value={field.value}
                       onSearch={searchQualifications}
                       onChange={options => {
+                        if (options.length > MAX_SELECTIONS) {
+                          setMax('qualificationName');
+                          return;
+                        }
                         if (options.length < MAX_SELECTIONS)
                           clearMax('qualificationName');
                         setQualificationInput('');
@@ -801,6 +831,10 @@ export default function TertiaryEducationStep({
                       value={field.value}
                       onSearch={searchBatches}
                       onChange={options => {
+                        if (options.length > MAX_SELECTIONS) {
+                          setMax('batch');
+                          return;
+                        }
                         if (options.length < MAX_SELECTIONS) clearMax('batch');
                         setBatchInput('');
                         field.onChange(options);
@@ -863,7 +897,16 @@ export default function TertiaryEducationStep({
                     <MultipleSelector
                       key={awardingBodySelectorKey}
                       value={field.value}
-                      onSearch={searchAwardingBodies}
+                      onSearch={async (search: string) => {
+                        const results = await searchAwardingBodies(search);
+                        // Filter out items already selected to prevent duplication
+                        const selectedValues = new Set(
+                          field.value.map(v => v.value.toLowerCase())
+                        );
+                        return results.filter(
+                          item => !selectedValues.has(item.value.toLowerCase())
+                        );
+                      }}
                       onChange={options => {
                         if (options.length < MAX_SELECTIONS)
                           clearMax('awardingBody');
@@ -937,6 +980,10 @@ export default function TertiaryEducationStep({
                       value={field.value}
                       onSearch={searchLevels}
                       onChange={options => {
+                        if (options.length > MAX_SELECTIONS) {
+                          setMax('levelOfQualification');
+                          return;
+                        }
                         if (options.length < MAX_SELECTIONS)
                           clearMax('levelOfQualification');
                         setLevelInput('');
@@ -1008,6 +1055,10 @@ export default function TertiaryEducationStep({
                       value={field.value}
                       onSearch={searchSpecializations}
                       onChange={options => {
+                        if (options.length > MAX_SELECTIONS) {
+                          setMax('specialization');
+                          return;
+                        }
                         if (options.length < MAX_SELECTIONS)
                           clearMax('specialization');
                         setSpecializationInput('');
@@ -1246,6 +1297,10 @@ export default function TertiaryEducationStep({
                       value={field.value}
                       onSearch={searchDepartments}
                       onChange={options => {
+                        if (options.length > MAX_SELECTIONS) {
+                          setMax('department');
+                          return;
+                        }
                         if (options.length < MAX_SELECTIONS)
                           clearMax('department');
                         setDepartmentInput('');
@@ -1314,6 +1369,10 @@ export default function TertiaryEducationStep({
                       value={field.value}
                       onSearch={searchFaculties}
                       onChange={options => {
+                        if (options.length > MAX_SELECTIONS) {
+                          setMax('faculty');
+                          return;
+                        }
                         if (options.length < MAX_SELECTIONS)
                           clearMax('faculty');
                         setFacultyInput('');
@@ -1388,10 +1447,30 @@ export default function TertiaryEducationStep({
         open={addAwardingBodyDialogOpen}
         initialName={pendingAwardingBodyLabel}
         onClose={() => {
-          setAwardingBodySelectorKey(k => k + 1);
           setAddAwardingBodyDialogOpen(false);
+          setPendingAwardingBodyLabel('');
+          setAwardingBodySelectorKey(k => k + 1);
         }}
         onAdded={option => {
+          // Validation guard: only add if location is provided
+          if (!option.locationId) {
+            return;
+          }
+
+          // Check for case-insensitive duplicate: same name + same location
+          const normalizedNewLabel = option.label.trim().toLowerCase();
+          const isDuplicate = awardingBodyValue.some(
+            body => body.label.trim().toLowerCase() === normalizedNewLabel
+          );
+
+          if (isDuplicate) {
+            // Item already exists, don't add
+            setAddAwardingBodyDialogOpen(false);
+            setPendingAwardingBodyLabel('');
+            setAwardingBodySelectorKey(k => k + 1);
+            return;
+          }
+
           pendingAwardingBodiesDataRef.current.set(option.value, {
             displayValue: option.label,
             locationId: option.locationId,
@@ -1401,7 +1480,9 @@ export default function TertiaryEducationStep({
             ...awardingBodyValue,
             { value: option.value, label: option.label, source: option.source },
           ]);
+          setAwardingBodySelectorKey(k => k + 1);
           setAddAwardingBodyDialogOpen(false);
+          setPendingAwardingBodyLabel('');
         }}
       />
 
@@ -1442,7 +1523,11 @@ export default function TertiaryEducationStep({
         <Button variant="secondary" className="h-12 w-48" onClick={onCancel}>
           {t('tertiaryEducation.cancel')}
         </Button>
-        <Button className="h-12 w-48" onClick={() => void handleNext()}>
+        <Button
+          className="h-12 w-48"
+          disabled={shouldDisableNavigation}
+          onClick={() => void handleNext()}
+        >
           {t('tertiaryEducation.next')}
         </Button>
       </div>

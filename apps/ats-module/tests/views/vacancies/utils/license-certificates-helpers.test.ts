@@ -4,7 +4,7 @@ import { toLicenseCertificatesPayload } from '@/views/vacancies/utils/license-ce
 
 const EMPTY_ENTRY = {
   nameOfLicenseCert: [] as never[],
-  issuingOrganization: undefined,
+  issuingOrganization: [] as never[],
   organizationLocations: [] as never[],
   internationallyAccepted: false,
   issueDate: undefined,
@@ -39,11 +39,13 @@ describe('toLicenseCertificatesPayload — disabled', () => {
             certType: 'CERTIFICATION',
           },
         ],
-        issuingOrganization: {
-          value: 'org-1',
-          label: 'Amazon',
-          source: 'MASTER',
-        },
+        issuingOrganization: [
+          {
+            value: 'org-1',
+            label: 'Amazon',
+            source: 'MASTER',
+          },
+        ],
         organizationLocations: [{ value: 'loc-1', label: 'Colombo' }],
         internationallyAccepted: true,
         issueDate: '2026-06-01',
@@ -181,7 +183,7 @@ describe('toLicenseCertificatesPayload — nameOfLicenseCert', () => {
     expect(result[0].content[0].nameOfLicenseCert[0].type).toBe('CERTIFICATE');
   });
 
-  it('drops unresolved PENDING_TEMP items with temporary ids', () => {
+  it('includes unresolved PENDING_TEMP items with temporary ids (like schools)', () => {
     const result = toLicenseCertificatesPayload({
       isEnabled: true,
       dataTakenFromCandidate: false,
@@ -198,24 +200,33 @@ describe('toLicenseCertificatesPayload — nameOfLicenseCert', () => {
       },
     });
 
-    expect(result[0].content[0].nameOfLicenseCert).toEqual([]);
+    expect(result[0].content[0].nameOfLicenseCert).toEqual([
+      {
+        source: 'PENDING',
+        id: '__pending_license_cert_123',
+        name: 'Custom Cert',
+        type: 'CERTIFICATION',
+      },
+    ]);
   });
 });
 
-// ── issuingOrganization (single optional object) ───────────────────────────
+// ── issuingOrganization (multi-select) ─────────────────────────────────────
 
 describe('toLicenseCertificatesPayload — issuingOrganization', () => {
-  it('wraps a single organization into an array of one ref', () => {
+  it('maps selected organizations to refs', () => {
     const result = toLicenseCertificatesPayload({
       isEnabled: true,
       dataTakenFromCandidate: false,
       entry: {
         ...EMPTY_ENTRY,
-        issuingOrganization: {
-          value: 'org-uuid',
-          label: 'CompTIA',
-          source: 'MASTER',
-        },
+        issuingOrganization: [
+          {
+            value: 'org-uuid',
+            label: 'CompTIA',
+            source: 'MASTER',
+          },
+        ],
       },
     });
 
@@ -224,46 +235,33 @@ describe('toLicenseCertificatesPayload — issuingOrganization', () => {
     ]);
   });
 
-  it('produces an empty array when issuingOrganization is undefined', () => {
+  it('produces an empty array when issuingOrganization is empty', () => {
     const result = toLicenseCertificatesPayload({
       isEnabled: true,
       dataTakenFromCandidate: false,
-      entry: { ...EMPTY_ENTRY, issuingOrganization: undefined },
+      entry: { ...EMPTY_ENTRY, issuingOrganization: [] },
     });
 
     expect(result[0].content[0].issuingOrganization).toEqual([]);
   });
 
-  it('produces an empty array when issuingOrganization is null', () => {
+  it('normalizes USER_CREATED source to PENDING for user-added organizations', () => {
     const result = toLicenseCertificatesPayload({
       isEnabled: true,
       dataTakenFromCandidate: false,
       entry: {
         ...EMPTY_ENTRY,
-        issuingOrganization: null,
+        issuingOrganization: [
+          {
+            value: 'user-org-id',
+            label: 'My Company',
+            source: 'USER_CREATED',
+          },
+        ],
       },
     });
 
-    expect(result[0].content[0].issuingOrganization).toEqual([]);
-  });
-
-  it('preserves USER_CREATED source for user-added organizations', () => {
-    const result = toLicenseCertificatesPayload({
-      isEnabled: true,
-      dataTakenFromCandidate: false,
-      entry: {
-        ...EMPTY_ENTRY,
-        issuingOrganization: {
-          value: 'user-org-id',
-          label: 'My Company',
-          source: 'USER_CREATED',
-        },
-      },
-    });
-
-    expect(result[0].content[0].issuingOrganization[0].source).toBe(
-      'USER_CREATED'
-    );
+    expect(result[0].content[0].issuingOrganization[0].source).toBe('PENDING');
   });
 });
 

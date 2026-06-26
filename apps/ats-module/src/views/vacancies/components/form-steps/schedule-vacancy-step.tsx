@@ -79,6 +79,15 @@ export default function ScheduleVacancyStep({
         expirationTime,
       };
 
+      const hasAny =
+        currentValues.schedulePublishDate ||
+        currentValues.schedulePublishTime ||
+        currentValues.expirationDate ||
+        currentValues.expirationTime;
+
+      if (!hasAny) return;
+
+      // All four fields present — use the full payload builder (AM/PM format)
       if (
         currentValues.schedulePublishDate &&
         currentValues.schedulePublishTime &&
@@ -89,7 +98,27 @@ export default function ScheduleVacancyStep({
           ...prev,
           schedule: toScheduleVacancyPayload(currentValues),
         }));
+        return;
       }
+
+      // Partial data — store 24-hour datetime strings so parseBackendDatetime
+      // can recover the values when the user returns to this step
+      const buildPartialAt = (date: string, time: string) =>
+        date || time ? `${date}T${time.trim()}` : '';
+
+      setForm(prev => ({
+        ...prev,
+        schedule: {
+          schedulePublishAt: buildPartialAt(
+            currentValues.schedulePublishDate,
+            currentValues.schedulePublishTime
+          ),
+          expirationAt: buildPartialAt(
+            currentValues.expirationDate,
+            currentValues.expirationTime
+          ),
+        },
+      }));
     },
     [publishDate, publishTime, expirationDate, expirationTime, setForm]
   );
@@ -170,6 +199,11 @@ export default function ScheduleVacancyStep({
     }
   };
 
+  const handleBack = () => {
+    persistScheduleToContext();
+    onBack();
+  };
+
   return (
     <div className="flex min-h-full flex-col">
       {/* ── Header ─────────────────────────────────────────────────── */}
@@ -178,7 +212,7 @@ export default function ScheduleVacancyStep({
           type="button"
           aria-label={t('common.back')}
           className="text-slate-700 transition-colors hover:text-slate-900"
-          onClick={onBack}
+          onClick={handleBack}
         >
           <ArrowLeft2 size={24} />
         </button>

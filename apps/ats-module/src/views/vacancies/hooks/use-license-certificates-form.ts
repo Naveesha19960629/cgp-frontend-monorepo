@@ -28,7 +28,7 @@ const orgItemSchema = z.object({
 
 const licenseCertEntrySchema = z.object({
   nameOfLicenseCert: z.array(selectionItemSchema).max(10),
-  issuingOrganization: orgItemSchema.nullable().optional(),
+  issuingOrganization: z.array(orgItemSchema).max(10),
   organizationLocations: z.array(locationItemSchema).max(10),
   internationallyAccepted: z.boolean(),
   issueDate: z.string().optional(),
@@ -47,7 +47,7 @@ type LicenseCertificatesFormValues = z.infer<
 
 const DEFAULT_ENTRY: z.infer<typeof licenseCertEntrySchema> = {
   nameOfLicenseCert: [],
-  issuingOrganization: undefined,
+  issuingOrganization: [],
   organizationLocations: [],
   internationallyAccepted: false,
   issueDate: undefined,
@@ -121,13 +121,13 @@ function buildDefaultValues(
             source: r.source,
             certType: r.type,
           })),
-          issuingOrganization: firstEntry.issuingOrganization[0]
-            ? {
-                value: firstEntry.issuingOrganization[0].id,
-                label: getRefLabel(firstEntry.issuingOrganization[0]),
-                source: firstEntry.issuingOrganization[0].source,
-              }
-            : undefined,
+          issuingOrganization: (firstEntry.issuingOrganization ?? []).map(
+            organization => ({
+              value: organization.id,
+              label: getRefLabel(organization),
+              source: organization.source,
+            })
+          ),
           organizationLocations: firstEntry.organizationLocations.map(r => ({
             value: r.id,
             label: getRefLabel(r),

@@ -86,32 +86,26 @@ function to24Hour(time: string): string {
  *   "2026-06-25 05:27:10 PM"      (12-hour with space separator)
  */
 function parseBackendDatetime(value: string): { date: string; time: string } {
-  const trimmed = value.trim();
-
-  // 12-hour AM/PM formats (legacy)
-  const ampmMatch =
+  // 12-hour AM/PM format (backend storage / toScheduleVacancyPayload output)
+  const match =
     /^(\d{4}-\d{2}-\d{2})[T ](\d{1,2}:\d{2}(?::\d{2})?)(?:\.\d+)?\s*(AM|PM)$/i.exec(
-      trimmed
+      value.trim()
     );
-  if (ampmMatch) {
+  if (match) {
     return {
-      date: ampmMatch[1],
-      time: `${ampmMatch[2]} ${ampmMatch[3].toUpperCase()}`,
+      date: match[1],
+      time: `${match[2]} ${match[3].toUpperCase()}`,
     };
   }
-
-  // 24-hour ISO format: "2026-06-24T10:00:00" or "2026-06-24T10:00:00.000"
-  const isoMatch =
-    /^(\d{4}-\d{2}-\d{2})[T ](\d{2}:\d{2}(?::\d{2})?)(?:\.\d+)?$/.exec(trimmed);
-  if (isoMatch) {
-    const timePart = isoMatch[2];
-    return {
-      date: isoMatch[1],
-      time: timePart.length === 5 ? `${timePart}:00` : timePart,
-    };
+  // 24-hour format (partial persist from schedule-vacancy-step)
+  const match24 = /^(\d{4}-\d{2}-\d{2})[T ](\d{2}:\d{2}(?::\d{2})?)$/.exec(
+    value.trim()
+  );
+  if (match24) {
+    return { date: match24[1], time: match24[2] };
   }
-
-  return { date: trimmed.split(/[T ]/)[0] ?? '', time: '' };
+  // Fallback: return whatever is before the separator as the date
+  return { date: value.split(/[T ]/)[0] ?? '', time: '' };
 }
 
 type ScheduleVacancyFormValues = z.infer<typeof scheduleVacancySchema>;
@@ -174,5 +168,10 @@ function useScheduleVacancyForm(defaults?: Partial<ScheduleVacancy>) {
   });
 }
 
-export { useScheduleVacancyForm, toScheduleVacancyPayload, to24Hour };
+export {
+  useScheduleVacancyForm,
+  toScheduleVacancyPayload,
+  to24Hour,
+  parseBackendDatetime,
+};
 export type { ScheduleVacancyFormValues };

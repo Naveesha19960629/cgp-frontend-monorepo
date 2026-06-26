@@ -19,8 +19,17 @@ function normalizeLicenseSource(source?: string): 'MASTER' | 'PENDING' {
   return 'MASTER';
 }
 
-function isTemporaryLicenseId(id: string): boolean {
-  return id.startsWith('__pending_license_cert_');
+function normalizeOrganizationSource(source?: string): 'MASTER' | 'PENDING' {
+  if (source === 'PENDING' || source === 'PENDING_TEMP') {
+    return 'PENDING';
+  }
+
+  // USER_CREATED entries are pending master data until approved.
+  if (source === 'USER_CREATED') {
+    return 'PENDING';
+  }
+
+  return 'MASTER';
 }
 
 const toLicenseCertificatesPayload = (
@@ -38,11 +47,7 @@ const toLicenseCertificatesPayload = (
     source: string;
     certType?: string;
   }): LicenseCertRef | null => {
-    if (
-      !item.value ||
-      item.value === item.label ||
-      isTemporaryLicenseId(item.value)
-    ) {
+    if (!item.value || item.value === item.label) {
       return null;
     }
     const ref: LicenseCertRef = {
@@ -86,7 +91,7 @@ const toLicenseCertificatesPayload = (
     label: string;
     source: string;
   }): LicenseCertRef => ({
-    source: item.source as 'MASTER' | 'PENDING',
+    source: normalizeOrganizationSource(item.source),
     id: item.value,
     name: item.label,
   });
@@ -94,9 +99,7 @@ const toLicenseCertificatesPayload = (
   const content: LicenseCertEntry[] = [
     {
       nameOfLicenseCert: toRefs(entry.nameOfLicenseCert),
-      issuingOrganization: entry.issuingOrganization
-        ? [toOrgRef(entry.issuingOrganization)]
-        : [],
+      issuingOrganization: entry.issuingOrganization.map(toOrgRef),
       organizationLocations: entry.organizationLocations.map(toLocationRef),
       internationallyAccepted: entry.internationallyAccepted,
       issueDate: normalizeToDateOnly(entry.issueDate),

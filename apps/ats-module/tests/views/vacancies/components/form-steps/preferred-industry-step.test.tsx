@@ -65,27 +65,30 @@ vi.mock('@cgp/ui-kit/components/multi-select', () => {
       options = [],
       onChange,
       onSearchSync,
-      onMaxSelected,
       placeholder,
       disabled,
       creatable,
       maxSelected,
+      errorMessage,
+      onErrorStateChange,
     }: {
       value?: Option[];
       options?: Option[];
       onChange?: (opts: Option[]) => void;
       onSearchSync?: (v: string) => Option[];
-      onMaxSelected?: (max: number) => void;
       placeholder?: string;
       disabled?: boolean;
       creatable?: boolean;
       maxSelected?: number;
+      errorMessage?: string;
+      onErrorStateChange?: (v: boolean) => void;
       [k: string]: unknown;
     },
     _ref: unknown
   ) {
     const [open, setOpen] = useState(false);
     const [search, setSearch] = useState('');
+    const [maxError, setMaxError] = useState(false);
 
     const displayOptions = onSearchSync ? onSearchSync(search) : options;
     const filtered = displayOptions.filter(
@@ -117,6 +120,7 @@ vi.mock('@cgp/ui-kit/components/multi-select', () => {
           onChange={e => setSearch(e.target.value)}
           onFocus={() => setOpen(true)}
         />
+        {maxError && <span>{errorMessage}</span>}
         {open && (
           <ul data-testid="multi-selector-options">
             {filtered.map(o => (
@@ -124,8 +128,13 @@ vi.mock('@cgp/ui-kit/components/multi-select', () => {
                 key={o.value}
                 onClick={() => {
                   if (maxSelected && value.length >= maxSelected) {
-                    onMaxSelected?.(value.length);
+                    setMaxError(true);
+                    onErrorStateChange?.(true);
                     return;
+                  }
+                  if (maxError) {
+                    setMaxError(false);
+                    onErrorStateChange?.(false);
                   }
                   onChange?.([...value, o]);
                   setSearch('');
@@ -138,8 +147,13 @@ vi.mock('@cgp/ui-kit/components/multi-select', () => {
               <li
                 onClick={() => {
                   if (maxSelected && value.length >= maxSelected) {
-                    onMaxSelected?.(value.length);
+                    setMaxError(true);
+                    onErrorStateChange?.(true);
                     return;
+                  }
+                  if (maxError) {
+                    setMaxError(false);
+                    onErrorStateChange?.(false);
                   }
                   onChange?.([...value, { value: search, label: search }]);
                   setSearch('');
@@ -266,6 +280,7 @@ function renderStep(
   const onNext = vi.fn();
   const onBack = vi.fn();
   const onSubmit = vi.fn();
+  const setFormSpy = vi.fn();
 
   mockUseVacancyForm.mockImplementation(() => {
     const initialState = makeForm(formOverrides);
@@ -281,6 +296,7 @@ function renderStep(
           | typeof formState
           | ((prev: typeof formState) => typeof formState)
       ) => {
+        setFormSpy(updater);
         setFormState(prev =>
           typeof updater === 'function' ? updater(prev) : updater
         );
@@ -301,7 +317,7 @@ function renderStep(
       mode={mode}
     />
   );
-  return { onNext, onBack, onSubmit };
+  return { onNext, onBack, onSubmit, setFormSpy };
 }
 
 // ── Tests ─────────────────────────────────────────────────────────────────────
@@ -473,80 +489,34 @@ describe('PreferredIndustryStep', () => {
     });
   });
 
-  describe('emptyDisableDialog', () => {
-    it('shows when Next is clicked with no items selected', async () => {
+  describe('navigation guard', () => {
+    it('disables Next when no items are selected and dataTakenFromCandidate is false', () => {
+      renderStep();
+
+      expect(screen.getByText('common.next')).toBeDisabled();
+    });
+
+    it('does not render emptyDisableDialog when Next is disabled', async () => {
       const user = userEvent.setup();
       const { onNext } = renderStep();
 
       await user.click(screen.getByText('common.next'));
 
       expect(
-        screen.getByText('preferredIndustries.emptyDisableDialog.title')
-      ).toBeInTheDocument();
+        screen.queryByText('preferredIndustries.emptyDisableDialog.title')
+      ).not.toBeInTheDocument();
       expect(onNext).not.toHaveBeenCalled();
     });
 
-    it('does not show when dataTakenFromCandidate is checked', async () => {
+    it('enables Next when dataTakenFromCandidate is checked', async () => {
       const user = userEvent.setup();
-      const { onNext } = renderStep();
+      renderStep();
 
       await user.click(
         screen.getByLabelText('preferredIndustries.dataTakenFromCandidate')
       );
-      await user.click(screen.getByText('common.next'));
 
-      expect(
-        screen.queryByText('preferredIndustries.emptyDisableDialog.title')
-      ).not.toBeInTheDocument();
-      expect(onNext).toHaveBeenCalledTimes(1);
-    });
-
-    it('closes without changing state when Cancel is clicked', async () => {
-      const user = userEvent.setup();
-      const { onNext } = renderStep();
-
-      await user.click(screen.getByText('common.next'));
-      await screen.findByText('preferredIndustries.emptyDisableDialog.title');
-      await user.click(screen.getByText('common.disableDialog.cancelButton'));
-
-      expect(
-        screen.queryByText('preferredIndustries.emptyDisableDialog.title')
-      ).not.toBeInTheDocument();
-      expect(onNext).not.toHaveBeenCalled();
-    });
-
-    it('calls onNext with disabled payload when Disable is clicked', async () => {
-      const user = userEvent.setup();
-      const { onNext } = renderStep();
-
-      await user.click(screen.getByText('common.next'));
-      await screen.findByText('preferredIndustries.emptyDisableDialog.title');
-      await user.click(
-        screen.getByText('preferredIndustries.emptyDisableDialog.disable')
-      );
-
-      expect(onNext).toHaveBeenCalledWith({
-        preferredIndustries: {
-          isEnabled: false,
-          dataTakenFromCandidate: false,
-          industries: [],
-        },
-      });
-    });
-
-    it('fires SuccessToast when Disable is clicked', async () => {
-      const user = userEvent.setup();
-      renderStep();
-
-      await user.click(screen.getByText('common.next'));
-      await screen.findByText('preferredIndustries.emptyDisableDialog.title');
-      await user.click(
-        screen.getByText('preferredIndustries.emptyDisableDialog.disable')
-      );
-
-      expect(mockSuccessToast).toHaveBeenCalledWith(
-        'preferredIndustries.title'
-      );
+      expect(screen.getByText('common.next')).toBeEnabled();
     });
   });
 
@@ -735,18 +705,26 @@ describe('PreferredIndustryStep', () => {
       expect(screen.queryAllByTestId('chip')).toHaveLength(0);
     });
 
-    it('shows max-industries error when the user tries to add beyond the limit', async () => {
-      const tenIndustries = Array.from({ length: 10 }, (_, i) => ({
+    it('shows max-industries error only after attempting the 11th selection', async () => {
+      const nineIndustries = Array.from({ length: 9 }, (_, i) => ({
         id: `selected-${i}`,
         label: `Industry ${i}`,
       }));
-      renderStep({ industries: tenIndustries });
+      renderStep({ industries: nineIndustries });
 
       const user = userEvent.setup();
       await user.click(
         screen.getByPlaceholderText('preferredIndustries.input.placeholder')
       );
-      await user.click(screen.getByText('Finance')); // 11th — triggers max error
+
+      // 10th selection: should not show max error yet.
+      await user.click(screen.getByText('Finance'));
+      expect(
+        screen.queryByText('preferredIndustries.validation.maxIndustries')
+      ).not.toBeInTheDocument();
+
+      // 11th selection attempt: should now show max error.
+      await user.click(screen.getByText('Technology'));
 
       await waitFor(() => {
         expect(
@@ -845,12 +823,15 @@ describe('PreferredIndustryStep', () => {
       expect(mockOnCancel).toHaveBeenCalledTimes(1);
     });
 
-    it('calls onBack when the header back button is clicked', async () => {
+    it('persists form and calls onBack when the header back button is enabled and clicked', async () => {
       const user = userEvent.setup();
-      const { onBack } = renderStep();
+      const { onBack, setFormSpy } = renderStep({
+        industries: [{ id: 'ind-1', label: 'Healthcare' }],
+      });
 
       await user.click(screen.getByRole('button', { name: 'common.back' }));
 
+      expect(setFormSpy).toHaveBeenCalledTimes(1);
       expect(onBack).toHaveBeenCalledTimes(1);
     });
 

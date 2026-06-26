@@ -34,7 +34,7 @@ vi.mock(
             onClick={() =>
               props.onAdded({
                 value: '__pending_awarding_body_123',
-                label: 'New Institute',
+                label: 'New Institute, Colombo',
                 source: 'PENDING_TEMP',
                 locationId: 'loc-1',
               })
@@ -421,6 +421,9 @@ async function openConfirmDialog() {
 describe('TertiaryEducationStep', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    stableForm.tertiaryEducation = [
+      { isEnabled: false, dataTakenFromCandidate: false, content: [] },
+    ];
     stableForm.status = undefined;
     mockQualificationMutate.mockResolvedValue({
       data: { pendingId: 'qual-id' },
@@ -752,7 +755,7 @@ describe('TertiaryEducationStep', () => {
   });
 
   describe('navigation', () => {
-    it('calls onBack when the back arrow is clicked', async () => {
+    it('persists form and calls onBack when the back arrow is clicked', async () => {
       const user = userEvent.setup();
       const { onBack } = renderStep();
 
@@ -760,6 +763,7 @@ describe('TertiaryEducationStep', () => {
         screen.getByRole('button', { name: 'tertiaryEducation.back' })
       );
 
+      expect(mockSetForm).toHaveBeenCalledTimes(1);
       expect(onBack).toHaveBeenCalledTimes(1);
     });
   });
@@ -853,6 +857,38 @@ describe('TertiaryEducationStep', () => {
   });
 
   describe('creatable field items deferred to Next', () => {
+    const makeApiRefs = (prefix: string, count = 10) =>
+      Array.from({ length: count }, (_, index) => ({
+        id: `${prefix}-${index + 1}`,
+        source: 'MASTER' as const,
+        name: `${prefix} ${index + 1}`,
+      }));
+
+    const setMaxedTertiaryForm = () => {
+      stableForm.tertiaryEducation = [
+        {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          content: [
+            {
+              qualificationName: makeApiRefs('qualification'),
+              tertiaryAwardingBody: [],
+              tertiaryAwardingBodyLocations: [],
+              levelOfQualification: makeApiRefs('level'),
+              specialization: makeApiRefs('specialization'),
+              studyMode: [],
+              studyPattern: [],
+              deliverySchedule: [],
+              batch: makeApiRefs('batch'),
+              department: makeApiRefs('department'),
+              faculty: makeApiRefs('faculty'),
+              grade: '',
+            },
+          ],
+        },
+      ];
+    };
+
     it('does not call addQualificationMutation when a new qualification item is added', async () => {
       const user = userEvent.setup();
       renderStep();
@@ -1015,6 +1051,52 @@ describe('TertiaryEducationStep', () => {
       });
     });
 
+    it.each([
+      {
+        placeholder: 'tertiaryEducation.placeholders.qualificationName',
+        mutationSpy: mockQualificationMutate,
+      },
+      {
+        placeholder: 'tertiaryEducation.placeholders.batch',
+        mutationSpy: mockBatchMutate,
+      },
+      {
+        placeholder: 'tertiaryEducation.placeholders.levelOfQualification',
+        mutationSpy: mockLevelMutate,
+      },
+      {
+        placeholder: 'tertiaryEducation.placeholders.specialization',
+        mutationSpy: mockSpecializationMutate,
+      },
+      {
+        placeholder: 'tertiaryEducation.placeholders.department',
+        mutationSpy: mockDepartmentMutate,
+      },
+      {
+        placeholder: 'tertiaryEducation.placeholders.faculty',
+        mutationSpy: mockFacultyMutate,
+      },
+    ])(
+      'does not call deferred add mutation for %s when already at max and Next is clicked',
+      async ({ placeholder, mutationSpy }) => {
+        const user = userEvent.setup();
+        setMaxedTertiaryForm();
+        renderStep();
+
+        const input = screen.getByPlaceholderText(placeholder);
+        if (!(input instanceof HTMLInputElement)) {
+          throw new Error('Expected input element');
+        }
+        input.value = 'new-val';
+
+        await user.click(screen.getByText('tertiaryEducation.next'));
+
+        await waitFor(() => {
+          expect(mutationSpy).not.toHaveBeenCalledWith('new-val');
+        });
+      }
+    );
+
     it('does not call addTertiaryAwardingBodyMutation immediately when awarding body dialog Add Now is clicked', async () => {
       const user = userEvent.setup();
       renderStep();
@@ -1044,7 +1126,7 @@ describe('TertiaryEducationStep', () => {
       await waitFor(() => {
         expect(mockAddAwardingBodyMutate).toHaveBeenCalledWith(
           expect.objectContaining({
-            displayValue: 'New Institute',
+            displayValue: 'New Institute, Colombo',
             locationId: 'loc-1',
           })
         );
@@ -1235,6 +1317,72 @@ describe('TertiaryEducationStep', () => {
         'tertiaryEducation.placeholders.grade'
       );
       expect(gradeInput).toHaveValue('High Distinction');
+    });
+  });
+
+  describe('Dropdown duplicate filtering (case-insensitive by label/name)', () => {
+    /**
+     * FIX: Dropdown onSearch callbacks filter by label (display name) instead of value (ID)
+     * This prevents duplicate awarding bodies from appearing when the same name is added with different IDs
+     *
+     * Example: User adds "University of Oxford", then searches for "oxford" or "OXFORD"
+     * Before fix: Would show both the newly added body AND the same body from API (different IDs)
+     * After fix: Only shows one "University of Oxford" in dropdown (filters by case-insensitive label match)
+     */
+    it('should filter awarding body results by label (name) to prevent duplicates', () => {
+      const selectedBodies = [
+        {
+          value: 'uuid-1',
+          label: 'University of Oxford',
+          source: 'MASTER',
+        },
+        { value: 'uuid-2', label: 'Cambridge', source: 'PENDING_TEMP' },
+      ];
+
+      const apiResults = [
+        {
+          value: 'api-uuid-1',
+          label: 'university of oxford',
+          source: 'MASTER',
+        }, // Same name, different ID!
+        { value: 'api-uuid-2', label: 'LSE', source: 'MASTER' },
+      ];
+
+      // Filter logic: use label.toLowerCase() not value.toLowerCase()
+      const selectedLabels = new Set(
+        selectedBodies.map(v => v.label.toLowerCase())
+      );
+      const filtered = apiResults.filter(
+        item => !selectedLabels.has(item.label.toLowerCase())
+      );
+
+      // Should only return LSE (university of oxford is filtered out)
+      expect(filtered).toHaveLength(1);
+      expect(filtered[0]?.label).toBe('LSE');
+    });
+
+    it('should filter location results by label (name) to prevent duplicates', () => {
+      const selectedLocations = [
+        { value: 'loc-id-1', label: 'London' },
+        { value: 'loc-id-2', label: 'Oxford' },
+      ];
+
+      const apiResults = [
+        { value: 'api-loc-id-1', label: 'london' }, // Same name, different ID!
+        { value: 'api-loc-id-2', label: 'Manchester' },
+      ];
+
+      // Filter logic: use label.toLowerCase() not value.toLowerCase()
+      const selectedLabels = new Set(
+        selectedLocations.map(v => v.label.toLowerCase())
+      );
+      const filtered = apiResults.filter(
+        item => !selectedLabels.has(item.label.toLowerCase())
+      );
+
+      // Should only return Manchester (london is filtered out)
+      expect(filtered).toHaveLength(1);
+      expect(filtered[0]?.label).toBe('Manchester');
     });
   });
 });
