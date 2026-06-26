@@ -25,19 +25,23 @@ const {
   mockStepPersistRef,
   mockStepDisableRef,
   mockOnCancel,
-} = vi.hoisted(() => ({
-  stableForm: {
+} = vi.hoisted(() => {
+  const stableForm: MockVacancyForm = {
     secondaryEducation: [
       { isEnabled: false, dataTakenFromCandidate: false, content: [] },
     ],
-    status: undefined as string | undefined,
-  } as MockVacancyForm,
-  mockSetForm: vi.fn(),
-  mockSetStepGuard: vi.fn(),
-  mockStepPersistRef: { current: null },
-  mockStepDisableRef: { current: null },
-  mockOnCancel: vi.fn(),
-}));
+    status: undefined,
+  };
+
+  return {
+    stableForm,
+    mockSetForm: vi.fn(),
+    mockSetStepGuard: vi.fn(),
+    mockStepPersistRef: { current: null },
+    mockStepDisableRef: { current: null },
+    mockOnCancel: vi.fn(),
+  };
+});
 
 vi.mock('@/views/vacancies/context/vacancy-form-context', () => ({
   useVacancyForm: () => ({

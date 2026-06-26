@@ -1,7 +1,7 @@
 import type {
   ApiResponse,
+  CreatePendingItemResponse,
   SingleApiResponse,
-  SocietyCreateResponse,
   SocietyItem,
 } from '@/views/vacancies/types';
 
@@ -14,15 +14,24 @@ export const societyService = {
   ): Promise<ApiResponse<SocietyItem[]>> => {
     const response = await httpClient.get<ApiResponse<SocietyItem[]>>(
       `/societies`,
+
       { params: { search, size } }
     );
     return response.data;
   },
 
-  createSociety: async (label: string): Promise<SocietyCreateResponse> => {
+  createSociety: async (label: string): Promise<CreatePendingItemResponse> => {
     const response = await httpClient.post<
-      SingleApiResponse<SocietyCreateResponse>
-    >(`/societies`, { type: 'SOCIETY', displayValue: label });
+      SingleApiResponse<CreatePendingItemResponse>
+    >(`/societies`, {
+      type: 'SOCIETY',
+      displayValue: label,
+      payload: {
+        additionalProp1: 'string',
+        additionalProp2: 'string',
+        additionalProp3: 'string',
+      },
+    });
     return response.data.data;
   },
 };

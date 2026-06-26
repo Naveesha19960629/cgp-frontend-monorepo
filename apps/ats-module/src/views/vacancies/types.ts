@@ -358,13 +358,13 @@ interface ClubSocietyFormEntry {
   id: string;
   isOpen: boolean;
   clubSociety: OptionWithSource[];
+  clubSocietySearch: string;
   startDate?: string;
   endDate?: string;
   representedOrganization: OptionWithSource[];
   organizationLocations: OptionLabel[];
   position: string;
 }
-
 interface PreferredClubSocietiesState {
   isEnabled: boolean;
   dataTakenFromCandidate: boolean;

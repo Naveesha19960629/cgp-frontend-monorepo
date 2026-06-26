@@ -132,7 +132,7 @@ vi.mock('@/views/vacancies/hooks', () => ({
 
 vi.mock('@/views/vacancies/utils', () => ({
   formatDate: () => 'formatted',
-  resolveUserCreatedOrganizations: vi.fn(async (entries: unknown[]) => entries),
+  resolveUserCreatedOrganizations: vi.fn((entries: unknown[]) => entries),
   toLicenseCertificatesPayload: (values: unknown) => values,
 }));
 
