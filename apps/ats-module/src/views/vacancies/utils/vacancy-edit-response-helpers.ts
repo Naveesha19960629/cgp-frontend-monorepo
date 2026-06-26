@@ -2,6 +2,7 @@ import type {
   AddOrSelectOption,
   JobRequirement,
   LicenseCertRef,
+  ScheduleVacancy,
   SkillCareerPathEntry,
   VacancyForm,
 } from '@/views/vacancies/types';
@@ -1112,6 +1113,30 @@ function normalizeVacancyStatus(
   return mapped;
 }
 
+function normalizeScheduleSection(
+  rawSection: unknown,
+  fallback: VacancyForm['schedule']
+): VacancyForm['schedule'] {
+  if (!isRecord(rawSection)) {
+    return fallback;
+  }
+
+  const schedulePublishAt =
+    toSafeString(rawSection.schedulePublishAt) ||
+    toSafeString(rawSection.publishAt) ||
+    '';
+  const expirationAt = toSafeString(rawSection.expirationAt) || '';
+
+  if (!schedulePublishAt && !expirationAt) {
+    return fallback;
+  }
+
+  return {
+    schedulePublishAt,
+    expirationAt,
+  };
+}
+
 function toVacancyFormFromResponse(
   rawVacancy: Record<string, unknown>,
   previousForm: VacancyForm
@@ -1179,6 +1204,10 @@ function toVacancyFormFromResponse(
     'preferredHobbies',
     'hobbyList',
     'hobbies',
+  ]);
+  const scheduleSection = readSectionValue(rawVacancy, sectionSource, [
+    'schedule',
+    'scheduleRequirement',
   ]);
 
   // Explicit whitelist: only pick known scalar top-level form fields.
@@ -1267,6 +1296,7 @@ function toVacancyFormFromResponse(
       preferredHobbiesSection,
       previousForm.preferredHobbies
     ),
+    schedule: normalizeScheduleSection(scheduleSection, previousForm.schedule),
   };
 }
 

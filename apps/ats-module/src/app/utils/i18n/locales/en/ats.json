@@ -922,6 +922,7 @@
     "timeLabel": "Schedule Time",
     "timePlaceholder": "hh:mm:ss AM/PM",
     "create": "Create",
+    "update": "Update",
     "cancel": "Cancel",
     "validation": {
       "publishDateRequired": "Scheduled Publish Date & Time is required.",

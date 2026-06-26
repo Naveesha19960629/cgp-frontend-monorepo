@@ -1,8 +1,11 @@
+import { renderHook } from '@testing-library/react';
+
 import { describe, expect, it } from 'vitest';
 
 import {
   to24Hour,
   toScheduleVacancyPayload,
+  useScheduleVacancyForm,
 } from '@/views/vacancies/hooks/use-schedule-vacancy-form';
 
 describe('use-schedule-vacancy-form helpers', () => {
@@ -132,6 +135,49 @@ describe('use-schedule-vacancy-form helpers', () => {
       const result = toScheduleVacancyPayload(values);
       expect(result.schedulePublishAt).toBe('2026-06-25T12:00:00 PM');
       expect(result.expirationAt).toBe('2026-06-30T12:30:00 PM');
+    });
+  });
+
+  describe('useScheduleVacancyForm', () => {
+    it('pre-fills correct date and time fields when passed a 12-hour AM/PM backend datetime string', () => {
+      const defaults = {
+        schedulePublishAt: '2026-06-25T05:27:10 PM',
+        expirationAt: '2026-06-30T10:30:00 AM',
+      };
+      const { result } = renderHook(() => useScheduleVacancyForm(defaults));
+
+      expect(result.current.getValues()).toEqual({
+        schedulePublishDate: '2026-06-25',
+        schedulePublishTime: '05:27:10 PM',
+        expirationDate: '2026-06-30',
+        expirationTime: '10:30:00 AM',
+      });
+    });
+
+    it('pre-fills correct date and time fields when passed a 24-hour ISO backend datetime string', () => {
+      const defaults = {
+        schedulePublishAt: '2026-06-24T01:00:00',
+        expirationAt: '2026-06-26T12:59:59',
+      };
+      const { result } = renderHook(() => useScheduleVacancyForm(defaults));
+
+      expect(result.current.getValues()).toEqual({
+        schedulePublishDate: '2026-06-24',
+        schedulePublishTime: '01:00:00 AM',
+        expirationDate: '2026-06-26',
+        expirationTime: '12:59:59 PM',
+      });
+    });
+
+    it('returns empty defaultValues when no defaults are provided', () => {
+      const { result } = renderHook(() => useScheduleVacancyForm());
+
+      expect(result.current.getValues()).toEqual({
+        schedulePublishDate: '',
+        schedulePublishTime: '',
+        expirationDate: '',
+        expirationTime: '',
+      });
     });
   });
 });
