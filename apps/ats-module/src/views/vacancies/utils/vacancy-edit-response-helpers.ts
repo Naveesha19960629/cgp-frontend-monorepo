@@ -2,7 +2,6 @@ import type {
   AddOrSelectOption,
   JobRequirement,
   LicenseCertRef,
-  ScheduleVacancy,
   SkillCareerPathEntry,
   VacancyForm,
 } from '@/views/vacancies/types';
