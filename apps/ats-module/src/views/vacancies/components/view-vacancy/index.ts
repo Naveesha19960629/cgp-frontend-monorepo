@@ -2,6 +2,7 @@ export { VacancyView } from '@/views/vacancies/components/view-vacancy/vacancy-v
 export { VacancyJobRequirementsSection } from '@/views/vacancies/components/view-vacancy/vacancy-job-requirements-section';
 export { VacancyProfileRequirementsSection } from '@/views/vacancies/components/view-vacancy/vacancy-profile-requirements-section';
 export { VacancyScheduledVacancySection } from '@/views/vacancies/components/view-vacancy/vacancy-scheduled-vacancy-section';
+export { VacancyCustomizableFormSection } from '@/views/vacancies/components/view-vacancy/vacancy-customizable-form-section';
 export { VacancyNoDetailsState } from '@/views/vacancies/components/view-vacancy/vacancy-no-details-state';
 export { VacancyPublicationsSection } from '@/views/vacancies/components/view-vacancy/vacancy-publications-section';
 export { VacancyClubsSocietiesSection } from '@/views/vacancies/components/view-vacancy/vacancy-clubs-societies-section';

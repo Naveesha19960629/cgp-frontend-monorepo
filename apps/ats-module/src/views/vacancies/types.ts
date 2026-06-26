@@ -1167,6 +1167,35 @@ interface VacancyViewScheduledVacancy {
   vacancyLink: string;
 }
 
+interface VacancyViewCustomizableFormQuestion {
+  text: string;
+  type:
+    | 'SHORT_ANSWER'
+    | 'PARAGRAPH'
+    | 'MULTIPLE_CHOICE'
+    | 'CHECKBOXES'
+    | 'DROPDOWN'
+    | 'LINEAR_SCALE'
+    | '';
+  required: boolean;
+  options: string[];
+  scaleFrom: number;
+  scaleTo: number;
+  startLabel: string;
+  endLabel: string;
+}
+
+interface VacancyViewCustomizableFormCard {
+  title: string;
+  questions: VacancyViewCustomizableFormQuestion[];
+}
+
+interface VacancyViewCustomizableForm {
+  isEnabled: boolean;
+  sectionTitle: string;
+  forms: VacancyViewCustomizableFormCard[];
+}
+
 interface VacancyViewModel {
   title: string;
   status: string;
@@ -1174,6 +1203,7 @@ interface VacancyViewModel {
   jobRequirement: VacancyViewJobRequirement;
   profileRequirement: VacancyViewProfileRequirement;
   scheduledVacancy?: VacancyViewScheduledVacancy;
+  customizableForm?: VacancyViewCustomizableForm;
   secondaryEducation?: VacancyViewSecondaryEducation;
   tertiaryEducation?: VacancyViewTertiaryEducation;
   licenseCertificates?: VacancyViewLicenseCertificates;
@@ -1455,6 +1485,9 @@ export type {
   CreateColumnsOptions,
   VacancyViewModel,
   VacancyViewScheduledVacancy,
+  VacancyViewCustomizableForm,
+  VacancyViewCustomizableFormCard,
+  VacancyViewCustomizableFormQuestion,
   VacancyViewJobRequirement,
   VacancyTablePaginationProps,
   SortableHeaderProps,

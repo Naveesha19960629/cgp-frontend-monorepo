@@ -151,7 +151,8 @@
       "sections": {
         "jobRequirements": "Job Requirement",
         "profileRequirements": "Profile Requirements",
-        "scheduledVacancy": "Scheduled Vacancy"
+        "scheduledVacancy": "Scheduled Vacancy",
+        "customizableForms": "Customizable Forms"
       },
       "scheduledVacancy": {
         "publishDateTime": "Scheduled Publish Date & Time",
@@ -296,6 +297,17 @@
       "endLabel": "End Label",
       "addOption": "Add Option",
       "required": "Required"
+    },
+    "view": {
+      "customizedQuestions": "Customized Questions",
+      "question": "Question",
+      "type": "Type",
+      "options": "Options",
+      "scale": "Scale",
+      "submissionRequirement": "Submission Requirement",
+      "required": "Required",
+      "optional": "Optional",
+      "skillLevelValue": "Skill Level {{level}} Value"
     }
   },
 
