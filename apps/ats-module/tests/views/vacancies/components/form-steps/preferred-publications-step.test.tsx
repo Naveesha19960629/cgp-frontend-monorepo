@@ -10,7 +10,34 @@ import PreferredPublicationsStep from '@/views/vacancies/components/form-steps/p
 // ── Module mocks ─────────────────────────────────────────────────────────────
 
 vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ t: (key: string) => key }),
+  useTranslation: () => ({
+    t: (key: string, options?: { number?: string }) => {
+      if (key === 'preferredPublications.cardTitle') {
+        return `Publication ${options?.number ?? '01'}`;
+      }
+
+      const dictionary: Record<string, string> = {
+        'preferredPublications.title': 'Preferred Publications',
+        'preferredPublications.labels.acceptedPublisher': 'Accepted Publisher',
+        'preferredPublications.labels.publishedDateFrom': 'Published Date From',
+        'preferredPublications.labels.publishedDateTo': 'Published Date To',
+        'preferredPublications.placeholders.acceptedPublisher':
+          'Enter accepted publisher',
+        'preferredPublications.placeholders.publishedDateFrom':
+          'Select published date from',
+        'preferredPublications.placeholders.publishedDateTo':
+          'Select published date to',
+        'preferredPublications.dataTakenFromCandidate':
+          'If selected, no manual input is required, and data will be taken from the candidate profile',
+        'preferredPublications.addEntry': 'Add entry',
+        'preferredPublications.cancel': 'Cancel',
+        'preferredPublications.next': 'Next',
+        'preferredPublications.back': 'Back',
+      };
+
+      return dictionary[key] ?? key;
+    },
+  }),
 }));
 
 const onCancel = vi.hoisted(() => vi.fn());

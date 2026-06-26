@@ -137,6 +137,9 @@ function SportCard({
   locationOptions: Array<{ value: string; label: string }>;
   isLocationsLoading: boolean;
 }>) {
+  const { t } = useTranslation('ats');
+  const [sportsError, setSportsError] = useState(false);
+  const [organizationsError, setOrganizationsError] = useState(false);
   const [openDatePopover, setOpenDatePopover] = useState<
     'startDate' | 'endDate' | null
   >(null);
@@ -151,13 +154,19 @@ function SportCard({
         {/* Card header */}
         <div className="flex items-center justify-between px-5 py-5">
           <span className="text-base font-bold text-slate-900">
-            Sports {String(index + 1).padStart(2, '0')}
+            {t('preferredSports.cardTitle', {
+              number: String(index + 1).padStart(2, '0'),
+            })}
           </span>
           <CollapsibleTrigger asChild>
             <button
               type="button"
               className="text-slate-400 transition-colors hover:text-slate-600"
-              aria-label={entry.isOpen ? 'Collapse' : 'Expand'}
+              aria-label={
+                entry.isOpen
+                  ? t('preferredSports.collapse')
+                  : t('preferredSports.expand')
+              }
             >
               <ChevronUpIcon
                 className={cn(
@@ -181,7 +190,11 @@ function SportCard({
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-1">
                 <div className="flex items-center justify-between">
-                  <Label>Name of the Sport</Label>
+                  <Label
+                    className={sportsError ? 'text-destructive' : undefined}
+                  >
+                    {t('preferredSports.labels.sport')}
+                  </Label>
                   <CharacterCount
                     currentLength={entry.sportSearch.length}
                     maxLength={MAX_SPORT_NAME_LENGTH}
@@ -223,12 +236,14 @@ function SportCard({
                   triggerSearchOnFocus
                   hideClearAllButton
                   maxSelected={MAX_SELECTIONS}
+                  errorMessage={t('preferredSports.errors.maxSelections')}
+                  onErrorStateChange={setSportsError}
                   disabled={fieldsDisabled}
                   loading={isSportsLoading}
-                  placeholder="Select or add sport name"
+                  placeholder={t('preferredSports.placeholders.sport')}
                   emptyIndicator={
                     <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                      No sports found
+                      {t('preferredSports.empty.sports')}
                     </p>
                   }
                 />
@@ -239,7 +254,7 @@ function SportCard({
                   <Label
                     className={locationsError ? 'text-destructive' : undefined}
                   >
-                    Organization Location
+                    {t('preferredSports.labels.organizationLocation')}
                   </Label>
                 </div>
                 <MultipleSelector
@@ -261,14 +276,16 @@ function SportCard({
                   keepSelectedInList
                   hideClearAllButton
                   maxSelected={MAX_SELECTIONS}
-                  errorMessage="Exceeded maximum of 10 selections"
+                  errorMessage={t('preferredSports.errors.maxSelections')}
                   onErrorStateChange={setLocationsError}
                   disabled={fieldsDisabled}
                   loading={isLocationsLoading}
-                  placeholder="Select location"
+                  placeholder={t(
+                    'preferredSports.placeholders.organizationLocation'
+                  )}
                   emptyIndicator={
                     <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                      No locations found
+                      {t('preferredSports.empty.locations')}
                     </p>
                   }
                 />
@@ -279,7 +296,7 @@ function SportCard({
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-1">
                 <div className="flex h-5 items-center">
-                  <Label>Level Represented</Label>
+                  <Label>{t('preferredSports.labels.levelRepresented')}</Label>
                 </div>
                 <MultipleSelector
                   value={entry.levelRepresented}
@@ -309,10 +326,12 @@ function SportCard({
                   maxSelected={MAX_SELECTIONS}
                   disabled={fieldsDisabled}
                   loading={isLevelsLoading}
-                  placeholder="Select level represented"
+                  placeholder={t(
+                    'preferredSports.placeholders.levelRepresented'
+                  )}
                   emptyIndicator={
                     <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                      No levels found
+                      {t('preferredSports.empty.levels')}
                     </p>
                   }
                 />
@@ -320,7 +339,13 @@ function SportCard({
 
               <div className="flex flex-col gap-1">
                 <div className="flex h-5 items-center">
-                  <Label>Represented Organization</Label>
+                  <Label
+                    className={
+                      organizationsError ? 'text-destructive' : undefined
+                    }
+                  >
+                    {t('preferredSports.labels.representedOrganization')}
+                  </Label>
                 </div>
                 <MultipleSelector
                   value={entry.representedOrganization}
@@ -362,12 +387,16 @@ function SportCard({
                   triggerSearchOnFocus
                   hideClearAllButton
                   maxSelected={MAX_SELECTIONS}
+                  errorMessage={t('preferredSports.errors.maxSelections')}
+                  onErrorStateChange={setOrganizationsError}
                   disabled={fieldsDisabled}
                   loading={isOrganizationsLoading}
-                  placeholder="Select or add represented organization"
+                  placeholder={t(
+                    'preferredSports.placeholders.representedOrganization'
+                  )}
                   emptyIndicator={
                     <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                      No organizations found
+                      {t('preferredSports.empty.organizations')}
                     </p>
                   }
                 />
@@ -378,7 +407,7 @@ function SportCard({
             <div className="grid grid-cols-4 gap-4">
               <div className="flex flex-col gap-1">
                 <div className="flex items-center justify-between">
-                  <Label>Position / Role Held</Label>
+                  <Label>{t('preferredSports.labels.position')}</Label>
                   <CharacterCount
                     currentLength={entry.position.length}
                     maxLength={MAX_POSITION_LENGTH}
@@ -391,14 +420,14 @@ function SportCard({
                     onUpdate(index, { position: sanitized.trimStart() });
                   }}
                   maxLength={MAX_POSITION_LENGTH}
-                  placeholder="Enter position"
+                  placeholder={t('preferredSports.placeholders.position')}
                   className="h-11"
                 />
               </div>
 
               <div className="flex flex-col gap-1">
                 <div className="flex h-5 items-center">
-                  <Label>Start Date</Label>
+                  <Label>{t('preferredSports.labels.startDate')}</Label>
                 </div>
                 <Popover
                   modal
@@ -427,7 +456,7 @@ function SportCard({
                     >
                       {entry.startDate
                         ? formatDate(entry.startDate)
-                        : 'Select start date'}
+                        : t('preferredSports.placeholders.startDate')}
                       <CalendarIcon
                         variant="Linear"
                         size={20}
@@ -469,7 +498,7 @@ function SportCard({
 
               <div className="flex flex-col gap-1">
                 <div className="flex h-5 items-center">
-                  <Label>End Date</Label>
+                  <Label>{t('preferredSports.labels.endDate')}</Label>
                 </div>
                 <Popover
                   modal
@@ -498,7 +527,7 @@ function SportCard({
                     >
                       {entry.endDate
                         ? formatDate(entry.endDate)
-                        : 'Select end date'}
+                        : t('preferredSports.placeholders.endDate')}
                       <CalendarIcon
                         variant="Linear"
                         size={20}
@@ -731,8 +760,8 @@ export default function PreferredSportsStep({
     removeCompletedStep(currentStepIndex);
     setConfirmDisableOpen(false);
     SuccessToast({
-      title: 'Section Disabled',
-      description: 'Preferred Sports section has been disabled successfully.',
+      title: t('preferredSports.notifications.disable.title'),
+      description: t('preferredSports.notifications.disable.message'),
     });
   };
 
@@ -751,13 +780,11 @@ export default function PreferredSportsStep({
         {/* ── Informational Banner ──────────────────────────────────────── */}
         <MessageBox
           fields={[
-            'Name of the Sport',
-            'Level Represented',
-            'Represented Organization',
-            'Organization Location',
-            'Position / Role Held',
-            'Start Date',
-            'End Date',
+            t('preferredSports.fieldList.sport'),
+            t('preferredSports.fieldList.levelRepresented'),
+            t('preferredSports.fieldList.position'),
+            t('preferredSports.fieldList.startDate'),
+            t('preferredSports.fieldList.endDate'),
           ]}
         />
 
@@ -766,7 +793,7 @@ export default function PreferredSportsStep({
           <div className="flex items-center gap-2">
             <button
               type="button"
-              aria-label="Back"
+              aria-label={t('preferredSports.back')}
               className={cn(
                 'cursor-pointer text-slate-700 transition-colors hover:text-slate-900',
                 !canNavigate &&
@@ -778,7 +805,7 @@ export default function PreferredSportsStep({
               <ArrowLeft2 size={24} />
             </button>
             <h2 className="text-xl font-bold tracking-tight text-slate-900">
-              Preferred Sports
+              {t('preferredSports.title')}
             </h2>
           </div>
           <SwitchPrimitive.Root
@@ -821,8 +848,7 @@ export default function PreferredSportsStep({
             htmlFor="sportsDataTakenFromCandidate"
             className="cursor-pointer text-sm leading-snug font-medium text-slate-900"
           >
-            If selected, no manual input is required, and data will be taken
-            from the candidate profile
+            {t('preferredSports.dataTakenFromCandidate')}
           </Label>
         </div>
 
@@ -866,7 +892,7 @@ export default function PreferredSportsStep({
           <Button
             variant="secondary"
             size="icon"
-            aria-label="Add entry"
+            aria-label={t('preferredSports.addEntry')}
             className="size-11 rounded-lg bg-gray-200 px-3 text-sm"
             disabled
             onClick={addEntry}
@@ -878,14 +904,14 @@ export default function PreferredSportsStep({
         {/* ── Step footer ───────────────────────────────────────────────── */}
         <div className="sticky bottom-0 mt-auto flex items-center justify-end gap-4 bg-white px-6 py-7 shadow-[0px_-8px_6.8px_0px_rgba(0,0,0,0.04)]">
           <Button variant="secondary" className="h-12 w-48" onClick={onCancel}>
-            Cancel
+            {t('preferredSports.cancel')}
           </Button>
           <Button
             className="h-12 w-48"
             onClick={handleNext}
             disabled={!canNavigate}
           >
-            Next
+            {t('preferredSports.next')}
           </Button>
         </div>
       </div>
