@@ -1448,8 +1448,29 @@ export default function TertiaryEducationStep({
         initialName={pendingAwardingBodyLabel}
         onClose={() => {
           setAddAwardingBodyDialogOpen(false);
+          setPendingAwardingBodyLabel('');
+          setAwardingBodySelectorKey(k => k + 1);
         }}
         onAdded={option => {
+          // Validation guard: only add if location is provided
+          if (!option.locationId) {
+            return;
+          }
+
+          // Check for case-insensitive duplicate: same name + same location
+          const normalizedNewLabel = option.label.trim().toLowerCase();
+          const isDuplicate = awardingBodyValue.some(
+            body => body.label.trim().toLowerCase() === normalizedNewLabel
+          );
+
+          if (isDuplicate) {
+            // Item already exists, don't add
+            setAddAwardingBodyDialogOpen(false);
+            setPendingAwardingBodyLabel('');
+            setAwardingBodySelectorKey(k => k + 1);
+            return;
+          }
+
           pendingAwardingBodiesDataRef.current.set(option.value, {
             displayValue: option.label,
             locationId: option.locationId,
@@ -1461,6 +1482,7 @@ export default function TertiaryEducationStep({
           ]);
           setAwardingBodySelectorKey(k => k + 1);
           setAddAwardingBodyDialogOpen(false);
+          setPendingAwardingBodyLabel('');
         }}
       />
 
