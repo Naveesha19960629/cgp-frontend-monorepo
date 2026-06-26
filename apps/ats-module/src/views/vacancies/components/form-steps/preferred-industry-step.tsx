@@ -75,9 +75,10 @@ export default function PreferredIndustryStep({
     }));
   };
 
-  useStepGuard(
-    isEnabled && !dataTakenFromCandidate && selectedIndustries.length === 0
-  );
+  const shouldDisableNavigation =
+    isEnabled && !dataTakenFromCandidate && selectedIndustries.length === 0;
+
+  useStepGuard(shouldDisableNavigation);
 
   useEffect(() => {
     stepPersistRef.current = () => {
@@ -162,6 +163,18 @@ export default function PreferredIndustryStep({
     });
   };
 
+  const handleBack = () => {
+    setForm(prev => ({
+      ...prev,
+      preferredIndustries: {
+        isEnabled,
+        dataTakenFromCandidate,
+        industries: selectedIndustries,
+      },
+    }));
+    onBack();
+  };
+
   return (
     <div>
       {/* ── Section Header ──────────────────────────────────────────── */}
@@ -170,8 +183,9 @@ export default function PreferredIndustryStep({
           <button
             type="button"
             aria-label={t('common.back')}
-            className="text-slate-700 transition-colors hover:text-slate-900"
-            onClick={onBack}
+            disabled={shouldDisableNavigation}
+            className="text-slate-700 transition-colors hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-40"
+            onClick={handleBack}
           >
             <ArrowLeft2 size={24} />
           </button>
@@ -253,7 +267,10 @@ export default function PreferredIndustryStep({
                 label: i.label,
                 source: i.source,
               }))}
-              onMaxSelected={() => setHasMaxError(true)}
+              errorMessage={t('preferredIndustries.validation.maxIndustries', {
+                max: MAX_INDUSTRIES,
+              })}
+              onErrorStateChange={setHasMaxError}
               onChange={options => {
                 const dedupedByLabel = new Map<string, IndustryEntry>();
 
@@ -272,9 +289,6 @@ export default function PreferredIndustryStep({
 
                 const entries = Array.from(dedupedByLabel.values());
                 updatePreferredIndustries({ industries: entries });
-                if (entries.length < MAX_INDUSTRIES) {
-                  setHasMaxError(false);
-                }
               }}
               options={apiIndustries.map(i => ({
                 value: i.id,
@@ -317,13 +331,6 @@ export default function PreferredIndustryStep({
                 </div>
               }
             />
-            {hasMaxError && (
-              <p className="text-destructive mt-2 text-sm">
-                {t('preferredIndustries.validation.maxIndustries', {
-                  max: MAX_INDUSTRIES,
-                })}
-              </p>
-            )}
           </div>
 
           {/* Bottom padding so dropdowns are never clipped */}
@@ -374,7 +381,11 @@ export default function PreferredIndustryStep({
         <Button variant="secondary" className="h-12 w-48" onClick={onCancel}>
           {t('common.cancel')}
         </Button>
-        <Button className="h-12 w-48" onClick={() => void handleNext()}>
+        <Button
+          className="h-12 w-48"
+          disabled={shouldDisableNavigation}
+          onClick={() => void handleNext()}
+        >
           {t('common.next')}
         </Button>
       </div>

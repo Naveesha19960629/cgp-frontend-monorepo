@@ -337,7 +337,7 @@ describe('AddSchoolDialog', () => {
       expect.objectContaining({
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         value: expect.stringMatching(/^__pending_school_/),
-        label: 'Royal College',
+        label: 'Royal College, Colombo',
         source: 'PENDING_TEMP',
         locationId: 'loc-1',
       })

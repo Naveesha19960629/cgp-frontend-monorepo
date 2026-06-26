@@ -1,9 +1,14 @@
 import * as React from 'react';
 
 import { applyTypography } from '@cgp/ui-kit/lib/typography';
-import { cn } from '@cgp/ui-kit/lib/utils';
+import { cn, removeEmoji } from '@cgp/ui-kit/lib/utils';
 
-function Input({ className, type, ...props }: React.ComponentProps<'input'>) {
+function Input({
+  className,
+  type,
+  onChange,
+  ...props
+}: React.ComponentProps<'input'>) {
   return (
     <input
       type={type}
@@ -16,6 +21,13 @@ function Input({ className, type, ...props }: React.ComponentProps<'input'>) {
         className
       )}
       {...props}
+      onChange={event => {
+        const sanitizedValue = removeEmoji(event.currentTarget.value);
+        if (sanitizedValue !== event.currentTarget.value) {
+          event.currentTarget.value = sanitizedValue;
+        }
+        onChange?.(event);
+      }}
     />
   );
 }

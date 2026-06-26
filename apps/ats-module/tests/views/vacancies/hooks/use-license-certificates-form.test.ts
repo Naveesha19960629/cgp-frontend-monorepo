@@ -10,7 +10,7 @@ describe('useLicenseCertificatesForm — no initial data', () => {
     expect(values.isEnabled).toBe(false);
     expect(values.dataTakenFromCandidate).toBe(false);
     expect(values.entry.nameOfLicenseCert).toEqual([]);
-    expect(values.entry.issuingOrganization).toBeUndefined();
+    expect(values.entry.issuingOrganization).toEqual([]);
     expect(values.entry.organizationLocations).toEqual([]);
     expect(values.entry.internationallyAccepted).toBe(false);
     expect(values.entry.issueDate).toBeUndefined();
@@ -98,7 +98,7 @@ describe('useLicenseCertificatesForm — restoring from saved data', () => {
     ]);
   });
 
-  it('maps the first issuingOrganization to a single object', () => {
+  it('maps issuingOrganization as an array of objects', () => {
     const { result } = renderHook(() =>
       useLicenseCertificatesForm([
         {
@@ -121,14 +121,16 @@ describe('useLicenseCertificatesForm — restoring from saved data', () => {
     );
 
     const values = result.current.getValues();
-    expect(values.entry.issuingOrganization).toEqual({
-      value: 'org-uuid',
-      label: 'CompTIA',
-      source: 'MASTER',
-    });
+    expect(values.entry.issuingOrganization).toEqual([
+      {
+        value: 'org-uuid',
+        label: 'CompTIA',
+        source: 'MASTER',
+      },
+    ]);
   });
 
-  it('sets issuingOrganization to undefined when array is empty', () => {
+  it('sets issuingOrganization to an empty array when source array is empty', () => {
     const { result } = renderHook(() =>
       useLicenseCertificatesForm([
         {
@@ -149,7 +151,7 @@ describe('useLicenseCertificatesForm — restoring from saved data', () => {
     );
 
     const values = result.current.getValues();
-    expect(values.entry.issuingOrganization).toBeUndefined();
+    expect(values.entry.issuingOrganization).toEqual([]);
   });
 
   it('maps organizationLocations to value/label pairs', () => {
@@ -196,7 +198,7 @@ describe('useLicenseCertificatesForm — restoring from saved data', () => {
 
     const values = result.current.getValues();
     expect(values.entry.nameOfLicenseCert).toEqual([]);
-    expect(values.entry.issuingOrganization).toBeUndefined();
+    expect(values.entry.issuingOrganization).toEqual([]);
     expect(values.entry.organizationLocations).toEqual([]);
   });
 
@@ -234,11 +236,13 @@ describe('useLicenseCertificatesForm — restoring from saved data', () => {
         certType: undefined,
       },
     ]);
-    expect(values.entry.issuingOrganization).toEqual({
-      value: 'org-obj-1',
-      label: 'PMI',
-      source: 'MASTER',
-    });
+    expect(values.entry.issuingOrganization).toEqual([
+      {
+        value: 'org-obj-1',
+        label: 'PMI',
+        source: 'MASTER',
+      },
+    ]);
   });
 
   it('falls back to id when name and label are missing in API object shape', () => {
@@ -264,7 +268,7 @@ describe('useLicenseCertificatesForm — restoring from saved data', () => {
       value: 'lc-id-only',
       label: 'lc-id-only',
     });
-    expect(values.entry.issuingOrganization).toMatchObject({
+    expect(values.entry.issuingOrganization[0]).toMatchObject({
       value: 'org-id-only',
       label: 'org-id-only',
     });

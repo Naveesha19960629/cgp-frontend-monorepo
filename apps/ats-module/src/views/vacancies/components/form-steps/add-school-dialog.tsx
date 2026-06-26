@@ -145,9 +145,10 @@ export function AddSchoolDialog({
     if (hasError) return;
 
     const tempId = `__pending_school_${Date.now()}`;
+    const formattedLabel = `${name}, ${selectedLocation.label}`;
     onAdded({
       value: tempId,
-      label: name,
+      label: formattedLabel,
       source: 'PENDING_TEMP',
       locationId: selectedLocation.id || undefined,
       url: url || undefined,

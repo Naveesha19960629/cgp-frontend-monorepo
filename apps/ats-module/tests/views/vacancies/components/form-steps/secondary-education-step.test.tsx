@@ -5,6 +5,11 @@ import userEvent from '@testing-library/user-event';
 
 import SecondaryEducationStep from '@/views/vacancies/components/form-steps/secondary-education-step';
 
+type MockVacancyForm = {
+  secondaryEducation: unknown;
+  status: string | undefined;
+};
+
 // ── Mock react-i18next ─────────────────────────────────────────────────────
 
 vi.mock('react-i18next', () => ({
@@ -26,7 +31,7 @@ const {
       { isEnabled: false, dataTakenFromCandidate: false, content: [] },
     ],
     status: undefined as string | undefined,
-  },
+  } as MockVacancyForm,
   mockSetForm: vi.fn(),
   mockSetStepGuard: vi.fn(),
   mockStepPersistRef: { current: null },
@@ -114,7 +119,7 @@ vi.mock('@/views/vacancies/components/form-steps/add-school-dialog', () => ({
           onClick={() =>
             props.onAdded({
               value: '__pending_school_123',
-              label: 'New School',
+              label: 'New School, Colombo',
               source: 'PENDING_TEMP',
               locationId: 'loc-1',
             })
@@ -333,6 +338,9 @@ async function openConfirmDialog() {
 describe('SecondaryEducationStep', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    stableForm.secondaryEducation = [
+      { isEnabled: false, dataTakenFromCandidate: false, content: [] },
+    ];
     stableForm.status = undefined;
     mockExaminationMutate.mockResolvedValue({ data: { pendingId: 'exam-id' } });
     mockAwardingBodyMutate.mockResolvedValue({
@@ -645,7 +653,7 @@ describe('SecondaryEducationStep', () => {
   });
 
   describe('navigation', () => {
-    it('calls onBack when the back arrow is clicked', async () => {
+    it('persists form and calls onBack when the back arrow is clicked', async () => {
       const user = userEvent.setup();
       const { onBack } = renderStep();
 
@@ -653,6 +661,7 @@ describe('SecondaryEducationStep', () => {
         screen.getByRole('button', { name: 'secondaryEducation.back' })
       );
 
+      expect(mockSetForm).toHaveBeenCalledTimes(1);
       expect(onBack).toHaveBeenCalledTimes(1);
     });
   });
@@ -754,6 +763,36 @@ describe('SecondaryEducationStep', () => {
   });
 
   describe('creatable field items deferred to Next', () => {
+    const makeApiRefs = (prefix: string, count = 10) =>
+      Array.from({ length: count }, (_, index) => ({
+        id: `${prefix}-${index + 1}`,
+        source: 'MASTER' as const,
+        name: `${prefix} ${index + 1}`,
+      }));
+
+    const setMaxedSecondaryForm = () => {
+      stableForm.secondaryEducation = [
+        {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          content: [
+            {
+              schools: [],
+              schoolLocations: [],
+              examinations: makeApiRefs('exam'),
+              secondaryAwardingBody: makeApiRefs('awarding-body'),
+              fieldsOfStudy: makeApiRefs('field-of-study'),
+              grade: '',
+              startDate: '',
+              endDate: '',
+              result: '',
+              acceptsHomeSchooling: false,
+            },
+          ],
+        },
+      ];
+    };
+
     it('does not call addExaminationMutation when a new item is added', async () => {
       const user = userEvent.setup();
       renderStep();
@@ -841,6 +880,40 @@ describe('SecondaryEducationStep', () => {
       });
     });
 
+    it.each([
+      {
+        placeholder: 'secondaryEducation.placeholders.examination',
+        mutationSpy: mockExaminationMutate,
+      },
+      {
+        placeholder: 'secondaryEducation.placeholders.awardingBody',
+        mutationSpy: mockAwardingBodyMutate,
+      },
+      {
+        placeholder: 'secondaryEducation.placeholders.fieldOfStudy',
+        mutationSpy: mockFieldOfStudyMutate,
+      },
+    ])(
+      'does not call deferred add mutation for %s when already at max and Next is clicked',
+      async ({ placeholder, mutationSpy }) => {
+        const user = userEvent.setup();
+        setMaxedSecondaryForm();
+        renderStep();
+
+        const input = screen.getByPlaceholderText(placeholder);
+        if (!(input instanceof HTMLInputElement)) {
+          throw new Error('Expected input element');
+        }
+        input.value = 'new-val';
+
+        await user.click(screen.getByText('secondaryEducation.next'));
+
+        await waitFor(() => {
+          expect(mutationSpy).not.toHaveBeenCalledWith('new-val');
+        });
+      }
+    );
+
     it('does not call addSchoolMutation immediately when school dialog Add Now is clicked', async () => {
       const user = userEvent.setup();
       renderStep();
@@ -866,7 +939,7 @@ describe('SecondaryEducationStep', () => {
       await waitFor(() => {
         expect(mockAddSchoolMutate).toHaveBeenCalledWith(
           expect.objectContaining({
-            displayValue: 'New School',
+            displayValue: 'New School, Colombo',
             locationId: 'loc-1',
           })
         );

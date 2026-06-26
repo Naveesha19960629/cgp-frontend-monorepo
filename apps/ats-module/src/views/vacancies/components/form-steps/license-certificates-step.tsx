@@ -2,7 +2,7 @@ import { ChevronUpIcon, Plus } from 'lucide-react';
 
 import { ArrowLeft2, Calendar as CalendarIcon } from 'iconsax-reactjs';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Controller } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
@@ -14,20 +14,24 @@ import VacancyStatusBadge from '@/views/vacancies/components/vacancy-status-badg
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import {
   useAddLicenseCertificateMutation,
+  useCreateOrganizationMutation,
   useLicenseCertificatesForm,
   useLicenseCertificatesSearch,
-  useOrganizationsQuery,
+  useOrganizationsSearch,
   useStepGuard,
   useTertiaryAwardingBodyLocationsSearch,
 } from '@/views/vacancies/hooks';
 import type { LicenseCertType, StepProps } from '@/views/vacancies/types';
 import {
   formatDate,
+  resolveUserCreatedOrganizations,
   toLicenseCertificatesPayload,
 } from '@/views/vacancies/utils';
-import { formatLocalDate } from '@/views/vacancies/utils/date-timezone-safe';
+import {
+  compareDates,
+  formatLocalDate,
+} from '@/views/vacancies/utils/date-timezone-safe';
 
-import { Combobox } from '@cgp/ui-kit/components/combobox';
 import { ErrorToast } from '@cgp/ui-kit/components/custom-toast';
 import MultipleSelector from '@cgp/ui-kit/components/multi-select';
 import { Button } from '@cgp/ui-kit/components/ui/button';
@@ -51,6 +55,21 @@ import { applyTypography } from '@cgp/ui-kit/lib/typography';
 import { cn } from '@cgp/ui-kit/lib/utils';
 
 const MAX_SELECTIONS = 10;
+const TODAY = new Date(
+  new Date().getFullYear(),
+  new Date().getMonth(),
+  new Date().getDate()
+);
+const HUNDRED_YEARS_AGO = new Date(
+  TODAY.getFullYear() - 100,
+  TODAY.getMonth(),
+  TODAY.getDate()
+);
+const HUNDRED_YEARS_FROM_NOW = new Date(
+  TODAY.getFullYear() + 100,
+  TODAY.getMonth(),
+  TODAY.getDate()
+);
 
 const multiSelectInfoAvatar = new URL(
   '../../../../assets/images/multi-select-info-avatar.svg',
@@ -88,7 +107,7 @@ export default function LicenseCertificatesStep({
 
   const clearEntryData = () => {
     setValue('entry.nameOfLicenseCert', []);
-    setValue('entry.issuingOrganization', undefined);
+    setValue('entry.issuingOrganization', []);
     setValue('entry.organizationLocations', []);
     setValue('entry.internationallyAccepted', false);
     setValue('entry.issueDate', undefined);
@@ -99,7 +118,7 @@ export default function LicenseCertificatesStep({
     const e = getValues('entry');
     return Boolean(
       e.nameOfLicenseCert.length > 0 ||
-      e.issuingOrganization != null ||
+      e.issuingOrganization.length > 0 ||
       e.organizationLocations.length > 0 ||
       e.internationallyAccepted === true ||
       !!e.issueDate ||
@@ -161,11 +180,10 @@ export default function LicenseCertificatesStep({
     return '';
   };
 
-  useStepGuard(
-    isEnabled &&
-      !dataTakenFromCandidate &&
-      (!hasEntryData() || hasUnresolvedPendingLicenses())
-  );
+  const shouldDisableNavigation =
+    isEnabled && !dataTakenFromCandidate && !hasEntryData();
+
+  useStepGuard(isEnabled && !dataTakenFromCandidate && !hasEntryData());
   useEffect(() => {
     stepPersistRef.current = () => {
       setForm(prev => ({
@@ -192,18 +210,22 @@ export default function LicenseCertificatesStep({
   }, [setForm, stepDisableRef]);
 
   // ── Add License/Cert dialog state ────────────────────────────────────────
-  const licenseCertValue = entryValue.nameOfLicenseCert;
   const addLicenseCertMutation = useAddLicenseCertificateMutation();
+  const { mutateAsync: createOrganization } = useCreateOrganizationMutation();
   const pendingLicenseCertsDataRef = useRef<
     Map<string, { displayValue: string; certType: LicenseCertType }>
   >(new Map());
   const licenseCertsSnapshotRef = useRef<
     { value: string; label: string; source: string; certType?: string }[]
   >([]);
+  const organizationsSnapshotRef = useRef<
+    { value: string; label: string; source: string }[]
+  >([]);
   const [addLicenseCertDialogOpen, setAddLicenseCertDialogOpen] =
     useState(false);
   const [pendingLicenseCertLabel, setPendingLicenseCertLabel] = useState('');
   const [licenseCertSelectorKey, setLicenseCertSelectorKey] = useState(0);
+  const [organizationSelectorKey, setOrganizationSelectorKey] = useState(0);
 
   // ── Date popover ─────────────────────────────────────────────────────────
   const [openDatePopover, setOpenDatePopover] = useState<
@@ -225,17 +247,8 @@ export default function LicenseCertificatesStep({
       return s;
     });
 
-  // ── Organization query (Combobox) ─────────────────────────────────────
-  const { data: organizationsData, isLoading: isOrganizationsLoading } =
-    useOrganizationsQuery('', isEnabled && !dataTakenFromCandidate);
-  const organizationOptions = useMemo(
-    () =>
-      organizationsData.map(o => ({
-        value: o.id,
-        label: o.name || o.label || '',
-      })),
-    [organizationsData]
-  );
+  // ── Organization search ────────────────────────────────────────────────
+  const searchOrganizations = useOrganizationsSearch();
   const [showAddOrganizationDialog, setShowAddOrganizationDialog] =
     useState(false);
   const [pendingOrganizationName, setPendingOrganizationName] = useState('');
@@ -313,7 +326,45 @@ export default function LicenseCertificatesStep({
     return !hasResolutionError;
   };
 
+  const resolveAndCommitOrganizations = async (): Promise<boolean> => {
+    const currentOrganizations = getValues('entry.issuingOrganization');
+    const hasUserCreatedOrganizations = currentOrganizations.some(
+      organization => organization.source === 'USER_CREATED'
+    );
+
+    if (!hasUserCreatedOrganizations) {
+      return true;
+    }
+
+    try {
+      const resolved = await resolveUserCreatedOrganizations(
+        [{ associatedOrganizations: currentOrganizations }],
+        createOrganization
+      );
+
+      const resolvedOrganizations =
+        resolved[0]?.associatedOrganizations ?? currentOrganizations;
+
+      setValue('entry.issuingOrganization', resolvedOrganizations);
+
+      return resolvedOrganizations.every(
+        organization => organization.source !== 'USER_CREATED'
+      );
+    } catch {
+      return false;
+    }
+  };
+
   const handleNext = async () => {
+    const resolveOrganizationsSuccess = await resolveAndCommitOrganizations();
+    if (!resolveOrganizationsSuccess) {
+      ErrorToast({
+        title: t('notifications.apiError.save.title'),
+        description: t('notifications.apiError.save.message'),
+      });
+      return;
+    }
+
     const resolveSuccess = await resolveAndCommitLicenseCerts();
     if (!resolveSuccess || hasUnresolvedPendingLicenses()) {
       ErrorToast({
@@ -330,6 +381,14 @@ export default function LicenseCertificatesStep({
 
     const values = getValues();
     onNext({ licenseCertificates: toLicenseCertificatesPayload(values) });
+  };
+
+  const handleBack = () => {
+    setForm(prev => ({
+      ...prev,
+      licenseCertificates: toLicenseCertificatesPayload(getValues()),
+    }));
+    onBack();
   };
 
   return (
@@ -353,8 +412,9 @@ export default function LicenseCertificatesStep({
             <button
               type="button"
               aria-label={t('licenseCertificates.back')}
-              className="text-slate-700 transition-colors hover:text-slate-900"
-              onClick={onBack}
+              disabled={shouldDisableNavigation}
+              className="text-slate-700 transition-colors hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-40"
+              onClick={handleBack}
             >
               <ArrowLeft2 size={24} />
             </button>
@@ -434,7 +494,7 @@ export default function LicenseCertificatesStep({
               <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
                 <div className="flex min-w-0 flex-col gap-1">
                   <div className="flex h-5 items-center">
-                    <Label className="truncate">
+                    <Label className="shrink-0">
                       {t('licenseCertificates.nameOfLicenseCert')}
                     </Label>
                   </div>
@@ -447,7 +507,11 @@ export default function LicenseCertificatesStep({
                         value={field.value}
                         onSearch={searchLicenseCerts}
                         onChange={options => {
-                          if (options.length < MAX_SELECTIONS)
+                          if (options.length > MAX_SELECTIONS) {
+                            setMax('nameOfLicenseCert');
+                            return;
+                          }
+                          if (options.length <= MAX_SELECTIONS)
                             clearMax('nameOfLicenseCert');
                           const newItem = options.find(
                             o => o.value === o.label
@@ -506,7 +570,7 @@ export default function LicenseCertificatesStep({
 
                 <div className="flex min-w-0 flex-col gap-1">
                   <div className="flex h-5 items-center">
-                    <Label className="truncate">
+                    <Label className="shrink-0">
                       {t('licenseCertificates.issuingOrganization')}
                     </Label>
                   </div>
@@ -514,45 +578,69 @@ export default function LicenseCertificatesStep({
                     control={control}
                     name="entry.issuingOrganization"
                     render={({ field }) => (
-                      <Combobox
-                        options={organizationOptions}
-                        value={field.value?.value ?? ''}
-                        onValueChange={value => {
-                          const found = organizationsData.find(
-                            o => o.id === value
-                          );
-                          if (found) {
-                            field.onChange({
-                              value: found.id,
-                              label: found.name || found.label || '',
-                              source: found.source ?? 'MASTER',
-                            });
-                          }
-                        }}
-                        onSearchChange={() => {}}
-                        loading={isOrganizationsLoading}
-                        onAddNew={name => {
-                          const existing = organizationsData.find(
-                            o =>
-                              (o.name || o.label || '').toLowerCase() ===
-                              name.toLowerCase()
-                          );
-                          if (existing) {
-                            field.onChange({
-                              value: existing.id,
-                              label: existing.name || existing.label || '',
-                              source: existing.source ?? 'MASTER',
-                            });
+                      <MultipleSelector
+                        key={organizationSelectorKey}
+                        value={field.value}
+                        onSearch={searchOrganizations}
+                        onChange={options => {
+                          if (options.length > MAX_SELECTIONS) {
+                            setMax('issuingOrganization');
                             return;
                           }
-                          setPendingOrganizationName(name);
-                          setShowAddOrganizationDialog(true);
+                          if (options.length < MAX_SELECTIONS) {
+                            clearMax('issuingOrganization');
+                          }
+
+                          const newItem = options.find(
+                            o => o.value === o.label
+                          );
+                          if (newItem) {
+                            organizationsSnapshotRef.current = getValues(
+                              'entry.issuingOrganization'
+                            );
+                            setPendingOrganizationName(newItem.label);
+                            setShowAddOrganizationDialog(true);
+                            return;
+                          }
+
+                          field.onChange(options);
                         }}
+                        maxSelected={MAX_SELECTIONS}
+                        onMaxSelected={() => setMax('issuingOrganization')}
+                        errorMessage={
+                          maxReachedFields.has('issuingOrganization')
+                            ? t('licenseCertificates.errors.maxSelections')
+                            : undefined
+                        }
+                        creatable
+                        hideClearAllButton
+                        triggerSearchOnFocus
+                        keepSelectedInList
+                        loadingIndicator={
+                          <p className="px-3 pb-3 text-left">
+                            {t('common.loading')}
+                          </p>
+                        }
+                        emptyIndicator={
+                          <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
+                            <div className="flex flex-col items-start">
+                              <img
+                                src={multiSelectInfoAvatar}
+                                alt={t('common.noData')}
+                              />
+                              <div className="mt-3 w-61 text-left">
+                                <p className="font-bold text-slate-900">
+                                  {t('common.noDataTitle')}
+                                </p>
+                                <p className="text-sm font-semibold text-slate-700">
+                                  {t('common.noDataDescription')}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        }
                         placeholder={t(
                           'licenseCertificates.placeholders.issuingOrganization'
-                        )}
-                        searchPlaceholder={t(
-                          'licenseCertificates.placeholders.searchOrganization'
                         )}
                       />
                     )}
@@ -564,7 +652,7 @@ export default function LicenseCertificatesStep({
               <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
                 <div className="flex min-w-0 flex-col gap-1">
                   <div className="flex h-5 items-center">
-                    <Label className="truncate">
+                    <Label className="shrink-0">
                       {t('licenseCertificates.organizationLocations')}
                     </Label>
                   </div>
@@ -576,7 +664,11 @@ export default function LicenseCertificatesStep({
                         value={field.value}
                         onSearch={searchLocations}
                         onChange={options => {
-                          if (options.length < MAX_SELECTIONS)
+                          if (options.length > MAX_SELECTIONS) {
+                            setMax('organizationLocations');
+                            return;
+                          }
+                          if (options.length <= MAX_SELECTIONS)
                             clearMax('organizationLocations');
                           field.onChange(options);
                         }}
@@ -697,12 +789,17 @@ export default function LicenseCertificatesStep({
                                 if (
                                   expDate &&
                                   date &&
-                                  new Date(expDate) < date
+                                  compareDates(expDate, date) < 0
                                 ) {
                                   setValue('entry.expirationDate', undefined);
                                 }
                               }}
+                              disabled={date =>
+                                date < HUNDRED_YEARS_AGO || date > TODAY
+                              }
                               captionLayout="dropdown"
+                              startMonth={HUNDRED_YEARS_AGO}
+                              endMonth={TODAY}
                             />
                           </PopoverContent>
                         </Popover>
@@ -786,11 +883,15 @@ export default function LicenseCertificatesStep({
                                 setOpenDatePopover(null);
                               }}
                               disabled={date =>
-                                issueDateValue
-                                  ? date < new Date(issueDateValue)
-                                  : false
+                                date < HUNDRED_YEARS_AGO ||
+                                date > HUNDRED_YEARS_FROM_NOW ||
+                                (issueDateValue
+                                  ? compareDates(date, issueDateValue) < 0
+                                  : false)
                               }
                               captionLayout="dropdown"
+                              startMonth={HUNDRED_YEARS_AGO}
+                              endMonth={HUNDRED_YEARS_FROM_NOW}
                             />
                           </PopoverContent>
                         </Popover>
@@ -845,14 +946,51 @@ export default function LicenseCertificatesStep({
         {/* ── Add Organization dialog ──────────────────────────────────────── */}
         <AddOrganizationFormDialog
           open={showAddOrganizationDialog}
-          onOpenChange={setShowAddOrganizationDialog}
+          onOpenChange={open => {
+            setShowAddOrganizationDialog(open);
+            if (!open) {
+              organizationsSnapshotRef.current = [];
+              setOrganizationSelectorKey(k => k + 1);
+            }
+          }}
           organizationName={pendingOrganizationName}
           onOrganizationAdded={org => {
-            setValue('entry.issuingOrganization', {
-              value: org.id,
-              label: org.name,
-              source: org.source,
+            const baseItems: {
+              value: string;
+              label: string;
+              source: string;
+            }[] =
+              organizationsSnapshotRef.current.length > 0
+                ? organizationsSnapshotRef.current
+                : (getValues('entry.issuingOrganization') ?? []);
+
+            const normalizedNewLabel = org.name.trim().toLowerCase();
+            const deduped = baseItems.filter(item => {
+              return item.label.trim().toLowerCase() !== normalizedNewLabel;
             });
+
+            if (deduped.length >= MAX_SELECTIONS) {
+              setMax('issuingOrganization');
+              organizationsSnapshotRef.current = [];
+              setOrganizationSelectorKey(k => k + 1);
+              setShowAddOrganizationDialog(false);
+              return;
+            }
+
+            setValue('entry.issuingOrganization', [
+              ...deduped,
+              {
+                value: org.id,
+                label: org.name,
+                source: org.source,
+              },
+            ]);
+
+            clearMax('issuingOrganization');
+
+            organizationsSnapshotRef.current = [];
+            setOrganizationSelectorKey(k => k + 1);
+            setShowAddOrganizationDialog(false);
           }}
         />
 
@@ -862,15 +1000,46 @@ export default function LicenseCertificatesStep({
           initialName={pendingLicenseCertLabel}
           onClose={() => {
             setLicenseCertSelectorKey(k => k + 1);
+            licenseCertsSnapshotRef.current = [];
             setAddLicenseCertDialogOpen(false);
           }}
           onAdded={option => {
+            const baseItems =
+              licenseCertsSnapshotRef.current.length > 0
+                ? licenseCertsSnapshotRef.current
+                : getValues('entry.nameOfLicenseCert');
+
+            const normalizedNewLabel = option.label.trim().toLowerCase();
+            const deduped = baseItems.filter(item => {
+              const isTempItem =
+                item.source === 'PENDING_TEMP' ||
+                item.value.startsWith('__pending_license_cert_');
+              if (isTempItem) {
+                return false;
+              }
+
+              const sameLabel =
+                item.label.trim().toLowerCase() === normalizedNewLabel;
+              const sameType = (item.certType ?? '') === option.certType;
+              return !(sameLabel && sameType);
+            });
+
+            if (deduped.length >= MAX_SELECTIONS) {
+              setMax('nameOfLicenseCert');
+              pendingLicenseCertsDataRef.current.delete(option.value);
+              licenseCertsSnapshotRef.current = [];
+              setLicenseCertSelectorKey(k => k + 1);
+              setAddLicenseCertDialogOpen(false);
+              return;
+            }
+
             pendingLicenseCertsDataRef.current.set(option.value, {
               displayValue: option.label,
               certType: option.certType,
             });
+
             setValue('entry.nameOfLicenseCert', [
-              ...licenseCertValue,
+              ...deduped,
               {
                 value: option.value,
                 label: option.label,
@@ -878,6 +1047,11 @@ export default function LicenseCertificatesStep({
                 certType: option.certType,
               },
             ]);
+
+            clearMax('nameOfLicenseCert');
+
+            licenseCertsSnapshotRef.current = [];
+            setLicenseCertSelectorKey(k => k + 1);
             setAddLicenseCertDialogOpen(false);
           }}
         />
@@ -923,7 +1097,11 @@ export default function LicenseCertificatesStep({
           <Button variant="secondary" className="h-12 w-48" onClick={onCancel}>
             {t('licenseCertificates.cancel')}
           </Button>
-          <Button className="h-12 w-48" onClick={() => void handleNext()}>
+          <Button
+            className="h-12 w-48"
+            disabled={shouldDisableNavigation}
+            onClick={() => void handleNext()}
+          >
             {t('licenseCertificates.next')}
           </Button>
         </div>
