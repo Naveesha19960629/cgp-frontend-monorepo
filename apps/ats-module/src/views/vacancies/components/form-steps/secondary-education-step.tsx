@@ -68,7 +68,21 @@ import { applyTypography } from '@cgp/ui-kit/lib/typography';
 import { cn } from '@cgp/ui-kit/lib/utils';
 
 const MAX_SELECTIONS = 10;
-const HUNDRED_YEARS_AGO = new Date(new Date().getFullYear() - 100, 0, 1);
+const TODAY = new Date(
+  new Date().getFullYear(),
+  new Date().getMonth(),
+  new Date().getDate()
+);
+const HUNDRED_YEARS_AGO = new Date(
+  TODAY.getFullYear() - 100,
+  TODAY.getMonth(),
+  TODAY.getDate()
+);
+const HUNDRED_YEARS_FROM_NOW = new Date(
+  TODAY.getFullYear() + 100,
+  TODAY.getMonth(),
+  TODAY.getDate()
+);
 
 const multiSelectInfoAvatar = new URL(
   '../../../../assets/images/multi-select-info-avatar.svg',
@@ -106,6 +120,24 @@ export default function SecondaryEducationStep({
   const fieldsDisabled = !isEnabled || dataTakenFromCandidate;
   const endDateDefaultMonth =
     parseLocalDate(endDateValue ?? startDateValue) ?? new Date();
+  let parsedStartDate: Date | null = null;
+  if (startDateValue) {
+    parsedStartDate = parseLocalDate(startDateValue);
+  }
+
+  let minEndDate: Date | null = null;
+  if (parsedStartDate) {
+    const startPlusOneDay = new Date(
+      parsedStartDate.getFullYear(),
+      parsedStartDate.getMonth(),
+      parsedStartDate.getDate() + 1
+    );
+
+    minEndDate =
+      compareDates(startPlusOneDay, TODAY) > 0 ? startPlusOneDay : TODAY;
+  } else {
+    minEndDate = TODAY;
+  }
 
   const clearEntryData = () => {
     setValue('entries.0.schools', []);
@@ -114,8 +146,8 @@ export default function SecondaryEducationStep({
     setValue('entries.0.awardingBodies', []);
     setValue('entries.0.fieldsOfStudy', []);
     setValue('entries.0.grade', '');
-    resetField('entries.0.startDate', { defaultValue: undefined });
-    resetField('entries.0.endDate', { defaultValue: undefined });
+    setValue('entries.0.startDate', undefined);
+    setValue('entries.0.endDate', undefined);
     setValue('entries.0.result', '');
     setValue('entries.0.acceptsHomeSchooling', false);
   };
@@ -140,7 +172,10 @@ export default function SecondaryEducationStep({
     return hasEntryData() || getValues('dataTakenFromCandidate') === true;
   };
 
-  useStepGuard(isEnabled && !dataTakenFromCandidate && !hasEntryData());
+  const shouldDisableNavigation =
+    isEnabled && !dataTakenFromCandidate && !hasEntryData();
+
+  useStepGuard(shouldDisableNavigation);
   useEffect(() => {
     stepPersistRef.current = () => {
       setForm(prev => ({
@@ -393,16 +428,31 @@ export default function SecondaryEducationStep({
   ) => {
     const input = ref.current?.input.value.trim();
     let current = getValues(fieldName);
-    if (input) {
+    const maxFieldByName = {
+      'entries.0.examinations': 'examinations',
+      'entries.0.awardingBodies': 'awardingBodies',
+      'entries.0.fieldsOfStudy': 'fieldsOfStudy',
+    } as const;
+
+    const maxField = maxFieldByName[fieldName];
+    const hasRoomForInput = !input || current.length < MAX_SELECTIONS;
+
+    if (!hasRoomForInput) {
+      setMax(maxField);
+    }
+
+    if (input && hasRoomForInput) {
       current = [...current, { value: input, label: input, source: '' }];
     }
     const resolved: { value: string; label: string; source: string }[] = [];
     for (const item of current) {
-      if (item.value === item.label) {
-        const created = await resolveItem(item.label, addMutation);
-        if (created) resolved.push(created);
-      } else {
-        resolved.push(item);
+      const nextItem =
+        item.value === item.label
+          ? await resolveItem(item.label, addMutation)
+          : item;
+
+      if (nextItem) {
+        resolved.push(nextItem);
       }
     }
     setValue(fieldName, resolved);
@@ -456,6 +506,14 @@ export default function SecondaryEducationStep({
     })();
   };
 
+  const handleBack = () => {
+    setForm(prev => ({
+      ...prev,
+      secondaryEducation: toSecondaryEducationPayload(getValues()),
+    }));
+    onBack();
+  };
+
   return (
     <Form {...form}>
       <div className="flex flex-col">
@@ -465,12 +523,8 @@ export default function SecondaryEducationStep({
             t('secondaryEducation.schoolName'),
             t('secondaryEducation.schoolLocation'),
             t('secondaryEducation.examination'),
-            t('secondaryEducation.awardingBody'),
-            t('secondaryEducation.fieldOfStudy'),
-            t('secondaryEducation.grade'),
             t('secondaryEducation.startDate'),
             t('secondaryEducation.endDate'),
-            t('secondaryEducation.results'),
           ]}
         />
 
@@ -480,8 +534,9 @@ export default function SecondaryEducationStep({
             <button
               type="button"
               aria-label={t('secondaryEducation.back')}
-              className="text-slate-700 transition-colors hover:text-slate-900"
-              onClick={onBack}
+              disabled={shouldDisableNavigation}
+              className="text-slate-700 transition-colors hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-40"
+              onClick={handleBack}
             >
               <ArrowLeft2 size={24} />
             </button>
@@ -593,8 +648,22 @@ export default function SecondaryEducationStep({
                       <MultipleSelector
                         key={schoolsSelectorKey}
                         value={field.value}
-                        onSearch={searchSchools}
+                        onSearch={async (search: string) => {
+                          const results = await searchSchools(search);
+                          // Filter out items already selected to prevent duplication
+                          const selectedValues = new Set(
+                            field.value.map(v => v.value.toLowerCase())
+                          );
+                          return results.filter(
+                            item =>
+                              !selectedValues.has(item.value.toLowerCase())
+                          );
+                        }}
                         onChange={options => {
+                          if (options.length > MAX_SELECTIONS) {
+                            setMax('schools');
+                            return;
+                          }
                           if (options.length < MAX_SELECTIONS)
                             clearMax('schools');
                           const newItem = options.find(
@@ -712,7 +781,7 @@ export default function SecondaryEducationStep({
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
                 <div className="flex min-w-0 flex-col gap-1">
                   <div className="flex min-w-0 items-center justify-between gap-2">
-                    <Label className="truncate pr-2">
+                    <Label className="shrink-0">
                       {t('secondaryEducation.grade')}
                     </Label>
                     <Controller
@@ -815,7 +884,7 @@ export default function SecondaryEducationStep({
                               if (
                                 endDate &&
                                 date &&
-                                compareDates(endDate, date) < 0
+                                compareDates(endDate, date) <= 0
                               ) {
                                 resetField('entries.0.endDate', {
                                   defaultValue: undefined,
@@ -823,10 +892,11 @@ export default function SecondaryEducationStep({
                               }
                             }}
                             disabled={date =>
-                              date > new Date() || date < HUNDRED_YEARS_AGO
+                              date > TODAY || date < HUNDRED_YEARS_AGO
                             }
                             captionLayout="dropdown"
                             startMonth={HUNDRED_YEARS_AGO}
+                            endMonth={TODAY}
                           />
                         </PopoverContent>
                       </Popover>
@@ -899,16 +969,15 @@ export default function SecondaryEducationStep({
                               setOpenDatePopover(null);
                             }}
                             disabled={date =>
-                              date < HUNDRED_YEARS_AGO ||
-                              (startDateValue
-                                ? compareDates(
-                                    date,
-                                    parseLocalDate(startDateValue) ?? new Date()
-                                  ) < 0
+                              date < TODAY ||
+                              date > HUNDRED_YEARS_FROM_NOW ||
+                              (minEndDate
+                                ? compareDates(date, minEndDate) < 0
                                 : false)
                             }
                             captionLayout="dropdown"
-                            startMonth={HUNDRED_YEARS_AGO}
+                            startMonth={TODAY}
+                            endMonth={HUNDRED_YEARS_FROM_NOW}
                           />
                         </PopoverContent>
                       </Popover>
@@ -921,7 +990,7 @@ export default function SecondaryEducationStep({
               <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
                 <div className="flex min-w-0 flex-col gap-1">
                   <div className="flex min-w-0 items-center justify-between gap-2">
-                    <Label className="truncate pr-2">
+                    <Label className="shrink-0">
                       {t('secondaryEducation.examination')}
                     </Label>
                     <CharacterCount
@@ -938,6 +1007,10 @@ export default function SecondaryEducationStep({
                         value={field.value}
                         onSearch={searchExaminations}
                         onChange={options => {
+                          if (options.length > MAX_SELECTIONS) {
+                            setMax('examinations');
+                            return;
+                          }
                           if (options.length < MAX_SELECTIONS)
                             clearMax('examinations');
                           setExaminationInput('');
@@ -991,7 +1064,7 @@ export default function SecondaryEducationStep({
 
                 <div className="flex min-w-0 flex-col gap-1">
                   <div className="flex min-w-0 items-center justify-between gap-2">
-                    <Label className="truncate pr-2">
+                    <Label className="shrink-0">
                       {t('secondaryEducation.awardingBody')}
                     </Label>
                     <CharacterCount
@@ -1008,6 +1081,10 @@ export default function SecondaryEducationStep({
                         value={field.value}
                         onSearch={searchAwardingBodies}
                         onChange={options => {
+                          if (options.length > MAX_SELECTIONS) {
+                            setMax('awardingBodies');
+                            return;
+                          }
                           if (options.length < MAX_SELECTIONS)
                             clearMax('awardingBodies');
                           setAwardingBodyInput('');
@@ -1064,7 +1141,7 @@ export default function SecondaryEducationStep({
               <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
                 <div className="flex min-w-0 flex-col gap-1">
                   <div className="flex min-w-0 items-center justify-between gap-2">
-                    <Label className="truncate pr-2">
+                    <Label className="shrink-0">
                       {t('secondaryEducation.fieldOfStudy')}
                     </Label>
                     <CharacterCount
@@ -1081,6 +1158,10 @@ export default function SecondaryEducationStep({
                         value={field.value}
                         onSearch={searchFieldsOfStudy}
                         onChange={options => {
+                          if (options.length > MAX_SELECTIONS) {
+                            setMax('fieldsOfStudy');
+                            return;
+                          }
                           if (options.length < MAX_SELECTIONS)
                             clearMax('fieldsOfStudy');
                           setFieldOfStudyInput('');
@@ -1134,7 +1215,7 @@ export default function SecondaryEducationStep({
 
                 <div className="flex min-w-0 flex-col gap-1">
                   <div className="flex min-w-0 items-center justify-between gap-2">
-                    <Label className="truncate pr-2">
+                    <Label className="shrink-0">
                       {t('secondaryEducation.results')}
                     </Label>
                     <Controller
@@ -1188,10 +1269,15 @@ export default function SecondaryEducationStep({
           open={addSchoolDialogOpen}
           initialName={pendingSchoolLabel}
           onClose={() => {
-            setSchoolsSelectorKey(k => k + 1);
             setAddSchoolDialogOpen(false);
           }}
           onAdded={option => {
+            const currentSchools = getValues('entries.0.schools');
+            if (currentSchools.length >= MAX_SELECTIONS) {
+              setMax('schools');
+              setAddSchoolDialogOpen(false);
+              return;
+            }
             pendingSchoolsDataRef.current.set(option.value, {
               displayValue: option.label,
               locationId: option.locationId,
@@ -1205,6 +1291,7 @@ export default function SecondaryEducationStep({
                 source: option.source,
               },
             ]);
+            setSchoolsSelectorKey(k => k + 1);
             setAddSchoolDialogOpen(false);
           }}
         />
@@ -1248,7 +1335,11 @@ export default function SecondaryEducationStep({
           <Button variant="secondary" className="h-12 w-48" onClick={onCancel}>
             {t('secondaryEducation.cancel')}
           </Button>
-          <Button className="h-12 w-48" onClick={() => void handleNext()}>
+          <Button
+            className="h-12 w-48"
+            disabled={shouldDisableNavigation}
+            onClick={() => void handleNext()}
+          >
             {t('secondaryEducation.next')}
           </Button>
         </div>

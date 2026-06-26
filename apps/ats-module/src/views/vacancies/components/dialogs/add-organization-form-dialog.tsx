@@ -14,6 +14,7 @@ import {
 } from '@/views/vacancies/hooks';
 
 import { CharacterCount } from '@cgp/ui-kit/components/character-count';
+import { SuccessToast } from '@cgp/ui-kit/components/custom-toast';
 import { LocationAutocomplete } from '@cgp/ui-kit/components/location-autocomplete';
 import { ScrollAreaWithShadow } from '@cgp/ui-kit/components/scroll-area-with-shadow';
 import { Button } from '@cgp/ui-kit/components/ui/button';
@@ -88,6 +89,13 @@ export default function AddOrganizationFormDialog({
       source: 'USER_CREATED' as const,
     };
     onOrganizationAdded(newOrganization);
+    SuccessToast({
+      title: t('organization.addSuccess.title', 'Successfully Added'),
+      description: t(
+        'organization.addSuccess.message',
+        'New organization has been successfully added.'
+      ),
+    });
     onOpenChange(false);
   });
 

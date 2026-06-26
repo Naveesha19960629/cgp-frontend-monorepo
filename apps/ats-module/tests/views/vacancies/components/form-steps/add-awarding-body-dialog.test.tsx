@@ -340,7 +340,7 @@ describe('AddAwardingBodyDialog', () => {
       expect.objectContaining({
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         value: expect.stringMatching(/^__pending_awarding_body_/),
-        label: 'University of Moratuwa',
+        label: 'University of Moratuwa, Colombo',
         source: 'PENDING_TEMP',
         locationId: 'loc-1',
       })

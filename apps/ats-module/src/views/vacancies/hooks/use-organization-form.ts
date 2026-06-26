@@ -10,12 +10,7 @@ const URL_PATTERN =
 
 function isUrlProtocolValid(url: string): boolean {
   if (!url) return true;
-  try {
-    new URL(url);
-    return true;
-  } catch {
-    return url.startsWith('http://') || url.startsWith('https://');
-  }
+  return /^https?:\/\//i.test(url.trim());
 }
 
 function isUrlFormatValid(url: string): boolean {
@@ -68,12 +63,15 @@ function createOrganizationFormSchema(
         (val: string) => isUrlProtocolValid(val),
         t(
           'ats:organization.validation.urlInvalidProtocol',
-          'Invalid URL protocol'
+          'Organization URL must start with http:// or https://.'
         )
       )
       .refine(
         (val: string) => isUrlFormatValid(val),
-        t('ats:organization.validation.urlInvalidFormat', 'Invalid URL format')
+        t(
+          'ats:organization.validation.urlInvalidFormat',
+          'Organization URL must be a valid format.'
+        )
       )
       .optional()
       .or(z.literal('')),

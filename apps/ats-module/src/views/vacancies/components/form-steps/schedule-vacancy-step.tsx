@@ -171,6 +171,11 @@ export default function ScheduleVacancyStep({
     }
   };
 
+  const handleBack = () => {
+    persistScheduleToContext();
+    onBack();
+  };
+
   return (
     <div className="flex min-h-full flex-col">
       {/* ── Header ─────────────────────────────────────────────────── */}
@@ -179,7 +184,7 @@ export default function ScheduleVacancyStep({
           type="button"
           aria-label={t('common.back')}
           className="text-slate-700 transition-colors hover:text-slate-900"
-          onClick={onBack}
+          onClick={handleBack}
         >
           <ArrowLeft2 size={24} />
         </button>
