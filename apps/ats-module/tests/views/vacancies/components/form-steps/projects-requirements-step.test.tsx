@@ -66,20 +66,7 @@ vi.mock('@/views/vacancies/hooks', () => ({
     isLoading: false,
   }),
   useCreateIndustryMutation: () => ({
-    mutateAsync: vi.fn((label: string) => ({
-      pendingId: 'pending-ind-123',
-      type: 'INDUSTRY',
-      value: label,
-      status: 'PENDING',
-    })),
-  }),
-  useCreateOrganizationMutation: () => ({
-    mutateAsync: vi.fn((label: string) => ({
-      pendingId: 'pending-org-123',
-      type: 'ORGANIZATION',
-      value: label,
-      status: 'PENDING',
-    })),
+    mutateAsync: vi.fn(),
   }),
   useStepGuard: vi.fn(),
   useOrganizationForm: () => ({

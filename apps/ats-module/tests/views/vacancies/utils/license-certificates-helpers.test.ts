@@ -183,7 +183,7 @@ describe('toLicenseCertificatesPayload — nameOfLicenseCert', () => {
     expect(result[0].content[0].nameOfLicenseCert[0].type).toBe('CERTIFICATE');
   });
 
-  it('drops unresolved PENDING_TEMP items with temporary ids', () => {
+  it('includes unresolved PENDING_TEMP items with temporary ids (like schools)', () => {
     const result = toLicenseCertificatesPayload({
       isEnabled: true,
       dataTakenFromCandidate: false,
@@ -200,7 +200,14 @@ describe('toLicenseCertificatesPayload — nameOfLicenseCert', () => {
       },
     });
 
-    expect(result[0].content[0].nameOfLicenseCert).toEqual([]);
+    expect(result[0].content[0].nameOfLicenseCert).toEqual([
+      {
+        source: 'PENDING',
+        id: '__pending_license_cert_123',
+        name: 'Custom Cert',
+        type: 'CERTIFICATION',
+      },
+    ]);
   });
 });
 

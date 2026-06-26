@@ -1,4 +1,4 @@
-import { ChevronUpIcon, Loader2, PlusIcon } from 'lucide-react';
+import { ChevronUpIcon, PlusIcon } from 'lucide-react';
 
 import { ArrowLeft2, Calendar as CalendarIcon } from 'iconsax-reactjs';
 
@@ -13,8 +13,6 @@ import StepDisableDialog from '@/views/vacancies/components/step-disable-dialog'
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import {
   useCausesQuery,
-  useCreateCauseMutation,
-  useCreateOrganizationMutation,
   useLocationsQuery,
   useOrganizationsQuery,
   useStepGuard,
@@ -98,9 +96,7 @@ function VolunteeringCard({
   isCausesLoading,
   locationOptions,
   isLocationsLoading,
-  orgSelectorKey,
 }: Readonly<{
-  orgSelectorKey: number;
   index: number;
   entry: VolunteeringEntry;
   onUpdate: (index: number, updates: Partial<VolunteeringEntry>) => void;
@@ -174,7 +170,6 @@ function VolunteeringCard({
                   </Label>
                 </div>
                 <MultipleSelector
-                  key={orgSelectorKey}
                   value={entry.organizationName}
                   onChange={options => {
                     const newItem = options.find(o => o.value === o.label);
@@ -508,10 +503,6 @@ export default function PreferredVolunteeringStep({
   const { form: contextForm, onCancel } = useVacancyForm();
   const savedVolunteering = contextForm.preferredVolunteering;
 
-  const { mutateAsync: createCause } = useCreateCauseMutation();
-  const { mutateAsync: createOrganization } = useCreateOrganizationMutation();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
   const [isEnabled, setIsEnabled] = useState(
     savedVolunteering?.isEnabled ?? false
   );
@@ -529,7 +520,6 @@ export default function PreferredVolunteeringStep({
     useState(false);
   const [pendingOrganizationName, setPendingOrganizationName] = useState('');
   const [activeCardIndex, setActiveCardIndex] = useState<number | null>(null);
-  const [orgSelectorKey, setOrgSelectorKey] = useState(0);
 
   const [entries, setEntries] = useState<VolunteeringEntry[]>(
     savedVolunteering?.volunteering && savedVolunteering.volunteering.length > 0
@@ -547,7 +537,7 @@ export default function PreferredVolunteeringStep({
       e.endDate != null
   );
 
-  const handleNext = async () => {
+  const handleNext = () => {
     const isEmptyEnabledSection =
       isEnabled && !dataTakenFromCandidate && !hasVolunteeringData;
 
@@ -556,97 +546,11 @@ export default function PreferredVolunteeringStep({
       return;
     }
 
-    // Resolve user-created causes & organizations
-    const allCauses = entries.flatMap(e => e.cause);
-    const hasUserCreatedCauses = allCauses.some(
-      c => c.source === 'USER_CREATED'
-    );
-    const allOrgs = entries.flatMap(e => e.organizationName);
-    const hasUserCreatedOrgs = allOrgs.some(o => o.source === 'USER_CREATED');
-
-    let resolvedEntries = entries;
-
-    if (hasUserCreatedCauses || hasUserCreatedOrgs) {
-      setIsSubmitting(true);
-      try {
-        let causeResultMap = new Map();
-        if (hasUserCreatedCauses) {
-          const uniqueUserCreatedCauses = Array.from(
-            new Map(
-              allCauses
-                .filter(c => c.source === 'USER_CREATED')
-                .map(c => [c.label, c])
-            ).values()
-          );
-          const cResults = await Promise.all(
-            uniqueUserCreatedCauses.map(c => createCause(c.label))
-          );
-          causeResultMap = new Map(
-            uniqueUserCreatedCauses.map((c, idx) => [c.label, cResults[idx]])
-          );
-        }
-
-        let orgResultMap = new Map();
-        if (hasUserCreatedOrgs) {
-          const uniqueUserCreatedOrgs = Array.from(
-            new Map(
-              allOrgs
-                .filter(o => o.source === 'USER_CREATED')
-                .map(o => [o.label, o])
-            ).values()
-          );
-          const oResults = await Promise.all(
-            uniqueUserCreatedOrgs.map(o => createOrganization(o.label))
-          );
-          orgResultMap = new Map(
-            uniqueUserCreatedOrgs.map((o, idx) => [o.label, oResults[idx]])
-          );
-        }
-
-        resolvedEntries = entries.map(entry => ({
-          ...entry,
-          cause: entry.cause.map(c => {
-            if (c.source === 'USER_CREATED') {
-              const res = causeResultMap.get(c.label);
-              if (res) {
-                return {
-                  value: res.pendingId,
-                  label: res.value,
-                  source: res.status,
-                };
-              }
-            }
-            return c;
-          }),
-          organizationName: entry.organizationName.map(o => {
-            if (o.source === 'USER_CREATED') {
-              const res = orgResultMap.get(o.label);
-              if (res) {
-                return {
-                  value: res.pendingId,
-                  label: res.value,
-                  source: res.status,
-                };
-              }
-            }
-            return o;
-          }),
-        }));
-
-        setEntries(resolvedEntries);
-      } catch (err) {
-        console.error(err);
-        return; // Stop execution on error
-      } finally {
-        setIsSubmitting(false);
-      }
-    }
-
     onNext({
       preferredVolunteering: {
         isEnabled,
         dataTakenFromCandidate,
-        volunteering: resolvedEntries,
+        volunteering: entries,
       },
     });
   };
@@ -735,13 +639,7 @@ export default function PreferredVolunteeringStep({
 
   const handleToggle = () => {
     if (isEnabled) {
-      if (hasVolunteeringData) {
-        setConfirmDisableOpen(true);
-      } else {
-        setIsEnabled(false);
-        setDataTakenFromCandidate(false);
-        removeCompletedStep(currentStepIndex);
-      }
+      setConfirmDisableOpen(true);
     } else {
       setIsEnabled(true);
     }
@@ -800,11 +698,11 @@ export default function PreferredVolunteeringStep({
               aria-label={t('preferredVolunteering.back')}
               className={cn(
                 'cursor-pointer text-slate-700 transition-colors hover:text-slate-900',
-                (!canNavigate || isSubmitting) &&
+                !canNavigate &&
                   'cursor-not-allowed opacity-40 hover:text-slate-700'
               )}
               onClick={handleBack}
-              disabled={!canNavigate || isSubmitting}
+              disabled={!canNavigate}
             >
               <ArrowLeft2 size={24} />
             </button>
@@ -879,7 +777,6 @@ export default function PreferredVolunteeringStep({
               isCausesLoading={isCausesLoading}
               locationOptions={locationOptions}
               isLocationsLoading={isLocationsLoading}
-              orgSelectorKey={orgSelectorKey}
             />
           ))}
         </div>
@@ -915,10 +812,8 @@ export default function PreferredVolunteeringStep({
           </Button>
           <Button
             className="h-12 w-48"
-            onClick={() => {
-              void handleNext();
-            }}
-            disabled={!canNavigate || isSubmitting}
+            onClick={handleNext}
+            disabled={!canNavigate}
           >
             {isSubmitting ? (
               <Loader2 className="size-4 animate-spin" />
@@ -932,10 +827,7 @@ export default function PreferredVolunteeringStep({
       {/* ── Add Organization dialog ──────────────────────────────────────── */}
       <AddOrganizationFormDialog
         open={showAddOrganizationDialog}
-        onOpenChange={open => {
-          if (!open) setOrgSelectorKey(k => k + 1);
-          setShowAddOrganizationDialog(open);
-        }}
+        onOpenChange={setShowAddOrganizationDialog}
         organizationName={pendingOrganizationName}
         onOrganizationAdded={org => {
           if (activeCardIndex !== null) {
@@ -946,7 +838,6 @@ export default function PreferredVolunteeringStep({
               ],
             });
           }
-          setOrgSelectorKey(k => k + 1);
           setShowAddOrganizationDialog(false);
         }}
       />

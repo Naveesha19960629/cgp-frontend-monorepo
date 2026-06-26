@@ -20,15 +20,7 @@ export const causeService = {
   createCause: async (label: string): Promise<CreatePendingItemResponse> => {
     const response = await httpClient.post<CreatePendingApiResponse>(
       '/causes',
-      {
-        type: 'CAUSE',
-        displayValue: label,
-        payload: {
-          additionalProp1: 'string',
-          additionalProp2: 'string',
-          additionalProp3: 'string',
-        },
-      }
+      { type: 'CAUSE', displayValue: label }
     );
     return response.data.data;
   },
