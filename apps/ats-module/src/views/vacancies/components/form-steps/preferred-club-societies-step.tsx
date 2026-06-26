@@ -107,6 +107,9 @@ function ClubSocietyCard({
   locationOptions: Array<{ value: string; label: string }>;
   isLocationsLoading: boolean;
 }>) {
+  const { t } = useTranslation('ats');
+  const [societiesError, setSocietiesError] = useState(false);
+  const [organizationsError, setOrganizationsError] = useState(false);
   const [locationsError, setLocationsError] = useState(false);
 
   return (
@@ -118,13 +121,19 @@ function ClubSocietyCard({
         {/* Card header */}
         <div className="flex items-center justify-between px-5 py-5">
           <span className="text-base font-bold text-slate-900">
-            Clubs and societies {String(index + 1).padStart(2, '0')}
+            {t('preferredClubSocieties.cardTitle', {
+              number: String(index + 1).padStart(2, '0'),
+            })}
           </span>
           <CollapsibleTrigger asChild>
             <button
               type="button"
               className="text-slate-400 transition-colors hover:text-slate-600"
-              aria-label={entry.isOpen ? 'Collapse' : 'Expand'}
+              aria-label={
+                entry.isOpen
+                  ? t('preferredClubSocieties.collapse')
+                  : t('preferredClubSocieties.expand')
+              }
             >
               <ChevronUpIcon
                 className={cn(
@@ -148,7 +157,11 @@ function ClubSocietyCard({
             <div className="grid grid-cols-[2fr_1fr_1fr] gap-4">
               <div className="flex flex-col gap-1">
                 <div className="flex h-5 items-center">
-                  <Label>Club / Society</Label>
+                  <Label
+                    className={societiesError ? 'text-destructive' : undefined}
+                  >
+                    {t('preferredClubSocieties.labels.clubSociety')}
+                  </Label>
                 </div>
                 <MultipleSelector
                   value={entry.clubSociety}
@@ -185,12 +198,18 @@ function ClubSocietyCard({
                   triggerSearchOnFocus
                   hideClearAllButton
                   maxSelected={MAX_SELECTIONS}
+                  errorMessage={t(
+                    'preferredClubSocieties.errors.maxSelections'
+                  )}
+                  onErrorStateChange={setSocietiesError}
                   disabled={fieldsDisabled}
                   loading={isSocietiesLoading}
-                  placeholder="Select or add club or society"
+                  placeholder={t(
+                    'preferredClubSocieties.placeholders.clubSociety'
+                  )}
                   emptyIndicator={
                     <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                      No societies found
+                      {t('preferredClubSocieties.empty.societies')}
                     </p>
                   }
                 />
@@ -198,7 +217,7 @@ function ClubSocietyCard({
 
               <div className="flex flex-col gap-1">
                 <div className="flex h-5 items-center">
-                  <Label>Start Date</Label>
+                  <Label>{t('preferredClubSocieties.labels.startDate')}</Label>
                 </div>
                 <Popover>
                   <PopoverTrigger asChild>
@@ -218,7 +237,7 @@ function ClubSocietyCard({
                     >
                       {entry.startDate
                         ? formatDate(entry.startDate)
-                        : 'Select start date'}
+                        : t('preferredClubSocieties.placeholders.startDate')}
                       <CalendarIcon
                         variant="Linear"
                         size={20}
@@ -243,7 +262,7 @@ function ClubSocietyCard({
 
               <div className="flex flex-col gap-1">
                 <div className="flex h-5 items-center">
-                  <Label>End Date</Label>
+                  <Label>{t('preferredClubSocieties.labels.endDate')}</Label>
                 </div>
                 <Popover>
                   <PopoverTrigger asChild>
@@ -263,7 +282,7 @@ function ClubSocietyCard({
                     >
                       {entry.endDate
                         ? formatDate(entry.endDate)
-                        : 'Select end date'}
+                        : t('preferredClubSocieties.placeholders.endDate')}
                       <CalendarIcon
                         variant="Linear"
                         size={20}
@@ -295,7 +314,13 @@ function ClubSocietyCard({
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-1">
                 <div className="flex h-5 items-center">
-                  <Label>Represented Organization</Label>
+                  <Label
+                    className={
+                      organizationsError ? 'text-destructive' : undefined
+                    }
+                  >
+                    {t('preferredClubSocieties.labels.representedOrganization')}
+                  </Label>
                 </div>
                 <MultipleSelector
                   value={entry.representedOrganization}
@@ -339,12 +364,18 @@ function ClubSocietyCard({
                   triggerSearchOnFocus
                   hideClearAllButton
                   maxSelected={MAX_SELECTIONS}
+                  errorMessage={t(
+                    'preferredClubSocieties.errors.maxSelections'
+                  )}
+                  onErrorStateChange={setOrganizationsError}
                   disabled={fieldsDisabled}
                   loading={isOrganizationsLoading}
-                  placeholder="Select or add represented organization"
+                  placeholder={t(
+                    'preferredClubSocieties.placeholders.representedOrganization'
+                  )}
                   emptyIndicator={
                     <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                      No organizations found
+                      {t('preferredClubSocieties.empty.organizations')}
                     </p>
                   }
                 />
@@ -355,7 +386,7 @@ function ClubSocietyCard({
                   <Label
                     className={locationsError ? 'text-destructive' : undefined}
                   >
-                    Organization Location
+                    {t('preferredClubSocieties.labels.organizationLocation')}
                   </Label>
                 </div>
                 <MultipleSelector
@@ -377,14 +408,18 @@ function ClubSocietyCard({
                   keepSelectedInList
                   hideClearAllButton
                   maxSelected={MAX_SELECTIONS}
-                  errorMessage="Exceeded maximum of 10 selections"
+                  errorMessage={t(
+                    'preferredClubSocieties.errors.maxSelections'
+                  )}
                   onErrorStateChange={setLocationsError}
                   disabled={fieldsDisabled}
                   loading={isLocationsLoading}
-                  placeholder="Select location"
+                  placeholder={t(
+                    'preferredClubSocieties.placeholders.organizationLocation'
+                  )}
                   emptyIndicator={
                     <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                      No locations found
+                      {t('preferredClubSocieties.empty.locations')}
                     </p>
                   }
                 />
@@ -395,7 +430,7 @@ function ClubSocietyCard({
             <div className="grid grid-cols-4 gap-4">
               <div className="col-span-1 flex flex-col gap-1">
                 <div className="flex items-center justify-between">
-                  <Label>Position / Role Held</Label>
+                  <Label>{t('preferredClubSocieties.labels.position')}</Label>
                   <CharacterCount
                     currentLength={entry.position.length}
                     maxLength={MAX_POSITION_LENGTH}
@@ -408,7 +443,9 @@ function ClubSocietyCard({
                     onUpdate(index, { position: sanitized.trimStart() });
                   }}
                   maxLength={MAX_POSITION_LENGTH}
-                  placeholder="Enter position or role held"
+                  placeholder={t(
+                    'preferredClubSocieties.placeholders.position'
+                  )}
                   className="h-11"
                 />
               </div>
@@ -626,9 +663,8 @@ export default function PreferredClubSocietiesStep({
     removeCompletedStep(currentStepIndex);
     setConfirmDisableOpen(false);
     SuccessToast({
-      title: 'Section Disabled',
-      description:
-        'Preferred Clubs and Societies section has been disabled successfully.',
+      title: t('preferredClubSocieties.notifications.disable.title'),
+      description: t('preferredClubSocieties.notifications.disable.message'),
     });
   };
 
@@ -659,7 +695,7 @@ export default function PreferredClubSocietiesStep({
           <div className="flex items-center gap-2">
             <button
               type="button"
-              aria-label="Back"
+              aria-label={t('preferredClubSocieties.back')}
               className={cn(
                 'cursor-pointer text-slate-700 transition-colors hover:text-slate-900',
                 !canNavigate &&
@@ -671,7 +707,7 @@ export default function PreferredClubSocietiesStep({
               <ArrowLeft2 size={24} />
             </button>
             <h2 className="text-xl font-bold tracking-tight text-slate-900">
-              Preferred Clubs and Societies
+              {t('preferredClubSocieties.title')}
             </h2>
           </div>
           <SwitchPrimitive.Root
@@ -725,8 +761,7 @@ export default function PreferredClubSocietiesStep({
             htmlFor="clubSocietiesDataTakenFromCandidate"
             className="cursor-pointer text-sm leading-snug font-medium text-slate-900"
           >
-            If selected, no manual input is required, and data will be taken
-            from the candidate profile
+            {t('preferredClubSocieties.dataTakenFromCandidate')}
           </Label>
         </div>
 
@@ -767,7 +802,7 @@ export default function PreferredClubSocietiesStep({
           <Button
             variant="secondary"
             size="icon"
-            aria-label="Add entry"
+            aria-label={t('preferredClubSocieties.addEntry')}
             className="size-11 rounded-lg bg-gray-200 px-3 text-sm"
             disabled
             onClick={addEntry}
@@ -779,14 +814,14 @@ export default function PreferredClubSocietiesStep({
         {/* ── Step footer ───────────────────────────────────────────────── */}
         <div className="sticky bottom-0 mt-auto flex items-center justify-end gap-4 bg-white px-6 py-7 shadow-[0px_-8px_6.8px_0px_rgba(0,0,0,0.04)]">
           <Button variant="secondary" className="h-12 w-48" onClick={onCancel}>
-            Cancel
+            {t('preferredClubSocieties.cancel')}
           </Button>
           <Button
             className="h-12 w-48"
             onClick={handleNext}
             disabled={!canNavigate}
           >
-            Next
+            {t('preferredClubSocieties.next')}
           </Button>
         </div>
       </div>

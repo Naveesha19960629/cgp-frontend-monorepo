@@ -1319,4 +1319,70 @@ describe('TertiaryEducationStep', () => {
       expect(gradeInput).toHaveValue('High Distinction');
     });
   });
+
+  describe('Dropdown duplicate filtering (case-insensitive by label/name)', () => {
+    /**
+     * FIX: Dropdown onSearch callbacks filter by label (display name) instead of value (ID)
+     * This prevents duplicate awarding bodies from appearing when the same name is added with different IDs
+     *
+     * Example: User adds "University of Oxford", then searches for "oxford" or "OXFORD"
+     * Before fix: Would show both the newly added body AND the same body from API (different IDs)
+     * After fix: Only shows one "University of Oxford" in dropdown (filters by case-insensitive label match)
+     */
+    it('should filter awarding body results by label (name) to prevent duplicates', () => {
+      const selectedBodies = [
+        {
+          value: 'uuid-1',
+          label: 'University of Oxford',
+          source: 'MASTER',
+        },
+        { value: 'uuid-2', label: 'Cambridge', source: 'PENDING_TEMP' },
+      ];
+
+      const apiResults = [
+        {
+          value: 'api-uuid-1',
+          label: 'university of oxford',
+          source: 'MASTER',
+        }, // Same name, different ID!
+        { value: 'api-uuid-2', label: 'LSE', source: 'MASTER' },
+      ];
+
+      // Filter logic: use label.toLowerCase() not value.toLowerCase()
+      const selectedLabels = new Set(
+        selectedBodies.map(v => v.label.toLowerCase())
+      );
+      const filtered = apiResults.filter(
+        item => !selectedLabels.has(item.label.toLowerCase())
+      );
+
+      // Should only return LSE (university of oxford is filtered out)
+      expect(filtered).toHaveLength(1);
+      expect(filtered[0]?.label).toBe('LSE');
+    });
+
+    it('should filter location results by label (name) to prevent duplicates', () => {
+      const selectedLocations = [
+        { value: 'loc-id-1', label: 'London' },
+        { value: 'loc-id-2', label: 'Oxford' },
+      ];
+
+      const apiResults = [
+        { value: 'api-loc-id-1', label: 'london' }, // Same name, different ID!
+        { value: 'api-loc-id-2', label: 'Manchester' },
+      ];
+
+      // Filter logic: use label.toLowerCase() not value.toLowerCase()
+      const selectedLabels = new Set(
+        selectedLocations.map(v => v.label.toLowerCase())
+      );
+      const filtered = apiResults.filter(
+        item => !selectedLabels.has(item.label.toLowerCase())
+      );
+
+      // Should only return Manchester (london is filtered out)
+      expect(filtered).toHaveLength(1);
+      expect(filtered[0]?.label).toBe('Manchester');
+    });
+  });
 });

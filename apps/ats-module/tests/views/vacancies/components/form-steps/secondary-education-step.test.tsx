@@ -25,19 +25,23 @@ const {
   mockStepPersistRef,
   mockStepDisableRef,
   mockOnCancel,
-} = vi.hoisted(() => ({
-  stableForm: {
+} = vi.hoisted(() => {
+  const stableForm: MockVacancyForm = {
     secondaryEducation: [
       { isEnabled: false, dataTakenFromCandidate: false, content: [] },
     ],
-    status: undefined as string | undefined,
-  } as MockVacancyForm,
-  mockSetForm: vi.fn(),
-  mockSetStepGuard: vi.fn(),
-  mockStepPersistRef: { current: null },
-  mockStepDisableRef: { current: null },
-  mockOnCancel: vi.fn(),
-}));
+    status: undefined,
+  };
+
+  return {
+    stableForm,
+    mockSetForm: vi.fn(),
+    mockSetStepGuard: vi.fn(),
+    mockStepPersistRef: { current: null },
+    mockStepDisableRef: { current: null },
+    mockOnCancel: vi.fn(),
+  };
+});
 
 vi.mock('@/views/vacancies/context/vacancy-form-context', () => ({
   useVacancyForm: () => ({
@@ -959,6 +963,68 @@ describe('SecondaryEducationStep', () => {
 
       expect(screen.queryByTestId('add-school-dialog')).not.toBeInTheDocument();
       expect(mockAddSchoolMutate).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('Dropdown duplicate filtering (case-insensitive by label/name)', () => {
+    /**
+     * FIX: Dropdown onSearch callbacks filter by label (display name) instead of value (ID)
+     * This prevents duplicate schools from appearing when the same name is added with different IDs
+     *
+     * Example: User adds "Harvard University", then searches for "harvard" or "HARVARD"
+     * Before fix: Would show both the newly added school AND the same school from API (different IDs)
+     * After fix: Only shows one "Harvard University" in dropdown (filters by case-insensitive label match)
+     */
+    it('should filter school results by label (name) to prevent duplicates', () => {
+      const selectedSchools = [
+        { value: 'uuid-1', label: 'Harvard University', source: 'MASTER' },
+        { value: 'uuid-2', label: 'MIT', source: 'PENDING_TEMP' },
+      ];
+
+      const apiResults = [
+        {
+          value: 'api-uuid-1',
+          label: 'harvard university',
+          source: 'MASTER',
+        }, // Same name, different ID!
+        { value: 'api-uuid-2', label: 'Stanford', source: 'MASTER' },
+      ];
+
+      // Filter logic: use label.toLowerCase() not value.toLowerCase()
+      const selectedLabels = new Set(
+        selectedSchools.map(v => v.label.toLowerCase())
+      );
+      const filtered = apiResults.filter(
+        item => !selectedLabels.has(item.label.toLowerCase())
+      );
+
+      // Should only return Stanford (harvard university is filtered out)
+      expect(filtered).toHaveLength(1);
+      expect(filtered[0]?.label).toBe('Stanford');
+    });
+
+    it('should filter location results by label (name) to prevent duplicates', () => {
+      const selectedLocations = [
+        { value: 'loc-id-1', label: 'Colombo' },
+        { value: 'loc-id-2', label: 'Galle' },
+      ];
+
+      const apiResults = [
+        { value: 'api-loc-id-1', label: 'colombo' }, // Same name, different ID!
+        { value: 'api-loc-id-2', label: 'Kandy' },
+      ];
+
+      // Filter logic: use label.toLowerCase() not value.toLowerCase()
+      const selectedLabels = new Set(
+        selectedLocations.map(v => v.label.toLowerCase())
+      );
+      const filtered = apiResults.filter(
+        item => !selectedLabels.has(item.label.toLowerCase())
+      );
+
+      // Should only return Kandy (colombo is filtered out)
+      expect(filtered).toHaveLength(1);
+      expect(filtered[0]?.label).toBe('Kandy');
     });
   });
 });

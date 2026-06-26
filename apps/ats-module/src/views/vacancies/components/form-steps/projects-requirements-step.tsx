@@ -127,7 +127,11 @@ function ProjectCard({
               <button
                 type="button"
                 className="text-slate-400 transition-colors hover:text-slate-600"
-                aria-label={project.isOpen ? 'Collapse' : 'Expand'}
+                aria-label={
+                  project.isOpen
+                    ? t('projectsRequirements.collapse')
+                    : t('projectsRequirements.expand')
+                }
               >
                 <ChevronUpIcon
                   className={cn(
@@ -400,7 +404,7 @@ function ProjectCard({
                   keepSelectedInList
                   hideClearAllButton
                   maxSelected={10}
-                  errorMessage="Exceeded maximum of 10 selections"
+                  errorMessage={t('projectsRequirements.errors.maxSelections')}
                   onErrorStateChange={setLocationsError}
                   disabled={fieldsDisabled}
                   loading={isLocationsLoading}
@@ -677,9 +681,8 @@ export default function ProjectsRequirementsStep({
     removeCompletedStep(currentStepIndex);
     setConfirmDisableOpen(false);
     SuccessToast({
-      title: 'Section Disabled',
-      description:
-        'Projects Requirements section has been disabled successfully.',
+      title: t('projectsRequirements.notifications.disable.title'),
+      description: t('projectsRequirements.notifications.disable.message'),
     });
   };
 
@@ -791,7 +794,7 @@ export default function ProjectsRequirementsStep({
           <div className="flex items-center gap-2">
             <button
               type="button"
-              aria-label="Back"
+              aria-label={t('projectsRequirements.back')}
               className={cn(
                 'cursor-pointer text-slate-700 transition-colors hover:text-slate-900',
                 (!canNavigate || isSubmitting) &&

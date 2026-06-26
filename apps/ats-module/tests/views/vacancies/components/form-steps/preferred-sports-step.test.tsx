@@ -3,6 +3,37 @@ import userEvent from '@testing-library/user-event';
 
 import PreferredSportsStep from '@/views/vacancies/components/form-steps/preferred-sports-step';
 
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({
+    t: (key: string, options?: { number?: string }) => {
+      if (key === 'preferredSports.cardTitle') {
+        return `Sports ${options?.number ?? '01'}`;
+      }
+
+      const dictionary: Record<string, string> = {
+        'preferredSports.title': 'Preferred Sports',
+        'preferredSports.labels.sport': 'Name of the Sport',
+        'preferredSports.labels.organizationLocation': 'Organization Location',
+        'preferredSports.labels.levelRepresented': 'Level Represented',
+        'preferredSports.labels.representedOrganization':
+          'Represented Organization',
+        'preferredSports.labels.position': 'Position / Role Held',
+        'preferredSports.labels.startDate': 'Start Date',
+        'preferredSports.labels.endDate': 'End Date',
+        'preferredSports.placeholders.sport': 'Select or add sport name',
+        'preferredSports.placeholders.organizationLocation': 'Select location',
+        'preferredSports.dataTakenFromCandidate':
+          'If selected, no manual input is required, and data will be taken from the candidate profile',
+        'preferredSports.addEntry': 'Add entry',
+        'preferredSports.cancel': 'Cancel',
+        'preferredSports.next': 'Next',
+      };
+
+      return dictionary[key] ?? key;
+    },
+  }),
+}));
+
 // ── Mock wizard form context ──────────────────────────────────────────────────
 
 const onCancel = vi.hoisted(() => vi.fn());

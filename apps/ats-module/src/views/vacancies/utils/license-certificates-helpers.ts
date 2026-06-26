@@ -32,10 +32,6 @@ function normalizeOrganizationSource(source?: string): 'MASTER' | 'PENDING' {
   return 'MASTER';
 }
 
-function isTemporaryLicenseId(id: string): boolean {
-  return id.startsWith('__pending_license_cert_');
-}
-
 const toLicenseCertificatesPayload = (
   values: LicenseCertificatesFormValues
 ): LicenseCertificates[] => {
@@ -51,11 +47,7 @@ const toLicenseCertificatesPayload = (
     source: string;
     certType?: string;
   }): LicenseCertRef | null => {
-    if (
-      !item.value ||
-      item.value === item.label ||
-      isTemporaryLicenseId(item.value)
-    ) {
+    if (!item.value || item.value === item.label) {
       return null;
     }
     const ref: LicenseCertRef = {
