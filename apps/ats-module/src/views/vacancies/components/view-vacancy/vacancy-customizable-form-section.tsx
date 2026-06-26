@@ -1,4 +1,4 @@
-import { ShieldTick } from 'iconsax-reactjs';
+import { Tether } from 'iconsax-reactjs';
 
 import { useTranslation } from 'react-i18next';
 
@@ -155,7 +155,7 @@ function VacancyCustomizableFormSection({
           className="flex flex-col gap-4 rounded-[12px] bg-white p-4"
         >
           <div className="flex items-center gap-1 text-sm">
-            <ShieldTick size={20} className="text-slate-500" variant="Bold" />
+            <Tether size={20} className="text-slate-500" variant="Bold" />
             <span className="font-semibold text-slate-600">
               {form.title || t('customizableForm.untitledForm')}
             </span>
