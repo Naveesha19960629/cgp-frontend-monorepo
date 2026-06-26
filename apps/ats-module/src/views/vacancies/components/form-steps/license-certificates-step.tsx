@@ -505,7 +505,23 @@ export default function LicenseCertificatesStep({
                       <MultipleSelector
                         key={licenseCertSelectorKey}
                         value={field.value}
-                        onSearch={searchLicenseCerts}
+                        onSearch={async (search: string) => {
+                          const results = await searchLicenseCerts(search);
+                          // Filter out items already selected to prevent duplication
+                          // Use label + type for case-insensitive matching (you can have "AWS" as LICENSE and CERTIFICATION)
+                          const selectedItems = new Set(
+                            field.value.map(
+                              v =>
+                                `${v.label.toLowerCase()}|${v.certType || 'certificate'}`
+                            )
+                          );
+                          return results.filter(
+                            item =>
+                              !selectedItems.has(
+                                `${item.label.toLowerCase()}|${item.certType || 'certificate'}`
+                              )
+                          );
+                        }}
                         onChange={options => {
                           if (options.length > MAX_SELECTIONS) {
                             setMax('nameOfLicenseCert');
@@ -581,7 +597,18 @@ export default function LicenseCertificatesStep({
                       <MultipleSelector
                         key={organizationSelectorKey}
                         value={field.value}
-                        onSearch={searchOrganizations}
+                        onSearch={async (search: string) => {
+                          const results = await searchOrganizations(search);
+                          // Filter out items already selected to prevent duplication
+                          // Use label (name) instead of value (ID) for case-insensitive matching
+                          const selectedLabels = new Set(
+                            field.value.map(v => v.label.toLowerCase())
+                          );
+                          return results.filter(
+                            item =>
+                              !selectedLabels.has(item.label.toLowerCase())
+                          );
+                        }}
                         onChange={options => {
                           if (options.length > MAX_SELECTIONS) {
                             setMax('issuingOrganization');
@@ -603,7 +630,23 @@ export default function LicenseCertificatesStep({
                             return;
                           }
 
-                          field.onChange(options);
+                          // Check for case-insensitive duplicates when adding existing organizations
+                          const currentOrganizations = getValues(
+                            'entry.issuingOrganization'
+                          );
+                          const filteredOptions = options.filter(newOrg => {
+                            const normalizedNewLabel = newOrg.label
+                              .trim()
+                              .toLowerCase();
+                            const isDuplicate = currentOrganizations.some(
+                              existing =>
+                                existing.label.trim().toLowerCase() ===
+                                normalizedNewLabel
+                            );
+                            return !isDuplicate;
+                          });
+
+                          field.onChange(filteredOptions);
                         }}
                         maxSelected={MAX_SELECTIONS}
                         onMaxSelected={() => setMax('issuingOrganization')}
@@ -662,7 +705,18 @@ export default function LicenseCertificatesStep({
                     render={({ field }) => (
                       <MultipleSelector
                         value={field.value}
-                        onSearch={searchLocations}
+                        onSearch={async (search: string) => {
+                          const results = await searchLocations(search);
+                          // Filter out items already selected to prevent duplication
+                          // Use label (location name) instead of value (ID) for case-insensitive matching
+                          const selectedLabels = new Set(
+                            field.value.map(v => v.label.toLowerCase())
+                          );
+                          return results.filter(
+                            item =>
+                              !selectedLabels.has(item.label.toLowerCase())
+                          );
+                        }}
                         onChange={options => {
                           if (options.length > MAX_SELECTIONS) {
                             setMax('organizationLocations');
@@ -949,36 +1003,43 @@ export default function LicenseCertificatesStep({
           onOpenChange={open => {
             setShowAddOrganizationDialog(open);
             if (!open) {
+              setPendingOrganizationName('');
               organizationsSnapshotRef.current = [];
               setOrganizationSelectorKey(k => k + 1);
             }
           }}
           organizationName={pendingOrganizationName}
           onOrganizationAdded={org => {
-            const baseItems: {
-              value: string;
-              label: string;
-              source: string;
-            }[] =
-              organizationsSnapshotRef.current.length > 0
-                ? organizationsSnapshotRef.current
-                : (getValues('entry.issuingOrganization') ?? []);
+            // Validation guard: only add if organization name is provided
+            if (!org.name || !org.name.trim()) {
+              return;
+            }
 
+            const currentOrganizations = getValues('entry.issuingOrganization');
+
+            // Check for case-insensitive duplicate: same name
             const normalizedNewLabel = org.name.trim().toLowerCase();
-            const deduped = baseItems.filter(item => {
-              return item.label.trim().toLowerCase() !== normalizedNewLabel;
-            });
+            const isDuplicate = currentOrganizations.some(
+              organization =>
+                organization.label.trim().toLowerCase() === normalizedNewLabel
+            );
 
-            if (deduped.length >= MAX_SELECTIONS) {
-              setMax('issuingOrganization');
-              organizationsSnapshotRef.current = [];
+            if (isDuplicate) {
+              // Item already exists, don't add
+              setShowAddOrganizationDialog(false);
+              setPendingOrganizationName('');
               setOrganizationSelectorKey(k => k + 1);
+              return;
+            }
+
+            if (currentOrganizations.length >= MAX_SELECTIONS) {
+              setMax('issuingOrganization');
               setShowAddOrganizationDialog(false);
               return;
             }
 
             setValue('entry.issuingOrganization', [
-              ...deduped,
+              ...currentOrganizations,
               {
                 value: org.id,
                 label: org.name,
@@ -989,6 +1050,7 @@ export default function LicenseCertificatesStep({
             clearMax('issuingOrganization');
 
             organizationsSnapshotRef.current = [];
+            setPendingOrganizationName('');
             setOrganizationSelectorKey(k => k + 1);
             setShowAddOrganizationDialog(false);
           }}
@@ -999,11 +1061,17 @@ export default function LicenseCertificatesStep({
           open={addLicenseCertDialogOpen}
           initialName={pendingLicenseCertLabel}
           onClose={() => {
+            setPendingLicenseCertLabel('');
             setLicenseCertSelectorKey(k => k + 1);
             licenseCertsSnapshotRef.current = [];
             setAddLicenseCertDialogOpen(false);
           }}
           onAdded={option => {
+            // Validation guard: only add if name and type are provided
+            if (!option.label || !option.certType) {
+              return;
+            }
+
             const baseItems =
               licenseCertsSnapshotRef.current.length > 0
                 ? licenseCertsSnapshotRef.current
@@ -1028,6 +1096,7 @@ export default function LicenseCertificatesStep({
               setMax('nameOfLicenseCert');
               pendingLicenseCertsDataRef.current.delete(option.value);
               licenseCertsSnapshotRef.current = [];
+              setPendingLicenseCertLabel('');
               setLicenseCertSelectorKey(k => k + 1);
               setAddLicenseCertDialogOpen(false);
               return;
@@ -1051,6 +1120,7 @@ export default function LicenseCertificatesStep({
             clearMax('nameOfLicenseCert');
 
             licenseCertsSnapshotRef.current = [];
+            setPendingLicenseCertLabel('');
             setLicenseCertSelectorKey(k => k + 1);
             setAddLicenseCertDialogOpen(false);
           }}
