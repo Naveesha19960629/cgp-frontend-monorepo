@@ -108,6 +108,8 @@ function ClubSocietyCard({
   isLocationsLoading: boolean;
 }>) {
   const { t } = useTranslation('ats');
+  const [societiesError, setSocietiesError] = useState(false);
+  const [organizationsError, setOrganizationsError] = useState(false);
   const [locationsError, setLocationsError] = useState(false);
 
   return (
@@ -211,11 +213,6 @@ function ClubSocietyCard({
                     </p>
                   }
                 />
-                {societiesCharLimitError && (
-                  <p className="text-destructive text-xs">
-                    {t('preferredClubSocieties.errors.maxCharacters')}
-                  </p>
-                )}
               </div>
 
               <div className="flex flex-col gap-1">
@@ -816,12 +813,7 @@ export default function PreferredClubSocietiesStep({
 
         {/* ── Step footer ───────────────────────────────────────────────── */}
         <div className="sticky bottom-0 mt-auto flex items-center justify-end gap-4 bg-white px-6 py-7 shadow-[0px_-8px_6.8px_0px_rgba(0,0,0,0.04)]">
-          <Button
-            variant="secondary"
-            className="h-12 w-48"
-            disabled={isSubmitting}
-            onClick={onCancel}
-          >
+          <Button variant="secondary" className="h-12 w-48" onClick={onCancel}>
             {t('preferredClubSocieties.cancel')}
           </Button>
           <Button
@@ -829,11 +821,7 @@ export default function PreferredClubSocietiesStep({
             onClick={handleNext}
             disabled={!canNavigate}
           >
-            {isSubmitting ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : (
-              t('preferredClubSocieties.next')
-            )}
+            {t('preferredClubSocieties.next')}
           </Button>
         </div>
       </div>

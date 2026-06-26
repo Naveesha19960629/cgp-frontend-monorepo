@@ -138,6 +138,8 @@ function SportCard({
   isLocationsLoading: boolean;
 }>) {
   const { t } = useTranslation('ats');
+  const [sportsError, setSportsError] = useState(false);
+  const [organizationsError, setOrganizationsError] = useState(false);
   const [openDatePopover, setOpenDatePopover] = useState<
     'startDate' | 'endDate' | null
   >(null);
@@ -901,12 +903,7 @@ export default function PreferredSportsStep({
 
         {/* ── Step footer ───────────────────────────────────────────────── */}
         <div className="sticky bottom-0 mt-auto flex items-center justify-end gap-4 bg-white px-6 py-7 shadow-[0px_-8px_6.8px_0px_rgba(0,0,0,0.04)]">
-          <Button
-            variant="secondary"
-            className="h-12 w-48"
-            disabled={isSubmitting}
-            onClick={onCancel}
-          >
+          <Button variant="secondary" className="h-12 w-48" onClick={onCancel}>
             {t('preferredSports.cancel')}
           </Button>
           <Button
@@ -914,11 +911,7 @@ export default function PreferredSportsStep({
             onClick={handleNext}
             disabled={!canNavigate}
           >
-            {isSubmitting ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : (
-              t('preferredSports.next')
-            )}
+            {t('preferredSports.next')}
           </Button>
         </div>
       </div>

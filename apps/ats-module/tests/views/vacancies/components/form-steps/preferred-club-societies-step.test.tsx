@@ -3,6 +3,39 @@ import userEvent from '@testing-library/user-event';
 
 import PreferredClubSocietiesStep from '@/views/vacancies/components/form-steps/preferred-club-societies-step';
 
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({
+    t: (key: string, options?: { number?: string }) => {
+      if (key === 'preferredClubSocieties.cardTitle') {
+        return `Clubs and societies ${options?.number ?? '01'}`;
+      }
+
+      const dictionary: Record<string, string> = {
+        'preferredClubSocieties.title': 'Preferred Clubs and Societies',
+        'preferredClubSocieties.labels.clubSociety': 'Club / Society',
+        'preferredClubSocieties.labels.startDate': 'Start Date',
+        'preferredClubSocieties.labels.endDate': 'End Date',
+        'preferredClubSocieties.labels.representedOrganization':
+          'Represented Organization',
+        'preferredClubSocieties.labels.organizationLocation':
+          'Organization Location',
+        'preferredClubSocieties.labels.position': 'Position / Role Held',
+        'preferredClubSocieties.placeholders.clubSociety':
+          'Select or add club or society',
+        'preferredClubSocieties.placeholders.organizationLocation':
+          'Select location',
+        'preferredClubSocieties.dataTakenFromCandidate':
+          'If selected, no manual input is required, and data will be taken from the candidate profile',
+        'preferredClubSocieties.addEntry': 'Add entry',
+        'preferredClubSocieties.cancel': 'Cancel',
+        'preferredClubSocieties.next': 'Next',
+      };
+
+      return dictionary[key] ?? key;
+    },
+  }),
+}));
+
 // ── Mock wizard form context ──────────────────────────────────────────────────
 
 const onCancel = vi.hoisted(() => vi.fn());

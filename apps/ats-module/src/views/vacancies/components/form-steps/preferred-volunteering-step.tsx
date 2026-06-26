@@ -802,12 +802,7 @@ export default function PreferredVolunteeringStep({
 
         {/* ── Step footer ───────────────────────────────────────────────── */}
         <div className="sticky bottom-0 mt-auto flex items-center justify-end gap-4 bg-white px-6 py-7 shadow-[0px_-8px_6.8px_0px_rgba(0,0,0,0.04)]">
-          <Button
-            variant="secondary"
-            className="h-12 w-48"
-            disabled={isSubmitting}
-            onClick={onCancel}
-          >
+          <Button variant="secondary" className="h-12 w-48" onClick={onCancel}>
             {t('preferredVolunteering.cancel')}
           </Button>
           <Button
@@ -815,11 +810,7 @@ export default function PreferredVolunteeringStep({
             onClick={handleNext}
             disabled={!canNavigate}
           >
-            {isSubmitting ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : (
-              t('preferredVolunteering.next')
-            )}
+            {t('preferredVolunteering.next')}
           </Button>
         </div>
       </div>
