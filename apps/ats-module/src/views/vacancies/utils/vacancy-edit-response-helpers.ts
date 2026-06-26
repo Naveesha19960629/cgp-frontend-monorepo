@@ -795,7 +795,6 @@ function normalizePreferredClubSocietiesSection(
         `club-${index + 1}`,
       isOpen: true,
       clubSociety: normalizeOptionWithSourceArray(item.clubSociety),
-      clubSocietySearch: '',
       startDate: toSafeString(item.startDate) || undefined,
       endDate: toSafeString(item.endDate) || undefined,
       representedOrganization:

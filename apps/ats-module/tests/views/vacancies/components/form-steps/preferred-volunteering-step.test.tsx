@@ -50,22 +50,6 @@ vi.mock('@/views/vacancies/hooks', () => ({
     data: mockLocationsData,
     isLoading: false,
   }),
-  useCreateCauseMutation: () => ({
-    mutateAsync: vi.fn((label: string) => ({
-      pendingId: 'pending-cause-123',
-      type: 'CAUSE',
-      value: label,
-      status: 'PENDING',
-    })),
-  }),
-  useCreateOrganizationMutation: () => ({
-    mutateAsync: vi.fn((label: string) => ({
-      pendingId: 'pending-org-123',
-      type: 'ORGANIZATION',
-      value: label,
-      status: 'PENDING',
-    })),
-  }),
   useStepGuard: vi.fn(),
   useOrganizationForm: () => ({
     form: {
