@@ -1,4 +1,4 @@
-import { ChevronUpIcon, PlusIcon } from 'lucide-react';
+import { ChevronUpIcon, Loader2, PlusIcon } from 'lucide-react';
 
 import { ArrowLeft2, Calendar as CalendarIcon } from 'iconsax-reactjs';
 
@@ -12,6 +12,8 @@ import { AddOrganizationFormDialog } from '@/views/vacancies/components/dialogs'
 import StepDisableDialog from '@/views/vacancies/components/step-disable-dialog';
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import {
+  useCreateOrganizationMutation,
+  useCreateSocietyMutation,
   useLocationsQuery,
   useOrganizationsQuery,
   useSocietiesQuery,
@@ -48,13 +50,17 @@ import { cn } from '@cgp/ui-kit/lib/utils';
 import DisableDialog from './disable-dialog';
 
 const MAX_POSITION_LENGTH = 250;
+const MAX_CLUB_SOCIETY_LENGTH = 250;
 const MAX_SELECTIONS = 10;
+const HUNDRED_YEARS_AGO = new Date(new Date().getFullYear() - 100, 0, 1);
+const HUNDRED_YEARS_FROM_NOW = new Date(new Date().getFullYear() + 100, 11, 31);
 
 interface ClubSocietyEntry {
   id: string;
   isOpen: boolean;
 
   clubSociety: Array<{ value: string; label: string; source: string }>;
+  clubSocietySearch: string;
   startDate?: string;
   endDate?: string;
   representedOrganization: Array<{
@@ -81,7 +87,9 @@ function ClubSocietyCard({
   isOrganizationsLoading,
   locationOptions,
   isLocationsLoading,
+  orgSelectorKey,
 }: Readonly<{
+  orgSelectorKey: number;
   index: number;
   entry: ClubSocietyEntry;
   onUpdate: (index: number, updates: Partial<ClubSocietyEntry>) => void;
@@ -107,7 +115,14 @@ function ClubSocietyCard({
   locationOptions: Array<{ value: string; label: string }>;
   isLocationsLoading: boolean;
 }>) {
+  const { t } = useTranslation('ats');
   const [locationsError, setLocationsError] = useState(false);
+  const [societiesError, setSocietiesError] = useState(false);
+  const [organizationsError, setOrganizationsError] = useState(false);
+  const [societiesCharLimitError, setSocietiesCharLimitError] = useState(false);
+  const [openDatePopover, setOpenDatePopover] = useState<
+    'startDate' | 'endDate' | null
+  >(null);
 
   return (
     <Collapsible
@@ -118,13 +133,19 @@ function ClubSocietyCard({
         {/* Card header */}
         <div className="flex items-center justify-between px-5 py-5">
           <span className="text-base font-bold text-slate-900">
-            Clubs and societies {String(index + 1).padStart(2, '0')}
+            {t('preferredClubSocieties.cardTitle', {
+              number: String(index + 1).padStart(2, '0'),
+            })}
           </span>
           <CollapsibleTrigger asChild>
             <button
               type="button"
               className="text-slate-400 transition-colors hover:text-slate-600"
-              aria-label={entry.isOpen ? 'Collapse' : 'Expand'}
+              aria-label={
+                entry.isOpen
+                  ? t('preferredClubSocieties.collapse')
+                  : t('preferredClubSocieties.expand')
+              }
             >
               <ChevronUpIcon
                 className={cn(
@@ -148,7 +169,11 @@ function ClubSocietyCard({
             <div className="grid grid-cols-[2fr_1fr_1fr] gap-4">
               <div className="flex flex-col gap-1">
                 <div className="flex h-5 items-center">
-                  <Label>Club / Society</Label>
+                  <Label
+                    className={societiesError ? 'text-destructive' : undefined}
+                  >
+                    {t('preferredClubSocieties.labels.clubSociety')}
+                  </Label>
                 </div>
                 <MultipleSelector
                   value={entry.clubSociety}
@@ -160,11 +185,23 @@ function ClubSocietyCard({
                             typeof opt.value === 'string' &&
                             opt.value.length > 0
                         )
-                        .map(opt => ({
-                          value: opt.value,
-                          label: opt.label,
-                          source: (opt.source as string) ?? 'USER_CREATED',
-                        })),
+                        .map(opt => {
+                          const source =
+                            (opt.source as string) ?? 'USER_CREATED';
+                          const isCreatable =
+                            source === 'USER_CREATED' ||
+                            opt.value === opt.label;
+
+                          return {
+                            value: isCreatable
+                              ? opt.value.slice(0, MAX_CLUB_SOCIETY_LENGTH)
+                              : opt.value,
+                            label: isCreatable
+                              ? opt.label.slice(0, MAX_CLUB_SOCIETY_LENGTH)
+                              : opt.label,
+                            source,
+                          };
+                        }),
                     });
                   }}
                   options={societies.map(s => ({
@@ -173,7 +210,16 @@ function ClubSocietyCard({
                     source: s.source,
                   }))}
                   onSearchSync={value => {
-                    onSocietiesSearch(value);
+                    const limitedSearch = value.slice(
+                      0,
+                      MAX_CLUB_SOCIETY_LENGTH
+                    );
+
+                    setSocietiesCharLimitError(
+                      value.length >= MAX_CLUB_SOCIETY_LENGTH
+                    );
+                    onUpdate(index, { clubSocietySearch: limitedSearch });
+                    onSocietiesSearch(limitedSearch);
                     return societies.map(s => ({
                       value: s.id,
                       label: s.name || s.label || '',
@@ -181,28 +227,51 @@ function ClubSocietyCard({
                     }));
                   }}
                   keepSelectedInList
+                  inputProps={{
+                    maxLength: MAX_CLUB_SOCIETY_LENGTH,
+                  }}
                   creatable
                   triggerSearchOnFocus
                   hideClearAllButton
                   maxSelected={MAX_SELECTIONS}
+                  errorMessage={t(
+                    'preferredClubSocieties.errors.maxSelections'
+                  )}
+                  onErrorStateChange={setSocietiesError}
                   disabled={fieldsDisabled}
                   loading={isSocietiesLoading}
-                  placeholder="Select or add club or society"
+                  placeholder={t(
+                    'preferredClubSocieties.placeholders.clubSociety'
+                  )}
                   emptyIndicator={
                     <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                      No societies found
+                      {t('preferredClubSocieties.empty.societies')}
                     </p>
                   }
                 />
+                {societiesCharLimitError && (
+                  <p className="text-destructive text-xs">
+                    {t('preferredClubSocieties.errors.maxCharacters')}
+                  </p>
+                )}
               </div>
 
               <div className="flex flex-col gap-1">
                 <div className="flex h-5 items-center">
-                  <Label>Start Date</Label>
+                  <Label>{t('preferredClubSocieties.labels.startDate')}</Label>
                 </div>
-                <Popover>
+                <Popover
+                  modal
+                  open={openDatePopover === 'startDate'}
+                  onOpenChange={open =>
+                    setOpenDatePopover(
+                      !fieldsDisabled && open ? 'startDate' : null
+                    )
+                  }
+                >
                   <PopoverTrigger asChild>
                     <Button
+                      type="button"
                       variant="outline"
                       disabled={fieldsDisabled}
                       className={cn(
@@ -218,7 +287,7 @@ function ClubSocietyCard({
                     >
                       {entry.startDate
                         ? formatDate(entry.startDate)
-                        : 'Select start date'}
+                        : t('preferredClubSocieties.placeholders.startDate')}
                       <CalendarIcon
                         variant="Linear"
                         size={20}
@@ -230,12 +299,29 @@ function ClubSocietyCard({
                     <Calendar
                       mode="single"
                       selected={parseLocalDate(entry.startDate) ?? undefined}
-                      onSelect={date =>
+                      defaultMonth={
+                        parseLocalDate(entry.startDate) ||
+                        parseLocalDate(entry.endDate) ||
+                        new Date()
+                      }
+                      onSelect={date => {
                         onUpdate(index, {
                           startDate: date ? formatLocalDate(date) : undefined,
-                        })
+                        });
+                        setOpenDatePopover(null);
+
+                        if (entry.endDate && date) {
+                          const endDate = parseLocalDate(entry.endDate);
+                          if (endDate != null && endDate < date) {
+                            onUpdate(index, { endDate: undefined });
+                          }
+                        }
+                      }}
+                      disabled={date =>
+                        date > new Date() || date < HUNDRED_YEARS_AGO
                       }
-                      disabled={date => date > new Date()}
+                      captionLayout="dropdown"
+                      startMonth={HUNDRED_YEARS_AGO}
                     />
                   </PopoverContent>
                 </Popover>
@@ -243,11 +329,20 @@ function ClubSocietyCard({
 
               <div className="flex flex-col gap-1">
                 <div className="flex h-5 items-center">
-                  <Label>End Date</Label>
+                  <Label>{t('preferredClubSocieties.labels.endDate')}</Label>
                 </div>
-                <Popover>
+                <Popover
+                  modal
+                  open={openDatePopover === 'endDate'}
+                  onOpenChange={open =>
+                    setOpenDatePopover(
+                      !fieldsDisabled && open ? 'endDate' : null
+                    )
+                  }
+                >
                   <PopoverTrigger asChild>
                     <Button
+                      type="button"
                       variant="outline"
                       disabled={fieldsDisabled}
                       className={cn(
@@ -263,7 +358,7 @@ function ClubSocietyCard({
                     >
                       {entry.endDate
                         ? formatDate(entry.endDate)
-                        : 'Select end date'}
+                        : t('preferredClubSocieties.placeholders.endDate')}
                       <CalendarIcon
                         variant="Linear"
                         size={20}
@@ -275,16 +370,28 @@ function ClubSocietyCard({
                     <Calendar
                       mode="single"
                       selected={parseLocalDate(entry.endDate) ?? undefined}
-                      onSelect={date =>
+                      defaultMonth={
+                        parseLocalDate(entry.endDate) ||
+                        parseLocalDate(entry.startDate) ||
+                        new Date()
+                      }
+                      onSelect={date => {
                         onUpdate(index, {
                           endDate: date ? formatLocalDate(date) : undefined,
-                        })
-                      }
-                      disabled={date =>
-                        entry.startDate
-                          ? date <= (parseLocalDate(entry.startDate) ?? date)
-                          : false
-                      }
+                        });
+                        setOpenDatePopover(null);
+                      }}
+                      disabled={date => {
+                        const startDate = parseLocalDate(entry.startDate);
+                        return (
+                          date < HUNDRED_YEARS_AGO ||
+                          date > HUNDRED_YEARS_FROM_NOW ||
+                          (startDate != null && date < startDate)
+                        );
+                      }}
+                      captionLayout="dropdown"
+                      startMonth={HUNDRED_YEARS_AGO}
+                      endMonth={HUNDRED_YEARS_FROM_NOW}
                     />
                   </PopoverContent>
                 </Popover>
@@ -295,9 +402,16 @@ function ClubSocietyCard({
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-1">
                 <div className="flex h-5 items-center">
-                  <Label>Represented Organization</Label>
+                  <Label
+                    className={
+                      organizationsError ? 'text-destructive' : undefined
+                    }
+                  >
+                    {t('preferredClubSocieties.labels.representedOrganization')}
+                  </Label>
                 </div>
                 <MultipleSelector
+                  key={orgSelectorKey}
                   value={entry.representedOrganization}
                   onChange={options => {
                     // Detect newly typed item (value === label means creatable)
@@ -339,12 +453,18 @@ function ClubSocietyCard({
                   triggerSearchOnFocus
                   hideClearAllButton
                   maxSelected={MAX_SELECTIONS}
+                  errorMessage={t(
+                    'preferredClubSocieties.errors.maxSelections'
+                  )}
+                  onErrorStateChange={setOrganizationsError}
                   disabled={fieldsDisabled}
                   loading={isOrganizationsLoading}
-                  placeholder="Select or add represented organization"
+                  placeholder={t(
+                    'preferredClubSocieties.placeholders.representedOrganization'
+                  )}
                   emptyIndicator={
                     <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                      No organizations found
+                      {t('preferredClubSocieties.empty.organizations')}
                     </p>
                   }
                 />
@@ -355,7 +475,7 @@ function ClubSocietyCard({
                   <Label
                     className={locationsError ? 'text-destructive' : undefined}
                   >
-                    Organization Location
+                    {t('preferredClubSocieties.labels.organizationLocation')}
                   </Label>
                 </div>
                 <MultipleSelector
@@ -377,14 +497,18 @@ function ClubSocietyCard({
                   keepSelectedInList
                   hideClearAllButton
                   maxSelected={MAX_SELECTIONS}
-                  errorMessage="Exceeded maximum of 10 selections"
+                  errorMessage={t(
+                    'preferredClubSocieties.errors.maxSelections'
+                  )}
                   onErrorStateChange={setLocationsError}
                   disabled={fieldsDisabled}
                   loading={isLocationsLoading}
-                  placeholder="Select location"
+                  placeholder={t(
+                    'preferredClubSocieties.placeholders.organizationLocation'
+                  )}
                   emptyIndicator={
                     <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                      No locations found
+                      {t('preferredClubSocieties.empty.locations')}
                     </p>
                   }
                 />
@@ -395,7 +519,7 @@ function ClubSocietyCard({
             <div className="grid grid-cols-4 gap-4">
               <div className="col-span-1 flex flex-col gap-1">
                 <div className="flex items-center justify-between">
-                  <Label>Position / Role Held</Label>
+                  <Label>{t('preferredClubSocieties.labels.position')}</Label>
                   <CharacterCount
                     currentLength={entry.position.length}
                     maxLength={MAX_POSITION_LENGTH}
@@ -408,7 +532,9 @@ function ClubSocietyCard({
                     onUpdate(index, { position: sanitized.trimStart() });
                   }}
                   maxLength={MAX_POSITION_LENGTH}
-                  placeholder="Enter position or role held"
+                  placeholder={t(
+                    'preferredClubSocieties.placeholders.position'
+                  )}
                   className="h-11"
                 />
               </div>
@@ -428,6 +554,10 @@ export default function PreferredClubSocietiesStep({
   const { form: contextForm, onCancel } = useVacancyForm();
   const savedClubSocieties = contextForm.preferredClubSocieties;
 
+  const { mutateAsync: createSociety } = useCreateSocietyMutation();
+  const { mutateAsync: createOrganization } = useCreateOrganizationMutation();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const [isEnabled, setIsEnabled] = useState(
     savedClubSocieties?.isEnabled ?? false
   );
@@ -445,16 +575,21 @@ export default function PreferredClubSocietiesStep({
     useState(false);
   const [pendingOrganizationName, setPendingOrganizationName] = useState('');
   const [activeCardIndex, setActiveCardIndex] = useState<number | null>(null);
+  const [orgSelectorKey, setOrgSelectorKey] = useState(0);
 
   const [entries, setEntries] = useState<ClubSocietyEntry[]>(
     savedClubSocieties?.clubSocieties &&
       savedClubSocieties.clubSocieties.length > 0
-      ? savedClubSocieties.clubSocieties
+      ? savedClubSocieties.clubSocieties.map(e => ({
+          ...e,
+          clubSocietySearch: e.clubSocietySearch ?? '',
+        }))
       : [
           {
             id: '1',
             isOpen: true,
             clubSociety: [],
+            clubSocietySearch: '',
             startDate: undefined,
             endDate: undefined,
             representedOrganization: [],
@@ -463,7 +598,6 @@ export default function PreferredClubSocietiesStep({
           },
         ]
   );
-
   const {
     setForm,
     stepPersistRef,
@@ -516,7 +650,7 @@ export default function PreferredClubSocietiesStep({
       e.endDate != null
   );
 
-  const handleNext = () => {
+  const handleNext = async () => {
     const isEmptyEnabledSection =
       isEnabled && !dataTakenFromCandidate && !hasClubSocietyData;
 
@@ -525,11 +659,97 @@ export default function PreferredClubSocietiesStep({
       return;
     }
 
+    // Resolve user-created club/societies & organizations
+    const allSocieties = entries.flatMap(e => e.clubSociety);
+    const hasUserCreatedSocieties = allSocieties.some(
+      s => s.source === 'USER_CREATED'
+    );
+    const allOrgs = entries.flatMap(e => e.representedOrganization);
+    const hasUserCreatedOrgs = allOrgs.some(o => o.source === 'USER_CREATED');
+
+    let resolvedEntries = entries;
+
+    if (hasUserCreatedSocieties || hasUserCreatedOrgs) {
+      setIsSubmitting(true);
+      try {
+        let societyResultMap = new Map();
+        if (hasUserCreatedSocieties) {
+          const uniqueUserCreatedSocieties = Array.from(
+            new Map(
+              allSocieties
+                .filter(s => s.source === 'USER_CREATED')
+                .map(s => [s.label, s])
+            ).values()
+          );
+          const sResults = await Promise.all(
+            uniqueUserCreatedSocieties.map(s => createSociety(s.label))
+          );
+          societyResultMap = new Map(
+            uniqueUserCreatedSocieties.map((s, idx) => [s.label, sResults[idx]])
+          );
+        }
+
+        let orgResultMap = new Map();
+        if (hasUserCreatedOrgs) {
+          const uniqueUserCreatedOrgs = Array.from(
+            new Map(
+              allOrgs
+                .filter(o => o.source === 'USER_CREATED')
+                .map(o => [o.label, o])
+            ).values()
+          );
+          const oResults = await Promise.all(
+            uniqueUserCreatedOrgs.map(o => createOrganization(o.label))
+          );
+          orgResultMap = new Map(
+            uniqueUserCreatedOrgs.map((o, idx) => [o.label, oResults[idx]])
+          );
+        }
+
+        resolvedEntries = entries.map(entry => ({
+          ...entry,
+          clubSociety: entry.clubSociety.map(s => {
+            if (s.source === 'USER_CREATED') {
+              const res = societyResultMap.get(s.label);
+              if (res) {
+                return {
+                  value: res.pendingId,
+                  label: res.value,
+                  source: res.status,
+                };
+              }
+            }
+            return s;
+          }),
+          representedOrganization: entry.representedOrganization.map(o => {
+            if (o.source === 'USER_CREATED') {
+              const res = orgResultMap.get(o.label);
+              if (res) {
+                return {
+                  value: res.pendingId,
+                  label: res.value,
+                  source: res.status,
+                };
+              }
+            }
+            return o;
+          }),
+        }));
+
+        setEntries(resolvedEntries);
+      } catch (err) {
+        console.error(err);
+        return; // Stop execution on error
+      } finally {
+        setIsSubmitting(false);
+      }
+    }
+
     onNext({
       preferredClubSocieties: {
         isEnabled,
         dataTakenFromCandidate,
-        clubSocieties: entries,
+        clubSocieties: resolvedEntries,
       },
     });
   };
@@ -579,7 +799,13 @@ export default function PreferredClubSocietiesStep({
 
   const handleToggle = () => {
     if (isEnabled) {
-      setConfirmDisableOpen(true);
+      if (hasClubSocietyData) {
+        setConfirmDisableOpen(true);
+      } else {
+        setIsEnabled(false);
+        setDataTakenFromCandidate(false);
+        removeCompletedStep(currentStepIndex);
+      }
     } else {
       setIsEnabled(true);
     }
@@ -599,6 +825,7 @@ export default function PreferredClubSocietiesStep({
         id: newId,
         isOpen: true,
         clubSociety: [],
+        clubSocietySearch: '',
         startDate: undefined,
         endDate: undefined,
         representedOrganization: [],
@@ -614,6 +841,7 @@ export default function PreferredClubSocietiesStep({
         id: '1',
         isOpen: true,
         clubSociety: [],
+        clubSocietySearch: '',
         startDate: undefined,
         endDate: undefined,
         representedOrganization: [],
@@ -626,14 +854,13 @@ export default function PreferredClubSocietiesStep({
     removeCompletedStep(currentStepIndex);
     setConfirmDisableOpen(false);
     SuccessToast({
-      title: 'Section Disabled',
-      description:
-        'Preferred Clubs and Societies section has been disabled successfully.',
+      title: t('preferredClubSocieties.notifications.disable.title'),
+      description: t('preferredClubSocieties.notifications.disable.message'),
     });
   };
 
   const handleBack = () => {
-    if (!canNavigate) {
+    if (!canNavigate || isSubmitting) {
       return;
     }
 
@@ -648,9 +875,10 @@ export default function PreferredClubSocietiesStep({
         <MessageBox
           fields={[
             t('preferredClubSocieties.fieldList.clubSociety'),
-            t('preferredClubSocieties.fieldList.position'),
             t('preferredClubSocieties.fieldList.representedOrganization'),
+            t('preferredClubSocieties.fieldList.position'),
             t('preferredClubSocieties.fieldList.startDate'),
+            t('preferredClubSocieties.fieldList.endDate'),
           ]}
         />
 
@@ -659,19 +887,19 @@ export default function PreferredClubSocietiesStep({
           <div className="flex items-center gap-2">
             <button
               type="button"
-              aria-label="Back"
+              aria-label={t('preferredClubSocieties.back')}
               className={cn(
                 'cursor-pointer text-slate-700 transition-colors hover:text-slate-900',
-                !canNavigate &&
+                (!canNavigate || isSubmitting) &&
                   'cursor-not-allowed opacity-40 hover:text-slate-700'
               )}
               onClick={handleBack}
-              disabled={!canNavigate}
+              disabled={!canNavigate || isSubmitting}
             >
               <ArrowLeft2 size={24} />
             </button>
             <h2 className="text-xl font-bold tracking-tight text-slate-900">
-              Preferred Clubs and Societies
+              {t('preferredClubSocieties.title')}
             </h2>
           </div>
           <SwitchPrimitive.Root
@@ -710,6 +938,7 @@ export default function PreferredClubSocietiesStep({
                     id: '1',
                     isOpen: true,
                     clubSociety: [],
+                    clubSocietySearch: '',
                     startDate: undefined,
                     endDate: undefined,
                     representedOrganization: [],
@@ -725,8 +954,7 @@ export default function PreferredClubSocietiesStep({
             htmlFor="clubSocietiesDataTakenFromCandidate"
             className="cursor-pointer text-sm leading-snug font-medium text-slate-900"
           >
-            If selected, no manual input is required, and data will be taken
-            from the candidate profile
+            {t('preferredClubSocieties.dataTakenFromCandidate')}
           </Label>
         </div>
 
@@ -753,6 +981,7 @@ export default function PreferredClubSocietiesStep({
               isOrganizationsLoading={isOrganizationsLoading}
               locationOptions={locationOptions}
               isLocationsLoading={isLocationsLoading}
+              orgSelectorKey={orgSelectorKey}
             />
           ))}
         </div>
@@ -767,7 +996,7 @@ export default function PreferredClubSocietiesStep({
           <Button
             variant="secondary"
             size="icon"
-            aria-label="Add entry"
+            aria-label={t('preferredClubSocieties.addEntry')}
             className="size-11 rounded-lg bg-gray-200 px-3 text-sm"
             disabled
             onClick={addEntry}
@@ -778,15 +1007,26 @@ export default function PreferredClubSocietiesStep({
 
         {/* ── Step footer ───────────────────────────────────────────────── */}
         <div className="sticky bottom-0 mt-auto flex items-center justify-end gap-4 bg-white px-6 py-7 shadow-[0px_-8px_6.8px_0px_rgba(0,0,0,0.04)]">
-          <Button variant="secondary" className="h-12 w-48" onClick={onCancel}>
-            Cancel
+          <Button
+            variant="secondary"
+            className="h-12 w-48"
+            disabled={isSubmitting}
+            onClick={onCancel}
+          >
+            {t('preferredClubSocieties.cancel')}
           </Button>
           <Button
             className="h-12 w-48"
-            onClick={handleNext}
-            disabled={!canNavigate}
+            onClick={() => {
+              void handleNext();
+            }}
+            disabled={!canNavigate || isSubmitting}
           >
-            Next
+            {isSubmitting ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              t('preferredClubSocieties.next')
+            )}
           </Button>
         </div>
       </div>
@@ -794,7 +1034,10 @@ export default function PreferredClubSocietiesStep({
       {/* ── Add Organization dialog ──────────────────────────────────────── */}
       <AddOrganizationFormDialog
         open={showAddOrganizationDialog}
-        onOpenChange={setShowAddOrganizationDialog}
+        onOpenChange={open => {
+          if (!open) setOrgSelectorKey(k => k + 1);
+          setShowAddOrganizationDialog(open);
+        }}
         organizationName={pendingOrganizationName}
         onOrganizationAdded={org => {
           if (activeCardIndex !== null) {
@@ -805,6 +1048,7 @@ export default function PreferredClubSocietiesStep({
               ],
             });
           }
+          setOrgSelectorKey(k => k + 1);
           setShowAddOrganizationDialog(false);
         }}
       />

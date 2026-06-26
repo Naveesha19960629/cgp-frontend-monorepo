@@ -64,6 +64,8 @@ function PublicationCard({
   onUpdate: (index: number, updates: Partial<PublicationEntry>) => void;
   fieldsDisabled: boolean;
 }>) {
+  const { t } = useTranslation('ats');
+
   return (
     <Collapsible
       open={publication.isOpen}
@@ -73,13 +75,19 @@ function PublicationCard({
         {/* Card header */}
         <div className="flex items-center justify-between px-5 py-5">
           <span className="text-base font-bold text-slate-900">
-            Publication {String(index + 1).padStart(2, '0')}
+            {t('preferredPublications.cardTitle', {
+              number: String(index + 1).padStart(2, '0'),
+            })}
           </span>
           <CollapsibleTrigger asChild>
             <button
               type="button"
               className="text-slate-400 transition-colors hover:text-slate-600"
-              aria-label={publication.isOpen ? 'Collapse' : 'Expand'}
+              aria-label={
+                publication.isOpen
+                  ? t('preferredPublications.collapse')
+                  : t('preferredPublications.expand')
+              }
             >
               <ChevronUpIcon
                 className={cn(
@@ -103,7 +111,9 @@ function PublicationCard({
             <div className="grid grid-cols-4 gap-4">
               <div className="flex flex-col gap-1">
                 <div className="flex items-center justify-between">
-                  <Label>Accepted Publisher</Label>
+                  <Label>
+                    {t('preferredPublications.labels.acceptedPublisher')}
+                  </Label>
                   <CharacterCount
                     currentLength={publication.acceptedPublisher.length}
                     maxLength={MAX_PUBLISHER_LENGTH}
@@ -118,14 +128,18 @@ function PublicationCard({
                     });
                   }}
                   maxLength={MAX_PUBLISHER_LENGTH}
-                  placeholder="Enter accepted publisher"
+                  placeholder={t(
+                    'preferredPublications.placeholders.acceptedPublisher'
+                  )}
                   className="h-11"
                 />
               </div>
 
               <div className="flex flex-col gap-1">
                 <div className="flex h-5 items-center">
-                  <Label>Published Date From</Label>
+                  <Label>
+                    {t('preferredPublications.labels.publishedDateFrom')}
+                  </Label>
                 </div>
                 <Popover
                   modal
@@ -155,7 +169,9 @@ function PublicationCard({
                     >
                       {publication.publishedDateFrom
                         ? formatDate(publication.publishedDateFrom)
-                        : 'Select published date from'}
+                        : t(
+                            'preferredPublications.placeholders.publishedDateFrom'
+                          )}
                       <CalendarIcon
                         variant="Linear"
                         size={20}
@@ -204,7 +220,9 @@ function PublicationCard({
 
               <div className="flex flex-col gap-1">
                 <div className="flex h-5 items-center">
-                  <Label>Published Date To</Label>
+                  <Label>
+                    {t('preferredPublications.labels.publishedDateTo')}
+                  </Label>
                 </div>
                 <Popover
                   modal
@@ -234,7 +252,9 @@ function PublicationCard({
                     >
                       {publication.publishedDateTo
                         ? formatDate(publication.publishedDateTo)
-                        : 'Select published date to'}
+                        : t(
+                            'preferredPublications.placeholders.publishedDateTo'
+                          )}
                       <CalendarIcon
                         variant="Linear"
                         size={20}
@@ -436,9 +456,8 @@ export default function PreferredPublicationsStep({
     removeCompletedStep(currentStepIndex);
     setConfirmDisableOpen(false);
     SuccessToast({
-      title: 'Section Disabled',
-      description:
-        'Preferred Publications section has been disabled successfully.',
+      title: t('preferredPublications.notifications.disable.title'),
+      description: t('preferredPublications.notifications.disable.message'),
     });
   };
 
@@ -468,7 +487,7 @@ export default function PreferredPublicationsStep({
           <div className="flex items-center gap-2">
             <button
               type="button"
-              aria-label="Back"
+              aria-label={t('preferredPublications.back')}
               className={cn(
                 'cursor-pointer text-slate-700 transition-colors hover:text-slate-900',
                 !canNavigate &&
@@ -480,7 +499,7 @@ export default function PreferredPublicationsStep({
               <ArrowLeft2 size={24} />
             </button>
             <h2 className="text-xl font-bold tracking-tight text-slate-900">
-              Preferred Publications
+              {t('preferredPublications.title')}
             </h2>
           </div>
           <SwitchPrimitive.Root
@@ -531,8 +550,7 @@ export default function PreferredPublicationsStep({
             htmlFor="publicationsDataTakenFromCandidate"
             className="cursor-pointer text-sm leading-snug font-medium text-slate-900"
           >
-            If selected, no manual input is required, and data will be taken
-            from the candidate profile
+            {t('preferredPublications.dataTakenFromCandidate')}
           </Label>
         </div>
 
@@ -559,7 +577,7 @@ export default function PreferredPublicationsStep({
           <Button
             variant="secondary"
             size="icon"
-            aria-label="Add entry"
+            aria-label={t('preferredPublications.addEntry')}
             className="size-11 rounded-lg bg-gray-200 px-3 text-sm"
             onClick={addPublication}
           >
@@ -570,14 +588,14 @@ export default function PreferredPublicationsStep({
         {/* ── Step footer ───────────────────────────────────────────────── */}
         <div className="sticky bottom-0 mt-auto flex items-center justify-end gap-4 bg-white px-6 py-7 shadow-[0px_-8px_6.8px_0px_rgba(0,0,0,0.04)]">
           <Button variant="secondary" className="h-12 w-48" onClick={onCancel}>
-            Cancel
+            {t('preferredPublications.cancel')}
           </Button>
           <Button
             className="h-12 w-48"
             onClick={handleNext}
             disabled={!canNavigate}
           >
-            Next
+            {t('preferredPublications.next')}
           </Button>
         </div>
       </div>

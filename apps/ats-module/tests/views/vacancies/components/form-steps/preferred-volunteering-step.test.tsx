@@ -3,6 +3,36 @@ import userEvent from '@testing-library/user-event';
 
 import PreferredVolunteeringStep from '@/views/vacancies/components/form-steps/preferred-volunteering-step';
 
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({
+    t: (key: string, options?: { number?: string }) => {
+      if (key === 'preferredVolunteering.cardTitle') {
+        return `Volunteering ${options?.number ?? '01'}`;
+      }
+
+      const dictionary: Record<string, string> = {
+        'preferredVolunteering.title': 'Preferred Volunteering',
+        'preferredVolunteering.labels.organizationName': 'Organisation Name',
+        'preferredVolunteering.labels.organizationLocation':
+          'Organization Location',
+        'preferredVolunteering.labels.cause': 'Cause',
+        'preferredVolunteering.labels.position': 'Position / Role',
+        'preferredVolunteering.labels.startDate': 'Start Date',
+        'preferredVolunteering.labels.endDate': 'End Date',
+        'preferredVolunteering.placeholders.organizationLocation':
+          'Select location',
+        'preferredVolunteering.dataTakenFromCandidate':
+          'If selected, no manual input is required, and data will be taken from the candidate profile',
+        'preferredVolunteering.addEntry': 'Add entry',
+        'preferredVolunteering.cancel': 'Cancel',
+        'preferredVolunteering.next': 'Next',
+      };
+
+      return dictionary[key] ?? key;
+    },
+  }),
+}));
+
 // ── Mock wizard form context ──────────────────────────────────────────────────
 
 const onCancel = vi.hoisted(() => vi.fn());
@@ -49,6 +79,22 @@ vi.mock('@/views/vacancies/hooks', () => ({
   useLocationsQuery: () => ({
     data: mockLocationsData,
     isLoading: false,
+  }),
+  useCreateCauseMutation: () => ({
+    mutateAsync: vi.fn((label: string) => ({
+      pendingId: 'pending-cause-123',
+      type: 'CAUSE',
+      value: label,
+      status: 'PENDING',
+    })),
+  }),
+  useCreateOrganizationMutation: () => ({
+    mutateAsync: vi.fn((label: string) => ({
+      pendingId: 'pending-org-123',
+      type: 'ORGANIZATION',
+      value: label,
+      status: 'PENDING',
+    })),
   }),
   useStepGuard: vi.fn(),
   useOrganizationForm: () => ({

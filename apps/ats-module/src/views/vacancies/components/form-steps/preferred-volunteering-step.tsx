@@ -1,4 +1,4 @@
-import { ChevronUpIcon, PlusIcon } from 'lucide-react';
+import { ChevronUpIcon, Loader2, PlusIcon } from 'lucide-react';
 
 import { ArrowLeft2, Calendar as CalendarIcon } from 'iconsax-reactjs';
 
@@ -13,6 +13,8 @@ import StepDisableDialog from '@/views/vacancies/components/step-disable-dialog'
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import {
   useCausesQuery,
+  useCreateCauseMutation,
+  useCreateOrganizationMutation,
   useLocationsQuery,
   useOrganizationsQuery,
   useStepGuard,
@@ -96,7 +98,9 @@ function VolunteeringCard({
   isCausesLoading,
   locationOptions,
   isLocationsLoading,
+  orgSelectorKey,
 }: Readonly<{
+  orgSelectorKey: number;
   index: number;
   entry: VolunteeringEntry;
   onUpdate: (index: number, updates: Partial<VolunteeringEntry>) => void;
@@ -117,6 +121,7 @@ function VolunteeringCard({
   locationOptions: Array<{ value: string; label: string }>;
   isLocationsLoading: boolean;
 }>) {
+  const { t } = useTranslation('ats');
   const [locationsError, setLocationsError] = useState(false);
 
   return (
@@ -128,13 +133,19 @@ function VolunteeringCard({
         {/* Card header */}
         <div className="flex items-center justify-between px-5 py-5">
           <span className="text-base font-bold text-slate-900">
-            Volunteering {String(index + 1).padStart(2, '0')}
+            {t('preferredVolunteering.cardTitle', {
+              number: String(index + 1).padStart(2, '0'),
+            })}
           </span>
           <CollapsibleTrigger asChild>
             <button
               type="button"
               className="text-slate-400 transition-colors hover:text-slate-600"
-              aria-label={entry.isOpen ? 'Collapse' : 'Expand'}
+              aria-label={
+                entry.isOpen
+                  ? t('preferredVolunteering.collapse')
+                  : t('preferredVolunteering.expand')
+              }
             >
               <ChevronUpIcon
                 className={cn(
@@ -158,9 +169,12 @@ function VolunteeringCard({
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-1">
                 <div className="flex h-5 items-center">
-                  <Label>Organisation Name</Label>
+                  <Label>
+                    {t('preferredVolunteering.labels.organizationName')}
+                  </Label>
                 </div>
                 <MultipleSelector
+                  key={orgSelectorKey}
                   value={entry.organizationName}
                   onChange={options => {
                     const newItem = options.find(o => o.value === o.label);
@@ -202,10 +216,12 @@ function VolunteeringCard({
                   maxSelected={MAX_SELECTIONS}
                   disabled={fieldsDisabled}
                   loading={isOrganizationsLoading}
-                  placeholder="Select or add organization name"
+                  placeholder={t(
+                    'preferredVolunteering.placeholders.organizationName'
+                  )}
                   emptyIndicator={
                     <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                      No organizations found
+                      {t('preferredVolunteering.empty.organizations')}
                     </p>
                   }
                 />
@@ -216,7 +232,7 @@ function VolunteeringCard({
                   <Label
                     className={locationsError ? 'text-destructive' : undefined}
                   >
-                    Organization Location
+                    {t('preferredVolunteering.labels.organizationLocation')}
                   </Label>
                 </div>
                 <MultipleSelector
@@ -238,14 +254,16 @@ function VolunteeringCard({
                   keepSelectedInList
                   hideClearAllButton
                   maxSelected={MAX_SELECTIONS}
-                  errorMessage="Exceeded maximum of 10 selections"
+                  errorMessage={t('preferredVolunteering.errors.maxSelections')}
                   onErrorStateChange={setLocationsError}
                   disabled={fieldsDisabled}
                   loading={isLocationsLoading}
-                  placeholder="Select location"
+                  placeholder={t(
+                    'preferredVolunteering.placeholders.organizationLocation'
+                  )}
                   emptyIndicator={
                     <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                      No locations found
+                      {t('preferredVolunteering.empty.locations')}
                     </p>
                   }
                 />
@@ -256,7 +274,7 @@ function VolunteeringCard({
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-1">
                 <div className="flex items-center justify-between">
-                  <Label>Cause</Label>
+                  <Label>{t('preferredVolunteering.labels.cause')}</Label>
                   <CharacterCount
                     currentLength={entry.causeSearch.length}
                     maxLength={MAX_CAUSE_LENGTH}
@@ -300,10 +318,10 @@ function VolunteeringCard({
                   maxSelected={MAX_SELECTIONS}
                   disabled={fieldsDisabled}
                   loading={isCausesLoading}
-                  placeholder="Select or add cause"
+                  placeholder={t('preferredVolunteering.placeholders.cause')}
                   emptyIndicator={
                     <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                      No causes found
+                      {t('preferredVolunteering.empty.causes')}
                     </p>
                   }
                 />
@@ -314,7 +332,7 @@ function VolunteeringCard({
             <div className="grid grid-cols-4 gap-4">
               <div className="flex flex-col gap-1">
                 <div className="flex items-center justify-between">
-                  <Label>Position / Role</Label>
+                  <Label>{t('preferredVolunteering.labels.position')}</Label>
                   <CharacterCount
                     currentLength={entry.position.length}
                     maxLength={MAX_POSITION_LENGTH}
@@ -327,14 +345,14 @@ function VolunteeringCard({
                     onUpdate(index, { position: sanitized.trimStart() });
                   }}
                   maxLength={MAX_POSITION_LENGTH}
-                  placeholder="Enter position"
+                  placeholder={t('preferredVolunteering.placeholders.position')}
                   className="h-11"
                 />
               </div>
 
               <div className="flex flex-col gap-1">
                 <div className="flex h-5 items-center">
-                  <Label>Start Date</Label>
+                  <Label>{t('preferredVolunteering.labels.startDate')}</Label>
                 </div>
                 <Popover
                   modal
@@ -364,7 +382,7 @@ function VolunteeringCard({
                     >
                       {entry.startDate
                         ? formatDate(entry.startDate)
-                        : 'Select start date'}
+                        : t('preferredVolunteering.placeholders.startDate')}
                       <CalendarIcon
                         variant="Linear"
                         size={20}
@@ -406,7 +424,7 @@ function VolunteeringCard({
 
               <div className="flex flex-col gap-1">
                 <div className="flex h-5 items-center">
-                  <Label>End Date</Label>
+                  <Label>{t('preferredVolunteering.labels.endDate')}</Label>
                 </div>
                 <Popover
                   modal
@@ -436,7 +454,7 @@ function VolunteeringCard({
                     >
                       {entry.endDate
                         ? formatDate(entry.endDate)
-                        : 'Select end date'}
+                        : t('preferredVolunteering.placeholders.endDate')}
                       <CalendarIcon
                         variant="Linear"
                         size={20}
@@ -490,6 +508,10 @@ export default function PreferredVolunteeringStep({
   const { form: contextForm, onCancel } = useVacancyForm();
   const savedVolunteering = contextForm.preferredVolunteering;
 
+  const { mutateAsync: createCause } = useCreateCauseMutation();
+  const { mutateAsync: createOrganization } = useCreateOrganizationMutation();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const [isEnabled, setIsEnabled] = useState(
     savedVolunteering?.isEnabled ?? false
   );
@@ -507,6 +529,7 @@ export default function PreferredVolunteeringStep({
     useState(false);
   const [pendingOrganizationName, setPendingOrganizationName] = useState('');
   const [activeCardIndex, setActiveCardIndex] = useState<number | null>(null);
+  const [orgSelectorKey, setOrgSelectorKey] = useState(0);
 
   const [entries, setEntries] = useState<VolunteeringEntry[]>(
     savedVolunteering?.volunteering && savedVolunteering.volunteering.length > 0
@@ -524,7 +547,7 @@ export default function PreferredVolunteeringStep({
       e.endDate != null
   );
 
-  const handleNext = () => {
+  const handleNext = async () => {
     const isEmptyEnabledSection =
       isEnabled && !dataTakenFromCandidate && !hasVolunteeringData;
 
@@ -533,11 +556,97 @@ export default function PreferredVolunteeringStep({
       return;
     }
 
+    // Resolve user-created causes & organizations
+    const allCauses = entries.flatMap(e => e.cause);
+    const hasUserCreatedCauses = allCauses.some(
+      c => c.source === 'USER_CREATED'
+    );
+    const allOrgs = entries.flatMap(e => e.organizationName);
+    const hasUserCreatedOrgs = allOrgs.some(o => o.source === 'USER_CREATED');
+
+    let resolvedEntries = entries;
+
+    if (hasUserCreatedCauses || hasUserCreatedOrgs) {
+      setIsSubmitting(true);
+      try {
+        let causeResultMap = new Map();
+        if (hasUserCreatedCauses) {
+          const uniqueUserCreatedCauses = Array.from(
+            new Map(
+              allCauses
+                .filter(c => c.source === 'USER_CREATED')
+                .map(c => [c.label, c])
+            ).values()
+          );
+          const cResults = await Promise.all(
+            uniqueUserCreatedCauses.map(c => createCause(c.label))
+          );
+          causeResultMap = new Map(
+            uniqueUserCreatedCauses.map((c, idx) => [c.label, cResults[idx]])
+          );
+        }
+
+        let orgResultMap = new Map();
+        if (hasUserCreatedOrgs) {
+          const uniqueUserCreatedOrgs = Array.from(
+            new Map(
+              allOrgs
+                .filter(o => o.source === 'USER_CREATED')
+                .map(o => [o.label, o])
+            ).values()
+          );
+          const oResults = await Promise.all(
+            uniqueUserCreatedOrgs.map(o => createOrganization(o.label))
+          );
+          orgResultMap = new Map(
+            uniqueUserCreatedOrgs.map((o, idx) => [o.label, oResults[idx]])
+          );
+        }
+
+        resolvedEntries = entries.map(entry => ({
+          ...entry,
+          cause: entry.cause.map(c => {
+            if (c.source === 'USER_CREATED') {
+              const res = causeResultMap.get(c.label);
+              if (res) {
+                return {
+                  value: res.pendingId,
+                  label: res.value,
+                  source: res.status,
+                };
+              }
+            }
+            return c;
+          }),
+          organizationName: entry.organizationName.map(o => {
+            if (o.source === 'USER_CREATED') {
+              const res = orgResultMap.get(o.label);
+              if (res) {
+                return {
+                  value: res.pendingId,
+                  label: res.value,
+                  source: res.status,
+                };
+              }
+            }
+            return o;
+          }),
+        }));
+
+        setEntries(resolvedEntries);
+      } catch (err) {
+        console.error(err);
+        return; // Stop execution on error
+      } finally {
+        setIsSubmitting(false);
+      }
+    }
+
     onNext({
       preferredVolunteering: {
         isEnabled,
         dataTakenFromCandidate,
-        volunteering: entries,
+        volunteering: resolvedEntries,
       },
     });
   };
@@ -626,7 +735,13 @@ export default function PreferredVolunteeringStep({
 
   const handleToggle = () => {
     if (isEnabled) {
-      setConfirmDisableOpen(true);
+      if (hasVolunteeringData) {
+        setConfirmDisableOpen(true);
+      } else {
+        setIsEnabled(false);
+        setDataTakenFromCandidate(false);
+        removeCompletedStep(currentStepIndex);
+      }
     } else {
       setIsEnabled(true);
     }
@@ -649,9 +764,8 @@ export default function PreferredVolunteeringStep({
     removeCompletedStep(currentStepIndex);
     setConfirmDisableOpen(false);
     SuccessToast({
-      title: 'Section Disabled',
-      description:
-        'Preferred Volunteering section has been disabled successfully.',
+      title: t('preferredVolunteering.notifications.disable.title'),
+      description: t('preferredVolunteering.notifications.disable.message'),
     });
   };
 
@@ -671,7 +785,8 @@ export default function PreferredVolunteeringStep({
         <MessageBox
           fields={[
             t('preferredVolunteering.fieldList.organization'),
-            t('preferredVolunteering.fieldList.location'),
+            t('preferredVolunteering.fieldList.position'),
+            t('preferredVolunteering.fieldList.cause'),
             t('preferredVolunteering.fieldList.startDate'),
             t('preferredVolunteering.fieldList.endDate'),
           ]}
@@ -682,19 +797,19 @@ export default function PreferredVolunteeringStep({
           <div className="flex items-center gap-2">
             <button
               type="button"
-              aria-label="Back"
+              aria-label={t('preferredVolunteering.back')}
               className={cn(
                 'cursor-pointer text-slate-700 transition-colors hover:text-slate-900',
-                !canNavigate &&
+                (!canNavigate || isSubmitting) &&
                   'cursor-not-allowed opacity-40 hover:text-slate-700'
               )}
               onClick={handleBack}
-              disabled={!canNavigate}
+              disabled={!canNavigate || isSubmitting}
             >
               <ArrowLeft2 size={24} />
             </button>
             <h2 className="text-xl font-bold tracking-tight text-slate-900">
-              Preferred Volunteering
+              {t('preferredVolunteering.title')}
             </h2>
           </div>
           <SwitchPrimitive.Root
@@ -737,8 +852,7 @@ export default function PreferredVolunteeringStep({
             htmlFor="volunteeringDataTakenFromCandidate"
             className="cursor-pointer text-sm leading-snug font-medium text-slate-900"
           >
-            If selected, no manual input is required, and data will be taken
-            from the candidate profile
+            {t('preferredVolunteering.dataTakenFromCandidate')}
           </Label>
         </div>
 
@@ -765,6 +879,7 @@ export default function PreferredVolunteeringStep({
               isCausesLoading={isCausesLoading}
               locationOptions={locationOptions}
               isLocationsLoading={isLocationsLoading}
+              orgSelectorKey={orgSelectorKey}
             />
           ))}
         </div>
@@ -779,7 +894,7 @@ export default function PreferredVolunteeringStep({
           <Button
             variant="secondary"
             size="icon"
-            aria-label="Add entry"
+            aria-label={t('preferredVolunteering.addEntry')}
             className="size-11 rounded-lg bg-gray-200 px-3 text-sm"
             disabled
             onClick={addEntry}
@@ -790,15 +905,26 @@ export default function PreferredVolunteeringStep({
 
         {/* ── Step footer ───────────────────────────────────────────────── */}
         <div className="sticky bottom-0 mt-auto flex items-center justify-end gap-4 bg-white px-6 py-7 shadow-[0px_-8px_6.8px_0px_rgba(0,0,0,0.04)]">
-          <Button variant="secondary" className="h-12 w-48" onClick={onCancel}>
-            Cancel
+          <Button
+            variant="secondary"
+            className="h-12 w-48"
+            disabled={isSubmitting}
+            onClick={onCancel}
+          >
+            {t('preferredVolunteering.cancel')}
           </Button>
           <Button
             className="h-12 w-48"
-            onClick={handleNext}
-            disabled={!canNavigate}
+            onClick={() => {
+              void handleNext();
+            }}
+            disabled={!canNavigate || isSubmitting}
           >
-            Next
+            {isSubmitting ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              t('preferredVolunteering.next')
+            )}
           </Button>
         </div>
       </div>
@@ -806,7 +932,10 @@ export default function PreferredVolunteeringStep({
       {/* ── Add Organization dialog ──────────────────────────────────────── */}
       <AddOrganizationFormDialog
         open={showAddOrganizationDialog}
-        onOpenChange={setShowAddOrganizationDialog}
+        onOpenChange={open => {
+          if (!open) setOrgSelectorKey(k => k + 1);
+          setShowAddOrganizationDialog(open);
+        }}
         organizationName={pendingOrganizationName}
         onOrganizationAdded={org => {
           if (activeCardIndex !== null) {
@@ -817,6 +946,7 @@ export default function PreferredVolunteeringStep({
               ],
             });
           }
+          setOrgSelectorKey(k => k + 1);
           setShowAddOrganizationDialog(false);
         }}
       />

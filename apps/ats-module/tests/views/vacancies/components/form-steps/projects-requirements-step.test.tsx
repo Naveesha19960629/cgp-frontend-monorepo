@@ -66,7 +66,20 @@ vi.mock('@/views/vacancies/hooks', () => ({
     isLoading: false,
   }),
   useCreateIndustryMutation: () => ({
-    mutateAsync: vi.fn(),
+    mutateAsync: vi.fn((label: string) => ({
+      pendingId: 'pending-ind-123',
+      type: 'INDUSTRY',
+      value: label,
+      status: 'PENDING',
+    })),
+  }),
+  useCreateOrganizationMutation: () => ({
+    mutateAsync: vi.fn((label: string) => ({
+      pendingId: 'pending-org-123',
+      type: 'ORGANIZATION',
+      value: label,
+      status: 'PENDING',
+    })),
   }),
   useStepGuard: vi.fn(),
   useOrganizationForm: () => ({
@@ -377,7 +390,7 @@ describe('ProjectsRequirementsStep', () => {
 
     const buttons = screen.getAllByRole('button');
     const backButton = buttons.find(
-      btn => btn.getAttribute('aria-label') === 'Back'
+      btn => btn.getAttribute('aria-label') === 'projectsRequirements.back'
     );
     // Back button should be disabled when section is enabled but no data entered
     expect(backButton?.hasAttribute('disabled')).toBe(true);

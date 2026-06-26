@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { societyService } from '@/views/vacancies/services/society.service';
 import type {
   ApiResponse,
-  SocietyCreateResponse,
+  CreatePendingItemResponse,
   SocietyItem,
 } from '@/views/vacancies/types';
 
@@ -161,10 +161,11 @@ describe('society.service', () => {
 
   describe('createSociety', () => {
     it('calls POST /societies with correct payload', async () => {
-      const mockResponse: SocietyCreateResponse = {
-        id: 'soc-123',
-        name: 'New Society',
-        source: 'PENDING',
+      const mockResponse: CreatePendingItemResponse = {
+        pendingId: 'soc-123',
+        type: 'SOCIETY',
+        value: 'New Society',
+        status: 'PENDING',
       };
 
       mockPost.mockResolvedValue({ data: { data: mockResponse } });
@@ -184,11 +185,11 @@ describe('society.service', () => {
     });
 
     it('returns response with pendingId when provided', async () => {
-      const mockResponse: SocietyCreateResponse = {
-        id: 'soc-456',
+      const mockResponse: CreatePendingItemResponse = {
         pendingId: 'pending-789',
-        name: 'Test Society',
-        source: 'PENDING',
+        type: 'SOCIETY',
+        value: 'Test Society',
+        status: 'PENDING',
       };
 
       mockPost.mockResolvedValue({ data: { data: mockResponse } });
@@ -196,14 +197,15 @@ describe('society.service', () => {
       const result = await societyService.createSociety('Test Society');
 
       expect(result.pendingId).toBe('pending-789');
-      expect(result.source).toBe('PENDING');
+      expect(result.status).toBe('PENDING');
     });
 
     it('handles society names with special characters', async () => {
-      const mockResponse: SocietyCreateResponse = {
-        id: 'soc-999',
-        name: 'Society & Club - 2024',
-        source: 'USER_CREATED',
+      const mockResponse: CreatePendingItemResponse = {
+        pendingId: 'soc-999',
+        type: 'SOCIETY',
+        value: 'Society & Club - 2024',
+        status: 'PENDING',
       };
 
       mockPost.mockResolvedValue({ data: { data: mockResponse } });

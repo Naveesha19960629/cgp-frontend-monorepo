@@ -14,6 +14,7 @@ export const societyService = {
   ): Promise<ApiResponse<SocietyItem[]>> => {
     const response = await httpClient.get<ApiResponse<SocietyItem[]>>(
       `/societies`,
+
       { params: { search, size } }
     );
     return response.data;
@@ -31,7 +32,6 @@ export const societyService = {
         additionalProp3: 'string',
       },
     });
-
     return response.data.data;
   },
 };
