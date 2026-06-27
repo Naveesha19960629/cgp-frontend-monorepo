@@ -1,5 +1,10 @@
 import { useTranslation } from 'react-i18next';
 
+const successToastAvatar = new URL(
+  '../../../../assets/images/success-toast-avatar.svg',
+  import.meta.url
+).href;
+
 export function VacancyNoDetailsState() {
   const { t } = useTranslation('ats');
 
@@ -22,7 +27,7 @@ export function VacancyNoDetailsState() {
         }}
       >
         <img
-          src="/success-toast-avatar.svg"
+          src={successToastAvatar}
           alt=""
           className="absolute top-4 left-17 h-[120%] max-w-none -translate-x-1/2 object-cover"
         />
