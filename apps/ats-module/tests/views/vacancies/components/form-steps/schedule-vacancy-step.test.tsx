@@ -509,7 +509,7 @@ describe('ScheduleVacancyStep', () => {
       ).toHaveValue('2099-12-25');
       expect(
         screen.getByRole('textbox', { name: `time-${PUBLISH_TIME_LABEL}` })
-      ).toHaveValue('10:30:00');
+      ).toHaveValue('10:30:00 AM');
       // Expiration fields should be empty
       expect(
         screen.getByRole('textbox', { name: `date-${EXPIRATION_TIME_LABEL}` })
@@ -533,7 +533,7 @@ describe('ScheduleVacancyStep', () => {
       ).toHaveValue('2099-12-26');
       expect(
         screen.getByRole('textbox', { name: `time-${EXPIRATION_TIME_LABEL}` })
-      ).toHaveValue('14:30:00');
+      ).toHaveValue('02:30:00 PM');
       // Publish fields should be empty
       expect(
         screen.getByRole('textbox', { name: `date-${PUBLISH_TIME_LABEL}` })
