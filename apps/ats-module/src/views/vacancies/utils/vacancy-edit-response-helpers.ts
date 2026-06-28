@@ -1,5 +1,8 @@
 import type {
   AddOrSelectOption,
+  CustomizableFormData,
+  CustomizableFormFormCard,
+  CustomizableFormQuestion,
   JobRequirement,
   LicenseCertRef,
   SkillCareerPathEntry,
@@ -1113,6 +1116,100 @@ function normalizeVacancyStatus(
   return mapped;
 }
 
+const VALID_CUSTOMIZABLE_QUESTION_TYPES = new Set([
+  'SHORT_ANSWER',
+  'PARAGRAPH',
+  'MULTIPLE_CHOICE',
+  'CHECKBOXES',
+  'DROPDOWN',
+  'LINEAR_SCALE',
+]);
+
+function toCustomizableQuestionType(
+  value: unknown
+): CustomizableFormQuestion['type'] {
+  const normalized = toSafeString(value).toUpperCase();
+  return VALID_CUSTOMIZABLE_QUESTION_TYPES.has(normalized)
+    ? (normalized as CustomizableFormQuestion['type'])
+    : '';
+}
+
+function toSafeInt(value: unknown): number {
+  const n = typeof value === 'number' ? value : Number(value);
+  return Number.isFinite(n) ? Math.trunc(n) : 0;
+}
+
+function normalizeCustomizableFormSection(
+  raw: unknown,
+  fallback: CustomizableFormData
+): CustomizableFormData {
+  const entry: unknown = Array.isArray(raw) ? raw[0] : raw;
+  if (!isRecord(entry)) return fallback;
+
+  const isEnabled =
+    typeof entry.isEnabled === 'boolean' ? entry.isEnabled : false;
+  const sectionTitle = toSafeString(entry.sectionTitle);
+  const rawForms = Array.isArray(entry.forms) ? entry.forms : [];
+
+  let formCounter = 1;
+  const forms: CustomizableFormFormCard[] = rawForms
+    .filter(isRecord)
+    .map(form => {
+      const rawQuestions = Array.isArray(form.questions) ? form.questions : [];
+      let questionCounter = 1;
+
+      const questions: CustomizableFormQuestion[] = rawQuestions
+        .filter(isRecord)
+        .map(question => {
+          const linearScale = isRecord(question.linearScale)
+            ? question.linearScale
+            : {};
+          const rawOptions = Array.isArray(question.options)
+            ? question.options
+            : [];
+
+          let optionCounter = 1;
+          const options = rawOptions
+            .map(opt => ({
+              id: optionCounter++,
+              value: isRecord(opt)
+                ? toSafeString(opt.value ?? opt.label)
+                : toSafeString(opt),
+            }))
+            .filter(o => o.value);
+
+          return {
+            id: questionCounter++,
+            text: toSafeString(question.questionText ?? question.text),
+            type: toCustomizableQuestionType(
+              question.questionType ?? question.type
+            ),
+            required:
+              typeof question.required === 'boolean'
+                ? question.required
+                : false,
+            options: options.length ? options : [{ id: 1, value: '' }],
+            from: toSafeInt(linearScale.startValue ?? question.from),
+            to: toSafeInt(linearScale.endValue ?? question.to) || 2,
+            startLabel: toSafeString(
+              linearScale.startLabel ?? question.startLabel
+            ),
+            endLabel: toSafeString(linearScale.endLabel ?? question.endLabel),
+          };
+        });
+
+      return {
+        id: formCounter++,
+        title: toSafeString(form.title),
+        questions,
+      };
+    });
+
+  if (!isEnabled && !sectionTitle && forms.length === 0) return fallback;
+
+  return { isEnabled, sectionTitle, forms };
+}
+
 function normalizeScheduleSection(
   rawSection: unknown,
   fallback: VacancyForm['schedule']
@@ -1209,6 +1306,12 @@ function toVacancyFormFromResponse(
     'schedule',
     'scheduleRequirement',
   ]);
+  const customizableFormSection = readSectionValue(rawVacancy, sectionSource, [
+    'customizedForm',
+    'customizableForm',
+    'customizableForms',
+    'customizedForms',
+  ]);
 
   // Explicit whitelist: only pick known scalar top-level form fields.
   // Avoids carrying unknown API keys into context state.
@@ -1297,6 +1400,14 @@ function toVacancyFormFromResponse(
       previousForm.preferredHobbies
     ),
     schedule: normalizeScheduleSection(scheduleSection, previousForm.schedule),
+    customizableForm: normalizeCustomizableFormSection(
+      customizableFormSection,
+      previousForm.customizableForm ?? {
+        isEnabled: false,
+        sectionTitle: '',
+        forms: [],
+      }
+    ),
   };
 }
 

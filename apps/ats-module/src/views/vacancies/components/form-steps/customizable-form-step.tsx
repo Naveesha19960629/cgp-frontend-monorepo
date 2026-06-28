@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { StepDisableDialog } from '@/views/vacancies';
+import VacancyStatusBadge from '@/views/vacancies/components/vacancy-status-badge';
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import { useStepGuard } from '@/views/vacancies/hooks';
 import { useDisableSuccessToast } from '@/views/vacancies/hooks';
@@ -545,7 +546,11 @@ function QuestionCard({
 }
 
 // ── Main step ────────────────────────────────────────────────────────────────
-export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
+export default function CustomizableFormStep({
+  onNext,
+  onBack,
+  mode = 'create',
+}: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
 
   const showDisableToast = useDisableSuccessToast();
@@ -990,6 +995,9 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
           <h2 className="text-xl font-bold tracking-[-0.1px] text-slate-900">
             {t('customizableForm.title')}
           </h2>
+          {mode === 'edit' && form.status ? (
+            <VacancyStatusBadge status={form.status} />
+          ) : null}
         </div>
 
         <Switch
