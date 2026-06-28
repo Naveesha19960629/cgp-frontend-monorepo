@@ -95,6 +95,7 @@ interface MultipleSelectorProps {
   selectFirstItem?: boolean;
   /** Allow user to create option when there is no option matched. */
   creatable?: boolean;
+  alwaysShowCreatable?: boolean;
   /** Props of `Command` */
   commandProps?: React.ComponentPropsWithoutRef<typeof Command>;
   /** Props of `CommandInput` */
@@ -255,6 +256,7 @@ const MultipleSelector = React.forwardRef<
       errorMessage,
       onErrorStateChange,
       showArrow = false,
+      alwaysShowCreatable,
     }: MultipleSelectorProps,
     ref: React.Ref<MultipleSelectorRef>
   ) => {
@@ -398,16 +400,25 @@ const MultipleSelector = React.forwardRef<
 
     const CreatableItem = (disabled = false) => {
       if (!creatable) return undefined;
-      if (
-        isOptionsExist(allOptionsWithCreated, [
-          { value: inputValue.trim(), label: inputValue.trim() },
-        ]) ||
-        selected.find(s => s.value === inputValue.trim()) ||
-        selected.find(
-          s => s.label?.toLowerCase() === inputValue.trim().toLowerCase()
-        )
-      ) {
-        return undefined;
+      const hasExactSelected = selected.some(
+        s => s.label?.toLowerCase() === inputValue.trim().toLowerCase()
+      );
+      if (alwaysShowCreatable) {
+        if (hasExactSelected) {
+          return undefined;
+        }
+      } else {
+        if (
+          isOptionsExist(allOptionsWithCreated, [
+            { value: inputValue.trim(), label: inputValue.trim() },
+          ]) ||
+          selected.find(s => s.value === inputValue.trim()) ||
+          selected.find(
+            s => s.label?.toLowerCase() === inputValue.trim().toLowerCase()
+          )
+        ) {
+          return undefined;
+        }
       }
 
       const Item = (

@@ -424,6 +424,7 @@ function HonoursAndAwardsCard({
                     </FormLabel>
                     <FormControl>
                       <MultipleSelector
+                        alwaysShowCreatable
                         value={
                           field.value?.map(organization => ({
                             value: organization.value,
@@ -1008,17 +1009,23 @@ export default function PreferredHonoursAwardsStep({
             `honoursAndAwards.${pendingHonorIndex}.associatedOrganizations`
           );
 
-          form.setValue(
-            `honoursAndAwards.${pendingHonorIndex}.associatedOrganizations`,
-            [
-              ...(currentOrganizations ?? []),
-              {
-                value: org.id,
-                label: org.name,
-                source: 'USER_CREATED',
-              },
-            ]
+          const isDuplicate = currentOrganizations?.some(
+            o => o.label.toLowerCase().trim() === org.name.toLowerCase().trim()
           );
+
+          if (!isDuplicate) {
+            form.setValue(
+              `honoursAndAwards.${pendingHonorIndex}.associatedOrganizations`,
+              [
+                ...(currentOrganizations ?? []),
+                {
+                  value: org.id,
+                  label: org.name,
+                  source: 'USER_CREATED',
+                },
+              ]
+            );
+          }
           setShowAddOrganizationDialog(false);
         }}
       />
