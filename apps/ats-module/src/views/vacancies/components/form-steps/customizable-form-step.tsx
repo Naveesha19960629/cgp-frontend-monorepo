@@ -27,7 +27,7 @@ import {
   SelectValue,
 } from '@cgp/ui-kit/components/ui/select';
 import { Switch } from '@cgp/ui-kit/components/ui/switch';
-import { removeEmoji } from '@cgp/ui-kit/lib/utils';
+import { cn, removeEmoji } from '@cgp/ui-kit/lib/utils';
 
 // ── UI-only state types (not API types) ──────────────────────────────────────
 
@@ -159,7 +159,7 @@ function QuestionCard({
   const addOption = () => {
     if (question.options.length >= MAX_OPTIONS) {
       ErrorToast({
-        title: t('common.errorTitle'),
+        title: t('customizableForm.errors.errorTitle'),
         description: t('customizableForm.errors.maxOptionsExceeded'),
       });
       return;
@@ -668,7 +668,7 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
   const addForm = () => {
     if (forms.length >= MAX_FORMS) {
       ErrorToast({
-        title: t('common.errorTitle'),
+        title: t('customizableForm.errors.errorTitle'),
         description: t('customizableForm.errors.maxFormsExceeded'),
       });
       return;
@@ -737,7 +737,7 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
   const duplicateForm = (id: number) => {
     if (forms.length >= MAX_FORMS) {
       ErrorToast({
-        title: t('common.errorTitle'),
+        title: t('customizableForm.errors.errorTitle'),
         description: t('customizableForm.errors.maxFormsExceeded'),
       });
       return;
@@ -837,7 +837,7 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
     const form = forms.find(f => f.id === formId);
     if (form && form.questions.length >= MAX_QUESTIONS) {
       ErrorToast({
-        title: t('common.errorTitle'),
+        title: t('customizableForm.errors.errorTitle'),
         description: t('customizableForm.errors.maxQuestionsExceeded'),
       });
       return;
@@ -882,7 +882,7 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
     const form = forms.find(f => f.id === formId);
     if (form && form.questions.length >= MAX_QUESTIONS) {
       ErrorToast({
-        title: t('common.errorTitle'),
+        title: t('customizableForm.errors.errorTitle'),
         description: t('customizableForm.errors.maxQuestionsExceeded'),
       });
       return;
@@ -961,6 +961,12 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
     onNext(payload);
   };
 
+  const handleBack = () => {
+    if (hasValidationErrors) return;
+    stepPersistRef.current?.();
+    onBack();
+  };
+
   // ── Render ──────────────────────────────────────────────────────────────
 
   return (
@@ -970,8 +976,13 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={onBack}
-            className="cursor-pointer text-slate-700 transition-colors hover:text-slate-900"
+            onClick={handleBack}
+            disabled={hasValidationErrors}
+            className={cn(
+              'cursor-pointer text-slate-700 transition-colors hover:text-slate-900',
+              hasValidationErrors &&
+                'cursor-not-allowed opacity-40 hover:text-slate-700'
+            )}
             aria-label={t('common.back')}
           >
             <ArrowLeft2 size={24} />

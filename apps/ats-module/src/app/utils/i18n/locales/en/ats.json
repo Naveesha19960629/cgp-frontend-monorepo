@@ -129,6 +129,18 @@
       "invalidId": "Invalid vacancy ID.",
       "failedToLoadVacancy": "Failed to load vacancy details. Please try again."
     },
+    "deleteDialog": {
+      "title": "Are you sure?",
+      "message": "Are you sure you want to delete this vacancy? This action cannot be undone",
+      "confirm": "Yes",
+      "cancel": "No",
+      "notifications": {
+        "successTitle": "Successfully Deleted",
+        "successMessage": "Vacancy has been successfully deleted.",
+        "errorTitle": "Failed to Delete",
+        "errorMessage": "Some changes could not be saved. Please try again."
+      }
+    },
     "view": {
       "untitledVacancy": "Untitled Vacancy",
       "applied": "Applied",
@@ -139,7 +151,8 @@
       "sections": {
         "jobRequirements": "Job Requirement",
         "profileRequirements": "Profile Requirements",
-        "scheduledVacancy": "Scheduled Vacancy"
+        "scheduledVacancy": "Scheduled Vacancy",
+        "customizableForms": "Customizable Forms"
       },
       "scheduledVacancy": {
         "publishDateTime": "Scheduled Publish Date & Time",
@@ -254,6 +267,7 @@
       "delete": "Yes"
     },
     "errors": {
+      "errorTitle": "Error",
       "maxLengthExceeded": "Exceeded maximum character length of {{max}}",
       "maxFormsExceeded": "Exceeded maximum of 5 forms allowed",
       "maxQuestionsExceeded": "Exceeded maximum of 10 questions allowed per form",
@@ -284,6 +298,17 @@
       "endLabel": "End Label",
       "addOption": "Add Option",
       "required": "Required"
+    },
+    "view": {
+      "customizedQuestions": "Customized Questions",
+      "question": "Question",
+      "type": "Type",
+      "options": "Options",
+      "scale": "Scale",
+      "submissionRequirement": "Submission Requirement",
+      "required": "Required",
+      "optional": "Optional",
+      "skillLevelValue": "Skill Level {{level}} Value"
     }
   },
 
@@ -707,7 +732,7 @@
     "dataTakenFromCandidate": "If selected, no manual input is required, and data will be taken from the candidate profile",
     "sectionLabel": "Tools, Technologies, Skills and Frameworks",
     "input": {
-      "placeholder": "Select or add a skill",
+      "placeholder": "Select or add skill",
       "addNew": "Add \"{{value}}\"",
       "typeToSearch": "Type to search skills…"
     },
@@ -989,6 +1014,7 @@
     "timeLabel": "Schedule Time",
     "timePlaceholder": "hh:mm:ss AM/PM",
     "create": "Create",
+    "update": "Update",
     "cancel": "Cancel",
     "validation": {
       "publishDateRequired": "Scheduled Publish Date & Time is required.",

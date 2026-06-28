@@ -27,3 +27,4 @@ export { useAddJobTitleMutation } from '@/views/vacancies/hooks/mutations/use-ad
 export { useUpdateCandidateProfileBasicInformationsMutation } from '@/views/vacancies/hooks/mutations/use-update-candidate-profile-basic-informations-mutation';
 export { useCreateSportMutation } from '@/views/vacancies/hooks/mutations/use-create-sport-mutation';
 export { useCreateSportLevelMutation } from '@/views/vacancies/hooks/mutations/use-create-sport-level-mutation';
+export { useDeleteVacancyMutation } from '@/views/vacancies/hooks/mutations/use-delete-vacancy-mutation';

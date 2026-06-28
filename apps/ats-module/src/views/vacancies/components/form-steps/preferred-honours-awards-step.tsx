@@ -2,7 +2,7 @@ import { ChevronUp, Loader2, Plus, Trash2 } from 'lucide-react';
 
 import { ArrowLeft2, Calendar as CalenderIcon } from 'iconsax-reactjs';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { type UseFormReturn } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
@@ -55,9 +55,6 @@ import { applyTypography } from '@cgp/ui-kit/lib/typography';
 import { cn, removeEmoji } from '@cgp/ui-kit/lib/utils';
 import { format } from 'date-fns';
 
-const HUNDRED_YEARS_AGO = new Date(new Date().getFullYear() - 100, 0, 1);
-const HUNDRED_YEARS_FROM_NOW = new Date(new Date().getFullYear() + 100, 11, 31);
-
 const multiSelectInfoAvatar = new URL(
   '../../../../assets/images/multi-select-info-avatar.svg',
   import.meta.url
@@ -89,6 +86,26 @@ function HonoursAndAwardsCard({
   onOpenAddOrganizationDialog,
 }: Readonly<HonoursAndAwardsCardProps>) {
   const { t } = useTranslation('ats');
+  const today = useMemo(() => {
+    const d = new Date();
+    d.setHours(23, 59, 59, 999);
+    return d;
+  }, []);
+
+  const hundredYearsAgo = useMemo(() => {
+    const d = new Date();
+    d.setFullYear(d.getFullYear() - 100);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }, []);
+
+  const hundredYearsFromNow = useMemo(() => {
+    const d = new Date();
+    d.setFullYear(d.getFullYear() + 100);
+    d.setHours(23, 59, 59, 999);
+    return d;
+  }, []);
+
   const [hasOrganizationMaxError, setHasOrganizationMaxError] = useState(false);
   const [hasLocationMaxError, setHasLocationMaxError] = useState(false);
   const [organizationSearch, setOrganizationSearch] = useState('');
@@ -159,7 +176,7 @@ function HonoursAndAwardsCard({
         {/* Collapsible body */}
         <CollapsibleContent>
           <div className="space-y-5 px-5 pb-5">
-            <div className="grid grid-cols-4 gap-3">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
               <FormField
                 control={form.control}
                 name={`honoursAndAwards.${index}.title`}
@@ -259,22 +276,21 @@ function HonoursAndAwardsCard({
                               'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
                               'dark:bg-input/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
                               applyTypography('body-medium'),
-                              'shadow-none!'
+                              'shadow-none!',
+                              'min-w-0'
                             )}
                           >
-                            {field.value ? (
-                              format(field.value, 'do MMM yyyy')
-                            ) : (
-                              <span>
-                                {t(
-                                  'preferredHonoursAwards.issuedDateFromPlaceholder'
-                                )}
-                              </span>
-                            )}
+                            <span className="mr-2 truncate">
+                              {field.value
+                                ? format(field.value, 'do MMM yyyy')
+                                : t(
+                                    'preferredHonoursAwards.issuedDateFromPlaceholder'
+                                  )}
+                            </span>
                             <CalenderIcon
                               variant="Linear"
                               size={20}
-                              className="text-zinc-800"
+                              className="shrink-0 text-zinc-800"
                             />
                           </Button>
                         </FormControl>
@@ -283,13 +299,7 @@ function HonoursAndAwardsCard({
                         <Calendar
                           mode="single"
                           selected={field.value}
-                          defaultMonth={
-                            field.value ??
-                            form.getValues(
-                              `honoursAndAwards.${index}.issuedDateTo`
-                            ) ??
-                            new Date()
-                          }
+                          defaultMonth={field.value ?? new Date()}
                           onSelect={date => {
                             field.onChange(date);
                             setOpenDatePopover(null);
@@ -304,10 +314,11 @@ function HonoursAndAwardsCard({
                             }
                           }}
                           disabled={date =>
-                            date > new Date() || date < HUNDRED_YEARS_AGO
+                            date > today || date < hundredYearsAgo
                           }
                           captionLayout="dropdown"
-                          startMonth={HUNDRED_YEARS_AGO}
+                          startMonth={hundredYearsAgo}
+                          endMonth={today}
                         />
                       </PopoverContent>
                     </Popover>
@@ -347,22 +358,21 @@ function HonoursAndAwardsCard({
                               'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
                               'dark:bg-input/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
                               applyTypography('body-medium'),
-                              'shadow-none!'
+                              'shadow-none!',
+                              'min-w-0'
                             )}
                           >
-                            {field.value ? (
-                              format(field.value, 'do MMM yyyy')
-                            ) : (
-                              <span>
-                                {t(
-                                  'preferredHonoursAwards.issuedDateToPlaceholder'
-                                )}
-                              </span>
-                            )}
+                            <span className="mr-2 truncate">
+                              {field.value
+                                ? format(field.value, 'do MMM yyyy')
+                                : t(
+                                    'preferredHonoursAwards.issuedDateToPlaceholder'
+                                  )}
+                            </span>
                             <CalenderIcon
                               variant="Linear"
                               size={20}
-                              className="text-zinc-800"
+                              className="shrink-0 text-zinc-800"
                             />
                           </Button>
                         </FormControl>
@@ -371,13 +381,7 @@ function HonoursAndAwardsCard({
                         <Calendar
                           mode="single"
                           selected={field.value}
-                          defaultMonth={
-                            field.value ??
-                            form.getValues(
-                              `honoursAndAwards.${index}.issuedDateFrom`
-                            ) ??
-                            new Date()
-                          }
+                          defaultMonth={field.value ?? new Date()}
                           onSelect={date => {
                             field.onChange(date);
                             setOpenDatePopover(null);
@@ -387,14 +391,14 @@ function HonoursAndAwardsCard({
                               `honoursAndAwards.${index}.issuedDateFrom`
                             );
                             return (
-                              date < HUNDRED_YEARS_AGO ||
-                              date > HUNDRED_YEARS_FROM_NOW ||
+                              date < hundredYearsAgo ||
+                              date > hundredYearsFromNow ||
                               (issuedDateFrom != null && date < issuedDateFrom)
                             );
                           }}
                           captionLayout="dropdown"
-                          startMonth={HUNDRED_YEARS_AGO}
-                          endMonth={HUNDRED_YEARS_FROM_NOW}
+                          startMonth={hundredYearsAgo}
+                          endMonth={hundredYearsFromNow}
                         />
                       </PopoverContent>
                     </Popover>
@@ -404,7 +408,7 @@ function HonoursAndAwardsCard({
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-x-5 gap-y-4 md:grid-cols-2">
               <FormField
                 control={form.control}
                 name={`honoursAndAwards.${index}.associatedOrganizations`}
@@ -420,6 +424,7 @@ function HonoursAndAwardsCard({
                     </FormLabel>
                     <FormControl>
                       <MultipleSelector
+                        alwaysShowCreatable
                         value={
                           field.value?.map(organization => ({
                             value: organization.value,
@@ -438,12 +443,7 @@ function HonoursAndAwardsCard({
                           let hasNewOrganization = false;
                           const validOrganizations = options
                             .map(option => {
-                              const isNew =
-                                typeof option.value === 'string' &&
-                                option.value.length > 0 &&
-                                !organizationsData.some(
-                                  o => o.id === option.value
-                                );
+                              const isNew = option.value === option.label;
                               if (isNew) {
                                 hasNewOrganization = true;
                                 onOpenAddOrganizationDialog(
@@ -1009,17 +1009,23 @@ export default function PreferredHonoursAwardsStep({
             `honoursAndAwards.${pendingHonorIndex}.associatedOrganizations`
           );
 
-          form.setValue(
-            `honoursAndAwards.${pendingHonorIndex}.associatedOrganizations`,
-            [
-              ...(currentOrganizations ?? []),
-              {
-                value: org.id,
-                label: org.name,
-                source: 'USER_CREATED',
-              },
-            ]
+          const isDuplicate = currentOrganizations?.some(
+            o => o.label.toLowerCase().trim() === org.name.toLowerCase().trim()
           );
+
+          if (!isDuplicate) {
+            form.setValue(
+              `honoursAndAwards.${pendingHonorIndex}.associatedOrganizations`,
+              [
+                ...(currentOrganizations ?? []),
+                {
+                  value: org.id,
+                  label: org.name,
+                  source: 'USER_CREATED',
+                },
+              ]
+            );
+          }
           setShowAddOrganizationDialog(false);
         }}
       />

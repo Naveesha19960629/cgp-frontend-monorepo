@@ -6,6 +6,7 @@ import VacanciesPage from '@/views/vacancies/pages/vacancies-page';
 const navigate = vi.fn();
 const useVacanciesQueryMock = vi.fn();
 const useVacancyTableParamsMock = vi.fn();
+const useDeleteVacancyMutationMock = vi.fn();
 
 const defaultParams = {
   page: 0,
@@ -47,6 +48,8 @@ vi.mock('@/views/vacancies', async importOriginal => {
     useVacanciesQuery: () => useVacanciesQueryMock(),
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     useVacancyTableParams: () => useVacancyTableParamsMock(),
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    useDeleteVacancyMutation: () => useDeleteVacancyMutationMock(),
     VacancyDataTable: () => <div data-testid="vacancy-data-table" />,
     VacancyFilteringSection: () => (
       <div data-testid="vacancy-filtering-section" />
@@ -69,6 +72,10 @@ describe('VacanciesPage', () => {
       isLoading: false,
     });
     useVacancyTableParamsMock.mockReturnValue([defaultParams, vi.fn()]);
+    useDeleteVacancyMutationMock.mockReturnValue({
+      mutate: vi.fn(),
+      isPending: false,
+    });
   });
 
   it('renders page heading and create vacancy button when data exists', () => {
