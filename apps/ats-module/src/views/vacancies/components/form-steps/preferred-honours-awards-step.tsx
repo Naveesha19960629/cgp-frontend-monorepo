@@ -442,12 +442,7 @@ function HonoursAndAwardsCard({
                           let hasNewOrganization = false;
                           const validOrganizations = options
                             .map(option => {
-                              const isNew =
-                                typeof option.value === 'string' &&
-                                option.value.length > 0 &&
-                                !organizationsData.some(
-                                  o => o.id === option.value
-                                );
+                              const isNew = option.value === option.label;
                               if (isNew) {
                                 hasNewOrganization = true;
                                 onOpenAddOrganizationDialog(
