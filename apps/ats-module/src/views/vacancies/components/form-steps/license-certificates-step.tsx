@@ -110,8 +110,8 @@ export default function LicenseCertificatesStep({
     setValue('entry.issuingOrganization', []);
     setValue('entry.organizationLocations', []);
     setValue('entry.internationallyAccepted', false);
-    setValue('entry.issueDate', undefined);
-    setValue('entry.expirationDate', undefined);
+    setValue('entry.issueDate', '');
+    setValue('entry.expirationDate', '');
   };
 
   const hasEntryData = (): boolean => {
@@ -630,23 +630,7 @@ export default function LicenseCertificatesStep({
                             return;
                           }
 
-                          // Check for case-insensitive duplicates when adding existing organizations
-                          const currentOrganizations = getValues(
-                            'entry.issuingOrganization'
-                          );
-                          const filteredOptions = options.filter(newOrg => {
-                            const normalizedNewLabel = newOrg.label
-                              .trim()
-                              .toLowerCase();
-                            const isDuplicate = currentOrganizations.some(
-                              existing =>
-                                existing.label.trim().toLowerCase() ===
-                                normalizedNewLabel
-                            );
-                            return !isDuplicate;
-                          });
-
-                          field.onChange(filteredOptions);
+                          field.onChange(options);
                         }}
                         maxSelected={MAX_SELECTIONS}
                         onMaxSelected={() => setMax('issuingOrganization')}
@@ -1079,13 +1063,6 @@ export default function LicenseCertificatesStep({
 
             const normalizedNewLabel = option.label.trim().toLowerCase();
             const deduped = baseItems.filter(item => {
-              const isTempItem =
-                item.source === 'PENDING_TEMP' ||
-                item.value.startsWith('__pending_license_cert_');
-              if (isTempItem) {
-                return false;
-              }
-
               const sameLabel =
                 item.label.trim().toLowerCase() === normalizedNewLabel;
               const sameType = (item.certType ?? '') === option.certType;

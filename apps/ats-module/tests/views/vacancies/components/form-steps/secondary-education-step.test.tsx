@@ -295,7 +295,34 @@ vi.mock('@cgp/ui-kit/components/ui/dialog', () => ({
 }));
 
 vi.mock('@cgp/ui-kit/components/ui/calendar', () => ({
-  Calendar: () => <div data-testid="calendar" />,
+  Calendar: ({
+    disabled,
+    endMonth,
+  }: {
+    disabled?: (date: Date) => boolean;
+    endMonth?: Date;
+  }) => {
+    const isEndDateCalendar = endMonth
+      ? endMonth.getFullYear() - new Date().getFullYear() > 50
+      : false;
+    return (
+      <div
+        data-testid={
+          isEndDateCalendar ? 'end-date-calendar' : 'start-date-calendar'
+        }
+      >
+        {disabled && isEndDateCalendar && (
+          <button
+            type="button"
+            data-testid="end-date-probe-jun-2020"
+            data-disabled={String(disabled(new Date(2020, 5, 15)))}
+          >
+            probe
+          </button>
+        )}
+      </div>
+    );
+  },
 }));
 
 vi.mock('@cgp/ui-kit/components/character-count', () => ({
@@ -526,6 +553,68 @@ describe('SecondaryEducationStep', () => {
           name: 'secondaryEducation.endDate',
         })
       ).toBeDisabled();
+    });
+  });
+
+  describe('end date calendar disabled logic', () => {
+    it('allows a past date when no start date is set', () => {
+      renderStep();
+      const probe = screen.getByTestId('end-date-probe-jun-2020');
+      expect(probe).toHaveAttribute('data-disabled', 'false');
+    });
+
+    it('blocks a past date that falls before start date + 1 day', () => {
+      stableForm.secondaryEducation = [
+        {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          content: [
+            {
+              schools: [],
+              schoolLocations: [],
+              examinations: [],
+              secondaryAwardingBody: [],
+              fieldsOfStudy: [],
+              grade: '',
+              startDate: '2020-06-20',
+              endDate: undefined,
+              result: '',
+              acceptsHomeSchooling: false,
+            },
+          ],
+        },
+      ];
+      renderStep();
+      // June 15 2020 is before minEndDate (June 21 2020) → must be disabled
+      const probe = screen.getByTestId('end-date-probe-jun-2020');
+      expect(probe).toHaveAttribute('data-disabled', 'true');
+    });
+
+    it('allows a past date that falls after start date + 1 day', () => {
+      stableForm.secondaryEducation = [
+        {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          content: [
+            {
+              schools: [],
+              schoolLocations: [],
+              examinations: [],
+              secondaryAwardingBody: [],
+              fieldsOfStudy: [],
+              grade: '',
+              startDate: '2020-06-10',
+              endDate: undefined,
+              result: '',
+              acceptsHomeSchooling: false,
+            },
+          ],
+        },
+      ];
+      renderStep();
+      // June 15 2020 is after minEndDate (June 11 2020) → must not be disabled
+      const probe = screen.getByTestId('end-date-probe-jun-2020');
+      expect(probe).toHaveAttribute('data-disabled', 'false');
     });
   });
 

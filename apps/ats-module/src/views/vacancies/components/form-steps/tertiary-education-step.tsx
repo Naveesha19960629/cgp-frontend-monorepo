@@ -552,14 +552,12 @@ export default function TertiaryEducationStep({
       {/* -- Informational Banner ------------------------------------------ */}
       <MessageBox
         fields={[
-          t('tertiaryEducation.qualificationName'),
-          t('tertiaryEducation.tertiaryAwardingBody'),
-          t('tertiaryEducation.tertiaryAwardingBodyLocations'),
-          t('tertiaryEducation.levelOfQualification'),
-          t('tertiaryEducation.studyPattern'),
-          t('tertiaryEducation.deliverySchedule'),
-          t('tertiaryEducation.startDate'),
-          t('tertiaryEducation.endDate'),
+          t('tertiaryEducation.messageBoxFields.qualificationName'),
+          t('tertiaryEducation.messageBoxFields.awardingBody'),
+          t('tertiaryEducation.messageBoxFields.awardingBodyLocation'),
+          t('tertiaryEducation.messageBoxFields.levelOfQualification'),
+          t('tertiaryEducation.messageBoxFields.studyPattern'),
+          t('tertiaryEducation.messageBoxFields.deliverySchedule'),
         ]}
       />
 
