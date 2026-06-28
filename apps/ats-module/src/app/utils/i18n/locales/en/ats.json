@@ -267,6 +267,7 @@
       "delete": "Yes"
     },
     "errors": {
+      "errorTitle": "Error",
       "maxLengthExceeded": "Exceeded maximum character length of {{max}}",
       "maxFormsExceeded": "Exceeded maximum of 5 forms allowed",
       "maxQuestionsExceeded": "Exceeded maximum of 10 questions allowed per form",
