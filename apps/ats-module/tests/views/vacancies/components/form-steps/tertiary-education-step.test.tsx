@@ -784,6 +784,47 @@ describe('TertiaryEducationStep', () => {
       );
       expect(gradeInput).toHaveValue('');
     });
+
+    it('clears grade from a pre-populated form state when checked', async () => {
+      stableForm.tertiaryEducation = [
+        {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          content: [
+            {
+              qualificationName: [],
+              tertiaryAwardingBody: [],
+              tertiaryAwardingBodyLocations: [],
+              levelOfQualification: [],
+              specialization: [],
+              studyMode: [],
+              studyPattern: [],
+              deliverySchedule: [],
+              batch: [],
+              department: [],
+              faculty: [],
+              grade: 'GPA 3.8',
+            },
+          ],
+        },
+      ];
+
+      const user = userEvent.setup();
+      renderStep();
+
+      const gradeInput = screen.getByPlaceholderText(
+        'tertiaryEducation.placeholders.grade'
+      );
+      expect(gradeInput).toHaveValue('GPA 3.8');
+
+      await user.click(
+        screen.getByLabelText('tertiaryEducation.collectFromCandidates')
+      );
+
+      await waitFor(() => {
+        expect(gradeInput).toHaveValue('');
+      });
+    });
   });
 
   describe('navigation', () => {

@@ -444,35 +444,37 @@ export default function LicenseCertificatesStep({
           />
         </div>
 
-        <div className="flex flex-col gap-4 px-6">
-          {/* dataTakenFromCandidate */}
-          <div className={cn(!isEnabled && 'pointer-events-none opacity-60')}>
-            <div className="flex items-start gap-2">
-              <Controller
-                control={control}
-                name="dataTakenFromCandidate"
-                render={({ field }) => (
-                  <Checkbox
-                    id="licenseCertDataTakenFromCandidate"
-                    checked={field.value}
-                    onCheckedChange={newValue => {
-                      const checked = newValue === true;
-                      if (checked) clearEntryData();
-                      field.onChange(checked);
-                    }}
-                    className="mt-0.5"
-                  />
-                )}
+        <div
+          className={cn(
+            'flex items-start gap-3 px-7 pb-8',
+            !isEnabled && 'pointer-events-none opacity-60'
+          )}
+        >
+          <Controller
+            control={control}
+            name="dataTakenFromCandidate"
+            render={({ field }) => (
+              <Checkbox
+                id="licenseCertDataTakenFromCandidate"
+                checked={field.value}
+                onCheckedChange={newValue => {
+                  const checked = newValue === true;
+                  if (checked) clearEntryData();
+                  field.onChange(checked);
+                }}
+                className="mt-0.5"
               />
-              <Label
-                htmlFor="licenseCertDataTakenFromCandidate"
-                className="cursor-pointer leading-snug wrap-break-word"
-              >
-                {t('licenseCertificates.collectFromCandidates')}
-              </Label>
-            </div>
-          </div>
+            )}
+          />
+          <Label
+            htmlFor="licenseCertDataTakenFromCandidate"
+            className="cursor-pointer leading-snug wrap-break-word"
+          >
+            {t('licenseCertificates.collectFromCandidates')}
+          </Label>
+        </div>
 
+        <div className="flex flex-col gap-4 px-6">
           {/* ── License and Certificate Card ─────────────────────────────── */}
           <div className="rounded-xl border border-neutral-300 bg-white shadow-[0px_4px_90px_0px_rgba(0,0,0,0.07)]">
             {/* Card header */}

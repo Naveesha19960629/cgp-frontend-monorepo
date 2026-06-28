@@ -561,34 +561,38 @@ export default function SecondaryEducationStep({
           />
         </div>
 
+        <div
+          className={cn(
+            'flex items-start gap-3 px-7 pb-8',
+            !isEnabled && 'pointer-events-none opacity-60'
+          )}
+        >
+          <Controller
+            control={control}
+            name="dataTakenFromCandidate"
+            render={({ field }) => (
+              <Checkbox
+                id="dataTakenFromCandidate"
+                checked={field.value}
+                onCheckedChange={newValue => {
+                  const checked = newValue === true;
+                  if (checked) clearEntryData();
+                  field.onChange(checked);
+                }}
+                className="mt-0.5"
+              />
+            )}
+          />
+          <Label
+            htmlFor="dataTakenFromCandidate"
+            className="cursor-pointer leading-snug"
+          >
+            {t('secondaryEducation.collectFromCandidates')}
+          </Label>
+        </div>
+
         <div className="flex flex-col gap-4 px-6">
           {/* dataTakenFromCandidate � grayed when toggle off */}
-          <div className={cn(!isEnabled && 'pointer-events-none opacity-60')}>
-            <div className="flex items-start gap-2">
-              <Controller
-                control={control}
-                name="dataTakenFromCandidate"
-                render={({ field }) => (
-                  <Checkbox
-                    id="dataTakenFromCandidate"
-                    checked={field.value}
-                    onCheckedChange={newValue => {
-                      const checked = newValue === true;
-                      if (checked) clearEntryData();
-                      field.onChange(checked);
-                    }}
-                    className="mt-0.5"
-                  />
-                )}
-              />
-              <Label
-                htmlFor="dataTakenFromCandidate"
-                className="cursor-pointer leading-snug"
-              >
-                {t('secondaryEducation.collectFromCandidates')}
-              </Label>
-            </div>
-          </div>
 
           {/* -- Education Card -------------------------------------------- */}
           <div className="rounded-xl border border-neutral-300 bg-white shadow-[0px_4px_90px_0px_rgba(0,0,0,0.07)]">

@@ -743,6 +743,52 @@ describe('SecondaryEducationStep', () => {
       );
       expect(gradeInput).toHaveValue('');
     });
+
+    it('clears startDate and endDate (shows placeholder text) when checked', async () => {
+      stableForm.secondaryEducation = [
+        {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          content: [
+            {
+              schools: [],
+              schoolLocations: [],
+              examinations: [],
+              secondaryAwardingBody: [],
+              fieldsOfStudy: [],
+              grade: '',
+              startDate: '2024-06-01',
+              endDate: '2024-12-01',
+              result: '',
+              acceptsHomeSchooling: false,
+            },
+          ],
+        },
+      ];
+
+      const user = userEvent.setup();
+      renderStep();
+
+      expect(
+        screen.queryByText('secondaryEducation.placeholders.startDate')
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByText('secondaryEducation.placeholders.endDate')
+      ).not.toBeInTheDocument();
+
+      await user.click(
+        screen.getByLabelText('secondaryEducation.collectFromCandidates')
+      );
+
+      await waitFor(() => {
+        expect(
+          screen.getByText('secondaryEducation.placeholders.startDate')
+        ).toBeInTheDocument();
+        expect(
+          screen.getByText('secondaryEducation.placeholders.endDate')
+        ).toBeInTheDocument();
+      });
+    });
   });
 
   describe('navigation', () => {
