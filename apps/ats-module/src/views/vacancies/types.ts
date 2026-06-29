@@ -169,7 +169,7 @@ interface LocationLookupItem {
 }
 
 interface SecondaryEducationRef {
-  source: 'MASTER' | 'PENDING';
+  source: 'MASTER' | 'PENDING' | 'USER_CREATED';
   id: string;
   name?: string;
 }
@@ -196,7 +196,7 @@ interface SecondaryEducation {
 // ─── Tertiary Education ───────────────────────────────────────────────────────
 
 interface TertiaryEducationRef {
-  source: 'MASTER' | 'PENDING';
+  source: 'MASTER' | 'PENDING' | 'USER_CREATED';
   id: string;
   name?: string;
 }
@@ -243,7 +243,7 @@ interface CreatePendingApiResponse {
 type LicenseCertType = 'LICENSE' | 'CERTIFICATION' | 'CERTIFICATE';
 
 interface LicenseCertRef {
-  source: 'MASTER' | 'PENDING';
+  source: 'MASTER' | 'PENDING' | 'USER_CREATED';
   id: string;
   name?: string;
   type?: LicenseCertType;

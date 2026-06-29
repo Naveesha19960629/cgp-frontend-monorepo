@@ -577,6 +577,14 @@
     "department": "Department",
     "faculty": "Faculty",
     "grade": "Grade",
+    "messageBoxFields": {
+      "qualificationName": "Name of the qualification",
+      "awardingBody": "Awarding body/Institute",
+      "awardingBodyLocation": "Awarding Body/Institute Location",
+      "levelOfQualification": "Level of the qualification",
+      "studyPattern": "Study Pattern",
+      "deliverySchedule": "Delivery Schedule"
+    },
     "bannerTitle": "Build the Application Form",
     "bannerMessageHighlight": "Certain fields",
     "bannerMessageRest": "in this section are always collected from candidates to support consistent candidate profiles. Any fields you don't select won't be collected",
