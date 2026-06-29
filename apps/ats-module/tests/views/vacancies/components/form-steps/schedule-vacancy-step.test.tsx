@@ -160,7 +160,7 @@ describe('ScheduleVacancyStep', () => {
 
   // ── Field label constants (t() returns the key in tests) ─────────────────
   const PUBLISH_TIME_LABEL = 'scheduleVacancy.timeLabel';
-  const EXPIRATION_TIME_LABEL = 'Expiration Time';
+  const EXPIRATION_TIME_LABEL = 'scheduleVacancy.expirationTimeLabel';
 
   // ── DOM helpers ──────────────────────────────────────────────────────────
   const getCreateButton = () => {
@@ -224,15 +224,15 @@ describe('ScheduleVacancyStep', () => {
       );
     });
 
-    it('does not render vacancy status badge in create mode', () => {
+    it('renders vacancy status badge in create mode when status exists', () => {
       mockVacancyForm({
         form: { schedule: undefined, status: 'ON_HOLD' },
       });
       renderComponent({ mode: 'create' as const });
 
-      expect(
-        screen.queryByTestId('vacancy-status-badge')
-      ).not.toBeInTheDocument();
+      expect(screen.getByTestId('vacancy-status-badge')).toHaveTextContent(
+        'ON_HOLD'
+      );
     });
   });
 
@@ -448,7 +448,9 @@ describe('ScheduleVacancyStep', () => {
       const expirationCall = vi.mocked(CalendarWithTime).mock.calls[1]?.[0];
 
       expect(publishCall?.timeLabel).toBe('scheduleVacancy.timeLabel');
-      expect(expirationCall?.timeLabel).toBe('Expiration Time');
+      expect(expirationCall?.timeLabel).toBe(
+        'scheduleVacancy.expirationTimeLabel'
+      );
     });
 
     it('passes formattedDateDisplay to publish picker when date is set', () => {

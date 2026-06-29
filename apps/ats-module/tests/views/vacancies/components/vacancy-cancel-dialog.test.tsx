@@ -164,7 +164,7 @@ describe('VacancyCancelDialog', () => {
     expect(saveDraftButton).toBeDisabled();
   });
 
-  it('shows spinner and hides button text when isSavingDraft is true', () => {
+  it('shows spinner alongside button text when isSavingDraft is true', () => {
     render(
       <VacancyCancelDialog
         open={true}
@@ -176,8 +176,8 @@ describe('VacancyCancelDialog', () => {
     );
 
     expect(
-      screen.queryByText('vacancyCancelDialog.saveAsDraftButton')
-    ).not.toBeInTheDocument();
+      screen.getByText('vacancyCancelDialog.saveAsDraftButton')
+    ).toBeInTheDocument();
 
     const buttons = screen.getAllByRole('button');
     const saveDraftButton = buttons[buttons.length - 1];

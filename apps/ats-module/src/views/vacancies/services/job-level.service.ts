@@ -1,11 +1,16 @@
-import type { JobLevelItem, SingleApiResponse } from '@/views/vacancies/types';
+import type {
+  JobLevelItem,
+  SingleRecordApiResponse,
+} from '@/views/vacancies/types';
 
 import { httpClient } from '@cgp/data-access';
 
 export const jobLevelService = {
-  getAllJobLevels: async (): Promise<SingleApiResponse<JobLevelItem[]>> => {
+  getAllJobLevels: async (): Promise<
+    SingleRecordApiResponse<JobLevelItem[]>
+  > => {
     const response =
-      await httpClient.get<SingleApiResponse<JobLevelItem[]>>('/levels');
+      await httpClient.get<SingleRecordApiResponse<JobLevelItem[]>>('/levels');
     return response.data;
   },
 };

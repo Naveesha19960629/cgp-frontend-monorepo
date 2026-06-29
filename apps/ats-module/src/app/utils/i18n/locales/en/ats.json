@@ -113,6 +113,9 @@
   },
   "vacancies": {
     "title": "Vacancies",
+    "stepBadge": {
+      "applied": "Applied"
+    },
     "createVacancyButton": "Create Vacancy",
     "emptyState": {
       "title": "No Vacancies Available",
@@ -327,6 +330,19 @@
         "message": "Saved as a draft successfully.",
         "errorTitle": "Try Again",
         "errorMessage": "Some changes could not be loaded. Please try again."
+      }
+    }
+  },
+
+  "vacancyEditCancelDialog": {
+    "title": "Are you sure?",
+    "description": "Are you sure you want to leave without updating your changes? Any unsaved changes will be lost.",
+    "yesButton": "Yes",
+    "noButton": "No",
+    "notifications": {
+      "discard": {
+        "title": "Successfully Discarded",
+        "message": "Vacancy edits discarded successfully."
       }
     }
   },
@@ -1012,6 +1028,7 @@
     "expirationDateLabel": "Expiration Date & Time",
     "expirationDatePlaceholder": "Expiration date & time",
     "timeLabel": "Schedule Time",
+    "expirationTimeLabel": "Expiration Time",
     "timePlaceholder": "hh:mm:ss AM/PM",
     "create": "Create",
     "update": "Update",

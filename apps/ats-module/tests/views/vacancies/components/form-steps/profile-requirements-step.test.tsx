@@ -10,6 +10,8 @@ import ProfileRequirementsStep from '@/views/vacancies/components/form-steps/pro
 const mockUseVacancyForm = vi.hoisted(() =>
   vi.fn(() => ({
     form: {
+      status: 'draft',
+      applicantCount: 0,
       profileRequirements: {
         isEnabled: false,
         dataTakenFromCandidate: false,
@@ -282,6 +284,8 @@ function makeForm(
 ) {
   return {
     form: {
+      status: 'draft',
+      applicantCount: 0,
       profileRequirements: {
         isEnabled: false,
         dataTakenFromCandidate: false,

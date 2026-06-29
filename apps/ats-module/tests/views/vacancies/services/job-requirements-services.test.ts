@@ -17,7 +17,7 @@ import type {
   JobLevelItem,
   JobTitleItem,
   RoleItem,
-  SingleApiResponse,
+  SingleRecordApiResponse,
   WorkScheduleItem,
 } from '@/views/vacancies/types';
 
@@ -457,7 +457,7 @@ describe('Job Requirements Services', () => {
 
   describe('jobLevelService', () => {
     it('calls GET /levels without params', async () => {
-      const mockData: SingleApiResponse<JobLevelItem[]> = {
+      const mockData: SingleRecordApiResponse<JobLevelItem[]> = {
         requestId: 'req-001',
         success: true,
         message: 'Success',

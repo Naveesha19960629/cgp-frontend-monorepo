@@ -1,7 +1,7 @@
 import type {
   ApiResponse,
   CreatePendingItemResponse,
-  SingleApiResponse,
+  SingleRecordApiResponse,
   SocietyItem,
 } from '@/views/vacancies/types';
 
@@ -22,7 +22,7 @@ export const societyService = {
 
   createSociety: async (label: string): Promise<CreatePendingItemResponse> => {
     const response = await httpClient.post<
-      SingleApiResponse<CreatePendingItemResponse>
+      SingleRecordApiResponse<CreatePendingItemResponse>
     >(`/societies`, {
       type: 'SOCIETY',
       displayValue: label,

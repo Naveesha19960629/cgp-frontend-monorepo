@@ -3,7 +3,7 @@ import { History, MoreVertical, UserSearch } from 'lucide-react';
 import { Edit2, Link21, Simcard2, Trash } from 'iconsax-reactjs';
 
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 import type { VacancyTableActionProps } from '@/views/vacancies/types';
 
@@ -26,6 +26,7 @@ export default function VacancyTableAction({
 }: VacancyTableActionProps) {
   const { t } = useTranslation('ats');
   const navigate = useNavigate();
+  const location = useLocation();
 
   const { status, applicantCount, availableActions } = vacancy;
   const hasApplicants = applicantCount > 0;
@@ -57,7 +58,9 @@ export default function VacancyTableAction({
     if (onEdit) {
       onEdit();
     } else {
-      void navigate(`/dashboard/ats/vacancies/${vacancy.id}/edit`);
+      void navigate(`/dashboard/ats/vacancies/${vacancy.id}/edit`, {
+        state: { from: location.pathname },
+      });
     }
   };
 

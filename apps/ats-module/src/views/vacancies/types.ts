@@ -284,8 +284,8 @@ interface ScheduleVacancy {
 }
 
 interface ScheduleVacancyPayload {
-  schedulePublishAt: string;
-  expirationAt: string;
+  schedulePublishAt: string | null;
+  expirationAt: string | null;
 }
 
 // ─── Customizable Form ──────────────────────────────────────────────────────
@@ -431,6 +431,7 @@ interface VacancyForm {
   title: string;
   status: string;
   lastActiveStep: string;
+  applicantCount?: number;
   jobRequirements: JobRequirement[];
   profileRequirements: ProfileRequirements;
   secondaryEducation: SecondaryEducation[];
@@ -503,17 +504,18 @@ interface ApiResponse<T> {
     };
   };
 }
-interface IndustryItem {
-  id: string;
-  label: string;
-  source: string;
-}
 
-interface SingleApiResponse<T> {
+interface SingleRecordApiResponse<T> {
   requestId: string;
   success: boolean;
   message: string;
   data: T;
+}
+
+interface IndustryItem {
+  id: string;
+  label: string;
+  source: string;
 }
 
 interface IndustryCreateResponse {
@@ -859,6 +861,135 @@ interface PublicationResponse<T> {
   data: T;
 }
 
+// ─── Vacancy Detail (GET /vacancies/:id response) ────────────────────────────
+
+interface VacancyDetailJobRequirementData {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  discipline: AddOrSelectOption | null;
+  careerPath: AddOrSelectOption | null;
+  level: AddOrSelectOption | null;
+  roles: AddOrSelectOption[];
+  jobTitles: AddOrSelectOption[];
+  employmentTypes: AddOrSelectOption[];
+  workSchedules: AddOrSelectOption[];
+  engagementModels: AddOrSelectOption[];
+  description: string;
+}
+
+interface VacancyDetailPatentEntry {
+  patentRequirementId: string;
+  statuses: PatentStatus[];
+  fromDate: string;
+  toDate: string;
+  relatedIndustry: AddOrSelectOption[];
+}
+
+interface VacancyDetailData {
+  vacancyId: string;
+  baseVacancyId: string;
+  title: string;
+  status: string;
+  version: number;
+  createdBy: string;
+  updatedBy: string;
+  createdAt: string;
+  updatedAt: string;
+  lastActiveStep: string;
+  jobRequirement: VacancyDetailJobRequirementData;
+  skills: {
+    isEnabled: boolean;
+    dataTakenFromCandidate: boolean;
+    skills: AddOrSelectOption[];
+  };
+  languages: {
+    isEnabled: boolean;
+    dataTakenFromCandidate: boolean;
+    languages: AddOrSelectOption[];
+  };
+  industry: {
+    isEnabled: boolean;
+    dataTakenFromCandidate: boolean;
+    industries: AddOrSelectOption[];
+  };
+  causes: {
+    isEnabled: boolean;
+    dataTakenFromCandidate: boolean;
+    causes: AddOrSelectOption[];
+  };
+  patents: {
+    isEnabled: boolean;
+    dataTakenFromCandidate: boolean;
+    patents: VacancyDetailPatentEntry[];
+  };
+  honoursAndAwards: {
+    isEnabled: boolean;
+    dataTakenFromCandidate: boolean;
+    honoursAndAwards: unknown[];
+  };
+  projects: {
+    isEnabled: boolean;
+    dataTakenFromCandidate: boolean;
+    projects: unknown[];
+  };
+  clubsAndSocieties: {
+    isEnabled: boolean;
+    dataTakenFromCandidate: boolean;
+    clubsAndSocieties: unknown[];
+  };
+  sports: {
+    isEnabled: boolean;
+    dataTakenFromCandidate: boolean;
+    sports: unknown[];
+  };
+  volunteering: {
+    isEnabled: boolean;
+    dataTakenFromCandidate: boolean;
+    volunteering: unknown[];
+  };
+  publications: {
+    isEnabled: boolean;
+    dataTakenFromCandidate: boolean;
+    publications: unknown[];
+  };
+  customizedForm: {
+    isEnabled: boolean;
+    sectionTitle: string | null;
+    forms: unknown[];
+  };
+  hobbyList: {
+    isEnabled: boolean;
+    dataTakenFromCandidate: boolean;
+    hobbyList: unknown[];
+  };
+  secondaryEducation: {
+    isEnabled: boolean;
+    dataTakenFromCandidate: boolean;
+    secondaryEducation: unknown[];
+  };
+  tertiaryEducation: {
+    isEnabled: boolean;
+    dataTakenFromCandidate: boolean;
+    tertiaryEducation: unknown[];
+  };
+  licensesAndCertifications: {
+    isEnabled: boolean;
+    dataTakenFromCandidate: boolean;
+    licensesAndCertifications: unknown[];
+  };
+  scheduleRequirement: {
+    schedulePublishAt: string;
+    expirationAt: string;
+  } | null;
+  profileRequirement: {
+    isEnabled: boolean;
+    dataTakenFromCandidate: boolean;
+    gender: AddOrSelectOption | null;
+    maritalStatus: AddOrSelectOption | null;
+    addresses: Address[];
+  };
+}
+
 interface VacancyCancelDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -872,6 +1003,12 @@ interface VacancyDeleteDialogProps {
   onOpenChange: (open: boolean) => void;
   onConfirm: () => void;
   isDeleting?: boolean;
+}
+
+interface VacancyEditCancelDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onConfirm: () => void;
 }
 
 interface VacancyTableColumn {
@@ -1235,6 +1372,7 @@ type VacancyStatus = 'draft' | 'unpublished' | 'live' | 'expired' | 'on_hold';
 
 interface VacancyStatusBadgeProps {
   status: string;
+  applicantCount?: number;
 }
 
 interface JobRequirementApiPayload {
@@ -1252,7 +1390,7 @@ interface JobRequirementApiPayload {
 }
 
 interface PatentContentApiPayload {
-  status?: string;
+  statuses?: string[];
   fromDate?: string;
   toDate?: string;
   relatedIndustry: MasterRef[];
@@ -1438,7 +1576,7 @@ interface CreateVacancyPayload {
     causes: CausesApiPayload[];
     hobbyList: HobbiesApiPayload[];
     industry: IndustryApiPayload;
-    schedule: { schedulePublishAt: string; expirationAt: string };
+    schedule: ScheduleVacancyPayload;
     customizedForm: CustomizedFormApiPayload;
     projects: ProjectGroupApiPayload[];
     publications: PublicationGroupApiPayload[];
@@ -1515,7 +1653,6 @@ export type {
   VacancyStep,
   GenderItem,
   ApiResponse,
-  SingleApiResponse,
   IndustryItem,
   IndustryCreateResponse,
   SocietyItem,
@@ -1560,6 +1697,7 @@ export type {
   PreferredSkills,
   LanguageItem,
   LanguageEntry,
+  SingleRecordApiResponse,
   PreferredLanguages,
   CauseItem,
   CauseEntry,
@@ -1595,6 +1733,10 @@ export type {
   PublicationResponse,
   VacancyCancelDialogProps,
   VacancyDeleteDialogProps,
+  VacancyEditCancelDialogProps,
+  VacancyDetailJobRequirementData,
+  VacancyDetailPatentEntry,
+  VacancyDetailData,
   VacancyTableColumn,
   VacancyQueryParams,
   VacanciesPaginatedData,

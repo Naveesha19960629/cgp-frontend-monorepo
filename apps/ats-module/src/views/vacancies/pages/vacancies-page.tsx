@@ -39,7 +39,7 @@ export default function VacanciesPage() {
 
   const queryParams: VacancyQueryParams = useMemo(
     () => ({
-      page: params.page,
+      page: params.page - 1,
       size: params.size,
       ...(params.sortBy && { sortBy: params.sortBy }),
       ...(params.sortBy && { sortOrder: params.sortOrder ?? 'asc' }),
@@ -51,12 +51,13 @@ export default function VacanciesPage() {
     [params]
   );
 
-  const { data: vacanciesResponse, isLoading } = useVacanciesQuery(
-    queryParams,
-    {
-      enabled: initialized && !!keycloak.authenticated,
-    }
-  );
+  const {
+    data: vacanciesResponse,
+    isLoading,
+    isFetching,
+  } = useVacanciesQuery(queryParams, {
+    enabled: initialized && !!keycloak.authenticated,
+  });
 
   const data = vacanciesResponse?.data?.content ?? [];
   const totalPages = vacanciesResponse?.data?.totalPages ?? 0;
@@ -73,7 +74,7 @@ export default function VacanciesPage() {
 
     if (wasHere) {
       void setParams({
-        page: 0,
+        page: 1,
         size: TABLE_PAGE_SIZE,
         sortBy: '',
         sortOrder: null,
@@ -96,13 +97,13 @@ export default function VacanciesPage() {
     (columnKey: string) => {
       if (params.sortBy !== columnKey) {
         // New column: start ascending
-        void setParams({ sortBy: columnKey, sortOrder: 'asc', page: 0 });
+        void setParams({ sortBy: columnKey, sortOrder: 'asc', page: 1 });
       } else if (params.sortOrder === 'asc') {
         // Same column, ascending → descending
-        void setParams({ sortOrder: 'desc', page: 0 });
+        void setParams({ sortOrder: 'desc', page: 1 });
       } else {
         // Same column, descending → clear sort (back to backend default: most recently created)
-        void setParams({ sortBy: '', sortOrder: null, page: 0 });
+        void setParams({ sortBy: '', sortOrder: null, page: 1 });
       }
     },
     [params.sortBy, params.sortOrder, setParams]
@@ -174,19 +175,19 @@ export default function VacanciesPage() {
                 <VacancyFilteringSection
                   search={params.search}
                   onSearchChange={value =>
-                    void setParams({ search: value, page: 0 })
+                    void setParams({ search: value, page: 1 })
                   }
                   careerPathFilter={params.careerPath}
                   onCareerPathChange={value =>
-                    void setParams({ careerPath: value, page: 0 })
+                    void setParams({ careerPath: value, page: 1 })
                   }
                   disciplineFilter={params.discipline}
                   onDisciplineChange={value =>
-                    void setParams({ discipline: value, page: 0 })
+                    void setParams({ discipline: value, page: 1 })
                   }
                   statusFilter={params.status}
                   onStatusChange={value =>
-                    void setParams({ status: value, page: 0 })
+                    void setParams({ status: value, page: 1 })
                   }
                 />
               )}
@@ -216,7 +217,7 @@ export default function VacanciesPage() {
           ) : (
             <VacancyDataTable
               table={table}
-              isLoading={false}
+              isLoading={isFetching}
               onRowClick={row =>
                 void navigate(`/dashboard/ats/vacancies/${row.vacancyId}/view`)
               }
@@ -225,9 +226,9 @@ export default function VacanciesPage() {
         </div>
         {!isLoading && data.length > 0 && (
           <VacancyTablePagination
-            currentPage={params.page}
+            currentPage={params.page - 1}
             totalPages={totalPages}
-            onPageChange={page => void setParams({ page })}
+            onPageChange={page => void setParams({ page: page + 1 })}
           />
         )}
       </section>

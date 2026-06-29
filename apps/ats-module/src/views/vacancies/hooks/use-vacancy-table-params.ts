@@ -9,7 +9,7 @@ const sortOrderOptions = ['asc', 'desc'] as const;
 
 const useVacancyTableParams = () =>
   useQueryStates({
-    page: parseAsInteger.withDefault(0),
+    page: parseAsInteger.withDefault(1),
     size: parseAsInteger.withDefault(12),
     sortBy: parseAsString.withDefault(''),
     sortOrder: parseAsStringLiteral(sortOrderOptions),
