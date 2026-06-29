@@ -176,7 +176,7 @@ function mapPatents(form: VacancyForm): PatentGroupApiPayload[] {
       isEnabled: form.patents.isEnabled,
       dataTakenFromCandidate: form.patents.dataTakenFromCandidate,
       content: form.patents.patents.map(p => ({
-        status: p.statuses[0]?.value,
+        statuses: p.statuses.map(s => s.value),
         fromDate: formatOptionalDate(p.fromDate),
         toDate: formatOptionalDate(p.toDate),
         relatedIndustry: p.relatedIndustries.map(i => ({
@@ -662,7 +662,10 @@ function toVacancyPayload(
       causes: mapPreferredCauses(form),
       hobbyList: mapPreferredHobbies(form),
       industry: mapIndustry(form),
-      schedule: form.schedule ?? { schedulePublishAt: '', expirationAt: '' },
+      schedule: {
+        schedulePublishAt: form.schedule?.schedulePublishAt || null,
+        expirationAt: form.schedule?.expirationAt || null,
+      },
       customizedForm: mapCustomizedForm(form),
       projects: mapProjects(form),
       publications: mapPublications(form),

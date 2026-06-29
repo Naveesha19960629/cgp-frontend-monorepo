@@ -27,7 +27,6 @@ import { startOfToday } from 'date-fns';
 export default function ScheduleVacancyStep({
   onBack,
   onSubmit,
-  mode = 'create',
 }: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
   const { id } = useParams<'id'>();
@@ -220,9 +219,7 @@ export default function ScheduleVacancyStep({
         <h2 className="text-xl font-bold tracking-tight text-slate-900">
           {t('scheduleVacancy.title')}
         </h2>
-        {mode === 'edit' && form.status ? (
-          <VacancyStatusBadge status={form.status} />
-        ) : null}
+        {form.status ? <VacancyStatusBadge status={form.status} /> : null}
       </div>
 
       {/* ── Body ────────────────────────────────────────────────────── */}
@@ -299,7 +296,7 @@ export default function ScheduleVacancyStep({
                       onDateChange={dateField.onChange}
                       timeValue={timeField.value}
                       onTimeChange={timeField.onChange}
-                      timeLabel="Expiration Time"
+                      timeLabel={t('scheduleVacancy.expirationTimeLabel')}
                       dateButtonPlaceholder={t(
                         'scheduleVacancy.expirationDatePlaceholder'
                       )}

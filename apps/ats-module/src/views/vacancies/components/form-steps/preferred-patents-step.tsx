@@ -8,7 +8,7 @@ import { useTranslation } from 'react-i18next';
 
 import { getApiErrorMessage } from '@/app/utils/api-error';
 import MessageBox from '@/components/message-box';
-import { StepDisableDialog } from '@/views/vacancies';
+import { StepDisableDialog, VacancyStatusBadge } from '@/views/vacancies';
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import {
   useCreateIndustryMutation,
@@ -84,7 +84,6 @@ function PatentCard({
     useIndustriesQuery(industriesSearch);
   const industriesData = industriesResponse?.data?.items?.content ?? [];
 
-  const isOpen = form.watch(`patents.${index}.isOpen`);
   const isEnabled = form.watch('isEnabled');
 
   const STATUS_OPTIONS: Option[] = [
@@ -120,19 +119,11 @@ function PatentCard({
             <CollapsibleTrigger asChild>
               <button
                 type="button"
-                className="text-slate-400 transition-colors hover:text-slate-600"
-                aria-label={
-                  isOpen
-                    ? t('preferredPatents.collapse')
-                    : t('preferredPatents.expand')
-                }
+                disabled
+                className="text-slate-400"
+                aria-label={t('preferredPatents.expand')}
               >
-                <ChevronUp
-                  className={cn(
-                    'size-5 transition-transform',
-                    !isOpen && 'rotate-180'
-                  )}
-                />
+                <ChevronUp className="size-5 rotate-180" />
               </button>
             </CollapsibleTrigger>
           </div>
@@ -376,9 +367,16 @@ function PatentCard({
                               );
                             }
                           }}
-                          disabled={date =>
-                            date > new Date() || date < HUNDRED_YEARS_AGO
-                          }
+                          disabled={date => {
+                            const toDate = form.getValues(
+                              `patents.${index}.toDate`
+                            );
+                            return (
+                              date > new Date() ||
+                              date < HUNDRED_YEARS_AGO ||
+                              (toDate != null && date > toDate)
+                            );
+                          }}
                           captionLayout="dropdown"
                           startMonth={HUNDRED_YEARS_AGO}
                           endMonth={new Date()}
@@ -505,8 +503,8 @@ export default function PreferredPatentsStep({ onNext, onBack }: StepProps) {
     !dataTakenFromCandidate &&
     !patentEntries.some(
       p =>
-        p.relatedIndustries.length > 0 ||
-        p.statuses.length > 0 ||
+        (p.relatedIndustries?.length ?? 0) > 0 ||
+        (p.statuses?.length ?? 0) > 0 ||
         p.fromDate != null ||
         p.toDate != null
     );
@@ -719,6 +717,10 @@ export default function PreferredPatentsStep({ onNext, onBack }: StepProps) {
               <h2 className="text-xl font-bold tracking-tight text-slate-900">
                 {t('preferredPatents.title')}
               </h2>
+              <VacancyStatusBadge
+                status={contextForm.status}
+                applicantCount={contextForm.applicantCount}
+              />
             </div>
 
             {/* Toggle switch */}

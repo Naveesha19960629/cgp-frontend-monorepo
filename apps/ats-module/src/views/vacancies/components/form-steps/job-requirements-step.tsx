@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 
 import { getApiErrorMessage } from '@/app/utils/api-error';
 import MessageBox from '@/components/message-box';
-import VacancyStatusBadge from '@/views/vacancies/components/vacancy-status-badge';
+import { VacancyStatusBadge } from '@/views/vacancies/components';
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import {
   useAddCareerPathMutation,
@@ -67,12 +67,9 @@ const multiSelectInfoAvatar = new URL(
   import.meta.url
 ).href;
 
-export default function JobRequirementsStep({
-  onNext,
-  mode = 'create',
-}: Readonly<StepProps>) {
+export default function JobRequirementsStep({ onNext }: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
-  const { onCancel, form: vacancyForm, stepDraftSaveRef } = useVacancyForm();
+  const { form: contextForm, onCancel, stepDraftSaveRef } = useVacancyForm();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -372,9 +369,10 @@ export default function JobRequirementsStep({
               <h2 className="text-xl font-bold tracking-tight text-slate-900">
                 {t('jobRequirements.sectionTitle')}
               </h2>
-              {mode === 'edit' && vacancyForm.status ? (
-                <VacancyStatusBadge status={vacancyForm.status} />
-              ) : null}
+              <VacancyStatusBadge
+                status={contextForm.status}
+                applicantCount={contextForm.applicantCount}
+              />
             </div>
           </div>
 

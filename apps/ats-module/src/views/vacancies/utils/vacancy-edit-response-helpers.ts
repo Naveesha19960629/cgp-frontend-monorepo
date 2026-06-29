@@ -2,9 +2,13 @@ import type {
   AddOrSelectOption,
   JobRequirement,
   LicenseCertRef,
+  PatentStatus,
+  ScheduleVacancy,
   SkillCareerPathEntry,
   VacancyForm,
+  preferredPatentsSchema,
 } from '@/views/vacancies/types';
+import { parseLocalDate } from '@/views/vacancies/utils/date-timezone-safe';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
@@ -901,38 +905,6 @@ function normalizePreferredVolunteeringSection(
   };
 }
 
-function normalizePreferredIndustriesSection(
-  rawSection: unknown,
-  fallback: VacancyForm['preferredIndustries']
-): VacancyForm['preferredIndustries'] {
-  if (Array.isArray(rawSection)) {
-    return {
-      isEnabled: fallback?.isEnabled ?? true,
-      dataTakenFromCandidate: fallback?.dataTakenFromCandidate ?? false,
-      industries: normalizeIndustryEntries(rawSection),
-    };
-  }
-
-  if (!isRecord(rawSection)) {
-    return fallback;
-  }
-
-  const contentEntries = normalizeIndustryEntries(rawSection.content);
-  const formEntries = normalizeIndustryEntries(rawSection.industries);
-
-  return {
-    isEnabled:
-      typeof rawSection.isEnabled === 'boolean'
-        ? rawSection.isEnabled
-        : (fallback?.isEnabled ?? false),
-    dataTakenFromCandidate:
-      typeof rawSection.dataTakenFromCandidate === 'boolean'
-        ? rawSection.dataTakenFromCandidate
-        : (fallback?.dataTakenFromCandidate ?? false),
-    industries: contentEntries.length > 0 ? contentEntries : formEntries,
-  };
-}
-
 function normalizeSkillEntry(raw: unknown): SkillCareerPathEntry | null {
   if (!isRecord(raw)) {
     return null;
@@ -997,6 +969,102 @@ function normalizePreferredSkillsSection(
         ? rawSection.dataTakenFromCandidate
         : (fallback?.dataTakenFromCandidate ?? false),
     skills,
+  };
+}
+
+function normalizePreferredIndustriesSection(
+  rawSection: unknown,
+  fallback: VacancyForm['preferredIndustries']
+): VacancyForm['preferredIndustries'] {
+  if (Array.isArray(rawSection)) {
+    return {
+      isEnabled: fallback?.isEnabled ?? true,
+      dataTakenFromCandidate: fallback?.dataTakenFromCandidate ?? false,
+      industries: normalizeIndustryEntries(rawSection),
+    };
+  }
+
+  if (!isRecord(rawSection)) {
+    return fallback;
+  }
+
+  const contentEntries = normalizeIndustryEntries(rawSection.content);
+  const formEntries = normalizeIndustryEntries(rawSection.industries);
+
+  return {
+    isEnabled:
+      typeof rawSection.isEnabled === 'boolean'
+        ? rawSection.isEnabled
+        : (fallback?.isEnabled ?? false),
+    dataTakenFromCandidate:
+      typeof rawSection.dataTakenFromCandidate === 'boolean'
+        ? rawSection.dataTakenFromCandidate
+        : (fallback?.dataTakenFromCandidate ?? false),
+    industries: contentEntries.length > 0 ? contentEntries : formEntries,
+  };
+}
+
+const PATENT_STATUS_LABEL_MAP: Record<PatentStatus, string> = {
+  PATENT_PENDING: 'Patent Pending',
+  PATENT_ISSUED: 'Patent Issued',
+};
+
+function normalizePatentsSection(
+  rawSection: unknown,
+  fallback: VacancyForm['patents']
+): preferredPatentsSchema {
+  const fallbackValue: preferredPatentsSchema = fallback ?? {
+    isEnabled: false,
+    dataTakenFromCandidate: false,
+    patents: [],
+  };
+
+  if (!isRecord(rawSection)) {
+    return fallbackValue;
+  }
+
+  const entries = Array.isArray(rawSection.patents) ? rawSection.patents : [];
+
+  return {
+    isEnabled:
+      typeof rawSection.isEnabled === 'boolean'
+        ? rawSection.isEnabled
+        : fallbackValue.isEnabled,
+    dataTakenFromCandidate:
+      typeof rawSection.dataTakenFromCandidate === 'boolean'
+        ? rawSection.dataTakenFromCandidate
+        : fallbackValue.dataTakenFromCandidate,
+    patents: entries.filter(isRecord).map(item => {
+      const apiStatuses = Array.isArray(item.statuses) ? item.statuses : [];
+      const apiIndustries = Array.isArray(item.relatedIndustry)
+        ? item.relatedIndustry
+        : [];
+
+      return {
+        relatedIndustries: apiIndustries.filter(isRecord).map(ind => ({
+          value: toSafeString(ind.id),
+          label:
+            toSafeString(ind.label) ||
+            toSafeString(ind.displayValue) ||
+            toSafeString(ind.id),
+          source: toSafeString(ind.source) || 'MASTER',
+        })),
+        statuses: apiStatuses
+          .filter(
+            (s): s is PatentStatus =>
+              s === 'PATENT_PENDING' || s === 'PATENT_ISSUED'
+          )
+          .map(s => ({
+            value: s,
+            label: PATENT_STATUS_LABEL_MAP[s],
+          })),
+        fromDate:
+          parseLocalDate(toSafeString(item.fromDate) || undefined) ?? undefined,
+        toDate:
+          parseLocalDate(toSafeString(item.toDate) || undefined) ?? undefined,
+        isOpen: true,
+      };
+    }),
   };
 }
 
@@ -1113,6 +1181,14 @@ function normalizeVacancyStatus(
   return mapped;
 }
 
+function normalizeSchedule(raw: unknown): ScheduleVacancy | undefined {
+  if (!isRecord(raw)) return undefined;
+  const publishAt = toSafeString(raw.schedulePublishAt);
+  const expirationAt = toSafeString(raw.expirationAt);
+  if (!publishAt || !expirationAt) return undefined;
+  return { schedulePublishAt: publishAt, expirationAt };
+}
+
 function toVacancyFormFromResponse(
   rawVacancy: Record<string, unknown>,
   previousForm: VacancyForm
@@ -1163,6 +1239,13 @@ function toVacancyFormFromResponse(
     sectionSource,
     ['preferredVolunteering', 'volunteering']
   );
+  const patentsSection = readSectionValue(rawVacancy, sectionSource, [
+    'patents',
+  ]);
+  const scheduleSection = readSectionValue(rawVacancy, sectionSource, [
+    'schedule',
+    'scheduleRequirement',
+  ]);
   const preferredSkillsSection = readSectionValue(rawVacancy, sectionSource, [
     'preferredSkills',
     'skills',
@@ -1252,6 +1335,8 @@ function toVacancyFormFromResponse(
       preferredIndustriesSection,
       previousForm.preferredIndustries
     ),
+    patents: normalizePatentsSection(patentsSection, previousForm.patents),
+    schedule: normalizeSchedule(scheduleSection) ?? previousForm.schedule,
     preferredSkills: normalizePreferredSkillsSection(
       preferredSkillsSection,
       previousForm.preferredSkills

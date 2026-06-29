@@ -297,3 +297,130 @@ describe('toCreateVacancyPayload', () => {
     });
   });
 });
+
+describe('toCreateVacancyPayload — patents statuses array', () => {
+  it('maps multiple patent statuses to a statuses array', () => {
+    const payload = toCreateVacancyPayload(
+      buildBaseForm({
+        patents: {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          patents: [
+            {
+              statuses: [
+                { value: 'PATENT_PENDING', label: 'Patent Pending' },
+                { value: 'PATENT_ISSUED', label: 'Patent Issued' },
+              ],
+              relatedIndustries: [],
+              fromDate: undefined,
+              toDate: undefined,
+              isOpen: true,
+            },
+          ],
+        },
+      })
+    );
+
+    expect(payload.data.patents[0].content[0].statuses).toEqual([
+      'PATENT_PENDING',
+      'PATENT_ISSUED',
+    ]);
+    expect(payload.data.patents[0].content[0]).not.toHaveProperty('status');
+  });
+
+  it('maps a single patent status to a one-element statuses array', () => {
+    const payload = toCreateVacancyPayload(
+      buildBaseForm({
+        patents: {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          patents: [
+            {
+              statuses: [{ value: 'PATENT_PENDING', label: 'Patent Pending' }],
+              relatedIndustries: [],
+              fromDate: undefined,
+              toDate: undefined,
+              isOpen: true,
+            },
+          ],
+        },
+      })
+    );
+
+    expect(payload.data.patents[0].content[0].statuses).toEqual([
+      'PATENT_PENDING',
+    ]);
+  });
+
+  it('maps empty statuses to an empty array', () => {
+    const payload = toCreateVacancyPayload(
+      buildBaseForm({
+        patents: {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          patents: [
+            {
+              statuses: [],
+              relatedIndustries: [],
+              fromDate: undefined,
+              toDate: undefined,
+              isOpen: true,
+            },
+          ],
+        },
+      })
+    );
+
+    expect(payload.data.patents[0].content[0].statuses).toEqual([]);
+  });
+
+  it('returns default empty patents group when form has no patents', () => {
+    const payload = toCreateVacancyPayload(buildBaseForm());
+
+    expect(payload.data.patents).toEqual([
+      { isEnabled: false, dataTakenFromCandidate: false, content: [] },
+    ]);
+  });
+});
+
+describe('toCreateVacancyPayload — schedule null values', () => {
+  it('outputs null for both schedule fields when schedule is undefined', () => {
+    const payload = toCreateVacancyPayload(
+      buildBaseForm({ schedule: undefined })
+    );
+
+    expect(payload.data.schedule).toEqual({
+      schedulePublishAt: null,
+      expirationAt: null,
+    });
+  });
+
+  it('outputs null for empty string schedule fields', () => {
+    const payload = toCreateVacancyPayload(
+      buildBaseForm({
+        schedule: { schedulePublishAt: '', expirationAt: '' },
+      })
+    );
+
+    expect(payload.data.schedule).toEqual({
+      schedulePublishAt: null,
+      expirationAt: null,
+    });
+  });
+
+  it('passes through non-empty schedule values', () => {
+    const payload = toCreateVacancyPayload(
+      buildBaseForm({
+        schedule: {
+          schedulePublishAt: '2024-06-01T10:00:00',
+          expirationAt: '2024-12-31T23:59:59',
+        },
+      })
+    );
+
+    expect(payload.data.schedule).toEqual({
+      schedulePublishAt: '2024-06-01T10:00:00',
+      expirationAt: '2024-12-31T23:59:59',
+    });
+  });
+});

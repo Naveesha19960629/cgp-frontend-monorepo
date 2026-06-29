@@ -56,6 +56,8 @@ const mockOnCancel = vi.hoisted(() => vi.fn());
 const mockUseVacancyForm = vi.hoisted(() =>
   vi.fn(() => ({
     form: {
+      status: 'draft',
+      applicantCount: 0,
       jobRequirements: [
         {
           isEnabled: true,
@@ -160,11 +162,16 @@ vi.mock('@/views/vacancies/hooks', async () => {
   };
 });
 
-vi.mock('@/views/vacancies/utils', () => ({
-  resolveUserCreatedOptions: vi.fn((options: unknown[]) =>
-    Promise.resolve(options)
-  ),
-}));
+vi.mock('@/views/vacancies/utils', async importOriginal => {
+  const actual =
+    await importOriginal<typeof import('@/views/vacancies/utils')>();
+  return {
+    ...actual,
+    resolveUserCreatedOptions: vi.fn((options: unknown[]) =>
+      Promise.resolve(options)
+    ),
+  };
+});
 
 vi.mock('@/app/utils/api-error', () => ({
   getApiErrorMessage: vi.fn(() => 'Error'),

@@ -10,11 +10,13 @@ import {
   VacancyFormProvider,
   useVacancyForm,
 } from '@/views/vacancies/context/vacancy-form-context';
+import type { VacancyForm } from '@/views/vacancies/types';
 
 // ── Hoisted mocks ─────────────────────────────────────────────────────────────
 
 const mockNavigate = vi.hoisted(() => vi.fn());
 const mockCreateVacancy = vi.hoisted(() => vi.fn());
+const mockUpdateDraftVacancy = vi.hoisted(() => vi.fn());
 const mockSuccessToast = vi.hoisted(() => vi.fn());
 const mockErrorToast = vi.hoisted(() => vi.fn());
 const mockToCreateVacancyPayload = vi.hoisted(() =>
@@ -40,6 +42,8 @@ vi.mock('@/views/vacancies/services', () => ({
   vacancyService: {
     createVacancy: (...args: unknown[]) =>
       mockCreateVacancy(...args) as Promise<void>,
+    updateDraftVacancy: (...args: unknown[]) =>
+      mockUpdateDraftVacancy(...args) as Promise<void>,
   },
 }));
 
@@ -96,6 +100,22 @@ function Wrapper({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={makeQueryClient()}>
       <VacancyFormProvider>{children}</VacancyFormProvider>
+    </QueryClientProvider>
+  );
+}
+
+function WrapperWithId({
+  children,
+  vacancyId,
+}: {
+  children: React.ReactNode;
+  vacancyId: string;
+}) {
+  return (
+    <QueryClientProvider client={makeQueryClient()}>
+      <VacancyFormProvider vacancyId={vacancyId}>
+        {children}
+      </VacancyFormProvider>
     </QueryClientProvider>
   );
 }
@@ -470,5 +490,334 @@ describe('vacancy-form-context', () => {
         expect(screen.getByTestId('is-saving')).toHaveTextContent('false');
       });
     });
+  });
+});
+
+// ── lockCancelDialog ──────────────────────────────────────────────────────────
+
+describe('lockCancelDialog', () => {
+  function LockCancelConsumer() {
+    const { lockCancelDialog, onCancel, showCancelDialog } = useVacancyForm();
+
+    return (
+      <div>
+        <p data-testid="show-dialog">{String(showCancelDialog)}</p>
+        <button onClick={lockCancelDialog} type="button">
+          Lock
+        </button>
+        <button onClick={onCancel} type="button">
+          Cancel
+        </button>
+      </div>
+    );
+  }
+
+  it('prevents the cancel dialog from opening after lockCancelDialog is called', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <Wrapper>
+        <LockCancelConsumer />
+      </Wrapper>
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Lock' }));
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+
+    expect(screen.getByTestId('show-dialog')).toHaveTextContent('false');
+  });
+
+  it('opens the cancel dialog normally without a lock', async () => {
+    const user = userEvent.setup();
+
+    function CancelOnlyConsumer() {
+      const { onCancel, showCancelDialog } = useVacancyForm();
+      return (
+        <div>
+          <p data-testid="show-dialog">{String(showCancelDialog)}</p>
+          <button onClick={onCancel} type="button">
+            Cancel
+          </button>
+        </div>
+      );
+    }
+
+    render(
+      <Wrapper>
+        <CancelOnlyConsumer />
+      </Wrapper>
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+
+    expect(screen.getByTestId('show-dialog')).toHaveTextContent('true');
+  });
+});
+
+// ── setIsInitialStep ──────────────────────────────────────────────────────────
+
+describe('setIsInitialStep', () => {
+  function InitStepConsumer() {
+    const { isInitialStep, setIsInitialStep } = useVacancyForm();
+
+    return (
+      <div>
+        <p>is-initial-step: {String(isInitialStep)}</p>
+        <button onClick={() => setIsInitialStep(false)} type="button">
+          Set False
+        </button>
+        <button onClick={() => setIsInitialStep(true)} type="button">
+          Set True
+        </button>
+      </div>
+    );
+  }
+
+  it('sets isInitialStep to false', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <Wrapper>
+        <InitStepConsumer />
+      </Wrapper>
+    );
+
+    expect(screen.getByText('is-initial-step: true')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Set False' }));
+
+    expect(screen.getByText('is-initial-step: false')).toBeInTheDocument();
+  });
+
+  it('sets isInitialStep back to true', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <Wrapper>
+        <InitStepConsumer />
+      </Wrapper>
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Set False' }));
+    expect(screen.getByText('is-initial-step: false')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Set True' }));
+    expect(screen.getByText('is-initial-step: true')).toBeInTheDocument();
+  });
+});
+
+// ── initCompletedStepsFromForm ────────────────────────────────────────────────
+
+describe('initCompletedStepsFromForm', () => {
+  const FORM_TWO_ENABLED = {
+    jobRequirements: [{ isEnabled: true }],
+    profileRequirements: { isEnabled: true },
+    secondaryEducation: [{ isEnabled: false }],
+    tertiaryEducation: [{ isEnabled: false }],
+    projectsRequirements: { isEnabled: false },
+    preferredPublications: { isEnabled: false },
+    preferredClubSocieties: { isEnabled: false },
+    preferredSports: { isEnabled: false },
+    preferredVolunteering: { isEnabled: false },
+    patents: { isEnabled: false },
+    preferredHonoursAwards: { isEnabled: false },
+    licenseCertificates: [{ isEnabled: false }],
+    preferredSkills: { isEnabled: false },
+    preferredLanguages: { isEnabled: false },
+    preferredCauses: { isEnabled: false },
+    preferredHobbies: { isEnabled: false },
+    preferredIndustries: { isEnabled: false },
+    customizableForm: { isEnabled: false },
+    schedule: undefined,
+  } as unknown as VacancyForm;
+
+  const FORM_SCHEDULE_ENABLED = {
+    ...FORM_TWO_ENABLED,
+    schedule: { schedulePublishAt: '2024-01-01', expirationAt: '2024-12-31' },
+  } as unknown as VacancyForm;
+
+  function InitCompletedConsumer({ loadedForm }: { loadedForm: VacancyForm }) {
+    const { completedSteps, initCompletedStepsFromForm } = useVacancyForm();
+
+    return (
+      <div>
+        <p>completed-count: {completedSteps.size}</p>
+        <button
+          onClick={() => initCompletedStepsFromForm(loadedForm)}
+          type="button"
+        >
+          Init
+        </button>
+      </div>
+    );
+  }
+
+  it('marks steps as completed based on loaded form enabled state', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <Wrapper>
+        <InitCompletedConsumer loadedForm={FORM_TWO_ENABLED} />
+      </Wrapper>
+    );
+
+    expect(screen.getByText('completed-count: 0')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Init' }));
+
+    expect(screen.getByText('completed-count: 2')).toBeInTheDocument();
+  });
+
+  it('marks schedule step as completed when schedule is defined', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <Wrapper>
+        <InitCompletedConsumer loadedForm={FORM_SCHEDULE_ENABLED} />
+      </Wrapper>
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Init' }));
+
+    expect(screen.getByText('completed-count: 3')).toBeInTheDocument();
+  });
+
+  it('results in zero completed steps when no steps are enabled', async () => {
+    const user = userEvent.setup();
+
+    const emptyForm = {
+      jobRequirements: [],
+      profileRequirements: { isEnabled: false },
+      secondaryEducation: [],
+      tertiaryEducation: [],
+      projectsRequirements: { isEnabled: false },
+      preferredPublications: { isEnabled: false },
+      preferredClubSocieties: { isEnabled: false },
+      preferredSports: { isEnabled: false },
+      preferredVolunteering: { isEnabled: false },
+      patents: { isEnabled: false },
+      preferredHonoursAwards: { isEnabled: false },
+      licenseCertificates: [],
+      preferredSkills: { isEnabled: false },
+      preferredLanguages: { isEnabled: false },
+      preferredCauses: { isEnabled: false },
+      preferredHobbies: { isEnabled: false },
+      preferredIndustries: { isEnabled: false },
+      customizableForm: { isEnabled: false },
+      schedule: undefined,
+    } as unknown as VacancyForm;
+
+    render(
+      <Wrapper>
+        <InitCompletedConsumer loadedForm={emptyForm} />
+      </Wrapper>
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Init' }));
+
+    expect(screen.getByText('completed-count: 0')).toBeInTheDocument();
+  });
+});
+
+// ── vacancyId prop: OnSaveAsDraft routes to updateDraftVacancy ────────────────
+
+describe('OnSaveAsDraft with vacancyId', () => {
+  function DraftConsumerWithId() {
+    const { OnSaveAsDraft, isSavingDraft } = useVacancyForm();
+
+    return (
+      <div>
+        <p data-testid="is-saving">{String(isSavingDraft)}</p>
+        <button onClick={OnSaveAsDraft} type="button">
+          Save Draft
+        </button>
+      </div>
+    );
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockUpdateDraftVacancy.mockResolvedValue(undefined);
+  });
+
+  it('calls updateDraftVacancy instead of createVacancy when vacancyId is provided', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <WrapperWithId vacancyId="vacancy-123">
+        <DraftConsumerWithId />
+      </WrapperWithId>
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Save Draft' }));
+
+    await waitFor(() => {
+      expect(mockUpdateDraftVacancy).toHaveBeenCalledTimes(1);
+    });
+
+    expect(mockCreateVacancy).not.toHaveBeenCalled();
+  });
+
+  it('calls updateDraftVacancy with the correct vacancyId and DRAFT status', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <WrapperWithId vacancyId="vacancy-abc">
+        <DraftConsumerWithId />
+      </WrapperWithId>
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Save Draft' }));
+
+    await waitFor(() => {
+      expect(mockToCreateVacancyPayload).toHaveBeenCalledWith(
+        expect.any(Object),
+        'DRAFT'
+      );
+    });
+  });
+
+  it('shows SuccessToast and navigates after updateDraftVacancy succeeds', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <WrapperWithId vacancyId="vacancy-123">
+        <DraftConsumerWithId />
+      </WrapperWithId>
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Save Draft' }));
+
+    await waitFor(() => {
+      expect(mockSuccessToast).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: 'vacancyCancelDialog.notifications.saveAsDraft.title',
+        })
+      );
+      expect(mockNavigate).toHaveBeenCalledWith('/dashboard/ats/vacancies');
+    });
+  });
+
+  it('shows ErrorToast when updateDraftVacancy rejects', async () => {
+    const user = userEvent.setup();
+    mockUpdateDraftVacancy.mockRejectedValueOnce(new Error('Update failed'));
+
+    render(
+      <WrapperWithId vacancyId="vacancy-123">
+        <DraftConsumerWithId />
+      </WrapperWithId>
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Save Draft' }));
+
+    await waitFor(() => {
+      expect(mockErrorToast).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: 'vacancyCancelDialog.notifications.saveAsDraft.errorTitle',
+        })
+      );
+    });
+
+    expect(mockNavigate).not.toHaveBeenCalled();
   });
 });

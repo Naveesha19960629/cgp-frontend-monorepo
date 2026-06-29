@@ -11,6 +11,7 @@ vi.mock('react-i18next', () => ({
 
 vi.mock('react-router-dom', () => ({
   useNavigate: () => mockNavigate,
+  useLocation: () => ({ state: null, pathname: '/' }),
 }));
 
 describe('VacancyTableAction', () => {
@@ -146,7 +147,8 @@ describe('VacancyTableAction', () => {
     await user.click(screen.getByText('vacancies.table.actions.edit'));
 
     expect(mockNavigate).toHaveBeenCalledWith(
-      '/dashboard/ats/vacancies/test-vacancy-id/edit'
+      '/dashboard/ats/vacancies/test-vacancy-id/edit',
+      { state: { from: '/' } }
     );
   });
 

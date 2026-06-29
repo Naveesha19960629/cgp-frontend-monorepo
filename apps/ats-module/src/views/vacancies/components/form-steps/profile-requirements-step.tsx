@@ -7,8 +7,7 @@ import { type UseFormReturn } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
 import MessageBox from '@/components/message-box';
-import { StepDisableDialog } from '@/views/vacancies';
-import VacancyStatusBadge from '@/views/vacancies/components/vacancy-status-badge';
+import { StepDisableDialog, VacancyStatusBadge } from '@/views/vacancies';
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import {
   useDisableSuccessToast,
@@ -371,11 +370,7 @@ function AddressCard({
   );
 }
 
-export default function ProfileRequirementsStep({
-  onNext,
-  onBack,
-  mode = 'create',
-}: StepProps) {
+export default function ProfileRequirementsStep({ onNext, onBack }: StepProps) {
   const { t } = useTranslation('ats');
   const showDisableToast = useDisableSuccessToast();
 
@@ -388,7 +383,6 @@ export default function ProfileRequirementsStep({
     currentStepIndex,
     removeCompletedStep,
   } = useVacancyForm();
-  const vacancyStatus = contextForm.status;
   const { form, fields, append, remove, replace } = useProfileRequirementsForm(
     contextForm.profileRequirements
   );
@@ -636,9 +630,10 @@ export default function ProfileRequirementsStep({
               <h2 className="text-xl font-bold tracking-tight text-slate-900">
                 {t('profileRequirements.title')}
               </h2>
-              {mode === 'edit' && vacancyStatus ? (
-                <VacancyStatusBadge status={vacancyStatus} />
-              ) : null}
+              <VacancyStatusBadge
+                status={contextForm.status}
+                applicantCount={contextForm.applicantCount}
+              />
             </div>
 
             {/* Toggle switch */}
