@@ -19,14 +19,19 @@ function normalizeLicenseSource(source?: string): 'MASTER' | 'PENDING' {
   return 'MASTER';
 }
 
-function normalizeOrganizationSource(source?: string): 'MASTER' | 'PENDING' {
+function normalizeOrganizationSource(
+  source?: string
+): 'MASTER' | 'PENDING' | 'USER_CREATED' {
   if (source === 'PENDING' || source === 'PENDING_TEMP') {
     return 'PENDING';
   }
 
-  // USER_CREATED entries are pending master data until approved.
+  // Preserve USER_CREATED so unresolved orgs can be detected and re-resolved
+  // after navigation (e.g. Back then Next). Converting to PENDING here would
+  // make them indistinguishable from properly resolved orgs and their
+  // client-generated UUID would be submitted to the API as a real pendingId.
   if (source === 'USER_CREATED') {
-    return 'PENDING';
+    return 'USER_CREATED';
   }
 
   return 'MASTER';

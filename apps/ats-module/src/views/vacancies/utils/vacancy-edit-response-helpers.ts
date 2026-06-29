@@ -380,7 +380,7 @@ function normalizeLicenseRefWithType(raw: unknown): LicenseCertRef | null {
 
   return {
     id,
-    source: source as 'MASTER' | 'PENDING',
+    source: source as 'MASTER' | 'PENDING' | 'USER_CREATED',
     name:
       toSafeString(raw.name) ||
       toSafeString(raw.label) ||
