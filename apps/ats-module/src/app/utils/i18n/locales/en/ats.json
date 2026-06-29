@@ -11,6 +11,7 @@
     "back": "Back",
     "cancel": "Cancel",
     "next": "Next",
+    "save": "Save",
     "submit": "Submit",
     "addEntry": "Add entry",
     "loading": "Searching...",
@@ -114,7 +115,8 @@
   "vacancies": {
     "title": "Vacancies",
     "stepBadge": {
-      "applied": "Applied"
+      "applied": "Applied",
+      "applicants": "Applicants"
     },
     "createVacancyButton": "Create Vacancy",
     "emptyState": {

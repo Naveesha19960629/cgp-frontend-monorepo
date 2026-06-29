@@ -94,6 +94,7 @@ export default function VacancyCreateStepperForm({
     setShowCancelDialog,
     OnSaveAsDraft,
     isSavingDraft,
+    isJobRequirementsFormValid,
   } = useVacancyForm();
 
   const isEditCancelDialog =
@@ -102,7 +103,8 @@ export default function VacancyCreateStepperForm({
     form.status.toLowerCase() !== 'draft';
 
   const currentStepKey = VACANCY_STEPS[currentStepIndex].key;
-  const isStepNavigationEnabled = completedSteps.has(0);
+  const isStepNavigationEnabled =
+    mode === 'edit' ? isJobRequirementsFormValid : completedSteps.has(0);
 
   const [pendingTargetIndex, setPendingTargetIndex] = useState<number | null>(
     null
@@ -143,8 +145,7 @@ export default function VacancyCreateStepperForm({
                 className="flex w-full flex-col items-start justify-start rounded-none border-none bg-transparent p-0"
               >
                 {VACANCY_STEPS.map((step, index) => {
-                  const isDisabled =
-                    mode === 'create' && index > 0 && !isStepNavigationEnabled;
+                  const isDisabled = index > 0 && !isStepNavigationEnabled;
                   return (
                     <div
                       key={step.key}
