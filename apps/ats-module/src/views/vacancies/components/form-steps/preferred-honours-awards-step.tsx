@@ -23,6 +23,7 @@ import type {
   preferredHonoursAwardsSchema,
 } from '@/views/vacancies/types';
 import { resolveUserCreatedOrganizations } from '@/views/vacancies/utils';
+import { DATE_DISPLAY_FORMAT } from '@/views/vacancies/utils/constants';
 
 import { CharacterCount } from '@cgp/ui-kit/components/character-count';
 import { ErrorToast, SuccessToast } from '@cgp/ui-kit/components/custom-toast';
@@ -282,7 +283,7 @@ function HonoursAndAwardsCard({
                           >
                             <span className="mr-2 truncate">
                               {field.value
-                                ? format(field.value, 'do MMM yyyy')
+                                ? format(field.value, DATE_DISPLAY_FORMAT)
                                 : t(
                                     'preferredHonoursAwards.issuedDateFromPlaceholder'
                                   )}
@@ -364,7 +365,7 @@ function HonoursAndAwardsCard({
                           >
                             <span className="mr-2 truncate">
                               {field.value
-                                ? format(field.value, 'do MMM yyyy')
+                                ? format(field.value, DATE_DISPLAY_FORMAT)
                                 : t(
                                     'preferredHonoursAwards.issuedDateToPlaceholder'
                                   )}
