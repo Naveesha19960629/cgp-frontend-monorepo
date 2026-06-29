@@ -258,6 +258,8 @@ interface VacancyFormContextValue {
   stepDraftSaveRef: React.MutableRefObject<
     (() => Promise<Partial<VacancyForm> | null>) | null
   >;
+  isJobRequirementsFormValid: boolean;
+  setIsJobRequirementsFormValid: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const VacancyFormContext = createContext<VacancyFormContextValue | null>(null);
@@ -280,6 +282,9 @@ function VacancyFormProvider({
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [stepGuard, setStepGuard] = useState(false);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
+  const [isJobRequirementsFormValid, setIsJobRequirementsFormValid] = useState(
+    () => Boolean(vacancyId)
+  );
   const stepPersistRef = useRef<(() => void) | null>(null);
   const stepDisableRef = useRef<(() => void) | null>(null);
   const stepDraftSaveRef = useRef<
@@ -466,6 +471,8 @@ function VacancyFormProvider({
         stepPersistRef,
         stepDisableRef,
         stepDraftSaveRef,
+        isJobRequirementsFormValid,
+        setIsJobRequirementsFormValid,
       }}
     >
       {children}

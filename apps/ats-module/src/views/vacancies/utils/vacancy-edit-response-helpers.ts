@@ -1290,6 +1290,10 @@ function toVacancyFormFromResponse(
         ? toSafeString(rawVacancy.title) || previousForm.title
         : normalizedTitle,
     status: normalizeVacancyStatus(rawVacancy.status, previousForm.status),
+    applicantCount:
+      typeof rawVacancy.applicantCount === 'number'
+        ? rawVacancy.applicantCount
+        : previousForm.applicantCount,
     lastActiveStep,
     jobRequirements: normalizeJobRequirementsSection(
       sectionSource,

@@ -895,6 +895,7 @@ interface VacancyDetailData {
   updatedBy: string;
   createdAt: string;
   updatedAt: string;
+  applicantCount: number;
   lastActiveStep: string;
   jobRequirement: VacancyDetailJobRequirementData;
   skills: {
