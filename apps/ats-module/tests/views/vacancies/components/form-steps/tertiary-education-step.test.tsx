@@ -212,8 +212,14 @@ vi.mock('@/views/vacancies/hooks', async importOriginal => {
 
 // ── Mock message box ────────────────────────────────────────────────────────
 
-vi.mock('@/app/components/message-box', () => ({
-  default: ({ title }: { title: string }) => <div>{title}</div>,
+vi.mock('@/components/message-box', () => ({
+  default: ({ fields }: { fields?: string[] }) => (
+    <div data-testid="message-box">
+      {fields?.map(f => (
+        <span key={f}>{f}</span>
+      ))}
+    </div>
+  ),
 }));
 
 // ── Mock AutocompleteCombobox ──────────────────────────────────────────────
@@ -444,6 +450,32 @@ describe('TertiaryEducationStep', () => {
     it('renders the section heading', () => {
       renderStep();
       expect(screen.getByText('tertiaryEducation.title')).toBeInTheDocument();
+    });
+
+    it('renders the info banner with the expected field names', () => {
+      renderStep();
+      expect(
+        screen.getByText('tertiaryEducation.messageBoxFields.qualificationName')
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText('tertiaryEducation.messageBoxFields.awardingBody')
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          'tertiaryEducation.messageBoxFields.awardingBodyLocation'
+        )
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          'tertiaryEducation.messageBoxFields.levelOfQualification'
+        )
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText('tertiaryEducation.messageBoxFields.studyPattern')
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText('tertiaryEducation.messageBoxFields.deliverySchedule')
+      ).toBeInTheDocument();
     });
 
     it('renders vacancy status badge in edit mode when status exists', () => {
@@ -751,6 +783,47 @@ describe('TertiaryEducationStep', () => {
         screen.getByLabelText('tertiaryEducation.collectFromCandidates')
       );
       expect(gradeInput).toHaveValue('');
+    });
+
+    it('clears grade from a pre-populated form state when checked', async () => {
+      stableForm.tertiaryEducation = [
+        {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          content: [
+            {
+              qualificationName: [],
+              tertiaryAwardingBody: [],
+              tertiaryAwardingBodyLocations: [],
+              levelOfQualification: [],
+              specialization: [],
+              studyMode: [],
+              studyPattern: [],
+              deliverySchedule: [],
+              batch: [],
+              department: [],
+              faculty: [],
+              grade: 'GPA 3.8',
+            },
+          ],
+        },
+      ];
+
+      const user = userEvent.setup();
+      renderStep();
+
+      const gradeInput = screen.getByPlaceholderText(
+        'tertiaryEducation.placeholders.grade'
+      );
+      expect(gradeInput).toHaveValue('GPA 3.8');
+
+      await user.click(
+        screen.getByLabelText('tertiaryEducation.collectFromCandidates')
+      );
+
+      await waitFor(() => {
+        expect(gradeInput).toHaveValue('');
+      });
     });
   });
 

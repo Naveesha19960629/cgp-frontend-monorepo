@@ -245,7 +245,7 @@ describe('toLicenseCertificatesPayload — issuingOrganization', () => {
     expect(result[0].content[0].issuingOrganization).toEqual([]);
   });
 
-  it('normalizes USER_CREATED source to PENDING for user-added organizations', () => {
+  it('preserves USER_CREATED source so unresolved orgs can be re-resolved after navigation', () => {
     const result = toLicenseCertificatesPayload({
       isEnabled: true,
       dataTakenFromCandidate: false,
@@ -261,7 +261,36 @@ describe('toLicenseCertificatesPayload — issuingOrganization', () => {
       },
     });
 
+    // USER_CREATED is preserved (not silently promoted to PENDING) so that if
+    // the API call in resolveAndCommitOrganizations fails and the user navigates
+    // back, the org is still detected as unresolved on the next forward pass and
+    // the creation is retried instead of submitting a fake client-side UUID.
+    expect(result[0].content[0].issuingOrganization[0].source).toBe(
+      'USER_CREATED'
+    );
+    expect(result[0].content[0].issuingOrganization[0].id).toBe('user-org-id');
+  });
+
+  it('maps a resolved PENDING org to PENDING (real pendingId preserved)', () => {
+    const result = toLicenseCertificatesPayload({
+      isEnabled: true,
+      dataTakenFromCandidate: false,
+      entry: {
+        ...EMPTY_ENTRY,
+        issuingOrganization: [
+          {
+            value: 'real-pending-id-from-api',
+            label: 'My Company',
+            source: 'PENDING',
+          },
+        ],
+      },
+    });
+
     expect(result[0].content[0].issuingOrganization[0].source).toBe('PENDING');
+    expect(result[0].content[0].issuingOrganization[0].id).toBe(
+      'real-pending-id-from-api'
+    );
   });
 });
 

@@ -1,4 +1,8 @@
-import type { VacancyViewModel } from '@/views/vacancies/types';
+import type {
+  VacancyViewCustomizableFormCard,
+  VacancyViewCustomizableFormQuestion,
+  VacancyViewModel,
+} from '@/views/vacancies/types';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
@@ -525,6 +529,87 @@ function normalizeIndustries(raw: unknown) {
   return { isEnabled, dataTakenFromCandidate, content: toTagList(rawContent) };
 }
 
+const CUSTOMIZABLE_FORM_QUESTION_TYPES = [
+  'SHORT_ANSWER',
+  'PARAGRAPH',
+  'MULTIPLE_CHOICE',
+  'CHECKBOXES',
+  'DROPDOWN',
+  'LINEAR_SCALE',
+] as const;
+
+function normalizeQuestionType(
+  value: unknown
+): VacancyViewCustomizableFormQuestion['type'] {
+  const normalized = toSafeString(value).toUpperCase();
+  return (CUSTOMIZABLE_FORM_QUESTION_TYPES as readonly string[]).includes(
+    normalized
+  )
+    ? (normalized as VacancyViewCustomizableFormQuestion['type'])
+    : '';
+}
+
+function normalizeCustomizableForm(
+  raw: unknown
+): VacancyViewModel['customizableForm'] {
+  const entry: unknown = Array.isArray(raw) ? raw[0] : raw;
+  if (!isRecord(entry)) return undefined;
+
+  const isEnabled =
+    typeof entry.isEnabled === 'boolean' ? entry.isEnabled : false;
+  const sectionTitle = toSafeString(entry.sectionTitle);
+
+  const rawForms = Array.isArray(entry.forms) ? entry.forms : [];
+
+  const forms: VacancyViewCustomizableFormCard[] = rawForms
+    .filter(isRecord)
+    .map(form => {
+      const title = toSafeString(form.title);
+      const rawQuestions = Array.isArray(form.questions) ? form.questions : [];
+
+      const questions: VacancyViewCustomizableFormQuestion[] = rawQuestions
+        .filter(isRecord)
+        .map(question => {
+          const linearScale = isRecord(question.linearScale)
+            ? question.linearScale
+            : {};
+          const rawOptions = Array.isArray(question.options)
+            ? question.options
+            : [];
+
+          return {
+            text: toSafeString(question.questionText ?? question.text),
+            type: normalizeQuestionType(question.questionType ?? question.type),
+            required:
+              typeof question.required === 'boolean'
+                ? question.required
+                : false,
+            options: rawOptions
+              .map(option =>
+                isRecord(option)
+                  ? toSafeString(option.value ?? option.label)
+                  : toSafeString(option)
+              )
+              .filter(Boolean),
+            scaleFrom: toSafeNumber(linearScale.startValue ?? question.from),
+            scaleTo: toSafeNumber(linearScale.endValue ?? question.to),
+            startLabel: toSafeString(
+              linearScale.startLabel ?? question.startLabel
+            ),
+            endLabel: toSafeString(linearScale.endLabel ?? question.endLabel),
+          };
+        });
+
+      return { title, questions };
+    });
+
+  if (!isEnabled && !sectionTitle && forms.length === 0) {
+    return undefined;
+  }
+
+  return { isEnabled, sectionTitle, forms };
+}
+
 function normalizeScheduledVacancy(
   rawVacancy: Record<string, unknown>,
   sectionSource: Record<string, unknown>
@@ -675,6 +760,12 @@ function toVacancyViewModel(
     sectionSource,
     ['preferredIndustries', 'industry', 'industries']
   );
+  const customizableFormSection = readSectionValue(rawVacancy, sectionSource, [
+    'customizedForm',
+    'customizableForm',
+    'customizableForms',
+    'customizedForms',
+  ]);
 
   return {
     title,
@@ -707,6 +798,7 @@ function toVacancyViewModel(
       addresses,
     },
     scheduledVacancy: normalizeScheduledVacancy(rawVacancy, sectionSource),
+    customizableForm: normalizeCustomizableForm(customizableFormSection),
     secondaryEducation: normalizeSecondaryEducation(secondaryEducationSection),
     tertiaryEducation: normalizeTertiaryEducation(tertiaryEducationSection),
     licenseCertificates: normalizeLicenseCertificates(

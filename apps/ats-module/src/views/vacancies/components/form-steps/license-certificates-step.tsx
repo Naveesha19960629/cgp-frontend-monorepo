@@ -110,8 +110,8 @@ export default function LicenseCertificatesStep({
     setValue('entry.issuingOrganization', []);
     setValue('entry.organizationLocations', []);
     setValue('entry.internationallyAccepted', false);
-    setValue('entry.issueDate', undefined);
-    setValue('entry.expirationDate', undefined);
+    setValue('entry.issueDate', '');
+    setValue('entry.expirationDate', '');
   };
 
   const hasEntryData = (): boolean => {
@@ -444,35 +444,37 @@ export default function LicenseCertificatesStep({
           />
         </div>
 
-        <div className="flex flex-col gap-4 px-6">
-          {/* dataTakenFromCandidate */}
-          <div className={cn(!isEnabled && 'pointer-events-none opacity-60')}>
-            <div className="flex items-start gap-2">
-              <Controller
-                control={control}
-                name="dataTakenFromCandidate"
-                render={({ field }) => (
-                  <Checkbox
-                    id="licenseCertDataTakenFromCandidate"
-                    checked={field.value}
-                    onCheckedChange={newValue => {
-                      const checked = newValue === true;
-                      if (checked) clearEntryData();
-                      field.onChange(checked);
-                    }}
-                    className="mt-0.5"
-                  />
-                )}
+        <div
+          className={cn(
+            'flex items-start gap-3 px-7 pb-8',
+            !isEnabled && 'pointer-events-none opacity-60'
+          )}
+        >
+          <Controller
+            control={control}
+            name="dataTakenFromCandidate"
+            render={({ field }) => (
+              <Checkbox
+                id="licenseCertDataTakenFromCandidate"
+                checked={field.value}
+                onCheckedChange={newValue => {
+                  const checked = newValue === true;
+                  if (checked) clearEntryData();
+                  field.onChange(checked);
+                }}
+                className="mt-0.5"
               />
-              <Label
-                htmlFor="licenseCertDataTakenFromCandidate"
-                className="cursor-pointer leading-snug wrap-break-word"
-              >
-                {t('licenseCertificates.collectFromCandidates')}
-              </Label>
-            </div>
-          </div>
+            )}
+          />
+          <Label
+            htmlFor="licenseCertDataTakenFromCandidate"
+            className="cursor-pointer leading-snug wrap-break-word"
+          >
+            {t('licenseCertificates.collectFromCandidates')}
+          </Label>
+        </div>
 
+        <div className="flex flex-col gap-4 px-6">
           {/* ── License and Certificate Card ─────────────────────────────── */}
           <div className="rounded-xl border border-neutral-300 bg-white shadow-[0px_4px_90px_0px_rgba(0,0,0,0.07)]">
             {/* Card header */}
@@ -630,23 +632,7 @@ export default function LicenseCertificatesStep({
                             return;
                           }
 
-                          // Check for case-insensitive duplicates when adding existing organizations
-                          const currentOrganizations = getValues(
-                            'entry.issuingOrganization'
-                          );
-                          const filteredOptions = options.filter(newOrg => {
-                            const normalizedNewLabel = newOrg.label
-                              .trim()
-                              .toLowerCase();
-                            const isDuplicate = currentOrganizations.some(
-                              existing =>
-                                existing.label.trim().toLowerCase() ===
-                                normalizedNewLabel
-                            );
-                            return !isDuplicate;
-                          });
-
-                          field.onChange(filteredOptions);
+                          field.onChange(options);
                         }}
                         maxSelected={MAX_SELECTIONS}
                         onMaxSelected={() => setMax('issuingOrganization')}
@@ -1079,13 +1065,6 @@ export default function LicenseCertificatesStep({
 
             const normalizedNewLabel = option.label.trim().toLowerCase();
             const deduped = baseItems.filter(item => {
-              const isTempItem =
-                item.source === 'PENDING_TEMP' ||
-                item.value.startsWith('__pending_license_cert_');
-              if (isTempItem) {
-                return false;
-              }
-
               const sameLabel =
                 item.label.trim().toLowerCase() === normalizedNewLabel;
               const sameType = (item.certType ?? '') === option.certType;

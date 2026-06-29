@@ -1,3 +1,5 @@
+import { useParams } from 'react-router-dom';
+
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
@@ -7,7 +9,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import ScheduleVacancyStep from '@/views/vacancies/components/form-steps/schedule-vacancy-step';
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
-import { useCreateVacancyMutation } from '@/views/vacancies/hooks';
+import {
+  useCreateVacancyMutation,
+  useUpdateVacancyMutation,
+} from '@/views/vacancies/hooks';
 
 import { ErrorToast, SuccessToast } from '@cgp/ui-kit/components/custom-toast';
 import { CalendarWithTime } from '@cgp/ui-kit/components/ui/calendar-with-time';
@@ -32,6 +37,7 @@ vi.mock('@/views/vacancies/hooks', async importOriginal => {
   return {
     ...actual,
     useCreateVacancyMutation: vi.fn(),
+    useUpdateVacancyMutation: vi.fn(),
   };
 });
 
@@ -75,7 +81,7 @@ vi.mock('react-i18next', () => ({
 }));
 vi.mock('react-router-dom', () => ({
   useNavigate: () => vi.fn(),
-  useParams: () => ({}),
+  useParams: vi.fn(() => ({})),
 }));
 vi.mock('@cgp/ui-kit/components/custom-toast', () => ({
   SuccessToast: vi.fn(),
@@ -100,6 +106,7 @@ describe('ScheduleVacancyStep', () => {
   const mockOnCancel = vi.fn();
   const mockSetForm = vi.fn();
   const mockCreateVacancy = vi.fn();
+  const mockUpdateVacancy = vi.fn();
   const mockStepPersistRef: { current: (() => void) | null } = {
     current: null,
   };
@@ -131,10 +138,17 @@ describe('ScheduleVacancyStep', () => {
     mockStepPersistRef.current = null;
     mockVacancyForm();
 
+    vi.mocked(useParams).mockReturnValue({});
+
     vi.mocked(useCreateVacancyMutation).mockReturnValue({
       mutateAsync: mockCreateVacancy,
       isPending: false,
     } as unknown as ReturnType<typeof useCreateVacancyMutation>);
+
+    vi.mocked(useUpdateVacancyMutation).mockReturnValue({
+      mutateAsync: mockUpdateVacancy,
+      isPending: false,
+    } as unknown as ReturnType<typeof useUpdateVacancyMutation>);
   });
 
   const renderComponent = (overrideProps = {}) =>
@@ -497,7 +511,7 @@ describe('ScheduleVacancyStep', () => {
       ).toHaveValue('2099-12-25');
       expect(
         screen.getByRole('textbox', { name: `time-${PUBLISH_TIME_LABEL}` })
-      ).toHaveValue('10:30:00');
+      ).toHaveValue('10:30:00 AM');
       // Expiration fields should be empty
       expect(
         screen.getByRole('textbox', { name: `date-${EXPIRATION_TIME_LABEL}` })
@@ -521,7 +535,7 @@ describe('ScheduleVacancyStep', () => {
       ).toHaveValue('2099-12-26');
       expect(
         screen.getByRole('textbox', { name: `time-${EXPIRATION_TIME_LABEL}` })
-      ).toHaveValue('14:30:00');
+      ).toHaveValue('02:30:00 PM');
       // Publish fields should be empty
       expect(
         screen.getByRole('textbox', { name: `date-${PUBLISH_TIME_LABEL}` })
@@ -735,6 +749,89 @@ describe('ScheduleVacancyStep', () => {
     it('uses useCreateVacancyMutation for submission', () => {
       renderComponent();
       expect(useCreateVacancyMutation).toHaveBeenCalled();
+    });
+  });
+
+  describe('edit mode and schedule changes', () => {
+    beforeEach(() => {
+      vi.mocked(useParams).mockReturnValue({ id: 'vacancy-123' });
+    });
+
+    it('renders with Update button in edit mode', () => {
+      mockVacancyForm({
+        form: { schedule: undefined, status: 'unpublished' },
+      });
+      renderComponent({ mode: 'edit' as const });
+      expect(getCreateButton()).toHaveTextContent('scheduleVacancy.update');
+    });
+
+    it('pre-fills the form with existing schedule values', async () => {
+      mockVacancyForm({
+        form: {
+          schedule: {
+            schedulePublishAt: '2026-06-25T10:30:00 AM',
+            expirationAt: '2026-07-15T11:59:59 PM',
+          },
+          status: 'unpublished',
+        },
+      });
+
+      renderComponent({ mode: 'edit' as const });
+
+      await waitFor(() => {
+        expect(
+          screen.getByLabelText('date-scheduleVacancy.timeLabel')
+        ).toHaveValue('2026-06-25');
+        expect(
+          screen.getByLabelText('time-scheduleVacancy.timeLabel')
+        ).toHaveValue('10:30:00 AM');
+      });
+    });
+
+    it('allows Update when schedule is unchanged even if it is in the past', async () => {
+      mockVacancyForm({
+        form: {
+          schedule: {
+            schedulePublishAt: '2020-01-01T10:30:00 AM',
+            expirationAt: '2020-01-02T11:59:59 PM',
+          },
+          status: 'unpublished',
+        },
+      });
+
+      renderComponent({ mode: 'edit' as const });
+
+      await waitFor(() => {
+        expect(getCreateButton()).not.toBeDisabled();
+      });
+
+      await userEvent.click(getCreateButton());
+
+      await waitFor(() => {
+        expect(mockUpdateVacancy).toHaveBeenCalled();
+        expect(ErrorToast).not.toHaveBeenCalled();
+      });
+    });
+
+    it('disables Update when schedule is changed to a past date/time', async () => {
+      mockVacancyForm({
+        form: {
+          schedule: {
+            schedulePublishAt: '2099-01-01T10:30:00 AM',
+            expirationAt: '2099-01-02T11:59:59 PM',
+          },
+          status: 'unpublished',
+        },
+      });
+
+      renderComponent({ mode: 'edit' as const });
+
+      // Change publish date/time to a past date (startOfToday mock is 2026-06-08)
+      fillPublish('2020-01-01', '10:00:00 AM');
+
+      await waitFor(() => {
+        expect(getCreateButton()).toBeDisabled();
+      });
     });
   });
 });

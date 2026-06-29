@@ -552,14 +552,12 @@ export default function TertiaryEducationStep({
       {/* -- Informational Banner ------------------------------------------ */}
       <MessageBox
         fields={[
-          t('tertiaryEducation.qualificationName'),
-          t('tertiaryEducation.tertiaryAwardingBody'),
-          t('tertiaryEducation.tertiaryAwardingBodyLocations'),
-          t('tertiaryEducation.levelOfQualification'),
-          t('tertiaryEducation.studyPattern'),
-          t('tertiaryEducation.deliverySchedule'),
-          t('tertiaryEducation.startDate'),
-          t('tertiaryEducation.endDate'),
+          t('tertiaryEducation.messageBoxFields.qualificationName'),
+          t('tertiaryEducation.messageBoxFields.awardingBody'),
+          t('tertiaryEducation.messageBoxFields.awardingBodyLocation'),
+          t('tertiaryEducation.messageBoxFields.levelOfQualification'),
+          t('tertiaryEducation.messageBoxFields.studyPattern'),
+          t('tertiaryEducation.messageBoxFields.deliverySchedule'),
         ]}
       />
 
@@ -601,34 +599,38 @@ export default function TertiaryEducationStep({
         />
       </div>
 
+      <div
+        className={cn(
+          'flex items-start gap-3 px-7 pb-8',
+          !isEnabled && 'pointer-events-none opacity-60'
+        )}
+      >
+        <Controller
+          control={control}
+          name="dataTakenFromCandidate"
+          render={({ field }) => (
+            <Checkbox
+              id="tertiaryDataTakenFromCandidate"
+              checked={field.value}
+              onCheckedChange={newValue => {
+                const checked = newValue === true;
+                if (checked) clearEntryData();
+                field.onChange(checked);
+              }}
+              className="mt-0.5"
+            />
+          )}
+        />
+        <Label
+          htmlFor="tertiaryDataTakenFromCandidate"
+          className="cursor-pointer leading-snug wrap-break-word"
+        >
+          {t('tertiaryEducation.collectFromCandidates')}
+        </Label>
+      </div>
+
       <div className="flex flex-col gap-4 px-6">
         {/* dataTakenFromCandidate � grayed when toggle off */}
-        <div className={cn(!isEnabled && 'pointer-events-none opacity-60')}>
-          <div className="flex items-start gap-2">
-            <Controller
-              control={control}
-              name="dataTakenFromCandidate"
-              render={({ field }) => (
-                <Checkbox
-                  id="tertiaryDataTakenFromCandidate"
-                  checked={field.value}
-                  onCheckedChange={newValue => {
-                    const checked = newValue === true;
-                    if (checked) clearEntryData();
-                    field.onChange(checked);
-                  }}
-                  className="mt-0.5"
-                />
-              )}
-            />
-            <Label
-              htmlFor="tertiaryDataTakenFromCandidate"
-              className="cursor-pointer leading-snug wrap-break-word"
-            >
-              {t('tertiaryEducation.collectFromCandidates')}
-            </Label>
-          </div>
-        </div>
 
         {/* -- Education Card -------------------------------------------- */}
         <div className="rounded-xl border border-neutral-300 bg-white shadow-[0px_4px_90px_0px_rgba(0,0,0,0.07)]">

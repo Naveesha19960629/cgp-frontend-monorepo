@@ -127,16 +127,11 @@ export default function SecondaryEducationStep({
 
   let minEndDate: Date | null = null;
   if (parsedStartDate) {
-    const startPlusOneDay = new Date(
+    minEndDate = new Date(
       parsedStartDate.getFullYear(),
       parsedStartDate.getMonth(),
       parsedStartDate.getDate() + 1
     );
-
-    minEndDate =
-      compareDates(startPlusOneDay, TODAY) > 0 ? startPlusOneDay : TODAY;
-  } else {
-    minEndDate = TODAY;
   }
 
   const clearEntryData = () => {
@@ -146,8 +141,8 @@ export default function SecondaryEducationStep({
     setValue('entries.0.awardingBodies', []);
     setValue('entries.0.fieldsOfStudy', []);
     setValue('entries.0.grade', '');
-    setValue('entries.0.startDate', undefined);
-    setValue('entries.0.endDate', undefined);
+    setValue('entries.0.startDate', '');
+    setValue('entries.0.endDate', '');
     setValue('entries.0.result', '');
     setValue('entries.0.acceptsHomeSchooling', false);
   };
@@ -566,34 +561,38 @@ export default function SecondaryEducationStep({
           />
         </div>
 
+        <div
+          className={cn(
+            'flex items-start gap-3 px-7 pb-8',
+            !isEnabled && 'pointer-events-none opacity-60'
+          )}
+        >
+          <Controller
+            control={control}
+            name="dataTakenFromCandidate"
+            render={({ field }) => (
+              <Checkbox
+                id="dataTakenFromCandidate"
+                checked={field.value}
+                onCheckedChange={newValue => {
+                  const checked = newValue === true;
+                  if (checked) clearEntryData();
+                  field.onChange(checked);
+                }}
+                className="mt-0.5"
+              />
+            )}
+          />
+          <Label
+            htmlFor="dataTakenFromCandidate"
+            className="cursor-pointer leading-snug"
+          >
+            {t('secondaryEducation.collectFromCandidates')}
+          </Label>
+        </div>
+
         <div className="flex flex-col gap-4 px-6">
           {/* dataTakenFromCandidate � grayed when toggle off */}
-          <div className={cn(!isEnabled && 'pointer-events-none opacity-60')}>
-            <div className="flex items-start gap-2">
-              <Controller
-                control={control}
-                name="dataTakenFromCandidate"
-                render={({ field }) => (
-                  <Checkbox
-                    id="dataTakenFromCandidate"
-                    checked={field.value}
-                    onCheckedChange={newValue => {
-                      const checked = newValue === true;
-                      if (checked) clearEntryData();
-                      field.onChange(checked);
-                    }}
-                    className="mt-0.5"
-                  />
-                )}
-              />
-              <Label
-                htmlFor="dataTakenFromCandidate"
-                className="cursor-pointer leading-snug"
-              >
-                {t('secondaryEducation.collectFromCandidates')}
-              </Label>
-            </div>
-          </div>
 
           {/* -- Education Card -------------------------------------------- */}
           <div className="rounded-xl border border-neutral-300 bg-white shadow-[0px_4px_90px_0px_rgba(0,0,0,0.07)]">
@@ -969,14 +968,13 @@ export default function SecondaryEducationStep({
                               setOpenDatePopover(null);
                             }}
                             disabled={date =>
-                              date < TODAY ||
                               date > HUNDRED_YEARS_FROM_NOW ||
                               (minEndDate
                                 ? compareDates(date, minEndDate) < 0
                                 : false)
                             }
                             captionLayout="dropdown"
-                            startMonth={TODAY}
+                            startMonth={minEndDate ?? HUNDRED_YEARS_AGO}
                             endMonth={HUNDRED_YEARS_FROM_NOW}
                           />
                         </PopoverContent>

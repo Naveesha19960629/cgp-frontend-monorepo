@@ -45,7 +45,27 @@ export default function ScheduleVacancyStep({
   const expirationDate = watch('expirationDate');
   const expirationTime = watch('expirationTime');
 
+  const isScheduleChanged = useMemo(() => {
+    if (!form.schedule) return true;
+
+    const currentSchedule = toScheduleVacancyPayload({
+      schedulePublishDate: publishDate,
+      schedulePublishTime: publishTime,
+      expirationDate,
+      expirationTime,
+    });
+
+    return (
+      currentSchedule.schedulePublishAt !== form.schedule.schedulePublishAt ||
+      currentSchedule.expirationAt !== form.schedule.expirationAt
+    );
+  }, [publishDate, publishTime, expirationDate, expirationTime, form.schedule]);
+
   const hasPastScheduleDateTime = useMemo(() => {
+    if (!isScheduleChanged) {
+      return false;
+    }
+
     if (!publishDate || !publishTime || !expirationDate || !expirationTime) {
       return false;
     }
@@ -64,7 +84,13 @@ export default function ScheduleVacancyStep({
 
     const now = new Date();
     return publishAt < now || expirationAt < now;
-  }, [publishDate, publishTime, expirationDate, expirationTime]);
+  }, [
+    publishDate,
+    publishTime,
+    expirationDate,
+    expirationTime,
+    isScheduleChanged,
+  ]);
 
   const { mutateAsync: createVacancy, isPending } = useCreateVacancyMutation();
   const { mutateAsync: updateVacancy, isPending: isUpdating } =
@@ -148,20 +174,22 @@ export default function ScheduleVacancyStep({
   };
 
   const onValid = async (values: ScheduleVacancyFormValues) => {
-    const publishAt = new Date(
-      `${values.schedulePublishDate}T${to24HourTime(values.schedulePublishTime)}`
-    );
-    const expirationAt = new Date(
-      `${values.expirationDate}T${to24HourTime(values.expirationTime)}`
-    );
-    const now = new Date();
+    if (isScheduleChanged) {
+      const publishAt = new Date(
+        `${values.schedulePublishDate}T${to24HourTime(values.schedulePublishTime)}`
+      );
+      const expirationAt = new Date(
+        `${values.expirationDate}T${to24HourTime(values.expirationTime)}`
+      );
+      const now = new Date();
 
-    if (publishAt < now || expirationAt < now) {
-      ErrorToast({
-        title: t('scheduleVacancy.notifications.validationErrorTitle'),
-        description: t('scheduleVacancy.notifications.pastDateTimeMessage'),
-      });
-      return;
+      if (publishAt < now || expirationAt < now) {
+        ErrorToast({
+          title: t('scheduleVacancy.notifications.validationErrorTitle'),
+          description: t('scheduleVacancy.notifications.pastDateTimeMessage'),
+        });
+        return;
+      }
     }
 
     try {
@@ -363,7 +391,7 @@ export default function ScheduleVacancyStep({
             handleSubmit(onValid, onInvalid)().catch(() => {});
           }}
         >
-          {id ? t('common.save') : t('scheduleVacancy.create')}
+          {id ? t('scheduleVacancy.update') : t('scheduleVacancy.create')}
         </Button>
       </div>
     </div>

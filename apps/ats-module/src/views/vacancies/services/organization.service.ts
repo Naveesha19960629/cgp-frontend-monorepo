@@ -46,11 +46,7 @@ export const organizationService = {
     const requestBody = {
       type: 'ORGANIZATION',
       displayValue: data.displayValue,
-      payload: {
-        additionalProp1: 'string',
-        additionalProp2: 'string',
-        additionalProp3: 'string',
-      },
+      payload: data.payload ?? {},
     };
 
     const response = await httpClient.post<CreateOrganizationResponse>(

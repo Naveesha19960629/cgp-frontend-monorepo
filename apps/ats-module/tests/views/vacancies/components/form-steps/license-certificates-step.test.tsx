@@ -48,6 +48,19 @@ const makeOption = (index: number) => ({
   source: 'MASTER',
 });
 
+let stableForm: AnyObj = {
+  isEnabled: true,
+  dataTakenFromCandidate: false,
+  entry: {
+    nameOfLicenseCert: [],
+    issuingOrganization: [],
+    organizationLocations: [],
+    internationallyAccepted: false,
+    issueDate: undefined,
+    expirationDate: undefined,
+  },
+};
+
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
 }));
@@ -99,18 +112,7 @@ vi.mock('@/views/vacancies/hooks', () => ({
   useTertiaryAwardingBodyLocationsSearch: () => vi.fn().mockResolvedValue([]),
   useStepGuard: vi.fn(),
   useLicenseCertificatesForm: () => {
-    const [values, setValues] = React.useState<AnyObj>({
-      isEnabled: true,
-      dataTakenFromCandidate: false,
-      entry: {
-        nameOfLicenseCert: [],
-        issuingOrganization: [],
-        organizationLocations: [],
-        internationallyAccepted: false,
-        issueDate: undefined,
-        expirationDate: undefined,
-      },
-    });
+    const [values, setValues] = React.useState<AnyObj>(stableForm);
 
     return {
       control: {
@@ -201,7 +203,22 @@ vi.mock('@cgp/ui-kit/components/ui/button', () => ({
 }));
 
 vi.mock('@cgp/ui-kit/components/ui/checkbox', () => ({
-  Checkbox: () => null,
+  Checkbox: ({
+    id,
+    checked,
+    onCheckedChange,
+  }: {
+    id?: string;
+    checked?: boolean;
+    onCheckedChange?: (checked: boolean) => void;
+  }) => (
+    <input
+      type="checkbox"
+      id={id}
+      checked={checked ?? false}
+      onChange={e => onCheckedChange?.(e.target.checked)}
+    />
+  ),
 }));
 
 vi.mock('@cgp/ui-kit/components/ui/form', () => ({
@@ -273,7 +290,9 @@ vi.mock('react-hook-form', () => ({
 }));
 
 vi.mock('@cgp/ui-kit/components/ui/label', () => ({
-  Label: ({ children }: { children: ReactNode }) => <label>{children}</label>,
+  Label: ({ children, htmlFor }: { children: ReactNode; htmlFor?: string }) => (
+    <label htmlFor={htmlFor}>{children}</label>
+  ),
 }));
 
 vi.mock('@cgp/ui-kit/components/ui/popover', () => ({
@@ -306,6 +325,18 @@ vi.mock('@cgp/ui-kit/lib/utils', () => ({
 describe('LicenseCertificatesStep', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    stableForm = {
+      isEnabled: true,
+      dataTakenFromCandidate: false,
+      entry: {
+        nameOfLicenseCert: [],
+        issuingOrganization: [],
+        organizationLocations: [],
+        internationallyAccepted: false,
+        issueDate: undefined,
+        expirationDate: undefined,
+      },
+    };
   });
 
   it('keeps only 10 selections when 11th is attempted and submits capped values', async () => {
@@ -505,6 +536,49 @@ describe('LicenseCertificatesStep', () => {
       // Should only return Paris (new york is filtered out)
       expect(filtered).toHaveLength(1);
       expect(filtered[0]?.label).toBe('Paris');
+    });
+  });
+
+  describe('date fields cleared on disable', () => {
+    it('clears issueDate and expirationDate when dataTakenFromCandidate is checked', async () => {
+      const user = userEvent.setup();
+      stableForm = {
+        isEnabled: true,
+        dataTakenFromCandidate: false,
+        entry: {
+          nameOfLicenseCert: [],
+          issuingOrganization: [],
+          organizationLocations: [],
+          internationallyAccepted: false,
+          issueDate: '2024-06-01',
+          expirationDate: '2024-12-01',
+        },
+      };
+
+      render(
+        <LicenseCertificatesStep
+          onNext={vi.fn()}
+          onBack={vi.fn()}
+          onSubmit={vi.fn()}
+        />
+      );
+
+      // Both date fields show formatted value (formatDate mock returns 'formatted')
+      expect(screen.getAllByText('formatted')).toHaveLength(2);
+
+      // Checking dataTakenFromCandidate triggers clearEntryData
+      await user.click(
+        screen.getByLabelText('licenseCertificates.collectFromCandidates')
+      );
+
+      // Date fields now show their placeholder text (field.value is '' which is falsy)
+      expect(screen.queryAllByText('formatted')).toHaveLength(0);
+      expect(
+        screen.getByText('licenseCertificates.placeholders.issueDate')
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText('licenseCertificates.placeholders.expirationDate')
+      ).toBeInTheDocument();
     });
   });
 });

@@ -193,6 +193,10 @@ const REAL_GET_RESPONSE = {
       },
     ],
   },
+  scheduleRequirement: {
+    schedulePublishAt: '2026-06-24T01:00:00',
+    expirationAt: '2026-06-26T12:59:59',
+  },
 };
 
 // ─── toVacancyFormFromResponse: top-level scalars ──────────────────────────
@@ -658,6 +662,12 @@ describe('toVacancyFormFromResponse — full GET response round-trip', () => {
     // Profile requirements
     expect(result.profileRequirements.gender.label).toBe('Male');
     expect(result.profileRequirements.addresses[0].city.label).toBe('Colombo');
+
+    // Schedule
+    expect(result.schedule).toEqual({
+      schedulePublishAt: '2026-06-24T01:00:00',
+      expirationAt: '2026-06-26T12:59:59',
+    });
   });
 
   it('does not overwrite unrelated previousForm sections with API garbage', () => {
