@@ -7,28 +7,11 @@ import {
   DataTableFacetedFilter,
   type VacancyFilteringSectionProps,
 } from '@/views/vacancies';
-import {
-  useCareerPathsQuery,
-  useDisciplinesQuery,
-} from '@/views/vacancies/hooks';
+import { useVacancyFilterOptionsQuery } from '@/views/vacancies/hooks';
 import { SEARCH_DEBOUNCE_MS } from '@/views/vacancies/utils';
 
 import { Input } from '@cgp/ui-kit/components/ui/input';
 import { removeEmoji } from '@cgp/ui-kit/lib/utils';
-
-const STATUS_VALUES = [
-  { value: 'Draft', labelKey: 'vacancies.table.filter.statusOptions.draft' },
-  {
-    value: 'Unpublished',
-    labelKey: 'vacancies.table.filter.statusOptions.unpublished',
-  },
-  { value: 'Live', labelKey: 'vacancies.table.filter.statusOptions.live' },
-  {
-    value: 'Expired',
-    labelKey: 'vacancies.table.filter.statusOptions.expired',
-  },
-  { value: 'Onhold', labelKey: 'vacancies.table.filter.statusOptions.onHold' },
-];
 
 const sanitize = (value: string) =>
   removeEmoji(value).trimStart().replace(/ {2,}/g, ' ');
@@ -79,58 +62,58 @@ export default function VacancyFilteringSection({
 
   useEffect(() => () => clearTimeout(searchTimerRef.current), []);
 
-  // Career path filter search — separate display vs query state so the
-  // CommandInput stays responsive while the API call is debounced.
+  // Per-dropdown local search for client-side filtering of returned options.
   const [careerPathInput, setCareerPathInput] = useState('');
-  const [careerPathSearch, setCareerPathSearch] = useState('');
-
-  useEffect(() => {
-    const timer = setTimeout(
-      () => setCareerPathSearch(careerPathInput),
-      SEARCH_DEBOUNCE_MS
-    );
-    return () => clearTimeout(timer);
-  }, [careerPathInput]);
-
-  // Discipline filter search — same pattern.
   const [disciplineInput, setDisciplineInput] = useState('');
-  const [disciplineSearch, setDisciplineSearch] = useState('');
 
-  useEffect(() => {
-    const timer = setTimeout(
-      () => setDisciplineSearch(disciplineInput),
-      SEARCH_DEBOUNCE_MS
-    );
-    return () => clearTimeout(timer);
-  }, [disciplineInput]);
+  // Single API call for all filter options, synced with the committed main search.
+  // `search` prop is the URL-committed value — the same term sent to the vacancy table query.
+  const { data: filterOptionsData, isLoading: isFilterOptionsLoading } =
+    useVacancyFilterOptionsQuery(search);
 
-  const { data: careerPathsData, isLoading: isCareerPathsLoading } =
-    useCareerPathsQuery(careerPathSearch);
-  const { data: disciplinesData, isLoading: isDisciplinesLoading } =
-    useDisciplinesQuery(disciplineSearch);
-
-  const careerPathOptions = useMemo(
+  const allCareerPathOptions = useMemo(
     () =>
-      careerPathsData?.data.items.content.map(item => ({
+      filterOptionsData?.data.careerPaths.map(item => ({
         value: item.id,
         label: item.label,
       })) ?? [],
-    [careerPathsData]
+    [filterOptionsData]
   );
 
-  const disciplineOptions = useMemo(
+  const allDisciplineOptions = useMemo(
     () =>
-      disciplinesData?.data.items.content.map(item => ({
+      filterOptionsData?.data.disciplines.map(item => ({
         value: item.id,
         label: item.label,
       })) ?? [],
-    [disciplinesData]
+    [filterOptionsData]
   );
 
   const statusOptions = useMemo(
-    () => STATUS_VALUES.map(s => ({ value: s.value, label: t(s.labelKey) })),
-    [t]
+    () =>
+      filterOptionsData?.data.statuses.map(item => ({
+        value: item.id,
+        label: item.label,
+      })) ?? [],
+    [filterOptionsData]
   );
+
+  // Client-side filter on dropdown search inputs.
+  const careerPathOptions = useMemo(() => {
+    if (!careerPathInput.trim()) return allCareerPathOptions;
+    const lower = careerPathInput.toLowerCase();
+    return allCareerPathOptions.filter(opt =>
+      opt.label.toLowerCase().includes(lower)
+    );
+  }, [allCareerPathOptions, careerPathInput]);
+
+  const disciplineOptions = useMemo(() => {
+    if (!disciplineInput.trim()) return allDisciplineOptions;
+    const lower = disciplineInput.toLowerCase();
+    return allDisciplineOptions.filter(opt =>
+      opt.label.toLowerCase().includes(lower)
+    );
+  }, [allDisciplineOptions, disciplineInput]);
 
   const selectedCareerPaths = careerPathFilter
     ? careerPathFilter.split(',')
@@ -149,7 +132,7 @@ export default function VacancyFilteringSection({
         onSelectionChange={values => onCareerPathChange(values.join(','))}
         searchValue={careerPathInput}
         onSearchChange={value => setCareerPathInput(sanitize(value))}
-        isLoading={isCareerPathsLoading}
+        isLoading={isFilterOptionsLoading}
       />
       <DataTableFacetedFilter
         title={t('vacancies.table.filter.discipline')}
@@ -158,7 +141,7 @@ export default function VacancyFilteringSection({
         onSelectionChange={values => onDisciplineChange(values.join(','))}
         searchValue={disciplineInput}
         onSearchChange={value => setDisciplineInput(sanitize(value))}
-        isLoading={isDisciplinesLoading}
+        isLoading={isFilterOptionsLoading}
       />
       <DataTableFacetedFilter
         title={t('vacancies.table.filter.status')}

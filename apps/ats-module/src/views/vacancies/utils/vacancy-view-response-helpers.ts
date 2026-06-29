@@ -504,6 +504,48 @@ function normalizeHobbies(raw: unknown) {
   return { isEnabled, dataTakenFromCandidate, content: toTagList(rawContent) };
 }
 
+function normalizePatents(raw: unknown) {
+  const entry: unknown = Array.isArray(raw) ? raw[0] : raw;
+  if (!isRecord(entry)) return undefined;
+
+  const isEnabled =
+    typeof entry.isEnabled === 'boolean' ? entry.isEnabled : false;
+  const dataTakenFromCandidate =
+    typeof entry.dataTakenFromCandidate === 'boolean'
+      ? entry.dataTakenFromCandidate
+      : false;
+  const rawContent = Array.isArray(entry.content)
+    ? entry.content
+    : Array.isArray(entry.patents)
+      ? entry.patents
+      : [];
+
+  const content = rawContent.filter(isRecord).map(item => {
+    const rawStatuses = Array.isArray(item.statuses) ? item.statuses : [];
+    const statuses = rawStatuses
+      .map((s: unknown) => {
+        // Statuses may come as objects { value, label } or plain strings
+        const val = isRecord(s) ? toSafeString(s.value) : toSafeString(s);
+        if (val === 'PATENT_PENDING') return 'Patent Pending';
+        if (val === 'PATENT_ISSUED') return 'Patent Issued';
+        return isRecord(s) ? toSafeString(s.label) || val : val;
+      })
+      .filter(Boolean);
+
+    // Form stores as `relatedIndustries` (plural); fallback to singular for API variations
+    const industries = item.relatedIndustries ?? item.relatedIndustry;
+
+    return {
+      relatedIndustry: toTagList(industries),
+      statuses,
+      fromDate: toSafeString(item.fromDate),
+      toDate: toSafeString(item.toDate),
+    };
+  });
+
+  return { isEnabled, dataTakenFromCandidate, content };
+}
+
 function normalizeIndustries(raw: unknown) {
   const entry: unknown = Array.isArray(raw) ? raw[0] : raw;
   if (!isRecord(entry)) {
@@ -737,6 +779,10 @@ function toVacancyViewModel(
     sectionSource,
     ['preferredHonoursAwards', 'honoursAndAwards']
   );
+  const preferredPatentsSection = readSectionValue(rawVacancy, sectionSource, [
+    'preferredPatents',
+    'patents',
+  ]);
   const preferredSkillsSection = readSectionValue(rawVacancy, sectionSource, [
     'preferredSkills',
     'skills',
@@ -813,6 +859,7 @@ function toVacancyViewModel(
     preferredHonoursAwards: normalizeHonoursAwards(
       preferredHonoursAwardsSection
     ),
+    preferredPatents: normalizePatents(preferredPatentsSection),
     preferredSkills: normalizeSkills(preferredSkillsSection),
     preferredLanguages: normalizeLanguages(preferredLanguagesSection),
     preferredCauses: normalizeCauses(preferredCausesSection),

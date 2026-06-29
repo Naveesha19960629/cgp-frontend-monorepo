@@ -21,8 +21,9 @@ const useUpdateDraftVacancyMutation = () => {
         id,
         toCreateVacancyPayload(form, status)
       ),
-    onSuccess: () => {
+    onSuccess: (_, { id }) => {
       void queryClient.invalidateQueries({ queryKey: ['vacancies'] });
+      void queryClient.invalidateQueries({ queryKey: ['vacancy', id] });
     },
   });
 };

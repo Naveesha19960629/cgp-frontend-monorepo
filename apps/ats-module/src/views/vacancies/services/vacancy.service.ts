@@ -4,6 +4,7 @@ import type {
   SingleRecordApiResponse,
   VacanciesApiResponse,
   VacancyDetailData,
+  VacancyFilterOptionsApiResponse,
   VacancyQueryParams,
 } from '@/views/vacancies/types';
 
@@ -59,6 +60,15 @@ export const vacancyService = {
   deleteVacancy: async (id: string): Promise<ApiResponse<string>> => {
     const response = await httpClient.delete<ApiResponse<string>>(
       `/vacancies/${id}`
+    );
+    return response.data;
+  },
+  getFilterOptions: async (
+    search?: string
+  ): Promise<VacancyFilterOptionsApiResponse> => {
+    const response = await httpClient.get<VacancyFilterOptionsApiResponse>(
+      '/vacancies/filters/options',
+      { params: search ? { search } : undefined }
     );
     return response.data;
   },

@@ -10,6 +10,8 @@ export { VacancyClubsSocietiesSection } from '@/views/vacancies/components/view-
 export { VacancySportsSection } from '@/views/vacancies/components/view-vacancy/vacancy-sports-section';
 export { VacancyVolunteeringSection } from '@/views/vacancies/components/view-vacancy/vacancy-volunteering-section';
 export { VacancyHonoursAwardsSection } from '@/views/vacancies/components/view-vacancy/vacancy-honours-awards-section';
+export { VacancyPatentsSection } from '@/views/vacancies/components/view-vacancy/vacancy-patents-section';
+export { VacancyTertiaryEducationSection } from '@/views/vacancies/components/view-vacancy/vacancy-tertiary-education-section';
 export { VacancyLicensesCertificationsSection } from '@/views/vacancies/components/view-vacancy/vacancy-licenses-certifications-section';
 export { VacancySkillsSection } from '@/views/vacancies/components/view-vacancy/vacancy-skills-section';
 export { VacancyLanguagesSection } from '@/views/vacancies/components/view-vacancy/vacancy-languages-section';
