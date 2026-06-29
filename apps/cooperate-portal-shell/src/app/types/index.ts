@@ -1,6 +1,7 @@
 interface BreadcrumbItemConfig {
   labelKey: string;
   link?: string;
+  isDynamicValue?: boolean;
 }
 
 interface BreadcrumbRoute {

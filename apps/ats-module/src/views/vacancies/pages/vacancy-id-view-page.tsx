@@ -4,6 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import {
   VacancyCausesSection,
   VacancyClubsSocietiesSection,
+  VacancyCustomizableFormSection,
   VacancyHobbiesSection,
   VacancyHonoursAwardsSection,
   VacancyIndustriesSection,
@@ -141,9 +142,6 @@ export default function VacancyIdViewPage() {
         <VacancySecondaryEducationSection
           secondaryEducation={viewModel.secondaryEducation}
         />
-        <VacancyScheduledVacancySection
-          scheduledVacancy={viewModel.scheduledVacancy}
-        />
         <VacancyPublicationsSection
           preferredPublications={viewModel.preferredPublications}
         />
@@ -168,6 +166,12 @@ export default function VacancyIdViewPage() {
         <VacancyHobbiesSection preferredHobbies={viewModel.preferredHobbies} />
         <VacancyIndustriesSection
           preferredIndustries={viewModel.preferredIndustries}
+        />
+        <VacancyCustomizableFormSection
+          customizableForm={viewModel.customizableForm}
+        />
+        <VacancyScheduledVacancySection
+          scheduledVacancy={viewModel.scheduledVacancy}
         />
       </VacancyView.Body>
     </VacancyView.Root>

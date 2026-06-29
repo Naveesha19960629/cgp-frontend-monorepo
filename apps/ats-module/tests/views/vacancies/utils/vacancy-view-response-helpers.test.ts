@@ -119,4 +119,73 @@ describe('toVacancyViewModel', () => {
       vacancyLink: '',
     });
   });
+
+  it('maps customizable form fields grouped by form cards', () => {
+    const model = toVacancyViewModel({
+      title: 'Vacancy with Customizable Forms',
+      data: {
+        customizableForms: [
+          {
+            isEnabled: true,
+            sectionTitle: 'Additional Screening Questions',
+            forms: [
+              {
+                title: 'Form 01',
+                questions: [
+                  {
+                    questionText: 'Do you have React experience?',
+                    questionType: 'SHORT_ANSWER',
+                    required: true,
+                  },
+                  {
+                    questionText: 'Rate your Javascript skills',
+                    questionType: 'LINEAR_SCALE',
+                    required: false,
+                    linearScale: {
+                      startValue: 1,
+                      endValue: 5,
+                      startLabel: 'Beginner',
+                      endLabel: 'Expert',
+                    },
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    });
+
+    expect(model.customizableForm).toEqual({
+      isEnabled: true,
+      sectionTitle: 'Additional Screening Questions',
+      forms: [
+        {
+          title: 'Form 01',
+          questions: [
+            {
+              text: 'Do you have React experience?',
+              type: 'SHORT_ANSWER',
+              required: true,
+              options: [],
+              scaleFrom: 0,
+              scaleTo: 0,
+              startLabel: '',
+              endLabel: '',
+            },
+            {
+              text: 'Rate your Javascript skills',
+              type: 'LINEAR_SCALE',
+              required: false,
+              options: [],
+              scaleFrom: 1,
+              scaleTo: 5,
+              startLabel: 'Beginner',
+              endLabel: 'Expert',
+            },
+          ],
+        },
+      ],
+    });
+  });
 });

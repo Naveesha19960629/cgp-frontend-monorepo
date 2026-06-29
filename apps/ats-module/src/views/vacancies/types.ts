@@ -998,6 +998,13 @@ interface VacancyCancelDialogProps {
   isSavingDraft?: boolean;
 }
 
+interface VacancyDeleteDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onConfirm: () => void;
+  isDeleting?: boolean;
+}
+
 interface VacancyEditCancelDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -1090,6 +1097,7 @@ interface VacancyTableActionProps {
     id: string;
     status: string;
     applicantCount: number;
+    availableActions?: string[];
   };
   onVersionHistory?: () => void;
   onMatchCandidate?: () => void;
@@ -1119,6 +1127,7 @@ interface CreateColumnsOptions {
   onSort: (columnKey: string) => void;
   onView: (vacancyId: string) => void;
   onEdit: (vacancyId: string) => void;
+  onDelete: (vacancyId: string) => void;
   t: (key: string) => string;
 }
 
@@ -1295,6 +1304,35 @@ interface VacancyViewScheduledVacancy {
   vacancyLink: string;
 }
 
+interface VacancyViewCustomizableFormQuestion {
+  text: string;
+  type:
+    | 'SHORT_ANSWER'
+    | 'PARAGRAPH'
+    | 'MULTIPLE_CHOICE'
+    | 'CHECKBOXES'
+    | 'DROPDOWN'
+    | 'LINEAR_SCALE'
+    | '';
+  required: boolean;
+  options: string[];
+  scaleFrom: number;
+  scaleTo: number;
+  startLabel: string;
+  endLabel: string;
+}
+
+interface VacancyViewCustomizableFormCard {
+  title: string;
+  questions: VacancyViewCustomizableFormQuestion[];
+}
+
+interface VacancyViewCustomizableForm {
+  isEnabled: boolean;
+  sectionTitle: string;
+  forms: VacancyViewCustomizableFormCard[];
+}
+
 interface VacancyViewModel {
   title: string;
   status: string;
@@ -1302,6 +1340,7 @@ interface VacancyViewModel {
   jobRequirement: VacancyViewJobRequirement;
   profileRequirement: VacancyViewProfileRequirement;
   scheduledVacancy?: VacancyViewScheduledVacancy;
+  customizableForm?: VacancyViewCustomizableForm;
   secondaryEducation?: VacancyViewSecondaryEducation;
   tertiaryEducation?: VacancyViewTertiaryEducation;
   licenseCertificates?: VacancyViewLicenseCertificates;
@@ -1584,6 +1623,9 @@ export type {
   CreateColumnsOptions,
   VacancyViewModel,
   VacancyViewScheduledVacancy,
+  VacancyViewCustomizableForm,
+  VacancyViewCustomizableFormCard,
+  VacancyViewCustomizableFormQuestion,
   VacancyViewJobRequirement,
   VacancyTablePaginationProps,
   SortableHeaderProps,
@@ -1690,6 +1732,7 @@ export type {
   PublicationApiData,
   PublicationResponse,
   VacancyCancelDialogProps,
+  VacancyDeleteDialogProps,
   VacancyEditCancelDialogProps,
   VacancyDetailJobRequirementData,
   VacancyDetailPatentEntry,

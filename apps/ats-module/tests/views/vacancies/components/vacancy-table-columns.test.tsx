@@ -38,6 +38,7 @@ const t = (key: string) => key;
 const onSort = vi.fn();
 const onView = vi.fn();
 const onEdit = vi.fn();
+const onDelete = vi.fn();
 
 const sampleRow: VacancyTableColumn = {
   vacancyId: 'f4e3d2c1-b0a9-8f7e-6d5c-4b3a2f1e0d9c',
@@ -77,6 +78,7 @@ function TableWrapper({
     onSort,
     onView,
     onEdit,
+    onDelete,
     t,
   });
   const table = useReactTable({
@@ -128,6 +130,7 @@ describe('createVacancyColumns', () => {
       onSort,
       onView,
       onEdit,
+      onDelete,
       t,
     });
     expect(cols).toHaveLength(17);
@@ -140,6 +143,7 @@ describe('createVacancyColumns', () => {
       onSort,
       onView,
       onEdit,
+      onDelete,
       t,
     });
     const ids = cols.map(

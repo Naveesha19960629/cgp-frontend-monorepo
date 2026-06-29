@@ -56,4 +56,10 @@ export const vacancyService = {
     );
     return response.data;
   },
+  deleteVacancy: async (id: string): Promise<ApiResponse<string>> => {
+    const response = await httpClient.delete<ApiResponse<string>>(
+      `/vacancies/${id}`
+    );
+    return response.data;
+  },
 };
