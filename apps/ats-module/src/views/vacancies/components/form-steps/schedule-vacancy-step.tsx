@@ -96,6 +96,9 @@ export default function ScheduleVacancyStep({
   const { mutateAsync: updateVacancy, isPending: isUpdating } =
     useUpdateVacancyMutation();
 
+  const isCreateAction =
+    !id || form.status === 'new' || form.status === 'draft';
+
   const persistScheduleToContext = useCallback(
     (values?: ScheduleVacancyFormValues) => {
       const currentValues = values ?? {
@@ -174,13 +177,14 @@ export default function ScheduleVacancyStep({
   };
 
   const onValid = async (values: ScheduleVacancyFormValues) => {
+    const publishAt = new Date(
+      `${values.schedulePublishDate}T${to24HourTime(values.schedulePublishTime)}`
+    );
+    const expirationAt = new Date(
+      `${values.expirationDate}T${to24HourTime(values.expirationTime)}`
+    );
+
     if (isScheduleChanged) {
-      const publishAt = new Date(
-        `${values.schedulePublishDate}T${to24HourTime(values.schedulePublishTime)}`
-      );
-      const expirationAt = new Date(
-        `${values.expirationDate}T${to24HourTime(values.expirationTime)}`
-      );
       const now = new Date();
 
       if (publishAt < now || expirationAt < now) {
@@ -192,6 +196,10 @@ export default function ScheduleVacancyStep({
       }
     }
 
+    // LIVE if publish time is now or in the past, UNPUBLISHED if future
+    const targetStatus = publishAt <= new Date() ? 'live' : 'unpublished';
+    const targetApiStatus = targetStatus === 'live' ? 'LIVE' : 'UNPUBLISHED';
+
     try {
       const schedule = toScheduleVacancyPayload(values);
       const payloadForm = { ...form, schedule };
@@ -200,21 +208,24 @@ export default function ScheduleVacancyStep({
         await updateVacancy({
           id,
           form: payloadForm,
-          existingStatus: form.status,
+          existingStatus: isCreateAction ? targetStatus : form.status,
         });
       } else {
-        await createVacancy({ form: { ...form, schedule } });
+        await createVacancy({
+          form: { ...form, schedule },
+          status: targetApiStatus,
+        });
       }
       SuccessToast({
         title: t(
-          id
-            ? 'scheduleVacancy.notifications.updateSuccessTitle'
-            : 'scheduleVacancy.notifications.successTitle'
+          isCreateAction
+            ? 'scheduleVacancy.notifications.successTitle'
+            : 'scheduleVacancy.notifications.updateSuccessTitle'
         ),
         description: t(
-          id
-            ? 'scheduleVacancy.notifications.updateSuccessMessage'
-            : 'scheduleVacancy.notifications.successMessage'
+          isCreateAction
+            ? 'scheduleVacancy.notifications.successMessage'
+            : 'scheduleVacancy.notifications.updateSuccessMessage'
         ),
       });
       onSubmit();
@@ -391,7 +402,9 @@ export default function ScheduleVacancyStep({
             handleSubmit(onValid, onInvalid)().catch(() => {});
           }}
         >
-          {id ? t('scheduleVacancy.update') : t('scheduleVacancy.create')}
+          {isCreateAction
+            ? t('scheduleVacancy.create')
+            : t('scheduleVacancy.update')}
         </Button>
       </div>
     </div>
