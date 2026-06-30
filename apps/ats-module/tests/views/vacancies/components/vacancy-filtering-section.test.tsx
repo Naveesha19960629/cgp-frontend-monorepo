@@ -25,16 +25,14 @@ vi.mock('@/views/vacancies/components/data-table-faceted-filter', () => ({
   ),
 }));
 
-const { mockCareerPaths, mockDisciplines } = vi.hoisted(() => ({
-  mockCareerPaths: vi.fn(),
-  mockDisciplines: vi.fn(),
+const { mockFilterOptions } = vi.hoisted(() => ({
+  mockFilterOptions: vi.fn(),
 }));
 
 vi.mock('@/views/vacancies/hooks', () => ({
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-  useCareerPathsQuery: (...args: unknown[]) => mockCareerPaths(...args),
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-  useDisciplinesQuery: (...args: unknown[]) => mockDisciplines(...args),
+  useVacancyFilterOptionsQuery: (...args: unknown[]) =>
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    mockFilterOptions(...args),
 }));
 
 const defaultProps = {
@@ -51,8 +49,7 @@ const defaultProps = {
 describe('VacancyFilteringSection', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockCareerPaths.mockReturnValue({ data: undefined, isLoading: false });
-    mockDisciplines.mockReturnValue({ data: undefined, isLoading: false });
+    mockFilterOptions.mockReturnValue({ data: undefined, isLoading: false });
   });
 
   afterEach(() => vi.useRealTimers());

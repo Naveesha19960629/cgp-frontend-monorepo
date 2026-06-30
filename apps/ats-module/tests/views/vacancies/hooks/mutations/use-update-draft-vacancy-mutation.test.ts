@@ -5,7 +5,7 @@ import type { VacancyForm } from '@/views/vacancies/types';
 
 type MockMutation<TArg = unknown> = {
   mutationFn: (arg: TArg) => Promise<unknown>;
-  onSuccess: () => void | Promise<void>;
+  onSuccess: (data: unknown, variables: TArg) => void | Promise<void>;
 };
 
 type MutationInput = { id: string; form: VacancyForm; status?: string };
@@ -151,10 +151,24 @@ describe('useUpdateDraftVacancyMutation', () => {
       const mutation =
         useUpdateDraftVacancyMutation() as unknown as MockMutation<MutationInput>;
 
-      await mutation.onSuccess();
+      await mutation.onSuccess(undefined, { id: 'vacancy-1', form: mockForm });
 
       expect(mockInvalidateQueries).toHaveBeenCalledWith({
         queryKey: ['vacancies'],
+      });
+    });
+
+    it("invalidates the ['vacancy', id] query cache", async () => {
+      const mutation =
+        useUpdateDraftVacancyMutation() as unknown as MockMutation<MutationInput>;
+
+      await mutation.onSuccess(undefined, {
+        id: 'vacancy-abc',
+        form: mockForm,
+      });
+
+      expect(mockInvalidateQueries).toHaveBeenCalledWith({
+        queryKey: ['vacancy', 'vacancy-abc'],
       });
     });
   });

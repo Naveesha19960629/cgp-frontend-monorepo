@@ -11,6 +11,7 @@ import {
   VacancyJobRequirementsSection,
   VacancyLanguagesSection,
   VacancyLicensesCertificationsSection,
+  VacancyPatentsSection,
   VacancyProfileRequirementsSection,
   VacancyPublicationsSection,
   VacancyScheduledVacancySection,
@@ -18,6 +19,7 @@ import {
   VacancySkillsSection,
   VacancySportsSection,
   VacancyStatusBadge,
+  VacancyTertiaryEducationSection,
   VacancyView,
   VacancyVolunteeringSection,
 } from '@/views/vacancies/components';
@@ -142,6 +144,9 @@ export default function VacancyIdViewPage() {
         <VacancySecondaryEducationSection
           secondaryEducation={viewModel.secondaryEducation}
         />
+        <VacancyTertiaryEducationSection
+          tertiaryEducation={viewModel.tertiaryEducation}
+        />
         <VacancyPublicationsSection
           preferredPublications={viewModel.preferredPublications}
         />
@@ -155,6 +160,7 @@ export default function VacancyIdViewPage() {
         <VacancyHonoursAwardsSection
           preferredHonoursAwards={viewModel.preferredHonoursAwards}
         />
+        <VacancyPatentsSection preferredPatents={viewModel.preferredPatents} />
         <VacancyLicensesCertificationsSection
           licenseCertificates={viewModel.licenseCertificates}
         />

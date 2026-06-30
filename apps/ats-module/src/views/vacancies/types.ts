@@ -155,6 +155,26 @@ interface PlacesApiResponse<T> {
   data: T[];
 }
 
+// ─── Vacancy Filter Options ───────────────────────────────────────────────────
+
+interface VacancyFilterOption {
+  id: string;
+  label: string;
+}
+
+interface VacancyFilterOptionsData {
+  disciplines: VacancyFilterOption[];
+  careerPaths: VacancyFilterOption[];
+  statuses: VacancyFilterOption[];
+}
+
+interface VacancyFilterOptionsApiResponse {
+  requestId: string;
+  success: boolean;
+  message: string;
+  data: VacancyFilterOptionsData;
+}
+
 // ─── Secondary Education ──────────────────────────────────────────────────────
 
 interface LookupItem {
@@ -1269,6 +1289,19 @@ interface VacancyViewHonoursAwards {
   }[];
 }
 
+interface VacancyViewPatentEntry {
+  relatedIndustry: string[];
+  statuses: string[];
+  fromDate: string;
+  toDate: string;
+}
+
+interface VacancyViewPreferredPatents {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  content: VacancyViewPatentEntry[];
+}
+
 interface VacancyViewSkills {
   isEnabled: boolean;
   dataTakenFromCandidate: boolean;
@@ -1350,6 +1383,7 @@ interface VacancyViewModel {
   preferredSports?: VacancyViewSports;
   preferredVolunteering?: VacancyViewVolunteering;
   preferredHonoursAwards?: VacancyViewHonoursAwards;
+  preferredPatents?: VacancyViewPreferredPatents;
   preferredSkills?: VacancyViewSkills;
   preferredLanguages?: VacancyViewLanguages;
   preferredCauses?: VacancyViewCauses;
@@ -1754,4 +1788,9 @@ export type {
   PlaceStateResult,
   PlaceCountryResult,
   PlacesApiResponse,
+  VacancyFilterOption,
+  VacancyFilterOptionsData,
+  VacancyFilterOptionsApiResponse,
+  VacancyViewPatentEntry,
+  VacancyViewPreferredPatents,
 };
