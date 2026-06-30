@@ -190,6 +190,31 @@ function QuestionCard({
 
   const set = (patch: Partial<Question>) => onUpdate({ ...question, ...patch });
 
+  // Option ids whose (normalized) value collides with another option in this
+  // question — used to highlight and focus duplicates on validation.
+  const duplicateOptionIds = (() => {
+    const counts = new Map<string, number>();
+    question.options.forEach(o => {
+      const v = o.value.trim().toLowerCase();
+      if (v !== '') counts.set(v, (counts.get(v) ?? 0) + 1);
+    });
+    return new Set(
+      question.options
+        .filter(o => {
+          const v = o.value.trim().toLowerCase();
+          return v !== '' && (counts.get(v) ?? 0) > 1;
+        })
+        .map(o => o.id)
+    );
+  })();
+
+  // An option field is invalid when it is a mandatory (first MIN_OPTIONS) blank
+  // field, or its value duplicates another option in the same question.
+  const isOptionInvalid = (opt: QuestionOption, optIdx: number): boolean =>
+    showValidation &&
+    ((optIdx < MIN_OPTIONS && opt.value.trim() === '') ||
+      duplicateOptionIds.has(opt.id));
+
   // Changing the question type pads option-based types to the minimum number of
   // option fields and clears option values when switching to a non-option type.
   const changeType = (val: string) => {
@@ -272,6 +297,9 @@ function QuestionCard({
             type="text"
             maxLength={QUESTION_MAX}
             value={question.text}
+            data-invalid={
+              showValidation && question.text.trim() === '' ? 'true' : undefined
+            }
             placeholder={t('customizableForm.question.questionPlaceholder')}
             onChange={e => set({ text: removeEmoji(e.target.value) })}
             className="h-11 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:ring-0 focus:outline-none"
@@ -284,7 +312,12 @@ function QuestionCard({
         </div>
 
         {/* Type */}
-        <div className="flex flex-col gap-1.5">
+        <div
+          className="flex flex-col gap-1.5"
+          data-invalid={
+            showValidation && question.type === '' ? 'true' : undefined
+          }
+        >
           <label className="text-sm font-semibold text-slate-900">
             {t('customizableForm.question.typeLabel')}
             <span className="ml-0.5 text-red-500">*</span>
@@ -348,11 +381,18 @@ function QuestionCard({
                       type="text"
                       maxLength={OPTION_MAX}
                       value={opt.value}
+                      data-invalid={
+                        isOptionInvalid(opt, optIdx) ? 'true' : undefined
+                      }
                       onChange={e =>
                         updateOption(opt.id, removeEmoji(e.target.value))
                       }
                       placeholder={t('customizableForm.question.enterOption')}
-                      className="h-11 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:ring-0 focus:outline-none"
+                      className={`h-11 w-full rounded-md border ${
+                        showValidation && duplicateOptionIds.has(opt.id)
+                          ? 'border-[#FF4A55]'
+                          : 'border-slate-200'
+                      } bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:ring-0 focus:outline-none`}
                     />
                   </div>
                   {optIdx >= MIN_OPTIONS && (
@@ -414,11 +454,18 @@ function QuestionCard({
                       type="text"
                       maxLength={OPTION_MAX}
                       value={opt.value}
+                      data-invalid={
+                        isOptionInvalid(opt, optIdx) ? 'true' : undefined
+                      }
                       onChange={e =>
                         updateOption(opt.id, removeEmoji(e.target.value))
                       }
                       placeholder={t('customizableForm.question.enterOption')}
-                      className="h-11 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:ring-0 focus:outline-none"
+                      className={`h-11 w-full rounded-md border ${
+                        showValidation && duplicateOptionIds.has(opt.id)
+                          ? 'border-[#FF4A55]'
+                          : 'border-slate-200'
+                      } bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:ring-0 focus:outline-none`}
                     />
                   </div>
                   {optIdx >= MIN_OPTIONS && (
@@ -480,11 +527,18 @@ function QuestionCard({
                       type="text"
                       maxLength={OPTION_MAX}
                       value={opt.value}
+                      data-invalid={
+                        isOptionInvalid(opt, optIdx) ? 'true' : undefined
+                      }
                       onChange={e =>
                         updateOption(opt.id, removeEmoji(e.target.value))
                       }
                       placeholder={t('customizableForm.question.enterOption')}
-                      className="h-11 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:ring-0 focus:outline-none"
+                      className={`h-11 w-full rounded-md border ${
+                        showValidation && duplicateOptionIds.has(opt.id)
+                          ? 'border-[#FF4A55]'
+                          : 'border-slate-200'
+                      } bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:ring-0 focus:outline-none`}
                     />
                   </div>
                   {optIdx >= MIN_OPTIONS && (
@@ -689,6 +743,10 @@ export default function CustomizableFormStep({
   const [pendingFormDelete, setPendingFormDelete] = useState<number | null>(
     null
   );
+
+  // Root container, used to scroll/focus the first invalid field on a blocked
+  // navigation attempt.
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const {
     setForm,
@@ -975,6 +1033,19 @@ export default function CustomizableFormStep({
     setIsEnabled(true);
   };
 
+  // After the validation state renders, scroll the first invalid field into
+  // view and focus it so the recruiter is taken straight to what needs fixing.
+  const focusFirstInvalidField = () => {
+    requestAnimationFrame(() => {
+      const target = containerRef.current?.querySelector<HTMLElement>(
+        '[data-invalid="true"]'
+      );
+      if (!target) return;
+      target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      target.focus({ preventScroll: true });
+    });
+  };
+
   // Validates the section (when enabled) before allowing navigation. Surfaces all
   // inline required messages at once and a toast for duplicate options; returns
   // false (and blocks navigation) when anything is invalid.
@@ -984,12 +1055,19 @@ export default function CustomizableFormStep({
     const duplicates = hasDuplicateOptions();
     if (hasInvalidContent() || duplicates) {
       setShowValidation(true);
+      // Expand every form so collapsed invalid fields are rendered and focusable.
+      setForms(prev =>
+        prev.every(f => f.isOpen)
+          ? prev
+          : prev.map(f => (f.isOpen ? f : { ...f, isOpen: true }))
+      );
       if (duplicates) {
         ErrorToast({
           title: t('customizableForm.errors.errorTitle'),
           description: t('customizableForm.errors.duplicateOption'),
         });
       }
+      focusFirstInvalidField();
       return false;
     }
     return true;
@@ -1027,7 +1105,7 @@ export default function CustomizableFormStep({
   // ── Render ──────────────────────────────────────────────────────────────
 
   return (
-    <div>
+    <div ref={containerRef}>
       {/* Header row */}
       <div className="flex items-center justify-between px-7 pt-7 pb-4">
         <div className="flex items-center gap-2">
@@ -1066,6 +1144,12 @@ export default function CustomizableFormStep({
             type="text"
             placeholder={t('customizableForm.sectionTitlePlaceholder')}
             value={sectionTitle}
+            data-invalid={
+              showValidation &&
+              (sectionTitle.trim() === '' || isSectionTitleError)
+                ? 'true'
+                : undefined
+            }
             onChange={e => setSectionTitle(removeEmoji(e.target.value))}
             className="w-full border-0 border-b border-slate-200 bg-transparent px-0 pb-3 text-[24px] leading-8 font-bold tracking-[-0.144px] text-slate-900 placeholder:text-slate-300 focus:border-slate-300 focus:ring-0 focus:outline-none"
           />
@@ -1154,6 +1238,12 @@ export default function CustomizableFormStep({
                         type="text"
                         placeholder={t('customizableForm.formTitlePlaceholder')}
                         value={form.title}
+                        data-invalid={
+                          showValidation &&
+                          (form.title.trim() === '' || isFormTitleError)
+                            ? 'true'
+                            : undefined
+                        }
                         onChange={e =>
                           updateFormTitle(form.id, removeEmoji(e.target.value))
                         }

@@ -277,7 +277,7 @@
       "requiredSectionTitle": "Section title is required",
       "requiredFormTitle": "Form title is required",
       "requiredOption": "Option is required",
-      "duplicateOption": "Duplicate options are not allowed within a question"
+      "duplicateOption": "Duplicate option values are not allowed."
     },
     "question": {
       "questionLabel": "Question",
