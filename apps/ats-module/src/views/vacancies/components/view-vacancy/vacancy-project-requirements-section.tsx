@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { VacancyNoDetailsState } from '@/views/vacancies/components/view-vacancy/vacancy-no-details-state';
 import { VacancyView } from '@/views/vacancies/components/view-vacancy/vacancy-view';
 import type { VacancyViewModel } from '@/views/vacancies/types';
+import { DATE_DISPLAY_FORMAT } from '@/views/vacancies/utils/constants';
 import { parseLocalDate } from '@/views/vacancies/utils/date-timezone-safe';
 
 import { format } from 'date-fns';
@@ -13,7 +14,7 @@ function formatDisplayDate(dateStr?: string): string {
   if (!dateStr) return '';
   const d = parseLocalDate(dateStr);
   if (!d) return '';
-  return format(d, 'do MMM yyyy');
+  return format(d, DATE_DISPLAY_FORMAT);
 }
 
 function formatDateRange(startDate?: string, endDate?: string): string {
