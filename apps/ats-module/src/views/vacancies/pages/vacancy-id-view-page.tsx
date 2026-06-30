@@ -4,19 +4,23 @@ import { useNavigate, useParams } from 'react-router-dom';
 import {
   VacancyCausesSection,
   VacancyClubsSocietiesSection,
+  VacancyCustomizableFormSection,
   VacancyHobbiesSection,
   VacancyHonoursAwardsSection,
   VacancyIndustriesSection,
   VacancyJobRequirementsSection,
   VacancyLanguagesSection,
   VacancyLicensesCertificationsSection,
+  VacancyPatentsSection,
   VacancyProfileRequirementsSection,
   VacancyProjectRequirementsSection,
   VacancyPublicationsSection,
   VacancyScheduledVacancySection,
+  VacancySecondaryEducationSection,
   VacancySkillsSection,
   VacancySportsSection,
   VacancyStatusBadge,
+  VacancyTertiaryEducationSection,
   VacancyView,
   VacancyVolunteeringSection,
 } from '@/views/vacancies/components';
@@ -138,6 +142,12 @@ export default function VacancyIdViewPage() {
         <VacancyProfileRequirementsSection
           profileRequirement={viewModel.profileRequirement}
         />
+        <VacancySecondaryEducationSection
+          secondaryEducation={viewModel.secondaryEducation}
+        />
+        <VacancyTertiaryEducationSection
+          tertiaryEducation={viewModel.tertiaryEducation}
+        />
         <VacancyProjectRequirementsSection
           preferredProjects={viewModel.preferredProjects}
         />
@@ -157,6 +167,7 @@ export default function VacancyIdViewPage() {
         <VacancyHonoursAwardsSection
           preferredHonoursAwards={viewModel.preferredHonoursAwards}
         />
+        <VacancyPatentsSection preferredPatents={viewModel.preferredPatents} />
         <VacancyLicensesCertificationsSection
           licenseCertificates={viewModel.licenseCertificates}
         />
@@ -168,6 +179,12 @@ export default function VacancyIdViewPage() {
         <VacancyHobbiesSection preferredHobbies={viewModel.preferredHobbies} />
         <VacancyIndustriesSection
           preferredIndustries={viewModel.preferredIndustries}
+        />
+        <VacancyCustomizableFormSection
+          customizableForm={viewModel.customizableForm}
+        />
+        <VacancyScheduledVacancySection
+          scheduledVacancy={viewModel.scheduledVacancy}
         />
       </VacancyView.Body>
     </VacancyView.Root>

@@ -1,15 +1,26 @@
 import { MemoryRouter } from 'react-router-dom';
 
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
 import { render, screen } from '@testing-library/react';
 
 import { AppBreadcrumb } from '@/app/components/app-breadcrumb';
 import { initI18n } from '@/app/utils/i18n';
 
 function renderWithRouter(pathname: string) {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+    },
+  });
   return render(
-    <MemoryRouter initialEntries={[pathname]}>
-      <AppBreadcrumb />
-    </MemoryRouter>
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter initialEntries={[pathname]}>
+        <AppBreadcrumb />
+      </MemoryRouter>
+    </QueryClientProvider>
   );
 }
 
@@ -40,14 +51,69 @@ describe('AppBreadcrumb', () => {
     renderWithRouter('/dashboard/ats/vacancies/new');
 
     expect(screen.getByText('Vacancies')).toBeInTheDocument();
-    expect(screen.getByText('Add Vacancy')).toBeInTheDocument();
+    expect(screen.getByText('Create Vacancy')).toBeInTheDocument();
   });
 
   it('renders parent breadcrumb as a link and current item without a link', () => {
     renderWithRouter('/dashboard/ats/vacancies/new');
 
     expect(screen.getByText('Vacancies').closest('a')).not.toBeNull();
-    expect(screen.getByText('Add Vacancy').closest('a')).toBeNull();
+    expect(screen.getByText('Create Vacancy').closest('a')).toBeNull();
+  });
+
+  it('renders dynamic vacancy title for /dashboard/ats/vacancies/:id/view when data is loaded', () => {
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        queries: {
+          retry: false,
+        },
+      },
+    });
+    queryClient.setQueryData(['vacancy', 'abc-123'], {
+      data: {
+        vacancy: {
+          title: 'Senior Software Engineer - React & Node.js Lead',
+        },
+      },
+    });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter
+          initialEntries={['/dashboard/ats/vacancies/abc-123/view']}
+        >
+          <AppBreadcrumb />
+        </MemoryRouter>
+      </QueryClientProvider>
+    );
+
+    expect(screen.getByText('Vacancies')).toBeInTheDocument();
+    expect(
+      screen.getByText('Senior Software Engineer - React & Node.js Lead')
+    ).toBeInTheDocument();
+  });
+
+  it('renders fallback View Vacancy for /dashboard/ats/vacancies/:id/view when data is loading', () => {
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        queries: {
+          retry: false,
+        },
+      },
+    });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter
+          initialEntries={['/dashboard/ats/vacancies/abc-123/view']}
+        >
+          <AppBreadcrumb />
+        </MemoryRouter>
+      </QueryClientProvider>
+    );
+
+    expect(screen.getByText('Vacancies')).toBeInTheDocument();
+    expect(screen.getByText('View Vacancy')).toBeInTheDocument();
   });
 
   it('renders nothing for an unknown route', () => {

@@ -193,6 +193,10 @@ const REAL_GET_RESPONSE = {
       },
     ],
   },
+  scheduleRequirement: {
+    schedulePublishAt: '2026-06-24T01:00:00',
+    expirationAt: '2026-06-26T12:59:59',
+  },
 };
 
 // ─── toVacancyFormFromResponse: top-level scalars ──────────────────────────
@@ -658,6 +662,12 @@ describe('toVacancyFormFromResponse — full GET response round-trip', () => {
     // Profile requirements
     expect(result.profileRequirements.gender.label).toBe('Male');
     expect(result.profileRequirements.addresses[0].city.label).toBe('Colombo');
+
+    // Schedule
+    expect(result.schedule).toEqual({
+      schedulePublishAt: '2026-06-24T01:00:00',
+      expirationAt: '2026-06-26T12:59:59',
+    });
   });
 
   it('does not overwrite unrelated previousForm sections with API garbage', () => {
@@ -1151,5 +1161,224 @@ describe('toVacancyFormFromResponse — projects/publications/clubs/sports/volun
     expect(result.preferredVolunteering?.volunteering[0].cause[0]).toEqual(
       expect.objectContaining({ value: 'cause-1', label: 'Education' })
     );
+  });
+});
+
+// ─── normalizePatentsSection (via toVacancyFormFromResponse) ──────────────────
+
+describe('toVacancyFormFromResponse — patents section', () => {
+  it('maps patents with statuses array and related industries', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        patents: {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          patents: [
+            {
+              statuses: ['PATENT_PENDING', 'PATENT_ISSUED'],
+              relatedIndustry: [
+                { id: 'ind-1', label: 'Technology', source: 'MASTER' },
+              ],
+              fromDate: '2024-01-15',
+              toDate: '2025-01-15',
+            },
+          ],
+        },
+      },
+      { ...FALLBACK_FORM }
+    );
+
+    expect(result.patents?.isEnabled).toBe(true);
+    expect(result.patents?.dataTakenFromCandidate).toBe(false);
+    expect(result.patents?.patents).toHaveLength(1);
+
+    const entry = result.patents!.patents[0];
+    expect(entry.statuses).toEqual([
+      { value: 'PATENT_PENDING', label: 'Patent Pending' },
+      { value: 'PATENT_ISSUED', label: 'Patent Issued' },
+    ]);
+    expect(entry.relatedIndustries).toEqual([
+      { value: 'ind-1', label: 'Technology', source: 'MASTER' },
+    ]);
+  });
+
+  it('filters out invalid patent status values and keeps only valid ones', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        patents: {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          patents: [
+            {
+              statuses: ['PATENT_PENDING', 'INVALID_STATUS', 'PATENT_ISSUED'],
+              relatedIndustry: [],
+            },
+          ],
+        },
+      },
+      { ...FALLBACK_FORM }
+    );
+
+    expect(result.patents!.patents[0].statuses).toHaveLength(2);
+    expect(result.patents!.patents[0].statuses[0].value).toBe('PATENT_PENDING');
+    expect(result.patents!.patents[0].statuses[1].value).toBe('PATENT_ISSUED');
+  });
+
+  it('returns fallback when patents section is not a record', () => {
+    const fallbackPatents = {
+      isEnabled: true,
+      dataTakenFromCandidate: false,
+      patents: [],
+    };
+
+    const result = toVacancyFormFromResponse(
+      { patents: 'not-a-record' },
+      { ...FALLBACK_FORM, patents: fallbackPatents }
+    );
+
+    expect(result.patents).toEqual(fallbackPatents);
+  });
+
+  it('uses empty patents array when patents key is absent from section', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        patents: {
+          isEnabled: false,
+          dataTakenFromCandidate: false,
+        },
+      },
+      { ...FALLBACK_FORM }
+    );
+
+    expect(result.patents?.patents).toEqual([]);
+  });
+
+  it('sets isOpen to true on every mapped patent entry', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        patents: {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          patents: [{ statuses: [], relatedIndustry: [] }],
+        },
+      },
+      { ...FALLBACK_FORM }
+    );
+
+    expect(result.patents!.patents[0].isOpen).toBe(true);
+  });
+
+  it('uses displayValue or id as label fallback for related industries', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        patents: {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          patents: [
+            {
+              statuses: [],
+              relatedIndustry: [
+                { id: 'ind-2', displayValue: 'Engineering', source: 'MASTER' },
+              ],
+            },
+          ],
+        },
+      },
+      { ...FALLBACK_FORM }
+    );
+
+    const industry = result.patents!.patents[0].relatedIndustries[0];
+    expect(industry.label).toBe('Engineering');
+    expect(industry.value).toBe('ind-2');
+    expect(industry.source).toBe('MASTER');
+  });
+});
+
+// ─── normalizeSchedule (via toVacancyFormFromResponse) ───────────────────────
+
+describe('toVacancyFormFromResponse — schedule section', () => {
+  it('maps schedule when both fields are present', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        schedule: {
+          schedulePublishAt: '2024-06-01T10:00:00',
+          expirationAt: '2024-12-31T23:59:59',
+        },
+      },
+      { ...FALLBACK_FORM }
+    );
+
+    expect(result.schedule).toEqual({
+      schedulePublishAt: '2024-06-01T10:00:00',
+      expirationAt: '2024-12-31T23:59:59',
+    });
+  });
+
+  it('falls back to previousForm.schedule when section is not a record', () => {
+    const fallbackSchedule = {
+      schedulePublishAt: '2024-01-01',
+      expirationAt: '2024-06-30',
+    };
+
+    const result = toVacancyFormFromResponse(
+      { schedule: null },
+      { ...FALLBACK_FORM, schedule: fallbackSchedule }
+    );
+
+    expect(result.schedule).toEqual(fallbackSchedule);
+  });
+
+  it('falls back to previousForm.schedule when schedulePublishAt is missing', () => {
+    const fallbackSchedule = {
+      schedulePublishAt: '2024-01-01',
+      expirationAt: '2024-06-30',
+    };
+
+    const result = toVacancyFormFromResponse(
+      { schedule: { expirationAt: '2024-12-31' } },
+      { ...FALLBACK_FORM, schedule: fallbackSchedule }
+    );
+
+    expect(result.schedule).toEqual(fallbackSchedule);
+  });
+
+  it('falls back to previousForm.schedule when expirationAt is missing', () => {
+    const fallbackSchedule = {
+      schedulePublishAt: '2024-01-01',
+      expirationAt: '2024-06-30',
+    };
+
+    const result = toVacancyFormFromResponse(
+      { schedule: { schedulePublishAt: '2024-06-01' } },
+      { ...FALLBACK_FORM, schedule: fallbackSchedule }
+    );
+
+    expect(result.schedule).toEqual(fallbackSchedule);
+  });
+
+  it('reads schedule from scheduleRequirement key', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        scheduleRequirement: {
+          schedulePublishAt: '2024-07-01',
+          expirationAt: '2024-11-30',
+        },
+      },
+      { ...FALLBACK_FORM }
+    );
+
+    expect(result.schedule).toEqual({
+      schedulePublishAt: '2024-07-01',
+      expirationAt: '2024-11-30',
+    });
+  });
+
+  it('returns previousForm.schedule (undefined) when no schedule section present', () => {
+    const result = toVacancyFormFromResponse(
+      { title: 'No Schedule' },
+      { ...FALLBACK_FORM }
+    );
+
+    expect(result.schedule).toBeUndefined();
   });
 });

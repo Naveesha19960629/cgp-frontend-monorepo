@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { StepDisableDialog } from '@/views/vacancies';
+import VacancyStatusBadge from '@/views/vacancies/components/vacancy-status-badge';
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import { useStepGuard } from '@/views/vacancies/hooks';
 import { useDisableSuccessToast } from '@/views/vacancies/hooks';
@@ -27,7 +28,7 @@ import {
   SelectValue,
 } from '@cgp/ui-kit/components/ui/select';
 import { Switch } from '@cgp/ui-kit/components/ui/switch';
-import { removeEmoji } from '@cgp/ui-kit/lib/utils';
+import { cn, removeEmoji } from '@cgp/ui-kit/lib/utils';
 
 // ── UI-only state types (not API types) ──────────────────────────────────────
 
@@ -159,7 +160,7 @@ function QuestionCard({
   const addOption = () => {
     if (question.options.length >= MAX_OPTIONS) {
       ErrorToast({
-        title: t('common.errorTitle'),
+        title: t('customizableForm.errors.errorTitle'),
         description: t('customizableForm.errors.maxOptionsExceeded'),
       });
       return;
@@ -545,7 +546,11 @@ function QuestionCard({
 }
 
 // ── Main step ────────────────────────────────────────────────────────────────
-export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
+export default function CustomizableFormStep({
+  onNext,
+  onBack,
+  mode = 'create',
+}: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
 
   const showDisableToast = useDisableSuccessToast();
@@ -668,7 +673,7 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
   const addForm = () => {
     if (forms.length >= MAX_FORMS) {
       ErrorToast({
-        title: t('common.errorTitle'),
+        title: t('customizableForm.errors.errorTitle'),
         description: t('customizableForm.errors.maxFormsExceeded'),
       });
       return;
@@ -737,7 +742,7 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
   const duplicateForm = (id: number) => {
     if (forms.length >= MAX_FORMS) {
       ErrorToast({
-        title: t('common.errorTitle'),
+        title: t('customizableForm.errors.errorTitle'),
         description: t('customizableForm.errors.maxFormsExceeded'),
       });
       return;
@@ -837,7 +842,7 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
     const form = forms.find(f => f.id === formId);
     if (form && form.questions.length >= MAX_QUESTIONS) {
       ErrorToast({
-        title: t('common.errorTitle'),
+        title: t('customizableForm.errors.errorTitle'),
         description: t('customizableForm.errors.maxQuestionsExceeded'),
       });
       return;
@@ -882,7 +887,7 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
     const form = forms.find(f => f.id === formId);
     if (form && form.questions.length >= MAX_QUESTIONS) {
       ErrorToast({
-        title: t('common.errorTitle'),
+        title: t('customizableForm.errors.errorTitle'),
         description: t('customizableForm.errors.maxQuestionsExceeded'),
       });
       return;
@@ -961,6 +966,12 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
     onNext(payload);
   };
 
+  const handleBack = () => {
+    if (hasValidationErrors) return;
+    stepPersistRef.current?.();
+    onBack();
+  };
+
   // ── Render ──────────────────────────────────────────────────────────────
 
   return (
@@ -970,8 +981,13 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={onBack}
-            className="cursor-pointer text-slate-700 transition-colors hover:text-slate-900"
+            onClick={handleBack}
+            disabled={hasValidationErrors}
+            className={cn(
+              'cursor-pointer text-slate-700 transition-colors hover:text-slate-900',
+              hasValidationErrors &&
+                'cursor-not-allowed opacity-40 hover:text-slate-700'
+            )}
             aria-label={t('common.back')}
           >
             <ArrowLeft2 size={24} />
@@ -979,6 +995,9 @@ export default function CustomizableFormStep({ onNext, onBack }: StepProps) {
           <h2 className="text-xl font-bold tracking-[-0.1px] text-slate-900">
             {t('customizableForm.title')}
           </h2>
+          {mode === 'edit' && form.status ? (
+            <VacancyStatusBadge status={form.status} />
+          ) : null}
         </div>
 
         <Switch

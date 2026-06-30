@@ -1,6 +1,6 @@
 import { Add } from 'iconsax-reactjs';
 
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
@@ -8,15 +8,18 @@ import { useVacanciesQuery, useVacancyTableParams } from '@/views/vacancies';
 import type { VacancyQueryParams, VacancyTableColumn } from '@/views/vacancies';
 import {
   VacancyDataTable,
+  VacancyDeleteDialog,
   VacancyFilteringSection,
   VacancyLoadingState,
   VacancySearchEmptyState,
   VacancyTableEmptyState,
   VacancyTablePagination,
   createVacancyColumns,
+  useDeleteVacancyMutation,
 } from '@/views/vacancies';
 import { TABLE_PAGE_SIZE } from '@/views/vacancies/utils';
 
+import { ErrorToast, SuccessToast } from '@cgp/ui-kit/components/custom-toast';
 import { Button } from '@cgp/ui-kit/components/ui/button';
 import { useKeycloak } from '@react-keycloak/web';
 import {
@@ -31,9 +34,12 @@ export default function VacanciesPage() {
   const [params, setParams] = useVacancyTableParams();
   const { keycloak, initialized } = useKeycloak();
 
+  const [deleteVacancyId, setDeleteVacancyId] = useState<string | null>(null);
+  const deleteMutation = useDeleteVacancyMutation();
+
   const queryParams: VacancyQueryParams = useMemo(
     () => ({
-      page: params.page,
+      page: params.page - 1,
       size: params.size,
       ...(params.sortBy && { sortBy: params.sortBy }),
       ...(params.sortBy && { sortOrder: params.sortOrder ?? 'asc' }),
@@ -45,12 +51,13 @@ export default function VacanciesPage() {
     [params]
   );
 
-  const { data: vacanciesResponse, isLoading } = useVacanciesQuery(
-    queryParams,
-    {
-      enabled: initialized && !!keycloak.authenticated,
-    }
-  );
+  const {
+    data: vacanciesResponse,
+    isLoading,
+    isFetching,
+  } = useVacanciesQuery(queryParams, {
+    enabled: initialized && !!keycloak.authenticated,
+  });
 
   const data = vacanciesResponse?.data?.content ?? [];
   const totalPages = vacanciesResponse?.data?.totalPages ?? 0;
@@ -67,7 +74,7 @@ export default function VacanciesPage() {
 
     if (wasHere) {
       void setParams({
-        page: 0,
+        page: 1,
         size: TABLE_PAGE_SIZE,
         sortBy: '',
         sortOrder: null,
@@ -90,17 +97,36 @@ export default function VacanciesPage() {
     (columnKey: string) => {
       if (params.sortBy !== columnKey) {
         // New column: start ascending
-        void setParams({ sortBy: columnKey, sortOrder: 'asc', page: 0 });
+        void setParams({ sortBy: columnKey, sortOrder: 'asc', page: 1 });
       } else if (params.sortOrder === 'asc') {
         // Same column, ascending → descending
-        void setParams({ sortOrder: 'desc', page: 0 });
+        void setParams({ sortOrder: 'desc', page: 1 });
       } else {
         // Same column, descending → clear sort (back to backend default: most recently created)
-        void setParams({ sortBy: '', sortOrder: null, page: 0 });
+        void setParams({ sortBy: '', sortOrder: null, page: 1 });
       }
     },
     [params.sortBy, params.sortOrder, setParams]
   );
+
+  const handleDeleteConfirm = () => {
+    if (!deleteVacancyId) return;
+    deleteMutation.mutate(deleteVacancyId, {
+      onSuccess: () => {
+        SuccessToast({
+          title: t('vacancies.deleteDialog.notifications.successTitle'),
+          description: t('vacancies.deleteDialog.notifications.successMessage'),
+        });
+        setDeleteVacancyId(null);
+      },
+      onError: () => {
+        ErrorToast({
+          title: t('vacancies.deleteDialog.notifications.errorTitle'),
+          description: t('vacancies.deleteDialog.notifications.errorMessage'),
+        });
+      },
+    });
+  };
 
   const columns = useMemo(
     () =>
@@ -112,6 +138,7 @@ export default function VacanciesPage() {
           void navigate(`/dashboard/ats/vacancies/${vacancyId}/view`),
         onEdit: (vacancyId: string) =>
           void navigate(`/dashboard/ats/vacancies/${vacancyId}/edit`),
+        onDelete: (vacancyId: string) => setDeleteVacancyId(vacancyId),
         t,
       }),
     [params.sortBy, params.sortOrder, handleSort, navigate, t]
@@ -134,75 +161,85 @@ export default function VacanciesPage() {
   });
 
   return (
-    <section className="flex h-full flex-col overflow-hidden px-7 py-5">
-      <div className="flex items-center gap-4 pb-5.5">
-        {!isLoading && (
-          <p className="shrink-0 text-2xl/8 font-bold text-slate-900">
-            {t('vacancies.title')}
-          </p>
-        )}
-        {showHeaderControls && (
-          <div className="flex min-w-0 flex-1 items-center justify-end gap-4">
-            {!isLoading && (
-              <VacancyFilteringSection
-                search={params.search}
-                onSearchChange={value =>
-                  void setParams({ search: value, page: 0 })
-                }
-                careerPathFilter={params.careerPath}
-                onCareerPathChange={value =>
-                  void setParams({ careerPath: value, page: 0 })
-                }
-                disciplineFilter={params.discipline}
-                onDisciplineChange={value =>
-                  void setParams({ discipline: value, page: 0 })
-                }
-                statusFilter={params.status}
-                onStatusChange={value =>
-                  void setParams({ status: value, page: 0 })
-                }
-              />
-            )}
-            {!isLoading && (
-              <Button
-                className="h-12 w-45 shrink-0 gap-1"
-                onClick={() => {
-                  void navigate('/dashboard/ats/vacancies/new');
-                }}
-              >
-                <Add className="size-5 stroke-2" />
-                {t('vacancies.createVacancyButton')}
-              </Button>
-            )}
-          </div>
-        )}
-      </div>
-      <div className="min-h-0 flex-1 overflow-hidden">
-        {isLoading ? (
-          <VacancyLoadingState />
-        ) : data.length === 0 ? (
-          hasActiveFilters ? (
-            <VacancySearchEmptyState />
+    <>
+      <section className="flex h-full flex-col overflow-hidden px-7 py-5">
+        <div className="flex items-center gap-4 pb-5.5">
+          {!isLoading && (
+            <p className="shrink-0 text-2xl/8 font-bold text-slate-900">
+              {t('vacancies.title')}
+            </p>
+          )}
+          {showHeaderControls && (
+            <div className="flex min-w-0 flex-1 items-center justify-end gap-4">
+              {!isLoading && (
+                <VacancyFilteringSection
+                  search={params.search}
+                  onSearchChange={value =>
+                    void setParams({ search: value, page: 1 })
+                  }
+                  careerPathFilter={params.careerPath}
+                  onCareerPathChange={value =>
+                    void setParams({ careerPath: value, page: 1 })
+                  }
+                  disciplineFilter={params.discipline}
+                  onDisciplineChange={value =>
+                    void setParams({ discipline: value, page: 1 })
+                  }
+                  statusFilter={params.status}
+                  onStatusChange={value =>
+                    void setParams({ status: value, page: 1 })
+                  }
+                />
+              )}
+              {!isLoading && (
+                <Button
+                  className="h-12 w-45 shrink-0 gap-1"
+                  onClick={() => {
+                    void navigate('/dashboard/ats/vacancies/new');
+                  }}
+                >
+                  <Add className="size-5 stroke-2" />
+                  {t('vacancies.createVacancyButton')}
+                </Button>
+              )}
+            </div>
+          )}
+        </div>
+        <div className="min-h-0 flex-1 overflow-hidden">
+          {isLoading ? (
+            <VacancyLoadingState />
+          ) : data.length === 0 ? (
+            hasActiveFilters ? (
+              <VacancySearchEmptyState />
+            ) : (
+              <VacancyTableEmptyState />
+            )
           ) : (
-            <VacancyTableEmptyState />
-          )
-        ) : (
-          <VacancyDataTable
-            table={table}
-            isLoading={false}
-            onRowClick={row =>
-              void navigate(`/dashboard/ats/vacancies/${row.vacancyId}/view`)
-            }
+            <VacancyDataTable
+              table={table}
+              isLoading={isFetching}
+              onRowClick={row =>
+                void navigate(`/dashboard/ats/vacancies/${row.vacancyId}/view`)
+              }
+            />
+          )}
+        </div>
+        {!isLoading && data.length > 0 && (
+          <VacancyTablePagination
+            currentPage={params.page - 1}
+            totalPages={totalPages}
+            onPageChange={page => void setParams({ page: page + 1 })}
           />
         )}
-      </div>
-      {!isLoading && data.length > 0 && (
-        <VacancyTablePagination
-          currentPage={params.page}
-          totalPages={totalPages}
-          onPageChange={page => void setParams({ page })}
-        />
-      )}
-    </section>
+      </section>
+      <VacancyDeleteDialog
+        open={Boolean(deleteVacancyId)}
+        onOpenChange={open => {
+          if (!open) setDeleteVacancyId(null);
+        }}
+        onConfirm={handleDeleteConfirm}
+        isDeleting={deleteMutation.isPending}
+      />
+    </>
   );
 }

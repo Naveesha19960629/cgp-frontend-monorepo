@@ -23,7 +23,10 @@ import {
   SecondaryEducationStep,
   TertiaryEducationStep,
 } from '@/views/vacancies';
-import { useCreateVacancyMutation } from '@/views/vacancies/hooks';
+import {
+  useCreateVacancyMutation,
+  useUpdateDraftVacancyMutation,
+} from '@/views/vacancies/hooks';
 import type { VacancyForm, VacancyStep } from '@/views/vacancies/types';
 
 import { ErrorToast, SuccessToast } from '@cgp/ui-kit/components/custom-toast';
@@ -236,10 +239,13 @@ interface VacancyFormContextValue {
   setCurrentStepIndex: (index: number) => void;
   completedSteps: Set<number>;
   removeCompletedStep: (index: number) => void;
+  initCompletedStepsFromForm: (loadedForm: VacancyForm) => void;
   isInitialStep: boolean;
+  setIsInitialStep: (val: boolean) => void;
   onNext: (data?: Partial<VacancyForm>, completed?: boolean) => void;
   onBack: () => void;
   onCancel: () => void;
+  lockCancelDialog: () => void;
   onSubmit: () => void;
   OnSaveAsDraft: () => void;
   isSavingDraft: boolean;
@@ -252,14 +258,23 @@ interface VacancyFormContextValue {
   stepDraftSaveRef: React.MutableRefObject<
     (() => Promise<Partial<VacancyForm> | null>) | null
   >;
+  isJobRequirementsFormValid: boolean;
+  setIsJobRequirementsFormValid: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const VacancyFormContext = createContext<VacancyFormContextValue | null>(null);
 
-function VacancyFormProvider({ children }: { children: React.ReactNode }) {
+function VacancyFormProvider({
+  children,
+  vacancyId,
+}: {
+  children: React.ReactNode;
+  vacancyId?: string;
+}) {
   const { t } = useTranslation('ats');
   const navigate = useNavigate();
   const { mutateAsync: createVacancy } = useCreateVacancyMutation();
+  const { mutateAsync: updateDraftVacancy } = useUpdateDraftVacancyMutation();
   const [form, setForm] = useState<VacancyForm>(DEFAULT_FORM);
   const [currentStepIndex, _setCurrentStepIndex] = useState(0);
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
@@ -267,11 +282,15 @@ function VacancyFormProvider({ children }: { children: React.ReactNode }) {
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [stepGuard, setStepGuard] = useState(false);
   const [isSavingDraft, setIsSavingDraft] = useState(false);
+  const [isJobRequirementsFormValid, setIsJobRequirementsFormValid] = useState(
+    () => Boolean(vacancyId)
+  );
   const stepPersistRef = useRef<(() => void) | null>(null);
   const stepDisableRef = useRef<(() => void) | null>(null);
   const stepDraftSaveRef = useRef<
     (() => Promise<Partial<VacancyForm> | null>) | null
   >(null);
+  const cancelLockRef = useRef(false);
 
   const setCurrentStepIndex = (index: number) => {
     _setCurrentStepIndex(index);
@@ -285,6 +304,44 @@ function VacancyFormProvider({ children }: { children: React.ReactNode }) {
       next.delete(index);
       return next;
     });
+  };
+
+  const initCompletedStepsFromForm = (loadedForm: VacancyForm) => {
+    const stepEnabledChecks: Array<() => boolean> = [
+      () =>
+        loadedForm.jobRequirements.length > 0 &&
+        loadedForm.jobRequirements[0].isEnabled,
+      () => loadedForm.profileRequirements.isEnabled,
+      () =>
+        loadedForm.secondaryEducation.length > 0 &&
+        loadedForm.secondaryEducation[0].isEnabled,
+      () =>
+        loadedForm.tertiaryEducation.length > 0 &&
+        loadedForm.tertiaryEducation[0].isEnabled,
+      () => Boolean(loadedForm.projectsRequirements?.isEnabled),
+      () => Boolean(loadedForm.preferredPublications?.isEnabled),
+      () => Boolean(loadedForm.preferredClubSocieties?.isEnabled),
+      () => Boolean(loadedForm.preferredSports?.isEnabled),
+      () => Boolean(loadedForm.preferredVolunteering?.isEnabled),
+      () => Boolean(loadedForm.patents?.isEnabled),
+      () => Boolean(loadedForm.preferredHonoursAwards?.isEnabled),
+      () =>
+        (loadedForm.licenseCertificates?.length ?? 0) > 0 &&
+        Boolean(loadedForm.licenseCertificates?.[0]?.isEnabled),
+      () => Boolean(loadedForm.preferredSkills?.isEnabled),
+      () => Boolean(loadedForm.preferredLanguages?.isEnabled),
+      () => Boolean(loadedForm.preferredCauses?.isEnabled),
+      () => Boolean(loadedForm.preferredHobbies?.isEnabled),
+      () => Boolean(loadedForm.preferredIndustries?.isEnabled),
+      () => Boolean(loadedForm.customizableForm?.isEnabled),
+      () => loadedForm.schedule !== undefined,
+    ];
+
+    const completed = new Set<number>();
+    stepEnabledChecks.forEach((check, index) => {
+      if (check()) completed.add(index);
+    });
+    setCompletedSteps(completed);
   };
 
   const isStepEnabled = (
@@ -303,12 +360,6 @@ function VacancyFormProvider({ children }: { children: React.ReactNode }) {
   };
 
   const onNext = (data?: Partial<VacancyForm>, completed?: boolean) => {
-    const stepKey =
-      VACANCY_STEPS[currentStepIndex]?.key ?? `step-${currentStepIndex}`;
-    console.group(`[Vacancy Wizard] Step payload — ${stepKey}`);
-    console.log('Step data:', data);
-    console.log('Full form after merge:', data ? { ...form, ...data } : form);
-    console.groupEnd();
     if (data) {
       setForm(prev => ({ ...prev, ...data }));
     }
@@ -336,7 +387,12 @@ function VacancyFormProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const lockCancelDialog = () => {
+    cancelLockRef.current = true;
+  };
+
   const onCancel = () => {
+    if (cancelLockRef.current) return;
     stepPersistRef.current?.();
     setShowCancelDialog(true);
   };
@@ -360,7 +416,15 @@ function VacancyFormProvider({ children }: { children: React.ReactNode }) {
           draftForm = { ...form, ...stepValues };
         }
 
-        await createVacancy({ form: draftForm, status: 'DRAFT' });
+        if (vacancyId) {
+          await updateDraftVacancy({
+            id: vacancyId,
+            form: draftForm,
+            status: 'DRAFT',
+          });
+        } else {
+          await createVacancy({ form: draftForm, status: 'DRAFT' });
+        }
         SuccessToast({
           title: t('vacancyCancelDialog.notifications.saveAsDraft.title'),
           description: t(
@@ -390,10 +454,13 @@ function VacancyFormProvider({ children }: { children: React.ReactNode }) {
         setCurrentStepIndex,
         completedSteps,
         removeCompletedStep,
+        initCompletedStepsFromForm,
         isInitialStep,
+        setIsInitialStep,
         onNext,
         onBack,
         onCancel,
+        lockCancelDialog,
         onSubmit,
         OnSaveAsDraft,
         isSavingDraft,
@@ -404,6 +471,8 @@ function VacancyFormProvider({ children }: { children: React.ReactNode }) {
         stepPersistRef,
         stepDisableRef,
         stepDraftSaveRef,
+        isJobRequirementsFormValid,
+        setIsJobRequirementsFormValid,
       }}
     >
       {children}

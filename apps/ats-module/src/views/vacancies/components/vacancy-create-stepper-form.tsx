@@ -2,11 +2,12 @@ import { Status } from 'iconsax-reactjs';
 
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 import {
   StepDisableDialog,
   VacancyCancelDialog,
+  VacancyEditCancelDialog,
 } from '@/views/vacancies/components';
 import {
   VACANCY_STEPS,
@@ -73,9 +74,12 @@ export default function VacancyCreateStepperForm({
 }: VacancyCreateStepperFormProps) {
   const { t } = useTranslation('ats');
   const navigate = useNavigate();
+  const location = useLocation();
+  const fromPath = (location.state as { from?: string } | null)?.from ?? '';
   const stepperTitle =
     mode === 'edit' ? t('vacancies.editVacancy') : t('vacancies.addVacancy');
   const {
+    form,
     currentStepIndex,
     setCurrentStepIndex,
     completedSteps,
@@ -90,14 +94,22 @@ export default function VacancyCreateStepperForm({
     setShowCancelDialog,
     OnSaveAsDraft,
     isSavingDraft,
+    isJobRequirementsFormValid,
   } = useVacancyForm();
 
+  const isEditCancelDialog =
+    mode === 'edit' &&
+    form.status.toLowerCase() !== 'new' &&
+    form.status.toLowerCase() !== 'draft';
+
   const currentStepKey = VACANCY_STEPS[currentStepIndex].key;
-  const isStepNavigationEnabled = completedSteps.has(0);
+  const isStepNavigationEnabled =
+    mode === 'edit' ? isJobRequirementsFormValid : completedSteps.has(0);
 
   const [pendingTargetIndex, setPendingTargetIndex] = useState<number | null>(
     null
   );
+  const [isNavigating, setIsNavigating] = useState(false);
 
   const handleTabChange = (value: string) => {
     const targetIndex = VACANCY_STEPS.findIndex(s => s.key === value);
@@ -204,20 +216,44 @@ export default function VacancyCreateStepperForm({
         </Tabs>
       </div>
 
-      <VacancyCancelDialog
-        open={showCancelDialog}
-        onOpenChange={setShowCancelDialog}
-        onDiscard={() => {
-          setShowCancelDialog(false);
-          SuccessToast({
-            title: t('vacancyCancelDialog.notifications.discard.title'),
-            description: t('vacancyCancelDialog.notifications.discard.message'),
-          });
-          void navigate('/dashboard/ats/vacancies');
-        }}
-        onSaveAsDraft={OnSaveAsDraft}
-        isSavingDraft={isSavingDraft}
-      />
+      {isEditCancelDialog ? (
+        <VacancyEditCancelDialog
+          open={showCancelDialog && !isNavigating}
+          onOpenChange={setShowCancelDialog}
+          onConfirm={() => {
+            setIsNavigating(true);
+            setShowCancelDialog(false);
+            SuccessToast({
+              title: t('vacancyEditCancelDialog.notifications.discard.title'),
+              description: t(
+                'vacancyEditCancelDialog.notifications.discard.message'
+              ),
+            });
+            if (fromPath.includes('/dashboard/ats/vacancies')) {
+              navigate(-1);
+            } else {
+              void navigate('/dashboard/ats/vacancies');
+            }
+          }}
+        />
+      ) : (
+        <VacancyCancelDialog
+          open={showCancelDialog}
+          onOpenChange={setShowCancelDialog}
+          onDiscard={() => {
+            setShowCancelDialog(false);
+            SuccessToast({
+              title: t('vacancyCancelDialog.notifications.discard.title'),
+              description: t(
+                'vacancyCancelDialog.notifications.discard.message'
+              ),
+            });
+            void navigate('/dashboard/ats/vacancies');
+          }}
+          onSaveAsDraft={OnSaveAsDraft}
+          isSavingDraft={isSavingDraft}
+        />
+      )}
 
       <StepDisableDialog
         open={pendingTargetIndex !== null}

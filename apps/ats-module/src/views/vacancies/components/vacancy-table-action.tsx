@@ -3,7 +3,7 @@ import { History, MoreVertical, UserSearch } from 'lucide-react';
 import { Edit2, Link21, Simcard2, Trash } from 'iconsax-reactjs';
 
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 import type { VacancyTableActionProps } from '@/views/vacancies/types';
 
@@ -21,12 +21,14 @@ export default function VacancyTableAction({
   onMatchCandidate,
   onCopyLink,
   onMakeACopy,
+  onEdit,
   onDelete,
 }: VacancyTableActionProps) {
   const { t } = useTranslation('ats');
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const { status, applicantCount } = vacancy;
+  const { status, applicantCount, availableActions } = vacancy;
   const hasApplicants = applicantCount > 0;
   const normalizedStatus = status.toLowerCase();
 
@@ -36,18 +38,30 @@ export default function VacancyTableAction({
   const isExpired = normalizedStatus === 'expired';
   const isOnHold = normalizedStatus === 'on_hold';
 
-  const showDuplicate = isUnpublished || isLive || isExpired || isOnHold;
-  const showVersionHistory = isUnpublished || isLive || isExpired || isOnHold;
-  const showCopyLink = isUnpublished || isLive || isExpired || isOnHold;
-  const showMatchCandidates =
-    (isLive || isExpired || isOnHold) && hasApplicants;
-  const showDelete =
-    isDraft ||
-    isUnpublished ||
-    ((isLive || isExpired || isOnHold) && !hasApplicants);
+  const showDuplicate = availableActions
+    ? availableActions.includes('MAKE_A_COPY')
+    : isUnpublished || isLive || isExpired || isOnHold;
+  const showVersionHistory = availableActions
+    ? availableActions.includes('VERSION_CONTROL')
+    : isUnpublished || isLive || isExpired || isOnHold;
+  const showCopyLink = availableActions
+    ? availableActions.includes('COPY_LINK')
+    : isUnpublished || isLive || isExpired || isOnHold;
+  const showMatchCandidates = availableActions
+    ? availableActions.includes('MATCH_CANDIDATE')
+    : (isLive || isExpired || isOnHold) && hasApplicants;
+  const showDelete = availableActions
+    ? availableActions.includes('DELETE')
+    : isDraft || isUnpublished || (isLive && !hasApplicants);
 
   const handleEdit = () => {
-    void navigate(`/dashboard/ats/vacancies/${vacancy.id}/edit`);
+    if (onEdit) {
+      onEdit();
+    } else {
+      void navigate(`/dashboard/ats/vacancies/${vacancy.id}/edit`, {
+        state: { from: location.pathname },
+      });
+    }
   };
 
   return (

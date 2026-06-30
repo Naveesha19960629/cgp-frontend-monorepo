@@ -12,8 +12,9 @@
   },
   "breadcrumb": {
     "vacancies": "Vacancies",
-    "addVacancy": "Add Vacancy",
+    "addVacancy": "Create Vacancy",
     "editVacancy": "Edit Vacancy",
+    "viewVacancy": "View Vacancy",
     "findCandidates": "Find Candidates",
     "templates": "Templates"
   },

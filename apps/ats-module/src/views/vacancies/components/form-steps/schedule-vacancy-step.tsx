@@ -27,7 +27,6 @@ import { startOfToday } from 'date-fns';
 export default function ScheduleVacancyStep({
   onBack,
   onSubmit,
-  mode = 'create',
 }: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
   const { id } = useParams<'id'>();
@@ -46,7 +45,27 @@ export default function ScheduleVacancyStep({
   const expirationDate = watch('expirationDate');
   const expirationTime = watch('expirationTime');
 
+  const isScheduleChanged = useMemo(() => {
+    if (!form.schedule) return true;
+
+    const currentSchedule = toScheduleVacancyPayload({
+      schedulePublishDate: publishDate,
+      schedulePublishTime: publishTime,
+      expirationDate,
+      expirationTime,
+    });
+
+    return (
+      currentSchedule.schedulePublishAt !== form.schedule.schedulePublishAt ||
+      currentSchedule.expirationAt !== form.schedule.expirationAt
+    );
+  }, [publishDate, publishTime, expirationDate, expirationTime, form.schedule]);
+
   const hasPastScheduleDateTime = useMemo(() => {
+    if (!isScheduleChanged) {
+      return false;
+    }
+
     if (!publishDate || !publishTime || !expirationDate || !expirationTime) {
       return false;
     }
@@ -65,11 +84,20 @@ export default function ScheduleVacancyStep({
 
     const now = new Date();
     return publishAt < now || expirationAt < now;
-  }, [publishDate, publishTime, expirationDate, expirationTime]);
+  }, [
+    publishDate,
+    publishTime,
+    expirationDate,
+    expirationTime,
+    isScheduleChanged,
+  ]);
 
   const { mutateAsync: createVacancy, isPending } = useCreateVacancyMutation();
   const { mutateAsync: updateVacancy, isPending: isUpdating } =
     useUpdateVacancyMutation();
+
+  const isCreateAction =
+    !id || form.status === 'new' || form.status === 'draft';
 
   const persistScheduleToContext = useCallback(
     (values?: ScheduleVacancyFormValues) => {
@@ -155,15 +183,22 @@ export default function ScheduleVacancyStep({
     const expirationAt = new Date(
       `${values.expirationDate}T${to24HourTime(values.expirationTime)}`
     );
-    const now = new Date();
 
-    if (publishAt < now || expirationAt < now) {
-      ErrorToast({
-        title: t('scheduleVacancy.notifications.validationErrorTitle'),
-        description: t('scheduleVacancy.notifications.pastDateTimeMessage'),
-      });
-      return;
+    if (isScheduleChanged) {
+      const now = new Date();
+
+      if (publishAt < now || expirationAt < now) {
+        ErrorToast({
+          title: t('scheduleVacancy.notifications.validationErrorTitle'),
+          description: t('scheduleVacancy.notifications.pastDateTimeMessage'),
+        });
+        return;
+      }
     }
+
+    // LIVE if publish time is now or in the past, UNPUBLISHED if future
+    const targetStatus = publishAt <= new Date() ? 'live' : 'unpublished';
+    const targetApiStatus = targetStatus === 'live' ? 'LIVE' : 'UNPUBLISHED';
 
     try {
       const schedule = toScheduleVacancyPayload(values);
@@ -173,21 +208,24 @@ export default function ScheduleVacancyStep({
         await updateVacancy({
           id,
           form: payloadForm,
-          existingStatus: form.status,
+          existingStatus: isCreateAction ? targetStatus : form.status,
         });
       } else {
-        await createVacancy({ form: { ...form, schedule } });
+        await createVacancy({
+          form: { ...form, schedule },
+          status: targetApiStatus,
+        });
       }
       SuccessToast({
         title: t(
-          id
-            ? 'scheduleVacancy.notifications.updateSuccessTitle'
-            : 'scheduleVacancy.notifications.successTitle'
+          isCreateAction
+            ? 'scheduleVacancy.notifications.successTitle'
+            : 'scheduleVacancy.notifications.updateSuccessTitle'
         ),
         description: t(
-          id
-            ? 'scheduleVacancy.notifications.updateSuccessMessage'
-            : 'scheduleVacancy.notifications.successMessage'
+          isCreateAction
+            ? 'scheduleVacancy.notifications.successMessage'
+            : 'scheduleVacancy.notifications.updateSuccessMessage'
         ),
       });
       onSubmit();
@@ -220,9 +258,7 @@ export default function ScheduleVacancyStep({
         <h2 className="text-xl font-bold tracking-tight text-slate-900">
           {t('scheduleVacancy.title')}
         </h2>
-        {mode === 'edit' && form.status ? (
-          <VacancyStatusBadge status={form.status} />
-        ) : null}
+        {form.status ? <VacancyStatusBadge status={form.status} /> : null}
       </div>
 
       {/* ── Body ────────────────────────────────────────────────────── */}
@@ -299,7 +335,7 @@ export default function ScheduleVacancyStep({
                       onDateChange={dateField.onChange}
                       timeValue={timeField.value}
                       onTimeChange={timeField.onChange}
-                      timeLabel="Expiration Time"
+                      timeLabel={t('scheduleVacancy.expirationTimeLabel')}
                       dateButtonPlaceholder={t(
                         'scheduleVacancy.expirationDatePlaceholder'
                       )}
@@ -366,7 +402,9 @@ export default function ScheduleVacancyStep({
             handleSubmit(onValid, onInvalid)().catch(() => {});
           }}
         >
-          {id ? t('common.save') : t('scheduleVacancy.create')}
+          {isCreateAction
+            ? t('scheduleVacancy.create')
+            : t('scheduleVacancy.update')}
         </Button>
       </div>
     </div>

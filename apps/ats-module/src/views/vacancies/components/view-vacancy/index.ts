@@ -1,7 +1,9 @@
 export { VacancyView } from '@/views/vacancies/components/view-vacancy/vacancy-view';
 export { VacancyJobRequirementsSection } from '@/views/vacancies/components/view-vacancy/vacancy-job-requirements-section';
+export { VacancySecondaryEducationSection } from '@/views/vacancies/components/view-vacancy/vacancy-secondary-education-section';
 export { VacancyProfileRequirementsSection } from '@/views/vacancies/components/view-vacancy/vacancy-profile-requirements-section';
 export { VacancyScheduledVacancySection } from '@/views/vacancies/components/view-vacancy/vacancy-scheduled-vacancy-section';
+export { VacancyCustomizableFormSection } from '@/views/vacancies/components/view-vacancy/vacancy-customizable-form-section';
 export { VacancyNoDetailsState } from '@/views/vacancies/components/view-vacancy/vacancy-no-details-state';
 export { VacancyPublicationsSection } from '@/views/vacancies/components/view-vacancy/vacancy-publications-section';
 export { VacancyClubsSocietiesSection } from '@/views/vacancies/components/view-vacancy/vacancy-clubs-societies-section';
@@ -9,6 +11,8 @@ export { VacancySportsSection } from '@/views/vacancies/components/view-vacancy/
 export { VacancyVolunteeringSection } from '@/views/vacancies/components/view-vacancy/vacancy-volunteering-section';
 export { VacancyProjectRequirementsSection } from '@/views/vacancies/components/view-vacancy/vacancy-project-requirements-section';
 export { VacancyHonoursAwardsSection } from '@/views/vacancies/components/view-vacancy/vacancy-honours-awards-section';
+export { VacancyPatentsSection } from '@/views/vacancies/components/view-vacancy/vacancy-patents-section';
+export { VacancyTertiaryEducationSection } from '@/views/vacancies/components/view-vacancy/vacancy-tertiary-education-section';
 export { VacancyLicensesCertificationsSection } from '@/views/vacancies/components/view-vacancy/vacancy-licenses-certifications-section';
 export { VacancySkillsSection } from '@/views/vacancies/components/view-vacancy/vacancy-skills-section';
 export { VacancyLanguagesSection } from '@/views/vacancies/components/view-vacancy/vacancy-languages-section';

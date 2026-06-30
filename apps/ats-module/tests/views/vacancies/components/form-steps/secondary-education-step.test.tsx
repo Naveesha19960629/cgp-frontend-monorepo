@@ -295,7 +295,34 @@ vi.mock('@cgp/ui-kit/components/ui/dialog', () => ({
 }));
 
 vi.mock('@cgp/ui-kit/components/ui/calendar', () => ({
-  Calendar: () => <div data-testid="calendar" />,
+  Calendar: ({
+    disabled,
+    endMonth,
+  }: {
+    disabled?: (date: Date) => boolean;
+    endMonth?: Date;
+  }) => {
+    const isEndDateCalendar = endMonth
+      ? endMonth.getFullYear() - new Date().getFullYear() > 50
+      : false;
+    return (
+      <div
+        data-testid={
+          isEndDateCalendar ? 'end-date-calendar' : 'start-date-calendar'
+        }
+      >
+        {disabled && isEndDateCalendar && (
+          <button
+            type="button"
+            data-testid="end-date-probe-jun-2020"
+            data-disabled={String(disabled(new Date(2020, 5, 15)))}
+          >
+            probe
+          </button>
+        )}
+      </div>
+    );
+  },
 }));
 
 vi.mock('@cgp/ui-kit/components/character-count', () => ({
@@ -529,6 +556,68 @@ describe('SecondaryEducationStep', () => {
     });
   });
 
+  describe('end date calendar disabled logic', () => {
+    it('allows a past date when no start date is set', () => {
+      renderStep();
+      const probe = screen.getByTestId('end-date-probe-jun-2020');
+      expect(probe).toHaveAttribute('data-disabled', 'false');
+    });
+
+    it('blocks a past date that falls before start date + 1 day', () => {
+      stableForm.secondaryEducation = [
+        {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          content: [
+            {
+              schools: [],
+              schoolLocations: [],
+              examinations: [],
+              secondaryAwardingBody: [],
+              fieldsOfStudy: [],
+              grade: '',
+              startDate: '2020-06-20',
+              endDate: undefined,
+              result: '',
+              acceptsHomeSchooling: false,
+            },
+          ],
+        },
+      ];
+      renderStep();
+      // June 15 2020 is before minEndDate (June 21 2020) → must be disabled
+      const probe = screen.getByTestId('end-date-probe-jun-2020');
+      expect(probe).toHaveAttribute('data-disabled', 'true');
+    });
+
+    it('allows a past date that falls after start date + 1 day', () => {
+      stableForm.secondaryEducation = [
+        {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          content: [
+            {
+              schools: [],
+              schoolLocations: [],
+              examinations: [],
+              secondaryAwardingBody: [],
+              fieldsOfStudy: [],
+              grade: '',
+              startDate: '2020-06-10',
+              endDate: undefined,
+              result: '',
+              acceptsHomeSchooling: false,
+            },
+          ],
+        },
+      ];
+      renderStep();
+      // June 15 2020 is after minEndDate (June 11 2020) → must not be disabled
+      const probe = screen.getByTestId('end-date-probe-jun-2020');
+      expect(probe).toHaveAttribute('data-disabled', 'false');
+    });
+  });
+
   describe('enable/disable toggle', () => {
     it('disables the section when toggled on then off', async () => {
       const user = userEvent.setup();
@@ -653,6 +742,52 @@ describe('SecondaryEducationStep', () => {
         screen.getByLabelText('secondaryEducation.collectFromCandidates')
       );
       expect(gradeInput).toHaveValue('');
+    });
+
+    it('clears startDate and endDate (shows placeholder text) when checked', async () => {
+      stableForm.secondaryEducation = [
+        {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          content: [
+            {
+              schools: [],
+              schoolLocations: [],
+              examinations: [],
+              secondaryAwardingBody: [],
+              fieldsOfStudy: [],
+              grade: '',
+              startDate: '2024-06-01',
+              endDate: '2024-12-01',
+              result: '',
+              acceptsHomeSchooling: false,
+            },
+          ],
+        },
+      ];
+
+      const user = userEvent.setup();
+      renderStep();
+
+      expect(
+        screen.queryByText('secondaryEducation.placeholders.startDate')
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByText('secondaryEducation.placeholders.endDate')
+      ).not.toBeInTheDocument();
+
+      await user.click(
+        screen.getByLabelText('secondaryEducation.collectFromCandidates')
+      );
+
+      await waitFor(() => {
+        expect(
+          screen.getByText('secondaryEducation.placeholders.startDate')
+        ).toBeInTheDocument();
+        expect(
+          screen.getByText('secondaryEducation.placeholders.endDate')
+        ).toBeInTheDocument();
+      });
     });
   });
 

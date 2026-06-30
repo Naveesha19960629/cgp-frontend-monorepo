@@ -1,10 +1,17 @@
 import type {
   AddOrSelectOption,
+  CustomizableFormData,
+  CustomizableFormFormCard,
+  CustomizableFormQuestion,
   JobRequirement,
   LicenseCertRef,
+  PatentStatus,
+  ScheduleVacancy,
   SkillCareerPathEntry,
   VacancyForm,
+  preferredPatentsSchema,
 } from '@/views/vacancies/types';
+import { parseLocalDate } from '@/views/vacancies/utils/date-timezone-safe';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
@@ -380,7 +387,7 @@ function normalizeLicenseRefWithType(raw: unknown): LicenseCertRef | null {
 
   return {
     id,
-    source: source as 'MASTER' | 'PENDING',
+    source: source as 'MASTER' | 'PENDING' | 'USER_CREATED',
     name:
       toSafeString(raw.name) ||
       toSafeString(raw.label) ||
@@ -795,6 +802,7 @@ function normalizePreferredClubSocietiesSection(
         `club-${index + 1}`,
       isOpen: true,
       clubSociety: normalizeOptionWithSourceArray(item.clubSociety),
+      clubSocietySearch: '',
       startDate: toSafeString(item.startDate) || undefined,
       endDate: toSafeString(item.endDate) || undefined,
       representedOrganization:
@@ -900,38 +908,6 @@ function normalizePreferredVolunteeringSection(
   };
 }
 
-function normalizePreferredIndustriesSection(
-  rawSection: unknown,
-  fallback: VacancyForm['preferredIndustries']
-): VacancyForm['preferredIndustries'] {
-  if (Array.isArray(rawSection)) {
-    return {
-      isEnabled: fallback?.isEnabled ?? true,
-      dataTakenFromCandidate: fallback?.dataTakenFromCandidate ?? false,
-      industries: normalizeIndustryEntries(rawSection),
-    };
-  }
-
-  if (!isRecord(rawSection)) {
-    return fallback;
-  }
-
-  const contentEntries = normalizeIndustryEntries(rawSection.content);
-  const formEntries = normalizeIndustryEntries(rawSection.industries);
-
-  return {
-    isEnabled:
-      typeof rawSection.isEnabled === 'boolean'
-        ? rawSection.isEnabled
-        : (fallback?.isEnabled ?? false),
-    dataTakenFromCandidate:
-      typeof rawSection.dataTakenFromCandidate === 'boolean'
-        ? rawSection.dataTakenFromCandidate
-        : (fallback?.dataTakenFromCandidate ?? false),
-    industries: contentEntries.length > 0 ? contentEntries : formEntries,
-  };
-}
-
 function normalizeSkillEntry(raw: unknown): SkillCareerPathEntry | null {
   if (!isRecord(raw)) {
     return null;
@@ -996,6 +972,102 @@ function normalizePreferredSkillsSection(
         ? rawSection.dataTakenFromCandidate
         : (fallback?.dataTakenFromCandidate ?? false),
     skills,
+  };
+}
+
+function normalizePreferredIndustriesSection(
+  rawSection: unknown,
+  fallback: VacancyForm['preferredIndustries']
+): VacancyForm['preferredIndustries'] {
+  if (Array.isArray(rawSection)) {
+    return {
+      isEnabled: fallback?.isEnabled ?? true,
+      dataTakenFromCandidate: fallback?.dataTakenFromCandidate ?? false,
+      industries: normalizeIndustryEntries(rawSection),
+    };
+  }
+
+  if (!isRecord(rawSection)) {
+    return fallback;
+  }
+
+  const contentEntries = normalizeIndustryEntries(rawSection.content);
+  const formEntries = normalizeIndustryEntries(rawSection.industries);
+
+  return {
+    isEnabled:
+      typeof rawSection.isEnabled === 'boolean'
+        ? rawSection.isEnabled
+        : (fallback?.isEnabled ?? false),
+    dataTakenFromCandidate:
+      typeof rawSection.dataTakenFromCandidate === 'boolean'
+        ? rawSection.dataTakenFromCandidate
+        : (fallback?.dataTakenFromCandidate ?? false),
+    industries: contentEntries.length > 0 ? contentEntries : formEntries,
+  };
+}
+
+const PATENT_STATUS_LABEL_MAP: Record<PatentStatus, string> = {
+  PATENT_PENDING: 'Patent Pending',
+  PATENT_ISSUED: 'Patent Issued',
+};
+
+function normalizePatentsSection(
+  rawSection: unknown,
+  fallback: VacancyForm['patents']
+): preferredPatentsSchema {
+  const fallbackValue: preferredPatentsSchema = fallback ?? {
+    isEnabled: false,
+    dataTakenFromCandidate: false,
+    patents: [],
+  };
+
+  if (!isRecord(rawSection)) {
+    return fallbackValue;
+  }
+
+  const entries = Array.isArray(rawSection.patents) ? rawSection.patents : [];
+
+  return {
+    isEnabled:
+      typeof rawSection.isEnabled === 'boolean'
+        ? rawSection.isEnabled
+        : fallbackValue.isEnabled,
+    dataTakenFromCandidate:
+      typeof rawSection.dataTakenFromCandidate === 'boolean'
+        ? rawSection.dataTakenFromCandidate
+        : fallbackValue.dataTakenFromCandidate,
+    patents: entries.filter(isRecord).map(item => {
+      const apiStatuses = Array.isArray(item.statuses) ? item.statuses : [];
+      const apiIndustries = Array.isArray(item.relatedIndustry)
+        ? item.relatedIndustry
+        : [];
+
+      return {
+        relatedIndustries: apiIndustries.filter(isRecord).map(ind => ({
+          value: toSafeString(ind.id),
+          label:
+            toSafeString(ind.label) ||
+            toSafeString(ind.displayValue) ||
+            toSafeString(ind.id),
+          source: toSafeString(ind.source) || 'MASTER',
+        })),
+        statuses: apiStatuses
+          .filter(
+            (s): s is PatentStatus =>
+              s === 'PATENT_PENDING' || s === 'PATENT_ISSUED'
+          )
+          .map(s => ({
+            value: s,
+            label: PATENT_STATUS_LABEL_MAP[s],
+          })),
+        fromDate:
+          parseLocalDate(toSafeString(item.fromDate) || undefined) ?? undefined,
+        toDate:
+          parseLocalDate(toSafeString(item.toDate) || undefined) ?? undefined,
+        isOpen: true,
+      };
+    }),
   };
 }
 
@@ -1112,6 +1184,108 @@ function normalizeVacancyStatus(
   return mapped;
 }
 
+const VALID_CUSTOMIZABLE_QUESTION_TYPES = new Set([
+  'SHORT_ANSWER',
+  'PARAGRAPH',
+  'MULTIPLE_CHOICE',
+  'CHECKBOXES',
+  'DROPDOWN',
+  'LINEAR_SCALE',
+]);
+
+function toCustomizableQuestionType(
+  value: unknown
+): CustomizableFormQuestion['type'] {
+  const normalized = toSafeString(value).toUpperCase();
+  return VALID_CUSTOMIZABLE_QUESTION_TYPES.has(normalized)
+    ? (normalized as CustomizableFormQuestion['type'])
+    : '';
+}
+
+function toSafeInt(value: unknown): number {
+  const n = typeof value === 'number' ? value : Number(value);
+  return Number.isFinite(n) ? Math.trunc(n) : 0;
+}
+
+function normalizeCustomizableFormSection(
+  raw: unknown,
+  fallback: CustomizableFormData
+): CustomizableFormData {
+  const entry: unknown = Array.isArray(raw) ? raw[0] : raw;
+  if (!isRecord(entry)) return fallback;
+
+  const isEnabled =
+    typeof entry.isEnabled === 'boolean' ? entry.isEnabled : false;
+  const sectionTitle = toSafeString(entry.sectionTitle);
+  const rawForms = Array.isArray(entry.forms) ? entry.forms : [];
+
+  let formCounter = 1;
+  const forms: CustomizableFormFormCard[] = rawForms
+    .filter(isRecord)
+    .map(form => {
+      const rawQuestions = Array.isArray(form.questions) ? form.questions : [];
+      let questionCounter = 1;
+
+      const questions: CustomizableFormQuestion[] = rawQuestions
+        .filter(isRecord)
+        .map(question => {
+          const linearScale = isRecord(question.linearScale)
+            ? question.linearScale
+            : {};
+          const rawOptions = Array.isArray(question.options)
+            ? question.options
+            : [];
+
+          let optionCounter = 1;
+          const options = rawOptions
+            .map(opt => ({
+              id: optionCounter++,
+              value: isRecord(opt)
+                ? toSafeString(opt.value ?? opt.label)
+                : toSafeString(opt),
+            }))
+            .filter(o => o.value);
+
+          return {
+            id: questionCounter++,
+            text: toSafeString(question.questionText ?? question.text),
+            type: toCustomizableQuestionType(
+              question.questionType ?? question.type
+            ),
+            required:
+              typeof question.required === 'boolean'
+                ? question.required
+                : false,
+            options: options.length ? options : [{ id: 1, value: '' }],
+            from: toSafeInt(linearScale.startValue ?? question.from),
+            to: toSafeInt(linearScale.endValue ?? question.to) || 2,
+            startLabel: toSafeString(
+              linearScale.startLabel ?? question.startLabel
+            ),
+            endLabel: toSafeString(linearScale.endLabel ?? question.endLabel),
+          };
+        });
+
+      return {
+        id: formCounter++,
+        title: toSafeString(form.title),
+        questions,
+      };
+    });
+
+  if (!isEnabled && !sectionTitle && forms.length === 0) return fallback;
+
+  return { isEnabled, sectionTitle, forms };
+}
+
+function normalizeSchedule(raw: unknown): ScheduleVacancy | undefined {
+  if (!isRecord(raw)) return undefined;
+  const publishAt = toSafeString(raw.schedulePublishAt);
+  const expirationAt = toSafeString(raw.expirationAt);
+  if (!publishAt || !expirationAt) return undefined;
+  return { schedulePublishAt: publishAt, expirationAt };
+}
+
 function toVacancyFormFromResponse(
   rawVacancy: Record<string, unknown>,
   previousForm: VacancyForm
@@ -1162,6 +1336,13 @@ function toVacancyFormFromResponse(
     sectionSource,
     ['preferredVolunteering', 'volunteering']
   );
+  const patentsSection = readSectionValue(rawVacancy, sectionSource, [
+    'patents',
+  ]);
+  const scheduleSection = readSectionValue(rawVacancy, sectionSource, [
+    'schedule',
+    'scheduleRequirement',
+  ]);
   const preferredSkillsSection = readSectionValue(rawVacancy, sectionSource, [
     'preferredSkills',
     'skills',
@@ -1179,6 +1360,12 @@ function toVacancyFormFromResponse(
     'preferredHobbies',
     'hobbyList',
     'hobbies',
+  ]);
+  const customizableFormSection = readSectionValue(rawVacancy, sectionSource, [
+    'customizedForm',
+    'customizableForm',
+    'customizableForms',
+    'customizedForms',
   ]);
 
   // Explicit whitelist: only pick known scalar top-level form fields.
@@ -1206,6 +1393,10 @@ function toVacancyFormFromResponse(
         ? toSafeString(rawVacancy.title) || previousForm.title
         : normalizedTitle,
     status: normalizeVacancyStatus(rawVacancy.status, previousForm.status),
+    applicantCount:
+      typeof rawVacancy.applicantCount === 'number'
+        ? rawVacancy.applicantCount
+        : previousForm.applicantCount,
     lastActiveStep,
     jobRequirements: normalizeJobRequirementsSection(
       sectionSource,
@@ -1251,6 +1442,8 @@ function toVacancyFormFromResponse(
       preferredIndustriesSection,
       previousForm.preferredIndustries
     ),
+    patents: normalizePatentsSection(patentsSection, previousForm.patents),
+    schedule: normalizeSchedule(scheduleSection) ?? previousForm.schedule,
     preferredSkills: normalizePreferredSkillsSection(
       preferredSkillsSection,
       previousForm.preferredSkills
@@ -1266,6 +1459,14 @@ function toVacancyFormFromResponse(
     preferredHobbies: normalizePreferredHobbiesSection(
       preferredHobbiesSection,
       previousForm.preferredHobbies
+    ),
+    customizableForm: normalizeCustomizableFormSection(
+      customizableFormSection,
+      previousForm.customizableForm ?? {
+        isEnabled: false,
+        sectionTitle: '',
+        forms: [],
+      }
     ),
   };
 }

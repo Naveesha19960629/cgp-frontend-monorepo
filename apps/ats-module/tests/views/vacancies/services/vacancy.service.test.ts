@@ -3,13 +3,15 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { vacancyService } from '@/views/vacancies/services/vacancy.service';
 import type { CreateVacancyPayload } from '@/views/vacancies/types';
 
-const { mockPost, mockPut } = vi.hoisted(() => ({
+const { mockGet, mockPost, mockPut } = vi.hoisted(() => ({
+  mockGet: vi.fn(),
   mockPost: vi.fn(),
   mockPut: vi.fn(),
 }));
 
 vi.mock('@cgp/data-access', () => ({
   httpClient: {
+    get: mockGet,
     post: mockPost,
     put: mockPut,
   },
@@ -192,6 +194,69 @@ describe('vacancyService', () => {
             },
           }),
         })
+      );
+    });
+  });
+
+  describe('getFilterOptions', () => {
+    const mockFilterResponse = {
+      data: {
+        requestId: 'req-filter-1',
+        success: true,
+        message: 'OK',
+        data: {
+          careerPaths: [{ id: 'cp1', label: 'Engineering' }],
+          disciplines: [{ id: 'd1', label: 'Software' }],
+          statuses: [{ id: 'Live', label: 'Live' }],
+        },
+      },
+    };
+
+    it('sends GET request to /vacancies/filters/options', async () => {
+      mockGet.mockResolvedValue(mockFilterResponse);
+
+      await vacancyService.getFilterOptions();
+
+      expect(mockGet).toHaveBeenCalledWith(
+        '/vacancies/filters/options',
+        expect.objectContaining({ params: undefined })
+      );
+    });
+
+    it('includes search param when search string is provided', async () => {
+      mockGet.mockResolvedValue(mockFilterResponse);
+
+      await vacancyService.getFilterOptions('engineer');
+
+      expect(mockGet).toHaveBeenCalledWith('/vacancies/filters/options', {
+        params: { search: 'engineer' },
+      });
+    });
+
+    it('sends no params when search is undefined', async () => {
+      mockGet.mockResolvedValue(mockFilterResponse);
+
+      await vacancyService.getFilterOptions(undefined);
+
+      expect(mockGet).toHaveBeenCalledWith(
+        '/vacancies/filters/options',
+        expect.objectContaining({ params: undefined })
+      );
+    });
+
+    it('returns the API response data', async () => {
+      mockGet.mockResolvedValue(mockFilterResponse);
+
+      const result = await vacancyService.getFilterOptions();
+
+      expect(result).toEqual(mockFilterResponse.data);
+    });
+
+    it('throws when HTTP request fails', async () => {
+      mockGet.mockRejectedValue(new Error('Network error'));
+
+      await expect(vacancyService.getFilterOptions()).rejects.toThrow(
+        'Network error'
       );
     });
   });

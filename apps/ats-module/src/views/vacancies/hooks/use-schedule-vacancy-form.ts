@@ -76,36 +76,55 @@ function to24Hour(time: string): string {
 }
 
 /**
- * Parse any of the four accepted backend formats into separate date and time
- * display strings so the form can be pre-populated from saved data.
+ * Parse backend datetime strings into separate date and time strings for the
+ * form. Handles both 24-hour ISO (from API) and 12-hour AM/PM (legacy).
  *
  * Accepted inputs:
- *   "2026-06-25T05:27:10.819 PM"  (date-time ISO with ms)
- *   "2026-06-25T05:27:10 PM"      (date-time ISO)
- *   "2026-06-25 05:27:10 PM"      (date-time space)
- *   "2026-06-25 05:27 PM"         (date-time space no seconds)
+ *   "2026-06-24T10:00:00"         (24-hour ISO — primary API format)
+ *   "2026-06-24T10:00:00.000"     (24-hour ISO with ms)
+ *   "2026-06-25T05:27:10 PM"      (12-hour with T separator)
+ *   "2026-06-25 05:27:10 PM"      (12-hour with space separator)
  */
 function parseBackendDatetime(value: string): { date: string; time: string } {
-  // 12-hour AM/PM format (backend storage / toScheduleVacancyPayload output)
-  const match =
+  const trimmed = value.trim();
+
+  // 1. 12-hour AM/PM format (e.g. "2026-06-25T05:27:10 PM", "2026-06-25 05:27 PM")
+  const twelveHourMatch =
     /^(\d{4}-\d{2}-\d{2})[T ](\d{1,2}:\d{2}(?::\d{2})?)(?:\.\d+)?\s*(AM|PM)$/i.exec(
-      value.trim()
+      trimmed
     );
-  if (match) {
+  if (twelveHourMatch) {
     return {
-      date: match[1],
-      time: `${match[2]} ${match[3].toUpperCase()}`,
+      date: twelveHourMatch[1],
+      time: `${twelveHourMatch[2]} ${twelveHourMatch[3].toUpperCase()}`,
     };
   }
-  // 24-hour format (partial persist from schedule-vacancy-step)
-  const match24 = /^(\d{4}-\d{2}-\d{2})[T ](\d{2}:\d{2}(?::\d{2})?)$/.exec(
-    value.trim()
-  );
-  if (match24) {
-    return { date: match24[1], time: match24[2] };
+
+  // 2. 24-hour format (e.g. "2026-06-24T01:00:00", "2026-06-24 01:00:00")
+  const twentyFourHourMatch =
+    /^(\d{4}-\d{2}-\d{2})[T ](\d{2}:\d{2}(?::\d{2})?)(?:\.\d+)?$/i.exec(
+      trimmed
+    );
+  if (twentyFourHourMatch) {
+    const date = twentyFourHourMatch[1];
+    const time24 = twentyFourHourMatch[2];
+    const parts = time24.split(':');
+    const hours24 = Number.parseInt(parts[0], 10);
+    const minutes = parts[1];
+    const seconds = parts[2] ?? '00';
+
+    const period = hours24 >= 12 ? 'PM' : 'AM';
+    let hours12 = hours24 % 12;
+    if (hours12 === 0) hours12 = 12;
+
+    return {
+      date,
+      time: `${String(hours12).padStart(2, '0')}:${minutes}:${seconds} ${period}`,
+    };
   }
+
   // Fallback: return whatever is before the separator as the date
-  return { date: value.split(/[T ]/)[0] ?? '', time: '' };
+  return { date: trimmed.split(/[T ]/)[0] ?? '', time: '' };
 }
 
 type ScheduleVacancyFormValues = z.infer<typeof scheduleVacancySchema>;

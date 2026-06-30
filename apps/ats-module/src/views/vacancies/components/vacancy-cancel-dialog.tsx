@@ -82,11 +82,8 @@ export default function VacancyCancelDialog({
               applyTypography('h5')
             )}
           >
-            {isSavingDraft ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : (
-              t('vacancyCancelDialog.saveAsDraftButton')
-            )}
+            {isSavingDraft && <Loader2 className="size-4 animate-spin" />}
+            {t('vacancyCancelDialog.saveAsDraftButton')}
           </Button>
         </div>
       </DialogContent>

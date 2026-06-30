@@ -51,6 +51,7 @@ const createVacancyColumns = ({
   onSort,
   onView,
   onEdit,
+  onDelete,
   t,
 }: CreateColumnsOptions): ColumnDef<VacancyTableColumn>[] => [
   {
@@ -327,8 +328,10 @@ const createVacancyColumns = ({
           id: row.original.vacancyId,
           status: row.original.status,
           applicantCount: row.original.applicantCount,
+          availableActions: row.original.availableActions,
         }}
         onEdit={() => onEdit(row.original.vacancyId)}
+        onDelete={() => onDelete(row.original.vacancyId)}
       />
     ),
     size: 50,

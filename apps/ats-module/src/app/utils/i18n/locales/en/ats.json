@@ -11,6 +11,7 @@
     "back": "Back",
     "cancel": "Cancel",
     "next": "Next",
+    "save": "Save",
     "submit": "Submit",
     "addEntry": "Add entry",
     "loading": "Searching...",
@@ -113,6 +114,10 @@
   },
   "vacancies": {
     "title": "Vacancies",
+    "stepBadge": {
+      "applied": "Applied",
+      "applicants": "Applicants"
+    },
     "createVacancyButton": "Create Vacancy",
     "emptyState": {
       "title": "No Vacancies Available",
@@ -129,6 +134,18 @@
       "invalidId": "Invalid vacancy ID.",
       "failedToLoadVacancy": "Failed to load vacancy details. Please try again."
     },
+    "deleteDialog": {
+      "title": "Are you sure?",
+      "message": "Are you sure you want to delete this vacancy? This action cannot be undone",
+      "confirm": "Yes",
+      "cancel": "No",
+      "notifications": {
+        "successTitle": "Successfully Deleted",
+        "successMessage": "Vacancy has been successfully deleted.",
+        "errorTitle": "Failed to Delete",
+        "errorMessage": "Some changes could not be saved. Please try again."
+      }
+    },
     "view": {
       "untitledVacancy": "Untitled Vacancy",
       "applied": "Applied",
@@ -140,7 +157,8 @@
         "jobRequirements": "Job Requirement",
         "profileRequirements": "Profile Requirements",
         "projectRequirements": "Preferred Projects",
-        "scheduledVacancy": "Scheduled Vacancy"
+        "scheduledVacancy": "Scheduled Vacancy",
+        "customizableForms": "Customizable Forms"
       },
       "scheduledVacancy": {
         "publishDateTime": "Scheduled Publish Date & Time",
@@ -255,6 +273,7 @@
       "delete": "Yes"
     },
     "errors": {
+      "errorTitle": "Error",
       "maxLengthExceeded": "Exceeded maximum character length of {{max}}",
       "maxFormsExceeded": "Exceeded maximum of 5 forms allowed",
       "maxQuestionsExceeded": "Exceeded maximum of 10 questions allowed per form",
@@ -285,6 +304,17 @@
       "endLabel": "End Label",
       "addOption": "Add Option",
       "required": "Required"
+    },
+    "view": {
+      "customizedQuestions": "Customized Questions",
+      "question": "Question",
+      "type": "Type",
+      "options": "Options",
+      "scale": "Scale",
+      "submissionRequirement": "Submission Requirement",
+      "required": "Required",
+      "optional": "Optional",
+      "skillLevelValue": "Skill Level {{level}} Value"
     }
   },
 
@@ -303,6 +333,19 @@
         "message": "Saved as a draft successfully.",
         "errorTitle": "Try Again",
         "errorMessage": "Some changes could not be loaded. Please try again."
+      }
+    }
+  },
+
+  "vacancyEditCancelDialog": {
+    "title": "Are you sure?",
+    "description": "Are you sure you want to leave without updating your changes? Any unsaved changes will be lost.",
+    "yesButton": "Yes",
+    "noButton": "No",
+    "notifications": {
+      "discard": {
+        "title": "Successfully Discarded",
+        "message": "Vacancy edits discarded successfully."
       }
     }
   },
@@ -562,6 +605,14 @@
     "department": "Department",
     "faculty": "Faculty",
     "grade": "Grade",
+    "messageBoxFields": {
+      "qualificationName": "Name of the qualification",
+      "awardingBody": "Awarding body/Institute",
+      "awardingBodyLocation": "Awarding Body/Institute Location",
+      "levelOfQualification": "Level of the qualification",
+      "studyPattern": "Study Pattern",
+      "deliverySchedule": "Delivery Schedule"
+    },
     "bannerTitle": "Build the Application Form",
     "bannerMessageHighlight": "Certain fields",
     "bannerMessageRest": "in this section are always collected from candidates to support consistent candidate profiles. Any fields you don't select won't be collected",
@@ -708,7 +759,7 @@
     "dataTakenFromCandidate": "If selected, no manual input is required, and data will be taken from the candidate profile",
     "sectionLabel": "Tools, Technologies, Skills and Frameworks",
     "input": {
-      "placeholder": "Select or add a skill",
+      "placeholder": "Select or add skill",
       "addNew": "Add \"{{value}}\"",
       "typeToSearch": "Type to search skills…"
     },
@@ -988,8 +1039,10 @@
     "expirationDateLabel": "Expiration Date & Time",
     "expirationDatePlaceholder": "Expiration date & time",
     "timeLabel": "Schedule Time",
+    "expirationTimeLabel": "Expiration Time",
     "timePlaceholder": "hh:mm:ss AM/PM",
     "create": "Create",
+    "update": "Update",
     "cancel": "Cancel",
     "validation": {
       "publishDateRequired": "Scheduled Publish Date & Time is required.",
