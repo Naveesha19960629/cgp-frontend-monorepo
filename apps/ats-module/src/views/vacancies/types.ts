@@ -1553,7 +1553,7 @@ interface CustomizedFormQuestionApiPayload {
 
 interface CustomizedFormApiPayload {
   isEnabled: boolean;
-  sectionTitle: string;
+  sectionTitle: string | null;
   forms: {
     title: string;
     displayOrder: number;
