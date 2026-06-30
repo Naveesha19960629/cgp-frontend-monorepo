@@ -9,6 +9,7 @@ export { VacancyPublicationsSection } from '@/views/vacancies/components/view-va
 export { VacancyClubsSocietiesSection } from '@/views/vacancies/components/view-vacancy/vacancy-clubs-societies-section';
 export { VacancySportsSection } from '@/views/vacancies/components/view-vacancy/vacancy-sports-section';
 export { VacancyVolunteeringSection } from '@/views/vacancies/components/view-vacancy/vacancy-volunteering-section';
+export { VacancyProjectRequirementsSection } from '@/views/vacancies/components/view-vacancy/vacancy-project-requirements-section';
 export { VacancyHonoursAwardsSection } from '@/views/vacancies/components/view-vacancy/vacancy-honours-awards-section';
 export { VacancyPatentsSection } from '@/views/vacancies/components/view-vacancy/vacancy-patents-section';
 export { VacancyTertiaryEducationSection } from '@/views/vacancies/components/view-vacancy/vacancy-tertiary-education-section';

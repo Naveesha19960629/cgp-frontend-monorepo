@@ -1,6 +1,6 @@
 import { Loader2 } from 'lucide-react';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { getApiErrorMessage } from '@/app/utils/api-error';
@@ -69,7 +69,12 @@ const multiSelectInfoAvatar = new URL(
 
 export default function JobRequirementsStep({ onNext }: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
-  const { form: contextForm, onCancel, stepDraftSaveRef } = useVacancyForm();
+  const {
+    form: contextForm,
+    onCancel,
+    stepDraftSaveRef,
+    setIsJobRequirementsFormValid,
+  } = useVacancyForm();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -82,6 +87,17 @@ export default function JobRequirementsStep({ onNext }: Readonly<StepProps>) {
   const [engagementModelSearch, setEngagementModelSearch] = useState('');
 
   const form = useJobRequirementsForm();
+
+  const isMountedRef = useRef(false);
+  const { isValid } = form.formState;
+
+  useEffect(() => {
+    if (!isMountedRef.current) {
+      isMountedRef.current = true;
+      return;
+    }
+    setIsJobRequirementsFormValid(isValid);
+  }, [isValid, setIsJobRequirementsFormValid]);
 
   const selectedDisciplines = form.watch('discipline');
   const selectedCareerPaths = form.watch('careerPath');

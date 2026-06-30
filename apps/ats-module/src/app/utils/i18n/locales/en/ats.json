@@ -11,6 +11,7 @@
     "back": "Back",
     "cancel": "Cancel",
     "next": "Next",
+    "save": "Save",
     "submit": "Submit",
     "addEntry": "Add entry",
     "loading": "Searching...",
@@ -114,7 +115,8 @@
   "vacancies": {
     "title": "Vacancies",
     "stepBadge": {
-      "applied": "Applied"
+      "applied": "Applied",
+      "applicants": "Applicants"
     },
     "createVacancyButton": "Create Vacancy",
     "emptyState": {
@@ -154,6 +156,7 @@
       "sections": {
         "jobRequirements": "Job Requirement",
         "profileRequirements": "Profile Requirements",
+        "projectRequirements": "Preferred Projects",
         "scheduledVacancy": "Scheduled Vacancy",
         "customizableForms": "Customizable Forms"
       },

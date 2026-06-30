@@ -22,7 +22,7 @@ export default function VacancyStatusBadge({
   const isDraft = key === 'draft';
   const label =
     !isDraft && applicantCount !== undefined
-      ? `${statusLabel} (${applicantCount} ${t('vacancies.stepBadge.applied')})`
+      ? `${statusLabel} - ${applicantCount} ${t('vacancies.stepBadge.applicants')}`
       : statusLabel;
 
   return (

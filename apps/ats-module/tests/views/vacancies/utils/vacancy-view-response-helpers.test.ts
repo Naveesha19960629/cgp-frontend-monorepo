@@ -188,4 +188,57 @@ describe('toVacancyViewModel', () => {
       ],
     });
   });
+
+  it('maps preferred projects from projectsRequirements shape', () => {
+    const model = toVacancyViewModel({
+      title: 'Preferred Projects Vacancy',
+      data: {
+        projectsRequirements: {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          projects: [
+            {
+              startDate: '2022-01-12',
+              endDate: '2023-02-13',
+              relatedIndustry: [
+                { id: 'i1', label: 'IT', source: 'MASTER' },
+                { id: 'i2', label: 'Finance', source: 'MASTER' },
+              ],
+              organizationLocations: [
+                {
+                  id: 'l1',
+                  label: 'Kandy, Central Province, Sri Lanka',
+                  source: 'MASTER',
+                },
+              ],
+              organizations: [
+                {
+                  id: 'o1',
+                  label:
+                    'University of Kelaniya, Kelaniya, Western Province, Sri Lanka',
+                  source: 'MASTER',
+                },
+              ],
+            },
+          ],
+        },
+      },
+    });
+
+    expect(model.preferredProjects).toEqual({
+      isEnabled: true,
+      dataTakenFromCandidate: false,
+      content: [
+        {
+          startDate: '2022-01-12',
+          endDate: '2023-02-13',
+          relatedIndustry: ['IT', 'Finance'],
+          organizationLocations: ['Kandy, Central Province, Sri Lanka'],
+          organization: [
+            'University of Kelaniya, Kelaniya, Western Province, Sri Lanka',
+          ],
+        },
+      ],
+    });
+  });
 });
