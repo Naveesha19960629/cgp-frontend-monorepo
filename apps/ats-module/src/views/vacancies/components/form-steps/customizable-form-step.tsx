@@ -28,7 +28,7 @@ import {
   SelectValue,
 } from '@cgp/ui-kit/components/ui/select';
 import { Switch } from '@cgp/ui-kit/components/ui/switch';
-import { cn, removeEmoji } from '@cgp/ui-kit/lib/utils';
+import { removeEmoji } from '@cgp/ui-kit/lib/utils';
 
 // ── UI-only state types (not API types) ──────────────────────────────────────
 
@@ -84,8 +84,8 @@ const createForm = (id: number): FormCard => ({
   id,
   title: '',
   isOpen: true,
-  questions: [],
-  nextQuestionId: 1,
+  questions: [createQuestion(1)],
+  nextQuestionId: 2,
   nextOptionId: 2,
 });
 
@@ -131,6 +131,35 @@ const START_END_MAX = 80;
 const MAX_FORMS = 5;
 const MAX_QUESTIONS = 10;
 const MAX_OPTIONS = 5;
+const MIN_OPTIONS = 2;
+const SECTION_TITLE_MAX = 200;
+const FORM_TITLE_MAX = 150;
+
+// ── Validation helpers (UI-only, pure) ───────────────────────────────────────────
+const isChoiceType = (type: QuestionType | ''): boolean =>
+  type === 'MULTIPLE_CHOICE' || type === 'CHECKBOXES' || type === 'DROPDOWN';
+
+// A question is empty when it has no user input at all.
+const isQuestionEmpty = (q: Question): boolean =>
+  q.text.trim() === '' && q.type === '' && q.required === false;
+
+// A form is empty when it has no title and every question is empty.
+const isFormEmpty = (form: FormCard): boolean =>
+  form.title.trim() === '' && form.questions.every(isQuestionEmpty);
+
+// Duplicate option detection: case-insensitive, trimmed, ignoring blanks,
+// only among options belonging to the same question.
+const hasDuplicateOptionValues = (q: Question): boolean => {
+  if (!isChoiceType(q.type)) return false;
+  const seen = new Set<string>();
+  for (const opt of q.options) {
+    const value = opt.value.trim().toLowerCase();
+    if (value === '') continue;
+    if (seen.has(value)) return true;
+    seen.add(value);
+  }
+  return false;
+};
 
 // ── QuestionCard ─────────────────────────────────────────────────────────────
 
@@ -142,6 +171,8 @@ interface QuestionCardProps {
   onRemove: () => void;
   onNextOptionId: (n: number) => void;
   isDeleteDisabled: boolean;
+  isDuplicateDisabled: boolean;
+  showValidation: boolean;
 }
 
 function QuestionCard({
@@ -152,10 +183,48 @@ function QuestionCard({
   onRemove,
   onNextOptionId,
   isDeleteDisabled,
+  isDuplicateDisabled,
+  showValidation,
 }: Readonly<QuestionCardProps>) {
   const { t } = useTranslation('ats');
 
   const set = (patch: Partial<Question>) => onUpdate({ ...question, ...patch });
+
+  // Number of options with a value. Once at least MIN_OPTIONS are filled, the
+  // remaining blank option fields are optional (no required message).
+  const filledOptionCount = question.options.filter(
+    o => o.value.trim() !== ''
+  ).length;
+
+  // Changing the question type pads option-based types to the minimum number of
+  // option fields and clears option values when switching to a non-option type.
+  const changeType = (val: string) => {
+    const newType = val as QuestionType;
+    const willBeChoice = isChoiceType(newType);
+    const wasChoice = isChoiceType(question.type);
+
+    if (willBeChoice) {
+      let options = question.options;
+      if (options.length < MIN_OPTIONS) {
+        const additions: QuestionOption[] = [];
+        let nid = nextOptionId;
+        for (let i = options.length; i < MIN_OPTIONS; i += 1) {
+          additions.push({ id: nid, value: '' });
+          nid += 1;
+        }
+        options = [...options, ...additions];
+        onNextOptionId(nid);
+      }
+      onUpdate({ ...question, type: newType, options });
+      return;
+    }
+
+    onUpdate({
+      ...question,
+      type: newType,
+      options: wasChoice ? [] : question.options,
+    });
+  };
 
   const addOption = () => {
     if (question.options.length >= MAX_OPTIONS) {
@@ -173,6 +242,7 @@ function QuestionCard({
   };
 
   const removeOption = (optId: number) => {
+    if (question.options.length <= MIN_OPTIONS) return;
     onUpdate({
       ...question,
       options: question.options.filter(o => o.id !== optId),
@@ -212,6 +282,11 @@ function QuestionCard({
             onChange={e => set({ text: removeEmoji(e.target.value) })}
             className="h-11 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:ring-0 focus:outline-none"
           />
+          {showValidation && question.text.trim() === '' && (
+            <p className="text-[13px] text-[#FF4A55]">
+              {t('customizableForm.errors.requiredQuestion')}
+            </p>
+          )}
         </div>
 
         {/* Type */}
@@ -220,10 +295,7 @@ function QuestionCard({
             {t('customizableForm.question.typeLabel')}
             <span className="ml-0.5 text-red-500">*</span>
           </label>
-          <Select
-            value={question.type}
-            onValueChange={val => set({ type: val as QuestionType })}
-          >
+          <Select value={question.type} onValueChange={changeType}>
             <SelectTrigger className="!h-11 w-full bg-white shadow-none">
               <SelectValue
                 placeholder={t('customizableForm.question.typePlaceholder')}
@@ -250,6 +322,11 @@ function QuestionCard({
               </SelectItem>
             </SelectContent>
           </Select>
+          {showValidation && question.type === '' && (
+            <p className="text-[13px] text-[#FF4A55]">
+              {t('customizableForm.errors.requiredType')}
+            </p>
+          )}
         </div>
       </div>
 
@@ -259,27 +336,32 @@ function QuestionCard({
           <div className="grid grid-cols-2 gap-4">
             {question.options.map((opt, optIdx) => (
               <div key={opt.id} className="flex flex-col gap-1.5">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold text-slate-900">
-                    {`Option ${String(optIdx + 1).padStart(2, '0')}`}
-                  </span>
-                  <CharacterCount
-                    maxLength={OPTION_MAX}
-                    currentLength={opt.value.length}
-                  />
-                </div>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    maxLength={OPTION_MAX}
-                    value={opt.value}
-                    onChange={e =>
-                      updateOption(opt.id, removeEmoji(e.target.value))
-                    }
-                    placeholder={t('customizableForm.question.enterOption')}
-                    className="h-11 flex-1 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:ring-0 focus:outline-none"
-                  />
-                  {optIdx > 0 && (
+                <div className="flex items-end gap-2">
+                  <div className="flex flex-1 flex-col gap-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-semibold text-slate-900">
+                        {`Option ${String(optIdx + 1).padStart(2, '0')}`}
+                        {optIdx < MIN_OPTIONS && (
+                          <span className="ml-0.5 text-red-500">*</span>
+                        )}
+                      </span>
+                      <CharacterCount
+                        maxLength={OPTION_MAX}
+                        currentLength={opt.value.length}
+                      />
+                    </div>
+                    <input
+                      type="text"
+                      maxLength={OPTION_MAX}
+                      value={opt.value}
+                      onChange={e =>
+                        updateOption(opt.id, removeEmoji(e.target.value))
+                      }
+                      placeholder={t('customizableForm.question.enterOption')}
+                      className="h-11 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:ring-0 focus:outline-none"
+                    />
+                  </div>
+                  {optIdx >= MIN_OPTIONS && (
                     <button
                       type="button"
                       onClick={() => removeOption(opt.id)}
@@ -290,6 +372,13 @@ function QuestionCard({
                     </button>
                   )}
                 </div>
+                {showValidation &&
+                  opt.value.trim() === '' &&
+                  filledOptionCount < MIN_OPTIONS && (
+                    <p className="text-[13px] text-[#FF4A55]">
+                      {t('customizableForm.errors.requiredOption')}
+                    </p>
+                  )}
               </div>
             ))}
           </div>
@@ -313,27 +402,32 @@ function QuestionCard({
           <div className="grid grid-cols-2 gap-4">
             {question.options.map((opt, optIdx) => (
               <div key={opt.id} className="flex flex-col gap-1.5">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold text-slate-900">
-                    {`Option ${String(optIdx + 1).padStart(2, '0')}`}
-                  </span>
-                  <CharacterCount
-                    maxLength={OPTION_MAX}
-                    currentLength={opt.value.length}
-                  />
-                </div>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    maxLength={OPTION_MAX}
-                    value={opt.value}
-                    onChange={e =>
-                      updateOption(opt.id, removeEmoji(e.target.value))
-                    }
-                    placeholder={t('customizableForm.question.enterOption')}
-                    className="h-11 flex-1 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:ring-0 focus:outline-none"
-                  />
-                  {optIdx > 0 && (
+                <div className="flex items-end gap-2">
+                  <div className="flex flex-1 flex-col gap-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-semibold text-slate-900">
+                        {`Option ${String(optIdx + 1).padStart(2, '0')}`}
+                        {optIdx < MIN_OPTIONS && (
+                          <span className="ml-0.5 text-red-500">*</span>
+                        )}
+                      </span>
+                      <CharacterCount
+                        maxLength={OPTION_MAX}
+                        currentLength={opt.value.length}
+                      />
+                    </div>
+                    <input
+                      type="text"
+                      maxLength={OPTION_MAX}
+                      value={opt.value}
+                      onChange={e =>
+                        updateOption(opt.id, removeEmoji(e.target.value))
+                      }
+                      placeholder={t('customizableForm.question.enterOption')}
+                      className="h-11 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:ring-0 focus:outline-none"
+                    />
+                  </div>
+                  {optIdx >= MIN_OPTIONS && (
                     <button
                       type="button"
                       onClick={() => removeOption(opt.id)}
@@ -344,6 +438,13 @@ function QuestionCard({
                     </button>
                   )}
                 </div>
+                {showValidation &&
+                  opt.value.trim() === '' &&
+                  filledOptionCount < MIN_OPTIONS && (
+                    <p className="text-[13px] text-[#FF4A55]">
+                      {t('customizableForm.errors.requiredOption')}
+                    </p>
+                  )}
               </div>
             ))}
           </div>
@@ -367,27 +468,32 @@ function QuestionCard({
           <div className="grid grid-cols-2 gap-4">
             {question.options.map((opt, optIdx) => (
               <div key={opt.id} className="flex flex-col gap-1.5">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold text-slate-900">
-                    {`Option ${String(optIdx + 1).padStart(2, '0')}`}
-                  </span>
-                  <CharacterCount
-                    maxLength={OPTION_MAX}
-                    currentLength={opt.value.length}
-                  />
-                </div>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    maxLength={OPTION_MAX}
-                    value={opt.value}
-                    onChange={e =>
-                      updateOption(opt.id, removeEmoji(e.target.value))
-                    }
-                    placeholder={t('customizableForm.question.enterOption')}
-                    className="h-11 flex-1 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:ring-0 focus:outline-none"
-                  />
-                  {optIdx > 0 && (
+                <div className="flex items-end gap-2">
+                  <div className="flex flex-1 flex-col gap-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-semibold text-slate-900">
+                        {`Option ${String(optIdx + 1).padStart(2, '0')}`}
+                        {optIdx < MIN_OPTIONS && (
+                          <span className="ml-0.5 text-red-500">*</span>
+                        )}
+                      </span>
+                      <CharacterCount
+                        maxLength={OPTION_MAX}
+                        currentLength={opt.value.length}
+                      />
+                    </div>
+                    <input
+                      type="text"
+                      maxLength={OPTION_MAX}
+                      value={opt.value}
+                      onChange={e =>
+                        updateOption(opt.id, removeEmoji(e.target.value))
+                      }
+                      placeholder={t('customizableForm.question.enterOption')}
+                      className="h-11 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:ring-0 focus:outline-none"
+                    />
+                  </div>
+                  {optIdx >= MIN_OPTIONS && (
                     <button
                       type="button"
                       onClick={() => removeOption(opt.id)}
@@ -398,6 +504,13 @@ function QuestionCard({
                     </button>
                   )}
                 </div>
+                {showValidation &&
+                  opt.value.trim() === '' &&
+                  filledOptionCount < MIN_OPTIONS && (
+                    <p className="text-[13px] text-[#FF4A55]">
+                      {t('customizableForm.errors.requiredOption')}
+                    </p>
+                  )}
               </div>
             ))}
           </div>
@@ -511,7 +624,12 @@ function QuestionCard({
         <button
           type="button"
           aria-label="Duplicate question"
-          className="cursor-pointer text-slate-500 transition-colors hover:text-slate-700"
+          className={
+            isDuplicateDisabled
+              ? 'cursor-not-allowed text-slate-300'
+              : 'cursor-pointer text-slate-500 transition-colors hover:text-slate-700'
+          }
+          disabled={isDuplicateDisabled}
           onClick={onDuplicate}
         >
           <Simcard2 size={24} />
@@ -567,7 +685,9 @@ export default function CustomizableFormStep({
   const [forms, setForms] = useState<FormCard[]>(initialForms);
   const [nextFormId, setNextFormId] = useState(getNextFormId(initialForms));
   const [showDisableConfirm, setShowDisableConfirm] = useState(false);
-  const [showValidationModal, setShowValidationModal] = useState(false);
+  // Set to true once the recruiter attempts to navigate (Next/Back) so inline
+  // required-field messages render. Stays live afterwards so they clear as fields fill.
+  const [showValidation, setShowValidation] = useState(false);
   const [pendingQuestionDelete, setPendingQuestionDelete] = useState<{
     formId: number;
     questionId: number;
@@ -610,17 +730,12 @@ export default function CustomizableFormStep({
     };
   }, [setForm, stepDisableRef]);
 
-  useStepGuard(
-    isEnabled &&
-      !sectionTitle.trim() &&
-      forms.every(f => f.questions.length === 0)
-  );
+  useStepGuard(isEnabled && !sectionTitle.trim() && forms.every(isFormEmpty));
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, []);
 
-  const hasAtLeastOneQuestion = forms.some(form => form.questions.length > 0);
   const hasFormData =
     sectionTitle.trim().length > 0 ||
     forms.some(
@@ -634,32 +749,36 @@ export default function CustomizableFormStep({
         )
     );
 
-  const isSectionTitleError = sectionTitle.length > 200;
-  const hasFormTitleError = forms.some(form => form.title.length > 150);
-  const hasFormWithoutQuestions = forms.some(
-    form => form.questions.length === 0
-  );
-  const hasEmptyQuestionTextOrTypeOrOptions = forms.some(form =>
-    form.questions.some(q => {
-      const isQuestionTextEmpty = q.text.trim() === '';
-      const isTypeEmpty = q.type === '';
-      const isOptionBased =
-        q.type === 'MULTIPLE_CHOICE' ||
-        q.type === 'CHECKBOXES' ||
-        q.type === 'DROPDOWN';
-      const hasNoOptionWithText =
-        isOptionBased && !q.options.some(opt => opt.value.trim() !== '');
+  const isSectionTitleError = sectionTitle.length > SECTION_TITLE_MAX;
 
-      return isQuestionTextEmpty || isTypeEmpty || hasNoOptionWithText;
-    })
-  );
+  // Question-level mandatory content (text, type, and options for choice types).
+  const isQuestionContentInvalid = (q: Question): boolean => {
+    if (q.text.trim() === '' || q.text.length > QUESTION_MAX) return true;
+    if (q.type === '') return true;
+    if (isChoiceType(q.type)) {
+      // At least MIN_OPTIONS option values must be filled; extra blank option
+      // fields beyond that are optional and are not saved.
+      const filledOptions = q.options.filter(o => o.value.trim() !== '').length;
+      if (filledOptions < MIN_OPTIONS) return true;
+    }
+    return false;
+  };
 
-  const hasValidationErrors =
-    isEnabled &&
-    (isSectionTitleError ||
-      hasFormTitleError ||
-      hasFormWithoutQuestions ||
-      hasEmptyQuestionTextOrTypeOrOptions);
+  // Whether the enabled section has any missing/invalid mandatory content.
+  // Duplicate options are reported separately via a toast (see handleNavigate).
+  const hasInvalidContent = (): boolean => {
+    if (!isEnabled) return false;
+    if (sectionTitle.trim() === '' || isSectionTitleError) return true;
+    return forms.some(
+      form =>
+        form.title.trim() === '' ||
+        form.title.length > FORM_TITLE_MAX ||
+        form.questions.some(isQuestionContentInvalid)
+    );
+  };
+
+  const hasDuplicateOptions = (): boolean =>
+    isEnabled && forms.some(f => f.questions.some(hasDuplicateOptionValues));
 
   const getDisplayFormTitle = (title: string) => {
     const trimmedTitle = title.trim();
@@ -682,61 +801,9 @@ export default function CustomizableFormStep({
     setNextFormId(id => id + 1);
   };
 
+  // Deleting a form simply removes it — remaining copies are never renumbered.
   const removeForm = (id: number) => {
-    setForms(prev => {
-      const filtered = prev.filter(f => f.id !== id);
-
-      const copyOfPrefix = String(
-        t('customizableForm.copyOfTitle', { title: '' })
-      );
-      const prefix = copyOfPrefix.endsWith(' ')
-        ? copyOfPrefix
-        : `${copyOfPrefix} `;
-
-      const parseTitle = (title: string) => {
-        if (title.startsWith(prefix)) {
-          const remaining = title.slice(prefix.length);
-          const match = remaining.match(/^(.*?)(?:\s*\((\d+)\))?$/);
-          if (match) {
-            return {
-              baseTitle: prefix + match[1].trim(),
-              suffix: match[2] ? parseInt(match[2], 10) : null,
-            };
-          }
-        }
-        return {
-          baseTitle: prefix + title.trim(),
-          suffix: null,
-        };
-      };
-
-      // Count actual duplicates for each targetBaseTitle in the filtered list
-      const duplicateCounts = new Map<string, number>();
-      filtered.forEach(f => {
-        if (f.title.startsWith(prefix)) {
-          const { baseTitle } = parseTitle(f.title);
-          duplicateCounts.set(
-            baseTitle,
-            (duplicateCounts.get(baseTitle) || 0) + 1
-          );
-        }
-      });
-
-      // For any duplicate form whose baseTitle now has only 1 duplicate in the list:
-      // If it has a suffix, remove its suffix (rename to just baseTitle)
-      return filtered.map(f => {
-        if (f.title.startsWith(prefix)) {
-          const parsed = parseTitle(f.title);
-          if (
-            duplicateCounts.get(parsed.baseTitle) === 1 &&
-            parsed.suffix !== null
-          ) {
-            return { ...f, title: parsed.baseTitle };
-          }
-        }
-        return f;
-      });
-    });
+    setForms(prev => prev.filter(f => f.id !== id));
   };
 
   const duplicateForm = (id: number) => {
@@ -749,7 +816,7 @@ export default function CustomizableFormStep({
     }
 
     const source = forms.find(f => f.id === id);
-    if (!source) return;
+    if (!source || isFormEmpty(source)) return;
 
     const copyOfPrefix = String(
       t('customizableForm.copyOfTitle', { title: '' })
@@ -758,6 +825,7 @@ export default function CustomizableFormStep({
       ? copyOfPrefix
       : `${copyOfPrefix} `;
 
+    // Strip any existing "Copy of " prefix and "(n)" suffix to find the family base.
     const parseTitle = (title: string) => {
       if (title.startsWith(prefix)) {
         const remaining = title.slice(prefix.length);
@@ -769,58 +837,36 @@ export default function CustomizableFormStep({
           };
         }
       }
-      return {
-        baseTitle: prefix + title.trim(),
-        suffix: null,
-      };
+      return { baseTitle: prefix + title.trim(), suffix: null };
     };
 
-    const parsedSource = parseTitle(source.title);
-    const targetBaseTitle = parsedSource.baseTitle;
+    const targetBaseTitle = parseTitle(source.title).baseTitle;
 
-    // Filter existing forms that are duplicates matching the targetBaseTitle
-    const matchingForms = forms.filter(f => {
-      if (!f.title.startsWith(prefix)) return false;
-      return parseTitle(f.title).baseTitle === targetBaseTitle;
-    });
+    // Existing copies in the same family. Existing copies are NEVER renamed.
+    const matchingForms = forms.filter(
+      f =>
+        f.title.startsWith(prefix) &&
+        parseTitle(f.title).baseTitle === targetBaseTitle
+    );
 
-    const existingSuffixes = new Set<number>();
-    let unsuffixedFormId: number | null = null;
-
+    // First copy → "Copy of X" (no suffix). Subsequent → next number after the
+    // highest existing suffix (treating the unsuffixed copy as 0): (1), (2), …
+    let maxSuffix = 0;
     matchingForms.forEach(f => {
-      const parsed = parseTitle(f.title);
-      if (parsed.suffix !== null) {
-        existingSuffixes.add(parsed.suffix);
-      } else {
-        unsuffixedFormId = f.id;
-      }
+      const { suffix } = parseTitle(f.title);
+      if (suffix !== null && suffix > maxSuffix) maxSuffix = suffix;
     });
-
-    let nextSuffix = 1;
-    if (unsuffixedFormId !== null) {
-      existingSuffixes.add(1);
-    }
-    while (existingSuffixes.has(nextSuffix)) {
-      nextSuffix++;
-    }
 
     const copiedTitle =
       matchingForms.length === 0
         ? targetBaseTitle
-        : `${targetBaseTitle} (${nextSuffix})`;
+        : `${targetBaseTitle} (${maxSuffix + 1})`;
 
     const copy: FormCard = { ...source, id: nextFormId, title: copiedTitle };
 
     setForms(prev => {
-      // If we are adding a second duplicate, rename the first unsuffixed duplicate to have suffix (1)
-      const updated = prev.map(f => {
-        if (f.id === unsuffixedFormId && matchingForms.length > 0) {
-          return { ...f, title: `${targetBaseTitle} (1)` };
-        }
-        return f;
-      });
-      const idx = updated.findIndex(f => f.id === id);
-      return [...updated.slice(0, idx + 1), copy, ...updated.slice(idx + 1)];
+      const idx = prev.findIndex(f => f.id === id);
+      return [...prev.slice(0, idx + 1), copy, ...prev.slice(idx + 1)];
     });
 
     setNextFormId(n => n + 1);
@@ -897,7 +943,7 @@ export default function CustomizableFormStep({
       prev.map(f => {
         if (f.id !== formId) return f;
         const source = f.questions.find(q => q.id === questionId);
-        if (!source) return f;
+        if (!source || isQuestionEmpty(source)) return f;
         const copy: Question = { ...source, id: f.nextQuestionId };
         const idx = f.questions.findIndex(q => q.id === questionId);
         return {
@@ -932,19 +978,28 @@ export default function CustomizableFormStep({
     setIsEnabled(true);
   };
 
-  const handleNext = () => {
-    if (isEnabled) {
-      if (hasValidationErrors) return;
+  // Validates the section (when enabled) before allowing navigation. Surfaces all
+  // inline required messages at once and a toast for duplicate options; returns
+  // false (and blocks navigation) when anything is invalid.
+  const canNavigate = (): boolean => {
+    if (!isEnabled) return true;
 
-      const missingSectionTitle = sectionTitle.trim().length === 0;
-      const missingRequiredFormData =
-        forms.length === 0 || !hasAtLeastOneQuestion;
-
-      if (missingSectionTitle || missingRequiredFormData) {
-        setShowValidationModal(true);
-        return;
+    const duplicates = hasDuplicateOptions();
+    if (hasInvalidContent() || duplicates) {
+      setShowValidation(true);
+      if (duplicates) {
+        ErrorToast({
+          title: t('customizableForm.errors.errorTitle'),
+          description: t('customizableForm.errors.duplicateOption'),
+        });
       }
+      return false;
     }
+    return true;
+  };
+
+  const handleNext = () => {
+    if (!canNavigate()) return;
 
     const formsPayload = isEnabled
       ? forms.map(currentForm => ({
@@ -967,7 +1022,7 @@ export default function CustomizableFormStep({
   };
 
   const handleBack = () => {
-    if (hasValidationErrors) return;
+    if (!canNavigate()) return;
     stepPersistRef.current?.();
     onBack();
   };
@@ -982,12 +1037,7 @@ export default function CustomizableFormStep({
           <button
             type="button"
             onClick={handleBack}
-            disabled={hasValidationErrors}
-            className={cn(
-              'cursor-pointer text-slate-700 transition-colors hover:text-slate-900',
-              hasValidationErrors &&
-                'cursor-not-allowed opacity-40 hover:text-slate-700'
-            )}
+            className="cursor-pointer text-slate-700 transition-colors hover:text-slate-900"
             aria-label={t('common.back')}
           >
             <ArrowLeft2 size={24} />
@@ -1027,6 +1077,11 @@ export default function CustomizableFormStep({
               {t('customizableForm.errors.maxLengthExceeded', { max: 200 })}
             </p>
           )}
+          {showValidation && sectionTitle.trim() === '' && (
+            <p className="mt-3 text-[13px] text-[#FF4A55]">
+              {t('customizableForm.errors.requiredSectionTitle')}
+            </p>
+          )}
         </div>
 
         {/* Form Builder heading */}
@@ -1037,8 +1092,9 @@ export default function CustomizableFormStep({
         {/* Form cards */}
         <div className="flex flex-col gap-4">
           {forms.map(form => {
-            const isFormTitleError = form.title.length > 150;
+            const isFormTitleError = form.title.length > FORM_TITLE_MAX;
             const displayFormTitle = getDisplayFormTitle(form.title);
+            const isFormDuplicateDisabled = isFormEmpty(form);
             return (
               <div
                 key={form.id}
@@ -1053,7 +1109,12 @@ export default function CustomizableFormStep({
                     <button
                       type="button"
                       aria-label="Duplicate form"
-                      className="cursor-pointer transition-colors hover:text-slate-700"
+                      className={
+                        isFormDuplicateDisabled
+                          ? 'cursor-not-allowed text-slate-300'
+                          : 'cursor-pointer transition-colors hover:text-slate-700'
+                      }
+                      disabled={isFormDuplicateDisabled}
                       onClick={() => duplicateForm(form.id)}
                     >
                       <Simcard2 size={24} />
@@ -1108,6 +1169,11 @@ export default function CustomizableFormStep({
                           })}
                         </p>
                       )}
+                      {showValidation && form.title.trim() === '' && (
+                        <p className="mt-3 text-[13px] text-[#FF4A55]">
+                          {t('customizableForm.errors.requiredFormTitle')}
+                        </p>
+                      )}
                     </div>
 
                     {/* Questions */}
@@ -1128,6 +1194,8 @@ export default function CustomizableFormStep({
                         }
                         onNextOptionId={n => setNextOptionId(form.id, n)}
                         isDeleteDisabled={form.questions.length === 1}
+                        isDuplicateDisabled={isQuestionEmpty(question)}
+                        showValidation={showValidation}
                       />
                     ))}
 
@@ -1182,31 +1250,6 @@ export default function CustomizableFormStep({
       />
 
       <StepDisableDialog
-        open={showValidationModal}
-        onOpenChange={setShowValidationModal}
-        onConfirm={() => {
-          setSectionTitle('');
-          setForms([createForm(1)]);
-          setNextFormId(2);
-          setIsEnabled(false);
-          setShowValidationModal(false);
-          showDisableToast(t('customizableForm.title'));
-
-          onNext({
-            customizableForm: {
-              isEnabled: false,
-              sectionTitle: '',
-              forms: [],
-            },
-          });
-        }}
-        title={t('customizableForm.validationModal.title')}
-        description={t('customizableForm.validationModal.message')}
-        cancelLabel={t('customizableForm.validationModal.cancel')}
-        confirmLabel={t('customizableForm.validationModal.disable')}
-      />
-
-      <StepDisableDialog
         open={pendingQuestionDelete !== null}
         onOpenChange={open => {
           if (!open) setPendingQuestionDelete(null);
@@ -1247,11 +1290,7 @@ export default function CustomizableFormStep({
         <Button variant="secondary" className="h-12 w-48" onClick={onCancel}>
           {t('common.cancel')}
         </Button>
-        <Button
-          className="h-12 w-48"
-          onClick={handleNext}
-          disabled={hasValidationErrors}
-        >
+        <Button className="h-12 w-48" onClick={handleNext}>
           {t('common.next')}
         </Button>
       </div>
