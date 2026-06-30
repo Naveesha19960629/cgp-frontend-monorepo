@@ -516,12 +516,12 @@ function mapIndustry(form: VacancyForm): IndustryApiPayload {
 
 function mapCustomizedForm(form: VacancyForm): CustomizedFormApiPayload {
   if (!form.customizableForm) {
-    return { isEnabled: false, sectionTitle: '', forms: [] };
+    return { isEnabled: false, sectionTitle: null, forms: [] };
   }
 
   return {
     isEnabled: form.customizableForm.isEnabled,
-    sectionTitle: form.customizableForm.sectionTitle,
+    sectionTitle: form.customizableForm.sectionTitle || null,
     forms: form.customizableForm.forms.map((f, formIdx) => ({
       title: f.title,
       displayOrder: formIdx + 1,
