@@ -753,6 +753,44 @@ describe('CustomizableFormStep', () => {
       });
     });
 
+    it('should keep the first two option fields mandatory even if a later option is filled', async () => {
+      const user = userEvent.setup();
+      const mockOnNext = vi.fn();
+      renderComponent({
+        onNext: mockOnNext,
+        onBack: vi.fn(),
+        onSubmit: vi.fn(),
+      });
+
+      await user.click(getSectionToggle());
+
+      await user.type(screen.getByPlaceholderText('Section Title'), 'Skills');
+      await user.type(screen.getByPlaceholderText('Form Title'), 'Tech');
+      await user.type(screen.getByPlaceholderText('Question'), 'Pick one');
+
+      const typeTrigger = screen.getByRole('combobox');
+      await user.click(typeTrigger);
+      await user.click(screen.getByText('Multiple Choice'));
+
+      // Add a third field, fill Option 01 and Option 03 but leave Option 02 empty.
+      await user.click(screen.getByRole('button', { name: 'Add Option' }));
+      const optionInputs = screen.getAllByPlaceholderText('Enter option');
+      fireEvent.change(optionInputs[0], { target: { value: 'Option A' } });
+      fireEvent.change(optionInputs[2], { target: { value: 'Option C' } });
+
+      // Option 02 (mandatory) is still empty → navigation is blocked.
+      await user.click(screen.getByRole('button', { name: 'Next' }));
+      expect(mockOnNext).not.toHaveBeenCalled();
+      expect(screen.getByText('Option is required')).toBeInTheDocument();
+
+      // Fill Option 02 → navigation succeeds.
+      fireEvent.change(optionInputs[1], { target: { value: 'Option B' } });
+      await user.click(screen.getByRole('button', { name: 'Next' }));
+      await waitFor(() => {
+        expect(mockOnNext).toHaveBeenCalled();
+      });
+    });
+
     it('should not require extra blank option fields once two options are filled', async () => {
       const user = userEvent.setup();
       const mockOnNext = vi.fn();

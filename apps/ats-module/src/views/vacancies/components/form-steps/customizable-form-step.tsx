@@ -190,12 +190,6 @@ function QuestionCard({
 
   const set = (patch: Partial<Question>) => onUpdate({ ...question, ...patch });
 
-  // Number of options with a value. Once at least MIN_OPTIONS are filled, the
-  // remaining blank option fields are optional (no required message).
-  const filledOptionCount = question.options.filter(
-    o => o.value.trim() !== ''
-  ).length;
-
   // Changing the question type pads option-based types to the minimum number of
   // option fields and clears option values when switching to a non-option type.
   const changeType = (val: string) => {
@@ -374,7 +368,7 @@ function QuestionCard({
                 </div>
                 {showValidation &&
                   opt.value.trim() === '' &&
-                  filledOptionCount < MIN_OPTIONS && (
+                  optIdx < MIN_OPTIONS && (
                     <p className="text-[13px] text-[#FF4A55]">
                       {t('customizableForm.errors.requiredOption')}
                     </p>
@@ -440,7 +434,7 @@ function QuestionCard({
                 </div>
                 {showValidation &&
                   opt.value.trim() === '' &&
-                  filledOptionCount < MIN_OPTIONS && (
+                  optIdx < MIN_OPTIONS && (
                     <p className="text-[13px] text-[#FF4A55]">
                       {t('customizableForm.errors.requiredOption')}
                     </p>
@@ -506,7 +500,7 @@ function QuestionCard({
                 </div>
                 {showValidation &&
                   opt.value.trim() === '' &&
-                  filledOptionCount < MIN_OPTIONS && (
+                  optIdx < MIN_OPTIONS && (
                     <p className="text-[13px] text-[#FF4A55]">
                       {t('customizableForm.errors.requiredOption')}
                     </p>
@@ -756,10 +750,13 @@ export default function CustomizableFormStep({
     if (q.text.trim() === '' || q.text.length > QUESTION_MAX) return true;
     if (q.type === '') return true;
     if (isChoiceType(q.type)) {
-      // At least MIN_OPTIONS option values must be filled; extra blank option
-      // fields beyond that are optional and are not saved.
-      const filledOptions = q.options.filter(o => o.value.trim() !== '').length;
-      if (filledOptions < MIN_OPTIONS) return true;
+      // The first MIN_OPTIONS option fields are mandatory (marked with *);
+      // extra fields beyond that are optional and are not saved when blank.
+      if (q.options.length < MIN_OPTIONS) return true;
+      const requiredEmpty = q.options
+        .slice(0, MIN_OPTIONS)
+        .some(o => o.value.trim() === '');
+      if (requiredEmpty) return true;
     }
     return false;
   };

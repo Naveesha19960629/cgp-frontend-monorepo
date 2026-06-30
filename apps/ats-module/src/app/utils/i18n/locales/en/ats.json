@@ -273,7 +273,7 @@
       "maxQuestionsExceeded": "Exceeded maximum of 10 questions allowed per form",
       "maxOptionsExceeded": "Exceeded maximum of 5 options allowed",
       "requiredQuestion": "Question is required",
-      "requiredType": "Question type is required",
+      "requiredType": "Type is required",
       "requiredSectionTitle": "Section title is required",
       "requiredFormTitle": "Form title is required",
       "requiredOption": "Option is required",
