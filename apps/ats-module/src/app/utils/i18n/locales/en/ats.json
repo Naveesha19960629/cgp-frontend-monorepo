@@ -110,7 +110,15 @@
     "locationLabel": "Organization Location",
     "locationPlaceholder": "Select organization location",
     "urlLabel": "Organization URL",
-    "urlPlaceholder": "Enter your organization URL"
+    "urlPlaceholder": "Enter your organization URL",
+    "addSuccess": {
+      "title": "Successfully Added",
+      "message": "New organization has been successfully added."
+    },
+    "duplicate": {
+      "title": "Already Added",
+      "message": "This organization has already been added."
+    }
   },
   "vacancies": {
     "title": "Vacancies",

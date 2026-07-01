@@ -442,12 +442,10 @@ function HonoursAndAwardsCard({
                         )}
                         onErrorStateChange={setHasOrganizationMaxError}
                         onChange={options => {
-                          let hasNewOrganization = false;
                           const validOrganizations = options
                             .map(option => {
                               const isNew = option.value === option.label;
                               if (isNew) {
-                                hasNewOrganization = true;
                                 onOpenAddOrganizationDialog(
                                   option.label,
                                   index
@@ -466,9 +464,11 @@ function HonoursAndAwardsCard({
                                 org !== null
                             );
 
-                          if (!hasNewOrganization) {
-                            field.onChange(validOrganizations);
-                          }
+                          // Always commit the cleaned list. When a new org is
+                          // detected it is excluded here and instead added (with
+                          // its location) once the dialog completes, so the raw
+                          // typed value never lingers as a partial entry.
+                          field.onChange(validOrganizations);
                         }}
                         options={organizationsData.map(organization => ({
                           value: organization.id,
@@ -1019,20 +1019,24 @@ export default function PreferredHonoursAwardsStep({
             o => o.label.toLowerCase().trim() === org.name.toLowerCase().trim()
           );
 
-          if (!isDuplicate) {
-            form.setValue(
-              `honoursAndAwards.${pendingHonorIndex}.associatedOrganizations`,
-              [
-                ...(currentOrganizations ?? []),
-                {
-                  value: org.id,
-                  label: org.name,
-                  source: 'USER_CREATED',
-                },
-              ]
-            );
+          if (isDuplicate) {
+            setShowAddOrganizationDialog(false);
+            return false;
           }
+
+          form.setValue(
+            `honoursAndAwards.${pendingHonorIndex}.associatedOrganizations`,
+            [
+              ...(currentOrganizations ?? []),
+              {
+                value: org.id,
+                label: org.name,
+                source: 'USER_CREATED',
+              },
+            ]
+          );
           setShowAddOrganizationDialog(false);
+          return true;
         }}
       />
     </>
