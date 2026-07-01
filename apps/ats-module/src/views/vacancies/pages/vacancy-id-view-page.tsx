@@ -161,10 +161,10 @@ export default function VacancyIdViewPage() {
         <VacancyVolunteeringSection
           preferredVolunteering={viewModel.preferredVolunteering}
         />
+        <VacancyPatentsSection preferredPatents={viewModel.preferredPatents} />
         <VacancyHonoursAwardsSection
           preferredHonoursAwards={viewModel.preferredHonoursAwards}
         />
-        <VacancyPatentsSection preferredPatents={viewModel.preferredPatents} />
         <VacancyLicensesCertificationsSection
           licenseCertificates={viewModel.licenseCertificates}
         />

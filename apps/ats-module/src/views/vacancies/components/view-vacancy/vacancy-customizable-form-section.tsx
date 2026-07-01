@@ -36,8 +36,8 @@ function MetaField({
 }) {
   return (
     <div className={`flex flex-col gap-1.5 ${className}`}>
-      <p className="text-xs font-medium text-slate-500">{label}</p>
-      <p className="text-sm font-semibold text-slate-900">{value || '-'}</p>
+      <p className="text-sm font-semibold text-slate-500">{label}</p>
+      <p className="text-base font-semibold text-slate-900">{value || '-'}</p>
     </div>
   );
 }
@@ -61,17 +61,17 @@ function QuestionCard({
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-8">
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
-            <p className="text-xs font-medium text-slate-500">
+            <p className="text-sm font-semibold text-slate-500">
               {t('customizableForm.view.question')}
             </p>
-            <p className="text-sm font-semibold text-slate-900">
+            <p className="text-base font-semibold text-slate-900">
               {question.text || '-'}
             </p>
           </div>
 
           {showOptions && (
             <div className="flex flex-col gap-2">
-              <p className="text-xs font-medium text-slate-500">
+              <p className="text-sm font-semibold text-slate-500">
                 {t('customizableForm.view.options')}
               </p>
               <div className="flex flex-wrap gap-3">

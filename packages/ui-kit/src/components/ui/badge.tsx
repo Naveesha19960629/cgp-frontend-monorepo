@@ -18,7 +18,7 @@ const badgeVariants = cva(
         destructive:
           'border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80 px-2.5 py-0.5 text-xs',
         outline: 'text-foreground px-2.5 py-0.5 text-xs',
-        chip: 'border-neutral-200 min-h-[44px] h-auto bg-[linear-gradient(97deg,rgba(5,150,105,0)_-511.32%,#F1F5F9_41.18%)] p-3 text-slate-600 text-[14px] leading-[20px] tracking-normal',
+        chip: 'border-neutral-200 min-h-[44px] h-auto bg-[linear-gradient(114.81deg,#e1eff0_0%,#f1f5f9_50%)] p-3 text-slate-600 text-[14px] leading-[20px] tracking-normal',
       },
     },
     defaultVariants: {

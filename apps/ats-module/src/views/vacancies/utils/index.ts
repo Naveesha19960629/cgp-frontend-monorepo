@@ -29,6 +29,10 @@ export {
   to24HourTime,
 } from '@/views/vacancies/utils/schedule-display-date-time';
 export {
+  formatDateRange,
+  formatDisplayDate,
+} from '@/views/vacancies/utils/format-date-range';
+export {
   toCreateVacancyPayload,
   toUpdateVacancyPayload,
 } from '@/views/vacancies/utils/vacancy-payload-helpers';

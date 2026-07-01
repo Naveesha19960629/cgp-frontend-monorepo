@@ -5,26 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { VacancyNoDetailsState } from '@/views/vacancies/components/view-vacancy/vacancy-no-details-state';
 import { VacancyView } from '@/views/vacancies/components/view-vacancy/vacancy-view';
 import type { VacancyViewModel } from '@/views/vacancies/types';
-import { DATE_DISPLAY_FORMAT } from '@/views/vacancies/utils/constants';
-import { parseLocalDate } from '@/views/vacancies/utils/date-timezone-safe';
-
-import { format } from 'date-fns';
-
-function formatDisplayDate(dateStr?: string): string {
-  if (!dateStr) return '';
-  const d = parseLocalDate(dateStr);
-  if (!d) return '';
-  return format(d, DATE_DISPLAY_FORMAT);
-}
-
-function formatDateRange(startDate?: string, endDate?: string): string {
-  const start = formatDisplayDate(startDate);
-  const end = formatDisplayDate(endDate);
-  if (start && end) return `${start} - ${end}`;
-  if (start) return `${start} - Present`;
-  if (end) return `Until ${end}`;
-  return '';
-}
+import { formatDateRange } from '@/views/vacancies/utils/format-date-range';
 
 function VacancyProjectRequirementsSection({
   preferredProjects,
@@ -46,12 +27,9 @@ function VacancyProjectRequirementsSection({
       ) : preferredProjects.content.length === 0 ? (
         <p className="text-sm text-slate-500">-</p>
       ) : (
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-6">
           {preferredProjects.content.map((project, index) => (
-            <div
-              key={index}
-              className="flex flex-col gap-4 border-b border-slate-100 pb-4 last:border-b-0 last:pb-0"
-            >
+            <div key={index} className="flex flex-col gap-4">
               <div className="flex items-center gap-1 text-sm text-slate-600">
                 <Clock size={18} className="text-slate-600" variant="Bold" />
                 <span className="font-semibold">

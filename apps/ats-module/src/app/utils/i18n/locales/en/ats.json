@@ -172,10 +172,6 @@
         "publishDateTime": "Scheduled Publish Date & Time",
         "expirationDateTime": "Expire Date and Time",
         "vacancyLink": "Vacancy Link"
-      },
-      "actions": {
-        "showMore": "Show More",
-        "showLess": "Show Less"
       }
     },
     "createVacancy": {
