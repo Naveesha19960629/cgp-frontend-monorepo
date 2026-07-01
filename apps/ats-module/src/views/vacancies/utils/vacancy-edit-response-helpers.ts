@@ -9,6 +9,7 @@ import type {
   ScheduleVacancy,
   SkillCareerPathEntry,
   VacancyForm,
+  preferredHonoursAwardsSchema,
   preferredPatentsSchema,
 } from '@/views/vacancies/types';
 import { parseLocalDate } from '@/views/vacancies/utils/date-timezone-safe';
@@ -1071,6 +1072,57 @@ function normalizePatentsSection(
   };
 }
 
+function normalizePreferredHonoursAwardsSection(
+  rawSection: unknown,
+  fallback: VacancyForm['preferredHonoursAwards']
+): preferredHonoursAwardsSchema {
+  const fallbackValue: preferredHonoursAwardsSchema = fallback ?? {
+    isEnabled: false,
+    dataTakenFromCandidate: false,
+    honoursAndAwards: [],
+  };
+
+  if (!isRecord(rawSection)) {
+    return fallbackValue;
+  }
+
+  const entries = Array.isArray(rawSection.content)
+    ? rawSection.content
+    : Array.isArray(rawSection.honoursAndAwards)
+      ? rawSection.honoursAndAwards
+      : [];
+
+  return {
+    isEnabled:
+      typeof rawSection.isEnabled === 'boolean'
+        ? rawSection.isEnabled
+        : fallbackValue.isEnabled,
+    dataTakenFromCandidate:
+      typeof rawSection.dataTakenFromCandidate === 'boolean'
+        ? rawSection.dataTakenFromCandidate
+        : fallbackValue.dataTakenFromCandidate,
+    honoursAndAwards: entries.filter(isRecord).map(item => ({
+      title: toSafeString(item.title),
+      issuedBy: toSafeString(item.issuedBy),
+      issuedDateFrom:
+        parseLocalDate(
+          toSafeString(item.issuedFromDate || item.issuedDateFrom) || undefined
+        ) ?? undefined,
+      issuedDateTo:
+        parseLocalDate(
+          toSafeString(item.issuedToDate || item.issuedDateTo) || undefined
+        ) ?? undefined,
+      associatedOrganizations: normalizeOptionWithSourceArray(
+        item.associatedOrganizations
+      ),
+      organizationLocations: normalizeOptionLabelArray(
+        item.organizationLocations
+      ),
+      isOpen: true,
+    })),
+  };
+}
+
 function normalizePreferredLanguagesSection(
   rawSection: unknown,
   fallback: VacancyForm['preferredLanguages']
@@ -1339,6 +1391,11 @@ function toVacancyFormFromResponse(
   const patentsSection = readSectionValue(rawVacancy, sectionSource, [
     'patents',
   ]);
+  const preferredHonoursAwardsSection = readSectionValue(
+    rawVacancy,
+    sectionSource,
+    ['preferredHonoursAwards', 'honoursAndAwards']
+  );
   const scheduleSection = readSectionValue(rawVacancy, sectionSource, [
     'schedule',
     'scheduleRequirement',
@@ -1443,6 +1500,10 @@ function toVacancyFormFromResponse(
       previousForm.preferredIndustries
     ),
     patents: normalizePatentsSection(patentsSection, previousForm.patents),
+    preferredHonoursAwards: normalizePreferredHonoursAwardsSection(
+      preferredHonoursAwardsSection,
+      previousForm.preferredHonoursAwards
+    ),
     schedule: normalizeSchedule(scheduleSection) ?? previousForm.schedule,
     preferredSkills: normalizePreferredSkillsSection(
       preferredSkillsSection,
