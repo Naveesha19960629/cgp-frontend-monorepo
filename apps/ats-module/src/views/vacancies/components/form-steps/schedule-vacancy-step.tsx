@@ -1,11 +1,13 @@
 import { ArrowLeft2 } from 'iconsax-reactjs';
 
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Controller } from 'react-hook-form';
 import type { FieldErrors } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 
+import VacancyNoRescheduleConfirmDialog from '@/views/vacancies/components/vacancy-no-reschedule-confirm-dialog';
+import VacancyRescheduleConfirmDialog from '@/views/vacancies/components/vacancy-reschedule-confirm-dialog';
 import VacancyStatusBadge from '@/views/vacancies/components/vacancy-status-badge';
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import {
@@ -37,7 +39,7 @@ export default function ScheduleVacancyStep({
     control,
     handleSubmit,
     watch,
-    formState: { errors, isValid },
+    formState: { errors, isValid, dirtyFields },
   } = useScheduleVacancyForm(form.schedule);
 
   const publishDate = watch('schedulePublishDate');
@@ -45,23 +47,26 @@ export default function ScheduleVacancyStep({
   const expirationDate = watch('expirationDate');
   const expirationTime = watch('expirationTime');
 
-  const isScheduleChanged = useMemo(() => {
-    if (!form.schedule) return true;
+  const isScheduleChanged = !!(
+    dirtyFields.schedulePublishDate ||
+    dirtyFields.schedulePublishTime ||
+    dirtyFields.expirationDate ||
+    dirtyFields.expirationTime
+  );
 
-    const currentSchedule = toScheduleVacancyPayload({
-      schedulePublishDate: publishDate,
-      schedulePublishTime: publishTime,
-      expirationDate,
-      expirationTime,
-    });
+  const isPublishDateChanged = !!(
+    dirtyFields.schedulePublishDate || dirtyFields.schedulePublishTime
+  );
 
-    return (
-      currentSchedule.schedulePublishAt !== form.schedule.schedulePublishAt ||
-      currentSchedule.expirationAt !== form.schedule.expirationAt
-    );
-  }, [publishDate, publishTime, expirationDate, expirationTime, form.schedule]);
+  const [confirmDialog, setConfirmDialog] = useState<
+    'reschedule' | 'noReschedule' | null
+  >(null);
+  const [pendingValues, setPendingValues] =
+    useState<ScheduleVacancyFormValues | null>(null);
 
   const hasPastScheduleDateTime = useMemo(() => {
+    if (form.status === 'expired') return false;
+
     if (!isScheduleChanged) {
       return false;
     }
@@ -85,6 +90,7 @@ export default function ScheduleVacancyStep({
     const now = new Date();
     return publishAt < now || expirationAt < now;
   }, [
+    form.status,
     publishDate,
     publishTime,
     expirationDate,
@@ -176,6 +182,51 @@ export default function ScheduleVacancyStep({
     }
   };
 
+  const executeUpdate = async (
+    values: ScheduleVacancyFormValues,
+    existingStatusOverride?: string
+  ) => {
+    const publishAt = new Date(
+      `${values.schedulePublishDate}T${to24HourTime(values.schedulePublishTime)}`
+    );
+
+    const targetStatus = publishAt <= new Date() ? 'live' : 'unpublished';
+    const targetApiStatus = targetStatus === 'live' ? 'LIVE' : 'UNPUBLISHED';
+
+    const schedule = toScheduleVacancyPayload(values);
+    const payloadForm = { ...form, schedule };
+
+    if (id) {
+      await updateVacancy({
+        id,
+        form: payloadForm,
+        existingStatus: isCreateAction
+          ? targetStatus
+          : (existingStatusOverride ?? form.status),
+      });
+    } else {
+      await createVacancy({
+        form: { ...form, schedule },
+        status: targetApiStatus,
+      });
+    }
+
+    SuccessToast({
+      title: t(
+        isCreateAction
+          ? 'scheduleVacancy.notifications.successTitle'
+          : 'scheduleVacancy.notifications.updateSuccessTitle'
+      ),
+      description: t(
+        isCreateAction
+          ? 'scheduleVacancy.notifications.successMessage'
+          : 'scheduleVacancy.notifications.updateSuccessMessage'
+      ),
+    });
+    onSubmit();
+    void navigate('/dashboard/ats/vacancies');
+  };
+
   const onValid = async (values: ScheduleVacancyFormValues) => {
     const publishAt = new Date(
       `${values.schedulePublishDate}T${to24HourTime(values.schedulePublishTime)}`
@@ -183,6 +234,22 @@ export default function ScheduleVacancyStep({
     const expirationAt = new Date(
       `${values.expirationDate}T${to24HourTime(values.expirationTime)}`
     );
+
+    if (form.status === 'expired') {
+      if (isScheduleChanged) {
+        const now = new Date();
+        if (publishAt < now || expirationAt < now) {
+          ErrorToast({
+            title: t('scheduleVacancy.notifications.validationErrorTitle'),
+            description: t('scheduleVacancy.notifications.pastDateTimeMessage'),
+          });
+          return;
+        }
+      }
+      setPendingValues(values);
+      setConfirmDialog(isPublishDateChanged ? 'reschedule' : 'noReschedule');
+      return;
+    }
 
     if (isScheduleChanged) {
       const now = new Date();
@@ -196,40 +263,23 @@ export default function ScheduleVacancyStep({
       }
     }
 
-    // LIVE if publish time is now or in the past, UNPUBLISHED if future
-    const targetStatus = publishAt <= new Date() ? 'live' : 'unpublished';
-    const targetApiStatus = targetStatus === 'live' ? 'LIVE' : 'UNPUBLISHED';
+    try {
+      await executeUpdate(values);
+    } catch {
+      ErrorToast({
+        title: t('scheduleVacancy.notifications.apiErrorTitle'),
+        description: t('scheduleVacancy.notifications.apiErrorMessage'),
+      });
+    }
+  };
+
+  const handleConfirmUpdate = async () => {
+    if (!pendingValues) return;
+    const isReschedule = confirmDialog === 'reschedule';
+    setConfirmDialog(null);
 
     try {
-      const schedule = toScheduleVacancyPayload(values);
-      const payloadForm = { ...form, schedule };
-
-      if (id) {
-        await updateVacancy({
-          id,
-          form: payloadForm,
-          existingStatus: isCreateAction ? targetStatus : form.status,
-        });
-      } else {
-        await createVacancy({
-          form: { ...form, schedule },
-          status: targetApiStatus,
-        });
-      }
-      SuccessToast({
-        title: t(
-          isCreateAction
-            ? 'scheduleVacancy.notifications.successTitle'
-            : 'scheduleVacancy.notifications.updateSuccessTitle'
-        ),
-        description: t(
-          isCreateAction
-            ? 'scheduleVacancy.notifications.successMessage'
-            : 'scheduleVacancy.notifications.updateSuccessMessage'
-        ),
-      });
-      onSubmit();
-      navigate('/dashboard/ats/vacancies');
+      await executeUpdate(pendingValues, isReschedule ? 'on_hold' : undefined);
     } catch {
       ErrorToast({
         title: t('scheduleVacancy.notifications.apiErrorTitle'),
@@ -407,6 +457,28 @@ export default function ScheduleVacancyStep({
             : t('scheduleVacancy.update')}
         </Button>
       </div>
+
+      <VacancyRescheduleConfirmDialog
+        open={confirmDialog === 'reschedule'}
+        onOpenChange={open => {
+          if (!open) setConfirmDialog(null);
+        }}
+        onConfirm={() => {
+          handleConfirmUpdate().catch(() => {});
+        }}
+        isConfirming={isPending || isUpdating}
+      />
+
+      <VacancyNoRescheduleConfirmDialog
+        open={confirmDialog === 'noReschedule'}
+        onOpenChange={open => {
+          if (!open) setConfirmDialog(null);
+        }}
+        onConfirm={() => {
+          handleConfirmUpdate().catch(() => {});
+        }}
+        isConfirming={isPending || isUpdating}
+      />
     </div>
   );
 }

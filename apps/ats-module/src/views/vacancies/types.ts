@@ -1032,6 +1032,20 @@ interface VacancyEditCancelDialogProps {
   onConfirm: () => void;
 }
 
+interface VacancyRescheduleConfirmDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onConfirm: () => void;
+  isConfirming?: boolean;
+}
+
+interface VacancyNoRescheduleConfirmDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onConfirm: () => void;
+  isConfirming?: boolean;
+}
+
 interface VacancyTableColumn {
   vacancyId: string;
   title: string;
@@ -1782,6 +1796,8 @@ export type {
   VacancyCancelDialogProps,
   VacancyDeleteDialogProps,
   VacancyEditCancelDialogProps,
+  VacancyRescheduleConfirmDialogProps,
+  VacancyNoRescheduleConfirmDialogProps,
   VacancyDetailJobRequirementData,
   VacancyDetailPatentEntry,
   VacancyDetailData,
