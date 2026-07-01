@@ -139,9 +139,17 @@ const FORM_TITLE_MAX = 150;
 const isChoiceType = (type: QuestionType | ''): boolean =>
   type === 'MULTIPLE_CHOICE' || type === 'CHECKBOXES' || type === 'DROPDOWN';
 
-// A question is empty when it has no user input at all.
+// A question is empty when it has no user input at all: no text, no selected
+// type, the Required toggle off, and no option values or scale labels. (Option
+// values / scale labels are checked too so a question loaded with that data but
+// an unrecognized type — normalized to '' — is still treated as non-empty.)
 const isQuestionEmpty = (q: Question): boolean =>
-  q.text.trim() === '' && q.type === '' && q.required === false;
+  q.text.trim() === '' &&
+  q.type === '' &&
+  q.required === false &&
+  q.options.every(o => o.value.trim() === '') &&
+  q.startLabel.trim() === '' &&
+  q.endLabel.trim() === '';
 
 // A form is empty when it has no title and every question is empty.
 const isFormEmpty = (form: FormCard): boolean =>

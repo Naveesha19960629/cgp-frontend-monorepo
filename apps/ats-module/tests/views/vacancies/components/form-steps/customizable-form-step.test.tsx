@@ -877,4 +877,83 @@ describe('CustomizableFormStep', () => {
       expect(mockOnNext).not.toHaveBeenCalled();
     });
   });
+
+  describe('Duplicate Form enable/disable (AC10)', () => {
+    const renderWithForm = (customizableForm: unknown) => {
+      mockUseVacancyForm.mockReturnValue({
+        form: { customizableForm },
+        onCancel: vi.fn(),
+        setForm: vi.fn(),
+        setStepGuard: vi.fn(),
+        stepPersistRef: { current: null },
+        stepDisableRef: { current: null },
+        currentStepIndex: 0,
+        removeCompletedStep: vi.fn(),
+      });
+      return render(
+        <CustomizableFormStep
+          onNext={vi.fn()}
+          onBack={vi.fn()}
+          onSubmit={vi.fn()}
+        />
+      );
+    };
+
+    const emptyQuestion = {
+      id: 1,
+      text: '',
+      type: '',
+      required: false,
+      options: [{ id: 1, value: '' }],
+      from: 0,
+      to: 2,
+      startLabel: '',
+      endLabel: '',
+    };
+
+    it('disables Duplicate Form when the form has no user input', () => {
+      renderWithForm({
+        isEnabled: true,
+        sectionTitle: '',
+        forms: [{ id: 1, title: '', questions: [emptyQuestion] }],
+      });
+      expect(
+        screen.getByRole('button', { name: 'Duplicate form' })
+      ).toBeDisabled();
+    });
+
+    it('enables Duplicate Form when a question only has option values (type unrecognized → "")', () => {
+      renderWithForm({
+        isEnabled: true,
+        sectionTitle: '',
+        forms: [
+          {
+            id: 1,
+            title: '',
+            questions: [{ ...emptyQuestion, options: [{ id: 1, value: 'A' }] }],
+          },
+        ],
+      });
+      expect(
+        screen.getByRole('button', { name: 'Duplicate form' })
+      ).toBeEnabled();
+    });
+
+    it('enables Duplicate Form when a question only has scale labels', () => {
+      renderWithForm({
+        isEnabled: true,
+        sectionTitle: '',
+        forms: [
+          {
+            id: 1,
+            title: '',
+            questions: [{ ...emptyQuestion, startLabel: 'Low' }],
+          },
+        ],
+      });
+      expect(
+        screen.getByRole('button', { name: 'Duplicate form' })
+      ).toBeEnabled();
+    });
+  });
 });
