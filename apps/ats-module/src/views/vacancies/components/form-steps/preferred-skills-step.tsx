@@ -380,6 +380,13 @@ export default function PreferredSkillsStep({
   const isStepActionDisabled =
     isEnabled && !dataTakenFromCandidate && selectedSkills.length === 0;
 
+  // Persist the current step's data to the shared form context before navigating
+  // back, so edits made on this step are not lost (matches the Next flow).
+  const handleBack = () => {
+    stepPersistRef.current?.();
+    onBack();
+  };
+
   return (
     <div>
       {/* ── Section Header ──────────────────────────────────────────── */}
@@ -392,7 +399,7 @@ export default function PreferredSkillsStep({
               'cursor-pointer text-slate-700 transition-colors hover:text-slate-900',
               isStepActionDisabled && 'cursor-not-allowed opacity-50'
             )}
-            onClick={onBack}
+            onClick={handleBack}
             disabled={isStepActionDisabled}
           >
             <ArrowLeft2 size={24} />

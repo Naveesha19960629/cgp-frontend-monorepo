@@ -38,8 +38,15 @@ vi.mock('react-i18next', () => ({
           'Max questions exceeded',
         'customizableForm.errors.maxLengthExceeded': 'Max length exceeded',
         'customizableForm.copyOfTitle': 'Copy of {{title}}',
+        'customizableForm.errors.errorTitle': 'Error',
         'customizableForm.errors.requiredQuestion': 'Required question',
         'customizableForm.errors.requiredType': 'Required type',
+        'customizableForm.errors.requiredSectionTitle':
+          'Section title is required',
+        'customizableForm.errors.requiredFormTitle': 'Form title is required',
+        'customizableForm.errors.requiredOption': 'Option is required',
+        'customizableForm.errors.duplicateOption':
+          'Duplicate options not allowed',
         'customizableForm.question.types.shortAnswer': 'Short Answer',
         'customizableForm.question.types.paragraph': 'Paragraph',
         'customizableForm.question.types.multipleChoice': 'Multiple Choice',
@@ -47,6 +54,7 @@ vi.mock('react-i18next', () => ({
         'customizableForm.question.types.dropDown': 'Dropdown',
         'customizableForm.question.types.linearScale': 'Linear Scale',
         'customizableForm.question.enterOption': 'Enter option',
+        'customizableForm.question.addOption': 'Add Option',
       };
       let baseText = map[key] || key;
       if (options) {
@@ -251,6 +259,10 @@ const renderComponent = (
   return render(<CustomizableFormStep {...props} />);
 };
 
+// The section enable/disable toggle is always the first switch in the DOM.
+// (Each question now renders its own "Required" switch.)
+const getSectionToggle = () => screen.getAllByRole('switch')[0];
+
 // ── Tests ────────────────────────────────────────────────────────────────────
 
 describe('CustomizableFormStep', () => {
@@ -267,7 +279,7 @@ describe('CustomizableFormStep', () => {
 
     it('should render with toggle switch', () => {
       renderComponent();
-      expect(screen.getByRole('switch')).toBeInTheDocument();
+      expect(getSectionToggle()).toBeInTheDocument();
     });
 
     it('should render section title input', () => {
@@ -277,10 +289,7 @@ describe('CustomizableFormStep', () => {
 
     it('should render with disabled state initially', () => {
       renderComponent();
-      expect(screen.getByRole('switch')).toHaveAttribute(
-        'aria-checked',
-        'false'
-      );
+      expect(getSectionToggle()).toHaveAttribute('aria-checked', 'false');
     });
 
     it('should render form builder heading', () => {
@@ -294,7 +303,7 @@ describe('CustomizableFormStep', () => {
       const user = userEvent.setup();
       renderComponent();
 
-      const toggle = screen.getByRole('switch');
+      const toggle = getSectionToggle();
       await user.click(toggle);
 
       expect(toggle).toHaveAttribute('aria-checked', 'true');
@@ -304,7 +313,7 @@ describe('CustomizableFormStep', () => {
       const user = userEvent.setup();
       renderComponent();
 
-      const toggle = screen.getByRole('switch');
+      const toggle = getSectionToggle();
       await user.click(toggle);
 
       expect(screen.getByPlaceholderText('Form Title')).toBeInTheDocument();
@@ -316,7 +325,7 @@ describe('CustomizableFormStep', () => {
       const user = userEvent.setup();
       renderComponent();
 
-      const toggle = screen.getByRole('switch');
+      const toggle = getSectionToggle();
       await user.click(toggle);
 
       const sectionInput: HTMLInputElement =
@@ -330,7 +339,7 @@ describe('CustomizableFormStep', () => {
       const user = userEvent.setup();
       renderComponent();
 
-      const toggle = screen.getByRole('switch');
+      const toggle = getSectionToggle();
       await user.click(toggle);
 
       const sectionInput = screen.getByPlaceholderText('Section Title');
@@ -349,7 +358,7 @@ describe('CustomizableFormStep', () => {
       const user = userEvent.setup();
       renderComponent();
 
-      const toggle = screen.getByRole('switch');
+      const toggle = getSectionToggle();
       await user.click(toggle);
 
       const sectionInput = screen.getByPlaceholderText('Section Title');
@@ -368,7 +377,7 @@ describe('CustomizableFormStep', () => {
       const user = userEvent.setup();
       renderComponent();
 
-      const toggle = screen.getByRole('switch');
+      const toggle = getSectionToggle();
       await user.click(toggle);
 
       expect(screen.getByText('Untitled Form')).toBeInTheDocument();
@@ -378,7 +387,7 @@ describe('CustomizableFormStep', () => {
       const user = userEvent.setup();
       renderComponent();
 
-      const toggle = screen.getByRole('switch');
+      const toggle = getSectionToggle();
       await user.click(toggle);
 
       const formInput: HTMLInputElement =
@@ -402,7 +411,7 @@ describe('CustomizableFormStep', () => {
       const user = userEvent.setup();
       renderComponent();
 
-      const toggle = screen.getByRole('switch');
+      const toggle = getSectionToggle();
       await user.click(toggle);
 
       const formInputs = screen.getAllByPlaceholderText('Form Title');
@@ -413,7 +422,7 @@ describe('CustomizableFormStep', () => {
       const user = userEvent.setup();
       renderComponent();
 
-      const toggle = screen.getByRole('switch');
+      const toggle = getSectionToggle();
       await user.click(toggle);
 
       const addButton = screen.getByRole('button', { name: 'Add Form' });
@@ -427,7 +436,7 @@ describe('CustomizableFormStep', () => {
       const user = userEvent.setup();
       renderComponent();
 
-      const toggle = screen.getByRole('switch');
+      const toggle = getSectionToggle();
       await user.click(toggle);
 
       // Initially, only 1 form exists, so delete button should be disabled
@@ -470,8 +479,12 @@ describe('CustomizableFormStep', () => {
       const user = userEvent.setup();
       renderComponent();
 
-      const toggle = screen.getByRole('switch');
+      const toggle = getSectionToggle();
       await user.click(toggle);
+
+      // Duplicate is disabled for an empty form, so give it a title first.
+      const formInput = screen.getByPlaceholderText('Form Title');
+      await user.type(formInput, 'My Form');
 
       const duplicateButton = screen.getByRole('button', {
         name: 'Duplicate form',
@@ -482,11 +495,11 @@ describe('CustomizableFormStep', () => {
       expect(formInputs.length).toBe(2);
     });
 
-    it('should sequentially name duplicate forms correctly and rename the first one when adding more duplicates', async () => {
+    it('should name copies per the convention and never rename existing copies (incl. on delete)', async () => {
       const user = userEvent.setup({ delay: null });
       renderComponent();
 
-      const toggle = screen.getByRole('switch');
+      const toggle = getSectionToggle();
       await user.click(toggle);
 
       const formInput = screen.getByPlaceholderText('Form Title');
@@ -496,61 +509,41 @@ describe('CustomizableFormStep', () => {
         name: 'Duplicate form',
       });
 
-      // 1. First duplicate
+      // 1. First copy → "Copy of sdfsdfsdf" (no suffix); original keeps its name.
       await user.click(duplicateButton);
       expect(screen.getByText('sdfsdfsdf')).toBeInTheDocument();
       expect(screen.getByText('Copy of sdfsdfsdf')).toBeInTheDocument();
 
-      // 2. Second duplicate (this should rename the first to 'Copy of sdfsdfsdf (1)')
+      // 2. Second copy of the original → "(1)"; the first copy is NOT renamed.
       await user.click(duplicateButton);
-      expect(screen.getByText('sdfsdfsdf')).toBeInTheDocument();
+      expect(screen.getByText('Copy of sdfsdfsdf')).toBeInTheDocument();
+      expect(screen.getByText('Copy of sdfsdfsdf (1)')).toBeInTheDocument();
+
+      // 3. Third copy → "(2)".
+      await user.click(duplicateButton);
       expect(screen.getByText('Copy of sdfsdfsdf (1)')).toBeInTheDocument();
       expect(screen.getByText('Copy of sdfsdfsdf (2)')).toBeInTheDocument();
 
-      // 3. Third duplicate
-      await user.click(duplicateButton);
-      expect(screen.getByText('sdfsdfsdf')).toBeInTheDocument();
-      expect(screen.getByText('Copy of sdfsdfsdf (1)')).toBeInTheDocument();
-      expect(screen.getByText('Copy of sdfsdfsdf (2)')).toBeInTheDocument();
-      expect(screen.getByText('Copy of sdfsdfsdf (3)')).toBeInTheDocument();
-
-      // 4. Remove one duplicate (so 2 remain)
-      let deleteButtons = screen.getAllByRole('button', {
+      // 4. Deleting the unsuffixed copy does NOT renumber the remaining copies.
+      const deleteButtons = screen.getAllByRole('button', {
         name: 'Delete form',
       });
-      await user.click(deleteButtons[1]); // delete one of the form cards
-      let confirmButton = screen.getByRole('button', {
+      await user.click(deleteButtons[deleteButtons.length - 1]);
+      const confirmButton = screen.getByRole('button', {
         name: 'customizableForm.deleteFormModal.delete',
       });
       await user.click(confirmButton);
 
-      // We should still have two duplicates with suffixes
       expect(screen.getByText('Copy of sdfsdfsdf (1)')).toBeInTheDocument();
       expect(screen.getByText('Copy of sdfsdfsdf (2)')).toBeInTheDocument();
-
-      // 5. Remove another duplicate (so only 1 remains)
-      deleteButtons = screen.getAllByRole('button', { name: 'Delete form' });
-      await user.click(deleteButtons[1]); // delete 'Copy of sdfsdfsdf (2)'
-      confirmButton = screen.getByRole('button', {
-        name: 'customizableForm.deleteFormModal.delete',
-      });
-      await user.click(confirmButton);
-
-      // The sole remaining duplicate should rename back to 'Copy of sdfsdfsdf'
-      expect(screen.getByText('Copy of sdfsdfsdf')).toBeInTheDocument();
-      expect(
-        screen.queryByText('Copy of sdfsdfsdf (1)')
-      ).not.toBeInTheDocument();
-      expect(
-        screen.queryByText('Copy of sdfsdfsdf (2)')
-      ).not.toBeInTheDocument();
+      expect(screen.queryByText('Copy of sdfsdfsdf')).not.toBeInTheDocument();
     });
 
     it('should toggle form open/closed when collapse button is clicked', async () => {
       const user = userEvent.setup();
       renderComponent();
 
-      const toggle = screen.getByRole('switch');
+      const toggle = getSectionToggle();
       await user.click(toggle);
 
       const collapseButton = screen.getByRole('button', {
@@ -569,7 +562,7 @@ describe('CustomizableFormStep', () => {
       const user = userEvent.setup();
       renderComponent();
 
-      const toggle = screen.getByRole('switch');
+      const toggle = getSectionToggle();
       await user.click(toggle);
 
       for (let i = 0; i < 4; i++) {
@@ -591,7 +584,7 @@ describe('CustomizableFormStep', () => {
       const user = userEvent.setup();
       renderComponent();
 
-      const toggle = screen.getByRole('switch');
+      const toggle = getSectionToggle();
       await user.click(toggle);
 
       const formInput: HTMLInputElement =
@@ -604,7 +597,7 @@ describe('CustomizableFormStep', () => {
       const user = userEvent.setup();
       renderComponent();
 
-      const toggle = screen.getByRole('switch');
+      const toggle = getSectionToggle();
       await user.click(toggle);
 
       const formInput = screen.getByPlaceholderText('Form Title');
@@ -660,7 +653,7 @@ describe('CustomizableFormStep', () => {
   describe('Initial State', () => {
     it('should render with customizable form disabled by default', () => {
       renderComponent();
-      const toggle = screen.getByRole('switch');
+      const toggle = getSectionToggle();
       expect(toggle).toHaveAttribute('aria-checked', 'false');
     });
 
@@ -673,96 +666,294 @@ describe('CustomizableFormStep', () => {
   });
 
   describe('Validation and Error Messages', () => {
-    it('should validate form and question state and enable/disable next button correctly', async () => {
+    it('should keep Next enabled but block navigation with inline messages until the section is valid', async () => {
       const user = userEvent.setup();
-      renderComponent();
+      const mockOnNext = vi.fn();
+      renderComponent({
+        onNext: mockOnNext,
+        onBack: vi.fn(),
+        onSubmit: vi.fn(),
+      });
 
-      const toggle = screen.getByRole('switch');
+      const toggle = getSectionToggle();
       await user.click(toggle);
 
       const nextButton = screen.getByRole('button', { name: 'Next' });
 
-      // Initially, form has 0 questions, so nextButton is disabled
-      expect(nextButton).toBeDisabled();
+      // Next is always enabled now.
+      expect(nextButton).toBeEnabled();
 
-      // Create a question
-      const createQuestionButton = screen.getByRole('button', {
-        name: 'Create Question',
-      });
-      await user.click(createQuestionButton);
+      // Attempting to navigate with everything empty is blocked and shows all
+      // the required-field messages at once.
+      await user.click(nextButton);
+      expect(mockOnNext).not.toHaveBeenCalled();
+      expect(screen.getByText('Section title is required')).toBeInTheDocument();
+      expect(screen.getByText('Form title is required')).toBeInTheDocument();
+      expect(screen.getByText('Required question')).toBeInTheDocument();
+      expect(screen.getByText('Required type')).toBeInTheDocument();
 
-      // Question created. Deleting it should be disabled because it's the only question
-      const deleteQuestionButtons = screen.getAllByRole('button', {
-        name: 'Delete question',
-      });
-      expect(deleteQuestionButtons[0]).toBeDisabled();
+      // Fill the mandatory fields.
+      await user.type(screen.getByPlaceholderText('Section Title'), 'Skills');
+      await user.type(screen.getByPlaceholderText('Form Title'), 'Tech');
+      await user.type(
+        screen.getByPlaceholderText('Question'),
+        'Years of experience?'
+      );
 
-      // Next button should be disabled because question text and type are empty
-      expect(nextButton).toBeDisabled();
-
-      // Type in the question text
-      const questionInput = screen.getByPlaceholderText('Question');
-      fireEvent.change(questionInput, {
-        target: { value: 'What is your experience?' },
-      });
-      expect(nextButton).toBeDisabled();
-
-      // Select type "Short Answer"
+      // Select a non-option type so options are not required.
       const typeTrigger = screen.getByRole('combobox');
       await user.click(typeTrigger);
-      const shortAnswerOption = screen.getByText('Short Answer');
-      await user.click(shortAnswerOption);
+      await user.click(screen.getByText('Short Answer'));
 
-      // Now it has valid text and type (non-option based), so Next button should be enabled
+      // Navigation now succeeds.
+      await user.click(nextButton);
       await waitFor(() => {
-        expect(nextButton).toBeEnabled();
+        expect(mockOnNext).toHaveBeenCalledWith(
+          expect.objectContaining({
+            customizableForm: expect.objectContaining({ isEnabled: true }),
+          })
+        );
       });
-
-      // Change type to "Multiple Choice" (option-based)
-      await user.click(typeTrigger);
-      const mcOption = screen.getByText('Multiple Choice');
-      await user.click(mcOption);
-
-      // Should be disabled because the default option value is empty
-      await waitFor(() => {
-        expect(nextButton).toBeDisabled();
-      });
-
-      // Type text in the first option
-      const optionInput = screen.getByPlaceholderText('Enter option');
-      fireEvent.change(optionInput, { target: { value: 'Option A' } });
-
-      // Now at least one option is filled, Next button should be enabled
-      await waitFor(() => {
-        expect(nextButton).toBeEnabled();
-      });
-
-      // If we duplicate the question, we have 2 questions, so delete button should be enabled
-      const duplicateQuestionButtons = screen.getAllByRole('button', {
-        name: 'Duplicate question',
-      });
-      await user.click(duplicateQuestionButtons[0]);
-
-      const updatedDeleteButtons = screen.getAllByRole('button', {
-        name: 'Delete question',
-      });
-      expect(updatedDeleteButtons[0]).toBeEnabled();
-      expect(updatedDeleteButtons[1]).toBeEnabled();
     });
 
-    it('should disable next button when section title is too long', async () => {
+    it('should require a minimum of two non-empty options for choice types', async () => {
       const user = userEvent.setup();
-      renderComponent();
+      const mockOnNext = vi.fn();
+      renderComponent({
+        onNext: mockOnNext,
+        onBack: vi.fn(),
+        onSubmit: vi.fn(),
+      });
 
-      const toggle = screen.getByRole('switch');
-      await user.click(toggle);
+      await user.click(getSectionToggle());
+
+      await user.type(screen.getByPlaceholderText('Section Title'), 'Skills');
+      await user.type(screen.getByPlaceholderText('Form Title'), 'Tech');
+      await user.type(screen.getByPlaceholderText('Question'), 'Pick one');
+
+      // Choose Multiple Choice → two option fields appear by default.
+      const typeTrigger = screen.getByRole('combobox');
+      await user.click(typeTrigger);
+      await user.click(screen.getByText('Multiple Choice'));
+
+      const optionInputs = screen.getAllByPlaceholderText('Enter option');
+      expect(optionInputs.length).toBe(2);
+
+      // Only one option filled → navigation blocked with a required message.
+      fireEvent.change(optionInputs[0], { target: { value: 'Option A' } });
+      await user.click(screen.getByRole('button', { name: 'Next' }));
+      expect(mockOnNext).not.toHaveBeenCalled();
+      expect(screen.getByText('Option is required')).toBeInTheDocument();
+
+      // Fill the second option → navigation succeeds.
+      fireEvent.change(optionInputs[1], { target: { value: 'Option B' } });
+      await user.click(screen.getByRole('button', { name: 'Next' }));
+      await waitFor(() => {
+        expect(mockOnNext).toHaveBeenCalled();
+      });
+    });
+
+    it('should keep the first two option fields mandatory even if a later option is filled', async () => {
+      const user = userEvent.setup();
+      const mockOnNext = vi.fn();
+      renderComponent({
+        onNext: mockOnNext,
+        onBack: vi.fn(),
+        onSubmit: vi.fn(),
+      });
+
+      await user.click(getSectionToggle());
+
+      await user.type(screen.getByPlaceholderText('Section Title'), 'Skills');
+      await user.type(screen.getByPlaceholderText('Form Title'), 'Tech');
+      await user.type(screen.getByPlaceholderText('Question'), 'Pick one');
+
+      const typeTrigger = screen.getByRole('combobox');
+      await user.click(typeTrigger);
+      await user.click(screen.getByText('Multiple Choice'));
+
+      // Add a third field, fill Option 01 and Option 03 but leave Option 02 empty.
+      await user.click(screen.getByRole('button', { name: 'Add Option' }));
+      const optionInputs = screen.getAllByPlaceholderText('Enter option');
+      fireEvent.change(optionInputs[0], { target: { value: 'Option A' } });
+      fireEvent.change(optionInputs[2], { target: { value: 'Option C' } });
+
+      // Option 02 (mandatory) is still empty → navigation is blocked.
+      await user.click(screen.getByRole('button', { name: 'Next' }));
+      expect(mockOnNext).not.toHaveBeenCalled();
+      expect(screen.getByText('Option is required')).toBeInTheDocument();
+
+      // Fill Option 02 → navigation succeeds.
+      fireEvent.change(optionInputs[1], { target: { value: 'Option B' } });
+      await user.click(screen.getByRole('button', { name: 'Next' }));
+      await waitFor(() => {
+        expect(mockOnNext).toHaveBeenCalled();
+      });
+    });
+
+    it('should not require extra blank option fields once two options are filled', async () => {
+      const user = userEvent.setup();
+      const mockOnNext = vi.fn();
+      renderComponent({
+        onNext: mockOnNext,
+        onBack: vi.fn(),
+        onSubmit: vi.fn(),
+      });
+
+      await user.click(getSectionToggle());
+
+      await user.type(screen.getByPlaceholderText('Section Title'), 'Skills');
+      await user.type(screen.getByPlaceholderText('Form Title'), 'Tech');
+      await user.type(screen.getByPlaceholderText('Question'), 'Pick one');
+
+      const typeTrigger = screen.getByRole('combobox');
+      await user.click(typeTrigger);
+      await user.click(screen.getByText('Multiple Choice'));
+
+      // Fill the two default options, then add a third blank one.
+      const optionInputs = screen.getAllByPlaceholderText('Enter option');
+      fireEvent.change(optionInputs[0], { target: { value: 'Option A' } });
+      fireEvent.change(optionInputs[1], { target: { value: 'Option B' } });
+      await user.click(screen.getByRole('button', { name: 'Add Option' }));
+
+      // The extra blank field must not show a required message and must not block.
+      await user.click(screen.getByRole('button', { name: 'Next' }));
+      expect(screen.queryByText('Option is required')).not.toBeInTheDocument();
+      await waitFor(() => {
+        expect(mockOnNext).toHaveBeenCalled();
+      });
+    });
+
+    it('should block navigation and toast on duplicate option values (case-insensitive)', async () => {
+      const user = userEvent.setup();
+      const mockOnNext = vi.fn();
+      renderComponent({
+        onNext: mockOnNext,
+        onBack: vi.fn(),
+        onSubmit: vi.fn(),
+      });
+
+      await user.click(getSectionToggle());
+
+      await user.type(screen.getByPlaceholderText('Section Title'), 'Skills');
+      await user.type(screen.getByPlaceholderText('Form Title'), 'Tech');
+      await user.type(screen.getByPlaceholderText('Question'), 'Pick one');
+
+      const typeTrigger = screen.getByRole('combobox');
+      await user.click(typeTrigger);
+      await user.click(screen.getByText('Multiple Choice'));
+
+      const optionInputs = screen.getAllByPlaceholderText('Enter option');
+      fireEvent.change(optionInputs[0], { target: { value: 'Java' } });
+      fireEvent.change(optionInputs[1], { target: { value: '  java ' } });
+
+      await user.click(screen.getByRole('button', { name: 'Next' }));
+
+      expect(mockOnNext).not.toHaveBeenCalled();
+      expect(mockErrorToast).toHaveBeenCalledWith(
+        expect.objectContaining({
+          description: 'Duplicate options not allowed',
+        })
+      );
+    });
+
+    it('should keep Next enabled but block navigation when section title is too long', async () => {
+      const user = userEvent.setup();
+      const mockOnNext = vi.fn();
+      renderComponent({
+        onNext: mockOnNext,
+        onBack: vi.fn(),
+        onSubmit: vi.fn(),
+      });
+
+      await user.click(getSectionToggle());
 
       const sectionInput = screen.getByPlaceholderText('Section Title');
-      const longText = 'a'.repeat(201);
-      fireEvent.change(sectionInput, { target: { value: longText } });
+      fireEvent.change(sectionInput, { target: { value: 'a'.repeat(201) } });
 
       const nextButton = screen.getByRole('button', { name: 'Next' });
-      expect(nextButton).toBeDisabled();
+      expect(nextButton).toBeEnabled();
+      await user.click(nextButton);
+      expect(mockOnNext).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('Duplicate Form enable/disable (AC10)', () => {
+    const renderWithForm = (customizableForm: unknown) => {
+      mockUseVacancyForm.mockReturnValue({
+        form: { customizableForm },
+        onCancel: vi.fn(),
+        setForm: vi.fn(),
+        setStepGuard: vi.fn(),
+        stepPersistRef: { current: null },
+        stepDisableRef: { current: null },
+        currentStepIndex: 0,
+        removeCompletedStep: vi.fn(),
+      });
+      return render(
+        <CustomizableFormStep
+          onNext={vi.fn()}
+          onBack={vi.fn()}
+          onSubmit={vi.fn()}
+        />
+      );
+    };
+
+    const emptyQuestion = {
+      id: 1,
+      text: '',
+      type: '',
+      required: false,
+      options: [{ id: 1, value: '' }],
+      from: 0,
+      to: 2,
+      startLabel: '',
+      endLabel: '',
+    };
+
+    it('disables Duplicate Form when the form has no user input', () => {
+      renderWithForm({
+        isEnabled: true,
+        sectionTitle: '',
+        forms: [{ id: 1, title: '', questions: [emptyQuestion] }],
+      });
+      expect(
+        screen.getByRole('button', { name: 'Duplicate form' })
+      ).toBeDisabled();
+    });
+
+    it('enables Duplicate Form when a question only has option values (type unrecognized → "")', () => {
+      renderWithForm({
+        isEnabled: true,
+        sectionTitle: '',
+        forms: [
+          {
+            id: 1,
+            title: '',
+            questions: [{ ...emptyQuestion, options: [{ id: 1, value: 'A' }] }],
+          },
+        ],
+      });
+      expect(
+        screen.getByRole('button', { name: 'Duplicate form' })
+      ).toBeEnabled();
+    });
+
+    it('enables Duplicate Form when a question only has scale labels', () => {
+      renderWithForm({
+        isEnabled: true,
+        sectionTitle: '',
+        forms: [
+          {
+            id: 1,
+            title: '',
+            questions: [{ ...emptyQuestion, startLabel: 'Low' }],
+          },
+        ],
+      });
+      expect(
+        screen.getByRole('button', { name: 'Duplicate form' })
+      ).toBeEnabled();
     });
   });
 });

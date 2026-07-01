@@ -1,6 +1,5 @@
 import { BrifecaseTimer, ChartSquare, Routing2 } from 'iconsax-reactjs';
 
-import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { VacancyView } from '@/views/vacancies/components/view-vacancy/vacancy-view';
@@ -12,7 +11,6 @@ function VacancyJobRequirementsSection({
   jobRequirement: VacancyViewModel['jobRequirement'];
 }) {
   const { t } = useTranslation('ats');
-  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 
   return (
     <VacancyView.Section title={t('vacancies.view.sections.jobRequirements')}>
@@ -47,16 +45,7 @@ function VacancyJobRequirementsSection({
 
       {/* Description Text */}
       <div className="mb-4">
-        <VacancyView.Description
-          value={jobRequirement.description}
-          expanded={isDescriptionExpanded}
-          onToggle={() => setIsDescriptionExpanded(prev => !prev)}
-          toggleLabel={
-            isDescriptionExpanded
-              ? t('vacancies.view.actions.showLess')
-              : t('vacancies.view.actions.showMore')
-          }
-        />
+        <VacancyView.Description value={jobRequirement.description} />
       </div>
 
       {/* Grid of Chips inside a shaded box */}
