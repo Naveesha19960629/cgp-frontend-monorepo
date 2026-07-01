@@ -558,6 +558,8 @@ export default function TertiaryEducationStep({
           t('tertiaryEducation.messageBoxFields.levelOfQualification'),
           t('tertiaryEducation.messageBoxFields.studyPattern'),
           t('tertiaryEducation.messageBoxFields.deliverySchedule'),
+          t('tertiaryEducation.messageBoxFields.startDate'),
+          t('tertiaryEducation.messageBoxFields.endDate'),
         ]}
       />
 

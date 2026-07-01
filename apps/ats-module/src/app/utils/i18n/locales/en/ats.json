@@ -527,6 +527,7 @@
     "sectionTitle": "Secondary Education",
     "collectFromCandidates": "If selected, no manual input is required, and data will be taken from the candidate profile",
     "acceptsHomeSchooling": "Accepts Home Schooling",
+    "school": "School",
     "schoolName": "School Name",
     "schoolLocation": "School Location",
     "examination": "Examination",
@@ -617,7 +618,9 @@
       "awardingBodyLocation": "Awarding Body/Institute Location",
       "levelOfQualification": "Level of the qualification",
       "studyPattern": "Study Pattern",
-      "deliverySchedule": "Delivery Schedule"
+      "deliverySchedule": "Delivery Schedule",
+      "startDate": "Start Date",
+      "endDate": "End Date"
     },
     "bannerTitle": "Build the Application Form",
     "bannerMessageHighlight": "Certain fields",
