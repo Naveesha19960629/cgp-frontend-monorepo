@@ -134,7 +134,7 @@ function BackHeader({
         <button
           type="button"
           onClick={onBack}
-          className="shrink-0 text-slate-600 transition-colors hover:text-slate-500"
+          className="shrink-0 cursor-pointer text-slate-600 transition-colors hover:text-slate-500"
           aria-label="Go back"
         >
           <ChevronLeft className="size-6" />
