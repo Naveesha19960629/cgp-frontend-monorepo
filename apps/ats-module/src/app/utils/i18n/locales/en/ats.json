@@ -954,7 +954,7 @@
       "levelRepresented": "Level Represented",
       "representedOrganization": "Represented Organization",
       "organizationLocation": "Organization Location",
-      "position": "Position / Role Held",
+      "position": "Position / Role",
       "startDate": "Start Date",
       "endDate": "End Date"
     },
@@ -1015,7 +1015,7 @@
       "organization": "Organization Name",
       "location": "Organization Location",
       "cause": "Cause",
-      "position": "Position / Role Held",
+      "position": "Position / Role",
       "startDate": "Start Date",
       "endDate": "End Date"
     },
@@ -1106,7 +1106,7 @@
     },
     "fieldList": {
       "clubSociety": "Club / Society",
-      "position": "Position / Role Held",
+      "position": "Club / Society Position",
       "representedOrganization": "Represented Organization",
       "organizationLocation": "Organization Location",
       "startDate": "Start Date",
