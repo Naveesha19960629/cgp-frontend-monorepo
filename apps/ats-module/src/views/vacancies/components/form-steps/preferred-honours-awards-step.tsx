@@ -10,6 +10,7 @@ import { getApiErrorMessage } from '@/app/utils/api-error';
 import MessageBox from '@/components/message-box';
 import { StepDisableDialog } from '@/views/vacancies';
 import { AddOrganizationFormDialog } from '@/views/vacancies/components/dialogs';
+import VacancyStatusBadge from '@/views/vacancies/components/vacancy-status-badge';
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import {
   useCreateOrganizationMutation,
@@ -622,6 +623,7 @@ function HonoursAndAwardsCard({
 export default function PreferredHonoursAwardsStep({
   onNext,
   onBack,
+  mode = 'create',
 }: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
 
@@ -861,6 +863,9 @@ export default function PreferredHonoursAwardsStep({
               <h2 className="text-xl font-bold tracking-tight text-slate-900">
                 {t('preferredHonoursAwards.title')}
               </h2>
+              {mode === 'edit' && contextForm.status ? (
+                <VacancyStatusBadge status={contextForm.status} />
+              ) : null}
             </div>
 
             {/* Toggle switch */}
