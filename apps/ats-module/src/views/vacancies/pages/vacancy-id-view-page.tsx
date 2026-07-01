@@ -161,9 +161,6 @@ export default function VacancyIdViewPage() {
         <VacancyVolunteeringSection
           preferredVolunteering={viewModel.preferredVolunteering}
         />
-        <VacancyScheduledVacancySection
-          scheduledVacancy={viewModel.scheduledVacancy}
-        />
         <VacancyHonoursAwardsSection
           preferredHonoursAwards={viewModel.preferredHonoursAwards}
         />
