@@ -134,12 +134,14 @@ function BackHeader({
         <button
           type="button"
           onClick={onBack}
-          className="group flex items-center gap-2 text-slate-900 transition-colors hover:text-slate-600"
+          className="shrink-0 text-slate-600 transition-colors hover:text-slate-500"
           aria-label="Go back"
         >
-          <ChevronLeft className="size-6 shrink-0 text-slate-600 group-hover:text-slate-500" />
-          <h1 className="truncate text-2xl/8 font-bold">{title}</h1>
+          <ChevronLeft className="size-6" />
         </button>
+        <h1 className="truncate text-2xl/8 font-bold text-slate-900">
+          {title}
+        </h1>
         {status}
       </div>
     </header>
