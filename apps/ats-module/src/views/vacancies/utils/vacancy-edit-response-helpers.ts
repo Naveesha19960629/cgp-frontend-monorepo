@@ -22,6 +22,17 @@ function toSafeString(value: unknown): string {
   return typeof value === 'string' ? value : '';
 }
 
+// Matches the title input maxLength and the API's 50-character constraint.
+// Duplicated vacancies ("Copy of <title>") created before the backend capped
+// the prefix can exceed it, so over-long titles are clamped on hydration.
+const VACANCY_TITLE_MAX_LENGTH = 50;
+
+function clampVacancyTitle(title: string): string {
+  return title.length > VACANCY_TITLE_MAX_LENGTH
+    ? title.slice(0, VACANCY_TITLE_MAX_LENGTH)
+    : title;
+}
+
 function toAddOrSelectOption(ref: unknown): AddOrSelectOption | null {
   if (!isRecord(ref)) {
     return null;
@@ -1444,11 +1455,12 @@ function toVacancyFormFromResponse(
 
   return {
     ...previousForm,
-    title:
+    title: clampVacancyTitle(
       (typeof rawVacancy.title === 'string' && rawVacancy.title.trim()) ||
-      !normalizedTitle
+        !normalizedTitle
         ? toSafeString(rawVacancy.title) || previousForm.title
-        : normalizedTitle,
+        : normalizedTitle
+    ),
     status: normalizeVacancyStatus(rawVacancy.status, previousForm.status),
     applicantCount:
       typeof rawVacancy.applicantCount === 'number'

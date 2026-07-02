@@ -52,6 +52,7 @@ const createVacancyColumns = ({
   onView,
   onEdit,
   onDelete,
+  onMakeACopy,
   t,
 }: CreateColumnsOptions): ColumnDef<VacancyTableColumn>[] => [
   {
@@ -332,6 +333,7 @@ const createVacancyColumns = ({
         }}
         onEdit={() => onEdit(row.original.vacancyId)}
         onDelete={() => onDelete(row.original.vacancyId)}
+        onMakeACopy={() => onMakeACopy(row.original.vacancyId)}
       />
     ),
     size: 50,

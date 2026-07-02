@@ -1149,6 +1149,7 @@ interface CreateColumnsOptions {
   onView: (vacancyId: string) => void;
   onEdit: (vacancyId: string) => void;
   onDelete: (vacancyId: string) => void;
+  onMakeACopy: (vacancyId: string) => void;
   t: (key: string) => string;
 }
 

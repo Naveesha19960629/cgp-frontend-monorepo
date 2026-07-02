@@ -154,6 +154,15 @@
         "errorMessage": "Some changes could not be saved. Please try again."
       }
     },
+    "duplicateVacancy": {
+      "inProgress": "Duplicating vacancy…",
+      "notifications": {
+        "successTitle": "Vacancy Duplicated",
+        "successMessage": "Vacancy has been successfully duplicated",
+        "errorTitle": "Failed to Duplicate",
+        "errorMessage": "Some changes could not be saved. Please try again."
+      }
+    },
     "view": {
       "untitledVacancy": "Untitled Vacancy",
       "applied": "Applied",

@@ -57,6 +57,12 @@ export const vacancyService = {
     );
     return response.data;
   },
+  duplicateVacancy: async (id: string): Promise<ApiResponse<string>> => {
+    const response = await httpClient.post<ApiResponse<string>>(
+      `/vacancies/${id}/duplicates`
+    );
+    return response.data;
+  },
   deleteVacancy: async (id: string): Promise<ApiResponse<string>> => {
     const response = await httpClient.delete<ApiResponse<string>>(
       `/vacancies/${id}`

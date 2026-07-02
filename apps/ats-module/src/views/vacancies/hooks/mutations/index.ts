@@ -29,3 +29,4 @@ export { useUpdateCandidateProfileBasicInformationsMutation } from '@/views/vaca
 export { useCreateSportMutation } from '@/views/vacancies/hooks/mutations/use-create-sport-mutation';
 export { useCreateSportLevelMutation } from '@/views/vacancies/hooks/mutations/use-create-sport-level-mutation';
 export { useDeleteVacancyMutation } from '@/views/vacancies/hooks/mutations/use-delete-vacancy-mutation';
+export { useDuplicateVacancyMutation } from '@/views/vacancies/hooks/mutations/use-duplicate-vacancy-mutation';

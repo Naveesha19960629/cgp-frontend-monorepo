@@ -16,11 +16,13 @@ import {
   VacancyTablePagination,
   createVacancyColumns,
   useDeleteVacancyMutation,
+  useDuplicateVacancyMutation,
 } from '@/views/vacancies';
 import { TABLE_PAGE_SIZE } from '@/views/vacancies/utils';
 
 import { ErrorToast, SuccessToast } from '@cgp/ui-kit/components/custom-toast';
 import { Button } from '@cgp/ui-kit/components/ui/button';
+import { Spinner } from '@cgp/ui-kit/components/ui/spinner';
 import { useKeycloak } from '@react-keycloak/web';
 import {
   getCoreRowModel,
@@ -36,6 +38,8 @@ export default function VacanciesPage() {
 
   const [deleteVacancyId, setDeleteVacancyId] = useState<string | null>(null);
   const deleteMutation = useDeleteVacancyMutation();
+  const { mutate: duplicateVacancy, isPending: isDuplicating } =
+    useDuplicateVacancyMutation();
 
   const queryParams: VacancyQueryParams = useMemo(
     () => ({
@@ -128,6 +132,30 @@ export default function VacanciesPage() {
     });
   };
 
+  const handleMakeACopy = useCallback(
+    (vacancyId: string) => {
+      duplicateVacancy(vacancyId, {
+        onSuccess: () => {
+          SuccessToast({
+            title: t('vacancies.duplicateVacancy.notifications.successTitle'),
+            description: t(
+              'vacancies.duplicateVacancy.notifications.successMessage'
+            ),
+          });
+        },
+        onError: () => {
+          ErrorToast({
+            title: t('vacancies.duplicateVacancy.notifications.errorTitle'),
+            description: t(
+              'vacancies.duplicateVacancy.notifications.errorMessage'
+            ),
+          });
+        },
+      });
+    },
+    [duplicateVacancy, t]
+  );
+
   const columns = useMemo(
     () =>
       createVacancyColumns({
@@ -139,9 +167,10 @@ export default function VacanciesPage() {
         onEdit: (vacancyId: string) =>
           void navigate(`/dashboard/ats/vacancies/${vacancyId}/edit`),
         onDelete: (vacancyId: string) => setDeleteVacancyId(vacancyId),
+        onMakeACopy: handleMakeACopy,
         t,
       }),
-    [params.sortBy, params.sortOrder, handleSort, navigate, t]
+    [params.sortBy, params.sortOrder, handleSort, handleMakeACopy, navigate, t]
   );
 
   const table = useReactTable<VacancyTableColumn>({
@@ -240,6 +269,18 @@ export default function VacanciesPage() {
         onConfirm={handleDeleteConfirm}
         isDeleting={deleteMutation.isPending}
       />
+      {isDuplicating && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-3 bg-white/70"
+        >
+          <Spinner className="size-8 text-slate-900" />
+          <p className="text-sm font-semibold text-slate-900">
+            {t('vacancies.duplicateVacancy.inProgress')}
+          </p>
+        </div>
+      )}
     </>
   );
 }
