@@ -1,12 +1,13 @@
 import { ChevronLeft } from 'lucide-react';
 
-import { useMemo, useState } from 'react';
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
 import {
   useCreateTemplateMutation,
   useNextTemplateNameQuery,
+  useVacancyTemplateForm,
 } from '@/views/vacancies/hooks';
 import type {
   TemplateFormState,
@@ -15,9 +16,8 @@ import type {
 import {
   TEMPLATE_NAME_MAX_LENGTH,
   TEMPLATE_SECTIONS,
-  createInitialTemplateFormState,
-  hasAnySelection,
-} from '@/views/vacancies/utils';
+} from '@/views/vacancies/utils/vacancy-template-config';
+import { hasAnySelection } from '@/views/vacancies/utils/vacancy-template-payload-helpers';
 
 import { ErrorToast, SuccessToast } from '@cgp/ui-kit/components/custom-toast';
 import { Button } from '@cgp/ui-kit/components/ui/button';
@@ -114,98 +114,38 @@ export default function NewVacancyTemplatePage() {
   const { t } = useTranslation('ats');
   const navigate = useNavigate();
 
-  const [form, setForm] = useState<TemplateFormState>(() =>
-    createInitialTemplateFormState()
-  );
-  // `null` until the recruiter edits the field — the auto-generated name is
-  // used as the display value up to that point.
-  const [nameOverride, setNameOverride] = useState<string | null>(null);
-  const [nameError, setNameError] = useState('');
+  const { form, setDataTakenFromCandidate } = useVacancyTemplateForm();
+  const values = form.watch();
 
   const { data: nextNameResponse } = useNextTemplateNameQuery();
   const createTemplate = useCreateTemplateMutation();
 
   const autoName = nextNameResponse?.data?.templateName ?? '';
   const refNumber = nextNameResponse?.data?.refNumber ?? '';
-  const templateName = nameOverride ?? autoName;
 
-  const canCreate = useMemo(
-    () =>
-      templateName.trim().length > 0 &&
-      templateName.length <= TEMPLATE_NAME_MAX_LENGTH &&
-      hasAnySelection(form),
-    [templateName, form]
-  );
-
-  // The field is not capped — the recruiter can type past the limit and an
-  // inline error is shown (mirrors the Customizable Form section-title field).
-  const handleNameChange = (value: string) => {
-    const sanitized = removeEmoji(value);
-    setNameOverride(sanitized);
-    if (sanitized.length > TEMPLATE_NAME_MAX_LENGTH) {
-      setNameError(
-        t('createTemplate.nameMaxLength', { max: TEMPLATE_NAME_MAX_LENGTH })
-      );
-    } else {
-      setNameError('');
+  // Pre-fill the auto-generated name once it loads, unless the recruiter has
+  // already edited the field. `setValue` is RHF state, not React state.
+  useEffect(() => {
+    if (autoName && !form.formState.dirtyFields.templateName) {
+      form.setValue('templateName', autoName);
     }
-  };
+  }, [autoName, form]);
 
-  const handleToggleField = (
-    sectionKey: string,
-    fieldCode: string,
-    value: boolean
-  ) => {
-    setForm(prev => ({
-      ...prev,
-      sections: {
-        ...prev.sections,
-        [sectionKey]: {
-          ...prev.sections[sectionKey],
-          fields: { ...prev.sections[sectionKey].fields, [fieldCode]: value },
-        },
-      },
-    }));
-  };
-
-  // Selecting the checkbox turns every field toggle in the section off.
-  const handleToggleCandidateData = (sectionKey: string, value: boolean) => {
-    setForm(prev => {
-      const section = prev.sections[sectionKey];
-      const fields = value
-        ? Object.fromEntries(
-            Object.keys(section.fields).map(code => [code, false])
-          )
-        : section.fields;
-      return {
-        ...prev,
-        sections: {
-          ...prev.sections,
-          [sectionKey]: { dataTakenFromCandidate: value, fields },
-        },
-      };
-    });
-  };
+  const nameErrorKey = form.formState.errors.templateName?.message;
+  const canCreate =
+    values.templateName.trim().length > 0 &&
+    values.templateName.length <= TEMPLATE_NAME_MAX_LENGTH &&
+    hasAnySelection(values);
 
   const handleCancel = () => {
     void navigate(TEMPLATES_LIST_ROUTE);
   };
 
   const handleCreate = () => {
-    const trimmed = templateName.trim();
-    if (!trimmed) {
-      setNameError(t('createTemplate.nameRequired'));
-      return;
-    }
-    if (trimmed.length > TEMPLATE_NAME_MAX_LENGTH) {
-      setNameError(
-        t('createTemplate.nameMaxLength', { max: TEMPLATE_NAME_MAX_LENGTH })
-      );
-      return;
-    }
+    if (!canCreate) return;
 
     createTemplate.mutate(
-      { state: form, templateName, refNumber },
+      { state: values, templateName: values.templateName, refNumber },
       {
         onSuccess: () => {
           SuccessToast({
@@ -255,13 +195,20 @@ export default function NewVacancyTemplatePage() {
             type="text"
             className="w-full border-0 border-b border-slate-200 bg-transparent px-0 pb-3 text-[24px] leading-8 font-bold tracking-[-0.144px] text-slate-900 placeholder:text-slate-300 focus:border-slate-300 focus:ring-0 focus:outline-none"
             placeholder={t('createTemplate.namePlaceholder')}
-            value={templateName}
+            value={values.templateName}
             aria-label={t('createTemplate.nameLabel')}
-            aria-invalid={nameError ? true : undefined}
-            onChange={e => handleNameChange(e.target.value)}
+            aria-invalid={nameErrorKey ? true : undefined}
+            onChange={e =>
+              form.setValue('templateName', removeEmoji(e.target.value), {
+                shouldValidate: true,
+                shouldDirty: true,
+              })
+            }
           />
-          {nameError && (
-            <p className="mt-3 text-[13px] text-[#FF4A55]">{nameError}</p>
+          {nameErrorKey && (
+            <p className="mt-3 text-[13px] text-[#FF4A55]">
+              {t(nameErrorKey, { max: TEMPLATE_NAME_MAX_LENGTH })}
+            </p>
           )}
         </div>
 
@@ -270,12 +217,15 @@ export default function NewVacancyTemplatePage() {
             <TemplateSectionCard
               key={section.key}
               section={section}
-              state={form.sections[section.key]}
+              state={values.sections[section.key]}
               onToggleField={(fieldCode, value) =>
-                handleToggleField(section.key, fieldCode, value)
+                form.setValue(
+                  `sections.${section.key}.fields.${fieldCode}`,
+                  value
+                )
               }
               onToggleCandidateData={value =>
-                handleToggleCandidateData(section.key, value)
+                setDataTakenFromCandidate(section.key, value)
               }
             />
           ))}
@@ -288,9 +238,9 @@ export default function NewVacancyTemplatePage() {
               </h3>
               <Switch
                 size="lg"
-                checked={form.customizableForm}
+                checked={values.customizableForm}
                 onCheckedChange={value =>
-                  setForm(prev => ({ ...prev, customizableForm: value }))
+                  form.setValue('customizableForm', value)
                 }
               />
             </div>

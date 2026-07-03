@@ -34,3 +34,7 @@ export {
   toScheduleVacancyPayload,
   type ScheduleVacancyFormValues,
 } from '@/views/vacancies/hooks/use-schedule-vacancy-form';
+export {
+  useVacancyTemplateForm,
+  type VacancyTemplateFormValues,
+} from '@/views/vacancies/hooks/use-vacancy-template-form';

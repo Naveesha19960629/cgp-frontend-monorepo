@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { vacancyTemplateService } from '@/views/vacancies/services';
 import type { TemplateFormState } from '@/views/vacancies/types';
-import { toCreateTemplatePayload } from '@/views/vacancies/utils';
+import { toCreateTemplatePayload } from '@/views/vacancies/utils/vacancy-template-payload-helpers';
 
 interface CreateTemplateArgs {
   state: TemplateFormState;
