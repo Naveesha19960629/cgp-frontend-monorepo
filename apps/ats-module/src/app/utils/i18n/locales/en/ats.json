@@ -1,4 +1,28 @@
 {
+  "templates": {
+    "title": "Templates",
+    "createButton": "Create Template",
+    "searchPlaceholder": "Search",
+    "sort": {
+      "newest": "Newest to oldest",
+      "oldest": "Oldest to newest"
+    },
+    "card": {
+      "lastUpdated": "Last Updated on {{date}}",
+      "useTemplate": "Use Template",
+      "edit": "Edit",
+      "delete": "Delete"
+    },
+    "emptyState": {
+      "title": "No Templates Available",
+      "description": "There's nothing here yet. Once template is created, it will appear in this section"
+    },
+    "searchEmptyState": {
+      "title": "No Search Results Found",
+      "descriptionLine1": "No matching vacancy templates found.",
+      "descriptionLine2": "Try adjusting your keywords or using broader search terms"
+    }
+  },
   "createTemplate": {
     "heading": "Create Template",
     "nameLabel": "Template Name",

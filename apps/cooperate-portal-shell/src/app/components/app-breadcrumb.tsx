@@ -50,7 +50,10 @@ const breadcrumbRoutes: BreadcrumbRoute[] = [
   },
   {
     url: '/dashboard/ats/templates',
-    items: [{ labelKey: 'breadcrumb.templates' }],
+    items: [
+      { labelKey: 'breadcrumb.vacancies', link: '/dashboard/ats/vacancies' },
+      { labelKey: 'breadcrumb.templates' },
+    ],
   },
   {
     url: '/dashboard/ats/templates/new',

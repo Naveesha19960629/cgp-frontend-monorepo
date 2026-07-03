@@ -1728,6 +1728,38 @@ interface CreatedVacancyTemplate {
   createdAt?: string;
 }
 
+// ── Vacancy Template list (search) ──────────────────────────────────────────
+
+/** Sort direction for the Templates list (maps to the backend `sortOrder`). */
+type TemplateSortOrder = 'NEWEST' | 'OLDEST';
+
+interface VacancyTemplateSearchItem {
+  vacancyTemplateId: string;
+  templateName: string;
+  refNumber: string;
+  createdAt: string;
+  updatedAt: string;
+  createdBy: string;
+  updatedBy: string;
+}
+
+interface VacancyTemplateSearchPage {
+  content: VacancyTemplateSearchItem[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  last: boolean;
+  empty: boolean;
+}
+
+interface VacancyTemplateQueryParams {
+  page?: number;
+  size?: number;
+  search?: string;
+  sortOrder?: TemplateSortOrder;
+}
+
 export type {
   CreateVacancyPayload,
   TemplateSectionKind,
@@ -1741,6 +1773,10 @@ export type {
   CreateVacancyTemplateRequest,
   NextTemplateName,
   CreatedVacancyTemplate,
+  TemplateSortOrder,
+  VacancyTemplateSearchItem,
+  VacancyTemplateSearchPage,
+  VacancyTemplateQueryParams,
   JobRequirementApiPayload,
   PatentContentApiPayload,
   PatentGroupApiPayload,

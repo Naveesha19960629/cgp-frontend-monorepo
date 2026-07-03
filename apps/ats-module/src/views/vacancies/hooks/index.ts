@@ -19,6 +19,7 @@ export {
   type TertiaryEducationFormValues,
 } from '@/views/vacancies/hooks/use-tertiary-education-form';
 export { useVacancyTableParams } from '@/views/vacancies/hooks/use-vacancy-table-params';
+export { useVacancyTemplatesTableParams } from '@/views/vacancies/hooks/use-vacancy-templates-table-params';
 export {
   useLicenseCertificatesForm,
   type LicenseCertificatesFormValues,
