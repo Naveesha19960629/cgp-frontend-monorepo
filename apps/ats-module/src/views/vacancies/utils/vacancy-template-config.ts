@@ -9,25 +9,10 @@
  * The recruiter never types data here — they only toggle which fields are
  * included in the template, so the config is intentionally static.
  */
-
-/** Whether a section serialises to a single object or a one-item array. */
-export type TemplateSectionKind = 'list' | 'single';
-
-export interface TemplateFieldConfig {
-  /** Backend fieldCode persisted in the template (content map key). */
-  code: string;
-  /** i18n key for the field label. */
-  labelKey: string;
-}
-
-export interface TemplateSectionConfig {
-  /** Section key in the request `data` object. */
-  key: string;
-  kind: TemplateSectionKind;
-  /** i18n key for the section title. */
-  titleKey: string;
-  fields: TemplateFieldConfig[];
-}
+import type {
+  TemplateFieldConfig,
+  TemplateSectionConfig,
+} from '@/views/vacancies/types';
 
 const f = (code: string, labelKey: string): TemplateFieldConfig => ({
   code,

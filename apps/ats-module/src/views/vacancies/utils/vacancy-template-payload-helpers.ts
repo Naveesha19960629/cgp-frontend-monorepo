@@ -1,54 +1,11 @@
-import {
-  TEMPLATE_SECTIONS,
-  type TemplateSectionConfig,
-} from '@/views/vacancies/templates/vacancy-template-config';
-
-/**
- * Local form state for a single section.
- * `fields` maps each field code to whether its toggle is enabled.
- */
-export interface TemplateSectionState {
-  dataTakenFromCandidate: boolean;
-  fields: Record<string, boolean>;
-}
-
-/**
- * Full local state for the Create Template form.
- *
- * The template name is intentionally kept outside this state and managed by the
- * page (derived from the auto-generated name until the recruiter edits it).
- */
-export interface TemplateFormState {
-  /** section key -> section state */
-  sections: Record<string, TemplateSectionState>;
-  /** Customizable Form section (toggle only, no fields). */
-  customizableForm: boolean;
-}
-
-// ── Request payload types (candidate-service CreateVacancyTemplateRequest) ──────
-
-export interface TemplateFieldRequest {
-  isEnabled: boolean;
-  dataTakenFromCandidate: boolean;
-  content: Record<string, boolean>;
-}
-
-export interface CustomizableFormSectionRequest {
-  isEnabled: boolean;
-}
-
-export type TemplateSectionData = Record<
-  string,
-  TemplateFieldRequest | TemplateFieldRequest[] | CustomizableFormSectionRequest
->;
-
-export interface CreateVacancyTemplateRequest {
-  templateName: string;
-  refNumber?: string;
-  data: TemplateSectionData;
-}
-
-// ── Helpers ────────────────────────────────────────────────────────────────────
+import type {
+  CreateVacancyTemplateRequest,
+  TemplateFieldRequest,
+  TemplateFormState,
+  TemplateSectionData,
+  TemplateSectionState,
+} from '@/views/vacancies/types';
+import { TEMPLATE_SECTIONS } from '@/views/vacancies/utils/vacancy-template-config';
 
 /** Builds the initial form state: all toggles off, all checkboxes unchecked. */
 export function createInitialTemplateFormState(): TemplateFormState {
@@ -102,7 +59,7 @@ function toFieldRequest(state: TemplateSectionState): TemplateFieldRequest {
 }
 
 /** Serialises the local form state into the create-template request body. */
-export function buildCreateTemplatePayload(
+export function toCreateTemplatePayload(
   state: TemplateFormState,
   templateName: string,
   refNumber?: string
@@ -134,5 +91,3 @@ export function buildCreateTemplatePayload(
 
   return payload;
 }
-
-export type { TemplateSectionConfig };

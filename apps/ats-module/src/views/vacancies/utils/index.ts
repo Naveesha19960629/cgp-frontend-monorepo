@@ -42,4 +42,13 @@ export {
   sanitizePlainText,
   sanitizePostalCodeText,
 } from '@/views/vacancies/utils/text-sanitizer';
+export {
+  TEMPLATE_SECTIONS,
+  TEMPLATE_NAME_MAX_LENGTH,
+} from '@/views/vacancies/utils/vacancy-template-config';
+export {
+  createInitialTemplateFormState,
+  hasAnySelection,
+  toCreateTemplatePayload,
+} from '@/views/vacancies/utils/vacancy-template-payload-helpers';
 export type { CreateVacancyPayload } from '@/views/vacancies/types';

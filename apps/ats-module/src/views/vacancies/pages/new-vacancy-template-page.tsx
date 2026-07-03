@@ -8,16 +8,16 @@ import {
   useCreateTemplateMutation,
   useNextTemplateNameQuery,
 } from '@/views/vacancies/hooks';
+import type {
+  TemplateFormState,
+  TemplateSectionConfig,
+} from '@/views/vacancies/types';
 import {
   TEMPLATE_NAME_MAX_LENGTH,
   TEMPLATE_SECTIONS,
-  type TemplateSectionConfig,
-} from '@/views/vacancies/templates/vacancy-template-config';
-import {
-  type TemplateFormState,
   createInitialTemplateFormState,
   hasAnySelection,
-} from '@/views/vacancies/templates/vacancy-template-form';
+} from '@/views/vacancies/utils';
 
 import { ErrorToast, SuccessToast } from '@cgp/ui-kit/components/custom-toast';
 import { Button } from '@cgp/ui-kit/components/ui/button';

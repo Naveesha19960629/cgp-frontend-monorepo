@@ -1,10 +1,8 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { vacancyTemplateService } from '@/views/vacancies/services';
-import {
-  type TemplateFormState,
-  buildCreateTemplatePayload,
-} from '@/views/vacancies/templates/vacancy-template-form';
+import type { TemplateFormState } from '@/views/vacancies/types';
+import { toCreateTemplatePayload } from '@/views/vacancies/utils';
 
 interface CreateTemplateArgs {
   state: TemplateFormState;
@@ -18,7 +16,7 @@ const useCreateTemplateMutation = () => {
   return useMutation({
     mutationFn: ({ state, templateName, refNumber }: CreateTemplateArgs) =>
       vacancyTemplateService.createTemplate(
-        buildCreateTemplatePayload(state, templateName, refNumber)
+        toCreateTemplatePayload(state, templateName, refNumber)
       ),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['vacancy-templates'] });
