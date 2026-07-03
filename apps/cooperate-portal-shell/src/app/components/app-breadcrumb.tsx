@@ -52,6 +52,13 @@ const breadcrumbRoutes: BreadcrumbRoute[] = [
     url: '/dashboard/ats/templates',
     items: [{ labelKey: 'breadcrumb.templates' }],
   },
+  {
+    url: '/dashboard/ats/templates/new',
+    items: [
+      { labelKey: 'breadcrumb.vacancies', link: '/dashboard/ats/vacancies' },
+      { labelKey: 'breadcrumb.createTemplate' },
+    ],
+  },
 ];
 
 export function AppBreadcrumb() {

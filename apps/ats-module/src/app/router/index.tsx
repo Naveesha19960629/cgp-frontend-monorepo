@@ -5,6 +5,7 @@ import { UserProvider } from '@/app/contexts/user-context';
 import { addAtsTranslations } from '@/app/utils/i18n';
 import {
   NewVacancyPage,
+  NewVacancyTemplatePage,
   VacanciesPage,
   VacancyIdEditPage,
   VacancyIdViewPage,
@@ -34,6 +35,7 @@ function AtsRoutes() {
         <Route path="vacancies/:id/view" element={<VacancyIdViewPage />} />
         <Route path="find-candidate" element={<div>Find Candidate</div>} />
         <Route path="templates" element={<div>Templates</div>} />
+        <Route path="templates/new" element={<NewVacancyTemplatePage />} />
         <Route path="*" element={<Navigate to="/not-found" replace />} />
       </Routes>
     </UserProvider>
@@ -58,6 +60,7 @@ function createStandaloneRouter() {
         { path: 'vacancies/:id/view', element: <VacancyIdViewPage /> },
         { path: 'find-candidate', element: <div>Find Candidate</div> },
         { path: 'templates', element: <div>Templates</div> },
+        { path: 'templates/new', element: <NewVacancyTemplatePage /> },
       ],
     },
     {
