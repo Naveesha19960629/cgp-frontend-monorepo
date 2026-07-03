@@ -11,6 +11,7 @@ import VacancyStatusBadge from '@/views/vacancies/components/vacancy-status-badg
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import {
   type ScheduleVacancyFormValues,
+  parseBackendDatetime,
   toScheduleVacancyPayload,
   useCreateVacancyMutation,
   useScheduleVacancyForm,
@@ -64,16 +65,20 @@ export default function ScheduleVacancyStep({
 
   const isPublishDateChanged = useMemo(() => {
     if (!form.schedule?.schedulePublishAt) return true;
+    if (!publishDate || !publishTime) return false;
 
-    const current = toScheduleVacancyPayload({
-      schedulePublishDate: publishDate,
-      schedulePublishTime: publishTime,
-      expirationDate,
-      expirationTime,
-    });
+    // Compare as timestamps to avoid format mismatches between the stored
+    // value (may be 24-hour ISO from the API) and the form's 12-hour AM/PM.
+    const saved = parseBackendDatetime(form.schedule.schedulePublishAt);
+    const savedTs = new Date(`${saved.date}T${to24HourTime(saved.time)}`);
+    const currentTs = new Date(`${publishDate}T${to24HourTime(publishTime)}`);
 
-    return current.schedulePublishAt !== form.schedule.schedulePublishAt;
-  }, [publishDate, publishTime, expirationDate, expirationTime, form.schedule]);
+    if (Number.isNaN(savedTs.getTime()) || Number.isNaN(currentTs.getTime())) {
+      return true;
+    }
+
+    return currentTs.getTime() !== savedTs.getTime();
+  }, [publishDate, publishTime, form.schedule]);
 
   const hasPastScheduleDateTime = useMemo(() => {
     if (!isScheduleChanged) {
@@ -113,8 +118,9 @@ export default function ScheduleVacancyStep({
   const isCreateAction =
     !id || form.status === 'new' || form.status === 'draft';
 
+  const isOnholdVacancy = form.status === 'on_hold';
   const isOnholdWithApplicants =
-    form.status === 'on_hold' && (form.applicantCount ?? 0) > 0;
+    isOnholdVacancy && (form.applicantCount ?? 0) > 0;
 
   const [showOnholdDialog, setShowOnholdDialog] = useState(false);
   const [pendingValues, setPendingValues] =
@@ -234,7 +240,7 @@ export default function ScheduleVacancyStep({
         ),
       });
       onSubmit();
-      navigate('/dashboard/ats/vacancies');
+      void navigate('/dashboard/ats/vacancies');
     } catch {
       ErrorToast({
         title: t('scheduleVacancy.notifications.apiErrorTitle'),
@@ -262,8 +268,8 @@ export default function ScheduleVacancyStep({
       }
     }
 
-    // For onhold vacancies with applicants, show confirmation dialog first
-    if (!isCreateAction && isOnholdWithApplicants) {
+    // For all onhold vacancies, show confirmation dialog first
+    if (!isCreateAction && isOnholdVacancy) {
       setPendingValues(values);
       setShowOnholdDialog(true);
       return;
@@ -457,6 +463,7 @@ export default function ScheduleVacancyStep({
           void handleOnholdConfirm();
         }}
         isPublishDateChanged={isPublishDateChanged}
+        hasApplicants={isOnholdWithApplicants}
         isConfirming={isPending || isUpdating}
       />
     </div>

@@ -25,13 +25,18 @@ export default function VacancyOnholdUpdateDialog({
   onOpenChange,
   onConfirm,
   isPublishDateChanged,
+  hasApplicants,
   isConfirming = false,
 }: Readonly<VacancyOnholdUpdateDialogProps>) {
   const { t } = useTranslation('ats');
 
   const variant = isPublishDateChanged
-    ? 'scheduleChanged'
-    : 'scheduleUnchanged';
+    ? hasApplicants
+      ? 'scheduleChanged'
+      : 'scheduleChangedNoApplicants'
+    : hasApplicants
+      ? 'scheduleUnchanged'
+      : 'scheduleUnchangedNoApplicants';
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

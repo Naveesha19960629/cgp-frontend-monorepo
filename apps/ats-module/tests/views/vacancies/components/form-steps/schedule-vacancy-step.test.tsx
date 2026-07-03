@@ -100,17 +100,20 @@ vi.mock('@/views/vacancies/components/vacancy-onhold-update-dialog', () => ({
     onConfirm,
     onOpenChange,
     isPublishDateChanged,
+    hasApplicants,
   }: {
     open: boolean;
     onConfirm: () => void;
     onOpenChange: (open: boolean) => void;
     isPublishDateChanged: boolean;
+    hasApplicants: boolean;
   }) => {
     if (!open) return null;
     return (
       <div
         data-testid="onhold-update-dialog"
         data-publish-changed={String(isPublishDateChanged)}
+        data-has-applicants={String(hasApplicants)}
       >
         <button type="button" onClick={onConfirm}>
           dialog-yes
@@ -904,7 +907,33 @@ describe('ScheduleVacancyStep', () => {
       ).toBe('true');
     });
 
-    it('does not show dialog for onhold vacancy with zero applicants — calls API directly', async () => {
+    it('passes data-has-applicants="true" to dialog when applicantCount > 0', async () => {
+      renderComponent({ mode: 'edit' as const });
+
+      await waitFor(() => {
+        expect(getCreateButton()).not.toBeDisabled();
+      });
+
+      await userEvent.click(getCreateButton());
+
+      await waitFor(() => {
+        expect(screen.getByTestId('onhold-update-dialog')).toBeInTheDocument();
+      });
+
+      expect(
+        screen.getByTestId('onhold-update-dialog').dataset['hasApplicants']
+      ).toBe('true');
+    });
+  });
+
+  describe('onhold vacancy without applicants', () => {
+    const SAVED_PUBLISH_AT = '2099-12-20T10:00:00 AM';
+    const SAVED_EXPIRATION_AT = '2099-12-30T11:59:59 PM';
+
+    beforeEach(() => {
+      vi.mocked(useParams).mockReturnValue({
+        id: 'vacancy-onhold-no-applicants',
+      });
       mockVacancyForm({
         form: {
           status: 'on_hold',
@@ -915,6 +944,42 @@ describe('ScheduleVacancyStep', () => {
           },
         },
       });
+    });
+
+    it('shows the onhold confirmation dialog for zero-applicant vacancy', async () => {
+      renderComponent({ mode: 'edit' as const });
+
+      await waitFor(() => {
+        expect(getCreateButton()).not.toBeDisabled();
+      });
+
+      await userEvent.click(getCreateButton());
+
+      await waitFor(() => {
+        expect(screen.getByTestId('onhold-update-dialog')).toBeInTheDocument();
+      });
+      expect(mockUpdateVacancy).not.toHaveBeenCalled();
+    });
+
+    it('passes data-has-applicants="false" to dialog when applicantCount = 0', async () => {
+      renderComponent({ mode: 'edit' as const });
+
+      await waitFor(() => {
+        expect(getCreateButton()).not.toBeDisabled();
+      });
+
+      await userEvent.click(getCreateButton());
+
+      await waitFor(() => {
+        expect(screen.getByTestId('onhold-update-dialog')).toBeInTheDocument();
+      });
+
+      expect(
+        screen.getByTestId('onhold-update-dialog').dataset['hasApplicants']
+      ).toBe('false');
+    });
+
+    it('calls updateVacancy and shows success toast when dialog Yes is clicked', async () => {
       mockUpdateVacancy.mockResolvedValueOnce(undefined);
 
       renderComponent({ mode: 'edit' as const });
@@ -926,11 +991,80 @@ describe('ScheduleVacancyStep', () => {
       await userEvent.click(getCreateButton());
 
       await waitFor(() => {
-        expect(mockUpdateVacancy).toHaveBeenCalled();
+        expect(screen.getByTestId('onhold-update-dialog')).toBeInTheDocument();
       });
+
+      await userEvent.click(screen.getByRole('button', { name: 'dialog-yes' }));
+
+      await waitFor(() => {
+        expect(mockUpdateVacancy).toHaveBeenCalled();
+        expect(SuccessToast).toHaveBeenCalledWith(
+          expect.objectContaining({
+            title: 'scheduleVacancy.notifications.updateSuccessTitle',
+          })
+        );
+      });
+    });
+
+    it('does not call updateVacancy when dialog No is clicked', async () => {
+      renderComponent({ mode: 'edit' as const });
+
+      await waitFor(() => {
+        expect(getCreateButton()).not.toBeDisabled();
+      });
+
+      await userEvent.click(getCreateButton());
+
+      await waitFor(() => {
+        expect(screen.getByTestId('onhold-update-dialog')).toBeInTheDocument();
+      });
+
+      await userEvent.click(screen.getByRole('button', { name: 'dialog-no' }));
+
+      await waitFor(() => {
+        expect(
+          screen.queryByTestId('onhold-update-dialog')
+        ).not.toBeInTheDocument();
+      });
+      expect(mockUpdateVacancy).not.toHaveBeenCalled();
+    });
+
+    it('passes isPublishDateChanged=false when publish date is unchanged', async () => {
+      renderComponent({ mode: 'edit' as const });
+
+      await waitFor(() => {
+        expect(getCreateButton()).not.toBeDisabled();
+      });
+
+      await userEvent.click(getCreateButton());
+
+      await waitFor(() => {
+        expect(screen.getByTestId('onhold-update-dialog')).toBeInTheDocument();
+      });
+
       expect(
-        screen.queryByTestId('onhold-update-dialog')
-      ).not.toBeInTheDocument();
+        screen.getByTestId('onhold-update-dialog').dataset['publishChanged']
+      ).toBe('false');
+    });
+
+    it('passes isPublishDateChanged=true when publish date is changed', async () => {
+      renderComponent({ mode: 'edit' as const });
+
+      fillPublish('2099-11-01', '09:00:00 AM');
+
+      await waitFor(() => {
+        expect(getCreateButton()).not.toBeDisabled();
+      });
+
+      await userEvent.click(getCreateButton());
+
+      await waitFor(() => {
+        expect(screen.getByTestId('onhold-update-dialog')).toBeInTheDocument();
+      });
+
+      expect(
+        screen.getByTestId('onhold-update-dialog').dataset['publishChanged']
+      ).toBe('true');
     });
   });
 

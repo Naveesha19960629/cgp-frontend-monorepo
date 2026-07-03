@@ -1037,6 +1037,7 @@ interface VacancyOnholdUpdateDialogProps {
   onOpenChange: (open: boolean) => void;
   onConfirm: () => void;
   isPublishDateChanged: boolean;
+  hasApplicants: boolean;
   isConfirming?: boolean;
 }
 

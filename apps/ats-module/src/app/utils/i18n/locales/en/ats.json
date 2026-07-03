@@ -1077,6 +1077,14 @@
       "title": "Are you sure?",
       "description": "Are you sure you want to update this vacancy without rescheduling? It will remain Onhold until the publish date is updated. Past applicants will not be notified of the fields, which are newly added or have updated preferred values."
     },
+    "scheduleChangedNoApplicants": {
+      "title": "Are you sure?",
+      "description": "Are you sure you want to update and reschedule this vacancy? It will go live on the new publish date."
+    },
+    "scheduleUnchangedNoApplicants": {
+      "title": "Are you sure?",
+      "description": "Are you sure you want to update this vacancy without rescheduling? It will remain Onhold until the publish date is updated."
+    },
     "yesButton": "Yes",
     "noButton": "No"
   },
