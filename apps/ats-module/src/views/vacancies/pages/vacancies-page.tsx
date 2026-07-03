@@ -205,8 +205,10 @@ export default function VacanciesPage() {
     if (!toggleTarget) return;
     const { id } = toggleTarget;
     setToggleTarget(null);
+    // Scheduling from the toggle always parks the vacancy in On hold until the
+    // configured date; scheduleToOnhold makes the schedule step submit as ONHOLD.
     void navigate(`/dashboard/ats/vacancies/${id}/edit`, {
-      state: { initialStep: 'schedule-vacancy' },
+      state: { initialStep: 'schedule-vacancy', scheduleToOnhold: true },
     });
   };
 
