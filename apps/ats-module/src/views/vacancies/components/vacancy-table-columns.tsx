@@ -53,6 +53,7 @@ const createVacancyColumns = ({
   onEdit,
   onDelete,
   onMakeACopy,
+  onToggleActive,
   t,
 }: CreateColumnsOptions): ColumnDef<VacancyTableColumn>[] => [
   {
@@ -305,15 +306,26 @@ const createVacancyColumns = ({
     cell: ({ row }) => {
       const { status } = row.original;
       const normalizedStatus = status.toLowerCase();
-      const showToggle =
-        normalizedStatus === 'live' || normalizedStatus === 'on_hold';
+      const isLive = normalizedStatus === 'live';
+      // API enum is ONHOLD (no underscore); on_hold is the form/UI key
+      const isOnHold =
+        normalizedStatus === 'onhold' || normalizedStatus === 'on_hold';
+      const showToggle = isLive || isOnHold;
       return (
         <div className="flex items-center gap-3 px-6">
           <div className="min-w-30">
             <VacancyStatusBadge status={status} />
           </div>
           {showToggle && (
-            <VacancyActiveToggle isActive={normalizedStatus === 'live'} />
+            <VacancyActiveToggle
+              isActive={isLive}
+              onToggle={() =>
+                onToggleActive(
+                  row.original.vacancyId,
+                  isLive ? 'DEACTIVATE' : 'ACTIVATE'
+                )
+              }
+            />
           )}
         </div>
       );

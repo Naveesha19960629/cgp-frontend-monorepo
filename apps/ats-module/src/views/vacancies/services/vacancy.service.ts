@@ -6,6 +6,8 @@ import type {
   VacancyDetailData,
   VacancyFilterOptionsApiResponse,
   VacancyQueryParams,
+  VacancyToggleAction,
+  VacancyToggleActiveData,
 } from '@/views/vacancies/types';
 
 import { httpClient } from '@cgp/data-access';
@@ -61,6 +63,15 @@ export const vacancyService = {
     const response = await httpClient.post<ApiResponse<string>>(
       `/vacancies/${id}/duplicates`
     );
+    return response.data;
+  },
+  toggleVacancyActiveStatus: async (
+    id: string,
+    action: VacancyToggleAction
+  ): Promise<ApiResponse<VacancyToggleActiveData>> => {
+    const response = await httpClient.patch<
+      ApiResponse<VacancyToggleActiveData>
+    >(`/vacancies/${id}/statuses`, { action });
     return response.data;
   },
   deleteVacancy: async (id: string): Promise<ApiResponse<string>> => {

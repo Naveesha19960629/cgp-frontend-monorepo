@@ -21,6 +21,7 @@ export { default as VacancyCreateStepperForm } from '@/views/vacancies/component
 export { default as StepDisableDialog } from '@/views/vacancies/components/step-disable-dialog';
 export { default as VacancyCancelDialog } from '@/views/vacancies/components/vacancy-cancel-dialog';
 export { default as VacancyDeleteDialog } from '@/views/vacancies/components/vacancy-delete-dialog';
+export { default as VacancyToggleStatusDialog } from '@/views/vacancies/components/vacancy-toggle-status-dialog';
 export { default as VacancyEditCancelDialog } from '@/views/vacancies/components/vacancy-edit-cancel-dialog';
 export { default as DataTableFacetedFilter } from '@/views/vacancies/components/data-table-faceted-filter';
 export { default as VacancyTableAction } from '@/views/vacancies/components/vacancy-table-action';

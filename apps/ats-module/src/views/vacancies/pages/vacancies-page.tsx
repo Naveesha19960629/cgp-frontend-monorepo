@@ -5,7 +5,11 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
 import { useVacanciesQuery, useVacancyTableParams } from '@/views/vacancies';
-import type { VacancyQueryParams, VacancyTableColumn } from '@/views/vacancies';
+import type {
+  VacancyQueryParams,
+  VacancyTableColumn,
+  VacancyToggleAction,
+} from '@/views/vacancies';
 import {
   VacancyDataTable,
   VacancyDeleteDialog,
@@ -14,9 +18,11 @@ import {
   VacancySearchEmptyState,
   VacancyTableEmptyState,
   VacancyTablePagination,
+  VacancyToggleStatusDialog,
   createVacancyColumns,
   useDeleteVacancyMutation,
   useDuplicateVacancyMutation,
+  useToggleVacancyStatusMutation,
 } from '@/views/vacancies';
 import { TABLE_PAGE_SIZE } from '@/views/vacancies/utils';
 
@@ -37,7 +43,12 @@ export default function VacanciesPage() {
   const { keycloak, initialized } = useKeycloak();
 
   const [deleteVacancyId, setDeleteVacancyId] = useState<string | null>(null);
+  const [toggleTarget, setToggleTarget] = useState<{
+    id: string;
+    action: VacancyToggleAction;
+  } | null>(null);
   const deleteMutation = useDeleteVacancyMutation();
+  const toggleStatusMutation = useToggleVacancyStatusMutation();
   const { mutate: duplicateVacancy, isPending: isDuplicating } =
     useDuplicateVacancyMutation();
 
@@ -156,6 +167,49 @@ export default function VacanciesPage() {
     [duplicateVacancy, t]
   );
 
+  const handleToggleConfirm = () => {
+    if (!toggleTarget) return;
+    const { id, action } = toggleTarget;
+    const isActivate = action === 'ACTIVATE';
+    toggleStatusMutation.mutate(
+      { id, action },
+      {
+        onSuccess: () => {
+          SuccessToast({
+            title: t(
+              isActivate
+                ? 'vacancies.toggleStatusDialog.notifications.activateSuccessTitle'
+                : 'vacancies.toggleStatusDialog.notifications.deactivateSuccessTitle'
+            ),
+            description: t(
+              isActivate
+                ? 'vacancies.toggleStatusDialog.notifications.activateSuccessMessage'
+                : 'vacancies.toggleStatusDialog.notifications.deactivateSuccessMessage'
+            ),
+          });
+          setToggleTarget(null);
+        },
+        onError: () => {
+          ErrorToast({
+            title: t('vacancies.toggleStatusDialog.notifications.errorTitle'),
+            description: t(
+              'vacancies.toggleStatusDialog.notifications.errorMessage'
+            ),
+          });
+        },
+      }
+    );
+  };
+
+  const handleToggleSchedule = () => {
+    if (!toggleTarget) return;
+    const { id } = toggleTarget;
+    setToggleTarget(null);
+    void navigate(`/dashboard/ats/vacancies/${id}/edit`, {
+      state: { initialStep: 'schedule-vacancy' },
+    });
+  };
+
   const columns = useMemo(
     () =>
       createVacancyColumns({
@@ -168,6 +222,8 @@ export default function VacanciesPage() {
           void navigate(`/dashboard/ats/vacancies/${vacancyId}/edit`),
         onDelete: (vacancyId: string) => setDeleteVacancyId(vacancyId),
         onMakeACopy: handleMakeACopy,
+        onToggleActive: (vacancyId: string, action: VacancyToggleAction) =>
+          setToggleTarget({ id: vacancyId, action }),
         t,
       }),
     [params.sortBy, params.sortOrder, handleSort, handleMakeACopy, navigate, t]
@@ -268,6 +324,16 @@ export default function VacanciesPage() {
         }}
         onConfirm={handleDeleteConfirm}
         isDeleting={deleteMutation.isPending}
+      />
+      <VacancyToggleStatusDialog
+        open={Boolean(toggleTarget)}
+        onOpenChange={open => {
+          if (!open) setToggleTarget(null);
+        }}
+        action={toggleTarget?.action ?? 'ACTIVATE'}
+        onConfirm={handleToggleConfirm}
+        onSchedule={handleToggleSchedule}
+        isToggling={toggleStatusMutation.isPending}
       />
       {isDuplicating && (
         <div

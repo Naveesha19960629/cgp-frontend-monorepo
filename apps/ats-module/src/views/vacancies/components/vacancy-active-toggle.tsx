@@ -13,9 +13,12 @@ export default function VacancyActiveToggle({
   return (
     <button
       type="button"
-      onClick={() => onToggle?.(!isActive)}
+      onClick={e => {
+        e.stopPropagation();
+        onToggle?.(!isActive);
+      }}
       className={cn(
-        'inline-flex h-7 items-center rounded-[100px] transition-opacity',
+        'inline-flex h-7 cursor-pointer items-center rounded-[100px] transition-opacity',
         isActive
           ? 'bg-[#059669] py-1 pr-1 pl-2'
           : 'bg-[#e5e5e5] py-1 pr-2 pl-1 opacity-50'

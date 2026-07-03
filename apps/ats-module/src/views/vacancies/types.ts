@@ -1032,6 +1032,23 @@ interface VacancyEditCancelDialogProps {
   onConfirm: () => void;
 }
 
+type VacancyToggleAction = 'ACTIVATE' | 'DEACTIVATE';
+
+interface VacancyToggleActiveData {
+  vacancyId: string;
+  status: string;
+  isManuallyOnhold: boolean;
+}
+
+interface VacancyToggleStatusDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  action: VacancyToggleAction;
+  onConfirm: () => void;
+  onSchedule: () => void;
+  isToggling?: boolean;
+}
+
 interface VacancyTableColumn {
   vacancyId: string;
   title: string;
@@ -1150,6 +1167,7 @@ interface CreateColumnsOptions {
   onEdit: (vacancyId: string) => void;
   onDelete: (vacancyId: string) => void;
   onMakeACopy: (vacancyId: string) => void;
+  onToggleActive: (vacancyId: string, action: VacancyToggleAction) => void;
   t: (key: string) => string;
 }
 
@@ -1783,6 +1801,9 @@ export type {
   VacancyCancelDialogProps,
   VacancyDeleteDialogProps,
   VacancyEditCancelDialogProps,
+  VacancyToggleAction,
+  VacancyToggleActiveData,
+  VacancyToggleStatusDialogProps,
   VacancyDetailJobRequirementData,
   VacancyDetailPatentEntry,
   VacancyDetailData,

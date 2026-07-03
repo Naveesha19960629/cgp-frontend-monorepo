@@ -163,6 +163,22 @@
         "errorMessage": "Some changes could not be saved. Please try again."
       }
     },
+    "toggleStatusDialog": {
+      "title": "Are you sure?",
+      "activateMessage": "Activating will make the vacancy link active and move the vacancy to 'Live' status. Applicants will be able to view and apply for this vacancy.\nYou may also schedule an automatic activation date below. Do you wish to proceed?",
+      "deactivateMessage": "Deactivating will make the vacancy link inactive and move the vacancy to 'On Hold' status. Applicants will no longer be able to view or apply for this vacancy. You may also schedule an automatic reactivation date to make the vacancy active again.\nDo you wish to proceed?",
+      "schedule": "Schedule",
+      "activate": "Activate",
+      "deactivate": "Deactivate",
+      "notifications": {
+        "activateSuccessTitle": "Successfully Activated",
+        "activateSuccessMessage": "Vacancy has been successfully activated.",
+        "deactivateSuccessTitle": "Successfully Deactivated",
+        "deactivateSuccessMessage": "Vacancy has been successfully deactivated.",
+        "errorTitle": "Try Again",
+        "errorMessage": "Some changes could not be saved. Please try again."
+      }
+    },
     "view": {
       "untitledVacancy": "Untitled Vacancy",
       "applied": "Applied",

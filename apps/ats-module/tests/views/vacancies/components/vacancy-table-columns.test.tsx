@@ -39,6 +39,8 @@ const onSort = vi.fn();
 const onView = vi.fn();
 const onEdit = vi.fn();
 const onDelete = vi.fn();
+const onMakeACopy = vi.fn();
+const onToggleActive = vi.fn();
 
 const sampleRow: VacancyTableColumn = {
   vacancyId: 'f4e3d2c1-b0a9-8f7e-6d5c-4b3a2f1e0d9c',
@@ -79,6 +81,8 @@ function TableWrapper({
     onView,
     onEdit,
     onDelete,
+    onMakeACopy,
+    onToggleActive,
     t,
   });
   const table = useReactTable({
@@ -131,6 +135,8 @@ describe('createVacancyColumns', () => {
       onView,
       onEdit,
       onDelete,
+      onMakeACopy,
+      onToggleActive,
       t,
     });
     expect(cols).toHaveLength(17);
@@ -144,6 +150,8 @@ describe('createVacancyColumns', () => {
       onView,
       onEdit,
       onDelete,
+      onMakeACopy,
+      onToggleActive,
       t,
     });
     const ids = cols.map(
@@ -179,6 +187,21 @@ describe('createVacancyColumns', () => {
     render(<TableWrapper data={[sampleRow]} />);
     expect(screen.getByTestId('status-badge')).toBeInTheDocument();
     expect(screen.getByTestId('active-toggle')).toBeInTheDocument();
+  });
+
+  it('renders an inactive toggle for the ONHOLD API enum status', () => {
+    render(<TableWrapper data={[{ ...sampleRow, status: 'ONHOLD' }]} />);
+    expect(screen.getByTestId('active-toggle')).toHaveTextContent('inactive');
+  });
+
+  it('renders an active toggle for LIVE status', () => {
+    render(<TableWrapper data={[{ ...sampleRow, status: 'LIVE' }]} />);
+    expect(screen.getByTestId('active-toggle')).toHaveTextContent('active');
+  });
+
+  it('does not render a toggle for DRAFT status', () => {
+    render(<TableWrapper data={[{ ...sampleRow, status: 'DRAFT' }]} />);
+    expect(screen.queryByTestId('active-toggle')).not.toBeInTheDocument();
   });
 
   it('renders the actions cell', () => {

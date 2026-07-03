@@ -8,6 +8,7 @@ const useVacanciesQueryMock = vi.fn();
 const useVacancyTableParamsMock = vi.fn();
 const useDeleteVacancyMutationMock = vi.fn();
 const useDuplicateVacancyMutationMock = vi.fn();
+const useToggleVacancyStatusMutationMock = vi.fn();
 
 const defaultParams = {
   page: 0,
@@ -53,6 +54,8 @@ vi.mock('@/views/vacancies', async importOriginal => {
     useDeleteVacancyMutation: () => useDeleteVacancyMutationMock(),
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     useDuplicateVacancyMutation: () => useDuplicateVacancyMutationMock(),
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    useToggleVacancyStatusMutation: () => useToggleVacancyStatusMutationMock(),
     VacancyDataTable: () => <div data-testid="vacancy-data-table" />,
     VacancyFilteringSection: () => (
       <div data-testid="vacancy-filtering-section" />
@@ -80,6 +83,10 @@ describe('VacanciesPage', () => {
       isPending: false,
     });
     useDuplicateVacancyMutationMock.mockReturnValue({
+      mutate: vi.fn(),
+      isPending: false,
+    });
+    useToggleVacancyStatusMutationMock.mockReturnValue({
       mutate: vi.fn(),
       isPending: false,
     });
