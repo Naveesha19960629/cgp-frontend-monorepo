@@ -310,23 +310,27 @@ const createVacancyColumns = ({
       // API enum is ONHOLD (no underscore); on_hold is the form/UI key
       const isOnHold =
         normalizedStatus === 'onhold' || normalizedStatus === 'on_hold';
-      const showToggle = isLive || isOnHold;
+      // Toggle is shown for every status but only actionable on Live/On hold;
+      // other statuses render a disabled toggle.
+      const isToggleEnabled = isLive || isOnHold;
       return (
         <div className="flex items-center gap-3 px-6">
           <div className="min-w-30">
             <VacancyStatusBadge status={status} />
           </div>
-          {showToggle && (
-            <VacancyActiveToggle
-              isActive={isLive}
-              onToggle={() =>
-                onToggleActive(
-                  row.original.vacancyId,
-                  isLive ? 'DEACTIVATE' : 'ACTIVATE'
-                )
-              }
-            />
-          )}
+          <VacancyActiveToggle
+            isActive={isLive}
+            disabled={!isToggleEnabled}
+            onToggle={
+              isToggleEnabled
+                ? () =>
+                    onToggleActive(
+                      row.original.vacancyId,
+                      isLive ? 'DEACTIVATE' : 'ACTIVATE'
+                    )
+                : undefined
+            }
+          />
         </div>
       );
     },

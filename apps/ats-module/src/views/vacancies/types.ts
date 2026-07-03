@@ -1426,6 +1426,7 @@ interface VacancyViewModel {
 interface VacancyActiveToggleProps {
   isActive: boolean;
   onToggle?: (isActive: boolean) => void;
+  disabled?: boolean;
 }
 
 interface StatusConfig {

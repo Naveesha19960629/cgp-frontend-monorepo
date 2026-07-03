@@ -23,8 +23,19 @@ vi.mock('@/views/vacancies', async importOriginal => {
 });
 
 vi.mock('@/views/vacancies/components/vacancy-active-toggle', () => ({
-  default: ({ isActive }: { isActive: boolean }) => (
-    <div data-testid="active-toggle">{isActive ? 'active' : 'inactive'}</div>
+  default: ({
+    isActive,
+    disabled,
+  }: {
+    isActive: boolean;
+    disabled?: boolean;
+  }) => (
+    <div
+      data-testid="active-toggle"
+      data-disabled={disabled ? 'true' : 'false'}
+    >
+      {isActive ? 'active' : 'inactive'}
+    </div>
   ),
 }));
 
@@ -199,9 +210,32 @@ describe('createVacancyColumns', () => {
     expect(screen.getByTestId('active-toggle')).toHaveTextContent('active');
   });
 
-  it('does not render a toggle for DRAFT status', () => {
-    render(<TableWrapper data={[{ ...sampleRow, status: 'DRAFT' }]} />);
-    expect(screen.queryByTestId('active-toggle')).not.toBeInTheDocument();
+  it('renders an enabled toggle for LIVE and ONHOLD statuses', () => {
+    const { rerender } = render(
+      <TableWrapper data={[{ ...sampleRow, status: 'LIVE' }]} />
+    );
+    expect(screen.getByTestId('active-toggle')).toHaveAttribute(
+      'data-disabled',
+      'false'
+    );
+
+    rerender(<TableWrapper data={[{ ...sampleRow, status: 'ONHOLD' }]} />);
+    expect(screen.getByTestId('active-toggle')).toHaveAttribute(
+      'data-disabled',
+      'false'
+    );
+  });
+
+  it('renders a disabled toggle for non Live/On hold statuses', () => {
+    for (const status of ['DRAFT', 'UNPUBLISHED', 'EXPIRED']) {
+      const { unmount } = render(
+        <TableWrapper data={[{ ...sampleRow, status }]} />
+      );
+      const toggle = screen.getByTestId('active-toggle');
+      expect(toggle).toBeInTheDocument();
+      expect(toggle).toHaveAttribute('data-disabled', 'true');
+      unmount();
+    }
   });
 
   it('renders the actions cell', () => {

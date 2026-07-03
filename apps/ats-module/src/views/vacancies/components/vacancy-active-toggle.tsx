@@ -7,21 +7,25 @@ import { cn } from '@cgp/ui-kit/lib/utils';
 export default function VacancyActiveToggle({
   isActive,
   onToggle,
+  disabled = false,
 }: VacancyActiveToggleProps) {
   const { t } = useTranslation('ats');
 
   return (
     <button
       type="button"
+      disabled={disabled}
       onClick={e => {
         e.stopPropagation();
+        if (disabled) return;
         onToggle?.(!isActive);
       }}
       className={cn(
-        'inline-flex h-7 cursor-pointer items-center rounded-[100px] transition-opacity',
-        isActive
-          ? 'bg-[#059669] py-1 pr-1 pl-2'
-          : 'bg-[#e5e5e5] py-1 pr-2 pl-1 opacity-50'
+        'inline-flex h-7 items-center rounded-[100px] transition-opacity',
+        // Only disabled (non Live/On hold) toggles are faded; the functional
+        // On hold "Inactive" toggle stays at full opacity per Figma.
+        disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer',
+        isActive ? 'bg-[#059669] py-1 pr-1 pl-2' : 'bg-[#e5e5e5] py-1 pr-2 pl-1'
       )}
     >
       {isActive ? (
