@@ -207,6 +207,14 @@ export default function VacancyDataTable<TData>({
                         <TableCell
                           key={cell.id}
                           style={getCellStyles(cell.column)}
+                          // Status/actions cells never navigate on click; only the
+                          // toggle and action buttons inside them stay interactive.
+                          data-row-click-ignore={
+                            cell.column.id === 'status' ||
+                            cell.column.id === 'actions'
+                              ? 'true'
+                              : undefined
+                          }
                           className={cn(
                             'overflow-hidden text-ellipsis whitespace-nowrap',
                             rowIndex < rows.length - 1 &&

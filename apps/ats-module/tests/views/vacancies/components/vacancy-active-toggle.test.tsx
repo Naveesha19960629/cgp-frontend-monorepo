@@ -45,4 +45,15 @@ describe('VacancyActiveToggle', () => {
     render(<VacancyActiveToggle isActive={false} />);
     await expect(user.click(screen.getByRole('button'))).resolves.not.toThrow();
   });
+
+  it('disables the button and does not call onToggle when disabled', async () => {
+    const user = userEvent.setup();
+    render(
+      <VacancyActiveToggle isActive={false} onToggle={onToggle} disabled />
+    );
+    const button = screen.getByRole('button');
+    expect(button).toBeDisabled();
+    await user.click(button);
+    expect(onToggle).not.toHaveBeenCalled();
+  });
 });

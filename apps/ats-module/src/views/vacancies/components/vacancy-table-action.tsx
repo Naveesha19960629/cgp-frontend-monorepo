@@ -36,7 +36,9 @@ export default function VacancyTableAction({
   const isUnpublished = normalizedStatus === 'unpublished';
   const isLive = normalizedStatus === 'live';
   const isExpired = normalizedStatus === 'expired';
-  const isOnHold = normalizedStatus === 'on_hold';
+  // API enum is ONHOLD (no underscore); on_hold is the form/UI key
+  const isOnHold =
+    normalizedStatus === 'onhold' || normalizedStatus === 'on_hold';
 
   const showDuplicate = availableActions
     ? availableActions.includes('MAKE_A_COPY')

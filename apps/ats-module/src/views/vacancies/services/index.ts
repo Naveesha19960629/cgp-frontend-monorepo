@@ -20,6 +20,7 @@ export { publicationService } from '@/views/vacancies/services/publication.servi
 export { secondaryEducationService } from '@/views/vacancies/services/secondary-education.service';
 export { tertiaryEducationService } from '@/views/vacancies/services/tertiary-education.service';
 export { vacancyService } from '@/views/vacancies/services/vacancy.service';
+export { vacancyTemplateService } from '@/views/vacancies/services/vacancy-template.service';
 export { licenseCertificatesService } from '@/views/vacancies/services/license-certificates.service';
 export type { LicenseCertLookupItem } from '@/views/vacancies/services/license-certificates.service';
 export { roleService } from '@/views/vacancies/services/role.service';

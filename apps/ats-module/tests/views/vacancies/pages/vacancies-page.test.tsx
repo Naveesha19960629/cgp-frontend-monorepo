@@ -7,6 +7,8 @@ const navigate = vi.fn();
 const useVacanciesQueryMock = vi.fn();
 const useVacancyTableParamsMock = vi.fn();
 const useDeleteVacancyMutationMock = vi.fn();
+const useDuplicateVacancyMutationMock = vi.fn();
+const useToggleVacancyStatusMutationMock = vi.fn();
 
 const defaultParams = {
   page: 0,
@@ -50,6 +52,10 @@ vi.mock('@/views/vacancies', async importOriginal => {
     useVacancyTableParams: () => useVacancyTableParamsMock(),
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     useDeleteVacancyMutation: () => useDeleteVacancyMutationMock(),
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    useDuplicateVacancyMutation: () => useDuplicateVacancyMutationMock(),
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    useToggleVacancyStatusMutation: () => useToggleVacancyStatusMutationMock(),
     VacancyDataTable: () => <div data-testid="vacancy-data-table" />,
     VacancyFilteringSection: () => (
       <div data-testid="vacancy-filtering-section" />
@@ -76,6 +82,37 @@ describe('VacanciesPage', () => {
       mutate: vi.fn(),
       isPending: false,
     });
+    useDuplicateVacancyMutationMock.mockReturnValue({
+      mutate: vi.fn(),
+      isPending: false,
+    });
+    useToggleVacancyStatusMutationMock.mockReturnValue({
+      mutate: vi.fn(),
+      isPending: false,
+    });
+  });
+
+  it('shows a blocking overlay while a vacancy is being duplicated', () => {
+    useDuplicateVacancyMutationMock.mockReturnValue({
+      mutate: vi.fn(),
+      isPending: true,
+    });
+
+    render(<VacanciesPage />);
+
+    expect(
+      screen.getByText('vacancies.duplicateVacancy.inProgress')
+    ).toBeInTheDocument();
+    // Overlay div and its Spinner both expose role="status"
+    expect(screen.getAllByRole('status')).not.toHaveLength(0);
+  });
+
+  it('does not render the duplicate overlay when no duplication is pending', () => {
+    render(<VacanciesPage />);
+
+    expect(
+      screen.queryByText('vacancies.duplicateVacancy.inProgress')
+    ).not.toBeInTheDocument();
   });
 
   it('renders page heading and create vacancy button when data exists', () => {
