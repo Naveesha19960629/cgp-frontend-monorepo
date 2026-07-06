@@ -126,6 +126,7 @@ export default function VacanciesPage() {
 
   const handleDeleteConfirm = () => {
     if (!deleteVacancyId) return;
+    const isLastItemOnPage = data.length === 1 && params.page > 1;
     deleteMutation.mutate(deleteVacancyId, {
       onSuccess: () => {
         SuccessToast({
@@ -133,6 +134,9 @@ export default function VacanciesPage() {
           description: t('vacancies.deleteDialog.notifications.successMessage'),
         });
         setDeleteVacancyId(null);
+        if (isLastItemOnPage) {
+          void setParams({ page: params.page - 1 });
+        }
       },
       onError: () => {
         ErrorToast({
