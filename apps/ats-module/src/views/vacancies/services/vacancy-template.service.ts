@@ -1,0 +1,37 @@
+import type {
+  CreateVacancyTemplateRequest,
+  CreatedVacancyTemplate,
+  NextTemplateName,
+  SingleRecordApiResponse,
+  VacancyTemplateQueryParams,
+  VacancyTemplateSearchPage,
+} from '@/views/vacancies/types';
+
+import { httpClient } from '@cgp/data-access';
+
+export const vacancyTemplateService = {
+  searchTemplates: async (
+    params: VacancyTemplateQueryParams
+  ): Promise<SingleRecordApiResponse<VacancyTemplateSearchPage>> => {
+    const response = await httpClient.get<
+      SingleRecordApiResponse<VacancyTemplateSearchPage>
+    >('/vacancy-templates', { params });
+    return response.data;
+  },
+  getNextTemplateName: async (): Promise<
+    SingleRecordApiResponse<NextTemplateName>
+  > => {
+    const response = await httpClient.get<
+      SingleRecordApiResponse<NextTemplateName>
+    >('/vacancy-templates/next-template-name');
+    return response.data;
+  },
+  createTemplate: async (
+    payload: CreateVacancyTemplateRequest
+  ): Promise<SingleRecordApiResponse<CreatedVacancyTemplate>> => {
+    const response = await httpClient.post<
+      SingleRecordApiResponse<CreatedVacancyTemplate>
+    >('/vacancy-templates', payload);
+    return response.data;
+  },
+};

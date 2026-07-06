@@ -1,4 +1,4 @@
-import { useParams } from 'react-router-dom';
+import { useLocation, useParams } from 'react-router-dom';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
@@ -82,6 +82,7 @@ vi.mock('react-i18next', () => ({
 vi.mock('react-router-dom', () => ({
   useNavigate: () => vi.fn(),
   useParams: vi.fn(() => ({})),
+  useLocation: vi.fn(() => ({ state: null })),
 }));
 vi.mock('@cgp/ui-kit/components/custom-toast', () => ({
   SuccessToast: vi.fn(),
@@ -189,6 +190,9 @@ describe('ScheduleVacancyStep', () => {
     mockVacancyForm();
 
     vi.mocked(useParams).mockReturnValue({});
+    vi.mocked(useLocation).mockReturnValue({
+      state: null,
+    } as unknown as ReturnType<typeof useLocation>);
 
     vi.mocked(useCreateVacancyMutation).mockReturnValue({
       mutateAsync: mockCreateVacancy,
@@ -860,6 +864,39 @@ describe('ScheduleVacancyStep', () => {
       await waitFor(() => {
         expect(mockUpdateVacancy).toHaveBeenCalled();
         expect(ErrorToast).not.toHaveBeenCalled();
+      });
+    });
+
+    it('submits a Live vacancy as ONHOLD when scheduled via the toggle flow', async () => {
+      vi.mocked(useLocation).mockReturnValue({
+        state: { scheduleToOnhold: true },
+      } as unknown as ReturnType<typeof useLocation>);
+
+      mockVacancyForm({
+        form: {
+          schedule: {
+            schedulePublishAt: '2020-01-01T10:30:00 AM',
+            expirationAt: '2020-01-02T11:59:59 PM',
+          },
+          status: 'live',
+        },
+      });
+
+      renderComponent({ mode: 'edit' as const });
+
+      await waitFor(() => {
+        expect(getCreateButton()).not.toBeDisabled();
+      });
+
+      await userEvent.click(getCreateButton());
+
+      await waitFor(() => {
+        expect(mockUpdateVacancy).toHaveBeenCalledWith(
+          expect.objectContaining({
+            id: 'vacancy-123',
+            existingStatus: 'on_hold',
+          })
+        );
       });
     });
 

@@ -226,6 +226,30 @@ describe('toVacancyFormFromResponse — top-level scalar fields', () => {
     expect(result.title).toBe('Existing Title');
   });
 
+  it('clamps titles longer than 50 characters to 50', () => {
+    // 58-char title from pre-fix "Copy of" duplication
+    const result = toVacancyFormFromResponse(
+      {
+        title: 'Copy of Copy of Senior Software Engineer - Back End (Java)',
+        status: 'UNPUBLISHED',
+      },
+      { ...FALLBACK_FORM }
+    );
+    expect(result.title).toBe(
+      'Copy of Copy of Senior Software Engineer - Back En'
+    );
+    expect(result.title).toHaveLength(50);
+  });
+
+  it('leaves titles of exactly 50 characters untouched', () => {
+    const title = 'x'.repeat(50);
+    const result = toVacancyFormFromResponse(
+      { title, status: 'DRAFT' },
+      { ...FALLBACK_FORM }
+    );
+    expect(result.title).toBe(title);
+  });
+
   it('normalises UNPUBLISHED status to "unpublished"', () => {
     const result = toVacancyFormFromResponse(
       { title: 'T', status: 'UNPUBLISHED' },

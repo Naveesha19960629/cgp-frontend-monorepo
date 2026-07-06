@@ -1,5 +1,6 @@
 const SANITIZE_NON_ASCII_REGEX = /[\u0080-\uFFFF]/g;
-const SANITIZE_PLAIN_TEXT_DISALLOWED_REGEX = /[^\w\s.,()'/&-]/g;
+// Allow all printable ASCII special characters; strip control/non-printable characters.
+const SANITIZE_PLAIN_TEXT_DISALLOWED_REGEX = /[^\x20-\x7E]/g;
 const SANITIZE_POSTAL_CODE_DISALLOWED_REGEX = /[^\w\s.-]/g;
 
 function sanitizeWithRegex(value: string, disallowedRegex: RegExp): string {

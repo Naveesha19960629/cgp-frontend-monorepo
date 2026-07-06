@@ -3,7 +3,6 @@ import { ChevronLeft } from 'lucide-react';
 import type { ReactNode } from 'react';
 
 import { Badge } from '@cgp/ui-kit/components/ui/badge';
-import { cn } from '@cgp/ui-kit/lib/utils';
 
 function Root({ children }: { children: ReactNode }) {
   return (
@@ -25,7 +24,7 @@ function Header({
   return (
     <header className="mb-5 flex flex-wrap items-center justify-between gap-3">
       <div className="flex min-w-0 items-center gap-3">
-        <h1 className="truncate text-2xl/8 font-bold text-slate-900">
+        <h1 className="truncate text-2xl/8 font-bold tracking-[-0.6px] text-slate-900">
           {title}
         </h1>
         {status}
@@ -79,43 +78,15 @@ function Tags({ values }: { values: string[] }) {
   );
 }
 
-function Description({
-  value,
-  expanded,
-  onToggle,
-  toggleLabel,
-}: {
-  value: string;
-  expanded: boolean;
-  onToggle: () => void;
-  toggleLabel: string;
-}) {
-  const hasOverflow = value.length > 260;
-
+function Description({ value }: { value: string }) {
   if (!value) {
     return <p className="text-sm text-slate-500">-</p>;
   }
 
   return (
-    <div>
-      <p
-        className={cn(
-          'text-sm leading-5 font-semibold whitespace-pre-wrap text-slate-500',
-          !expanded && 'line-clamp-3'
-        )}
-      >
-        {value}
-      </p>
-      {hasOverflow && (
-        <button
-          type="button"
-          className="text-brand-primary-500 mt-2 cursor-pointer text-sm font-semibold"
-          onClick={onToggle}
-        >
-          {toggleLabel}
-        </button>
-      )}
-    </div>
+    <p className="text-sm leading-5 font-semibold whitespace-pre-wrap text-slate-500">
+      {value}
+    </p>
   );
 }
 
@@ -134,12 +105,14 @@ function BackHeader({
         <button
           type="button"
           onClick={onBack}
-          className="group flex items-center gap-2 text-slate-900 transition-colors hover:text-slate-600"
+          className="shrink-0 cursor-pointer text-slate-600 transition-colors hover:text-slate-500"
           aria-label="Go back"
         >
-          <ChevronLeft className="size-6 shrink-0 text-slate-600 group-hover:text-slate-500" />
-          <h1 className="truncate text-2xl/8 font-bold">{title}</h1>
+          <ChevronLeft className="size-6" />
         </button>
+        <h1 className="truncate text-2xl/8 font-bold tracking-[-0.6px] text-slate-900">
+          {title}
+        </h1>
         {status}
       </div>
     </header>
@@ -159,12 +132,12 @@ function InfoRow({
 
   return (
     <div className="flex items-center gap-2 text-sm">
-      <div className="flex items-center gap-1 text-slate-500">
+      <div className="flex items-center gap-1 text-slate-600">
         {icon}
         <span className="font-semibold">{label}</span>
       </div>
-      <span className="size-1.5 shrink-0 rounded-full bg-slate-400" />
-      <span className="font-semibold text-slate-900">
+      <span className="size-1.5 shrink-0 rounded-full bg-slate-600" />
+      <span className="font-semibold text-slate-600">
         {displayValue || '-'}
       </span>
     </div>

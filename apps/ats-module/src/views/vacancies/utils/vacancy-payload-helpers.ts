@@ -534,11 +534,15 @@ function mapCustomizedForm(form: VacancyForm): CustomizedFormApiPayload {
         };
 
         const choiceTypes = ['MULTIPLE_CHOICE', 'CHECKBOXES', 'DROPDOWN'];
-        if (choiceTypes.includes(q.type) && q.options.length > 0) {
-          base.options = q.options.map((o, oIdx) => ({
-            value: o.value,
-            displayOrder: oIdx + 1,
-          }));
+        if (choiceTypes.includes(q.type)) {
+          // Option fields left blank are not valid options and are not saved.
+          const filledOptions = q.options.filter(o => o.value.trim() !== '');
+          if (filledOptions.length > 0) {
+            base.options = filledOptions.map((o, oIdx) => ({
+              value: o.value,
+              displayOrder: oIdx + 1,
+            }));
+          }
         }
 
         if (q.type === 'LINEAR_SCALE') {

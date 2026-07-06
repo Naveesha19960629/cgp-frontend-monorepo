@@ -269,7 +269,16 @@ export default function LicenseCertificatesStep({
     let hasResolutionError = false;
 
     for (const item of current) {
-      if (item.source === 'PENDING_TEMP') {
+      // A newly-added entry needs resolution when it is still marked
+      // PENDING_TEMP or still carries a temporary value. The source can be
+      // normalized to PENDING when the step is persisted on navigation (see
+      // toLicenseCertificatesPayload), so the temp-value prefix is checked too —
+      // otherwise a return visit would leave the temp id unresolved and trigger
+      // the "changes could not be saved" error on Next.
+      const isUnresolvedPending =
+        item.source === 'PENDING_TEMP' ||
+        item.value.startsWith('__pending_license_cert_');
+      if (isUnresolvedPending) {
         const pendingData = pendingLicenseCertsDataRef.current.get(
           item.value
         ) ?? {

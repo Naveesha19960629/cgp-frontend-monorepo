@@ -89,7 +89,7 @@ export default function JobRequirementsStep({ onNext }: Readonly<StepProps>) {
   const form = useJobRequirementsForm();
 
   const isMountedRef = useRef(false);
-  const { isValid } = form.formState;
+  const { isValid, submitCount } = form.formState;
 
   useEffect(() => {
     if (!isMountedRef.current) {
@@ -109,6 +109,18 @@ export default function JobRequirementsStep({ onNext }: Readonly<StepProps>) {
 
   const isOtherDiscipline =
     selectedDiscipline?.label?.toLowerCase() === 'other';
+
+  // Level and role are only required when the discipline is not "Other".
+  // Switching to "Other" clears any previously shown required errors for those
+  // fields immediately; switching back to a normal discipline re-shows them
+  // (but only once the user has already attempted to submit).
+  useEffect(() => {
+    if (isOtherDiscipline) {
+      form.clearErrors(['level', 'role']);
+    } else if (submitCount > 0) {
+      void form.trigger(['level', 'role']);
+    }
+  }, [isOtherDiscipline, submitCount, form]);
 
   const isCareerPathDisabled = selectedDisciplines.length === 0;
   const isRoleDisabled =

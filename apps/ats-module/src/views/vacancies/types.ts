@@ -1046,6 +1046,23 @@ interface VacancyNoRescheduleConfirmDialogProps {
   isConfirming?: boolean;
 }
 
+type VacancyToggleAction = 'ACTIVATE' | 'DEACTIVATE';
+
+interface VacancyToggleActiveData {
+  vacancyId: string;
+  status: string;
+  isManuallyOnhold: boolean;
+}
+
+interface VacancyToggleStatusDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  action: VacancyToggleAction;
+  onConfirm: () => void;
+  onSchedule: () => void;
+  isToggling?: boolean;
+}
+
 interface VacancyTableColumn {
   vacancyId: string;
   title: string;
@@ -1163,6 +1180,8 @@ interface CreateColumnsOptions {
   onView: (vacancyId: string) => void;
   onEdit: (vacancyId: string) => void;
   onDelete: (vacancyId: string) => void;
+  onMakeACopy: (vacancyId: string) => void;
+  onToggleActive: (vacancyId: string, action: VacancyToggleAction) => void;
   t: (key: string) => string;
 }
 
@@ -1421,6 +1440,7 @@ interface VacancyViewModel {
 interface VacancyActiveToggleProps {
   isActive: boolean;
   onToggle?: (isActive: boolean) => void;
+  disabled?: boolean;
 }
 
 interface StatusConfig {
@@ -1651,8 +1671,126 @@ interface CreateVacancyPayload {
   };
 }
 
+// ── Vacancy Template ────────────────────────────────────────────────────────
+
+/** Whether a template section serialises to a single object or a one-item array. */
+type TemplateSectionKind = 'list' | 'single';
+
+interface TemplateFieldConfig {
+  /** Backend fieldCode persisted in the template (content map key). */
+  code: string;
+  /** i18n key for the field label. */
+  labelKey: string;
+}
+
+interface TemplateSectionConfig {
+  /** Section key in the request `data` object. */
+  key: string;
+  kind: TemplateSectionKind;
+  /** i18n key for the section title. */
+  titleKey: string;
+  fields: TemplateFieldConfig[];
+}
+
+/** Local form state for a single template section. */
+interface TemplateSectionState {
+  dataTakenFromCandidate: boolean;
+  /** field code -> whether its toggle is enabled */
+  fields: Record<string, boolean>;
+}
+
+/**
+ * Full local state for the Create Template form. The template name is kept
+ * outside this state and managed by the page.
+ */
+interface TemplateFormState {
+  sections: Record<string, TemplateSectionState>;
+  /** Customizable Form section (toggle only, no fields). */
+  customizableForm: boolean;
+}
+
+interface TemplateFieldRequest {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+  content: Record<string, boolean>;
+}
+
+interface CustomizableFormSectionRequest {
+  isEnabled: boolean;
+}
+
+type TemplateSectionData = Record<
+  string,
+  TemplateFieldRequest | TemplateFieldRequest[] | CustomizableFormSectionRequest
+>;
+
+interface CreateVacancyTemplateRequest {
+  templateName: string;
+  refNumber?: string;
+  data: TemplateSectionData;
+}
+
+interface NextTemplateName {
+  templateName: string;
+  refNumber?: string;
+}
+
+interface CreatedVacancyTemplate {
+  vacancyTemplateId: string;
+  templateName: string;
+  refNumber: string;
+  createdAt?: string;
+}
+
+// ── Vacancy Template list (search) ──────────────────────────────────────────
+
+/** Sort direction for the Templates list (maps to the backend `sortOrder`). */
+type TemplateSortOrder = 'NEWEST' | 'OLDEST';
+
+interface VacancyTemplateSearchItem {
+  vacancyTemplateId: string;
+  templateName: string;
+  refNumber: string;
+  createdAt: string;
+  updatedAt: string;
+  createdBy: string;
+  updatedBy: string;
+}
+
+interface VacancyTemplateSearchPage {
+  content: VacancyTemplateSearchItem[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  last: boolean;
+  empty: boolean;
+}
+
+interface VacancyTemplateQueryParams {
+  page?: number;
+  size?: number;
+  search?: string;
+  sortOrder?: TemplateSortOrder;
+}
+
 export type {
   CreateVacancyPayload,
+  TemplateSectionKind,
+  TemplateFieldConfig,
+  TemplateSectionConfig,
+  TemplateSectionState,
+  TemplateFormState,
+  TemplateFieldRequest,
+  CustomizableFormSectionRequest,
+  TemplateSectionData,
+  CreateVacancyTemplateRequest,
+  NextTemplateName,
+  CreatedVacancyTemplate,
+  TemplateSortOrder,
+  VacancyTemplateSearchItem,
+  VacancyTemplateSearchPage,
+  VacancyTemplateQueryParams,
   JobRequirementApiPayload,
   PatentContentApiPayload,
   PatentGroupApiPayload,
@@ -1798,6 +1936,9 @@ export type {
   VacancyEditCancelDialogProps,
   VacancyRescheduleConfirmDialogProps,
   VacancyNoRescheduleConfirmDialogProps,
+  VacancyToggleAction,
+  VacancyToggleActiveData,
+  VacancyToggleStatusDialogProps,
   VacancyDetailJobRequirementData,
   VacancyDetailPatentEntry,
   VacancyDetailData,

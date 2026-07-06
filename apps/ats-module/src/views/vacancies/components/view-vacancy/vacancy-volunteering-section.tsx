@@ -5,25 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { VacancyNoDetailsState } from '@/views/vacancies/components/view-vacancy/vacancy-no-details-state';
 import { VacancyView } from '@/views/vacancies/components/view-vacancy/vacancy-view';
 import type { VacancyViewModel } from '@/views/vacancies/types';
-import { parseLocalDate } from '@/views/vacancies/utils/date-timezone-safe';
-
-import { format } from 'date-fns';
-
-function formatDisplayDate(dateStr?: string): string {
-  if (!dateStr) return '';
-  const d = parseLocalDate(dateStr);
-  if (!d) return '';
-  return format(d, 'do MMM yyyy');
-}
-
-function formatDateRange(startDate?: string, endDate?: string): string {
-  const start = formatDisplayDate(startDate);
-  const end = formatDisplayDate(endDate);
-  if (start && end) return `${start} - ${end}`;
-  if (start) return `${start} - Present`;
-  if (end) return `Until ${end}`;
-  return '';
-}
+import { formatDateRange } from '@/views/vacancies/utils/format-date-range';
 
 function VacancyVolunteeringSection({
   preferredVolunteering,
@@ -61,7 +43,7 @@ function VacancyVolunteeringSection({
                 />
                 <div className="flex items-center gap-1 text-sm">
                   <Clock size={20} className="text-slate-600" variant="Bold" />
-                  <span className="font-semibold text-slate-900">
+                  <span className="font-semibold text-slate-600">
                     {formatDateRange(entry.startDate, entry.endDate)}
                   </span>
                 </div>

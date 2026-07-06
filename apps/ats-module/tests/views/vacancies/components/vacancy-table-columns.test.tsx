@@ -23,8 +23,19 @@ vi.mock('@/views/vacancies', async importOriginal => {
 });
 
 vi.mock('@/views/vacancies/components/vacancy-active-toggle', () => ({
-  default: ({ isActive }: { isActive: boolean }) => (
-    <div data-testid="active-toggle">{isActive ? 'active' : 'inactive'}</div>
+  default: ({
+    isActive,
+    disabled,
+  }: {
+    isActive: boolean;
+    disabled?: boolean;
+  }) => (
+    <div
+      data-testid="active-toggle"
+      data-disabled={disabled ? 'true' : 'false'}
+    >
+      {isActive ? 'active' : 'inactive'}
+    </div>
   ),
 }));
 
@@ -39,6 +50,8 @@ const onSort = vi.fn();
 const onView = vi.fn();
 const onEdit = vi.fn();
 const onDelete = vi.fn();
+const onMakeACopy = vi.fn();
+const onToggleActive = vi.fn();
 
 const sampleRow: VacancyTableColumn = {
   vacancyId: 'f4e3d2c1-b0a9-8f7e-6d5c-4b3a2f1e0d9c',
@@ -79,6 +92,8 @@ function TableWrapper({
     onView,
     onEdit,
     onDelete,
+    onMakeACopy,
+    onToggleActive,
     t,
   });
   const table = useReactTable({
@@ -131,6 +146,8 @@ describe('createVacancyColumns', () => {
       onView,
       onEdit,
       onDelete,
+      onMakeACopy,
+      onToggleActive,
       t,
     });
     expect(cols).toHaveLength(17);
@@ -144,6 +161,8 @@ describe('createVacancyColumns', () => {
       onView,
       onEdit,
       onDelete,
+      onMakeACopy,
+      onToggleActive,
       t,
     });
     const ids = cols.map(
@@ -179,6 +198,44 @@ describe('createVacancyColumns', () => {
     render(<TableWrapper data={[sampleRow]} />);
     expect(screen.getByTestId('status-badge')).toBeInTheDocument();
     expect(screen.getByTestId('active-toggle')).toBeInTheDocument();
+  });
+
+  it('renders an inactive toggle for the ONHOLD API enum status', () => {
+    render(<TableWrapper data={[{ ...sampleRow, status: 'ONHOLD' }]} />);
+    expect(screen.getByTestId('active-toggle')).toHaveTextContent('inactive');
+  });
+
+  it('renders an active toggle for LIVE status', () => {
+    render(<TableWrapper data={[{ ...sampleRow, status: 'LIVE' }]} />);
+    expect(screen.getByTestId('active-toggle')).toHaveTextContent('active');
+  });
+
+  it('renders an enabled toggle for LIVE and ONHOLD statuses', () => {
+    const { rerender } = render(
+      <TableWrapper data={[{ ...sampleRow, status: 'LIVE' }]} />
+    );
+    expect(screen.getByTestId('active-toggle')).toHaveAttribute(
+      'data-disabled',
+      'false'
+    );
+
+    rerender(<TableWrapper data={[{ ...sampleRow, status: 'ONHOLD' }]} />);
+    expect(screen.getByTestId('active-toggle')).toHaveAttribute(
+      'data-disabled',
+      'false'
+    );
+  });
+
+  it('renders a disabled toggle for non Live/On hold statuses', () => {
+    for (const status of ['DRAFT', 'UNPUBLISHED', 'EXPIRED']) {
+      const { unmount } = render(
+        <TableWrapper data={[{ ...sampleRow, status }]} />
+      );
+      const toggle = screen.getByTestId('active-toggle');
+      expect(toggle).toBeInTheDocument();
+      expect(toggle).toHaveAttribute('data-disabled', 'true');
+      unmount();
+    }
   });
 
   it('renders the actions cell', () => {

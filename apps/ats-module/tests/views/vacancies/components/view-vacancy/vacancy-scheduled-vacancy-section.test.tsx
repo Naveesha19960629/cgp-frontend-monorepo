@@ -27,13 +27,17 @@ describe('VacancyScheduledVacancySection', () => {
     expect(
       screen.getByText('vacancies.view.scheduledVacancy.expirationDateTime')
     ).toBeInTheDocument();
-    expect(
-      screen.getByText('vacancies.view.scheduledVacancy.vacancyLink')
-    ).toBeInTheDocument();
 
     expect(screen.getByText('12th Feb 2023 | 09 : 00 PM')).toBeInTheDocument();
     expect(screen.getByText('13th Feb 2023 | 09 : 00 PM')).toBeInTheDocument();
-    expect(screen.getByText('example.com/job-posting')).toBeInTheDocument();
+
+    // Vacancy link row is intentionally not rendered (matches Figma design).
+    expect(
+      screen.queryByText('vacancies.view.scheduledVacancy.vacancyLink')
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('example.com/job-posting')
+    ).not.toBeInTheDocument();
   });
 
   it('does not render when no scheduled vacancy data exists', () => {

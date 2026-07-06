@@ -501,14 +501,19 @@ const MultipleSelector = React.forwardRef<
           .flat()
           .map((o: Option) => o.value)
       );
+      const selectedValues = new Set(selected.map(s => s.value));
+      // Only surface a user-created option while it is actually selected.
+      // Otherwise a created entry that the consumer rerouted or replaced (e.g.
+      // enriched via a dialog into a different value/label) would linger as a
+      // stale duplicate row alongside the committed one.
       const newCreated = userCreatedOptions.filter(
-        co => !existingValues.has(co.value)
+        co => !existingValues.has(co.value) && selectedValues.has(co.value)
       );
       if (newCreated.length > 0) {
         merged[''] = [...(merged[''] || []), ...newCreated];
       }
       return merged;
-    }, [options, userCreatedOptions]);
+    }, [options, userCreatedOptions, selected]);
 
     const selectables = React.useMemo<GroupOption>(() => {
       if (keepSelectedInList) {

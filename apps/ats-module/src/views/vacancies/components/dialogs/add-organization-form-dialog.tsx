@@ -40,13 +40,16 @@ import { removeEmoji } from '@cgp/ui-kit/lib/utils';
 interface AddOrganizationFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  // Returns false when the organization was rejected as a duplicate by the
+  // consumer, so the dialog can surface the correct toast. Consumers without
+  // duplicate handling can return nothing (treated as a successful add).
   onOrganizationAdded: (organization: {
     id: string;
     name: string;
     location: string;
     organizationWebSite?: string;
     source: 'USER_CREATED';
-  }) => void;
+  }) => boolean | void;
   organizationName: string;
 }
 
@@ -88,14 +91,19 @@ export default function AddOrganizationFormDialog({
       organizationWebSite: data.organizationWebSite,
       source: 'USER_CREATED' as const,
     };
-    onOrganizationAdded(newOrganization);
-    SuccessToast({
-      title: t('organization.addSuccess.title', 'Successfully Added'),
-      description: t(
-        'organization.addSuccess.message',
-        'New organization has been successfully added.'
-      ),
-    });
+    const wasAdded = onOrganizationAdded(newOrganization);
+    // Only surface the success toast for a genuinely new organization.
+    // Duplicates (same name + location) are silently skipped — no success or
+    // error toast is shown.
+    if (wasAdded !== false) {
+      SuccessToast({
+        title: t('organization.addSuccess.title', 'Successfully Added'),
+        description: t(
+          'organization.addSuccess.message',
+          'New organization has been successfully added.'
+        ),
+      });
+    }
     onOpenChange(false);
   });
 

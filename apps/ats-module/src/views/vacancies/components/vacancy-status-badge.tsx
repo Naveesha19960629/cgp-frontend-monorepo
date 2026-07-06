@@ -13,7 +13,9 @@ export default function VacancyStatusBadge({
   applicantCount,
 }: VacancyStatusBadgeProps) {
   const { t } = useTranslation('ats');
-  const key = status.toLowerCase();
+  // API enum is ONHOLD (no underscore); on_hold is the config key
+  const normalized = status.toLowerCase();
+  const key = normalized === 'onhold' ? 'on_hold' : normalized;
   if (key === 'new') return null;
   const config =
     VACANCY_STATUS_CONFIG[key as keyof typeof VACANCY_STATUS_CONFIG] ??

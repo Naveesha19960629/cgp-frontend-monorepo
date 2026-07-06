@@ -515,7 +515,7 @@ export default function SecondaryEducationStep({
         {/* -- Informational Banner ------------------------------------------ */}
         <MessageBox
           fields={[
-            t('secondaryEducation.schoolName'),
+            t('secondaryEducation.school'),
             t('secondaryEducation.schoolLocation'),
             t('secondaryEducation.examination'),
             t('secondaryEducation.startDate'),
