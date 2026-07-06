@@ -69,6 +69,17 @@ interface DraftFormResolverDeps {
     locationId?: string;
     url?: string;
   }) => Promise<CreatePendingApiResponse>;
+  addExamination: (label: string) => Promise<CreatePendingApiResponse>;
+  addSecondaryAwardingBody: (
+    label: string
+  ) => Promise<CreatePendingApiResponse>;
+  addFieldOfStudy: (label: string) => Promise<CreatePendingApiResponse>;
+  addQualification: (label: string) => Promise<CreatePendingApiResponse>;
+  addLevelOfQualification: (label: string) => Promise<CreatePendingApiResponse>;
+  addSpecialization: (label: string) => Promise<CreatePendingApiResponse>;
+  addBatch: (label: string) => Promise<CreatePendingApiResponse>;
+  addDepartment: (label: string) => Promise<CreatePendingApiResponse>;
+  addFaculty: (label: string) => Promise<CreatePendingApiResponse>;
 }
 
 function isAlreadyExistsError(err: unknown): boolean {
@@ -357,6 +368,55 @@ async function searchTertiaryAwardingBodies(
   return toLookupResults(result.data.items.content);
 }
 
+async function searchExaminations(label: string): Promise<LookupResult[]> {
+  const result = await secondaryEducationService.getExaminations(label);
+  return toLookupResults(result.data.items.content);
+}
+
+async function searchSecondaryAwardingBodies(
+  label: string
+): Promise<LookupResult[]> {
+  const result = await secondaryEducationService.getAwardingBodies(label);
+  return toLookupResults(result.data.items.content);
+}
+
+async function searchFieldsOfStudy(label: string): Promise<LookupResult[]> {
+  const result = await secondaryEducationService.getFieldsOfStudy(label);
+  return toLookupResults(result.data.items.content);
+}
+
+async function searchQualifications(label: string): Promise<LookupResult[]> {
+  const result = await tertiaryEducationService.getQualifications(label);
+  return toLookupResults(result.data.items.content);
+}
+
+async function searchLevelOfQualifications(
+  label: string
+): Promise<LookupResult[]> {
+  const result = await tertiaryEducationService.getLevelOfQualifications(label);
+  return toLookupResults(result.data.items.content);
+}
+
+async function searchSpecializations(label: string): Promise<LookupResult[]> {
+  const result = await tertiaryEducationService.getSpecializations(label);
+  return toLookupResults(result.data.items.content);
+}
+
+async function searchBatches(label: string): Promise<LookupResult[]> {
+  const result = await tertiaryEducationService.getBatches(label);
+  return toLookupResults(result.data.items.content);
+}
+
+async function searchDepartments(label: string): Promise<LookupResult[]> {
+  const result = await tertiaryEducationService.getDepartments(label);
+  return toLookupResults(result.data.items.content);
+}
+
+async function searchFaculties(label: string): Promise<LookupResult[]> {
+  const result = await tertiaryEducationService.getFaculties(label);
+  return toLookupResults(result.data.items.content);
+}
+
 /**
  * Resolves one placeholder ref: try to create it, and on MST-403 ("already
  * exists in pending approvals" — e.g. because the same label was already
@@ -386,6 +446,33 @@ async function resolvePendingRef(
     }
     throw err;
   }
+}
+
+/**
+ * Resolves every USER_CREATED ref in a flat {source,id,name} array — the
+ * shape shared by every secondary/tertiary education field that's a plain
+ * freetext creatable multi-select (as opposed to the dialog-backed fields,
+ * which use resolvePendingRef directly since they need an id-prefix check).
+ */
+async function resolveRefEntries<
+  T extends { source: string; id: string; name?: string },
+>(
+  entries: T[],
+  createFn: (label: string) => Promise<CreatePendingApiResponse>,
+  searchFn: (label: string) => Promise<LookupResult[]>
+): Promise<T[]> {
+  return Promise.all(
+    entries.map(async ref => {
+      if (ref.source !== 'USER_CREATED') return ref;
+      const label = ref.name ?? ref.id;
+      const resolved = await resolvePendingRef(
+        label,
+        () => createFn(label),
+        searchFn
+      );
+      return { ...ref, ...resolved };
+    })
+  );
 }
 
 /**
@@ -425,9 +512,9 @@ async function resolveLicenseCertificateNames(
   );
 }
 
-async function resolveSecondaryEducationSchools(
+async function resolveSecondaryEducationContent(
   content: SecondaryEducationEntry[],
-  addSchool: DraftFormResolverDeps['addSchool']
+  deps: DraftFormResolverDeps
 ): Promise<SecondaryEducationEntry[]> {
   return Promise.all(
     content.map(async entry => ({
@@ -438,19 +525,34 @@ async function resolveSecondaryEducationSchools(
           const label = ref.name ?? ref.id;
           const resolved = await resolvePendingRef(
             label,
-            () => addSchool({ displayValue: label }),
+            () => deps.addSchool({ displayValue: label }),
             searchSchools
           );
           return { ...resolved, name: ref.name };
         })
       ),
+      examinations: await resolveRefEntries(
+        entry.examinations,
+        deps.addExamination,
+        searchExaminations
+      ),
+      secondaryAwardingBody: await resolveRefEntries(
+        entry.secondaryAwardingBody,
+        deps.addSecondaryAwardingBody,
+        searchSecondaryAwardingBodies
+      ),
+      fieldsOfStudy: await resolveRefEntries(
+        entry.fieldsOfStudy,
+        deps.addFieldOfStudy,
+        searchFieldsOfStudy
+      ),
     }))
   );
 }
 
-async function resolveTertiaryEducationAwardingBodies(
+async function resolveTertiaryEducationContent(
   content: TertiaryEducationEntry[],
-  addTertiaryAwardingBody: DraftFormResolverDeps['addTertiaryAwardingBody']
+  deps: DraftFormResolverDeps
 ): Promise<TertiaryEducationEntry[]> {
   return Promise.all(
     content.map(async entry => ({
@@ -461,11 +563,37 @@ async function resolveTertiaryEducationAwardingBodies(
           const label = ref.name ?? ref.id;
           const resolved = await resolvePendingRef(
             label,
-            () => addTertiaryAwardingBody({ displayValue: label }),
+            () => deps.addTertiaryAwardingBody({ displayValue: label }),
             searchTertiaryAwardingBodies
           );
           return { ...resolved, name: ref.name };
         })
+      ),
+      qualificationName: await resolveRefEntries(
+        entry.qualificationName,
+        deps.addQualification,
+        searchQualifications
+      ),
+      levelOfQualification: await resolveRefEntries(
+        entry.levelOfQualification,
+        deps.addLevelOfQualification,
+        searchLevelOfQualifications
+      ),
+      specialization: await resolveRefEntries(
+        entry.specialization,
+        deps.addSpecialization,
+        searchSpecializations
+      ),
+      batch: await resolveRefEntries(entry.batch, deps.addBatch, searchBatches),
+      department: await resolveRefEntries(
+        entry.department,
+        deps.addDepartment,
+        searchDepartments
+      ),
+      faculty: await resolveRefEntries(
+        entry.faculty,
+        deps.addFaculty,
+        searchFaculties
       ),
     }))
   );
@@ -570,9 +698,9 @@ async function resolveDraftUserCreatedEntries(
     resolvedForm.secondaryEducation = [
       {
         ...firstSecondaryEducation,
-        content: await resolveSecondaryEducationSchools(
+        content: await resolveSecondaryEducationContent(
           firstSecondaryEducation.content,
-          deps.addSchool
+          deps
         ),
       },
       ...restSecondaryEducation,
@@ -585,9 +713,9 @@ async function resolveDraftUserCreatedEntries(
     resolvedForm.tertiaryEducation = [
       {
         ...firstTertiaryEducation,
-        content: await resolveTertiaryEducationAwardingBodies(
+        content: await resolveTertiaryEducationContent(
           firstTertiaryEducation.content,
-          deps.addTertiaryAwardingBody
+          deps
         ),
       },
       ...restTertiaryEducation,

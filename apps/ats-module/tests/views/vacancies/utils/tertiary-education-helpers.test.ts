@@ -132,7 +132,7 @@ describe('toTertiaryEducationPayload', () => {
     });
   });
 
-  it('filters out items whose value equals their label (pending creatable items not yet resolved)', () => {
+  it('tags items whose value equals their label as USER_CREATED instead of dropping them (pending creatable items not yet resolved)', () => {
     const result = toTertiaryEducationPayload({
       isEnabled: true,
       dataTakenFromCandidate: false,
@@ -151,8 +151,13 @@ describe('toTertiaryEducationPayload', () => {
       ],
     });
 
-    expect(result[0].content[0].qualificationName).toHaveLength(1);
+    expect(result[0].content[0].qualificationName).toHaveLength(2);
     expect(result[0].content[0].qualificationName[0].id).toBe('q-uuid');
+    expect(result[0].content[0].qualificationName[1]).toEqual({
+      id: 'Custom Qualification',
+      source: 'USER_CREATED',
+      name: 'Custom Qualification',
+    });
   });
 
   it('preserves grade string', () => {

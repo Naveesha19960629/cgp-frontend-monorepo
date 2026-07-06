@@ -38,7 +38,13 @@ export default function ScheduleVacancyStep({
   const scheduleToOnhold =
     (location.state as { scheduleToOnhold?: boolean } | null)
       ?.scheduleToOnhold ?? false;
-  const { form, setForm, onCancel, stepPersistRef } = useVacancyForm();
+  const {
+    form,
+    setForm,
+    onCancel,
+    stepPersistRef,
+    resolveFormUserCreatedEntries,
+  } = useVacancyForm();
 
   const {
     control,
@@ -209,7 +215,11 @@ export default function ScheduleVacancyStep({
 
     try {
       const schedule = toScheduleVacancyPayload(values);
-      const payloadForm = { ...form, schedule };
+      const payloadForm = await resolveFormUserCreatedEntries({
+        ...form,
+        schedule,
+      });
+      setForm(payloadForm);
 
       if (id) {
         const existingStatus = scheduleToOnhold
@@ -224,7 +234,7 @@ export default function ScheduleVacancyStep({
         });
       } else {
         await createVacancy({
-          form: { ...form, schedule },
+          form: payloadForm,
           status: targetApiStatus,
         });
       }
