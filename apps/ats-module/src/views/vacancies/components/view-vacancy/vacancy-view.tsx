@@ -70,7 +70,11 @@ function Tags({ values }: { values: string[] }) {
   return (
     <div className="flex flex-wrap gap-3">
       {values.map(value => (
-        <Badge key={value} variant="chip">
+        <Badge
+          key={value}
+          variant="chip"
+          className="break-all whitespace-normal"
+        >
           {value}
         </Badge>
       ))}
