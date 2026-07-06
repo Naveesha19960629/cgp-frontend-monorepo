@@ -1,3 +1,5 @@
+import { Loader2 } from 'lucide-react';
+
 import { ArrowLeft2 } from 'iconsax-reactjs';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -40,7 +42,13 @@ export default function ScheduleVacancyStep({
   const scheduleToOnhold =
     (location.state as { scheduleToOnhold?: boolean } | null)
       ?.scheduleToOnhold ?? false;
-  const { form, setForm, onCancel, stepPersistRef } = useVacancyForm();
+  const {
+    form,
+    setForm,
+    onCancel,
+    stepPersistRef,
+    resolveFormUserCreatedEntries,
+  } = useVacancyForm();
 
   const {
     control,
@@ -121,6 +129,7 @@ export default function ScheduleVacancyStep({
   const { mutateAsync: createVacancy, isPending } = useCreateVacancyMutation();
   const { mutateAsync: updateVacancy, isPending: isUpdating } =
     useUpdateVacancyMutation();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const isCreateAction =
     !id || form.status === 'new' || form.status === 'draft';
@@ -218,9 +227,14 @@ export default function ScheduleVacancyStep({
     const targetStatus = publishAt <= new Date() ? 'live' : 'unpublished';
     const targetApiStatus = targetStatus === 'live' ? 'LIVE' : 'UNPUBLISHED';
 
+    setIsSubmitting(true);
     try {
       const schedule = toScheduleVacancyPayload(values);
-      const payloadForm = { ...form, schedule };
+      const payloadForm = await resolveFormUserCreatedEntries({
+        ...form,
+        schedule,
+      });
+      setForm(payloadForm);
 
       if (id) {
         const existingStatus = scheduleToOnhold
@@ -235,7 +249,7 @@ export default function ScheduleVacancyStep({
         });
       } else {
         await createVacancy({
-          form: { ...form, schedule },
+          form: payloadForm,
           status: targetApiStatus,
         });
       }
@@ -258,6 +272,8 @@ export default function ScheduleVacancyStep({
         title: t('scheduleVacancy.notifications.apiErrorTitle'),
         description: t('scheduleVacancy.notifications.apiErrorMessage'),
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -460,12 +476,19 @@ export default function ScheduleVacancyStep({
           className="h-12 w-48"
           type="button"
           disabled={
-            isPending || isUpdating || !isValid || hasPastScheduleDateTime
+            isSubmitting ||
+            isPending ||
+            isUpdating ||
+            !isValid ||
+            hasPastScheduleDateTime
           }
           onClick={() => {
             handleSubmit(onValid, onInvalid)().catch(() => {});
           }}
         >
+          {(isSubmitting || isPending || isUpdating) && (
+            <Loader2 className="size-4 animate-spin" />
+          )}
           {isCreateAction
             ? t('scheduleVacancy.create')
             : t('scheduleVacancy.update')}

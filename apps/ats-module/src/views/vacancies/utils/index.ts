@@ -24,6 +24,8 @@ export {
   isUrlFormatValid,
 } from '@/views/vacancies/utils/url-validation';
 export { resolveUserCreatedOptions } from '@/views/vacancies/utils/job-requirements-form-helpers';
+export { resolveDraftUserCreatedEntries } from '@/views/vacancies/utils/resolve-draft-form';
+export type { DraftFormResolverDeps } from '@/views/vacancies/utils/resolve-draft-form';
 export {
   formatDisplayDateTime,
   to24HourTime,

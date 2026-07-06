@@ -143,6 +143,9 @@ describe('ScheduleVacancyStep', () => {
   const mockStepPersistRef: { current: (() => void) | null } = {
     current: null,
   };
+  const mockResolveFormUserCreatedEntries = vi.fn((form: unknown) =>
+    Promise.resolve(form)
+  );
 
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false } },
@@ -162,6 +165,7 @@ describe('ScheduleVacancyStep', () => {
       setForm: mockSetForm,
       onCancel: mockOnCancel,
       stepPersistRef: mockStepPersistRef,
+      resolveFormUserCreatedEntries: mockResolveFormUserCreatedEntries,
       ...overrides,
     } as unknown as ReturnType<typeof useVacancyForm>);
   };

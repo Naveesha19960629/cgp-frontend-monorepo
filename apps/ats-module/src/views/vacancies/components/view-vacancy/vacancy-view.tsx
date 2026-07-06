@@ -55,7 +55,7 @@ function Grid({ children }: { children: ReactNode }) {
 
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex min-w-0 flex-col gap-3">
       <p className="text-sm font-semibold text-slate-600">{label}</p>
       {children}
     </div>
@@ -70,11 +70,7 @@ function Tags({ values }: { values: string[] }) {
   return (
     <div className="flex flex-wrap gap-3">
       {values.map(value => (
-        <Badge
-          key={value}
-          variant="chip"
-          className="break-all whitespace-normal"
-        >
+        <Badge key={value} variant="chip" className="min-w-0">
           {value}
         </Badge>
       ))}
