@@ -2,7 +2,7 @@
 
 A monorepo for CGP frontend applications, managed with [Nx](https://nx.dev) and [pnpm](https://pnpm.io) workspaces.
 
----
+--- 
 
 ## Table of Contents
 

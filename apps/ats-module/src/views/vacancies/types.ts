@@ -1049,6 +1049,15 @@ interface VacancyToggleStatusDialogProps {
   isToggling?: boolean;
 }
 
+interface VacancyOnholdUpdateDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onConfirm: () => void;
+  isPublishDateChanged: boolean;
+  hasApplicants: boolean;
+  isConfirming?: boolean;
+}
+
 interface VacancyTableColumn {
   vacancyId: string;
   title: string;
@@ -1923,6 +1932,7 @@ export type {
   VacancyToggleAction,
   VacancyToggleActiveData,
   VacancyToggleStatusDialogProps,
+  VacancyOnholdUpdateDialogProps,
   VacancyDetailJobRequirementData,
   VacancyDetailPatentEntry,
   VacancyDetailData,
