@@ -1,15 +1,17 @@
 import { ArrowLeft2 } from 'iconsax-reactjs';
 
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Controller } from 'react-hook-form';
 import type { FieldErrors } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
+import { VacancyOnholdUpdateDialog } from '@/views/vacancies/components';
 import VacancyStatusBadge from '@/views/vacancies/components/vacancy-status-badge';
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import {
   type ScheduleVacancyFormValues,
+  parseBackendDatetime,
   toScheduleVacancyPayload,
   useCreateVacancyMutation,
   useScheduleVacancyForm,
@@ -68,6 +70,23 @@ export default function ScheduleVacancyStep({
     );
   }, [publishDate, publishTime, expirationDate, expirationTime, form.schedule]);
 
+  const isPublishDateChanged = useMemo(() => {
+    if (!form.schedule?.schedulePublishAt) return true;
+    if (!publishDate || !publishTime) return false;
+
+    // Compare as timestamps to avoid format mismatches between the stored
+    // value (may be 24-hour ISO from the API) and the form's 12-hour AM/PM.
+    const saved = parseBackendDatetime(form.schedule.schedulePublishAt);
+    const savedTs = new Date(`${saved.date}T${to24HourTime(saved.time)}`);
+    const currentTs = new Date(`${publishDate}T${to24HourTime(publishTime)}`);
+
+    if (Number.isNaN(savedTs.getTime()) || Number.isNaN(currentTs.getTime())) {
+      return true;
+    }
+
+    return currentTs.getTime() !== savedTs.getTime();
+  }, [publishDate, publishTime, form.schedule]);
+
   const hasPastScheduleDateTime = useMemo(() => {
     if (!isScheduleChanged) {
       return false;
@@ -105,6 +124,14 @@ export default function ScheduleVacancyStep({
 
   const isCreateAction =
     !id || form.status === 'new' || form.status === 'draft';
+
+  const isOnholdVacancy = form.status === 'on_hold';
+  const isOnholdWithApplicants =
+    isOnholdVacancy && (form.applicantCount ?? 0) > 0;
+
+  const [showOnholdDialog, setShowOnholdDialog] = useState(false);
+  const [pendingValues, setPendingValues] =
+    useState<ScheduleVacancyFormValues | null>(null);
 
   const persistScheduleToContext = useCallback(
     (values?: ScheduleVacancyFormValues) => {
@@ -183,27 +210,11 @@ export default function ScheduleVacancyStep({
     }
   };
 
-  const onValid = async (values: ScheduleVacancyFormValues) => {
+  const executeUpdate = async (values: ScheduleVacancyFormValues) => {
+    // LIVE if publish time is now or in the past, UNPUBLISHED if future
     const publishAt = new Date(
       `${values.schedulePublishDate}T${to24HourTime(values.schedulePublishTime)}`
     );
-    const expirationAt = new Date(
-      `${values.expirationDate}T${to24HourTime(values.expirationTime)}`
-    );
-
-    if (isScheduleChanged) {
-      const now = new Date();
-
-      if (publishAt < now || expirationAt < now) {
-        ErrorToast({
-          title: t('scheduleVacancy.notifications.validationErrorTitle'),
-          description: t('scheduleVacancy.notifications.pastDateTimeMessage'),
-        });
-        return;
-      }
-    }
-
-    // LIVE if publish time is now or in the past, UNPUBLISHED if future
     const targetStatus = publishAt <= new Date() ? 'live' : 'unpublished';
     const targetApiStatus = targetStatus === 'live' ? 'LIVE' : 'UNPUBLISHED';
 
@@ -241,13 +252,49 @@ export default function ScheduleVacancyStep({
         ),
       });
       onSubmit();
-      navigate('/dashboard/ats/vacancies');
+      void navigate('/dashboard/ats/vacancies');
     } catch {
       ErrorToast({
         title: t('scheduleVacancy.notifications.apiErrorTitle'),
         description: t('scheduleVacancy.notifications.apiErrorMessage'),
       });
     }
+  };
+
+  const onValid = async (values: ScheduleVacancyFormValues) => {
+    if (isScheduleChanged) {
+      const now = new Date();
+      const publishAt = new Date(
+        `${values.schedulePublishDate}T${to24HourTime(values.schedulePublishTime)}`
+      );
+      const expirationAt = new Date(
+        `${values.expirationDate}T${to24HourTime(values.expirationTime)}`
+      );
+
+      if (publishAt < now || expirationAt < now) {
+        ErrorToast({
+          title: t('scheduleVacancy.notifications.validationErrorTitle'),
+          description: t('scheduleVacancy.notifications.pastDateTimeMessage'),
+        });
+        return;
+      }
+    }
+
+    // For all onhold vacancies, show confirmation dialog first
+    if (!isCreateAction && isOnholdVacancy) {
+      setPendingValues(values);
+      setShowOnholdDialog(true);
+      return;
+    }
+
+    await executeUpdate(values);
+  };
+
+  const handleOnholdConfirm = async () => {
+    if (!pendingValues) return;
+    setShowOnholdDialog(false);
+    await executeUpdate(pendingValues);
+    setPendingValues(null);
   };
 
   const handleBack = () => {
@@ -424,6 +471,18 @@ export default function ScheduleVacancyStep({
             : t('scheduleVacancy.update')}
         </Button>
       </div>
+
+      {/* ── Onhold update confirmation dialog ───────────────────────── */}
+      <VacancyOnholdUpdateDialog
+        open={showOnholdDialog}
+        onOpenChange={setShowOnholdDialog}
+        onConfirm={() => {
+          void handleOnholdConfirm();
+        }}
+        isPublishDateChanged={isPublishDateChanged}
+        hasApplicants={isOnholdWithApplicants}
+        isConfirming={isPending || isUpdating}
+      />
     </div>
   );
 }
