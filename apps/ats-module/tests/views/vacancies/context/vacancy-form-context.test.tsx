@@ -51,6 +51,7 @@ vi.mock('@/views/vacancies/utils', () => ({
   toCreateVacancyPayload: (...args: unknown[]) =>
     // @ts-expect-error - Return type is not compatible with the actual function, but it's sufficient for testing the context logic
     mockToCreateVacancyPayload(...args),
+  resolveDraftUserCreatedEntries: (form: unknown) => Promise.resolve(form),
 }));
 
 vi.mock('@cgp/ui-kit/components/custom-toast', () => ({

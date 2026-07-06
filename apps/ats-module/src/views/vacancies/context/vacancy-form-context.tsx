@@ -24,10 +24,28 @@ import {
   TertiaryEducationStep,
 } from '@/views/vacancies';
 import {
+  useAddCareerPathMutation,
+  useAddDisciplineMutation,
+  useAddJobTitleMutation,
+  useAddLicenseCertificateMutation,
+  useAddRoleMutation,
+  useAddSchoolMutation,
+  useAddTertiaryAwardingBodyMutation,
+  useCreateCareerPathMutation,
+  useCreateCauseMutation,
+  useCreateHobbyMutation,
+  useCreateIndustryMutation,
+  useCreateLanguageMutation,
+  useCreateOrganizationMutation,
+  useCreateSkillCareerPathMutation,
+  useCreateSocietyMutation,
+  useCreateSportLevelMutation,
+  useCreateSportMutation,
   useCreateVacancyMutation,
   useUpdateDraftVacancyMutation,
 } from '@/views/vacancies/hooks';
 import type { VacancyForm, VacancyStep } from '@/views/vacancies/types';
+import { resolveDraftUserCreatedEntries } from '@/views/vacancies/utils';
 
 import { ErrorToast, SuccessToast } from '@cgp/ui-kit/components/custom-toast';
 
@@ -275,6 +293,26 @@ function VacancyFormProvider({
   const navigate = useNavigate();
   const { mutateAsync: createVacancy } = useCreateVacancyMutation();
   const { mutateAsync: updateDraftVacancy } = useUpdateDraftVacancyMutation();
+  const { mutateAsync: addDiscipline } = useAddDisciplineMutation();
+  const { mutateAsync: addCareerPath } = useAddCareerPathMutation();
+  const { mutateAsync: addRole } = useAddRoleMutation();
+  const { mutateAsync: addJobTitle } = useAddJobTitleMutation();
+  const { mutateAsync: createIndustry } = useCreateIndustryMutation();
+  const { mutateAsync: createOrganization } = useCreateOrganizationMutation();
+  const { mutateAsync: createCause } = useCreateCauseMutation();
+  const { mutateAsync: createHobby } = useCreateHobbyMutation();
+  const { mutateAsync: createLanguage } = useCreateLanguageMutation();
+  const { mutateAsync: createSociety } = useCreateSocietyMutation();
+  const { mutateAsync: createSport } = useCreateSportMutation();
+  const { mutateAsync: createSportLevel } = useCreateSportLevelMutation();
+  const { mutateAsync: createCareerPath } = useCreateCareerPathMutation();
+  const { mutateAsync: createSkillCareerPath } =
+    useCreateSkillCareerPathMutation();
+  const { mutateAsync: addLicenseCertificate } =
+    useAddLicenseCertificateMutation();
+  const { mutateAsync: addSchool } = useAddSchoolMutation();
+  const { mutateAsync: addTertiaryAwardingBody } =
+    useAddTertiaryAwardingBodyMutation();
   const [form, setForm] = useState<VacancyForm>(DEFAULT_FORM);
   const [currentStepIndex, _setCurrentStepIndex] = useState(0);
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
@@ -415,6 +453,27 @@ function VacancyFormProvider({
           }
           draftForm = { ...form, ...stepValues };
         }
+
+        draftForm = await resolveDraftUserCreatedEntries(draftForm, {
+          addDiscipline,
+          addCareerPath,
+          addRole,
+          addJobTitle,
+          createIndustry,
+          createOrganization,
+          createCause,
+          createHobby,
+          createLanguage,
+          createSociety,
+          createSport,
+          createSportLevel,
+          createCareerPath,
+          createSkillCareerPath,
+          addLicenseCertificate,
+          addSchool,
+          addTertiaryAwardingBody,
+        });
+        setForm(draftForm);
 
         if (vacancyId) {
           await updateDraftVacancy({
