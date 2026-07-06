@@ -21,6 +21,7 @@ export { default as VacancyCreateStepperForm } from '@/views/vacancies/component
 export { default as StepDisableDialog } from '@/views/vacancies/components/step-disable-dialog';
 export { default as VacancyCancelDialog } from '@/views/vacancies/components/vacancy-cancel-dialog';
 export { default as VacancyDeleteDialog } from '@/views/vacancies/components/vacancy-delete-dialog';
+export { default as VacancyToggleStatusDialog } from '@/views/vacancies/components/vacancy-toggle-status-dialog';
 export { default as VacancyEditCancelDialog } from '@/views/vacancies/components/vacancy-edit-cancel-dialog';
 export { default as VacancyOnholdUpdateDialog } from '@/views/vacancies/components/vacancy-onhold-update-dialog';
 export { default as DataTableFacetedFilter } from '@/views/vacancies/components/data-table-faceted-filter';
@@ -34,5 +35,9 @@ export { default as VacancyActiveToggle } from '@/views/vacancies/components/vac
 export { default as VacancyTableEmptyState } from '@/views/vacancies/components/vacancy-table-empty-state';
 export { default as VacancySearchEmptyState } from '@/views/vacancies/components/vacancy-search-empty-state';
 export { default as VacancyLoadingState } from '@/views/vacancies/components/vacancy-loading-state';
+export { default as TemplateCard } from '@/views/vacancies/components/template-card';
+export { default as TemplatesToolbar } from '@/views/vacancies/components/templates-toolbar';
+export { default as TemplateEmptyState } from '@/views/vacancies/components/template-empty-state';
+export { default as TemplateSearchEmptyState } from '@/views/vacancies/components/template-search-empty-state';
 export * from '@/views/vacancies/components/view-vacancy';
 export * from '@/views/vacancies/components/dialogs';

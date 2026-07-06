@@ -104,7 +104,10 @@ function EditVacancyTitleStep() {
 
 function EditVacancyContent({ id }: { id: string | undefined }) {
   const { t } = useTranslation('ats');
+  const location = useLocation();
   const { keycloak, initialized } = useKeycloak();
+  const initialStep = (location.state as { initialStep?: string } | null)
+    ?.initialStep;
   const {
     isInitialStep,
     setIsInitialStep,
@@ -149,7 +152,14 @@ function EditVacancyContent({ id }: { id: string | undefined }) {
       initCompletedStepsFromForm(resolvedForm);
     }
 
-    if (typeof vacancyRecord.lastActiveStep === 'string') {
+    const requestedStepIndex = initialStep
+      ? VACANCY_STEPS.findIndex(step => step.key === initialStep)
+      : -1;
+    if (requestedStepIndex >= 0) {
+      // Deep link (e.g. Schedule from the toggle popup) lands on the requested step
+      setCurrentStepIndex(requestedStepIndex);
+      setIsInitialStep(false);
+    } else if (typeof vacancyRecord.lastActiveStep === 'string') {
       const stepIndex = VACANCY_STEPS.findIndex(
         step => step.key === vacancyRecord.lastActiveStep
       );
@@ -171,6 +181,7 @@ function EditVacancyContent({ id }: { id: string | undefined }) {
   }, [
     error,
     initCompletedStepsFromForm,
+    initialStep,
     isLoading,
     setCurrentStepIndex,
     setForm,

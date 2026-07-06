@@ -1,4 +1,5 @@
 export { useCreateIndustryMutation } from '@/views/vacancies/hooks/mutations/use-create-industry-mutation';
+export { useCreateTemplateMutation } from '@/views/vacancies/hooks/mutations/use-create-template-mutation';
 export { useCreateOrganizationMutation } from '@/views/vacancies/hooks/mutations/use-create-organization-mutation';
 export { useCreateSocietyMutation } from '@/views/vacancies/hooks/mutations/use-create-society-mutation';
 export { useAddSchoolMutation } from '@/views/vacancies/hooks/mutations/use-add-school-mutation';
@@ -29,3 +30,5 @@ export { useUpdateCandidateProfileBasicInformationsMutation } from '@/views/vaca
 export { useCreateSportMutation } from '@/views/vacancies/hooks/mutations/use-create-sport-mutation';
 export { useCreateSportLevelMutation } from '@/views/vacancies/hooks/mutations/use-create-sport-level-mutation';
 export { useDeleteVacancyMutation } from '@/views/vacancies/hooks/mutations/use-delete-vacancy-mutation';
+export { useDuplicateVacancyMutation } from '@/views/vacancies/hooks/mutations/use-duplicate-vacancy-mutation';
+export { useToggleVacancyStatusMutation } from '@/views/vacancies/hooks/mutations/use-toggle-vacancy-status-mutation';

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Controller } from 'react-hook-form';
 import type { FieldErrors } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { VacancyOnholdUpdateDialog } from '@/views/vacancies/components';
 import VacancyStatusBadge from '@/views/vacancies/components/vacancy-status-badge';
@@ -33,6 +33,13 @@ export default function ScheduleVacancyStep({
   const { t } = useTranslation('ats');
   const { id } = useParams<'id'>();
   const navigate = useNavigate();
+  const location = useLocation();
+  // Set when the recruiter reached this step via the Active/Inactive toggle's
+  // "Schedule" action — the vacancy must be updated as ONHOLD so the backend
+  // accepts the reschedule and auto-activates at the configured date.
+  const scheduleToOnhold =
+    (location.state as { scheduleToOnhold?: boolean } | null)
+      ?.scheduleToOnhold ?? false;
   const { form, setForm, onCancel, stepPersistRef } = useVacancyForm();
 
   const {
@@ -216,10 +223,15 @@ export default function ScheduleVacancyStep({
       const payloadForm = { ...form, schedule };
 
       if (id) {
+        const existingStatus = scheduleToOnhold
+          ? 'on_hold'
+          : isCreateAction
+            ? targetStatus
+            : form.status;
         await updateVacancy({
           id,
           form: payloadForm,
-          existingStatus: isCreateAction ? targetStatus : form.status,
+          existingStatus,
         });
       } else {
         await createVacancy({
@@ -305,7 +317,12 @@ export default function ScheduleVacancyStep({
         <h2 className="text-xl font-bold tracking-tight text-slate-900">
           {t('scheduleVacancy.title')}
         </h2>
-        {form.status ? <VacancyStatusBadge status={form.status} /> : null}
+        {(() => {
+          const displayStatus = scheduleToOnhold ? 'on_hold' : form.status;
+          return displayStatus ? (
+            <VacancyStatusBadge status={displayStatus} />
+          ) : null;
+        })()}
       </div>
 
       {/* ── Body ────────────────────────────────────────────────────── */}
