@@ -1,6 +1,8 @@
+import { Loader2 } from 'lucide-react';
+
 import { ArrowLeft2 } from 'iconsax-reactjs';
 
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Controller } from 'react-hook-form';
 import type { FieldErrors } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
@@ -108,6 +110,7 @@ export default function ScheduleVacancyStep({
   const { mutateAsync: createVacancy, isPending } = useCreateVacancyMutation();
   const { mutateAsync: updateVacancy, isPending: isUpdating } =
     useUpdateVacancyMutation();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const isCreateAction =
     !id || form.status === 'new' || form.status === 'draft';
@@ -213,6 +216,7 @@ export default function ScheduleVacancyStep({
     const targetStatus = publishAt <= new Date() ? 'live' : 'unpublished';
     const targetApiStatus = targetStatus === 'live' ? 'LIVE' : 'UNPUBLISHED';
 
+    setIsSubmitting(true);
     try {
       const schedule = toScheduleVacancyPayload(values);
       const payloadForm = await resolveFormUserCreatedEntries({
@@ -257,6 +261,8 @@ export default function ScheduleVacancyStep({
         title: t('scheduleVacancy.notifications.apiErrorTitle'),
         description: t('scheduleVacancy.notifications.apiErrorMessage'),
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -423,12 +429,19 @@ export default function ScheduleVacancyStep({
           className="h-12 w-48"
           type="button"
           disabled={
-            isPending || isUpdating || !isValid || hasPastScheduleDateTime
+            isSubmitting ||
+            isPending ||
+            isUpdating ||
+            !isValid ||
+            hasPastScheduleDateTime
           }
           onClick={() => {
             handleSubmit(onValid, onInvalid)().catch(() => {});
           }}
         >
+          {(isSubmitting || isPending || isUpdating) && (
+            <Loader2 className="size-4 animate-spin" />
+          )}
           {isCreateAction
             ? t('scheduleVacancy.create')
             : t('scheduleVacancy.update')}
