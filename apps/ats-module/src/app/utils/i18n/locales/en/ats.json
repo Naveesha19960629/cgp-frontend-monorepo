@@ -1264,6 +1264,18 @@
       "apiErrorMessage": "Some changes could not be saved. Please try again.",
       "networkErrorTitle": "Try Again",
       "networkErrorMessage": "Some changes could not be saved. Please retry."
+    },
+    "rescheduleConfirmDialog": {
+      "title": "Are you sure?",
+      "description": "Are you sure you want to update and reschedule this vacancy? It will go live again with the updated version.",
+      "yesButton": "Yes",
+      "noButton": "No"
+    },
+    "noRescheduleConfirmDialog": {
+      "title": "Are you sure?",
+      "description": "Are you sure you want to update this vacancy without rescheduling? The updated version will go live only after the vacancy is rescheduled.",
+      "yesButton": "Yes",
+      "noButton": "No"
     }
   },
   "vacancyOnholdUpdateDialog": {

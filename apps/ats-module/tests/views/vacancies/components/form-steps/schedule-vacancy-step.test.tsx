@@ -95,6 +95,56 @@ vi.mock('@/views/vacancies/components/vacancy-status-badge', () => ({
   ),
 }));
 
+vi.mock(
+  '@/views/vacancies/components/vacancy-reschedule-confirm-dialog',
+  () => ({
+    default: ({
+      open,
+      onConfirm,
+      onOpenChange,
+    }: {
+      open: boolean;
+      onConfirm: () => void;
+      onOpenChange: (open: boolean) => void;
+    }) =>
+      open ? (
+        <div data-testid="reschedule-confirm-dialog">
+          <button type="button" onClick={onConfirm}>
+            confirm-yes
+          </button>
+          <button type="button" onClick={() => onOpenChange(false)}>
+            confirm-no
+          </button>
+        </div>
+      ) : null,
+  })
+);
+
+vi.mock(
+  '@/views/vacancies/components/vacancy-no-reschedule-confirm-dialog',
+  () => ({
+    default: ({
+      open,
+      onConfirm,
+      onOpenChange,
+    }: {
+      open: boolean;
+      onConfirm: () => void;
+      onOpenChange: (open: boolean) => void;
+    }) =>
+      open ? (
+        <div data-testid="no-reschedule-confirm-dialog">
+          <button type="button" onClick={onConfirm}>
+            confirm-yes
+          </button>
+          <button type="button" onClick={() => onOpenChange(false)}>
+            confirm-no
+          </button>
+        </div>
+      ) : null,
+  })
+);
+
 vi.mock('@/views/vacancies/components/vacancy-onhold-update-dialog', () => ({
   default: ({
     open,
@@ -1189,6 +1239,297 @@ describe('ScheduleVacancyStep', () => {
       await waitFor(() => {
         expect(getCreateButton()).toBeDisabled();
       });
+    });
+  });
+
+  describe('expired vacancy confirmation dialogs', () => {
+    const expiredSchedule = {
+      schedulePublishAt: '2020-01-01T10:30:00 AM',
+      expirationAt: '2020-01-02T11:59:59 PM',
+    };
+
+    beforeEach(() => {
+      vi.mocked(useParams).mockReturnValue({ id: 'vacancy-123' });
+    });
+
+    it('enables Update button for expired vacancy even when existing dates are in the past', async () => {
+      mockVacancyForm({
+        form: { schedule: expiredSchedule, status: 'expired' },
+      });
+
+      renderComponent({ mode: 'edit' as const });
+
+      await waitFor(() => {
+        expect(getCreateButton()).not.toBeDisabled();
+      });
+    });
+
+    it('shows non-reschedule dialog when Update is clicked without any schedule changes', async () => {
+      mockVacancyForm({
+        form: { schedule: expiredSchedule, status: 'expired' },
+      });
+
+      renderComponent({ mode: 'edit' as const });
+
+      await waitFor(() => expect(getCreateButton()).not.toBeDisabled());
+      await userEvent.click(getCreateButton());
+
+      await waitFor(() => {
+        expect(
+          screen.getByTestId('no-reschedule-confirm-dialog')
+        ).toBeInTheDocument();
+      });
+      expect(
+        screen.queryByTestId('reschedule-confirm-dialog')
+      ).not.toBeInTheDocument();
+      expect(ErrorToast).not.toHaveBeenCalled();
+    });
+
+    it('shows non-reschedule dialog (not a past-date error) when the saved schedule is 24-hour ISO from the API and Update is clicked immediately with no edits', async () => {
+      // Regression test: the API returns 24-hour ISO ("...T10:30:00"), while
+      // the form always watches 12-hour AM/PM values. Comparing those two
+      // formats as raw strings falsely flagged the schedule as "changed" on
+      // the very first render (before any user edit), which ran the
+      // past-date validator and showed an ErrorToast instead of the
+      // no-reschedule confirmation dialog.
+      mockVacancyForm({
+        form: {
+          schedule: {
+            schedulePublishAt: '2020-01-01T10:30:00',
+            expirationAt: '2020-01-02T23:59:59',
+          },
+          status: 'expired',
+        },
+      });
+
+      renderComponent({ mode: 'edit' as const });
+
+      await waitFor(() => expect(getCreateButton()).not.toBeDisabled());
+      await userEvent.click(getCreateButton());
+
+      await waitFor(() => {
+        expect(
+          screen.getByTestId('no-reschedule-confirm-dialog')
+        ).toBeInTheDocument();
+      });
+      expect(
+        screen.queryByTestId('reschedule-confirm-dialog')
+      ).not.toBeInTheDocument();
+      expect(ErrorToast).not.toHaveBeenCalled();
+    });
+
+    it('shows reschedule dialog when publish date is changed to a future date', async () => {
+      mockVacancyForm({
+        form: { schedule: expiredSchedule, status: 'expired' },
+      });
+
+      renderComponent({ mode: 'edit' as const });
+
+      fillPublish('2099-12-25', '10:00:00 AM');
+      fillExpiration('2099-12-26', '11:59:59 PM');
+
+      await waitFor(() => expect(getCreateButton()).not.toBeDisabled());
+      await userEvent.click(getCreateButton());
+
+      await waitFor(() => {
+        expect(
+          screen.getByTestId('reschedule-confirm-dialog')
+        ).toBeInTheDocument();
+      });
+      expect(
+        screen.queryByTestId('no-reschedule-confirm-dialog')
+      ).not.toBeInTheDocument();
+      expect(ErrorToast).not.toHaveBeenCalled();
+    });
+
+    it('shows ErrorToast (not a dialog) when changed dates are in the past', async () => {
+      mockVacancyForm({
+        form: { schedule: expiredSchedule, status: 'expired' },
+      });
+
+      renderComponent({ mode: 'edit' as const });
+
+      fillPublish('2019-01-01', '10:00:00 AM');
+      fillExpiration('2019-01-02', '11:59:59 PM');
+
+      await waitFor(() => expect(getCreateButton()).not.toBeDisabled());
+      await userEvent.click(getCreateButton());
+
+      await waitFor(() => {
+        expect(ErrorToast).toHaveBeenCalledWith(
+          expect.objectContaining({
+            title: 'scheduleVacancy.notifications.validationErrorTitle',
+            description: 'scheduleVacancy.notifications.pastDateTimeMessage',
+          })
+        );
+      });
+      expect(
+        screen.queryByTestId('reschedule-confirm-dialog')
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId('no-reschedule-confirm-dialog')
+      ).not.toBeInTheDocument();
+    });
+
+    it('calls updateVacancy keeping expired status when Yes is clicked on non-reschedule dialog', async () => {
+      mockUpdateVacancy.mockResolvedValueOnce(undefined);
+      mockVacancyForm({
+        form: { schedule: expiredSchedule, status: 'expired' },
+      });
+
+      renderComponent({ mode: 'edit' as const });
+
+      await waitFor(() => expect(getCreateButton()).not.toBeDisabled());
+      await userEvent.click(getCreateButton());
+
+      await waitFor(() => {
+        expect(
+          screen.getByTestId('no-reschedule-confirm-dialog')
+        ).toBeInTheDocument();
+      });
+
+      await userEvent.click(
+        screen.getByRole('button', { name: 'confirm-yes' })
+      );
+
+      await waitFor(() => {
+        expect(mockUpdateVacancy).toHaveBeenCalledWith(
+          expect.objectContaining({
+            id: 'vacancy-123',
+            existingStatus: 'expired',
+          })
+        );
+        expect(SuccessToast).toHaveBeenCalledWith(
+          expect.objectContaining({
+            title: 'scheduleVacancy.notifications.updateSuccessTitle',
+          })
+        );
+      });
+    });
+
+    it('calls updateVacancy with on_hold status when Yes is clicked on reschedule dialog', async () => {
+      mockUpdateVacancy.mockResolvedValueOnce(undefined);
+      mockVacancyForm({
+        form: { schedule: expiredSchedule, status: 'expired' },
+      });
+
+      renderComponent({ mode: 'edit' as const });
+
+      fillPublish('2099-12-25', '10:00:00 AM');
+      fillExpiration('2099-12-26', '11:59:59 PM');
+
+      await waitFor(() => expect(getCreateButton()).not.toBeDisabled());
+      await userEvent.click(getCreateButton());
+
+      await waitFor(() => {
+        expect(
+          screen.getByTestId('reschedule-confirm-dialog')
+        ).toBeInTheDocument();
+      });
+
+      await userEvent.click(
+        screen.getByRole('button', { name: 'confirm-yes' })
+      );
+
+      await waitFor(() => {
+        expect(mockUpdateVacancy).toHaveBeenCalledWith(
+          expect.objectContaining({
+            id: 'vacancy-123',
+            existingStatus: 'on_hold',
+          })
+        );
+        expect(SuccessToast).toHaveBeenCalledWith(
+          expect.objectContaining({
+            title: 'scheduleVacancy.notifications.updateSuccessTitle',
+          })
+        );
+      });
+    });
+
+    it('closes non-reschedule dialog and does not call updateVacancy when No is clicked', async () => {
+      mockVacancyForm({
+        form: { schedule: expiredSchedule, status: 'expired' },
+      });
+
+      renderComponent({ mode: 'edit' as const });
+
+      await waitFor(() => expect(getCreateButton()).not.toBeDisabled());
+      await userEvent.click(getCreateButton());
+
+      await waitFor(() => {
+        expect(
+          screen.getByTestId('no-reschedule-confirm-dialog')
+        ).toBeInTheDocument();
+      });
+
+      await userEvent.click(screen.getByRole('button', { name: 'confirm-no' }));
+
+      await waitFor(() => {
+        expect(
+          screen.queryByTestId('no-reschedule-confirm-dialog')
+        ).not.toBeInTheDocument();
+      });
+      expect(mockUpdateVacancy).not.toHaveBeenCalled();
+    });
+
+    it('closes reschedule dialog and does not call updateVacancy when No is clicked', async () => {
+      mockVacancyForm({
+        form: { schedule: expiredSchedule, status: 'expired' },
+      });
+
+      renderComponent({ mode: 'edit' as const });
+
+      fillPublish('2099-12-25', '10:00:00 AM');
+      fillExpiration('2099-12-26', '11:59:59 PM');
+
+      await waitFor(() => expect(getCreateButton()).not.toBeDisabled());
+      await userEvent.click(getCreateButton());
+
+      await waitFor(() => {
+        expect(
+          screen.getByTestId('reschedule-confirm-dialog')
+        ).toBeInTheDocument();
+      });
+
+      await userEvent.click(screen.getByRole('button', { name: 'confirm-no' }));
+
+      await waitFor(() => {
+        expect(
+          screen.queryByTestId('reschedule-confirm-dialog')
+        ).not.toBeInTheDocument();
+      });
+      expect(mockUpdateVacancy).not.toHaveBeenCalled();
+    });
+
+    it('shows ErrorToast on API error after confirming update', async () => {
+      mockUpdateVacancy.mockRejectedValueOnce(new Error('API error'));
+      mockVacancyForm({
+        form: { schedule: expiredSchedule, status: 'expired' },
+      });
+
+      renderComponent({ mode: 'edit' as const });
+
+      await waitFor(() => expect(getCreateButton()).not.toBeDisabled());
+      await userEvent.click(getCreateButton());
+
+      await waitFor(() => {
+        expect(
+          screen.getByTestId('no-reschedule-confirm-dialog')
+        ).toBeInTheDocument();
+      });
+
+      await userEvent.click(
+        screen.getByRole('button', { name: 'confirm-yes' })
+      );
+
+      await waitFor(() => {
+        expect(ErrorToast).toHaveBeenCalledWith(
+          expect.objectContaining({
+            title: 'scheduleVacancy.notifications.apiErrorTitle',
+          })
+        );
+      });
+      expect(SuccessToast).not.toHaveBeenCalled();
     });
   });
 });

@@ -9,6 +9,8 @@ import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { VacancyOnholdUpdateDialog } from '@/views/vacancies/components';
+import VacancyNoRescheduleConfirmDialog from '@/views/vacancies/components/vacancy-no-reschedule-confirm-dialog';
+import VacancyRescheduleConfirmDialog from '@/views/vacancies/components/vacancy-reschedule-confirm-dialog';
 import VacancyStatusBadge from '@/views/vacancies/components/vacancy-status-badge';
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import {
@@ -63,18 +65,44 @@ export default function ScheduleVacancyStep({
   const expirationTime = watch('expirationTime');
 
   const isScheduleChanged = useMemo(() => {
-    if (!form.schedule) return true;
+    if (!form.schedule?.schedulePublishAt || !form.schedule?.expirationAt) {
+      return true;
+    }
+    if (!publishDate || !publishTime || !expirationDate || !expirationTime) {
+      return true;
+    }
 
-    const currentSchedule = toScheduleVacancyPayload({
-      schedulePublishDate: publishDate,
-      schedulePublishTime: publishTime,
-      expirationDate,
-      expirationTime,
-    });
+    // Compare as timestamps, not raw strings — the stored value may be
+    // 24-hour ISO from the API while the form always watches 12-hour AM/PM,
+    // so a direct string comparison flags "changed" even with no edits.
+    const savedPublish = parseBackendDatetime(form.schedule.schedulePublishAt);
+    const savedExpiration = parseBackendDatetime(form.schedule.expirationAt);
+
+    const savedPublishTs = new Date(
+      `${savedPublish.date}T${to24HourTime(savedPublish.time)}`
+    );
+    const savedExpirationTs = new Date(
+      `${savedExpiration.date}T${to24HourTime(savedExpiration.time)}`
+    );
+    const currentPublishTs = new Date(
+      `${publishDate}T${to24HourTime(publishTime)}`
+    );
+    const currentExpirationTs = new Date(
+      `${expirationDate}T${to24HourTime(expirationTime)}`
+    );
+
+    if (
+      Number.isNaN(savedPublishTs.getTime()) ||
+      Number.isNaN(savedExpirationTs.getTime()) ||
+      Number.isNaN(currentPublishTs.getTime()) ||
+      Number.isNaN(currentExpirationTs.getTime())
+    ) {
+      return true;
+    }
 
     return (
-      currentSchedule.schedulePublishAt !== form.schedule.schedulePublishAt ||
-      currentSchedule.expirationAt !== form.schedule.expirationAt
+      currentPublishTs.getTime() !== savedPublishTs.getTime() ||
+      currentExpirationTs.getTime() !== savedExpirationTs.getTime()
     );
   }, [publishDate, publishTime, expirationDate, expirationTime, form.schedule]);
 
@@ -96,6 +124,8 @@ export default function ScheduleVacancyStep({
   }, [publishDate, publishTime, form.schedule]);
 
   const hasPastScheduleDateTime = useMemo(() => {
+    if (form.status === 'expired') return false;
+
     if (!isScheduleChanged) {
       return false;
     }
@@ -119,6 +149,7 @@ export default function ScheduleVacancyStep({
     const now = new Date();
     return publishAt < now || expirationAt < now;
   }, [
+    form.status,
     publishDate,
     publishTime,
     expirationDate,
@@ -138,6 +169,9 @@ export default function ScheduleVacancyStep({
   const isOnholdWithApplicants =
     isOnholdVacancy && (form.applicantCount ?? 0) > 0;
 
+  const [confirmDialog, setConfirmDialog] = useState<
+    'reschedule' | 'noReschedule' | null
+  >(null);
   const [showOnholdDialog, setShowOnholdDialog] = useState(false);
   const [pendingValues, setPendingValues] =
     useState<ScheduleVacancyFormValues | null>(null);
@@ -219,7 +253,10 @@ export default function ScheduleVacancyStep({
     }
   };
 
-  const executeUpdate = async (values: ScheduleVacancyFormValues) => {
+  const executeUpdate = async (
+    values: ScheduleVacancyFormValues,
+    existingStatusOverride?: string
+  ) => {
     // LIVE if publish time is now or in the past, UNPUBLISHED if future
     const publishAt = new Date(
       `${values.schedulePublishDate}T${to24HourTime(values.schedulePublishTime)}`
@@ -237,11 +274,13 @@ export default function ScheduleVacancyStep({
       setForm(payloadForm);
 
       if (id) {
-        const existingStatus = scheduleToOnhold
-          ? 'on_hold'
-          : isCreateAction
-            ? targetStatus
-            : form.status;
+        const existingStatus =
+          existingStatusOverride ??
+          (scheduleToOnhold
+            ? 'on_hold'
+            : isCreateAction
+              ? targetStatus
+              : form.status);
         await updateVacancy({
           id,
           form: payloadForm,
@@ -278,14 +317,31 @@ export default function ScheduleVacancyStep({
   };
 
   const onValid = async (values: ScheduleVacancyFormValues) => {
+    const publishAt = new Date(
+      `${values.schedulePublishDate}T${to24HourTime(values.schedulePublishTime)}`
+    );
+    const expirationAt = new Date(
+      `${values.expirationDate}T${to24HourTime(values.expirationTime)}`
+    );
+
+    if (form.status === 'expired') {
+      if (isScheduleChanged) {
+        const now = new Date();
+        if (publishAt < now || expirationAt < now) {
+          ErrorToast({
+            title: t('scheduleVacancy.notifications.validationErrorTitle'),
+            description: t('scheduleVacancy.notifications.pastDateTimeMessage'),
+          });
+          return;
+        }
+      }
+      setPendingValues(values);
+      setConfirmDialog(isPublishDateChanged ? 'reschedule' : 'noReschedule');
+      return;
+    }
+
     if (isScheduleChanged) {
       const now = new Date();
-      const publishAt = new Date(
-        `${values.schedulePublishDate}T${to24HourTime(values.schedulePublishTime)}`
-      );
-      const expirationAt = new Date(
-        `${values.expirationDate}T${to24HourTime(values.expirationTime)}`
-      );
 
       if (publishAt < now || expirationAt < now) {
         ErrorToast({
@@ -304,6 +360,14 @@ export default function ScheduleVacancyStep({
     }
 
     await executeUpdate(values);
+  };
+
+  const handleConfirmUpdate = async () => {
+    if (!pendingValues) return;
+    const isReschedule = confirmDialog === 'reschedule';
+    setConfirmDialog(null);
+    await executeUpdate(pendingValues, isReschedule ? 'on_hold' : undefined);
+    setPendingValues(null);
   };
 
   const handleOnholdConfirm = async () => {
@@ -495,6 +559,28 @@ export default function ScheduleVacancyStep({
         </Button>
       </div>
 
+      <VacancyRescheduleConfirmDialog
+        open={confirmDialog === 'reschedule'}
+        onOpenChange={open => {
+          if (!open) setConfirmDialog(null);
+        }}
+        onConfirm={() => {
+          handleConfirmUpdate().catch(() => {});
+        }}
+        isConfirming={isSubmitting || isPending || isUpdating}
+      />
+
+      <VacancyNoRescheduleConfirmDialog
+        open={confirmDialog === 'noReschedule'}
+        onOpenChange={open => {
+          if (!open) setConfirmDialog(null);
+        }}
+        onConfirm={() => {
+          handleConfirmUpdate().catch(() => {});
+        }}
+        isConfirming={isSubmitting || isPending || isUpdating}
+      />
+
       {/* ── Onhold update confirmation dialog ───────────────────────── */}
       <VacancyOnholdUpdateDialog
         open={showOnholdDialog}
@@ -504,7 +590,7 @@ export default function ScheduleVacancyStep({
         }}
         isPublishDateChanged={isPublishDateChanged}
         hasApplicants={isOnholdWithApplicants}
-        isConfirming={isPending || isUpdating}
+        isConfirming={isSubmitting || isPending || isUpdating}
       />
     </div>
   );
