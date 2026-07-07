@@ -24,10 +24,37 @@ import {
   TertiaryEducationStep,
 } from '@/views/vacancies';
 import {
+  useAddAwardingBodyMutation,
+  useAddBatchMutation,
+  useAddCareerPathMutation,
+  useAddDepartmentMutation,
+  useAddDisciplineMutation,
+  useAddExaminationMutation,
+  useAddFacultyMutation,
+  useAddFieldOfStudyMutation,
+  useAddJobTitleMutation,
+  useAddLevelOfQualificationMutation,
+  useAddLicenseCertificateMutation,
+  useAddQualificationMutation,
+  useAddRoleMutation,
+  useAddSchoolMutation,
+  useAddSpecializationMutation,
+  useAddTertiaryAwardingBodyMutation,
+  useCreateCareerPathMutation,
+  useCreateCauseMutation,
+  useCreateHobbyMutation,
+  useCreateIndustryMutation,
+  useCreateLanguageMutation,
+  useCreateOrganizationMutation,
+  useCreateSkillCareerPathMutation,
+  useCreateSocietyMutation,
+  useCreateSportLevelMutation,
+  useCreateSportMutation,
   useCreateVacancyMutation,
   useUpdateDraftVacancyMutation,
 } from '@/views/vacancies/hooks';
 import type { VacancyForm, VacancyStep } from '@/views/vacancies/types';
+import { resolveDraftUserCreatedEntries } from '@/views/vacancies/utils';
 
 import { ErrorToast, SuccessToast } from '@cgp/ui-kit/components/custom-toast';
 
@@ -248,6 +275,7 @@ interface VacancyFormContextValue {
   lockCancelDialog: () => void;
   onSubmit: () => void;
   OnSaveAsDraft: () => void;
+  resolveFormUserCreatedEntries: (form: VacancyForm) => Promise<VacancyForm>;
   isSavingDraft: boolean;
   showCancelDialog: boolean;
   setShowCancelDialog: (open: boolean) => void;
@@ -275,6 +303,37 @@ function VacancyFormProvider({
   const navigate = useNavigate();
   const { mutateAsync: createVacancy } = useCreateVacancyMutation();
   const { mutateAsync: updateDraftVacancy } = useUpdateDraftVacancyMutation();
+  const { mutateAsync: addDiscipline } = useAddDisciplineMutation();
+  const { mutateAsync: addCareerPath } = useAddCareerPathMutation();
+  const { mutateAsync: addRole } = useAddRoleMutation();
+  const { mutateAsync: addJobTitle } = useAddJobTitleMutation();
+  const { mutateAsync: createIndustry } = useCreateIndustryMutation();
+  const { mutateAsync: createOrganization } = useCreateOrganizationMutation();
+  const { mutateAsync: createCause } = useCreateCauseMutation();
+  const { mutateAsync: createHobby } = useCreateHobbyMutation();
+  const { mutateAsync: createLanguage } = useCreateLanguageMutation();
+  const { mutateAsync: createSociety } = useCreateSocietyMutation();
+  const { mutateAsync: createSport } = useCreateSportMutation();
+  const { mutateAsync: createSportLevel } = useCreateSportLevelMutation();
+  const { mutateAsync: createCareerPath } = useCreateCareerPathMutation();
+  const { mutateAsync: createSkillCareerPath } =
+    useCreateSkillCareerPathMutation();
+  const { mutateAsync: addLicenseCertificate } =
+    useAddLicenseCertificateMutation();
+  const { mutateAsync: addSchool } = useAddSchoolMutation();
+  const { mutateAsync: addTertiaryAwardingBody } =
+    useAddTertiaryAwardingBodyMutation();
+  const { mutateAsync: addExamination } = useAddExaminationMutation();
+  const { mutateAsync: addSecondaryAwardingBody } =
+    useAddAwardingBodyMutation();
+  const { mutateAsync: addFieldOfStudy } = useAddFieldOfStudyMutation();
+  const { mutateAsync: addQualification } = useAddQualificationMutation();
+  const { mutateAsync: addLevelOfQualification } =
+    useAddLevelOfQualificationMutation();
+  const { mutateAsync: addSpecialization } = useAddSpecializationMutation();
+  const { mutateAsync: addBatch } = useAddBatchMutation();
+  const { mutateAsync: addDepartment } = useAddDepartmentMutation();
+  const { mutateAsync: addFaculty } = useAddFacultyMutation();
   const [form, setForm] = useState<VacancyForm>(DEFAULT_FORM);
   const [currentStepIndex, _setCurrentStepIndex] = useState(0);
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
@@ -401,6 +460,36 @@ function VacancyFormProvider({
     // TODO: submit form
   };
 
+  const resolveFormUserCreatedEntries = (formToResolve: VacancyForm) =>
+    resolveDraftUserCreatedEntries(formToResolve, {
+      addDiscipline,
+      addCareerPath,
+      addRole,
+      addJobTitle,
+      createIndustry,
+      createOrganization,
+      createCause,
+      createHobby,
+      createLanguage,
+      createSociety,
+      createSport,
+      createSportLevel,
+      createCareerPath,
+      createSkillCareerPath,
+      addLicenseCertificate,
+      addSchool,
+      addTertiaryAwardingBody,
+      addExamination,
+      addSecondaryAwardingBody,
+      addFieldOfStudy,
+      addQualification,
+      addLevelOfQualification,
+      addSpecialization,
+      addBatch,
+      addDepartment,
+      addFaculty,
+    });
+
   const OnSaveAsDraft = () => {
     void (async () => {
       setIsSavingDraft(true);
@@ -415,6 +504,9 @@ function VacancyFormProvider({
           }
           draftForm = { ...form, ...stepValues };
         }
+
+        draftForm = await resolveFormUserCreatedEntries(draftForm);
+        setForm(draftForm);
 
         if (vacancyId) {
           await updateDraftVacancy({
@@ -463,6 +555,7 @@ function VacancyFormProvider({
         lockCancelDialog,
         onSubmit,
         OnSaveAsDraft,
+        resolveFormUserCreatedEntries,
         isSavingDraft,
         showCancelDialog,
         setShowCancelDialog,

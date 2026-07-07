@@ -45,7 +45,14 @@ const toSecondaryEducationPayload = (
     label: string;
     source: string;
   }): SecondaryEducationRef | null => {
-    if (!item.value || item.value === item.label) return null;
+    if (!item.value) return null;
+    // A freshly-typed creatable chip has no id yet (value === label) — keep
+    // it tagged as USER_CREATED instead of dropping it, so it can still be
+    // resolved to real master data later (e.g. on draft-save) instead of the
+    // user's input silently vanishing.
+    if (item.value === item.label) {
+      return { source: 'USER_CREATED', id: item.value, name: item.label };
+    }
     return {
       source: item.source as 'MASTER' | 'PENDING',
       id: item.value,

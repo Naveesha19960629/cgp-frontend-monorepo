@@ -25,6 +25,7 @@ export { default as VacancyToggleStatusDialog } from '@/views/vacancies/componen
 export { default as VacancyEditCancelDialog } from '@/views/vacancies/components/vacancy-edit-cancel-dialog';
 export { default as VacancyRescheduleConfirmDialog } from '@/views/vacancies/components/vacancy-reschedule-confirm-dialog';
 export { default as VacancyNoRescheduleConfirmDialog } from '@/views/vacancies/components/vacancy-no-reschedule-confirm-dialog';
+export { default as VacancyOnholdUpdateDialog } from '@/views/vacancies/components/vacancy-onhold-update-dialog';
 export { default as DataTableFacetedFilter } from '@/views/vacancies/components/data-table-faceted-filter';
 export { default as VacancyTableAction } from '@/views/vacancies/components/vacancy-table-action';
 export { default as createVacancyColumns } from '@/views/vacancies/components/vacancy-table-columns';

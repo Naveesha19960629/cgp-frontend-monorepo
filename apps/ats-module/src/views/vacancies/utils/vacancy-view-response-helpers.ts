@@ -18,7 +18,7 @@ function toSafeNumber(value: unknown): number {
 
 function toLabel(value: unknown): string {
   if (typeof value === 'string') {
-    return value;
+    return value.trim();
   }
 
   if (!isRecord(value)) {
@@ -31,7 +31,7 @@ function toLabel(value: unknown): string {
     toSafeString(value.name) ||
     toSafeString(value.value) ||
     toSafeString(value.id)
-  );
+  ).trim();
 }
 
 function toTagList(value: unknown): string[] {

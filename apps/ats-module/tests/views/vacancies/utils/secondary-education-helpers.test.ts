@@ -94,7 +94,7 @@ describe('toSecondaryEducationPayload', () => {
     });
   });
 
-  it('filters out items whose value equals their label (pending creatable items not yet resolved)', () => {
+  it('tags items whose value equals their label as USER_CREATED instead of dropping them (pending creatable items not yet resolved)', () => {
     const result = toSecondaryEducationPayload({
       isEnabled: true,
       dataTakenFromCandidate: false,
@@ -109,8 +109,13 @@ describe('toSecondaryEducationPayload', () => {
       ],
     });
 
-    expect(result[0].content[0].examinations).toHaveLength(1);
+    expect(result[0].content[0].examinations).toHaveLength(2);
     expect(result[0].content[0].examinations[0].id).toBe('exam-uuid');
+    expect(result[0].content[0].examinations[1]).toEqual({
+      id: 'Custom Exam',
+      source: 'USER_CREATED',
+      name: 'Custom Exam',
+    });
   });
 
   it('maps optional dates to empty string when undefined', () => {
