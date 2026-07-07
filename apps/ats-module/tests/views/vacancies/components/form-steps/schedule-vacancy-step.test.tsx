@@ -1285,6 +1285,39 @@ describe('ScheduleVacancyStep', () => {
       expect(ErrorToast).not.toHaveBeenCalled();
     });
 
+    it('shows non-reschedule dialog (not a past-date error) when the saved schedule is 24-hour ISO from the API and Update is clicked immediately with no edits', async () => {
+      // Regression test: the API returns 24-hour ISO ("...T10:30:00"), while
+      // the form always watches 12-hour AM/PM values. Comparing those two
+      // formats as raw strings falsely flagged the schedule as "changed" on
+      // the very first render (before any user edit), which ran the
+      // past-date validator and showed an ErrorToast instead of the
+      // no-reschedule confirmation dialog.
+      mockVacancyForm({
+        form: {
+          schedule: {
+            schedulePublishAt: '2020-01-01T10:30:00',
+            expirationAt: '2020-01-02T23:59:59',
+          },
+          status: 'expired',
+        },
+      });
+
+      renderComponent({ mode: 'edit' as const });
+
+      await waitFor(() => expect(getCreateButton()).not.toBeDisabled());
+      await userEvent.click(getCreateButton());
+
+      await waitFor(() => {
+        expect(
+          screen.getByTestId('no-reschedule-confirm-dialog')
+        ).toBeInTheDocument();
+      });
+      expect(
+        screen.queryByTestId('reschedule-confirm-dialog')
+      ).not.toBeInTheDocument();
+      expect(ErrorToast).not.toHaveBeenCalled();
+    });
+
     it('shows reschedule dialog when publish date is changed to a future date', async () => {
       mockVacancyForm({
         form: { schedule: expiredSchedule, status: 'expired' },

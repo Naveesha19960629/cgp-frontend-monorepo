@@ -65,18 +65,44 @@ export default function ScheduleVacancyStep({
   const expirationTime = watch('expirationTime');
 
   const isScheduleChanged = useMemo(() => {
-    if (!form.schedule) return true;
+    if (!form.schedule?.schedulePublishAt || !form.schedule?.expirationAt) {
+      return true;
+    }
+    if (!publishDate || !publishTime || !expirationDate || !expirationTime) {
+      return true;
+    }
 
-    const currentSchedule = toScheduleVacancyPayload({
-      schedulePublishDate: publishDate,
-      schedulePublishTime: publishTime,
-      expirationDate,
-      expirationTime,
-    });
+    // Compare as timestamps, not raw strings — the stored value may be
+    // 24-hour ISO from the API while the form always watches 12-hour AM/PM,
+    // so a direct string comparison flags "changed" even with no edits.
+    const savedPublish = parseBackendDatetime(form.schedule.schedulePublishAt);
+    const savedExpiration = parseBackendDatetime(form.schedule.expirationAt);
+
+    const savedPublishTs = new Date(
+      `${savedPublish.date}T${to24HourTime(savedPublish.time)}`
+    );
+    const savedExpirationTs = new Date(
+      `${savedExpiration.date}T${to24HourTime(savedExpiration.time)}`
+    );
+    const currentPublishTs = new Date(
+      `${publishDate}T${to24HourTime(publishTime)}`
+    );
+    const currentExpirationTs = new Date(
+      `${expirationDate}T${to24HourTime(expirationTime)}`
+    );
+
+    if (
+      Number.isNaN(savedPublishTs.getTime()) ||
+      Number.isNaN(savedExpirationTs.getTime()) ||
+      Number.isNaN(currentPublishTs.getTime()) ||
+      Number.isNaN(currentExpirationTs.getTime())
+    ) {
+      return true;
+    }
 
     return (
-      currentSchedule.schedulePublishAt !== form.schedule.schedulePublishAt ||
-      currentSchedule.expirationAt !== form.schedule.expirationAt
+      currentPublishTs.getTime() !== savedPublishTs.getTime() ||
+      currentExpirationTs.getTime() !== savedExpirationTs.getTime()
     );
   }, [publishDate, publishTime, expirationDate, expirationTime, form.schedule]);
 
