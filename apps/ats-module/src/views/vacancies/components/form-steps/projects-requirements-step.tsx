@@ -8,7 +8,10 @@ import { useTranslation } from 'react-i18next';
 import MessageBox from '@/components/message-box';
 import { AddOrganizationFormDialog } from '@/views/vacancies/components/dialogs';
 import StepDisableDialog from '@/views/vacancies/components/step-disable-dialog';
-import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
+import {
+  useTemplateFieldVisible,
+  useVacancyForm,
+} from '@/views/vacancies/context/vacancy-form-context';
 import {
   useCreateIndustryMutation,
   useCreateOrganizationMutation,
@@ -95,6 +98,7 @@ function ProjectCard({
   isOrganizationsLoading: boolean;
 }>) {
   const { t } = useTranslation('ats');
+  const isFieldVisible = useTemplateFieldVisible('projects');
   const [hasMaxError, setHasMaxError] = useState(false);
   const [locationsError, setLocationsError] = useState(false);
   const [industriesSearch, setIndustriesSearch] = useState('');
@@ -155,332 +159,350 @@ function ProjectCard({
           >
             {/* Row 1: Start Date | End Date | Related Industry */}
             <div className="grid grid-cols-[1fr_1fr_2fr] gap-4">
-              <div className="flex flex-col gap-1">
-                <div className="flex h-5 items-center">
-                  <Label>{t('projectsRequirements.startDate')}</Label>
-                </div>
-                <Popover
-                  modal
-                  open={openDatePopover === 'startDate'}
-                  onOpenChange={open =>
-                    setOpenDatePopover(
-                      !fieldsDisabled && open ? 'startDate' : null
-                    )
-                  }
-                >
-                  <PopoverTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      disabled={fieldsDisabled}
-                      className={cn(
-                        'border-input flex h-11 w-full items-center justify-between rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
-                        !project.startDate && 'text-slate-500',
-                        project.startDate && 'text-zinc-800',
-                        'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
-                        'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
-                        'dark:bg-input/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
-                        applyTypography('body-medium'),
-                        'shadow-none!'
-                      )}
-                    >
-                      {project.startDate
-                        ? formatDate(project.startDate)
-                        : t('projectsRequirements.placeholders.startDate')}
-                      <CalendarIcon
-                        variant="Linear"
-                        size={20}
-                        className="text-zinc-800"
-                      />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={parseLocalDate(project.startDate) ?? undefined}
-                      defaultMonth={
-                        parseLocalDate(project.startDate) ||
-                        parseLocalDate(project.endDate) ||
-                        new Date()
-                      }
-                      onSelect={date => {
-                        onUpdate(index, {
-                          startDate: date ? formatLocalDate(date) : undefined,
-                        });
-                        setOpenDatePopover(null);
-
-                        if (project.endDate && date) {
-                          const endDate = parseLocalDate(project.endDate);
-                          if (endDate != null && endDate < date) {
-                            onUpdate(index, { endDate: undefined });
-                          }
-                        }
-                      }}
-                      disabled={date =>
-                        date > new Date() || date < HUNDRED_YEARS_AGO
-                      }
-                      captionLayout="dropdown"
-                      startMonth={HUNDRED_YEARS_AGO}
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <div className="flex h-5 items-center">
-                  <Label>{t('projectsRequirements.endDate')}</Label>
-                </div>
-                <Popover
-                  modal
-                  open={openDatePopover === 'endDate'}
-                  onOpenChange={open =>
-                    setOpenDatePopover(
-                      !fieldsDisabled && open ? 'endDate' : null
-                    )
-                  }
-                >
-                  <PopoverTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      disabled={fieldsDisabled}
-                      className={cn(
-                        'border-input flex h-11 w-full items-center justify-between rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
-                        !project.endDate && 'text-slate-500',
-                        project.endDate && 'text-zinc-800',
-                        'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
-                        'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
-                        'dark:bg-input/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
-                        applyTypography('body-medium'),
-                        'shadow-none!'
-                      )}
-                    >
-                      {project.endDate
-                        ? formatDate(project.endDate)
-                        : t('projectsRequirements.placeholders.endDate')}
-                      <CalendarIcon
-                        variant="Linear"
-                        size={20}
-                        className="text-zinc-800"
-                      />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={parseLocalDate(project.endDate) ?? undefined}
-                      defaultMonth={
-                        parseLocalDate(project.endDate) ||
-                        parseLocalDate(project.startDate) ||
-                        new Date()
-                      }
-                      onSelect={date => {
-                        onUpdate(index, {
-                          endDate: date ? formatLocalDate(date) : undefined,
-                        });
-                        setOpenDatePopover(null);
-                      }}
-                      disabled={date => {
-                        const startDate = parseLocalDate(project.startDate);
-                        return (
-                          date < HUNDRED_YEARS_AGO ||
-                          date > HUNDRED_YEARS_FROM_NOW ||
-                          (startDate != null && date < startDate)
-                        );
-                      }}
-                      captionLayout="dropdown"
-                      startMonth={HUNDRED_YEARS_AGO}
-                      endMonth={HUNDRED_YEARS_FROM_NOW}
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <div className="flex items-center justify-between">
-                  <Label
-                    className={hasMaxError ? 'text-destructive' : undefined}
+              {isFieldVisible('startDate') && (
+                <div className="flex flex-col gap-1">
+                  <div className="flex h-5 items-center">
+                    <Label>{t('projectsRequirements.startDate')}</Label>
+                  </div>
+                  <Popover
+                    modal
+                    open={openDatePopover === 'startDate'}
+                    onOpenChange={open =>
+                      setOpenDatePopover(
+                        !fieldsDisabled && open ? 'startDate' : null
+                      )
+                    }
                   >
-                    {t('projectsRequirements.relatedIndustry')}
-                  </Label>
-                  <CharacterCount
-                    currentLength={industriesSearch.length}
-                    maxLength={100}
-                  />
+                    <PopoverTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled={fieldsDisabled}
+                        className={cn(
+                          'border-input flex h-11 w-full items-center justify-between rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
+                          !project.startDate && 'text-slate-500',
+                          project.startDate && 'text-zinc-800',
+                          'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
+                          'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
+                          'dark:bg-input/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
+                          applyTypography('body-medium'),
+                          'shadow-none!'
+                        )}
+                      >
+                        {project.startDate
+                          ? formatDate(project.startDate)
+                          : t('projectsRequirements.placeholders.startDate')}
+                        <CalendarIcon
+                          variant="Linear"
+                          size={20}
+                          className="text-zinc-800"
+                        />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={
+                          parseLocalDate(project.startDate) ?? undefined
+                        }
+                        defaultMonth={
+                          parseLocalDate(project.startDate) ||
+                          parseLocalDate(project.endDate) ||
+                          new Date()
+                        }
+                        onSelect={date => {
+                          onUpdate(index, {
+                            startDate: date ? formatLocalDate(date) : undefined,
+                          });
+                          setOpenDatePopover(null);
+
+                          if (project.endDate && date) {
+                            const endDate = parseLocalDate(project.endDate);
+                            if (endDate != null && endDate < date) {
+                              onUpdate(index, { endDate: undefined });
+                            }
+                          }
+                        }}
+                        disabled={date =>
+                          date > new Date() || date < HUNDRED_YEARS_AGO
+                        }
+                        captionLayout="dropdown"
+                        startMonth={HUNDRED_YEARS_AGO}
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
-                <MultipleSelector
-                  value={project.relatedIndustry.map(i => ({
-                    value: i.value,
-                    label: i.label,
-                    source: i.source,
-                  }))}
-                  errorMessage={t('projectsRequirements.errors.maxIndustries')}
-                  onErrorStateChange={setHasMaxError}
-                  onChange={options => {
-                    onUpdate(index, {
-                      relatedIndustry: options
-                        .filter(
-                          opt =>
-                            typeof opt.value === 'string' &&
-                            opt.value.length > 0
-                        )
-                        .map(opt => ({
-                          value: opt.value,
-                          label: opt.label,
-                          source: (opt.source as string) ?? 'USER_CREATED',
-                        })),
-                    });
-                  }}
-                  options={industries.map(i => ({
-                    value: i.id,
-                    label: i.label,
-                    source: i.source,
-                  }))}
-                  onSearchSync={value => {
-                    setIndustriesSearch(value);
-                    onIndustriesSearch(value);
-                    return industries.map(i => ({
+              )}
+
+              {isFieldVisible('endDate') && (
+                <div className="flex flex-col gap-1">
+                  <div className="flex h-5 items-center">
+                    <Label>{t('projectsRequirements.endDate')}</Label>
+                  </div>
+                  <Popover
+                    modal
+                    open={openDatePopover === 'endDate'}
+                    onOpenChange={open =>
+                      setOpenDatePopover(
+                        !fieldsDisabled && open ? 'endDate' : null
+                      )
+                    }
+                  >
+                    <PopoverTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled={fieldsDisabled}
+                        className={cn(
+                          'border-input flex h-11 w-full items-center justify-between rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
+                          !project.endDate && 'text-slate-500',
+                          project.endDate && 'text-zinc-800',
+                          'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
+                          'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
+                          'dark:bg-input/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
+                          applyTypography('body-medium'),
+                          'shadow-none!'
+                        )}
+                      >
+                        {project.endDate
+                          ? formatDate(project.endDate)
+                          : t('projectsRequirements.placeholders.endDate')}
+                        <CalendarIcon
+                          variant="Linear"
+                          size={20}
+                          className="text-zinc-800"
+                        />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={parseLocalDate(project.endDate) ?? undefined}
+                        defaultMonth={
+                          parseLocalDate(project.endDate) ||
+                          parseLocalDate(project.startDate) ||
+                          new Date()
+                        }
+                        onSelect={date => {
+                          onUpdate(index, {
+                            endDate: date ? formatLocalDate(date) : undefined,
+                          });
+                          setOpenDatePopover(null);
+                        }}
+                        disabled={date => {
+                          const startDate = parseLocalDate(project.startDate);
+                          return (
+                            date < HUNDRED_YEARS_AGO ||
+                            date > HUNDRED_YEARS_FROM_NOW ||
+                            (startDate != null && date < startDate)
+                          );
+                        }}
+                        captionLayout="dropdown"
+                        startMonth={HUNDRED_YEARS_AGO}
+                        endMonth={HUNDRED_YEARS_FROM_NOW}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              )}
+
+              {isFieldVisible('relatedIndustry') && (
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center justify-between">
+                    <Label
+                      className={hasMaxError ? 'text-destructive' : undefined}
+                    >
+                      {t('projectsRequirements.relatedIndustry')}
+                    </Label>
+                    <CharacterCount
+                      currentLength={industriesSearch.length}
+                      maxLength={100}
+                    />
+                  </div>
+                  <MultipleSelector
+                    value={project.relatedIndustry.map(i => ({
+                      value: i.value,
+                      label: i.label,
+                      source: i.source,
+                    }))}
+                    errorMessage={t(
+                      'projectsRequirements.errors.maxIndustries'
+                    )}
+                    onErrorStateChange={setHasMaxError}
+                    onChange={options => {
+                      onUpdate(index, {
+                        relatedIndustry: options
+                          .filter(
+                            opt =>
+                              typeof opt.value === 'string' &&
+                              opt.value.length > 0
+                          )
+                          .map(opt => ({
+                            value: opt.value,
+                            label: opt.label,
+                            source: (opt.source as string) ?? 'USER_CREATED',
+                          })),
+                      });
+                    }}
+                    options={industries.map(i => ({
                       value: i.id,
                       label: i.label,
                       source: i.source,
-                    }));
-                  }}
-                  keepSelectedInList
-                  creatable
-                  triggerSearchOnFocus
-                  hideClearAllButton
-                  maxSelected={MAX_SELECTIONS}
-                  disabled={fieldsDisabled}
-                  inputProps={{
-                    maxLength: 100,
-                  }}
-                  loading={isIndustriesLoading}
-                  placeholder={t(
-                    'projectsRequirements.placeholders.relatedIndustry'
-                  )}
-                  loadingIndicator={
-                    <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                      {t('projectsRequirements.industrySearch.loading', {
-                        defaultValue: 'Searching...',
-                      })}
-                    </p>
-                  }
-                  emptyIndicator={
-                    <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                      {t(
-                        'projectsRequirements.industrySearch.noDataDescription'
-                      )}
-                    </p>
-                  }
-                />
-              </div>
+                    }))}
+                    onSearchSync={value => {
+                      setIndustriesSearch(value);
+                      onIndustriesSearch(value);
+                      return industries.map(i => ({
+                        value: i.id,
+                        label: i.label,
+                        source: i.source,
+                      }));
+                    }}
+                    keepSelectedInList
+                    creatable
+                    triggerSearchOnFocus
+                    hideClearAllButton
+                    maxSelected={MAX_SELECTIONS}
+                    disabled={fieldsDisabled}
+                    inputProps={{
+                      maxLength: 100,
+                    }}
+                    loading={isIndustriesLoading}
+                    placeholder={t(
+                      'projectsRequirements.placeholders.relatedIndustry'
+                    )}
+                    loadingIndicator={
+                      <p className="px-3 pb-3 text-left text-sm text-slate-500">
+                        {t('projectsRequirements.industrySearch.loading', {
+                          defaultValue: 'Searching...',
+                        })}
+                      </p>
+                    }
+                    emptyIndicator={
+                      <p className="px-3 pb-3 text-left text-sm text-slate-500">
+                        {t(
+                          'projectsRequirements.industrySearch.noDataDescription'
+                        )}
+                      </p>
+                    }
+                  />
+                </div>
+              )}
             </div>
 
             {/* Row 2: Organization Location | Organization Name */}
             <div className="grid grid-cols-2 gap-4">
-              <div className="flex flex-col gap-1">
-                <div className="flex h-5 items-center">
-                  <Label
-                    className={locationsError ? 'text-destructive' : undefined}
-                  >
-                    {t('projectsRequirements.organizationLocation')}
-                  </Label>
-                </div>
-                <MultipleSelector
-                  value={project.organizationLocations}
-                  onChange={options => {
-                    onUpdate(index, {
-                      organizationLocations: options.map(opt => ({
-                        value: opt.value,
-                        label: opt.label,
-                      })),
-                    });
-                  }}
-                  options={locationOptions}
-                  onSearchSync={value => {
-                    onLocationsSearch(value);
-                    return locationOptions;
-                  }}
-                  showArrow
-                  keepSelectedInList
-                  hideClearAllButton
-                  maxSelected={10}
-                  errorMessage={t('projectsRequirements.errors.maxSelections')}
-                  onErrorStateChange={setLocationsError}
-                  disabled={fieldsDisabled}
-                  loading={isLocationsLoading}
-                  placeholder={t(
-                    'projectsRequirements.placeholders.organizationLocation'
-                  )}
-                  loadingIndicator={
-                    <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                      {t('projectsRequirements.industrySearch.loading', {
-                        defaultValue: 'Searching...',
-                      })}
-                    </p>
-                  }
-                  emptyIndicator={
-                    <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                      {t(
-                        'projectsRequirements.industrySearch.noDataDescription'
-                      )}
-                    </p>
-                  }
-                />
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <div className="flex h-5 items-center">
-                  <Label>{t('projectsRequirements.organizationName')}</Label>
-                </div>
-                <MultipleSelector
-                  key={orgSelectorKey}
-                  value={project.organizations}
-                  onChange={options => {
-                    const newItem = options.find(o => o.value === o.label);
-                    if (newItem) {
-                      onRequestAddOrganization(index, newItem.label);
-                    } else {
+              {isFieldVisible('organizationLocations') && (
+                <div className="flex flex-col gap-1">
+                  <div className="flex h-5 items-center">
+                    <Label
+                      className={
+                        locationsError ? 'text-destructive' : undefined
+                      }
+                    >
+                      {t('projectsRequirements.organizationLocation')}
+                    </Label>
+                  </div>
+                  <MultipleSelector
+                    value={project.organizationLocations}
+                    onChange={options => {
                       onUpdate(index, {
-                        organizations: options.map(opt => ({
+                        organizationLocations: options.map(opt => ({
                           value: opt.value,
                           label: opt.label,
-                          source: (opt.source as string) ?? 'USER_CREATED',
                         })),
                       });
+                    }}
+                    options={locationOptions}
+                    onSearchSync={value => {
+                      onLocationsSearch(value);
+                      return locationOptions;
+                    }}
+                    showArrow
+                    keepSelectedInList
+                    hideClearAllButton
+                    maxSelected={10}
+                    errorMessage={t(
+                      'projectsRequirements.errors.maxSelections'
+                    )}
+                    onErrorStateChange={setLocationsError}
+                    disabled={fieldsDisabled}
+                    loading={isLocationsLoading}
+                    placeholder={t(
+                      'projectsRequirements.placeholders.organizationLocation'
+                    )}
+                    loadingIndicator={
+                      <p className="px-3 pb-3 text-left text-sm text-slate-500">
+                        {t('projectsRequirements.industrySearch.loading', {
+                          defaultValue: 'Searching...',
+                        })}
+                      </p>
                     }
-                  }}
-                  options={organizationOptions}
-                  onSearchSync={value => {
-                    onOrganizationsSearch(value);
-                    return organizationOptions;
-                  }}
-                  creatable
-                  keepSelectedInList
-                  triggerSearchOnFocus
-                  hideClearAllButton
-                  maxSelected={10}
-                  disabled={fieldsDisabled}
-                  loading={isOrganizationsLoading}
-                  placeholder={t(
-                    'projectsRequirements.placeholders.organizationName'
-                  )}
-                  loadingIndicator={
-                    <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                      {t('projectsRequirements.industrySearch.loading', {
-                        defaultValue: 'Searching...',
-                      })}
-                    </p>
-                  }
-                  emptyIndicator={
-                    <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                      {t(
-                        'projectsRequirements.industrySearch.noDataDescription'
-                      )}
-                    </p>
-                  }
-                />
-              </div>
+                    emptyIndicator={
+                      <p className="px-3 pb-3 text-left text-sm text-slate-500">
+                        {t(
+                          'projectsRequirements.industrySearch.noDataDescription'
+                        )}
+                      </p>
+                    }
+                  />
+                </div>
+              )}
+
+              {isFieldVisible('organization') && (
+                <div className="flex flex-col gap-1">
+                  <div className="flex h-5 items-center">
+                    <Label>{t('projectsRequirements.organizationName')}</Label>
+                  </div>
+                  <MultipleSelector
+                    key={orgSelectorKey}
+                    value={project.organizations}
+                    onChange={options => {
+                      const newItem = options.find(o => o.value === o.label);
+                      if (newItem) {
+                        onRequestAddOrganization(index, newItem.label);
+                      } else {
+                        onUpdate(index, {
+                          organizations: options.map(opt => ({
+                            value: opt.value,
+                            label: opt.label,
+                            source: (opt.source as string) ?? 'USER_CREATED',
+                          })),
+                        });
+                      }
+                    }}
+                    options={organizationOptions}
+                    onSearchSync={value => {
+                      onOrganizationsSearch(value);
+                      return organizationOptions;
+                    }}
+                    creatable
+                    keepSelectedInList
+                    triggerSearchOnFocus
+                    hideClearAllButton
+                    maxSelected={10}
+                    disabled={fieldsDisabled}
+                    loading={isOrganizationsLoading}
+                    placeholder={t(
+                      'projectsRequirements.placeholders.organizationName'
+                    )}
+                    loadingIndicator={
+                      <p className="px-3 pb-3 text-left text-sm text-slate-500">
+                        {t('projectsRequirements.industrySearch.loading', {
+                          defaultValue: 'Searching...',
+                        })}
+                      </p>
+                    }
+                    emptyIndicator={
+                      <p className="px-3 pb-3 text-left text-sm text-slate-500">
+                        {t(
+                          'projectsRequirements.industrySearch.noDataDescription'
+                        )}
+                      </p>
+                    }
+                  />
+                </div>
+              )}
             </div>
           </div>
         </CollapsibleContent>

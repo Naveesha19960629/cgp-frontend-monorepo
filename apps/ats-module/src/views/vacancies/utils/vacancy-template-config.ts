@@ -267,3 +267,41 @@ export const TEMPLATE_SECTIONS: TemplateSectionConfig[] = [
 
 /** Maximum length allowed for the template name (mirrors backend validation). */
 export const TEMPLATE_NAME_MAX_LENGTH = 150;
+
+/**
+ * Maps a backend template `data` section key (as returned by getTemplateById /
+ * sent in the create payload) to the corresponding wizard step key in
+ * `VACANCY_STEPS`. Used by the "Use Template" flow to decide which steps appear
+ * in the navigator and to look up per-section field visibility.
+ */
+export const SECTION_KEY_TO_STEP_KEY: Record<string, string> = {
+  jobRequirement: 'job-requirements',
+  profileRequirement: 'profile-requirements',
+  secondaryEducation: 'secondary-education',
+  tertiaryEducation: 'tertiary-education',
+  projects: 'projects-requirements',
+  publications: 'preferred-publications',
+  clubsAndSocieties: 'preferred-club-societies',
+  sports: 'preferred-sports',
+  volunteering: 'preferred-volunteering',
+  patents: 'preferred-patents',
+  honoursAndAwards: 'preferred-honours-awards',
+  licensesAndCertifications: 'license-certificates',
+  skills: 'preferred-skills',
+  languages: 'preferred-languages',
+  causes: 'preferred-causes',
+  hobbyList: 'preferred-hobbies',
+  industry: 'preferred-industry',
+  customizedForm: 'customizable-form',
+  schedule: 'schedule-vacancy',
+};
+
+/**
+ * Step keys that must always appear in the navigator during the Use Template
+ * flow regardless of what the template configured (AC 7.1). Vacancy Title is the
+ * separate initial screen and is not part of `VACANCY_STEPS`.
+ */
+export const MANDATORY_TEMPLATE_STEP_KEYS: readonly string[] = [
+  'job-requirements',
+  'schedule-vacancy',
+];

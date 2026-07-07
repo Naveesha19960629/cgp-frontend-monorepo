@@ -46,8 +46,14 @@ export default function TemplatesPage() {
 
   const goToCreate = () => void navigate(TEMPLATE_CREATE_ROUTE);
 
-  // Use Template / Edit / Delete flows are handled by their own stories
-  // (DQCGP-2198 / 2199 / 2200). Wired here as no-ops until those land.
+  // Launch the Create Vacancy From Template flow (DQCGP-2198).
+  const goToUseTemplate = (id: string) =>
+    void navigate(`/dashboard/ats/vacancies/from-template/${id}`, {
+      state: { from: '/dashboard/ats/templates' },
+    });
+
+  // Edit / Delete flows are handled by their own stories
+  // (DQCGP-2199 / 2200). Wired here as no-ops until those land.
   const noop = () => {};
 
   return (
@@ -86,7 +92,7 @@ export default function TemplatesPage() {
                 template={template}
                 onEdit={noop}
                 onDelete={noop}
-                onUse={noop}
+                onUse={goToUseTemplate}
               />
             ))}
           </div>

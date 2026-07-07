@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useRef, useState } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
@@ -54,7 +60,10 @@ import {
   useUpdateDraftVacancyMutation,
 } from '@/views/vacancies/hooks';
 import type { VacancyForm, VacancyStep } from '@/views/vacancies/types';
-import { resolveDraftUserCreatedEntries } from '@/views/vacancies/utils';
+import {
+  MANDATORY_TEMPLATE_STEP_KEYS,
+  resolveDraftUserCreatedEntries,
+} from '@/views/vacancies/utils';
 
 import { ErrorToast, SuccessToast } from '@cgp/ui-kit/components/custom-toast';
 
@@ -262,6 +271,17 @@ const DEFAULT_FORM: VacancyForm = {
 interface VacancyFormContextValue {
   form: VacancyForm;
   setForm: React.Dispatch<React.SetStateAction<VacancyForm>>;
+  /**
+   * The steps shown in the navigator. Equals `VACANCY_STEPS` in the normal
+   * create/edit flow; a filtered subset in the "Use Template" flow. All
+   * index-based step logic (currentStepIndex, completedSteps) is keyed off this.
+   */
+  visibleSteps: readonly VacancyStep[];
+  /**
+   * When set (Use Template flow), maps a backend section key to the field codes
+   * that are visible. Undefined in the normal flow (all fields visible).
+   */
+  templateFieldVisibility?: Record<string, Record<string, boolean>>;
   currentStepIndex: number;
   setCurrentStepIndex: (index: number) => void;
   completedSteps: Set<number>;
@@ -295,9 +315,19 @@ const VacancyFormContext = createContext<VacancyFormContextValue | null>(null);
 function VacancyFormProvider({
   children,
   vacancyId,
+  visibleStepKeys,
+  templateFieldVisibility,
+  templateId,
 }: {
   children: React.ReactNode;
   vacancyId?: string;
+  /** When provided (Use Template flow), restricts the navigator to these step keys
+   * (mandatory steps are always included). Absent → full `VACANCY_STEPS`. */
+  visibleStepKeys?: string[];
+  /** Per-section field visibility for the Use Template flow. */
+  templateFieldVisibility?: Record<string, Record<string, boolean>>;
+  /** Source template id, echoed to the backend on create for lineage. */
+  templateId?: string;
 }) {
   const { t } = useTranslation('ats');
   const navigate = useNavigate();
@@ -351,9 +381,21 @@ function VacancyFormProvider({
   >(null);
   const cancelLockRef = useRef(false);
 
+  // In the normal flow `visibleSteps === VACANCY_STEPS`. In the Use Template flow
+  // it is the master list filtered to the template's sections (mandatory steps
+  // always kept), preserving master order. All index-based step logic keys off this.
+  const visibleSteps = useMemo<readonly VacancyStep[]>(() => {
+    if (!visibleStepKeys) return VACANCY_STEPS;
+    const allowed = new Set<string>([
+      ...MANDATORY_TEMPLATE_STEP_KEYS,
+      ...visibleStepKeys,
+    ]);
+    return VACANCY_STEPS.filter(step => allowed.has(step.key));
+  }, [visibleStepKeys]);
+
   const setCurrentStepIndex = (index: number) => {
     _setCurrentStepIndex(index);
-    setForm(prev => ({ ...prev, lastActiveStep: VACANCY_STEPS[index].key }));
+    setForm(prev => ({ ...prev, lastActiveStep: visibleSteps[index].key }));
     setStepGuard(false);
   };
 
@@ -366,39 +408,50 @@ function VacancyFormProvider({
   };
 
   const initCompletedStepsFromForm = (loadedForm: VacancyForm) => {
-    const stepEnabledChecks: Array<() => boolean> = [
-      () =>
+    // Keyed by step key (not position) so it stays correct when `visibleSteps` is
+    // a filtered subset in the Use Template flow.
+    const stepEnabledChecks: Record<string, () => boolean> = {
+      'job-requirements': () =>
         loadedForm.jobRequirements.length > 0 &&
         loadedForm.jobRequirements[0].isEnabled,
-      () => loadedForm.profileRequirements.isEnabled,
-      () =>
+      'profile-requirements': () => loadedForm.profileRequirements.isEnabled,
+      'secondary-education': () =>
         loadedForm.secondaryEducation.length > 0 &&
         loadedForm.secondaryEducation[0].isEnabled,
-      () =>
+      'tertiary-education': () =>
         loadedForm.tertiaryEducation.length > 0 &&
         loadedForm.tertiaryEducation[0].isEnabled,
-      () => Boolean(loadedForm.projectsRequirements?.isEnabled),
-      () => Boolean(loadedForm.preferredPublications?.isEnabled),
-      () => Boolean(loadedForm.preferredClubSocieties?.isEnabled),
-      () => Boolean(loadedForm.preferredSports?.isEnabled),
-      () => Boolean(loadedForm.preferredVolunteering?.isEnabled),
-      () => Boolean(loadedForm.patents?.isEnabled),
-      () => Boolean(loadedForm.preferredHonoursAwards?.isEnabled),
-      () =>
+      'projects-requirements': () =>
+        Boolean(loadedForm.projectsRequirements?.isEnabled),
+      'preferred-publications': () =>
+        Boolean(loadedForm.preferredPublications?.isEnabled),
+      'preferred-club-societies': () =>
+        Boolean(loadedForm.preferredClubSocieties?.isEnabled),
+      'preferred-sports': () => Boolean(loadedForm.preferredSports?.isEnabled),
+      'preferred-volunteering': () =>
+        Boolean(loadedForm.preferredVolunteering?.isEnabled),
+      'preferred-patents': () => Boolean(loadedForm.patents?.isEnabled),
+      'preferred-honours-awards': () =>
+        Boolean(loadedForm.preferredHonoursAwards?.isEnabled),
+      'license-certificates': () =>
         (loadedForm.licenseCertificates?.length ?? 0) > 0 &&
         Boolean(loadedForm.licenseCertificates?.[0]?.isEnabled),
-      () => Boolean(loadedForm.preferredSkills?.isEnabled),
-      () => Boolean(loadedForm.preferredLanguages?.isEnabled),
-      () => Boolean(loadedForm.preferredCauses?.isEnabled),
-      () => Boolean(loadedForm.preferredHobbies?.isEnabled),
-      () => Boolean(loadedForm.preferredIndustries?.isEnabled),
-      () => Boolean(loadedForm.customizableForm?.isEnabled),
-      () => loadedForm.schedule !== undefined,
-    ];
+      'preferred-skills': () => Boolean(loadedForm.preferredSkills?.isEnabled),
+      'preferred-languages': () =>
+        Boolean(loadedForm.preferredLanguages?.isEnabled),
+      'preferred-causes': () => Boolean(loadedForm.preferredCauses?.isEnabled),
+      'preferred-hobbies': () =>
+        Boolean(loadedForm.preferredHobbies?.isEnabled),
+      'preferred-industry': () =>
+        Boolean(loadedForm.preferredIndustries?.isEnabled),
+      'customizable-form': () =>
+        Boolean(loadedForm.customizableForm?.isEnabled),
+      'schedule-vacancy': () => loadedForm.schedule !== undefined,
+    };
 
     const completed = new Set<number>();
-    stepEnabledChecks.forEach((check, index) => {
-      if (check()) completed.add(index);
+    visibleSteps.forEach((step, index) => {
+      if (stepEnabledChecks[step.key]?.()) completed.add(index);
     });
     setCompletedSteps(completed);
   };
@@ -426,7 +479,7 @@ function VacancyFormProvider({
       setIsInitialStep(false);
       return;
     }
-    if (currentStepIndex < VACANCY_STEPS.length - 1) {
+    if (currentStepIndex < visibleSteps.length - 1) {
       const shouldComplete =
         currentStepIndex === 0 || isStepEnabled(data, completed);
       if (shouldComplete) {
@@ -515,7 +568,7 @@ function VacancyFormProvider({
             status: 'DRAFT',
           });
         } else {
-          await createVacancy({ form: draftForm, status: 'DRAFT' });
+          await createVacancy({ form: draftForm, status: 'DRAFT', templateId });
         }
         SuccessToast({
           title: t('vacancyCancelDialog.notifications.saveAsDraft.title'),
@@ -542,6 +595,8 @@ function VacancyFormProvider({
       value={{
         form,
         setForm,
+        visibleSteps,
+        templateFieldVisibility,
         currentStepIndex,
         setCurrentStepIndex,
         completedSteps,
@@ -581,4 +636,25 @@ function useVacancyForm() {
   return context;
 }
 
-export { VacancyFormProvider, useVacancyForm, VACANCY_STEPS };
+/**
+ * Returns a `(fieldCode) => boolean` predicate for a template section key.
+ * Normal create/edit flow: always `true` (every field renders). Use Template
+ * flow: only fields the template configured (content boolean true) are visible.
+ * Field codes match `TEMPLATE_SECTIONS` in vacancy-template-config.ts.
+ */
+function useTemplateFieldVisible(
+  sectionKey: string
+): (fieldCode: string) => boolean {
+  const { templateFieldVisibility } = useVacancyForm();
+  const sectionMap = templateFieldVisibility?.[sectionKey];
+  return (fieldCode: string) =>
+    sectionMap ? Boolean(sectionMap[fieldCode]) : true;
+}
+
+export {
+  VacancyFormProvider,
+  useVacancyForm,
+  useTemplateFieldVisible,
+  VACANCY_STEPS,
+  DEFAULT_FORM,
+};

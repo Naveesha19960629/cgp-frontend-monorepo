@@ -1657,6 +1657,8 @@ interface CreateVacancyPayload {
   title: string;
   status: string;
   lastActiveStep: string;
+  /** Set when the vacancy is created from a template, for server-side lineage. */
+  templateId?: string;
   data: {
     jobRequirement: JobRequirementApiPayload;
     profileRequirement: ProfileRequirementApiPayload[];
@@ -1783,6 +1785,32 @@ interface VacancyTemplateQueryParams {
   sortOrder?: TemplateSortOrder;
 }
 
+// ── Use Template (create vacancy from template) ─────────────────────────────
+
+/**
+ * Pre-built POST /v1/vacancies skeleton returned by getTemplateById. Each key in
+ * `data` is either `null` (section not configured in the template → hide it) or a
+ * section object/array whose `content` map holds field-VISIBILITY booleans (true =
+ * render that field). `customizedForm` carries actual copied form data. The mapper
+ * `toVacancyFormFromTemplateUsePayload` interprets it defensively, so `data` is typed
+ * loosely here.
+ */
+interface VacancyTemplateUseRequestBody {
+  title: string;
+  status: string;
+  lastActiveStep: string;
+  templateId: string;
+  data: Record<string, unknown>;
+}
+
+/** Response payload of GET /vacancy-templates/{id} used in the "Use Template" flow. */
+interface VacancyTemplateUseResponse {
+  templateId: string;
+  templateName: string;
+  refNumber: string;
+  requestBody: VacancyTemplateUseRequestBody;
+}
+
 export type {
   CreateVacancyPayload,
   TemplateSectionKind,
@@ -1800,6 +1828,8 @@ export type {
   VacancyTemplateSearchItem,
   VacancyTemplateSearchPage,
   VacancyTemplateQueryParams,
+  VacancyTemplateUseRequestBody,
+  VacancyTemplateUseResponse,
   JobRequirementApiPayload,
   PatentContentApiPayload,
   PatentGroupApiPayload,

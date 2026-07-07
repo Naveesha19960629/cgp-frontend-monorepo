@@ -9,10 +9,7 @@ import {
   VacancyCancelDialog,
   VacancyEditCancelDialog,
 } from '@/views/vacancies/components';
-import {
-  VACANCY_STEPS,
-  useVacancyForm,
-} from '@/views/vacancies/context/vacancy-form-context';
+import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 
 import { SuccessToast } from '@cgp/ui-kit/components/custom-toast';
 import { ScrollArea } from '@cgp/ui-kit/components/ui/scroll-area';
@@ -80,6 +77,7 @@ export default function VacancyCreateStepperForm({
     mode === 'edit' ? t('vacancies.editVacancy') : t('vacancies.addVacancy');
   const {
     form,
+    visibleSteps,
     currentStepIndex,
     setCurrentStepIndex,
     completedSteps,
@@ -102,7 +100,7 @@ export default function VacancyCreateStepperForm({
     form.status.toLowerCase() !== 'new' &&
     form.status.toLowerCase() !== 'draft';
 
-  const currentStepKey = VACANCY_STEPS[currentStepIndex].key;
+  const currentStepKey = visibleSteps[currentStepIndex].key;
   const isStepNavigationEnabled =
     mode === 'edit' ? isJobRequirementsFormValid : completedSteps.has(0);
 
@@ -112,7 +110,7 @@ export default function VacancyCreateStepperForm({
   const [isNavigating, setIsNavigating] = useState(false);
 
   const handleTabChange = (value: string) => {
-    const targetIndex = VACANCY_STEPS.findIndex(s => s.key === value);
+    const targetIndex = visibleSteps.findIndex(s => s.key === value);
     if (targetIndex === -1 || targetIndex === currentStepIndex) return;
     if (stepGuard) {
       setPendingTargetIndex(targetIndex);
@@ -144,7 +142,7 @@ export default function VacancyCreateStepperForm({
                 variant="line"
                 className="flex w-full flex-col items-start justify-start rounded-none border-none bg-transparent p-0"
               >
-                {VACANCY_STEPS.map((step, index) => {
+                {visibleSteps.map((step, index) => {
                   const isDisabled = index > 0 && !isStepNavigationEnabled;
                   return (
                     <div
@@ -174,7 +172,7 @@ export default function VacancyCreateStepperForm({
                           {step.label}
                         </span>
                       </TabsTrigger>
-                      {index < VACANCY_STEPS.length - 1 && (
+                      {index < visibleSteps.length - 1 && (
                         <div
                           className={cn(
                             'my-2 ml-2.5 h-4 w-px',
@@ -194,7 +192,7 @@ export default function VacancyCreateStepperForm({
           {/* Right — content */}
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
             <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
-              {VACANCY_STEPS.map((step, index) => {
+              {visibleSteps.map((step, index) => {
                 const StepComponent = step.component;
                 return (
                   <TabsContent
@@ -265,7 +263,7 @@ export default function VacancyCreateStepperForm({
         confirmLabel={t('stepNavigation.disableDialog.confirmButton')}
         onConfirm={() => {
           if (pendingTargetIndex !== null) {
-            const sectionName = VACANCY_STEPS[currentStepIndex].label;
+            const sectionName = visibleSteps[currentStepIndex].label;
             stepDisableRef.current?.();
             removeCompletedStep(currentStepIndex);
             SuccessToast({

@@ -11,7 +11,10 @@ import MessageBox from '@/components/message-box';
 import { AddSchoolDialog } from '@/views/vacancies/components/form-steps/add-school-dialog';
 import StepDisableDialog from '@/views/vacancies/components/step-disable-dialog';
 import VacancyStatusBadge from '@/views/vacancies/components/vacancy-status-badge';
-import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
+import {
+  useTemplateFieldVisible,
+  useVacancyForm,
+} from '@/views/vacancies/context/vacancy-form-context';
 import {
   useAddAwardingBodyMutation,
   useAddExaminationMutation,
@@ -95,6 +98,7 @@ export default function SecondaryEducationStep({
   mode = 'create',
 }: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
+  const isFieldVisible = useTemplateFieldVisible('secondaryEducation');
   const {
     form: vacancyForm,
     setForm,
@@ -612,636 +616,662 @@ export default function SecondaryEducationStep({
               )}
             >
               {/* Accepts Home Schooling */}
-              <div className="flex items-center gap-2">
-                <Controller
-                  control={control}
-                  name="entries.0.acceptsHomeSchooling"
-                  render={({ field }) => (
-                    <Checkbox
-                      id="acceptsHomeSchooling"
-                      checked={field.value}
-                      onCheckedChange={newValue =>
-                        field.onChange(newValue === true)
-                      }
-                    />
-                  )}
-                />
-                <Label
-                  htmlFor="acceptsHomeSchooling"
-                  className="cursor-pointer"
-                >
-                  {t('secondaryEducation.acceptsHomeSchooling')}
-                </Label>
-              </div>
+              {isFieldVisible('acceptsHomeSchooling') && (
+                <div className="flex items-center gap-2">
+                  <Controller
+                    control={control}
+                    name="entries.0.acceptsHomeSchooling"
+                    render={({ field }) => (
+                      <Checkbox
+                        id="acceptsHomeSchooling"
+                        checked={field.value}
+                        onCheckedChange={newValue =>
+                          field.onChange(newValue === true)
+                        }
+                      />
+                    )}
+                  />
+                  <Label
+                    htmlFor="acceptsHomeSchooling"
+                    className="cursor-pointer"
+                  >
+                    {t('secondaryEducation.acceptsHomeSchooling')}
+                  </Label>
+                </div>
+              )}
 
               {/* Row 1: School Name | School Location */}
               <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-                <div className="flex min-w-0 flex-col gap-1">
-                  <Label className="truncate">
-                    {t('secondaryEducation.schoolName')}
-                  </Label>
-                  <Controller
-                    control={control}
-                    name="entries.0.schools"
-                    render={({ field }) => (
-                      <MultipleSelector
-                        key={schoolsSelectorKey}
-                        value={field.value}
-                        onSearch={async (search: string) => {
-                          const results = await searchSchools(search);
-                          // Filter out items already selected to prevent duplication
-                          const selectedValues = new Set(
-                            field.value.map(v => v.value.toLowerCase())
-                          );
-                          return results.filter(
-                            item =>
-                              !selectedValues.has(item.value.toLowerCase())
-                          );
-                        }}
-                        onChange={options => {
-                          if (options.length > MAX_SELECTIONS) {
-                            setMax('schools');
-                            return;
+                {isFieldVisible('schools') && (
+                  <div className="flex min-w-0 flex-col gap-1">
+                    <Label className="truncate">
+                      {t('secondaryEducation.schoolName')}
+                    </Label>
+                    <Controller
+                      control={control}
+                      name="entries.0.schools"
+                      render={({ field }) => (
+                        <MultipleSelector
+                          key={schoolsSelectorKey}
+                          value={field.value}
+                          onSearch={async (search: string) => {
+                            const results = await searchSchools(search);
+                            // Filter out items already selected to prevent duplication
+                            const selectedValues = new Set(
+                              field.value.map(v => v.value.toLowerCase())
+                            );
+                            return results.filter(
+                              item =>
+                                !selectedValues.has(item.value.toLowerCase())
+                            );
+                          }}
+                          onChange={options => {
+                            if (options.length > MAX_SELECTIONS) {
+                              setMax('schools');
+                              return;
+                            }
+                            if (options.length < MAX_SELECTIONS)
+                              clearMax('schools');
+                            const newItem = options.find(
+                              o => o.value === o.label
+                            );
+                            if (newItem) {
+                              schoolsSnapshotRef.current =
+                                getValues('entries.0.schools');
+                              setPendingSchoolLabel(newItem.label);
+                              setAddSchoolDialogOpen(true);
+                            } else {
+                              field.onChange(options);
+                            }
+                          }}
+                          maxSelected={MAX_SELECTIONS}
+                          onMaxSelected={() => setMax('schools')}
+                          errorMessage={
+                            maxReachedFields.has('schools')
+                              ? t('secondaryEducation.errors.maxSelections')
+                              : undefined
                           }
-                          if (options.length < MAX_SELECTIONS)
-                            clearMax('schools');
-                          const newItem = options.find(
-                            o => o.value === o.label
-                          );
-                          if (newItem) {
-                            schoolsSnapshotRef.current =
-                              getValues('entries.0.schools');
-                            setPendingSchoolLabel(newItem.label);
-                            setAddSchoolDialogOpen(true);
-                          } else {
-                            field.onChange(options);
+                          creatable
+                          hideClearAllButton
+                          triggerSearchOnFocus
+                          keepSelectedInList
+                          loadingIndicator={
+                            <p className="px-3 pb-3 text-left">
+                              {t('common.loading')}
+                            </p>
                           }
-                        }}
-                        maxSelected={MAX_SELECTIONS}
-                        onMaxSelected={() => setMax('schools')}
-                        errorMessage={
-                          maxReachedFields.has('schools')
-                            ? t('secondaryEducation.errors.maxSelections')
-                            : undefined
-                        }
-                        creatable
-                        hideClearAllButton
-                        triggerSearchOnFocus
-                        keepSelectedInList
-                        loadingIndicator={
-                          <p className="px-3 pb-3 text-left">
-                            {t('common.loading')}
-                          </p>
-                        }
-                        emptyIndicator={
-                          <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
-                            <div className="flex flex-col items-start">
-                              <img
-                                src={multiSelectInfoAvatar}
-                                alt={t('common.noData')}
-                              />
-                              <div className="mt-3 w-61 text-left">
-                                <p className="font-bold text-slate-900">
-                                  {t('common.noDataTitle')}
-                                </p>
-                                <p className="text-sm font-semibold text-slate-700">
-                                  {t('common.noDataDescription')}
-                                </p>
+                          emptyIndicator={
+                            <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
+                              <div className="flex flex-col items-start">
+                                <img
+                                  src={multiSelectInfoAvatar}
+                                  alt={t('common.noData')}
+                                />
+                                <div className="mt-3 w-61 text-left">
+                                  <p className="font-bold text-slate-900">
+                                    {t('common.noDataTitle')}
+                                  </p>
+                                  <p className="text-sm font-semibold text-slate-700">
+                                    {t('common.noDataDescription')}
+                                  </p>
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        }
-                        placeholder={t(
-                          'secondaryEducation.placeholders.school'
-                        )}
-                      />
-                    )}
-                  />
-                </div>
+                          }
+                          placeholder={t(
+                            'secondaryEducation.placeholders.school'
+                          )}
+                        />
+                      )}
+                    />
+                  </div>
+                )}
 
-                <div className="flex min-w-0 flex-col gap-1">
-                  <Label className="truncate">
-                    {t('secondaryEducation.schoolLocation')}
-                  </Label>
-                  <Controller
-                    control={control}
-                    name="entries.0.schoolLocations"
-                    render={({ field }) => (
-                      <MultipleSelector
-                        value={field.value}
-                        onSearch={searchLocations}
-                        onChange={options => {
-                          if (options.length < MAX_SELECTIONS)
-                            clearMax('schoolLocations');
-                          field.onChange(options);
-                        }}
-                        maxSelected={MAX_SELECTIONS}
-                        onMaxSelected={() => setMax('schoolLocations')}
-                        errorMessage={
-                          maxReachedFields.has('schoolLocations')
-                            ? t('secondaryEducation.errors.maxSelections')
-                            : undefined
-                        }
-                        triggerSearchOnFocus
-                        keepSelectedInList
-                        loadingIndicator={
-                          <p className="px-3 pb-3 text-left">
-                            {t('common.loading')}
-                          </p>
-                        }
-                        emptyIndicator={
-                          <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
-                            <div className="flex flex-col items-start">
-                              <img
-                                src={multiSelectInfoAvatar}
-                                alt={t('common.noData')}
-                              />
-                              <div className="mt-3 w-61 text-left">
-                                <p className="font-bold text-slate-900">
-                                  {t('common.noDataTitle')}
-                                </p>
-                                <p className="text-sm font-semibold text-slate-700">
-                                  {t('common.noDataDescription')}
-                                </p>
+                {isFieldVisible('schoolLocations') && (
+                  <div className="flex min-w-0 flex-col gap-1">
+                    <Label className="truncate">
+                      {t('secondaryEducation.schoolLocation')}
+                    </Label>
+                    <Controller
+                      control={control}
+                      name="entries.0.schoolLocations"
+                      render={({ field }) => (
+                        <MultipleSelector
+                          value={field.value}
+                          onSearch={searchLocations}
+                          onChange={options => {
+                            if (options.length < MAX_SELECTIONS)
+                              clearMax('schoolLocations');
+                            field.onChange(options);
+                          }}
+                          maxSelected={MAX_SELECTIONS}
+                          onMaxSelected={() => setMax('schoolLocations')}
+                          errorMessage={
+                            maxReachedFields.has('schoolLocations')
+                              ? t('secondaryEducation.errors.maxSelections')
+                              : undefined
+                          }
+                          triggerSearchOnFocus
+                          keepSelectedInList
+                          loadingIndicator={
+                            <p className="px-3 pb-3 text-left">
+                              {t('common.loading')}
+                            </p>
+                          }
+                          emptyIndicator={
+                            <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
+                              <div className="flex flex-col items-start">
+                                <img
+                                  src={multiSelectInfoAvatar}
+                                  alt={t('common.noData')}
+                                />
+                                <div className="mt-3 w-61 text-left">
+                                  <p className="font-bold text-slate-900">
+                                    {t('common.noDataTitle')}
+                                  </p>
+                                  <p className="text-sm font-semibold text-slate-700">
+                                    {t('common.noDataDescription')}
+                                  </p>
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        }
-                        placeholder={t(
-                          'secondaryEducation.placeholders.schoolLocation'
-                        )}
-                      />
-                    )}
-                  />
-                </div>
+                          }
+                          placeholder={t(
+                            'secondaryEducation.placeholders.schoolLocation'
+                          )}
+                        />
+                      )}
+                    />
+                  </div>
+                )}
               </div>
 
               {/* Row 2: Grade | Start Date | End Date */}
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-                <div className="flex min-w-0 flex-col gap-1">
-                  <div className="flex min-w-0 items-center justify-between gap-2">
-                    <Label className="shrink-0">
-                      {t('secondaryEducation.grade')}
-                    </Label>
+                {isFieldVisible('grade') && (
+                  <div className="flex min-w-0 flex-col gap-1">
+                    <div className="flex min-w-0 items-center justify-between gap-2">
+                      <Label className="shrink-0">
+                        {t('secondaryEducation.grade')}
+                      </Label>
+                      <Controller
+                        control={control}
+                        name="entries.0.grade"
+                        render={({ field }) => (
+                          <CharacterCount
+                            currentLength={field.value.length}
+                            maxLength={80}
+                          />
+                        )}
+                      />
+                    </div>
                     <Controller
                       control={control}
                       name="entries.0.grade"
                       render={({ field }) => (
-                        <CharacterCount
-                          currentLength={field.value.length}
+                        <Input
+                          {...field}
                           maxLength={80}
+                          className="h-11"
+                          placeholder={t(
+                            'secondaryEducation.placeholders.grade'
+                          )}
                         />
                       )}
                     />
                   </div>
-                  <Controller
+                )}
+
+                {isFieldVisible('startDate') && (
+                  <FormField
                     control={control}
-                    name="entries.0.grade"
+                    name="entries.0.startDate"
                     render={({ field }) => (
-                      <Input
-                        {...field}
-                        maxLength={80}
-                        className="h-11"
-                        placeholder={t('secondaryEducation.placeholders.grade')}
-                      />
+                      <FormItem className="flex w-full flex-col gap-1 space-y-0">
+                        <div className="flex h-5 items-center">
+                          <FormLabel>
+                            {t('secondaryEducation.startDate')}
+                          </FormLabel>
+                        </div>
+                        <Popover
+                          modal
+                          open={openDatePopover === 'startDate'}
+                          onOpenChange={open =>
+                            setOpenDatePopover(
+                              !fieldsDisabled && open ? 'startDate' : null
+                            )
+                          }
+                        >
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                disabled={fieldsDisabled}
+                                className={cn(
+                                  'border-input flex h-11 w-full min-w-0 items-center justify-between rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
+                                  !field.value && 'text-slate-500',
+                                  field.value && 'text-zinc-800',
+                                  'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
+                                  'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
+                                  'dark:bg-input/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
+                                  applyTypography('body-medium'),
+                                  'shadow-none!'
+                                )}
+                              >
+                                {field.value ? (
+                                  <span className="truncate pr-2">
+                                    {formatDate(field.value)}
+                                  </span>
+                                ) : (
+                                  <span className="truncate pr-2">
+                                    {t(
+                                      'secondaryEducation.placeholders.startDate'
+                                    )}
+                                  </span>
+                                )}
+                                <CalendarIcon
+                                  variant="Linear"
+                                  size={20}
+                                  className="shrink-0 text-zinc-800"
+                                />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={
+                                field.value ? new Date(field.value) : undefined
+                              }
+                              defaultMonth={
+                                field.value
+                                  ? (parseLocalDate(field.value) ?? new Date())
+                                  : new Date()
+                              }
+                              onSelect={date => {
+                                field.onChange(
+                                  date ? formatLocalDate(date) : undefined
+                                );
+                                setOpenDatePopover(null);
+                                const endDate = getValues('entries.0.endDate');
+                                if (
+                                  endDate &&
+                                  date &&
+                                  compareDates(endDate, date) <= 0
+                                ) {
+                                  resetField('entries.0.endDate', {
+                                    defaultValue: undefined,
+                                  });
+                                }
+                              }}
+                              disabled={date =>
+                                date > TODAY || date < HUNDRED_YEARS_AGO
+                              }
+                              captionLayout="dropdown"
+                              startMonth={HUNDRED_YEARS_AGO}
+                              endMonth={TODAY}
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      </FormItem>
                     )}
                   />
-                </div>
+                )}
 
-                <FormField
-                  control={control}
-                  name="entries.0.startDate"
-                  render={({ field }) => (
-                    <FormItem className="flex w-full flex-col gap-1 space-y-0">
-                      <div className="flex h-5 items-center">
-                        <FormLabel>
-                          {t('secondaryEducation.startDate')}
-                        </FormLabel>
-                      </div>
-                      <Popover
-                        modal
-                        open={openDatePopover === 'startDate'}
-                        onOpenChange={open =>
-                          setOpenDatePopover(
-                            !fieldsDisabled && open ? 'startDate' : null
-                          )
-                        }
-                      >
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              disabled={fieldsDisabled}
-                              className={cn(
-                                'border-input flex h-11 w-full min-w-0 items-center justify-between rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
-                                !field.value && 'text-slate-500',
-                                field.value && 'text-zinc-800',
-                                'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
-                                'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
-                                'dark:bg-input/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
-                                applyTypography('body-medium'),
-                                'shadow-none!'
-                              )}
-                            >
-                              {field.value ? (
-                                <span className="truncate pr-2">
-                                  {formatDate(field.value)}
-                                </span>
-                              ) : (
-                                <span className="truncate pr-2">
-                                  {t(
-                                    'secondaryEducation.placeholders.startDate'
-                                  )}
-                                </span>
-                              )}
-                              <CalendarIcon
-                                variant="Linear"
-                                size={20}
-                                className="shrink-0 text-zinc-800"
-                              />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={
-                              field.value ? new Date(field.value) : undefined
-                            }
-                            defaultMonth={
-                              field.value
-                                ? (parseLocalDate(field.value) ?? new Date())
-                                : new Date()
-                            }
-                            onSelect={date => {
-                              field.onChange(
-                                date ? formatLocalDate(date) : undefined
-                              );
-                              setOpenDatePopover(null);
-                              const endDate = getValues('entries.0.endDate');
-                              if (
-                                endDate &&
-                                date &&
-                                compareDates(endDate, date) <= 0
-                              ) {
-                                resetField('entries.0.endDate', {
-                                  defaultValue: undefined,
-                                });
+                {isFieldVisible('endDate') && (
+                  <FormField
+                    control={control}
+                    name="entries.0.endDate"
+                    render={({ field }) => (
+                      <FormItem className="flex w-full flex-col gap-1 space-y-0">
+                        <div className="flex h-5 items-center">
+                          <FormLabel>
+                            {t('secondaryEducation.endDate')}
+                          </FormLabel>
+                        </div>
+                        <Popover
+                          modal
+                          open={openDatePopover === 'endDate'}
+                          onOpenChange={open =>
+                            setOpenDatePopover(
+                              !fieldsDisabled && open ? 'endDate' : null
+                            )
+                          }
+                        >
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                disabled={fieldsDisabled}
+                                className={cn(
+                                  'border-input flex h-11 w-full min-w-0 items-center justify-between rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
+                                  !field.value && 'text-slate-500',
+                                  field.value && 'text-zinc-800',
+                                  'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
+                                  'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
+                                  'dark:bg-input/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
+                                  applyTypography('body-medium'),
+                                  'shadow-none!'
+                                )}
+                              >
+                                {field.value ? (
+                                  <span className="truncate pr-2">
+                                    {formatDate(field.value)}
+                                  </span>
+                                ) : (
+                                  <span className="truncate pr-2">
+                                    {t(
+                                      'secondaryEducation.placeholders.endDate'
+                                    )}
+                                  </span>
+                                )}
+                                <CalendarIcon
+                                  variant="Linear"
+                                  size={20}
+                                  className="shrink-0 text-zinc-800"
+                                />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={
+                                field.value ? new Date(field.value) : undefined
                               }
-                            }}
-                            disabled={date =>
-                              date > TODAY || date < HUNDRED_YEARS_AGO
-                            }
-                            captionLayout="dropdown"
-                            startMonth={HUNDRED_YEARS_AGO}
-                            endMonth={TODAY}
-                          />
-                        </PopoverContent>
-                      </Popover>
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={control}
-                  name="entries.0.endDate"
-                  render={({ field }) => (
-                    <FormItem className="flex w-full flex-col gap-1 space-y-0">
-                      <div className="flex h-5 items-center">
-                        <FormLabel>{t('secondaryEducation.endDate')}</FormLabel>
-                      </div>
-                      <Popover
-                        modal
-                        open={openDatePopover === 'endDate'}
-                        onOpenChange={open =>
-                          setOpenDatePopover(
-                            !fieldsDisabled && open ? 'endDate' : null
-                          )
-                        }
-                      >
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              disabled={fieldsDisabled}
-                              className={cn(
-                                'border-input flex h-11 w-full min-w-0 items-center justify-between rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
-                                !field.value && 'text-slate-500',
-                                field.value && 'text-zinc-800',
-                                'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
-                                'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
-                                'dark:bg-input/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
-                                applyTypography('body-medium'),
-                                'shadow-none!'
-                              )}
-                            >
-                              {field.value ? (
-                                <span className="truncate pr-2">
-                                  {formatDate(field.value)}
-                                </span>
-                              ) : (
-                                <span className="truncate pr-2">
-                                  {t('secondaryEducation.placeholders.endDate')}
-                                </span>
-                              )}
-                              <CalendarIcon
-                                variant="Linear"
-                                size={20}
-                                className="shrink-0 text-zinc-800"
-                              />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={
-                              field.value ? new Date(field.value) : undefined
-                            }
-                            defaultMonth={endDateDefaultMonth}
-                            onSelect={date => {
-                              field.onChange(
-                                date ? formatLocalDate(date) : undefined
-                              );
-                              setOpenDatePopover(null);
-                            }}
-                            disabled={date =>
-                              date > HUNDRED_YEARS_FROM_NOW ||
-                              (minEndDate
-                                ? compareDates(date, minEndDate) < 0
-                                : false)
-                            }
-                            captionLayout="dropdown"
-                            startMonth={minEndDate ?? HUNDRED_YEARS_AGO}
-                            endMonth={HUNDRED_YEARS_FROM_NOW}
-                          />
-                        </PopoverContent>
-                      </Popover>
-                    </FormItem>
-                  )}
-                />
+                              defaultMonth={endDateDefaultMonth}
+                              onSelect={date => {
+                                field.onChange(
+                                  date ? formatLocalDate(date) : undefined
+                                );
+                                setOpenDatePopover(null);
+                              }}
+                              disabled={date =>
+                                date > HUNDRED_YEARS_FROM_NOW ||
+                                (minEndDate
+                                  ? compareDates(date, minEndDate) < 0
+                                  : false)
+                              }
+                              captionLayout="dropdown"
+                              startMonth={minEndDate ?? HUNDRED_YEARS_AGO}
+                              endMonth={HUNDRED_YEARS_FROM_NOW}
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      </FormItem>
+                    )}
+                  />
+                )}
               </div>
 
               {/* Row 3: Examination | Awarding Body */}
               <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-                <div className="flex min-w-0 flex-col gap-1">
-                  <div className="flex min-w-0 items-center justify-between gap-2">
-                    <Label className="shrink-0">
-                      {t('secondaryEducation.examination')}
-                    </Label>
-                    <CharacterCount
-                      currentLength={examinationInput.length}
-                      maxLength={100}
-                    />
-                  </div>
-                  <Controller
-                    control={control}
-                    name="entries.0.examinations"
-                    render={({ field }) => (
-                      <MultipleSelector
-                        ref={examinationRef}
-                        value={field.value}
-                        onSearch={searchExaminations}
-                        onChange={options => {
-                          if (options.length > MAX_SELECTIONS) {
-                            setMax('examinations');
-                            return;
-                          }
-                          if (options.length < MAX_SELECTIONS)
-                            clearMax('examinations');
-                          setExaminationInput('');
-                          field.onChange(options);
-                        }}
-                        maxSelected={MAX_SELECTIONS}
-                        onMaxSelected={() => setMax('examinations')}
-                        errorMessage={
-                          maxReachedFields.has('examinations')
-                            ? t('secondaryEducation.errors.maxSelections')
-                            : undefined
-                        }
-                        creatable
-                        hideClearAllButton
-                        triggerSearchOnFocus
-                        keepSelectedInList
-                        loadingIndicator={
-                          <p className="px-3 pb-3 text-left">
-                            {t('common.loading')}
-                          </p>
-                        }
-                        emptyIndicator={
-                          <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
-                            <div className="flex flex-col items-start">
-                              <img
-                                src={multiSelectInfoAvatar}
-                                alt={t('common.noData')}
-                              />
-                              <div className="mt-3 w-61 text-left">
-                                <p className="font-bold text-slate-900">
-                                  {t('common.noDataTitle')}
-                                </p>
-                                <p className="text-sm font-semibold text-slate-700">
-                                  {t('common.noDataDescription')}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        }
-                        inputProps={{
-                          maxLength: 100,
-                          onValueChange: val => setExaminationInput(val),
-                        }}
-                        placeholder={t(
-                          'secondaryEducation.placeholders.examination'
-                        )}
+                {isFieldVisible('examinations') && (
+                  <div className="flex min-w-0 flex-col gap-1">
+                    <div className="flex min-w-0 items-center justify-between gap-2">
+                      <Label className="shrink-0">
+                        {t('secondaryEducation.examination')}
+                      </Label>
+                      <CharacterCount
+                        currentLength={examinationInput.length}
+                        maxLength={100}
                       />
-                    )}
-                  />
-                </div>
-
-                <div className="flex min-w-0 flex-col gap-1">
-                  <div className="flex min-w-0 items-center justify-between gap-2">
-                    <Label className="shrink-0">
-                      {t('secondaryEducation.awardingBody')}
-                    </Label>
-                    <CharacterCount
-                      currentLength={awardingBodyInput.length}
-                      maxLength={200}
-                    />
-                  </div>
-                  <Controller
-                    control={control}
-                    name="entries.0.awardingBodies"
-                    render={({ field }) => (
-                      <MultipleSelector
-                        ref={awardingBodyRef}
-                        value={field.value}
-                        onSearch={searchAwardingBodies}
-                        onChange={options => {
-                          if (options.length > MAX_SELECTIONS) {
-                            setMax('awardingBodies');
-                            return;
-                          }
-                          if (options.length < MAX_SELECTIONS)
-                            clearMax('awardingBodies');
-                          setAwardingBodyInput('');
-                          field.onChange(options);
-                        }}
-                        maxSelected={MAX_SELECTIONS}
-                        onMaxSelected={() => setMax('awardingBodies')}
-                        errorMessage={
-                          maxReachedFields.has('awardingBodies')
-                            ? t('secondaryEducation.errors.maxSelections')
-                            : undefined
-                        }
-                        creatable
-                        hideClearAllButton
-                        triggerSearchOnFocus
-                        keepSelectedInList
-                        loadingIndicator={
-                          <p className="px-3 pb-3 text-left">
-                            {t('common.loading')}
-                          </p>
-                        }
-                        emptyIndicator={
-                          <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
-                            <div className="flex flex-col items-start">
-                              <img
-                                src={multiSelectInfoAvatar}
-                                alt={t('common.noData')}
-                              />
-                              <div className="mt-3 w-61 text-left">
-                                <p className="font-bold text-slate-900">
-                                  {t('common.noDataTitle')}
-                                </p>
-                                <p className="text-sm font-semibold text-slate-700">
-                                  {t('common.noDataDescription')}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        }
-                        inputProps={{
-                          maxLength: 200,
-                          onValueChange: val => setAwardingBodyInput(val),
-                        }}
-                        placeholder={t(
-                          'secondaryEducation.placeholders.awardingBody'
-                        )}
-                      />
-                    )}
-                  />
-                </div>
-              </div>
-
-              {/* Row 4: Field of Study | Results */}
-              <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-                <div className="flex min-w-0 flex-col gap-1">
-                  <div className="flex min-w-0 items-center justify-between gap-2">
-                    <Label className="shrink-0">
-                      {t('secondaryEducation.fieldOfStudy')}
-                    </Label>
-                    <CharacterCount
-                      currentLength={fieldOfStudyInput.length}
-                      maxLength={100}
-                    />
-                  </div>
-                  <Controller
-                    control={control}
-                    name="entries.0.fieldsOfStudy"
-                    render={({ field }) => (
-                      <MultipleSelector
-                        ref={fieldOfStudyRef}
-                        value={field.value}
-                        onSearch={searchFieldsOfStudy}
-                        onChange={options => {
-                          if (options.length > MAX_SELECTIONS) {
-                            setMax('fieldsOfStudy');
-                            return;
-                          }
-                          if (options.length < MAX_SELECTIONS)
-                            clearMax('fieldsOfStudy');
-                          setFieldOfStudyInput('');
-                          field.onChange(options);
-                        }}
-                        maxSelected={MAX_SELECTIONS}
-                        onMaxSelected={() => setMax('fieldsOfStudy')}
-                        errorMessage={
-                          maxReachedFields.has('fieldsOfStudy')
-                            ? t('secondaryEducation.errors.maxSelections')
-                            : undefined
-                        }
-                        creatable
-                        hideClearAllButton
-                        triggerSearchOnFocus
-                        keepSelectedInList
-                        loadingIndicator={
-                          <p className="px-3 pb-3 text-left">
-                            {t('common.loading')}
-                          </p>
-                        }
-                        emptyIndicator={
-                          <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
-                            <div className="flex flex-col items-start">
-                              <img
-                                src={multiSelectInfoAvatar}
-                                alt={t('common.noData')}
-                              />
-                              <div className="mt-3 w-61 text-left">
-                                <p className="font-bold text-slate-900">
-                                  {t('common.noDataTitle')}
-                                </p>
-                                <p className="text-sm font-semibold text-slate-700">
-                                  {t('common.noDataDescription')}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        }
-                        inputProps={{
-                          maxLength: 100,
-                          onValueChange: val => setFieldOfStudyInput(val),
-                        }}
-                        placeholder={t(
-                          'secondaryEducation.placeholders.fieldOfStudy'
-                        )}
-                      />
-                    )}
-                  />
-                </div>
-
-                <div className="flex min-w-0 flex-col gap-1">
-                  <div className="flex min-w-0 items-center justify-between gap-2">
-                    <Label className="shrink-0">
-                      {t('secondaryEducation.results')}
-                    </Label>
+                    </div>
                     <Controller
                       control={control}
-                      name="entries.0.result"
+                      name="entries.0.examinations"
                       render={({ field }) => (
-                        <CharacterCount
-                          currentLength={field.value.length}
-                          maxLength={1000}
+                        <MultipleSelector
+                          ref={examinationRef}
+                          value={field.value}
+                          onSearch={searchExaminations}
+                          onChange={options => {
+                            if (options.length > MAX_SELECTIONS) {
+                              setMax('examinations');
+                              return;
+                            }
+                            if (options.length < MAX_SELECTIONS)
+                              clearMax('examinations');
+                            setExaminationInput('');
+                            field.onChange(options);
+                          }}
+                          maxSelected={MAX_SELECTIONS}
+                          onMaxSelected={() => setMax('examinations')}
+                          errorMessage={
+                            maxReachedFields.has('examinations')
+                              ? t('secondaryEducation.errors.maxSelections')
+                              : undefined
+                          }
+                          creatable
+                          hideClearAllButton
+                          triggerSearchOnFocus
+                          keepSelectedInList
+                          loadingIndicator={
+                            <p className="px-3 pb-3 text-left">
+                              {t('common.loading')}
+                            </p>
+                          }
+                          emptyIndicator={
+                            <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
+                              <div className="flex flex-col items-start">
+                                <img
+                                  src={multiSelectInfoAvatar}
+                                  alt={t('common.noData')}
+                                />
+                                <div className="mt-3 w-61 text-left">
+                                  <p className="font-bold text-slate-900">
+                                    {t('common.noDataTitle')}
+                                  </p>
+                                  <p className="text-sm font-semibold text-slate-700">
+                                    {t('common.noDataDescription')}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          }
+                          inputProps={{
+                            maxLength: 100,
+                            onValueChange: val => setExaminationInput(val),
+                          }}
+                          placeholder={t(
+                            'secondaryEducation.placeholders.examination'
+                          )}
                         />
                       )}
                     />
                   </div>
-                  <Controller
-                    control={control}
-                    name="entries.0.result"
-                    render={({ field }) => (
-                      <Textarea
-                        {...field}
-                        maxLength={1000}
-                        className="min-h-42.5"
-                        placeholder={t(
-                          'secondaryEducation.placeholders.results'
+                )}
+
+                {isFieldVisible('secondaryAwardingBody') && (
+                  <div className="flex min-w-0 flex-col gap-1">
+                    <div className="flex min-w-0 items-center justify-between gap-2">
+                      <Label className="shrink-0">
+                        {t('secondaryEducation.awardingBody')}
+                      </Label>
+                      <CharacterCount
+                        currentLength={awardingBodyInput.length}
+                        maxLength={200}
+                      />
+                    </div>
+                    <Controller
+                      control={control}
+                      name="entries.0.awardingBodies"
+                      render={({ field }) => (
+                        <MultipleSelector
+                          ref={awardingBodyRef}
+                          value={field.value}
+                          onSearch={searchAwardingBodies}
+                          onChange={options => {
+                            if (options.length > MAX_SELECTIONS) {
+                              setMax('awardingBodies');
+                              return;
+                            }
+                            if (options.length < MAX_SELECTIONS)
+                              clearMax('awardingBodies');
+                            setAwardingBodyInput('');
+                            field.onChange(options);
+                          }}
+                          maxSelected={MAX_SELECTIONS}
+                          onMaxSelected={() => setMax('awardingBodies')}
+                          errorMessage={
+                            maxReachedFields.has('awardingBodies')
+                              ? t('secondaryEducation.errors.maxSelections')
+                              : undefined
+                          }
+                          creatable
+                          hideClearAllButton
+                          triggerSearchOnFocus
+                          keepSelectedInList
+                          loadingIndicator={
+                            <p className="px-3 pb-3 text-left">
+                              {t('common.loading')}
+                            </p>
+                          }
+                          emptyIndicator={
+                            <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
+                              <div className="flex flex-col items-start">
+                                <img
+                                  src={multiSelectInfoAvatar}
+                                  alt={t('common.noData')}
+                                />
+                                <div className="mt-3 w-61 text-left">
+                                  <p className="font-bold text-slate-900">
+                                    {t('common.noDataTitle')}
+                                  </p>
+                                  <p className="text-sm font-semibold text-slate-700">
+                                    {t('common.noDataDescription')}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          }
+                          inputProps={{
+                            maxLength: 200,
+                            onValueChange: val => setAwardingBodyInput(val),
+                          }}
+                          placeholder={t(
+                            'secondaryEducation.placeholders.awardingBody'
+                          )}
+                        />
+                      )}
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Row 4: Field of Study | Results */}
+              <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+                {isFieldVisible('fieldsOfStudy') && (
+                  <div className="flex min-w-0 flex-col gap-1">
+                    <div className="flex min-w-0 items-center justify-between gap-2">
+                      <Label className="shrink-0">
+                        {t('secondaryEducation.fieldOfStudy')}
+                      </Label>
+                      <CharacterCount
+                        currentLength={fieldOfStudyInput.length}
+                        maxLength={100}
+                      />
+                    </div>
+                    <Controller
+                      control={control}
+                      name="entries.0.fieldsOfStudy"
+                      render={({ field }) => (
+                        <MultipleSelector
+                          ref={fieldOfStudyRef}
+                          value={field.value}
+                          onSearch={searchFieldsOfStudy}
+                          onChange={options => {
+                            if (options.length > MAX_SELECTIONS) {
+                              setMax('fieldsOfStudy');
+                              return;
+                            }
+                            if (options.length < MAX_SELECTIONS)
+                              clearMax('fieldsOfStudy');
+                            setFieldOfStudyInput('');
+                            field.onChange(options);
+                          }}
+                          maxSelected={MAX_SELECTIONS}
+                          onMaxSelected={() => setMax('fieldsOfStudy')}
+                          errorMessage={
+                            maxReachedFields.has('fieldsOfStudy')
+                              ? t('secondaryEducation.errors.maxSelections')
+                              : undefined
+                          }
+                          creatable
+                          hideClearAllButton
+                          triggerSearchOnFocus
+                          keepSelectedInList
+                          loadingIndicator={
+                            <p className="px-3 pb-3 text-left">
+                              {t('common.loading')}
+                            </p>
+                          }
+                          emptyIndicator={
+                            <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
+                              <div className="flex flex-col items-start">
+                                <img
+                                  src={multiSelectInfoAvatar}
+                                  alt={t('common.noData')}
+                                />
+                                <div className="mt-3 w-61 text-left">
+                                  <p className="font-bold text-slate-900">
+                                    {t('common.noDataTitle')}
+                                  </p>
+                                  <p className="text-sm font-semibold text-slate-700">
+                                    {t('common.noDataDescription')}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          }
+                          inputProps={{
+                            maxLength: 100,
+                            onValueChange: val => setFieldOfStudyInput(val),
+                          }}
+                          placeholder={t(
+                            'secondaryEducation.placeholders.fieldOfStudy'
+                          )}
+                        />
+                      )}
+                    />
+                  </div>
+                )}
+
+                {isFieldVisible('result') && (
+                  <div className="flex min-w-0 flex-col gap-1">
+                    <div className="flex min-w-0 items-center justify-between gap-2">
+                      <Label className="shrink-0">
+                        {t('secondaryEducation.results')}
+                      </Label>
+                      <Controller
+                        control={control}
+                        name="entries.0.result"
+                        render={({ field }) => (
+                          <CharacterCount
+                            currentLength={field.value.length}
+                            maxLength={1000}
+                          />
                         )}
                       />
-                    )}
-                  />
-                </div>
+                    </div>
+                    <Controller
+                      control={control}
+                      name="entries.0.result"
+                      render={({ field }) => (
+                        <Textarea
+                          {...field}
+                          maxLength={1000}
+                          className="min-h-42.5"
+                          placeholder={t(
+                            'secondaryEducation.placeholders.results'
+                          )}
+                        />
+                      )}
+                    />
+                  </div>
+                )}
               </div>
             </div>
           </div>

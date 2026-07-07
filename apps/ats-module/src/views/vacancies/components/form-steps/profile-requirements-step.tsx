@@ -8,7 +8,10 @@ import { useTranslation } from 'react-i18next';
 
 import MessageBox from '@/components/message-box';
 import { StepDisableDialog, VacancyStatusBadge } from '@/views/vacancies';
-import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
+import {
+  useTemplateFieldVisible,
+  useVacancyForm,
+} from '@/views/vacancies/context/vacancy-form-context';
 import {
   useDisableSuccessToast,
   useGendersQuery,
@@ -107,6 +110,7 @@ function AddressCard({
   canRemove: boolean;
 }) {
   const { t } = useTranslation('ats');
+  const isFieldVisible = useTemplateFieldVisible('profileRequirement');
 
   const [citySearch, setCitySearch] = useState('');
   const [stateSearch, setStateSearch] = useState('');
@@ -249,122 +253,130 @@ function AddressCard({
       {/* Card body */}
       <div className="grid grid-cols-4 gap-5 px-5 pb-5">
         {/* City */}
-        <FormField
-          control={form.control}
-          name={`addresses.${index}.city`}
-          render={({ field, fieldState }) => (
-            <FormItem className="flex flex-col gap-1.5 space-y-0">
-              <FormLabel className="text-sm font-semibold text-slate-900">
-                {t('profileRequirements.city')}
-              </FormLabel>
-              <FormControl>
-                <Combobox
-                  options={cityOptions}
-                  value={field.value?.id ?? ''}
-                  onValueChange={handleCitySelect}
-                  onSearchChange={setCitySearch}
-                  loading={isCityLoading}
-                  disabled={isDisabled}
-                  placeholder={t('profileRequirements.cityPlaceholder')}
-                  addable={false}
-                  isError={!!fieldState.error}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {isFieldVisible('cityRefId') && (
+          <FormField
+            control={form.control}
+            name={`addresses.${index}.city`}
+            render={({ field, fieldState }) => (
+              <FormItem className="flex flex-col gap-1.5 space-y-0">
+                <FormLabel className="text-sm font-semibold text-slate-900">
+                  {t('profileRequirements.city')}
+                </FormLabel>
+                <FormControl>
+                  <Combobox
+                    options={cityOptions}
+                    value={field.value?.id ?? ''}
+                    onValueChange={handleCitySelect}
+                    onSearchChange={setCitySearch}
+                    loading={isCityLoading}
+                    disabled={isDisabled}
+                    placeholder={t('profileRequirements.cityPlaceholder')}
+                    addable={false}
+                    isError={!!fieldState.error}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
 
         {/* State / Province / Region */}
-        <FormField
-          control={form.control}
-          name={`addresses.${index}.stateProvince`}
-          render={({ field, fieldState }) => (
-            <FormItem className="flex flex-col gap-1.5 space-y-0">
-              <FormLabel className="text-sm font-semibold text-slate-900">
-                {t('profileRequirements.stateProvince')}
-              </FormLabel>
-              <FormControl>
-                <Combobox
-                  options={stateOptions}
-                  value={field.value?.id ?? ''}
-                  onValueChange={handleStateSelect}
-                  onSearchChange={setStateSearch}
-                  loading={isStateLoading}
-                  disabled={isDisabled}
-                  placeholder={t(
-                    'profileRequirements.stateProvincePlaceholder'
-                  )}
-                  addable={false}
-                  isError={!!fieldState.error}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {isFieldVisible('stateRefId') && (
+          <FormField
+            control={form.control}
+            name={`addresses.${index}.stateProvince`}
+            render={({ field, fieldState }) => (
+              <FormItem className="flex flex-col gap-1.5 space-y-0">
+                <FormLabel className="text-sm font-semibold text-slate-900">
+                  {t('profileRequirements.stateProvince')}
+                </FormLabel>
+                <FormControl>
+                  <Combobox
+                    options={stateOptions}
+                    value={field.value?.id ?? ''}
+                    onValueChange={handleStateSelect}
+                    onSearchChange={setStateSearch}
+                    loading={isStateLoading}
+                    disabled={isDisabled}
+                    placeholder={t(
+                      'profileRequirements.stateProvincePlaceholder'
+                    )}
+                    addable={false}
+                    isError={!!fieldState.error}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
 
         {/* Country */}
-        <FormField
-          control={form.control}
-          name={`addresses.${index}.country`}
-          render={({ field, fieldState }) => (
-            <FormItem className="flex flex-col gap-1.5 space-y-0">
-              <FormLabel className="text-sm font-semibold text-slate-900">
-                {t('profileRequirements.country')}
-              </FormLabel>
-              <FormControl>
-                <Combobox
-                  options={countryOptions}
-                  value={field.value?.id ?? ''}
-                  onValueChange={handleCountrySelect}
-                  onSearchChange={setCountrySearch}
-                  loading={isCountryLoading}
-                  disabled={isDisabled}
-                  placeholder={t('profileRequirements.countryPlaceholder')}
-                  addable={false}
-                  isError={!!fieldState.error}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {isFieldVisible('countryRefId') && (
+          <FormField
+            control={form.control}
+            name={`addresses.${index}.country`}
+            render={({ field, fieldState }) => (
+              <FormItem className="flex flex-col gap-1.5 space-y-0">
+                <FormLabel className="text-sm font-semibold text-slate-900">
+                  {t('profileRequirements.country')}
+                </FormLabel>
+                <FormControl>
+                  <Combobox
+                    options={countryOptions}
+                    value={field.value?.id ?? ''}
+                    onValueChange={handleCountrySelect}
+                    onSearchChange={setCountrySearch}
+                    loading={isCountryLoading}
+                    disabled={isDisabled}
+                    placeholder={t('profileRequirements.countryPlaceholder')}
+                    addable={false}
+                    isError={!!fieldState.error}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
 
         {/* Postal Code / Zip */}
-        <FormField
-          control={form.control}
-          name={`addresses.${index}.postalCode`}
-          render={({ field }) => (
-            <FormItem className="flex flex-col gap-1.5 space-y-0">
-              <FormLabel className="flex justify-between text-sm font-semibold text-slate-900">
-                <span>{t('profileRequirements.postalCode')}</span>
-                <CharacterCount
-                  maxLength={20}
-                  currentLength={field.value?.length ?? 0}
-                />
-              </FormLabel>
-              <FormControl>
-                <Input
-                  placeholder={t('profileRequirements.postalCodePlaceholder')}
-                  maxLength={20}
-                  disabled={isDisabled}
-                  className="h-9 shadow-none"
-                  {...field}
-                  onChange={e => {
-                    const sanitized = sanitizePostalCodeText(e.target.value);
-                    field.onChange(sanitized.trimStart());
-                  }}
-                  onBlur={() => {
-                    field.onBlur();
-                    checkDuplicate();
-                  }}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {isFieldVisible('postalCode') && (
+          <FormField
+            control={form.control}
+            name={`addresses.${index}.postalCode`}
+            render={({ field }) => (
+              <FormItem className="flex flex-col gap-1.5 space-y-0">
+                <FormLabel className="flex justify-between text-sm font-semibold text-slate-900">
+                  <span>{t('profileRequirements.postalCode')}</span>
+                  <CharacterCount
+                    maxLength={20}
+                    currentLength={field.value?.length ?? 0}
+                  />
+                </FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder={t('profileRequirements.postalCodePlaceholder')}
+                    maxLength={20}
+                    disabled={isDisabled}
+                    className="h-9 shadow-none"
+                    {...field}
+                    onChange={e => {
+                      const sanitized = sanitizePostalCodeText(e.target.value);
+                      field.onChange(sanitized.trimStart());
+                    }}
+                    onBlur={() => {
+                      field.onBlur();
+                      checkDuplicate();
+                    }}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
       </div>
     </div>
   );
@@ -373,6 +385,7 @@ function AddressCard({
 export default function ProfileRequirementsStep({ onNext, onBack }: StepProps) {
   const { t } = useTranslation('ats');
   const showDisableToast = useDisableSuccessToast();
+  const isFieldVisible = useTemplateFieldVisible('profileRequirement');
 
   const {
     form: contextForm,
@@ -705,94 +718,98 @@ export default function ProfileRequirementsStep({ onNext, onBack }: StepProps) {
           {/* Gender & Marital Status */}
           <div className="grid grid-cols-2 gap-5 px-7 pb-8">
             {/* Gender */}
-            <FormField
-              control={form.control}
-              name="gender"
-              render={({ field }) => (
-                <FormItem className="flex flex-col gap-1 space-y-0">
-                  <FormLabel className="text-sm font-semibold text-slate-900">
-                    {t('profileRequirements.gender')}
-                  </FormLabel>
-                  <FormControl>
-                    <Select
-                      value={field.value?.id ?? ''}
-                      onValueChange={val => {
-                        const found = gendersData.find(g => g.id === val);
-                        if (found) {
-                          field.onChange({
-                            id: found.id,
-                            label: found.label,
-                          });
-                        }
-                      }}
-                      disabled={isFieldsDisabled}
-                    >
-                      <SelectTrigger className="!h-11 w-full bg-white shadow-none">
-                        <SelectValue
-                          placeholder={t(
-                            'profileRequirements.genderPlaceholder'
-                          )}
-                        />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {gendersData.map(g => (
-                          <SelectItem key={g.id} value={g.id}>
-                            {g.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {isFieldVisible('gender') && (
+              <FormField
+                control={form.control}
+                name="gender"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col gap-1 space-y-0">
+                    <FormLabel className="text-sm font-semibold text-slate-900">
+                      {t('profileRequirements.gender')}
+                    </FormLabel>
+                    <FormControl>
+                      <Select
+                        value={field.value?.id ?? ''}
+                        onValueChange={val => {
+                          const found = gendersData.find(g => g.id === val);
+                          if (found) {
+                            field.onChange({
+                              id: found.id,
+                              label: found.label,
+                            });
+                          }
+                        }}
+                        disabled={isFieldsDisabled}
+                      >
+                        <SelectTrigger className="!h-11 w-full bg-white shadow-none">
+                          <SelectValue
+                            placeholder={t(
+                              'profileRequirements.genderPlaceholder'
+                            )}
+                          />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {gendersData.map(g => (
+                            <SelectItem key={g.id} value={g.id}>
+                              {g.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             {/* Marital Status */}
-            <FormField
-              control={form.control}
-              name="maritalStatus"
-              render={({ field }) => (
-                <FormItem className="flex flex-col gap-1 space-y-0">
-                  <FormLabel className="text-sm font-semibold text-slate-900">
-                    {t('profileRequirements.maritalStatus')}
-                  </FormLabel>
-                  <FormControl>
-                    <Select
-                      value={field.value?.id ?? ''}
-                      onValueChange={val => {
-                        const found = maritalStatusesData.find(
-                          ms => ms.id === val
-                        );
-                        if (found) {
-                          field.onChange({
-                            id: found.id,
-                            label: found.label,
-                          });
-                        }
-                      }}
-                      disabled={isFieldsDisabled}
-                    >
-                      <SelectTrigger className="!h-11 w-full bg-white shadow-none">
-                        <SelectValue
-                          placeholder={t(
-                            'profileRequirements.maritalStatusPlaceholder'
-                          )}
-                        />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {maritalStatusesData.map(ms => (
-                          <SelectItem key={ms.id} value={ms.id}>
-                            {ms.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {isFieldVisible('maritalStatus') && (
+              <FormField
+                control={form.control}
+                name="maritalStatus"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col gap-1 space-y-0">
+                    <FormLabel className="text-sm font-semibold text-slate-900">
+                      {t('profileRequirements.maritalStatus')}
+                    </FormLabel>
+                    <FormControl>
+                      <Select
+                        value={field.value?.id ?? ''}
+                        onValueChange={val => {
+                          const found = maritalStatusesData.find(
+                            ms => ms.id === val
+                          );
+                          if (found) {
+                            field.onChange({
+                              id: found.id,
+                              label: found.label,
+                            });
+                          }
+                        }}
+                        disabled={isFieldsDisabled}
+                      >
+                        <SelectTrigger className="!h-11 w-full bg-white shadow-none">
+                          <SelectValue
+                            placeholder={t(
+                              'profileRequirements.maritalStatusPlaceholder'
+                            )}
+                          />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {maritalStatusesData.map(ms => (
+                            <SelectItem key={ms.id} value={ms.id}>
+                              {ms.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
           </div>
 
           {/* Addresses section header */}

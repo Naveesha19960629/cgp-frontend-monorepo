@@ -10,7 +10,10 @@ import { useTranslation } from 'react-i18next';
 import MessageBox from '@/components/message-box';
 import { AddOrganizationFormDialog } from '@/views/vacancies/components/dialogs';
 import StepDisableDialog from '@/views/vacancies/components/step-disable-dialog';
-import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
+import {
+  useTemplateFieldVisible,
+  useVacancyForm,
+} from '@/views/vacancies/context/vacancy-form-context';
 import {
   useCreateOrganizationMutation,
   useCreateSportLevelMutation,
@@ -143,6 +146,7 @@ function SportCard({
   isLocationsLoading: boolean;
 }>) {
   const { t } = useTranslation('ats');
+  const isFieldVisible = useTemplateFieldVisible('sports');
   const [openDatePopover, setOpenDatePopover] = useState<
     'startDate' | 'endDate' | null
   >(null);
@@ -193,176 +197,24 @@ function SportCard({
           >
             {/* Row 1: Name of the Sport | Organization Location */}
             <div className="grid grid-cols-2 gap-4">
-              <div className="flex flex-col gap-1">
-                <div className="flex items-center justify-between">
-                  <Label
-                    className={sportsError ? 'text-destructive' : undefined}
-                  >
-                    {t('preferredSports.labels.sport')}
-                  </Label>
-                  <CharacterCount
-                    currentLength={entry.sportSearch.length}
-                    maxLength={MAX_SPORT_NAME_LENGTH}
-                  />
-                </div>
-                <MultipleSelector
-                  value={entry.sport}
-                  onChange={options => {
-                    onUpdate(index, {
-                      sport: options
-                        .filter(
-                          opt =>
-                            typeof opt.value === 'string' &&
-                            opt.value.length > 0
-                        )
-                        .map(opt => ({
-                          value: opt.value,
-                          label: opt.label,
-                          source: (opt.source as string) ?? 'USER_CREATED',
-                        })),
-                    });
-                  }}
-                  options={sports.map(s => ({
-                    value: s.id,
-                    label: s.name || s.label || '',
-                    source: s.source,
-                  }))}
-                  onSearchSync={value => {
-                    onUpdate(index, { sportSearch: value });
-                    onSportsSearch(value);
-                    return sports.map(s => ({
-                      value: s.id,
-                      label: s.name || s.label || '',
-                      source: s.source,
-                    }));
-                  }}
-                  keepSelectedInList
-                  creatable
-                  triggerSearchOnFocus
-                  hideClearAllButton
-                  maxSelected={MAX_SELECTIONS}
-                  errorMessage={t('preferredSports.errors.maxSelections')}
-                  onErrorStateChange={setSportsError}
-                  disabled={fieldsDisabled}
-                  loading={isSportsLoading}
-                  placeholder={t('preferredSports.placeholders.sport')}
-                  emptyIndicator={
-                    <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                      {t('preferredSports.empty.sports')}
-                    </p>
-                  }
-                />
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <div className="flex h-5 items-center">
-                  <Label
-                    className={locationsError ? 'text-destructive' : undefined}
-                  >
-                    {t('preferredSports.labels.organizationLocation')}
-                  </Label>
-                </div>
-                <MultipleSelector
-                  value={entry.organizationLocations}
-                  onChange={options => {
-                    onUpdate(index, {
-                      organizationLocations: options.map(opt => ({
-                        value: opt.value,
-                        label: opt.label,
-                      })),
-                    });
-                  }}
-                  options={locationOptions}
-                  onSearchSync={value => {
-                    onLocationsSearch(value);
-                    return locationOptions;
-                  }}
-                  showArrow
-                  keepSelectedInList
-                  hideClearAllButton
-                  maxSelected={MAX_SELECTIONS}
-                  errorMessage={t('preferredSports.errors.maxSelections')}
-                  onErrorStateChange={setLocationsError}
-                  disabled={fieldsDisabled}
-                  loading={isLocationsLoading}
-                  placeholder={t(
-                    'preferredSports.placeholders.organizationLocation'
-                  )}
-                  emptyIndicator={
-                    <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                      {t('preferredSports.empty.locations')}
-                    </p>
-                  }
-                />
-              </div>
-            </div>
-
-            {/* Row 2: Level Represented | Represented Organization */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex flex-col gap-1">
-                <div className="flex h-5 items-center">
-                  <Label>{t('preferredSports.labels.levelRepresented')}</Label>
-                </div>
-                <MultipleSelector
-                  value={entry.levelRepresented}
-                  onChange={options => {
-                    onUpdate(index, {
-                      levelRepresented: options
-                        .filter(
-                          opt =>
-                            typeof opt.value === 'string' &&
-                            opt.value.length > 0
-                        )
-                        .map(opt => ({
-                          value: opt.value,
-                          label: opt.label,
-                          source: (opt.source as string) ?? 'USER_CREATED',
-                        })),
-                    });
-                  }}
-                  options={levelRepresentedOptions}
-                  onSearchSync={value => {
-                    onLevelRepresentedSearch(value);
-                    return levelRepresentedOptions;
-                  }}
-                  keepSelectedInList
-                  creatable
-                  triggerSearchOnFocus
-                  hideClearAllButton
-                  maxSelected={MAX_SELECTIONS}
-                  disabled={fieldsDisabled}
-                  loading={isLevelsLoading}
-                  placeholder={t(
-                    'preferredSports.placeholders.levelRepresented'
-                  )}
-                  emptyIndicator={
-                    <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                      {t('preferredSports.empty.levels')}
-                    </p>
-                  }
-                />
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <div className="flex h-5 items-center">
-                  <Label
-                    className={
-                      organizationsError ? 'text-destructive' : undefined
-                    }
-                  >
-                    {t('preferredSports.labels.representedOrganization')}
-                  </Label>
-                </div>
-                <MultipleSelector
-                  key={orgSelectorKey}
-                  value={entry.representedOrganization}
-                  onChange={options => {
-                    const newItem = options.find(o => o.value === o.label);
-                    if (newItem) {
-                      onRequestAddOrganization(index, newItem.label);
-                    } else {
+              {isFieldVisible('nameOfSport') && (
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center justify-between">
+                    <Label
+                      className={sportsError ? 'text-destructive' : undefined}
+                    >
+                      {t('preferredSports.labels.sport')}
+                    </Label>
+                    <CharacterCount
+                      currentLength={entry.sportSearch.length}
+                      maxLength={MAX_SPORT_NAME_LENGTH}
+                    />
+                  </div>
+                  <MultipleSelector
+                    value={entry.sport}
+                    onChange={options => {
                       onUpdate(index, {
-                        representedOrganization: options
+                        sport: options
                           .filter(
                             opt =>
                               typeof opt.value === 'string' &&
@@ -374,204 +226,374 @@ function SportCard({
                             source: (opt.source as string) ?? 'USER_CREATED',
                           })),
                       });
+                    }}
+                    options={sports.map(s => ({
+                      value: s.id,
+                      label: s.name || s.label || '',
+                      source: s.source,
+                    }))}
+                    onSearchSync={value => {
+                      onUpdate(index, { sportSearch: value });
+                      onSportsSearch(value);
+                      return sports.map(s => ({
+                        value: s.id,
+                        label: s.name || s.label || '',
+                        source: s.source,
+                      }));
+                    }}
+                    keepSelectedInList
+                    creatable
+                    triggerSearchOnFocus
+                    hideClearAllButton
+                    maxSelected={MAX_SELECTIONS}
+                    errorMessage={t('preferredSports.errors.maxSelections')}
+                    onErrorStateChange={setSportsError}
+                    disabled={fieldsDisabled}
+                    loading={isSportsLoading}
+                    placeholder={t('preferredSports.placeholders.sport')}
+                    emptyIndicator={
+                      <p className="px-3 pb-3 text-left text-sm text-slate-500">
+                        {t('preferredSports.empty.sports')}
+                      </p>
                     }
-                  }}
-                  options={organizations.map(o => ({
-                    value: o.id,
-                    label: o.name || o.label || '',
-                    source: o.source || 'MASTER',
-                  }))}
-                  onSearchSync={value => {
-                    onOrganizationsSearch(value);
-                    return organizations.map(o => ({
+                  />
+                </div>
+              )}
+
+              {isFieldVisible('organizationLocations') && (
+                <div className="flex flex-col gap-1">
+                  <div className="flex h-5 items-center">
+                    <Label
+                      className={
+                        locationsError ? 'text-destructive' : undefined
+                      }
+                    >
+                      {t('preferredSports.labels.organizationLocation')}
+                    </Label>
+                  </div>
+                  <MultipleSelector
+                    value={entry.organizationLocations}
+                    onChange={options => {
+                      onUpdate(index, {
+                        organizationLocations: options.map(opt => ({
+                          value: opt.value,
+                          label: opt.label,
+                        })),
+                      });
+                    }}
+                    options={locationOptions}
+                    onSearchSync={value => {
+                      onLocationsSearch(value);
+                      return locationOptions;
+                    }}
+                    showArrow
+                    keepSelectedInList
+                    hideClearAllButton
+                    maxSelected={MAX_SELECTIONS}
+                    errorMessage={t('preferredSports.errors.maxSelections')}
+                    onErrorStateChange={setLocationsError}
+                    disabled={fieldsDisabled}
+                    loading={isLocationsLoading}
+                    placeholder={t(
+                      'preferredSports.placeholders.organizationLocation'
+                    )}
+                    emptyIndicator={
+                      <p className="px-3 pb-3 text-left text-sm text-slate-500">
+                        {t('preferredSports.empty.locations')}
+                      </p>
+                    }
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Row 2: Level Represented | Represented Organization */}
+            <div className="grid grid-cols-2 gap-4">
+              {isFieldVisible('levelRepresented') && (
+                <div className="flex flex-col gap-1">
+                  <div className="flex h-5 items-center">
+                    <Label>
+                      {t('preferredSports.labels.levelRepresented')}
+                    </Label>
+                  </div>
+                  <MultipleSelector
+                    value={entry.levelRepresented}
+                    onChange={options => {
+                      onUpdate(index, {
+                        levelRepresented: options
+                          .filter(
+                            opt =>
+                              typeof opt.value === 'string' &&
+                              opt.value.length > 0
+                          )
+                          .map(opt => ({
+                            value: opt.value,
+                            label: opt.label,
+                            source: (opt.source as string) ?? 'USER_CREATED',
+                          })),
+                      });
+                    }}
+                    options={levelRepresentedOptions}
+                    onSearchSync={value => {
+                      onLevelRepresentedSearch(value);
+                      return levelRepresentedOptions;
+                    }}
+                    keepSelectedInList
+                    creatable
+                    triggerSearchOnFocus
+                    hideClearAllButton
+                    maxSelected={MAX_SELECTIONS}
+                    disabled={fieldsDisabled}
+                    loading={isLevelsLoading}
+                    placeholder={t(
+                      'preferredSports.placeholders.levelRepresented'
+                    )}
+                    emptyIndicator={
+                      <p className="px-3 pb-3 text-left text-sm text-slate-500">
+                        {t('preferredSports.empty.levels')}
+                      </p>
+                    }
+                  />
+                </div>
+              )}
+
+              {isFieldVisible('representedOrganization') && (
+                <div className="flex flex-col gap-1">
+                  <div className="flex h-5 items-center">
+                    <Label
+                      className={
+                        organizationsError ? 'text-destructive' : undefined
+                      }
+                    >
+                      {t('preferredSports.labels.representedOrganization')}
+                    </Label>
+                  </div>
+                  <MultipleSelector
+                    key={orgSelectorKey}
+                    value={entry.representedOrganization}
+                    onChange={options => {
+                      const newItem = options.find(o => o.value === o.label);
+                      if (newItem) {
+                        onRequestAddOrganization(index, newItem.label);
+                      } else {
+                        onUpdate(index, {
+                          representedOrganization: options
+                            .filter(
+                              opt =>
+                                typeof opt.value === 'string' &&
+                                opt.value.length > 0
+                            )
+                            .map(opt => ({
+                              value: opt.value,
+                              label: opt.label,
+                              source: (opt.source as string) ?? 'USER_CREATED',
+                            })),
+                        });
+                      }
+                    }}
+                    options={organizations.map(o => ({
                       value: o.id,
                       label: o.name || o.label || '',
                       source: o.source || 'MASTER',
-                    }));
-                  }}
-                  keepSelectedInList
-                  creatable
-                  triggerSearchOnFocus
-                  hideClearAllButton
-                  maxSelected={MAX_SELECTIONS}
-                  errorMessage={t('preferredSports.errors.maxSelections')}
-                  onErrorStateChange={setOrganizationsError}
-                  disabled={fieldsDisabled}
-                  loading={isOrganizationsLoading}
-                  placeholder={t(
-                    'preferredSports.placeholders.representedOrganization'
-                  )}
-                  emptyIndicator={
-                    <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                      {t('preferredSports.empty.organizations')}
-                    </p>
-                  }
-                />
-              </div>
+                    }))}
+                    onSearchSync={value => {
+                      onOrganizationsSearch(value);
+                      return organizations.map(o => ({
+                        value: o.id,
+                        label: o.name || o.label || '',
+                        source: o.source || 'MASTER',
+                      }));
+                    }}
+                    keepSelectedInList
+                    creatable
+                    triggerSearchOnFocus
+                    hideClearAllButton
+                    maxSelected={MAX_SELECTIONS}
+                    errorMessage={t('preferredSports.errors.maxSelections')}
+                    onErrorStateChange={setOrganizationsError}
+                    disabled={fieldsDisabled}
+                    loading={isOrganizationsLoading}
+                    placeholder={t(
+                      'preferredSports.placeholders.representedOrganization'
+                    )}
+                    emptyIndicator={
+                      <p className="px-3 pb-3 text-left text-sm text-slate-500">
+                        {t('preferredSports.empty.organizations')}
+                      </p>
+                    }
+                  />
+                </div>
+              )}
             </div>
 
             {/* Row 3: Position / Role Held | Start Date | End Date */}
             <div className="grid grid-cols-4 gap-4">
-              <div className="flex flex-col gap-1">
-                <div className="flex items-center justify-between">
-                  <Label>{t('preferredSports.labels.position')}</Label>
-                  <CharacterCount
-                    currentLength={entry.position.length}
+              {isFieldVisible('positionRoleHeld') && (
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center justify-between">
+                    <Label>{t('preferredSports.labels.position')}</Label>
+                    <CharacterCount
+                      currentLength={entry.position.length}
+                      maxLength={MAX_POSITION_LENGTH}
+                    />
+                  </div>
+                  <Input
+                    value={entry.position}
+                    onChange={e => {
+                      const sanitized = sanitizePlainText(e.target.value);
+                      onUpdate(index, { position: sanitized.trimStart() });
+                    }}
                     maxLength={MAX_POSITION_LENGTH}
+                    placeholder={t('preferredSports.placeholders.position')}
+                    className="h-11"
                   />
                 </div>
-                <Input
-                  value={entry.position}
-                  onChange={e => {
-                    const sanitized = sanitizePlainText(e.target.value);
-                    onUpdate(index, { position: sanitized.trimStart() });
-                  }}
-                  maxLength={MAX_POSITION_LENGTH}
-                  placeholder={t('preferredSports.placeholders.position')}
-                  className="h-11"
-                />
-              </div>
+              )}
 
-              <div className="flex flex-col gap-1">
-                <div className="flex h-5 items-center">
-                  <Label>{t('preferredSports.labels.startDate')}</Label>
-                </div>
-                <Popover
-                  modal
-                  open={openDatePopover === 'startDate'}
-                  onOpenChange={open =>
-                    setOpenDatePopover(
-                      !fieldsDisabled && open ? 'startDate' : null
-                    )
-                  }
-                >
-                  <PopoverTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      disabled={fieldsDisabled}
-                      className={cn(
-                        'border-input flex h-11 w-full items-center justify-between rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
-                        !entry.startDate && 'text-slate-500',
-                        entry.startDate && 'text-zinc-800',
-                        'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
-                        'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
-                        'dark:bg-input/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
-                        applyTypography('body-medium'),
-                        'shadow-none!'
-                      )}
-                    >
-                      {entry.startDate
-                        ? formatDate(entry.startDate)
-                        : t('preferredSports.placeholders.startDate')}
-                      <CalendarIcon
-                        variant="Linear"
-                        size={20}
-                        className="text-zinc-800"
-                      />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={parseLocalDate(entry.startDate) ?? undefined}
-                      defaultMonth={
-                        parseLocalDate(entry.startDate) ||
-                        parseLocalDate(entry.endDate) ||
-                        new Date()
-                      }
-                      onSelect={date => {
-                        onUpdate(index, {
-                          startDate: date ? formatLocalDate(date) : undefined,
-                        });
-                        setOpenDatePopover(null);
-
-                        if (entry.endDate && date) {
-                          const endDate = parseLocalDate(entry.endDate);
-                          if (endDate != null && endDate < date) {
-                            onUpdate(index, { endDate: undefined });
-                          }
+              {isFieldVisible('startDate') && (
+                <div className="flex flex-col gap-1">
+                  <div className="flex h-5 items-center">
+                    <Label>{t('preferredSports.labels.startDate')}</Label>
+                  </div>
+                  <Popover
+                    modal
+                    open={openDatePopover === 'startDate'}
+                    onOpenChange={open =>
+                      setOpenDatePopover(
+                        !fieldsDisabled && open ? 'startDate' : null
+                      )
+                    }
+                  >
+                    <PopoverTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled={fieldsDisabled}
+                        className={cn(
+                          'border-input flex h-11 w-full items-center justify-between rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
+                          !entry.startDate && 'text-slate-500',
+                          entry.startDate && 'text-zinc-800',
+                          'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
+                          'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
+                          'dark:bg-input/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
+                          applyTypography('body-medium'),
+                          'shadow-none!'
+                        )}
+                      >
+                        {entry.startDate
+                          ? formatDate(entry.startDate)
+                          : t('preferredSports.placeholders.startDate')}
+                        <CalendarIcon
+                          variant="Linear"
+                          size={20}
+                          className="text-zinc-800"
+                        />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={parseLocalDate(entry.startDate) ?? undefined}
+                        defaultMonth={
+                          parseLocalDate(entry.startDate) ||
+                          parseLocalDate(entry.endDate) ||
+                          new Date()
                         }
-                      }}
-                      disabled={date =>
-                        date > new Date() || date < HUNDRED_YEARS_AGO
-                      }
-                      captionLayout="dropdown"
-                      startMonth={HUNDRED_YEARS_AGO}
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
+                        onSelect={date => {
+                          onUpdate(index, {
+                            startDate: date ? formatLocalDate(date) : undefined,
+                          });
+                          setOpenDatePopover(null);
 
-              <div className="flex flex-col gap-1">
-                <div className="flex h-5 items-center">
-                  <Label>{t('preferredSports.labels.endDate')}</Label>
-                </div>
-                <Popover
-                  modal
-                  open={openDatePopover === 'endDate'}
-                  onOpenChange={open =>
-                    setOpenDatePopover(
-                      !fieldsDisabled && open ? 'endDate' : null
-                    )
-                  }
-                >
-                  <PopoverTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      disabled={fieldsDisabled}
-                      className={cn(
-                        'border-input flex h-11 w-full items-center justify-between rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
-                        !entry.endDate && 'text-slate-500',
-                        entry.endDate && 'text-zinc-800',
-                        'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
-                        'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
-                        'dark:bg-input/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
-                        applyTypography('body-medium'),
-                        'shadow-none!'
-                      )}
-                    >
-                      {entry.endDate
-                        ? formatDate(entry.endDate)
-                        : t('preferredSports.placeholders.endDate')}
-                      <CalendarIcon
-                        variant="Linear"
-                        size={20}
-                        className="text-zinc-800"
+                          if (entry.endDate && date) {
+                            const endDate = parseLocalDate(entry.endDate);
+                            if (endDate != null && endDate < date) {
+                              onUpdate(index, { endDate: undefined });
+                            }
+                          }
+                        }}
+                        disabled={date =>
+                          date > new Date() || date < HUNDRED_YEARS_AGO
+                        }
+                        captionLayout="dropdown"
+                        startMonth={HUNDRED_YEARS_AGO}
                       />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={parseLocalDate(entry.endDate) ?? undefined}
-                      defaultMonth={
-                        parseLocalDate(entry.endDate) ||
-                        parseLocalDate(entry.startDate) ||
-                        new Date()
-                      }
-                      onSelect={date => {
-                        onUpdate(index, {
-                          endDate: date ? formatLocalDate(date) : undefined,
-                        });
-                        setOpenDatePopover(null);
-                      }}
-                      disabled={date => {
-                        const startDate = parseLocalDate(entry.startDate);
-                        return (
-                          date < HUNDRED_YEARS_AGO ||
-                          date > HUNDRED_YEARS_FROM_NOW ||
-                          (startDate != null && date < startDate)
-                        );
-                      }}
-                      captionLayout="dropdown"
-                      startMonth={HUNDRED_YEARS_AGO}
-                      endMonth={HUNDRED_YEARS_FROM_NOW}
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              )}
+
+              {isFieldVisible('endDate') && (
+                <div className="flex flex-col gap-1">
+                  <div className="flex h-5 items-center">
+                    <Label>{t('preferredSports.labels.endDate')}</Label>
+                  </div>
+                  <Popover
+                    modal
+                    open={openDatePopover === 'endDate'}
+                    onOpenChange={open =>
+                      setOpenDatePopover(
+                        !fieldsDisabled && open ? 'endDate' : null
+                      )
+                    }
+                  >
+                    <PopoverTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled={fieldsDisabled}
+                        className={cn(
+                          'border-input flex h-11 w-full items-center justify-between rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
+                          !entry.endDate && 'text-slate-500',
+                          entry.endDate && 'text-zinc-800',
+                          'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
+                          'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
+                          'dark:bg-input/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
+                          applyTypography('body-medium'),
+                          'shadow-none!'
+                        )}
+                      >
+                        {entry.endDate
+                          ? formatDate(entry.endDate)
+                          : t('preferredSports.placeholders.endDate')}
+                        <CalendarIcon
+                          variant="Linear"
+                          size={20}
+                          className="text-zinc-800"
+                        />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={parseLocalDate(entry.endDate) ?? undefined}
+                        defaultMonth={
+                          parseLocalDate(entry.endDate) ||
+                          parseLocalDate(entry.startDate) ||
+                          new Date()
+                        }
+                        onSelect={date => {
+                          onUpdate(index, {
+                            endDate: date ? formatLocalDate(date) : undefined,
+                          });
+                          setOpenDatePopover(null);
+                        }}
+                        disabled={date => {
+                          const startDate = parseLocalDate(entry.startDate);
+                          return (
+                            date < HUNDRED_YEARS_AGO ||
+                            date > HUNDRED_YEARS_FROM_NOW ||
+                            (startDate != null && date < startDate)
+                          );
+                        }}
+                        captionLayout="dropdown"
+                        startMonth={HUNDRED_YEARS_AGO}
+                        endMonth={HUNDRED_YEARS_FROM_NOW}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              )}
             </div>
           </div>
         </CollapsibleContent>
