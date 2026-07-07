@@ -542,12 +542,35 @@ export default function PreferredPatentsStep({ onNext, onBack }: StepProps) {
   }, [setForm, stepDisableRef]);
 
   const [showDisableConfirm, setShowDisableConfirm] = useState(false);
+  const [showTakeFromCandidateConfirm, setShowTakeFromCandidateConfirm] =
+    useState(false);
   const [pendingEmptyAction, setPendingEmptyAction] = useState<
     'next' | 'back' | null
   >(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { mutateAsync } = useCreateIndustryMutation();
+
+  // Switching to "data taken from candidate" clears all added patent data.
+  const applyTakeFromCandidate = () => {
+    const values = form.getValues();
+    form.reset({
+      isEnabled: values.isEnabled,
+      dataTakenFromCandidate: true,
+      patents: values.patents.map(p => ({
+        ...p,
+        relatedIndustries: [],
+        statuses: [],
+        fromDate: undefined,
+        toDate: undefined,
+      })),
+    });
+  };
+
+  const handleConfirmTakeFromCandidate = () => {
+    applyTakeFromCandidate();
+    setShowTakeFromCandidateConfirm(false);
+  };
 
   const handleConfirmDisable = () => {
     form.reset({
@@ -771,21 +794,24 @@ export default function PreferredPatentsStep({ onNext, onBack }: StepProps) {
                     checked={field.value}
                     disabled={!form.watch('isEnabled')}
                     onCheckedChange={checked => {
-                      field.onChange(checked);
-                      if (checked) {
-                        const values = form.getValues();
-                        form.reset({
-                          isEnabled: values.isEnabled,
-                          dataTakenFromCandidate: true,
-                          patents: values.patents.map(p => ({
-                            ...p,
-                            relatedIndustries: [],
-                            statuses: [],
-                            fromDate: undefined,
-                            toDate: undefined,
-                          })),
-                        });
+                      if (!checked) {
+                        field.onChange(false);
+                        return;
                       }
+                      // Confirm before wiping any added patent data.
+                      const patents = form.getValues('patents');
+                      const hasData = patents.some(
+                        p =>
+                          p.relatedIndustries.length > 0 ||
+                          p.statuses.length > 0 ||
+                          p.fromDate != null ||
+                          p.toDate != null
+                      );
+                      if (hasData) {
+                        setShowTakeFromCandidateConfirm(true);
+                        return;
+                      }
+                      applyTakeFromCandidate();
                     }}
                   />
                   <label
@@ -862,6 +888,12 @@ export default function PreferredPatentsStep({ onNext, onBack }: StepProps) {
         open={showDisableConfirm}
         onOpenChange={setShowDisableConfirm}
         onConfirm={handleConfirmDisable}
+      />
+
+      <StepDisableDialog
+        open={showTakeFromCandidateConfirm}
+        onOpenChange={open => !open && setShowTakeFromCandidateConfirm(false)}
+        onConfirm={handleConfirmTakeFromCandidate}
       />
 
       <StepDisableDialog

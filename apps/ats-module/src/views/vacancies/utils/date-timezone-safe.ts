@@ -1,3 +1,40 @@
+import { addYears, startOfDay, subYears } from 'date-fns';
+
+/**
+ * Start of the current day (00:00:00.000) in the local timezone.
+ *
+ * Normalising to the start of the day removes the current time-of-day from
+ * boundary comparisons, so "today" is treated as an inclusive boundary
+ * regardless of the hour the check runs.
+ */
+export function startOfToday(): Date {
+  return startOfDay(new Date());
+}
+
+/**
+ * Exact calendar date `years` years before the start of today (local time).
+ *
+ * Unlike a year-only cutoff (e.g. Jan 1st of `currentYear - years`), this
+ * returns the exact day/month/year boundary. If today is 2026-07-02,
+ * `getDateYearsAgo(100)` returns 1926-07-02.
+ *
+ * @param years - Number of whole years to subtract
+ */
+export function getDateYearsAgo(years: number): Date {
+  return subYears(startOfToday(), years);
+}
+
+/**
+ * Exact calendar date `years` years after the start of today (local time).
+ *
+ * If today is 2026-07-02, `getDateYearsFromNow(100)` returns 2126-07-02.
+ *
+ * @param years - Number of whole years to add
+ */
+export function getDateYearsFromNow(years: number): Date {
+  return addYears(startOfToday(), years);
+}
+
 /**
  * Parse a date string in local timezone without UTC offset issues.
  * Handles both date-only (YYYY-MM-DD) and full ISO strings.

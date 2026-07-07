@@ -3,7 +3,10 @@ import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { VacancyCreateStepperForm } from '@/views/vacancies';
-import { VacancyStatusBadge } from '@/views/vacancies/components';
+import {
+  VacancyEditCancelDialog,
+  VacancyStatusBadge,
+} from '@/views/vacancies/components';
 import {
   VACANCY_STEPS,
   VacancyFormProvider,
@@ -14,6 +17,7 @@ import type { VacancyForm } from '@/views/vacancies/types';
 import { toVacancyFormFromResponse } from '@/views/vacancies/utils/vacancy-edit-response-helpers';
 
 import { CharacterCount } from '@cgp/ui-kit/components/character-count';
+import { SuccessToast } from '@cgp/ui-kit/components/custom-toast';
 import { Button } from '@cgp/ui-kit/components/ui/button';
 import { Input } from '@cgp/ui-kit/components/ui/input';
 import { Label } from '@cgp/ui-kit/components/ui/label';
@@ -29,76 +33,120 @@ function EditVacancyTitleStep() {
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useTranslation('ats');
-  const { form, setForm, onNext } = useVacancyForm();
+  const { form, setForm, onNext, setCurrentStepIndex } = useVacancyForm();
   const showStatusBadge = form.status && form.status !== 'new';
   const fromPath = (location.state as { from?: string } | null)?.from ?? '';
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [titleError, setTitleError] = useState('');
 
   const handleTitleChange = (value: string) => {
     const sanitizedTitle = removeEmoji(value);
     setForm(prev => ({ ...prev, title: sanitizedTitle }));
+
+    if (sanitizedTitle.trim()) {
+      setTitleError('');
+    }
+  };
+
+  const handleNext = () => {
+    if (!form.title.trim()) {
+      setTitleError(t('vacancies.createVacancy.titleRequired'));
+      return;
+    }
+
+    setTitleError('');
+    // Always land on Job Requirements (first step) when leaving the title
+    // form — hydration may have set currentStepIndex to the saved
+    // lastActiveStep, which would otherwise skip the user forward.
+    setCurrentStepIndex(0);
+    onNext();
+  };
+
+  const leaveEditPage = () => {
+    if (fromPath.includes('/dashboard/ats/vacancies')) {
+      void navigate(-1);
+    } else {
+      void navigate('/dashboard/ats/vacancies');
+    }
+  };
+
+  const handleCancelConfirm = () => {
+    setShowCancelDialog(false);
+    SuccessToast({
+      title: t('vacancyEditCancelDialog.notifications.discard.title'),
+      description: t('vacancyEditCancelDialog.notifications.discard.message'),
+    });
+    leaveEditPage();
   };
 
   return (
-    <div className="flex flex-1 flex-col">
-      <header className="flex items-center gap-3 pt-7 pl-7">
-        <p className="text-2xl/8 font-bold text-slate-900">
-          {t('vacancies.editVacancy')}
-        </p>
-        {showStatusBadge && (
-          <VacancyStatusBadge
-            status={form.status}
-            applicantCount={form.applicantCount}
-          />
-        )}
-      </header>
-      <div className="flex flex-1 flex-col items-center justify-center">
-        <div className="w-99.5">
-          <p className="mb-4 text-xl font-bold text-slate-900">
-            {t('vacancies.createVacancy.formTitle')}
+    <>
+      <div className="flex flex-1 flex-col">
+        <header className="flex items-center gap-3 pt-7 pl-7">
+          <p className="text-2xl/8 font-bold text-slate-900">
+            {t('vacancies.editVacancy')}
           </p>
-          <div className="mb-1 flex items-center justify-between">
-            <Label
-              htmlFor="vacancy-title"
-              className="text-sm font-semibold text-slate-900"
-            >
-              {t('vacancies.createVacancy.fieldTitle')}
-            </Label>
-            <CharacterCount
-              maxLength={50}
-              currentLength={form.title.length}
-              className={'font-["Plus_Jakarta_Sans",sans-serif]'}
+          {showStatusBadge && (
+            <VacancyStatusBadge
+              status={form.status}
+              applicantCount={form.applicantCount}
             />
-          </div>
-          <Input
-            id="vacancy-title"
-            className="h-11 w-full"
-            maxLength={50}
-            placeholder={t('vacancies.createVacancy.titlePlaceholder')}
-            required
-            value={form.title}
-            onChange={e => handleTitleChange(e.target.value)}
-          />
-          <div className="mt-4 flex gap-4">
-            <Button
-              variant="secondary"
-              className="h-12 flex-1"
-              onClick={() => {
-                if (fromPath.includes('/dashboard/ats/vacancies')) {
-                  void navigate(-1);
-                } else {
-                  void navigate('/dashboard/ats/vacancies');
-                }
-              }}
-            >
-              {t('vacancies.createVacancy.cancelButton')}
-            </Button>
-            <Button className="h-12 flex-1" onClick={() => onNext()}>
-              {t('vacancies.createVacancy.nextButton')}
-            </Button>
+          )}
+        </header>
+        <div className="flex flex-1 flex-col items-center justify-center">
+          <div className="w-99.5">
+            <p className="mb-4 text-xl font-bold text-slate-900">
+              {t('vacancies.createVacancy.formTitle')}
+            </p>
+            <div className="mb-1 flex items-center justify-between">
+              <Label
+                htmlFor="vacancy-title"
+                className="text-sm font-semibold text-slate-900"
+              >
+                {t('vacancies.createVacancy.fieldTitle')}
+              </Label>
+              <CharacterCount
+                maxLength={50}
+                currentLength={form.title.length}
+                className={'font-["Plus_Jakarta_Sans",sans-serif]'}
+              />
+            </div>
+            <Input
+              id="vacancy-title"
+              className="h-11 w-full"
+              maxLength={50}
+              placeholder={t('vacancies.createVacancy.titlePlaceholder')}
+              required
+              value={form.title}
+              onChange={e => handleTitleChange(e.target.value)}
+            />
+            {titleError && (
+              <p className="mt-1 text-xs font-medium text-rose-500">
+                {titleError}
+              </p>
+            )}
+            <div className="mt-4 flex gap-4">
+              <Button
+                variant="secondary"
+                className="h-12 flex-1"
+                onClick={() => setShowCancelDialog(true)}
+              >
+                {t('vacancies.createVacancy.cancelButton')}
+              </Button>
+              <Button className="h-12 flex-1" onClick={handleNext}>
+                {t('vacancies.createVacancy.nextButton')}
+              </Button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+
+      <VacancyEditCancelDialog
+        open={showCancelDialog}
+        onOpenChange={setShowCancelDialog}
+        onConfirm={handleCancelConfirm}
+      />
+    </>
   );
 }
 
@@ -164,14 +212,10 @@ function EditVacancyContent({ id }: { id: string | undefined }) {
         step => step.key === vacancyRecord.lastActiveStep
       );
       if (stepIndex >= 0) {
+        // Preserve the last active step for in-form navigation, but always
+        // open the Edit Vacancy Title form first (drafts included). The title
+        // form is the entry point for editing any vacancy.
         setCurrentStepIndex(stepIndex);
-        // Draft vacancies land directly on their last active step
-        if (
-          typeof vacancyRecord.status === 'string' &&
-          vacancyRecord.status.toLowerCase() === 'draft'
-        ) {
-          setIsInitialStep(false);
-        }
       }
     }
 

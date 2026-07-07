@@ -10,6 +10,7 @@ import { useTranslation } from 'react-i18next';
 import MessageBox from '@/components/message-box';
 import { AddOrganizationFormDialog } from '@/views/vacancies/components/dialogs';
 import StepDisableDialog from '@/views/vacancies/components/step-disable-dialog';
+import VacancyStatusBadge from '@/views/vacancies/components/vacancy-status-badge';
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import {
   useCreateOrganizationMutation,
@@ -579,10 +580,12 @@ function ClubSocietyCard({
 export default function PreferredClubSocietiesStep({
   onNext,
   onBack,
+  mode = 'create',
 }: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
   const { form: contextForm, onCancel } = useVacancyForm();
   const savedClubSocieties = contextForm.preferredClubSocieties;
+  const vacancyStatus = contextForm.status;
 
   const { mutateAsync: createSociety } = useCreateSocietyMutation();
   const { mutateAsync: createOrganization } = useCreateOrganizationMutation();
@@ -596,6 +599,8 @@ export default function PreferredClubSocietiesStep({
   );
   const [confirmDisableOpen, setConfirmDisableOpen] = useState(false);
   const [emptyDisableOpen, setEmptyDisableOpen] = useState(false);
+  const [confirmTakeFromCandidateOpen, setConfirmTakeFromCandidateOpen] =
+    useState(false);
   const [societiesSearchQuery, setSocietiesSearchQuery] = useState('');
   const [organizationsSearchQuery, setOrganizationsSearchQuery] = useState('');
   const [locationsSearchQuery, setLocationsSearchQuery] = useState('');
@@ -829,13 +834,7 @@ export default function PreferredClubSocietiesStep({
 
   const handleToggle = () => {
     if (isEnabled) {
-      if (hasClubSocietyData) {
-        setConfirmDisableOpen(true);
-      } else {
-        setIsEnabled(false);
-        setDataTakenFromCandidate(false);
-        removeCompletedStep(currentStepIndex);
-      }
+      setConfirmDisableOpen(true);
     } else {
       setIsEnabled(true);
     }
@@ -863,6 +862,42 @@ export default function PreferredClubSocietiesStep({
         position: '',
       },
     ]);
+  };
+
+  const applyTakeFromCandidate = () => {
+    setDataTakenFromCandidate(true);
+    setEntries([
+      {
+        id: '1',
+        isOpen: true,
+        clubSociety: [],
+        clubSocietySearch: '',
+        startDate: undefined,
+        endDate: undefined,
+        representedOrganization: [],
+        organizationLocations: [],
+        position: '',
+      },
+    ]);
+  };
+
+  // Checking "data taken from candidate" clears all added data. Confirm first
+  // when there is data to lose; apply directly otherwise. Unchecking is safe.
+  const handleTakeFromCandidateChange = (checked: boolean) => {
+    if (!checked) {
+      setDataTakenFromCandidate(false);
+      return;
+    }
+    if (hasClubSocietyData) {
+      setConfirmTakeFromCandidateOpen(true);
+      return;
+    }
+    applyTakeFromCandidate();
+  };
+
+  const handleConfirmTakeFromCandidate = () => {
+    applyTakeFromCandidate();
+    setConfirmTakeFromCandidateOpen(false);
   };
 
   const handleDisable = () => {
@@ -931,6 +966,9 @@ export default function PreferredClubSocietiesStep({
             <h2 className="text-xl font-bold tracking-tight text-slate-900">
               {t('preferredClubSocieties.title')}
             </h2>
+            {mode === 'edit' && vacancyStatus ? (
+              <VacancyStatusBadge status={vacancyStatus} />
+            ) : null}
           </div>
           <SwitchPrimitive.Root
             checked={isEnabled}
@@ -959,25 +997,7 @@ export default function PreferredClubSocietiesStep({
           <Checkbox
             id="clubSocietiesDataTakenFromCandidate"
             checked={dataTakenFromCandidate}
-            onCheckedChange={value => {
-              const checked = !!value;
-              setDataTakenFromCandidate(checked);
-              if (checked) {
-                setEntries([
-                  {
-                    id: '1',
-                    isOpen: true,
-                    clubSociety: [],
-                    clubSocietySearch: '',
-                    startDate: undefined,
-                    endDate: undefined,
-                    representedOrganization: [],
-                    organizationLocations: [],
-                    position: '',
-                  },
-                ]);
-              }
-            }}
+            onCheckedChange={value => handleTakeFromCandidateChange(!!value)}
             className="mt-0.5"
           />
           <Label
@@ -1071,9 +1091,24 @@ export default function PreferredClubSocietiesStep({
         organizationName={pendingOrganizationName}
         onOrganizationAdded={org => {
           if (activeCardIndex !== null) {
+            const existing =
+              entries[activeCardIndex]?.representedOrganization ?? [];
+            // Duplicate = same name + location (org.name already combines
+            // both, e.g. "OXO Labs, Colombo, Western Province, Sri Lanka").
+            // Case-insensitive so re-typing the same value keeps the existing
+            // selection instead of adding a new entry.
+            const normalizedNewLabel = org.name.trim().toLowerCase();
+            const isDuplicate = existing.some(
+              o => o.label.trim().toLowerCase() === normalizedNewLabel
+            );
+            if (isDuplicate) {
+              setOrgSelectorKey(k => k + 1);
+              setShowAddOrganizationDialog(false);
+              return false;
+            }
             updateEntry(activeCardIndex, {
               representedOrganization: [
-                ...(entries[activeCardIndex]?.representedOrganization ?? []),
+                ...existing,
                 { value: org.id, label: org.name, source: org.source },
               ],
             });
@@ -1095,6 +1130,20 @@ export default function PreferredClubSocietiesStep({
         disableLabel={t('preferredClubSocieties.confirmDisableDialog.disable')}
         onCancel={() => setConfirmDisableOpen(false)}
         onDisable={handleDisable}
+      />
+
+      {/* ── Take-from-candidate Confirmation Dialog ───────────────────────── */}
+      <DisableDialog
+        open={confirmTakeFromCandidateOpen}
+        onOpenChange={open => {
+          if (!open) setConfirmTakeFromCandidateOpen(false);
+        }}
+        title={t('preferredClubSocieties.confirmDisableDialog.title')}
+        message={t('preferredClubSocieties.confirmDisableDialog.message')}
+        cancelLabel={t('preferredClubSocieties.confirmDisableDialog.cancel')}
+        disableLabel={t('preferredClubSocieties.confirmDisableDialog.disable')}
+        onCancel={() => setConfirmTakeFromCandidateOpen(false)}
+        onDisable={handleConfirmTakeFromCandidate}
       />
 
       <StepDisableDialog
