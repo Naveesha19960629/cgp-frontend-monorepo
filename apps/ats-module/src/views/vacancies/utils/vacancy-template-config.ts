@@ -265,6 +265,29 @@ export const TEMPLATE_SECTIONS: TemplateSectionConfig[] = [
   },
 ];
 
+/**
+ * Sections that are never rendered on the Create Template form but are always
+ * included in the created template with every field enabled (AC — Out of Scope
+ * #2: "Job Requirements ... shall be automatically included in the template").
+ *
+ * Keys match the candidate-service `OptionalSectionToggleRequest.content` field
+ * codes (VacancyTemplateServiceImpl#buildJobRequirementPayload / buildSchedulePayload).
+ */
+export const AUTO_INCLUDED_SECTION_FIELD_CODES: Record<string, string[]> = {
+  jobRequirement: [
+    'discipline',
+    'careerPath',
+    'level',
+    'roles',
+    'jobTitles',
+    'employmentTypes',
+    'workSchedules',
+    'engagementModels',
+    'description',
+  ],
+  schedule: ['schedulePublishAt', 'expirationAt'],
+};
+
 /** Maximum length allowed for the template name (mirrors backend validation). */
 export const TEMPLATE_NAME_MAX_LENGTH = 150;
 
