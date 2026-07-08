@@ -8,6 +8,7 @@ import { useTranslation } from 'react-i18next';
 import MessageBox from '@/components/message-box';
 import { AddOrganizationFormDialog } from '@/views/vacancies/components/dialogs';
 import StepDisableDialog from '@/views/vacancies/components/step-disable-dialog';
+import VacancyStatusBadge from '@/views/vacancies/components/vacancy-status-badge';
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import {
   useCreateIndustryMutation,
@@ -492,10 +493,12 @@ function ProjectCard({
 export default function ProjectsRequirementsStep({
   onNext,
   onBack,
+  mode = 'create',
 }: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
   const { form: contextForm, onCancel } = useVacancyForm();
   const savedProjects = contextForm.projectsRequirements;
+  const vacancyStatus = contextForm.status;
 
   const [isEnabled, setIsEnabled] = useState(savedProjects?.isEnabled ?? false);
   const [dataTakenFromCandidate, setDataTakenFromCandidate] = useState(
@@ -504,6 +507,8 @@ export default function ProjectsRequirementsStep({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [confirmDisableOpen, setConfirmDisableOpen] = useState(false);
   const [emptyDisableOpen, setEmptyDisableOpen] = useState(false);
+  const [confirmTakeFromCandidateOpen, setConfirmTakeFromCandidateOpen] =
+    useState(false);
   const [industrySearchQuery, setIndustrySearchQuery] = useState('');
   const [locationSearchQuery, setLocationSearchQuery] = useState('');
   const [organizationSearchQuery, setOrganizationSearchQuery] = useState('');
@@ -617,22 +622,7 @@ export default function ProjectsRequirementsStep({
 
   const handleToggle = () => {
     if (isEnabled) {
-      const hasProjectData = projects.some(
-        p =>
-          p.relatedIndustry.length > 0 ||
-          p.organizations.length > 0 ||
-          p.organizationLocations.length > 0 ||
-          p.startDate != null ||
-          p.endDate != null
-      );
-
-      if (hasProjectData) {
-        setConfirmDisableOpen(true);
-      } else {
-        setIsEnabled(false);
-        setDataTakenFromCandidate(false);
-        removeCompletedStep(currentStepIndex);
-      }
+      setConfirmDisableOpen(true);
     } else {
       setIsEnabled(true);
     }
@@ -679,6 +669,48 @@ export default function ProjectsRequirementsStep({
         organizations: [],
       },
     ]);
+  };
+
+  const applyTakeFromCandidate = () => {
+    setDataTakenFromCandidate(true);
+    setProjects([
+      {
+        id: '1',
+        isOpen: true,
+        startDate: undefined,
+        endDate: undefined,
+        relatedIndustry: [],
+        organizationLocations: [],
+        organizations: [],
+      },
+    ]);
+  };
+
+  // Checking "data taken from candidate" clears all added data. Confirm first
+  // when there is data to lose; apply directly otherwise. Unchecking is safe.
+  const handleTakeFromCandidateChange = (checked: boolean) => {
+    if (!checked) {
+      setDataTakenFromCandidate(false);
+      return;
+    }
+    const hasProjectData = projects.some(
+      p =>
+        p.relatedIndustry.length > 0 ||
+        p.organizations.length > 0 ||
+        p.organizationLocations.length > 0 ||
+        p.startDate != null ||
+        p.endDate != null
+    );
+    if (hasProjectData) {
+      setConfirmTakeFromCandidateOpen(true);
+      return;
+    }
+    applyTakeFromCandidate();
+  };
+
+  const handleConfirmTakeFromCandidate = () => {
+    applyTakeFromCandidate();
+    setConfirmTakeFromCandidateOpen(false);
   };
 
   const handleDisable = () => {
@@ -855,6 +887,9 @@ export default function ProjectsRequirementsStep({
             <h2 className="text-xl font-bold tracking-tight text-slate-900">
               {t('projectsRequirements.title')}
             </h2>
+            {mode === 'edit' && vacancyStatus ? (
+              <VacancyStatusBadge status={vacancyStatus} />
+            ) : null}
           </div>
 
           <Switch
@@ -874,23 +909,7 @@ export default function ProjectsRequirementsStep({
           <Checkbox
             id="projectsDataTakenFromCandidate"
             checked={dataTakenFromCandidate}
-            onCheckedChange={value => {
-              const checked = !!value;
-              setDataTakenFromCandidate(checked);
-              if (checked) {
-                setProjects([
-                  {
-                    id: '1',
-                    isOpen: true,
-                    startDate: undefined,
-                    endDate: undefined,
-                    relatedIndustry: [],
-                    organizationLocations: [],
-                    organizations: [],
-                  },
-                ]);
-              }
-            }}
+            onCheckedChange={value => handleTakeFromCandidateChange(!!value)}
           />
           <Label
             htmlFor="projectsDataTakenFromCandidate"
@@ -977,9 +996,23 @@ export default function ProjectsRequirementsStep({
         organizationName={pendingOrganizationName}
         onOrganizationAdded={org => {
           if (activeCardIndex !== null) {
+            const existing = projects[activeCardIndex]?.organizations ?? [];
+            // Duplicate = same name + location (org.name already combines
+            // both, e.g. "OXO Labs, Colombo, Western Province, Sri Lanka").
+            // Case-insensitive so re-typing the same value keeps the existing
+            // selection instead of adding a new entry.
+            const normalizedNewLabel = org.name.trim().toLowerCase();
+            const isDuplicate = existing.some(
+              o => o.label.trim().toLowerCase() === normalizedNewLabel
+            );
+            if (isDuplicate) {
+              setOrgSelectorKey(k => k + 1);
+              setShowAddOrganizationDialog(false);
+              return false;
+            }
             updateProject(activeCardIndex, {
               organizations: [
-                ...(projects[activeCardIndex]?.organizations ?? []),
+                ...existing,
                 { value: org.id, label: org.name, source: org.source },
               ],
             });
@@ -1001,6 +1034,20 @@ export default function ProjectsRequirementsStep({
         disableLabel={t('projectsRequirements.confirmDisableDialog.disable')}
         onCancel={() => setConfirmDisableOpen(false)}
         onDisable={handleDisable}
+      />
+
+      {/* ── Take-from-candidate Confirmation Dialog ───────────────────────── */}
+      <DisableDialog
+        open={confirmTakeFromCandidateOpen}
+        onOpenChange={open => {
+          if (!open) setConfirmTakeFromCandidateOpen(false);
+        }}
+        title={t('projectsRequirements.confirmDisableDialog.title')}
+        message={t('projectsRequirements.confirmDisableDialog.message')}
+        cancelLabel={t('projectsRequirements.confirmDisableDialog.cancel')}
+        disableLabel={t('projectsRequirements.confirmDisableDialog.disable')}
+        onCancel={() => setConfirmTakeFromCandidateOpen(false)}
+        onDisable={handleConfirmTakeFromCandidate}
       />
 
       <StepDisableDialog

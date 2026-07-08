@@ -9,13 +9,17 @@ import { useTranslation } from 'react-i18next';
 
 import MessageBox from '@/components/message-box';
 import StepDisableDialog from '@/views/vacancies/components/step-disable-dialog';
+import VacancyStatusBadge from '@/views/vacancies/components/vacancy-status-badge';
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import { useStepGuard } from '@/views/vacancies/hooks';
 import type { StepProps } from '@/views/vacancies/types';
 import { formatDate, sanitizePlainText } from '@/views/vacancies/utils';
 import {
   formatLocalDate,
+  getDateYearsAgo,
+  getDateYearsFromNow,
   parseLocalDate,
+  startOfToday,
 } from '@/views/vacancies/utils/date-timezone-safe';
 
 import { CharacterCount } from '@cgp/ui-kit/components/character-count';
@@ -37,12 +41,21 @@ import {
 } from '@cgp/ui-kit/components/ui/popover';
 import { applyTypography } from '@cgp/ui-kit/lib/typography';
 import { cn } from '@cgp/ui-kit/lib/utils';
+import { isAfter, isBefore, startOfDay } from 'date-fns';
 
 import DisableDialog from './disable-dialog';
 
 const MAX_PUBLISHER_LENGTH = 250;
-const HUNDRED_YEARS_AGO = new Date(new Date().getFullYear() - 100, 0, 1);
-const HUNDRED_YEARS_FROM_NOW = new Date(new Date().getFullYear() + 100, 11, 31);
+const DATE_BOUNDARY_YEARS = 100;
+// Exact-date boundaries (day/month/year), not year-only. If today is
+// 2026-07-02: MIN_DATE = 1926-07-02, TODAY = 2026-07-02, MAX_DATE = 2126-07-02.
+const TODAY = startOfToday();
+const HUNDRED_YEARS_AGO = getDateYearsAgo(DATE_BOUNDARY_YEARS);
+const HUNDRED_YEARS_FROM_NOW = getDateYearsFromNow(DATE_BOUNDARY_YEARS);
+
+/** True when `date` falls before the 100-year-ago cutoff (exclusive). */
+const isBeforeMinDate = (date: Date) =>
+  isBefore(startOfDay(date), HUNDRED_YEARS_AGO);
 
 interface PublicationEntry {
   id: string;
@@ -108,10 +121,10 @@ function PublicationCard({
             )}
           >
             {/* Row 1: Accepted Publisher | Published Date From | Published Date To */}
-            <div className="grid grid-cols-4 gap-4">
-              <div className="flex flex-col gap-1">
-                <div className="flex items-center justify-between">
-                  <Label>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <div className="flex min-w-0 flex-col gap-1">
+                <div className="flex items-center justify-between gap-2">
+                  <Label className="min-w-0">
                     {t('preferredPublications.labels.acceptedPublisher')}
                   </Label>
                   <CharacterCount
@@ -135,8 +148,8 @@ function PublicationCard({
                 />
               </div>
 
-              <div className="flex flex-col gap-1">
-                <div className="flex h-5 items-center">
+              <div className="flex min-w-0 flex-col gap-1">
+                <div className="flex min-h-5 items-center">
                   <Label>
                     {t('preferredPublications.labels.publishedDateFrom')}
                   </Label>
@@ -157,7 +170,7 @@ function PublicationCard({
                       variant="outline"
                       disabled={fieldsDisabled}
                       className={cn(
-                        'border-input flex h-11 w-full items-center justify-between rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
+                        'border-input flex h-11 w-full min-w-0 items-center justify-between gap-2 rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
                         !publication.publishedDateFrom && 'text-slate-500',
                         publication.publishedDateFrom && 'text-zinc-800',
                         'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
@@ -167,15 +180,17 @@ function PublicationCard({
                         'shadow-none!'
                       )}
                     >
-                      {publication.publishedDateFrom
-                        ? formatDate(publication.publishedDateFrom)
-                        : t(
-                            'preferredPublications.placeholders.publishedDateFrom'
-                          )}
+                      <span className="min-w-0 truncate text-left">
+                        {publication.publishedDateFrom
+                          ? formatDate(publication.publishedDateFrom)
+                          : t(
+                              'preferredPublications.placeholders.publishedDateFrom'
+                            )}
+                      </span>
                       <CalendarIcon
                         variant="Linear"
                         size={20}
-                        className="text-zinc-800"
+                        className="shrink-0 text-zinc-800"
                       />
                     </Button>
                   </PopoverTrigger>
@@ -209,17 +224,19 @@ function PublicationCard({
                         }
                       }}
                       disabled={date =>
-                        date > new Date() || date < HUNDRED_YEARS_AGO
+                        isAfter(startOfDay(date), TODAY) ||
+                        isBeforeMinDate(date)
                       }
                       captionLayout="dropdown"
                       startMonth={HUNDRED_YEARS_AGO}
+                      endMonth={TODAY}
                     />
                   </PopoverContent>
                 </Popover>
               </div>
 
-              <div className="flex flex-col gap-1">
-                <div className="flex h-5 items-center">
+              <div className="flex min-w-0 flex-col gap-1">
+                <div className="flex min-h-5 items-center">
                   <Label>
                     {t('preferredPublications.labels.publishedDateTo')}
                   </Label>
@@ -240,7 +257,7 @@ function PublicationCard({
                       variant="outline"
                       disabled={fieldsDisabled}
                       className={cn(
-                        'border-input flex h-11 w-full items-center justify-between rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
+                        'border-input flex h-11 w-full min-w-0 items-center justify-between gap-2 rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
                         !publication.publishedDateTo && 'text-slate-500',
                         publication.publishedDateTo && 'text-zinc-800',
                         'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
@@ -250,15 +267,17 @@ function PublicationCard({
                         'shadow-none!'
                       )}
                     >
-                      {publication.publishedDateTo
-                        ? formatDate(publication.publishedDateTo)
-                        : t(
-                            'preferredPublications.placeholders.publishedDateTo'
-                          )}
+                      <span className="min-w-0 truncate text-left">
+                        {publication.publishedDateTo
+                          ? formatDate(publication.publishedDateTo)
+                          : t(
+                              'preferredPublications.placeholders.publishedDateTo'
+                            )}
+                      </span>
                       <CalendarIcon
                         variant="Linear"
                         size={20}
-                        className="text-zinc-800"
+                        className="shrink-0 text-zinc-800"
                       />
                     </Button>
                   </PopoverTrigger>
@@ -282,13 +301,15 @@ function PublicationCard({
                         onUpdate(index, { openDatePopover: null });
                       }}
                       disabled={date => {
+                        const day = startOfDay(date);
                         const fromDate = parseLocalDate(
                           publication.publishedDateFrom
                         );
                         return (
-                          date < HUNDRED_YEARS_AGO ||
-                          date > HUNDRED_YEARS_FROM_NOW ||
-                          (fromDate != null && date < fromDate)
+                          isBeforeMinDate(date) ||
+                          isAfter(day, HUNDRED_YEARS_FROM_NOW) ||
+                          (fromDate != null &&
+                            isBefore(day, startOfDay(fromDate)))
                         );
                       }}
                       captionLayout="dropdown"
@@ -309,10 +330,12 @@ function PublicationCard({
 export default function PreferredPublicationsStep({
   onNext,
   onBack,
+  mode = 'create',
 }: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
   const { form: contextForm, onCancel } = useVacancyForm();
   const savedPublications = contextForm.preferredPublications;
+  const vacancyStatus = contextForm.status;
 
   const [isEnabled, setIsEnabled] = useState(
     savedPublications?.isEnabled ?? false
@@ -501,6 +524,9 @@ export default function PreferredPublicationsStep({
             <h2 className="text-xl font-bold tracking-tight text-slate-900">
               {t('preferredPublications.title')}
             </h2>
+            {mode === 'edit' && vacancyStatus ? (
+              <VacancyStatusBadge status={vacancyStatus} />
+            ) : null}
           </div>
           <SwitchPrimitive.Root
             checked={isEnabled}
@@ -575,8 +601,10 @@ export default function PreferredPublicationsStep({
           )}
         >
           <Button
+            type="button"
             variant="secondary"
             size="icon"
+            disabled
             aria-label={t('preferredPublications.addEntry')}
             className="size-11 rounded-lg bg-gray-200 px-3 text-sm"
             onClick={addPublication}

@@ -10,6 +10,7 @@ import { useTranslation } from 'react-i18next';
 import MessageBox from '@/components/message-box';
 import { AddOrganizationFormDialog } from '@/views/vacancies/components/dialogs';
 import StepDisableDialog from '@/views/vacancies/components/step-disable-dialog';
+import VacancyStatusBadge from '@/views/vacancies/components/vacancy-status-badge';
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import {
   useCreateOrganizationMutation,
@@ -25,7 +26,10 @@ import type { StepProps } from '@/views/vacancies/types';
 import { formatDate, sanitizePlainText } from '@/views/vacancies/utils';
 import {
   formatLocalDate,
+  getDateYearsAgo,
+  getDateYearsFromNow,
   parseLocalDate,
+  startOfToday,
 } from '@/views/vacancies/utils/date-timezone-safe';
 
 import { CharacterCount } from '@cgp/ui-kit/components/character-count';
@@ -48,14 +52,24 @@ import {
 } from '@cgp/ui-kit/components/ui/popover';
 import { applyTypography } from '@cgp/ui-kit/lib/typography';
 import { cn } from '@cgp/ui-kit/lib/utils';
+import { isAfter, isBefore, startOfDay } from 'date-fns';
 
 import DisableDialog from './disable-dialog';
 
 const MAX_SPORT_NAME_LENGTH = 100;
 const MAX_POSITION_LENGTH = 100;
 const MAX_SELECTIONS = 10;
-const HUNDRED_YEARS_AGO = new Date(new Date().getFullYear() - 100, 0, 1);
-const HUNDRED_YEARS_FROM_NOW = new Date(new Date().getFullYear() + 100, 11, 31);
+const DATE_BOUNDARY_YEARS = 100;
+// Exact-date boundaries (day/month/year), not year-only — matches the
+// Preferred Publications date pickers. If today is 2026-07-07:
+// MIN = 1926-07-07, TODAY = 2026-07-07, MAX = 2126-07-07.
+const TODAY = startOfToday();
+const HUNDRED_YEARS_AGO = getDateYearsAgo(DATE_BOUNDARY_YEARS);
+const HUNDRED_YEARS_FROM_NOW = getDateYearsFromNow(DATE_BOUNDARY_YEARS);
+
+/** True when `date` falls before the 100-year-ago cutoff (exclusive). */
+const isBeforeMinDate = (date: Date) =>
+  isBefore(startOfDay(date), HUNDRED_YEARS_AGO);
 
 interface SportEntry {
   id: string;
@@ -215,11 +229,23 @@ function SportCard({
                             typeof opt.value === 'string' &&
                             opt.value.length > 0
                         )
-                        .map(opt => ({
-                          value: opt.value,
-                          label: opt.label,
-                          source: (opt.source as string) ?? 'USER_CREATED',
-                        })),
+                        .map(opt => {
+                          const source =
+                            (opt.source as string) ?? 'USER_CREATED';
+                          const isCreatable =
+                            source === 'USER_CREATED' ||
+                            opt.value === opt.label;
+
+                          return {
+                            value: isCreatable
+                              ? opt.value.slice(0, MAX_SPORT_NAME_LENGTH)
+                              : opt.value,
+                            label: isCreatable
+                              ? opt.label.slice(0, MAX_SPORT_NAME_LENGTH)
+                              : opt.label,
+                            source,
+                          };
+                        }),
                     });
                   }}
                   options={sports.map(s => ({
@@ -228,8 +254,9 @@ function SportCard({
                     source: s.source,
                   }))}
                   onSearchSync={value => {
-                    onUpdate(index, { sportSearch: value });
-                    onSportsSearch(value);
+                    const limitedSearch = value.slice(0, MAX_SPORT_NAME_LENGTH);
+                    onUpdate(index, { sportSearch: limitedSearch });
+                    onSportsSearch(limitedSearch);
                     return sports.map(s => ({
                       value: s.id,
                       label: s.name || s.label || '',
@@ -237,6 +264,9 @@ function SportCard({
                     }));
                   }}
                   keepSelectedInList
+                  inputProps={{
+                    maxLength: MAX_SPORT_NAME_LENGTH,
+                  }}
                   creatable
                   triggerSearchOnFocus
                   hideClearAllButton
@@ -411,9 +441,9 @@ function SportCard({
             </div>
 
             {/* Row 3: Position / Role Held | Start Date | End Date */}
-            <div className="grid grid-cols-4 gap-4">
-              <div className="flex flex-col gap-1">
-                <div className="flex items-center justify-between">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <div className="flex min-w-0 flex-col gap-1">
+                <div className="flex items-center justify-between gap-2">
                   <Label>{t('preferredSports.labels.position')}</Label>
                   <CharacterCount
                     currentLength={entry.position.length}
@@ -432,8 +462,8 @@ function SportCard({
                 />
               </div>
 
-              <div className="flex flex-col gap-1">
-                <div className="flex h-5 items-center">
+              <div className="flex min-w-0 flex-col gap-1">
+                <div className="flex min-h-5 items-center">
                   <Label>{t('preferredSports.labels.startDate')}</Label>
                 </div>
                 <Popover
@@ -451,7 +481,7 @@ function SportCard({
                       variant="outline"
                       disabled={fieldsDisabled}
                       className={cn(
-                        'border-input flex h-11 w-full items-center justify-between rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
+                        'border-input flex h-11 w-full min-w-0 items-center justify-between gap-2 rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
                         !entry.startDate && 'text-slate-500',
                         entry.startDate && 'text-zinc-800',
                         'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
@@ -461,13 +491,15 @@ function SportCard({
                         'shadow-none!'
                       )}
                     >
-                      {entry.startDate
-                        ? formatDate(entry.startDate)
-                        : t('preferredSports.placeholders.startDate')}
+                      <span className="min-w-0 truncate text-left">
+                        {entry.startDate
+                          ? formatDate(entry.startDate)
+                          : t('preferredSports.placeholders.startDate')}
+                      </span>
                       <CalendarIcon
                         variant="Linear"
                         size={20}
-                        className="text-zinc-800"
+                        className="shrink-0 text-zinc-800"
                       />
                     </Button>
                   </PopoverTrigger>
@@ -494,17 +526,19 @@ function SportCard({
                         }
                       }}
                       disabled={date =>
-                        date > new Date() || date < HUNDRED_YEARS_AGO
+                        isAfter(startOfDay(date), TODAY) ||
+                        isBeforeMinDate(date)
                       }
                       captionLayout="dropdown"
                       startMonth={HUNDRED_YEARS_AGO}
+                      endMonth={TODAY}
                     />
                   </PopoverContent>
                 </Popover>
               </div>
 
-              <div className="flex flex-col gap-1">
-                <div className="flex h-5 items-center">
+              <div className="flex min-w-0 flex-col gap-1">
+                <div className="flex min-h-5 items-center">
                   <Label>{t('preferredSports.labels.endDate')}</Label>
                 </div>
                 <Popover
@@ -522,7 +556,7 @@ function SportCard({
                       variant="outline"
                       disabled={fieldsDisabled}
                       className={cn(
-                        'border-input flex h-11 w-full items-center justify-between rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
+                        'border-input flex h-11 w-full min-w-0 items-center justify-between gap-2 rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
                         !entry.endDate && 'text-slate-500',
                         entry.endDate && 'text-zinc-800',
                         'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
@@ -532,13 +566,15 @@ function SportCard({
                         'shadow-none!'
                       )}
                     >
-                      {entry.endDate
-                        ? formatDate(entry.endDate)
-                        : t('preferredSports.placeholders.endDate')}
+                      <span className="min-w-0 truncate text-left">
+                        {entry.endDate
+                          ? formatDate(entry.endDate)
+                          : t('preferredSports.placeholders.endDate')}
+                      </span>
                       <CalendarIcon
                         variant="Linear"
                         size={20}
-                        className="text-zinc-800"
+                        className="shrink-0 text-zinc-800"
                       />
                     </Button>
                   </PopoverTrigger>
@@ -558,11 +594,13 @@ function SportCard({
                         setOpenDatePopover(null);
                       }}
                       disabled={date => {
+                        const day = startOfDay(date);
                         const startDate = parseLocalDate(entry.startDate);
                         return (
-                          date < HUNDRED_YEARS_AGO ||
-                          date > HUNDRED_YEARS_FROM_NOW ||
-                          (startDate != null && date < startDate)
+                          isBeforeMinDate(date) ||
+                          isAfter(day, HUNDRED_YEARS_FROM_NOW) ||
+                          (startDate != null &&
+                            isBefore(day, startOfDay(startDate)))
                         );
                       }}
                       captionLayout="dropdown"
@@ -584,10 +622,12 @@ export default function PreferredSportsStep({
   onNext,
 
   onBack,
+  mode = 'create',
 }: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
   const { form: contextForm, onCancel } = useVacancyForm();
   const savedSports = contextForm.preferredSports;
+  const vacancyStatus = contextForm.status;
 
   const { mutateAsync: createSport } = useCreateSportMutation();
   const { mutateAsync: createSportLevel } = useCreateSportLevelMutation();
@@ -600,6 +640,8 @@ export default function PreferredSportsStep({
   );
   const [confirmDisableOpen, setConfirmDisableOpen] = useState(false);
   const [emptyDisableOpen, setEmptyDisableOpen] = useState(false);
+  const [confirmTakeFromCandidateOpen, setConfirmTakeFromCandidateOpen] =
+    useState(false);
   const [sportsSearchQuery, setSportsSearchQuery] = useState('');
   const [organizationsSearchQuery, setOrganizationsSearchQuery] = useState('');
   const [locationsSearchQuery, setLocationsSearchQuery] = useState('');
@@ -873,13 +915,7 @@ export default function PreferredSportsStep({
 
   const handleToggle = () => {
     if (isEnabled) {
-      if (hasSportsData) {
-        setConfirmDisableOpen(true);
-      } else {
-        setIsEnabled(false);
-        setDataTakenFromCandidate(false);
-        removeCompletedStep(currentStepIndex);
-      }
+      setConfirmDisableOpen(true);
     } else {
       setIsEnabled(true);
     }
@@ -893,6 +929,30 @@ export default function PreferredSportsStep({
 
   const addEntry = () => {
     setEntries(prev => [...prev, createEmptyEntry(String(Date.now()))]);
+  };
+
+  const applyTakeFromCandidate = () => {
+    setDataTakenFromCandidate(true);
+    setEntries([createEmptyEntry('1')]);
+  };
+
+  // Checking "data taken from candidate" clears all added data. Confirm first
+  // when there is data to lose; apply directly otherwise. Unchecking is safe.
+  const handleTakeFromCandidateChange = (checked: boolean) => {
+    if (!checked) {
+      setDataTakenFromCandidate(false);
+      return;
+    }
+    if (hasSportsData) {
+      setConfirmTakeFromCandidateOpen(true);
+      return;
+    }
+    applyTakeFromCandidate();
+  };
+
+  const handleConfirmTakeFromCandidate = () => {
+    applyTakeFromCandidate();
+    setConfirmTakeFromCandidateOpen(false);
   };
 
   const handleDisable = () => {
@@ -949,6 +1009,9 @@ export default function PreferredSportsStep({
             <h2 className="text-xl font-bold tracking-tight text-slate-900">
               {t('preferredSports.title')}
             </h2>
+            {mode === 'edit' && vacancyStatus ? (
+              <VacancyStatusBadge status={vacancyStatus} />
+            ) : null}
           </div>
           <SwitchPrimitive.Root
             checked={isEnabled}
@@ -977,13 +1040,7 @@ export default function PreferredSportsStep({
           <Checkbox
             id="sportsDataTakenFromCandidate"
             checked={dataTakenFromCandidate}
-            onCheckedChange={value => {
-              const checked = !!value;
-              setDataTakenFromCandidate(checked);
-              if (checked) {
-                setEntries([createEmptyEntry('1')]);
-              }
-            }}
+            onCheckedChange={value => handleTakeFromCandidateChange(!!value)}
             className="mt-0.5"
           />
           <Label
@@ -1080,9 +1137,24 @@ export default function PreferredSportsStep({
         organizationName={pendingOrganizationName}
         onOrganizationAdded={org => {
           if (activeCardIndex !== null) {
+            const existing =
+              entries[activeCardIndex]?.representedOrganization ?? [];
+            // Duplicate = same name + location (org.name already combines
+            // both, e.g. "OXO Labs, Colombo, Western Province, Sri Lanka").
+            // Case-insensitive so re-typing the same value keeps the existing
+            // selection instead of adding a new entry.
+            const normalizedNewLabel = org.name.trim().toLowerCase();
+            const isDuplicate = existing.some(
+              o => o.label.trim().toLowerCase() === normalizedNewLabel
+            );
+            if (isDuplicate) {
+              setOrgSelectorKey(k => k + 1);
+              setShowAddOrganizationDialog(false);
+              return false;
+            }
             updateEntry(activeCardIndex, {
               representedOrganization: [
-                ...(entries[activeCardIndex]?.representedOrganization ?? []),
+                ...existing,
                 { value: org.id, label: org.name, source: org.source },
               ],
             });
@@ -1104,6 +1176,20 @@ export default function PreferredSportsStep({
         disableLabel={t('preferredSports.confirmDisableDialog.disable')}
         onCancel={() => setConfirmDisableOpen(false)}
         onDisable={handleDisable}
+      />
+
+      {/* ── Take-from-candidate Confirmation Dialog ───────────────────────── */}
+      <DisableDialog
+        open={confirmTakeFromCandidateOpen}
+        onOpenChange={open => {
+          if (!open) setConfirmTakeFromCandidateOpen(false);
+        }}
+        title={t('preferredSports.confirmDisableDialog.title')}
+        message={t('preferredSports.confirmDisableDialog.message')}
+        cancelLabel={t('preferredSports.confirmDisableDialog.cancel')}
+        disableLabel={t('preferredSports.confirmDisableDialog.disable')}
+        onCancel={() => setConfirmTakeFromCandidateOpen(false)}
+        onDisable={handleConfirmTakeFromCandidate}
       />
 
       <StepDisableDialog

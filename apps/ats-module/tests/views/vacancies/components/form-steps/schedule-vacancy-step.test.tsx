@@ -177,7 +177,8 @@ vi.mock('@/views/vacancies/components/vacancy-onhold-update-dialog', () => ({
   },
 }));
 
-vi.mock('date-fns', () => ({
+vi.mock('date-fns', async importOriginal => ({
+  ...(await importOriginal<typeof import('date-fns')>()),
   format: (_date: Date, _format: string) => '10 Jun 2026',
   startOfToday: () => new Date('2026-06-08'),
 }));

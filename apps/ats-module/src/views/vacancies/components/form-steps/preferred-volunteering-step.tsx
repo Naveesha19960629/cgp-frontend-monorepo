@@ -10,6 +10,7 @@ import { useTranslation } from 'react-i18next';
 import MessageBox from '@/components/message-box';
 import { AddOrganizationFormDialog } from '@/views/vacancies/components/dialogs';
 import StepDisableDialog from '@/views/vacancies/components/step-disable-dialog';
+import VacancyStatusBadge from '@/views/vacancies/components/vacancy-status-badge';
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import {
   useCausesQuery,
@@ -503,10 +504,12 @@ function VolunteeringCard({
 export default function PreferredVolunteeringStep({
   onNext,
   onBack,
+  mode = 'create',
 }: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
   const { form: contextForm, onCancel } = useVacancyForm();
   const savedVolunteering = contextForm.preferredVolunteering;
+  const vacancyStatus = contextForm.status;
 
   const { mutateAsync: createCause } = useCreateCauseMutation();
   const { mutateAsync: createOrganization } = useCreateOrganizationMutation();
@@ -520,6 +523,8 @@ export default function PreferredVolunteeringStep({
   );
   const [confirmDisableOpen, setConfirmDisableOpen] = useState(false);
   const [emptyDisableOpen, setEmptyDisableOpen] = useState(false);
+  const [confirmTakeFromCandidateOpen, setConfirmTakeFromCandidateOpen] =
+    useState(false);
   const [organizationsSearchQuery, setOrganizationsSearchQuery] = useState('');
   const [locationsSearchQuery, setLocationsSearchQuery] = useState('');
   const [causesSearchQuery, setCausesSearchQuery] = useState('');
@@ -735,13 +740,7 @@ export default function PreferredVolunteeringStep({
 
   const handleToggle = () => {
     if (isEnabled) {
-      if (hasVolunteeringData) {
-        setConfirmDisableOpen(true);
-      } else {
-        setIsEnabled(false);
-        setDataTakenFromCandidate(false);
-        removeCompletedStep(currentStepIndex);
-      }
+      setConfirmDisableOpen(true);
     } else {
       setIsEnabled(true);
     }
@@ -755,6 +754,30 @@ export default function PreferredVolunteeringStep({
 
   const addEntry = () => {
     setEntries(prev => [...prev, createEmptyEntry(String(Date.now()))]);
+  };
+
+  const applyTakeFromCandidate = () => {
+    setDataTakenFromCandidate(true);
+    setEntries([createEmptyEntry('1')]);
+  };
+
+  // Checking "data taken from candidate" clears all added data. Confirm first
+  // when there is data to lose; apply directly otherwise. Unchecking is safe.
+  const handleTakeFromCandidateChange = (checked: boolean) => {
+    if (!checked) {
+      setDataTakenFromCandidate(false);
+      return;
+    }
+    if (hasVolunteeringData) {
+      setConfirmTakeFromCandidateOpen(true);
+      return;
+    }
+    applyTakeFromCandidate();
+  };
+
+  const handleConfirmTakeFromCandidate = () => {
+    applyTakeFromCandidate();
+    setConfirmTakeFromCandidateOpen(false);
   };
 
   const handleDisable = () => {
@@ -811,6 +834,9 @@ export default function PreferredVolunteeringStep({
             <h2 className="text-xl font-bold tracking-tight text-slate-900">
               {t('preferredVolunteering.title')}
             </h2>
+            {mode === 'edit' && vacancyStatus ? (
+              <VacancyStatusBadge status={vacancyStatus} />
+            ) : null}
           </div>
           <SwitchPrimitive.Root
             checked={isEnabled}
@@ -839,13 +865,7 @@ export default function PreferredVolunteeringStep({
           <Checkbox
             id="volunteeringDataTakenFromCandidate"
             checked={dataTakenFromCandidate}
-            onCheckedChange={value => {
-              const checked = !!value;
-              setDataTakenFromCandidate(checked);
-              if (checked) {
-                setEntries([createEmptyEntry('1')]);
-              }
-            }}
+            onCheckedChange={value => handleTakeFromCandidateChange(!!value)}
             className="mt-0.5"
           />
           <Label
@@ -939,9 +959,23 @@ export default function PreferredVolunteeringStep({
         organizationName={pendingOrganizationName}
         onOrganizationAdded={org => {
           if (activeCardIndex !== null) {
+            const existing = entries[activeCardIndex]?.organizationName ?? [];
+            // Duplicate = same name + location (org.name already combines
+            // both, e.g. "OXO Labs, Colombo, Western Province, Sri Lanka").
+            // Case-insensitive so re-typing the same value keeps the existing
+            // selection instead of adding a new entry.
+            const normalizedNewLabel = org.name.trim().toLowerCase();
+            const isDuplicate = existing.some(
+              o => o.label.trim().toLowerCase() === normalizedNewLabel
+            );
+            if (isDuplicate) {
+              setOrgSelectorKey(k => k + 1);
+              setShowAddOrganizationDialog(false);
+              return false;
+            }
             updateEntry(activeCardIndex, {
               organizationName: [
-                ...(entries[activeCardIndex]?.organizationName ?? []),
+                ...existing,
                 { value: org.id, label: org.name, source: org.source },
               ],
             });
@@ -963,6 +997,20 @@ export default function PreferredVolunteeringStep({
         disableLabel={t('preferredVolunteering.confirmDisableDialog.disable')}
         onCancel={() => setConfirmDisableOpen(false)}
         onDisable={handleDisable}
+      />
+
+      {/* ── Take-from-candidate Confirmation Dialog ───────────────────────── */}
+      <DisableDialog
+        open={confirmTakeFromCandidateOpen}
+        onOpenChange={open => {
+          if (!open) setConfirmTakeFromCandidateOpen(false);
+        }}
+        title={t('preferredVolunteering.confirmDisableDialog.title')}
+        message={t('preferredVolunteering.confirmDisableDialog.message')}
+        cancelLabel={t('preferredVolunteering.confirmDisableDialog.cancel')}
+        disableLabel={t('preferredVolunteering.confirmDisableDialog.disable')}
+        onCancel={() => setConfirmTakeFromCandidateOpen(false)}
+        onDisable={handleConfirmTakeFromCandidate}
       />
 
       <StepDisableDialog
