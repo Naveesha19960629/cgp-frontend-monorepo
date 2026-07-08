@@ -282,6 +282,8 @@ interface VacancyFormContextValue {
    * that are visible. Undefined in the normal flow (all fields visible).
    */
   templateFieldVisibility?: Record<string, Record<string, boolean>>;
+  /** Source template id (Use Template flow), echoed to the backend on create for lineage. */
+  templateId?: string;
   currentStepIndex: number;
   setCurrentStepIndex: (index: number) => void;
   completedSteps: Set<number>;
@@ -597,6 +599,7 @@ function VacancyFormProvider({
         setForm,
         visibleSteps,
         templateFieldVisibility,
+        templateId,
         currentStepIndex,
         setCurrentStepIndex,
         completedSteps,

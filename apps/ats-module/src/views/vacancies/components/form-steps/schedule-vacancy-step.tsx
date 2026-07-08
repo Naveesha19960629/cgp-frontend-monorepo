@@ -50,6 +50,7 @@ export default function ScheduleVacancyStep({
     onCancel,
     stepPersistRef,
     resolveFormUserCreatedEntries,
+    templateId,
   } = useVacancyForm();
 
   const {
@@ -290,6 +291,7 @@ export default function ScheduleVacancyStep({
         await createVacancy({
           form: payloadForm,
           status: targetApiStatus,
+          templateId,
         });
       }
       SuccessToast({
