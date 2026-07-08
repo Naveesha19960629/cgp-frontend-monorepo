@@ -101,3 +101,7 @@ export {
 export { useVacanciesQuery } from '@/views/vacancies/hooks/queries/use-vacancies-query';
 export { useVacancyByIdQuery } from '@/views/vacancies/hooks/queries/use-vacancy-by-id-query';
 export { useVacancyFilterOptionsQuery } from '@/views/vacancies/hooks/queries/use-vacancy-filter-options-query';
+export {
+  useVacancyJobDescriptionQuery,
+  VACANCY_JOB_DESCRIPTION_QUERY_KEY,
+} from '@/views/vacancies/hooks/queries/use-vacancy-job-description-query';

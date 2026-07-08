@@ -55,6 +55,9 @@ describe('VacancyTableAction', () => {
       screen.getByText('vacancies.table.actions.edit')
     ).toBeInTheDocument();
     expect(
+      screen.getByText('vacancies.table.actions.editJd')
+    ).toBeInTheDocument();
+    expect(
       screen.getByText('vacancies.table.actions.makeACopy')
     ).toBeInTheDocument();
     expect(
@@ -86,6 +89,9 @@ describe('VacancyTableAction', () => {
       screen.getByText('vacancies.table.actions.matchCandidate')
     ).toBeInTheDocument();
     expect(
+      screen.getByText('vacancies.table.actions.editJd')
+    ).toBeInTheDocument();
+    expect(
       screen.queryByText('vacancies.table.actions.delete')
     ).not.toBeInTheDocument();
   });
@@ -114,6 +120,9 @@ describe('VacancyTableAction', () => {
     ).not.toBeInTheDocument();
     expect(
       screen.queryByText('vacancies.table.actions.copyLink')
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('vacancies.table.actions.editJd')
     ).not.toBeInTheDocument();
     expect(
       screen.queryByText('vacancies.table.actions.matchCandidate')
@@ -201,5 +210,41 @@ describe('VacancyTableAction', () => {
     expect(
       screen.queryByText('vacancies.table.actions.makeACopy')
     ).not.toBeInTheDocument();
+    // EDIT_JD not in availableActions — falls back to status-based (live → show)
+    expect(
+      screen.getByText('vacancies.table.actions.editJd')
+    ).toBeInTheDocument();
+  });
+
+  it('shows editJd when EDIT_JD is explicitly in availableActions, regardless of status', async () => {
+    const user = userEvent.setup();
+    render(
+      <VacancyTableAction
+        {...defaultProps}
+        vacancy={{
+          id: 'test',
+          status: 'draft',
+          applicantCount: 0,
+          availableActions: ['EDIT_JD'],
+        }}
+      />
+    );
+    await user.click(screen.getByRole('button'));
+
+    expect(
+      screen.getByText('vacancies.table.actions.editJd')
+    ).toBeInTheDocument();
+  });
+
+  it('navigates to edit-jd page when editJd menu item is clicked without onEditJd prop', async () => {
+    const user = userEvent.setup();
+    render(<VacancyTableAction {...defaultProps} />);
+    await user.click(screen.getByRole('button'));
+    await user.click(screen.getByText('vacancies.table.actions.editJd'));
+
+    expect(mockNavigate).toHaveBeenCalledWith(
+      '/dashboard/ats/vacancies/test-vacancy-id/edit-jd',
+      { state: { from: '/' } }
+    );
   });
 });

@@ -51,4 +51,8 @@ export {
   hasAnySelection,
   toCreateTemplatePayload,
 } from '@/views/vacancies/utils/vacancy-template-payload-helpers';
+export {
+  getSectionTitleKey,
+  getFieldLabelKey,
+} from '@/views/vacancies/utils/job-description-field-labels';
 export type { CreateVacancyPayload } from '@/views/vacancies/types';

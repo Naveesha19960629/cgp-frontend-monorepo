@@ -32,3 +32,4 @@ export { useCreateSportLevelMutation } from '@/views/vacancies/hooks/mutations/u
 export { useDeleteVacancyMutation } from '@/views/vacancies/hooks/mutations/use-delete-vacancy-mutation';
 export { useDuplicateVacancyMutation } from '@/views/vacancies/hooks/mutations/use-duplicate-vacancy-mutation';
 export { useToggleVacancyStatusMutation } from '@/views/vacancies/hooks/mutations/use-toggle-vacancy-status-mutation';
+export { useUpdateVacancyJobDescriptionMutation } from '@/views/vacancies/hooks/mutations/use-update-vacancy-job-description-mutation';

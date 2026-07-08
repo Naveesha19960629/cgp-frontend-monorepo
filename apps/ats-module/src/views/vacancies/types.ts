@@ -1151,6 +1151,7 @@ interface VacancyTableActionProps {
   onCopyLink?: () => void;
   onMakeACopy?: () => void;
   onEdit?: () => void;
+  onEditJd?: () => void;
   onDelete?: () => void;
 }
 
@@ -1769,6 +1770,36 @@ interface VacancyTemplateQueryParams {
   sortOrder?: TemplateSortOrder;
 }
 
+// ── Edit Job Description ────────────────────────────────────────────────────
+
+interface JobDescriptionField {
+  fieldKey: string;
+  isVisible: boolean;
+}
+
+interface JobDescriptionSection {
+  sectionKey: string;
+  fields: JobDescriptionField[];
+}
+
+interface VacancyJobDescription {
+  vacancyId: string;
+  sections: JobDescriptionSection[];
+}
+
+/** Local form state: sectionKey -> fieldKey -> toggle value. */
+type JobDescriptionFormState = Record<string, Record<string, boolean>>;
+
+interface JobDescriptionFieldVisibilityUpdate {
+  sectionKey: string;
+  fieldKey: string;
+  isVisible: boolean;
+}
+
+interface UpdateVacancyJobDescriptionRequest {
+  fields: JobDescriptionFieldVisibilityUpdate[];
+}
+
 export type {
   CreateVacancyPayload,
   TemplateSectionKind,
@@ -1786,6 +1817,12 @@ export type {
   VacancyTemplateSearchItem,
   VacancyTemplateSearchPage,
   VacancyTemplateQueryParams,
+  JobDescriptionField,
+  JobDescriptionSection,
+  VacancyJobDescription,
+  JobDescriptionFormState,
+  JobDescriptionFieldVisibilityUpdate,
+  UpdateVacancyJobDescriptionRequest,
   JobRequirementApiPayload,
   PatentContentApiPayload,
   PatentGroupApiPayload,
