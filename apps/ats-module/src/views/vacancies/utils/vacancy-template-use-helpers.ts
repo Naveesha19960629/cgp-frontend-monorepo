@@ -43,14 +43,38 @@ function unwrapSection(value: unknown): Record<string, unknown> | null {
   return isRecord(entry) ? entry : null;
 }
 
+/**
+ * Flattens a section `content` map into `fieldCode -> visibility`. Most fields
+ * sit at the top level, but some sections wrap their fields in a nested group
+ * array/object (e.g. `profileRequirement` nests the address fields inside an
+ * `addresses` array: `content.addresses[0].{cityRefId,stateRefId,...}`). We
+ * descend into nested objects/arrays and lift every leaf boolean up by its
+ * field code so `useTemplateFieldVisible` can resolve it — otherwise gated
+ * fields like `stateRefId` stay hidden even when the template enabled them.
+ */
+function collectFieldFlags(
+  node: Record<string, unknown>,
+  out: Record<string, boolean>
+): void {
+  for (const [code, value] of Object.entries(node)) {
+    if (typeof value === 'boolean') {
+      out[code] = value;
+    } else if (Array.isArray(value)) {
+      for (const item of value) {
+        if (isRecord(item)) collectFieldFlags(item, out);
+      }
+    } else if (isRecord(value)) {
+      collectFieldFlags(value, out);
+    }
+  }
+}
+
 function readContentFlags(
   section: Record<string, unknown>
 ): Record<string, boolean> {
   if (!isRecord(section.content)) return {};
   const out: Record<string, boolean> = {};
-  for (const [code, enabled] of Object.entries(section.content)) {
-    out[code] = Boolean(enabled);
-  }
+  collectFieldFlags(section.content, out);
   return out;
 }
 
