@@ -1190,11 +1190,11 @@ export default function CustomizableFormStep({
                 className="rounded-xl border border-neutral-300 bg-white p-5 shadow-[0px_4px_90px_0px_rgba(0,0,0,0.07)]"
               >
                 {/* Card action buttons */}
-                <div className="flex items-center justify-between">
-                  <p className="text-base leading-6 font-bold text-slate-900">
+                <div className="flex items-start justify-between gap-3">
+                  <p className="min-w-0 flex-1 text-base leading-6 font-bold wrap-break-word text-slate-900">
                     {displayFormTitle}
                   </p>
-                  <div className="flex items-center gap-3 text-slate-500">
+                  <div className="flex shrink-0 items-center gap-3 text-slate-500">
                     <button
                       type="button"
                       aria-label="Duplicate form"
