@@ -53,6 +53,18 @@ import { cn } from '@cgp/ui-kit/lib/utils';
 
 const MAX_ADDRESS_ENTRIES = 5;
 
+/**
+ * Field codes that make up the Addresses group. In the Use Template flow the
+ * whole Addresses section (and its add button) is hidden when none of these are
+ * enabled by the template — see `hasVisibleAddressField`.
+ */
+const ADDRESS_FIELD_CODES = [
+  'cityRefId',
+  'stateRefId',
+  'countryRefId',
+  'postalCode',
+] as const;
+
 const multiSelectInfoAvatar = new URL(
   '../../../../assets/images/multi-select-info-avatar.svg',
   import.meta.url
@@ -386,6 +398,11 @@ export default function ProfileRequirementsStep({ onNext, onBack }: StepProps) {
   const { t } = useTranslation('ats');
   const showDisableToast = useDisableSuccessToast();
   const isFieldVisible = useTemplateFieldVisible('profileRequirement');
+  // In the Use Template flow, hide the entire Addresses group (and its add
+  // button) when the template enabled none of the address fields.
+  const hasVisibleAddressField = ADDRESS_FIELD_CODES.some(code =>
+    isFieldVisible(code)
+  );
 
   const {
     form: contextForm,
@@ -812,65 +829,70 @@ export default function ProfileRequirementsStep({ onNext, onBack }: StepProps) {
             )}
           </div>
 
-          {/* Addresses section header */}
-          <div className="px-7 pt-6 pb-2">
-            <h3 className="text-base font-bold text-slate-900">
-              {t('profileRequirements.addressesTitle')}
-            </h3>
-            <p className="text-sm text-slate-500">
-              {t('profileRequirements.addressesDescription')}
-            </p>
-          </div>
+          {/* Addresses group — hidden when the template enabled no address field. */}
+          {hasVisibleAddressField && (
+            <>
+              {/* Addresses section header */}
+              <div className="px-7 pt-6 pb-2">
+                <h3 className="text-base font-bold text-slate-900">
+                  {t('profileRequirements.addressesTitle')}
+                </h3>
+                <p className="text-sm text-slate-500">
+                  {t('profileRequirements.addressesDescription')}
+                </p>
+              </div>
 
-          {/* Address cards - reverse chronological order (newest first) */}
-          <div className="flex flex-col gap-4 px-6 pt-4">
-            {[...fields]
-              .map((field, originalIndex) => ({ field, originalIndex }))
-              .reverse()
-              .map(({ field, originalIndex }) => (
-                <AddressCard
-                  key={field.id}
-                  index={originalIndex}
-                  displayNumber={originalIndex + 1}
-                  form={form}
-                  onRemove={() => remove(originalIndex)}
-                  canRemove={fields.length > 1}
-                />
-              ))}
-          </div>
+              {/* Address cards - reverse chronological order (newest first) */}
+              <div className="flex flex-col gap-4 px-6 pt-4">
+                {[...fields]
+                  .map((field, originalIndex) => ({ field, originalIndex }))
+                  .reverse()
+                  .map(({ field, originalIndex }) => (
+                    <AddressCard
+                      key={field.id}
+                      index={originalIndex}
+                      displayNumber={originalIndex + 1}
+                      form={form}
+                      onRemove={() => remove(originalIndex)}
+                      canRemove={fields.length > 1}
+                    />
+                  ))}
+              </div>
 
-          {/* Add address button */}
-          <div className="flex justify-end px-6 py-4">
-            <Button
-              type="button"
-              variant="secondary"
-              disabled={isFieldsDisabled}
-              className="size-11 rounded-lg bg-gray-200 px-3 text-sm"
-              onClick={() => {
-                if (fields.length >= MAX_ADDRESS_ENTRIES) {
-                  ErrorToast({
-                    title: 'Error',
-                    description: t(
-                      'profileRequirements.errors.maxEntries',
-                      'Exceeded maximum of {{max}} entries allowed.',
-                      { max: MAX_ADDRESS_ENTRIES }
-                    ),
-                  });
-                  return;
-                }
+              {/* Add address button */}
+              <div className="flex justify-end px-6 py-4">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  disabled={isFieldsDisabled}
+                  className="size-11 rounded-lg bg-gray-200 px-3 text-sm"
+                  onClick={() => {
+                    if (fields.length >= MAX_ADDRESS_ENTRIES) {
+                      ErrorToast({
+                        title: 'Error',
+                        description: t(
+                          'profileRequirements.errors.maxEntries',
+                          'Exceeded maximum of {{max}} entries allowed.',
+                          { max: MAX_ADDRESS_ENTRIES }
+                        ),
+                      });
+                      return;
+                    }
 
-                append({
-                  city: { id: '', label: '' },
-                  stateProvince: { id: '', label: '' },
-                  country: { id: '', label: '' },
-                  postalCode: '',
-                  isOpen: true,
-                });
-              }}
-            >
-              <Plus className="size-4 text-neutral-600!" />
-            </Button>
-          </div>
+                    append({
+                      city: { id: '', label: '' },
+                      stateProvince: { id: '', label: '' },
+                      country: { id: '', label: '' },
+                      postalCode: '',
+                      isOpen: true,
+                    });
+                  }}
+                >
+                  <Plus className="size-4 text-neutral-600!" />
+                </Button>
+              </div>
+            </>
+          )}
 
           {/* Footer: Cancel + Next */}
           <div className="sticky bottom-0 mt-auto flex items-center justify-end gap-4 bg-white px-6 py-7 shadow-[0px_-8px_6.8px_0px_rgba(0,0,0,0.04)]">
