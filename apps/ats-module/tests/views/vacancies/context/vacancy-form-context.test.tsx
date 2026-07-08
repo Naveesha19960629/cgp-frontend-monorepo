@@ -454,7 +454,8 @@ describe('vacancy-form-context', () => {
           expect.objectContaining({
             jobRequirements: stepValues.jobRequirements,
           }),
-          'DRAFT'
+          'DRAFT',
+          undefined
         );
       });
     });
