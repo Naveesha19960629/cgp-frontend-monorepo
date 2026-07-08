@@ -41,8 +41,6 @@ export default function TemplatesPage() {
   const templates = response?.data?.content ?? [];
   const totalPages = response?.data?.totalPages ?? 0;
   const hasActiveSearch = Boolean(params.search);
-  const showHeaderControls =
-    isLoading || templates.length > 0 || hasActiveSearch;
 
   const goToCreate = () => void navigate(TEMPLATE_CREATE_ROUTE);
 
@@ -62,17 +60,15 @@ export default function TemplatesPage() {
         <p className="shrink-0 text-2xl/8 font-bold text-slate-900">
           {t('templates.title')}
         </p>
-        {showHeaderControls && (
-          <TemplatesToolbar
-            search={params.search}
-            onSearchChange={value => void setParams({ search: value, page: 1 })}
-            sortOrder={params.sortOrder}
-            onSortOrderChange={value =>
-              void setParams({ sortOrder: value, page: 1 })
-            }
-            onCreate={goToCreate}
-          />
-        )}
+        <TemplatesToolbar
+          search={params.search}
+          onSearchChange={value => void setParams({ search: value, page: 1 })}
+          sortOrder={params.sortOrder}
+          onSortOrderChange={value =>
+            void setParams({ sortOrder: value, page: 1 })
+          }
+          onCreate={goToCreate}
+        />
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto">
