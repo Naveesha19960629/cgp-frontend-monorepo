@@ -1,12 +1,13 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { VacancyCreateStepperForm } from '@/views/vacancies';
 import { VacancyStatusBadge } from '@/views/vacancies/components';
 import {
-  VACANCY_STEPS,
+  DEFAULT_FORM,
   VacancyFormProvider,
+  getEnabledStepKeys,
   useVacancyForm,
 } from '@/views/vacancies/context/vacancy-form-context';
 import { useVacancyByIdQuery } from '@/views/vacancies/hooks';
@@ -109,6 +110,7 @@ function EditVacancyContent({ id }: { id: string | undefined }) {
   const initialStep = (location.state as { initialStep?: string } | null)
     ?.initialStep;
   const {
+    visibleSteps,
     isInitialStep,
     setIsInitialStep,
     setForm,
@@ -153,14 +155,14 @@ function EditVacancyContent({ id }: { id: string | undefined }) {
     }
 
     const requestedStepIndex = initialStep
-      ? VACANCY_STEPS.findIndex(step => step.key === initialStep)
+      ? visibleSteps.findIndex(step => step.key === initialStep)
       : -1;
     if (requestedStepIndex >= 0) {
       // Deep link (e.g. Schedule from the toggle popup) lands on the requested step
       setCurrentStepIndex(requestedStepIndex);
       setIsInitialStep(false);
     } else if (typeof vacancyRecord.lastActiveStep === 'string') {
-      const stepIndex = VACANCY_STEPS.findIndex(
+      const stepIndex = visibleSteps.findIndex(
         step => step.key === vacancyRecord.lastActiveStep
       );
       if (stepIndex >= 0) {
@@ -187,6 +189,7 @@ function EditVacancyContent({ id }: { id: string | undefined }) {
     setForm,
     setIsInitialStep,
     vacancyResponse,
+    visibleSteps,
   ]);
 
   if (!id) {
@@ -274,8 +277,27 @@ function EditVacancyContent({ id }: { id: string | undefined }) {
 
 export default function VacancyIdEditPage() {
   const { id } = useParams<'id'>();
+  const { keycloak, initialized } = useKeycloak();
+
+  // Same query key as EditVacancyContent → served from cache (no extra request).
+  const { data: vacancyResponse } = useVacancyByIdQuery(id || '', {
+    enabled: initialized && !!keycloak?.authenticated && !!id,
+  });
+
+  // Vacancies created from a template carry `vacancyTemplateId`. For those, the
+  // edit navigator must mirror the Use Template create flow: only the mandatory
+  // steps plus the sections the template included (reconstructed from the saved
+  // vacancy's enabled sections). Normal vacancies get `undefined` → all steps.
+  const visibleStepKeys = useMemo<string[] | undefined>(() => {
+    const record = vacancyResponse?.success ? vacancyResponse.data : undefined;
+    if (!isRecord(record) || !record.vacancyTemplateId) {
+      return undefined;
+    }
+    return getEnabledStepKeys(toVacancyFormFromResponse(record, DEFAULT_FORM));
+  }, [vacancyResponse]);
+
   return (
-    <VacancyFormProvider vacancyId={id}>
+    <VacancyFormProvider vacancyId={id} visibleStepKeys={visibleStepKeys}>
       <section className="flex min-h-0 flex-1 flex-col overflow-hidden">
         <EditVacancyContent id={id} />
       </section>

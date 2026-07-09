@@ -908,6 +908,7 @@ interface VacancyDetailPatentEntry {
 interface VacancyDetailData {
   vacancyId: string;
   baseVacancyId: string;
+  vacancyTemplateId?: string | null;
   title: string;
   status: string;
   version: number;

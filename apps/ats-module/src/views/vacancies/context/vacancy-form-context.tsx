@@ -268,6 +268,63 @@ const DEFAULT_FORM: VacancyForm = {
   schedule: undefined,
 };
 
+/**
+ * Per step key, whether the matching section of `loadedForm` is enabled. Shared
+ * by `initCompletedStepsFromForm` (mark completed steps) and `getEnabledStepKeys`
+ * (restrict the navigator in the Use Template edit flow). Keyed by step key so it
+ * stays correct when `visibleSteps` is a filtered subset.
+ */
+function buildStepEnabledChecks(
+  loadedForm: VacancyForm
+): Record<string, () => boolean> {
+  return {
+    'job-requirements': () =>
+      loadedForm.jobRequirements.length > 0 &&
+      loadedForm.jobRequirements[0].isEnabled,
+    'profile-requirements': () => loadedForm.profileRequirements.isEnabled,
+    'secondary-education': () =>
+      loadedForm.secondaryEducation.length > 0 &&
+      loadedForm.secondaryEducation[0].isEnabled,
+    'tertiary-education': () =>
+      loadedForm.tertiaryEducation.length > 0 &&
+      loadedForm.tertiaryEducation[0].isEnabled,
+    'projects-requirements': () =>
+      Boolean(loadedForm.projectsRequirements?.isEnabled),
+    'preferred-publications': () =>
+      Boolean(loadedForm.preferredPublications?.isEnabled),
+    'preferred-club-societies': () =>
+      Boolean(loadedForm.preferredClubSocieties?.isEnabled),
+    'preferred-sports': () => Boolean(loadedForm.preferredSports?.isEnabled),
+    'preferred-volunteering': () =>
+      Boolean(loadedForm.preferredVolunteering?.isEnabled),
+    'preferred-patents': () => Boolean(loadedForm.patents?.isEnabled),
+    'preferred-honours-awards': () =>
+      Boolean(loadedForm.preferredHonoursAwards?.isEnabled),
+    'license-certificates': () =>
+      (loadedForm.licenseCertificates?.length ?? 0) > 0 &&
+      Boolean(loadedForm.licenseCertificates?.[0]?.isEnabled),
+    'preferred-skills': () => Boolean(loadedForm.preferredSkills?.isEnabled),
+    'preferred-languages': () =>
+      Boolean(loadedForm.preferredLanguages?.isEnabled),
+    'preferred-causes': () => Boolean(loadedForm.preferredCauses?.isEnabled),
+    'preferred-hobbies': () => Boolean(loadedForm.preferredHobbies?.isEnabled),
+    'preferred-industry': () =>
+      Boolean(loadedForm.preferredIndustries?.isEnabled),
+    'customizable-form': () => Boolean(loadedForm.customizableForm?.isEnabled),
+    'schedule-vacancy': () => loadedForm.schedule !== undefined,
+  };
+}
+
+/**
+ * Step keys whose section is enabled in `loadedForm`. In the Use Template edit
+ * flow this reconstructs the template's step set from the saved vacancy (the
+ * template mapper enabled exactly the sections the template included).
+ */
+function getEnabledStepKeys(loadedForm: VacancyForm): string[] {
+  const checks = buildStepEnabledChecks(loadedForm);
+  return Object.keys(checks).filter(key => checks[key]());
+}
+
 interface VacancyFormContextValue {
   form: VacancyForm;
   setForm: React.Dispatch<React.SetStateAction<VacancyForm>>;
@@ -412,44 +469,7 @@ function VacancyFormProvider({
   const initCompletedStepsFromForm = (loadedForm: VacancyForm) => {
     // Keyed by step key (not position) so it stays correct when `visibleSteps` is
     // a filtered subset in the Use Template flow.
-    const stepEnabledChecks: Record<string, () => boolean> = {
-      'job-requirements': () =>
-        loadedForm.jobRequirements.length > 0 &&
-        loadedForm.jobRequirements[0].isEnabled,
-      'profile-requirements': () => loadedForm.profileRequirements.isEnabled,
-      'secondary-education': () =>
-        loadedForm.secondaryEducation.length > 0 &&
-        loadedForm.secondaryEducation[0].isEnabled,
-      'tertiary-education': () =>
-        loadedForm.tertiaryEducation.length > 0 &&
-        loadedForm.tertiaryEducation[0].isEnabled,
-      'projects-requirements': () =>
-        Boolean(loadedForm.projectsRequirements?.isEnabled),
-      'preferred-publications': () =>
-        Boolean(loadedForm.preferredPublications?.isEnabled),
-      'preferred-club-societies': () =>
-        Boolean(loadedForm.preferredClubSocieties?.isEnabled),
-      'preferred-sports': () => Boolean(loadedForm.preferredSports?.isEnabled),
-      'preferred-volunteering': () =>
-        Boolean(loadedForm.preferredVolunteering?.isEnabled),
-      'preferred-patents': () => Boolean(loadedForm.patents?.isEnabled),
-      'preferred-honours-awards': () =>
-        Boolean(loadedForm.preferredHonoursAwards?.isEnabled),
-      'license-certificates': () =>
-        (loadedForm.licenseCertificates?.length ?? 0) > 0 &&
-        Boolean(loadedForm.licenseCertificates?.[0]?.isEnabled),
-      'preferred-skills': () => Boolean(loadedForm.preferredSkills?.isEnabled),
-      'preferred-languages': () =>
-        Boolean(loadedForm.preferredLanguages?.isEnabled),
-      'preferred-causes': () => Boolean(loadedForm.preferredCauses?.isEnabled),
-      'preferred-hobbies': () =>
-        Boolean(loadedForm.preferredHobbies?.isEnabled),
-      'preferred-industry': () =>
-        Boolean(loadedForm.preferredIndustries?.isEnabled),
-      'customizable-form': () =>
-        Boolean(loadedForm.customizableForm?.isEnabled),
-      'schedule-vacancy': () => loadedForm.schedule !== undefined,
-    };
+    const stepEnabledChecks = buildStepEnabledChecks(loadedForm);
 
     const completed = new Set<number>();
     visibleSteps.forEach((step, index) => {
@@ -658,6 +678,7 @@ export {
   VacancyFormProvider,
   useVacancyForm,
   useTemplateFieldVisible,
+  getEnabledStepKeys,
   VACANCY_STEPS,
   DEFAULT_FORM,
 };
