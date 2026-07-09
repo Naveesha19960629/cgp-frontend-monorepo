@@ -4,9 +4,9 @@ import userEvent from '@testing-library/user-event';
 import VacancyIdEditJdPage from '@/views/vacancies/pages/vacancy-id-edit-jd-page';
 
 const mockNavigate = vi.fn();
-const mockUseVacancyJobDescriptionQuery = vi.fn();
-const mockUseEditJobDescriptionForm = vi.fn();
-const mockUseUpdateVacancyJobDescriptionMutation = vi.fn();
+const mockUseVacancyJobDescriptionQuery = vi.fn<() => unknown>();
+const mockUseEditJobDescriptionForm = vi.fn<() => unknown>();
+const mockUseUpdateVacancyJobDescriptionMutation = vi.fn<() => unknown>();
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
