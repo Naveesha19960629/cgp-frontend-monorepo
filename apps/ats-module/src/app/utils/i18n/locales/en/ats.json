@@ -44,11 +44,11 @@
     },
     "sections": {
       "profileRequirement": "Profile Requirements",
-      "secondaryEducation": "Secondary Education Requirements",
-      "tertiaryEducation": "Tertiary Education",
-      "projects": "Projects Requirements",
+      "secondaryEducation": "Secondary Educational Requirements",
+      "tertiaryEducation": "Tertiary Educational Requirements",
+      "projects": "Project Requirements",
       "publications": "Preferred Publications",
-      "clubsAndSocieties": "Preferred Clubs and Societies",
+      "clubsAndSocieties": "Preferred Clubs & Societies",
       "sports": "Preferred Sports",
       "volunteering": "Preferred Volunteering",
       "patents": "Preferred Patents",
@@ -56,7 +56,7 @@
       "licensesAndCertifications": "Preferred Licenses and Certifications",
       "skills": "Preferred Skills",
       "languages": "Preferred Languages",
-      "causes": "Preferred Cause",
+      "causes": "Preferred Causes",
       "hobbies": "Preferred Hobbies",
       "industries": "Preferred Industries",
       "customizableForm": "Customizable Form"
@@ -68,7 +68,7 @@
         "city": "City",
         "state": "State/Province/Region",
         "country": "Country",
-        "postalCode": "Postal Code/Zip"
+        "postalCode": "Postal Code / ZIP"
       },
       "secondary": {
         "acceptsHomeSchooling": "Accepts Home Schooling",
@@ -84,9 +84,9 @@
       },
       "tertiary": {
         "requiredQualification": "Required Qualification(s)",
-        "preferredAwardingBodyName": "Preferred Awarding Body /Institute Name",
-        "preferredAwardingBodyLocation": "Preferred Awarding Body /Institute Location",
-        "levelOfQualification": "Level of the Qualification",
+        "preferredAwardingBodyName": "Preferred Awarding Body/Institute Name",
+        "preferredAwardingBodyLocation": "Preferred Awarding Body Location",
+        "levelOfQualification": "Level of Qualification",
         "specialization": "Specialization",
         "modeOfStudy": "Mode of Study",
         "studyPattern": "Study Pattern",
@@ -100,8 +100,8 @@
         "relatedIndustry": "Related Industry",
         "organizationName": "Organization Name",
         "organizationLocation": "Organization Location",
-        "startDateOfInvolvement": "Start Date Of Involvement",
-        "endDateOfInvolvement": "End Date Of Involvement"
+        "startDateOfInvolvement": "Start Date of Involvement",
+        "endDateOfInvolvement": "End Date of Involvement"
       },
       "publications": {
         "acceptedPublisher": "Accepted Publisher",
@@ -109,7 +109,7 @@
         "publishedDateTo": "Published Date To"
       },
       "clubs": {
-        "clubSociety": "Club/Society",
+        "clubSociety": "Club / Society",
         "representedOrganization": "Represented Organization",
         "organizationLocation": "Organization Location",
         "positionRoleHeld": "Position / Role Held",
@@ -169,6 +169,21 @@
       },
       "industries": {
         "industry": "Industries"
+      }
+    }
+  },
+  "editJobDescription": {
+    "heading": "Update Job Description",
+    "cancel": "Cancel",
+    "update": "Update",
+    "notifications": {
+      "success": {
+        "title": "Successfully Updated",
+        "message": "Job description has been successfully updated."
+      },
+      "error": {
+        "title": "Try Again",
+        "message": "Some changes could not be saved. Please try again."
       }
     }
   },
@@ -408,6 +423,7 @@
         "copyLink": "Copy Link",
         "makeACopy": "Make a Copy",
         "edit": "Edit",
+        "editJd": "Edit JD",
         "delete": "Delete"
       },
       "pagination": {

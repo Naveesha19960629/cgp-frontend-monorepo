@@ -4,6 +4,8 @@ import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
+import FieldToggle from '@/views/vacancies/components/field-toggle';
+import SectionCard from '@/views/vacancies/components/section-card';
 import {
   useCreateTemplateMutation,
   useNextTemplateNameQuery,
@@ -23,36 +25,9 @@ import { ErrorToast, SuccessToast } from '@cgp/ui-kit/components/custom-toast';
 import { Button } from '@cgp/ui-kit/components/ui/button';
 import { Checkbox } from '@cgp/ui-kit/components/ui/checkbox';
 import { Switch } from '@cgp/ui-kit/components/ui/switch';
-import { cn, removeEmoji } from '@cgp/ui-kit/lib/utils';
+import { removeEmoji } from '@cgp/ui-kit/lib/utils';
 
 const TEMPLATES_LIST_ROUTE = '/dashboard/ats/templates';
-
-/** A single field label + enable/disable toggle. */
-function FieldToggle({
-  label,
-  checked,
-  disabled,
-  onToggle,
-}: {
-  label: string;
-  checked: boolean;
-  disabled?: boolean;
-  onToggle: (value: boolean) => void;
-}) {
-  return (
-    <div className={cn('flex items-start gap-3', disabled && 'opacity-50')}>
-      <span className="min-w-0 flex-1 pt-0.5 text-sm leading-5 font-semibold wrap-break-word text-slate-500">
-        {label}
-      </span>
-      <Switch
-        size="lg"
-        checked={checked}
-        disabled={disabled}
-        onCheckedChange={onToggle}
-      />
-    </div>
-  );
-}
 
 /** One section card: title, "data from candidate" checkbox, and field toggles. */
 function TemplateSectionCard({
@@ -70,11 +45,9 @@ function TemplateSectionCard({
   const checkboxId = `data-from-candidate-${section.key}`;
 
   return (
-    <section className="rounded-xl border border-[#d4d4d4] bg-white px-5 py-5 shadow-[0px_4px_20px_0px_rgba(0,0,0,0.07)]">
-      <div className="flex items-start justify-between gap-4">
-        <h3 className="text-xl leading-6 font-bold tracking-[-0.1px] text-slate-900">
-          {t(section.titleKey)}
-        </h3>
+    <SectionCard
+      title={t(section.titleKey)}
+      headerExtra={
         <label
           htmlFor={checkboxId}
           className="flex cursor-pointer items-center gap-2 text-xs font-medium text-slate-500"
@@ -86,8 +59,8 @@ function TemplateSectionCard({
           />
           <span>{t('createTemplate.dataFromCandidate')}</span>
         </label>
-      </div>
-
+      }
+    >
       {/* When "data taken from candidate" is selected the fields stay visible
           but are toggled off and disabled (mirrors the create-vacancy
           behaviour). */}
@@ -106,7 +79,7 @@ function TemplateSectionCard({
           />
         ))}
       </div>
-    </section>
+    </SectionCard>
   );
 }
 

@@ -1,4 +1,4 @@
-import { History, MoreVertical, UserSearch } from 'lucide-react';
+import { FileEdit, History, MoreVertical, UserSearch } from 'lucide-react';
 
 import { Edit2, Link21, Simcard2, Trash } from 'iconsax-reactjs';
 
@@ -22,6 +22,7 @@ export default function VacancyTableAction({
   onCopyLink,
   onMakeACopy,
   onEdit,
+  onEditJd,
   onDelete,
 }: VacancyTableActionProps) {
   const { t } = useTranslation('ats');
@@ -55,12 +56,25 @@ export default function VacancyTableAction({
   const showDelete = availableActions
     ? availableActions.includes('DELETE')
     : isDraft || isUnpublished || (isLive && !hasApplicants);
+  const showEditJd = availableActions?.includes('EDIT_JD')
+    ? true
+    : isUnpublished || isLive || isExpired || isOnHold;
 
   const handleEdit = () => {
     if (onEdit) {
       onEdit();
     } else {
       void navigate(`/dashboard/ats/vacancies/${vacancy.id}/edit`, {
+        state: { from: location.pathname },
+      });
+    }
+  };
+
+  const handleEditJd = () => {
+    if (onEditJd) {
+      onEditJd();
+    } else {
+      void navigate(`/dashboard/ats/vacancies/${vacancy.id}/edit-jd`, {
         state: { from: location.pathname },
       });
     }
@@ -93,6 +107,15 @@ export default function VacancyTableAction({
           {t('vacancies.table.actions.edit')}
         </DropdownMenuItem>
 
+        {showEditJd && (
+          <DropdownMenuItem
+            className="gap-2 px-3 py-3 text-sm font-medium text-slate-500"
+            onSelect={handleEditJd}
+          >
+            <FileEdit className="size-4 shrink-0" />
+            {t('vacancies.table.actions.editJd')}
+          </DropdownMenuItem>
+        )}
         {showDuplicate && (
           <DropdownMenuItem
             className="gap-2 px-3 py-3 text-sm font-medium text-slate-500"
