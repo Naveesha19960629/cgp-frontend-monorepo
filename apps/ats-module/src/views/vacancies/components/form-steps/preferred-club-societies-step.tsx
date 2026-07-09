@@ -52,7 +52,6 @@ import DisableDialog from './disable-dialog';
 
 const MAX_POSITION_LENGTH = 250;
 const MAX_CLUB_SOCIETY_LENGTH = 250;
-const MAX_ORGANIZATION_LENGTH = 250;
 const MAX_SELECTIONS = 10;
 const HUNDRED_YEARS_AGO = new Date(new Date().getFullYear() - 100, 0, 1);
 const HUNDRED_YEARS_FROM_NOW = new Date(new Date().getFullYear() + 100, 11, 31);
@@ -122,7 +121,6 @@ function ClubSocietyCard({
   const [societiesError, setSocietiesError] = useState(false);
   const [organizationsError, setOrganizationsError] = useState(false);
   const [societiesCharLimitError, setSocietiesCharLimitError] = useState(false);
-  const [orgSearchLength, setOrgSearchLength] = useState(0);
   const [openDatePopover, setOpenDatePopover] = useState<
     'startDate' | 'endDate' | null
   >(null);
@@ -171,12 +169,16 @@ function ClubSocietyCard({
             {/* Row 1: Club / Society | Start Date | End Date */}
             <div className="grid grid-cols-[2fr_1fr_1fr] gap-4">
               <div className="flex flex-col gap-1">
-                <div className="flex h-5 items-center">
+                <div className="flex items-center justify-between">
                   <Label
                     className={societiesError ? 'text-destructive' : undefined}
                   >
                     {t('preferredClubSocieties.labels.clubSociety')}
                   </Label>
+                  <CharacterCount
+                    currentLength={entry.clubSocietySearch.length}
+                    maxLength={MAX_CLUB_SOCIETY_LENGTH}
+                  />
                 </div>
                 <MultipleSelector
                   value={entry.clubSociety}
@@ -404,7 +406,7 @@ function ClubSocietyCard({
             {/* Row 2: Represented Organization | Organization Location */}
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-1">
-                <div className="flex items-center justify-between">
+                <div className="flex h-5 items-center">
                   <Label
                     className={
                       organizationsError ? 'text-destructive' : undefined
@@ -412,10 +414,6 @@ function ClubSocietyCard({
                   >
                     {t('preferredClubSocieties.labels.representedOrganization')}
                   </Label>
-                  <CharacterCount
-                    currentLength={orgSearchLength}
-                    maxLength={MAX_ORGANIZATION_LENGTH}
-                  />
                 </div>
                 <MultipleSelector
                   key={orgSelectorKey}
@@ -424,10 +422,7 @@ function ClubSocietyCard({
                     // Detect newly typed item (value === label means creatable)
                     const newItem = options.find(o => o.value === o.label);
                     if (newItem) {
-                      onRequestAddOrganization(
-                        index,
-                        newItem.label.slice(0, MAX_ORGANIZATION_LENGTH)
-                      );
+                      onRequestAddOrganization(index, newItem.label);
                       // Don't add yet — dialog will handle it
                     } else {
                       onUpdate(index, {
@@ -440,17 +435,10 @@ function ClubSocietyCard({
                           .map(opt => {
                             const source =
                               (opt.source as string) ?? 'USER_CREATED';
-                            const isCreatable =
-                              source === 'USER_CREATED' ||
-                              opt.value === opt.label;
 
                             return {
-                              value: isCreatable
-                                ? opt.value.slice(0, MAX_ORGANIZATION_LENGTH)
-                                : opt.value,
-                              label: isCreatable
-                                ? opt.label.slice(0, MAX_ORGANIZATION_LENGTH)
-                                : opt.label,
+                              value: opt.value,
+                              label: opt.label,
                               source,
                             };
                           }),
@@ -463,13 +451,7 @@ function ClubSocietyCard({
                     source: o.source || 'MASTER',
                   }))}
                   onSearchSync={value => {
-                    const limitedSearch = value.slice(
-                      0,
-                      MAX_ORGANIZATION_LENGTH
-                    );
-
-                    setOrgSearchLength(limitedSearch.length);
-                    onOrganizationsSearch(limitedSearch);
+                    onOrganizationsSearch(value);
                     return organizations.map(o => ({
                       value: o.id,
                       label: o.name || o.label || '',
@@ -477,9 +459,6 @@ function ClubSocietyCard({
                     }));
                   }}
                   keepSelectedInList
-                  inputProps={{
-                    maxLength: MAX_ORGANIZATION_LENGTH,
-                  }}
                   creatable
                   triggerSearchOnFocus
                   hideClearAllButton
