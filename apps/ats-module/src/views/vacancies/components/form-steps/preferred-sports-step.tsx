@@ -163,6 +163,7 @@ function SportCard({
   const [locationsError, setLocationsError] = useState(false);
   const [sportsError, setSportsError] = useState(false);
   const [organizationsError, setOrganizationsError] = useState(false);
+  const [levelsError, setLevelsError] = useState(false);
 
   return (
     <Collapsible
@@ -331,7 +332,11 @@ function SportCard({
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-1">
                 <div className="flex h-5 items-center">
-                  <Label>{t('preferredSports.labels.levelRepresented')}</Label>
+                  <Label
+                    className={levelsError ? 'text-destructive' : undefined}
+                  >
+                    {t('preferredSports.labels.levelRepresented')}
+                  </Label>
                 </div>
                 <MultipleSelector
                   value={entry.levelRepresented}
@@ -360,6 +365,8 @@ function SportCard({
                   triggerSearchOnFocus
                   hideClearAllButton
                   maxSelected={MAX_SELECTIONS}
+                  errorMessage={t('preferredSports.errors.maxSelections')}
+                  onErrorStateChange={setLevelsError}
                   disabled={fieldsDisabled}
                   loading={isLevelsLoading}
                   placeholder={t(
