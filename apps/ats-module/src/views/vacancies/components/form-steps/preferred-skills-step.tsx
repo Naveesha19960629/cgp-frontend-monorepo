@@ -7,7 +7,10 @@ import { useTranslation } from 'react-i18next';
 
 import { StepDisableDialog } from '@/views/vacancies';
 import VacancyStatusBadge from '@/views/vacancies/components/vacancy-status-badge';
-import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
+import {
+  useTemplateFieldVisible,
+  useVacancyForm,
+} from '@/views/vacancies/context/vacancy-form-context';
 import {
   useCareerPathsQuery,
   useCreateCareerPathMutation,
@@ -49,6 +52,7 @@ export default function PreferredSkillsStep({
 }: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
   const showDisableToast = useDisableSuccessToast();
+  const isFieldVisible = useTemplateFieldVisible('skills');
   const {
     form,
     setForm,
@@ -457,198 +461,211 @@ export default function PreferredSkillsStep({
           </div>
 
           {/* Section: Tools, Technologies, Skills and Frameworks */}
-          <div>
-            <div className="mb-2 flex items-center justify-between">
-              <span
-                className={cn(
-                  'text-sm font-semibold text-slate-700',
-                  hasMaxError && 'text-destructive'
-                )}
-              >
-                {t('preferredSkills.sectionLabel')}
-              </span>
-              <CharacterCount
-                maxLength={MAX_SKILL_CHARS}
-                currentLength={skillSearch.length}
-              />
-            </div>
+          {isFieldVisible('skillCareerPath') && (
+            <>
+              <div>
+                <div className="mb-2 flex items-center justify-between">
+                  <span
+                    className={cn(
+                      'text-sm font-semibold text-slate-700',
+                      hasMaxError && 'text-destructive'
+                    )}
+                  >
+                    {t('preferredSkills.sectionLabel')}
+                  </span>
+                  <CharacterCount
+                    maxLength={MAX_SKILL_CHARS}
+                    currentLength={skillSearch.length}
+                  />
+                </div>
 
-            <MultipleSelector
-              key={
-                isCareerPathPopoverOpen
-                  ? 'skills-selector-locked'
-                  : 'skills-selector-active'
-              }
-              className={cn(
-                isCareerPathPopoverOpen && 'pointer-events-none cursor-default'
-              )}
-              value={selectedSkills.map(s => ({
-                value: s.skillId || s.skillName,
-                label: s.displayValue,
-                source: s.source,
-              }))}
-              errorMessage={t('preferredSkills.validation.maxSkills', {
-                max: MAX_SKILLS,
-              })}
-              onErrorStateChange={setHasMaxError}
-              onChange={handleSkillsChange}
-              options={skillOptions}
-              onSearchSync={value => {
-                setSkillSearch(value);
-                return skillOptions;
-              }}
-              keepSelectedInList
-              creatable
-              triggerSearchOnFocus
-              hideClearAllButton
-              maxSelected={MAX_SKILLS}
-              disabled={!isEnabled || dataTakenFromCandidate}
-              inputProps={{
-                maxLength: MAX_SKILL_CHARS,
-                readOnly: isCareerPathPopoverOpen,
-                tabIndex: isCareerPathPopoverOpen ? -1 : 0,
-              }}
-              loading={isSkillsLoading}
-              placeholder={t('preferredSkills.input.placeholder')}
-              loadingIndicator={
-                <p className="px-3 pb-3 text-left">{t('common.loading')}</p>
-              }
-              emptyIndicator={
-                <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
-                  <div className="flex flex-col items-start">
-                    <img src={multiSelectInfoAvatar} alt={t('common.noData')} />
-                    <div className="mt-3 w-61 text-left">
-                      <p className="font-bold text-slate-900">
-                        {t('common.noDataTitle')}
-                      </p>
-                      <p className="text-sm font-semibold text-slate-700">
-                        {t('common.noDataDescription')}
+                <MultipleSelector
+                  key={
+                    isCareerPathPopoverOpen
+                      ? 'skills-selector-locked'
+                      : 'skills-selector-active'
+                  }
+                  className={cn(
+                    isCareerPathPopoverOpen &&
+                      'pointer-events-none cursor-default'
+                  )}
+                  value={selectedSkills.map(s => ({
+                    value: s.skillId || s.skillName,
+                    label: s.displayValue,
+                    source: s.source,
+                  }))}
+                  errorMessage={t('preferredSkills.validation.maxSkills', {
+                    max: MAX_SKILLS,
+                  })}
+                  onErrorStateChange={setHasMaxError}
+                  onChange={handleSkillsChange}
+                  options={skillOptions}
+                  onSearchSync={value => {
+                    setSkillSearch(value);
+                    return skillOptions;
+                  }}
+                  keepSelectedInList
+                  creatable
+                  triggerSearchOnFocus
+                  hideClearAllButton
+                  maxSelected={MAX_SKILLS}
+                  disabled={!isEnabled || dataTakenFromCandidate}
+                  inputProps={{
+                    maxLength: MAX_SKILL_CHARS,
+                    readOnly: isCareerPathPopoverOpen,
+                    tabIndex: isCareerPathPopoverOpen ? -1 : 0,
+                  }}
+                  loading={isSkillsLoading}
+                  placeholder={t('preferredSkills.input.placeholder')}
+                  loadingIndicator={
+                    <p className="px-3 pb-3 text-left">{t('common.loading')}</p>
+                  }
+                  emptyIndicator={
+                    <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
+                      <div className="flex flex-col items-start">
+                        <img
+                          src={multiSelectInfoAvatar}
+                          alt={t('common.noData')}
+                        />
+                        <div className="mt-3 w-61 text-left">
+                          <p className="font-bold text-slate-900">
+                            {t('common.noDataTitle')}
+                          </p>
+                          <p className="text-sm font-semibold text-slate-700">
+                            {t('common.noDataDescription')}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  }
+                />
+
+                {/* Pending skill chip — shown while career path popover is open */}
+                {pendingSkillName && isCareerPathPopoverOpen && (
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <Badge
+                      variant="chip"
+                      className="animate-fadeIn flex cursor-default items-center gap-2 pe-2 text-sm font-semibold text-slate-600 shadow-sm"
+                      style={{ borderColor: '#f59e0b', borderWidth: '1px' }}
+                    >
+                      <span className="min-w-0 break-all capitalize">
+                        {pendingSkillName}
+                      </span>
+                    </Badge>
+                  </div>
+                )}
+              </div>
+
+              {/* Career Path Panel — inline in content flow, appears after the skill chips */}
+              {isCareerPathPopoverOpen && (
+                <div
+                  className="mt-4 max-w-128.5 overflow-hidden rounded-2xl border border-slate-200 p-4 pb-5 shadow-2xl"
+                  style={{
+                    backgroundImage:
+                      'linear-gradient(90deg, rgb(254,244,238) 24.671%, rgb(248,242,236) 37.979%, rgb(233,244,240) 99.173%, rgb(238,247,245) 166.77%)',
+                  }}
+                >
+                  {/* Header row: title + close */}
+                  <div className="mb-4 flex items-start justify-between">
+                    <div className="flex flex-col gap-1.5 pr-8">
+                      <h4 className="text-base font-semibold text-slate-900">
+                        {t('preferredSkills.careerPath.title')}
+                      </h4>
+                      <p className="text-sm leading-snug text-slate-600">
+                        {t('preferredSkills.careerPath.description')}
                       </p>
                     </div>
+                    <button
+                      type="button"
+                      onClick={handleCancelCareerPath}
+                      className="flex size-8 items-center justify-center rounded text-slate-900 hover:bg-black/5"
+                    >
+                      <X className="size-5 rotate-0" />
+                    </button>
+                  </div>
+
+                  {/* White card with Combobox */}
+                  <div className="mb-3 w-full rounded-xl bg-white p-3">
+                    <div className="flex items-center justify-between gap-1">
+                      <label className="text-sm font-semibold text-slate-700">
+                        {t('preferredSkills.careerPath.label')}{' '}
+                        <span className="text-rose-500">*</span>
+                      </label>
+                      <CharacterCount
+                        currentLength={
+                          careerPathApiSearch.length ||
+                          careerPathSearch.length ||
+                          0
+                        }
+                        maxLength={MAX_CAREER_PATH_CHARS}
+                      />
+                    </div>
+
+                    <div className="mt-1">
+                      <Combobox
+                        modal={false}
+                        options={careerPaths.map(cp => ({
+                          label: cp.label,
+                          value: cp.label,
+                        }))}
+                        value={careerPathSearch}
+                        onValueChange={(value: string) => {
+                          setCareerPathSearch(value);
+                          setCareerPathError('');
+                        }}
+                        onSearchChange={setCareerPathApiSearch}
+                        loading={isCareerPathsLoading}
+                        onAddNew={(value: string) => {
+                          const trimmedValue = value.trim();
+                          const existing = careerPaths.find(
+                            cp =>
+                              cp.label.toLowerCase() ===
+                              trimmedValue.toLowerCase()
+                          );
+                          if (existing) {
+                            setCareerPathSearch(existing.label);
+                            setCareerPathError('');
+                            return;
+                          }
+                          const newCareerPath = {
+                            id: crypto.randomUUID(),
+                            label: trimmedValue,
+                          };
+                          setUserEnteredCareerPaths(prev => [
+                            ...prev,
+                            newCareerPath,
+                          ]);
+                          setCareerPathSearch(trimmedValue);
+                          setCareerPathError('');
+                        }}
+                        placeholder={t(
+                          'preferredSkills.careerPath.input.placeholder'
+                        )}
+                        className="h-11 border-slate-200 bg-white text-sm"
+                        maxLength={MAX_CAREER_PATH_CHARS}
+                        isError={!!careerPathError}
+                      />
+                    </div>
+
+                    {careerPathError && (
+                      <p className="mt-1 text-xs text-red-500">
+                        {careerPathError}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="flex justify-end">
+                    <Button
+                      onClick={handleAddCareerPath}
+                      className="h-auto w-37.75 gap-1 rounded-lg bg-teal-800 px-8 py-2 text-sm font-medium text-white shadow-sm hover:bg-teal-900"
+                    >
+                      <Plus className="size-5 stroke-2" />
+                      {t('preferredSkills.careerPath.addButton')}
+                    </Button>
                   </div>
                 </div>
-              }
-            />
-
-            {/* Pending skill chip — shown while career path popover is open */}
-            {pendingSkillName && isCareerPathPopoverOpen && (
-              <div className="mt-2 flex flex-wrap gap-2">
-                <Badge
-                  variant="chip"
-                  className="animate-fadeIn flex cursor-default items-center gap-2 pe-2 text-sm font-semibold text-slate-600 shadow-sm"
-                  style={{ borderColor: '#f59e0b', borderWidth: '1px' }}
-                >
-                  <span className="min-w-0 break-all capitalize">
-                    {pendingSkillName}
-                  </span>
-                </Badge>
-              </div>
-            )}
-          </div>
-
-          {/* Career Path Panel — inline in content flow, appears after the skill chips */}
-          {isCareerPathPopoverOpen && (
-            <div
-              className="mt-4 max-w-128.5 overflow-hidden rounded-2xl border border-slate-200 p-4 pb-5 shadow-2xl"
-              style={{
-                backgroundImage:
-                  'linear-gradient(90deg, rgb(254,244,238) 24.671%, rgb(248,242,236) 37.979%, rgb(233,244,240) 99.173%, rgb(238,247,245) 166.77%)',
-              }}
-            >
-              {/* Header row: title + close */}
-              <div className="mb-4 flex items-start justify-between">
-                <div className="flex flex-col gap-1.5 pr-8">
-                  <h4 className="text-base font-semibold text-slate-900">
-                    {t('preferredSkills.careerPath.title')}
-                  </h4>
-                  <p className="text-sm leading-snug text-slate-600">
-                    {t('preferredSkills.careerPath.description')}
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={handleCancelCareerPath}
-                  className="flex size-8 items-center justify-center rounded text-slate-900 hover:bg-black/5"
-                >
-                  <X className="size-5 rotate-0" />
-                </button>
-              </div>
-
-              {/* White card with Combobox */}
-              <div className="mb-3 w-full rounded-xl bg-white p-3">
-                <div className="flex items-center justify-between gap-1">
-                  <label className="text-sm font-semibold text-slate-700">
-                    {t('preferredSkills.careerPath.label')}{' '}
-                    <span className="text-rose-500">*</span>
-                  </label>
-                  <CharacterCount
-                    currentLength={
-                      careerPathApiSearch.length || careerPathSearch.length || 0
-                    }
-                    maxLength={MAX_CAREER_PATH_CHARS}
-                  />
-                </div>
-
-                <div className="mt-1">
-                  <Combobox
-                    modal={false}
-                    options={careerPaths.map(cp => ({
-                      label: cp.label,
-                      value: cp.label,
-                    }))}
-                    value={careerPathSearch}
-                    onValueChange={(value: string) => {
-                      setCareerPathSearch(value);
-                      setCareerPathError('');
-                    }}
-                    onSearchChange={setCareerPathApiSearch}
-                    loading={isCareerPathsLoading}
-                    onAddNew={(value: string) => {
-                      const trimmedValue = value.trim();
-                      const existing = careerPaths.find(
-                        cp =>
-                          cp.label.toLowerCase() === trimmedValue.toLowerCase()
-                      );
-                      if (existing) {
-                        setCareerPathSearch(existing.label);
-                        setCareerPathError('');
-                        return;
-                      }
-                      const newCareerPath = {
-                        id: crypto.randomUUID(),
-                        label: trimmedValue,
-                      };
-                      setUserEnteredCareerPaths(prev => [
-                        ...prev,
-                        newCareerPath,
-                      ]);
-                      setCareerPathSearch(trimmedValue);
-                      setCareerPathError('');
-                    }}
-                    placeholder={t(
-                      'preferredSkills.careerPath.input.placeholder'
-                    )}
-                    className="h-11 border-slate-200 bg-white text-sm"
-                    maxLength={MAX_CAREER_PATH_CHARS}
-                    isError={!!careerPathError}
-                  />
-                </div>
-
-                {careerPathError && (
-                  <p className="mt-1 text-xs text-red-500">{careerPathError}</p>
-                )}
-              </div>
-
-              <div className="flex justify-end">
-                <Button
-                  onClick={handleAddCareerPath}
-                  className="h-auto w-37.75 gap-1 rounded-lg bg-teal-800 px-8 py-2 text-sm font-medium text-white shadow-sm hover:bg-teal-900"
-                >
-                  <Plus className="size-5 stroke-2" />
-                  {t('preferredSkills.careerPath.addButton')}
-                </Button>
-              </div>
-            </div>
+              )}
+            </>
           )}
 
           {/* Bottom padding so dropdowns are never clipped by the scroll container edge */}

@@ -685,9 +685,11 @@ function toVacancyPayload(
 
 function toCreateVacancyPayload(
   form: VacancyForm,
-  status = 'UNPUBLISHED'
+  status = 'UNPUBLISHED',
+  templateId?: string
 ): CreateVacancyPayload {
-  return toVacancyPayload(form, status);
+  const payload = toVacancyPayload(form, status);
+  return templateId ? { ...payload, templateId } : payload;
 }
 
 function toUpdateVacancyPayload(

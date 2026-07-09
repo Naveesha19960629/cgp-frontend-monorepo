@@ -21,6 +21,9 @@
       "title": "No Search Results Found",
       "descriptionLine1": "No matching vacancy templates found.",
       "descriptionLine2": "Try adjusting your keywords or using broader search terms"
+    },
+    "useTemplate": {
+      "failedToLoadTemplate": "Failed to load the selected template. Please try again."
     }
   },
   "createTemplate": {

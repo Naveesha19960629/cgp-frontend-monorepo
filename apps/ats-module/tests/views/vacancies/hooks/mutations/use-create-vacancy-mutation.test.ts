@@ -72,7 +72,8 @@ describe('useCreateVacancyMutation', () => {
 
       expect(mockToCreateVacancyPayload).toHaveBeenCalledWith(
         mockForm,
-        'DRAFT'
+        'DRAFT',
+        undefined
       );
     });
 
@@ -84,6 +85,7 @@ describe('useCreateVacancyMutation', () => {
 
       expect(mockToCreateVacancyPayload).toHaveBeenCalledWith(
         mockForm,
+        undefined,
         undefined
       );
     });

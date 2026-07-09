@@ -41,13 +41,17 @@ export default function TemplatesPage() {
   const templates = response?.data?.content ?? [];
   const totalPages = response?.data?.totalPages ?? 0;
   const hasActiveSearch = Boolean(params.search);
-  const showHeaderControls =
-    isLoading || templates.length > 0 || hasActiveSearch;
 
   const goToCreate = () => void navigate(TEMPLATE_CREATE_ROUTE);
 
-  // Use Template / Edit / Delete flows are handled by their own stories
-  // (DQCGP-2198 / 2199 / 2200). Wired here as no-ops until those land.
+  // Launch the Create Vacancy From Template flow (DQCGP-2198).
+  const goToUseTemplate = (id: string) =>
+    void navigate(`/dashboard/ats/vacancies/from-template/${id}`, {
+      state: { from: '/dashboard/ats/templates' },
+    });
+
+  // Edit / Delete flows are handled by their own stories
+  // (DQCGP-2199 / 2200). Wired here as no-ops until those land.
   const noop = () => {};
 
   return (
@@ -56,17 +60,15 @@ export default function TemplatesPage() {
         <p className="shrink-0 text-2xl/8 font-bold text-slate-900">
           {t('templates.title')}
         </p>
-        {showHeaderControls && (
-          <TemplatesToolbar
-            search={params.search}
-            onSearchChange={value => void setParams({ search: value, page: 1 })}
-            sortOrder={params.sortOrder}
-            onSortOrderChange={value =>
-              void setParams({ sortOrder: value, page: 1 })
-            }
-            onCreate={goToCreate}
-          />
-        )}
+        <TemplatesToolbar
+          search={params.search}
+          onSearchChange={value => void setParams({ search: value, page: 1 })}
+          sortOrder={params.sortOrder}
+          onSortOrderChange={value =>
+            void setParams({ sortOrder: value, page: 1 })
+          }
+          onCreate={goToCreate}
+        />
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto">
@@ -86,7 +88,7 @@ export default function TemplatesPage() {
                 template={template}
                 onEdit={noop}
                 onDelete={noop}
-                onUse={noop}
+                onUse={goToUseTemplate}
               />
             ))}
           </div>

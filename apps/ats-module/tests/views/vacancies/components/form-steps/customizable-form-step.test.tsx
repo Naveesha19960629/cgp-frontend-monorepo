@@ -75,6 +75,7 @@ vi.mock('@cgp/ui-kit/components/custom-toast', () => ({
 }));
 
 vi.mock('@/views/vacancies/context/vacancy-form-context', () => ({
+  useTemplateFieldVisible: () => () => true,
   useVacancyForm: mockUseVacancyForm,
 }));
 

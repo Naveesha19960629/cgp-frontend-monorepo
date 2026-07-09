@@ -5,7 +5,10 @@ import { useTranslation } from 'react-i18next';
 
 import { StepDisableDialog } from '@/views/vacancies';
 import VacancyStatusBadge from '@/views/vacancies/components/vacancy-status-badge';
-import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
+import {
+  useTemplateFieldVisible,
+  useVacancyForm,
+} from '@/views/vacancies/context/vacancy-form-context';
 import {
   useCreateLanguageMutation,
   useDisableSuccessToast,
@@ -38,6 +41,7 @@ export default function PreferredLanguagesStep({
 }: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
   const showDisableToast = useDisableSuccessToast();
+  const isFieldVisible = useTemplateFieldVisible('languages');
   const {
     form,
     setForm,
@@ -226,82 +230,87 @@ export default function PreferredLanguagesStep({
           </div>
 
           {/* Section: Languages */}
-          <div>
-            <div className="mb-2 flex items-center justify-between">
-              <span
-                className={cn(
-                  'text-sm font-semibold text-slate-700',
-                  hasMaxError && 'text-destructive'
-                )}
-              >
-                {t('preferredLanguages.sectionLabel')}
-              </span>
-              <CharacterCount
-                maxLength={MAX_LANG_CHARS}
-                currentLength={langSearch.length}
-              />
-            </div>
+          {isFieldVisible('language') && (
+            <div>
+              <div className="mb-2 flex items-center justify-between">
+                <span
+                  className={cn(
+                    'text-sm font-semibold text-slate-700',
+                    hasMaxError && 'text-destructive'
+                  )}
+                >
+                  {t('preferredLanguages.sectionLabel')}
+                </span>
+                <CharacterCount
+                  maxLength={MAX_LANG_CHARS}
+                  currentLength={langSearch.length}
+                />
+              </div>
 
-            <MultipleSelector
-              value={selectedLanguages.map(l => ({
-                value: l.id,
-                label: l.label,
-                source: l.source,
-              }))}
-              errorMessage={t('preferredLanguages.validation.maxLanguages', {
-                max: MAX_LANGUAGES,
-              })}
-              onErrorStateChange={setHasMaxError}
-              onChange={options => {
-                const entries: LanguageEntry[] = options.map(opt => ({
-                  id: opt.value,
-                  label: opt.label,
-                  source: (opt.source as string) ?? 'USER_CREATED',
-                }));
-                setSelectedLanguages(entries);
-              }}
-              options={apiLanguages.map(l => ({
-                value: l.id,
-                label: l.label,
-                source: l.source ?? 'MASTER',
-              }))}
-              onSearchSync={value => {
-                setLangSearch(value);
-                return apiLanguages.map(l => ({
+              <MultipleSelector
+                value={selectedLanguages.map(l => ({
+                  value: l.id,
+                  label: l.label,
+                  source: l.source,
+                }))}
+                errorMessage={t('preferredLanguages.validation.maxLanguages', {
+                  max: MAX_LANGUAGES,
+                })}
+                onErrorStateChange={setHasMaxError}
+                onChange={options => {
+                  const entries: LanguageEntry[] = options.map(opt => ({
+                    id: opt.value,
+                    label: opt.label,
+                    source: (opt.source as string) ?? 'USER_CREATED',
+                  }));
+                  setSelectedLanguages(entries);
+                }}
+                options={apiLanguages.map(l => ({
                   value: l.id,
                   label: l.label,
                   source: l.source ?? 'MASTER',
-                }));
-              }}
-              keepSelectedInList
-              creatable
-              triggerSearchOnFocus
-              hideClearAllButton
-              maxSelected={MAX_LANGUAGES}
-              disabled={!isEnabled || dataTakenFromCandidate}
-              inputProps={{ maxLength: MAX_LANG_CHARS }}
-              loading={isLanguagesLoading}
-              placeholder={t('preferredLanguages.input.placeholder')}
-              loadingIndicator={
-                <p className="px-3 pb-3 text-left">{t('common.loading')}</p>
-              }
-              emptyIndicator={
-                <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
-                  <div className="flex flex-col items-start">
-                    <img src={multiSelectInfoAvatar} alt={t('common.noData')} />
-                    <div className="mt-3 w-61 text-left">
-                      <p className="font-bold text-slate-900">
-                        {t('common.noDataTitle')}
-                      </p>
-                      <p className="text-sm font-semibold text-slate-700">
-                        {t('common.noDataDescription')}
-                      </p>
+                }))}
+                onSearchSync={value => {
+                  setLangSearch(value);
+                  return apiLanguages.map(l => ({
+                    value: l.id,
+                    label: l.label,
+                    source: l.source ?? 'MASTER',
+                  }));
+                }}
+                keepSelectedInList
+                creatable
+                triggerSearchOnFocus
+                hideClearAllButton
+                maxSelected={MAX_LANGUAGES}
+                disabled={!isEnabled || dataTakenFromCandidate}
+                inputProps={{ maxLength: MAX_LANG_CHARS }}
+                loading={isLanguagesLoading}
+                placeholder={t('preferredLanguages.input.placeholder')}
+                loadingIndicator={
+                  <p className="px-3 pb-3 text-left">{t('common.loading')}</p>
+                }
+                emptyIndicator={
+                  <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
+                    <div className="flex flex-col items-start">
+                      <img
+                        src={multiSelectInfoAvatar}
+                        alt={t('common.noData')}
+                      />
+                      <div className="mt-3 w-61 text-left">
+                        <p className="font-bold text-slate-900">
+                          {t('common.noDataTitle')}
+                        </p>
+                        <p className="text-sm font-semibold text-slate-700">
+                          {t('common.noDataDescription')}
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              }
-            />
-          </div>
+                }
+              />
+            </div>
+          )}
 
           {/* Bottom padding so dropdowns are never clipped */}
           <div className="h-64" />

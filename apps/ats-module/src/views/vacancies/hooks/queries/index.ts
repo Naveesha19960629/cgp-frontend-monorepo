@@ -1,6 +1,7 @@
 export { useGendersQuery } from '@/views/vacancies/hooks/queries/use-gender-query';
 export { useNextTemplateNameQuery } from '@/views/vacancies/hooks/queries/use-next-template-name-query';
 export { useVacancyTemplatesQuery } from '@/views/vacancies/hooks/queries/use-vacancy-templates-query';
+export { useVacancyTemplateByIdQuery } from '@/views/vacancies/hooks/queries/use-vacancy-template-by-id-query';
 export {
   useIndustriesQuery,
   useIndustriesSearch,

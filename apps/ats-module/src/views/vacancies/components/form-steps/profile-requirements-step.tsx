@@ -8,7 +8,10 @@ import { useTranslation } from 'react-i18next';
 
 import MessageBox from '@/components/message-box';
 import { StepDisableDialog, VacancyStatusBadge } from '@/views/vacancies';
-import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
+import {
+  useTemplateFieldVisible,
+  useVacancyForm,
+} from '@/views/vacancies/context/vacancy-form-context';
 import {
   useDisableSuccessToast,
   useGendersQuery,
@@ -49,6 +52,18 @@ import { Switch } from '@cgp/ui-kit/components/ui/switch';
 import { cn } from '@cgp/ui-kit/lib/utils';
 
 const MAX_ADDRESS_ENTRIES = 5;
+
+/**
+ * Field codes that make up the Addresses group. In the Use Template flow the
+ * whole Addresses section (and its add button) is hidden when none of these are
+ * enabled by the template — see `hasVisibleAddressField`.
+ */
+const ADDRESS_FIELD_CODES = [
+  'cityRefId',
+  'stateRefId',
+  'countryRefId',
+  'postalCode',
+] as const;
 
 const multiSelectInfoAvatar = new URL(
   '../../../../assets/images/multi-select-info-avatar.svg',
@@ -107,6 +122,7 @@ function AddressCard({
   canRemove: boolean;
 }) {
   const { t } = useTranslation('ats');
+  const isFieldVisible = useTemplateFieldVisible('profileRequirement');
 
   const [citySearch, setCitySearch] = useState('');
   const [stateSearch, setStateSearch] = useState('');
@@ -249,122 +265,130 @@ function AddressCard({
       {/* Card body */}
       <div className="grid grid-cols-4 gap-5 px-5 pb-5">
         {/* City */}
-        <FormField
-          control={form.control}
-          name={`addresses.${index}.city`}
-          render={({ field, fieldState }) => (
-            <FormItem className="flex flex-col gap-1.5 space-y-0">
-              <FormLabel className="text-sm font-semibold text-slate-900">
-                {t('profileRequirements.city')}
-              </FormLabel>
-              <FormControl>
-                <Combobox
-                  options={cityOptions}
-                  value={field.value?.id ?? ''}
-                  onValueChange={handleCitySelect}
-                  onSearchChange={setCitySearch}
-                  loading={isCityLoading}
-                  disabled={isDisabled}
-                  placeholder={t('profileRequirements.cityPlaceholder')}
-                  addable={false}
-                  isError={!!fieldState.error}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {isFieldVisible('cityRefId') && (
+          <FormField
+            control={form.control}
+            name={`addresses.${index}.city`}
+            render={({ field, fieldState }) => (
+              <FormItem className="flex flex-col gap-1.5 space-y-0">
+                <FormLabel className="text-sm font-semibold text-slate-900">
+                  {t('profileRequirements.city')}
+                </FormLabel>
+                <FormControl>
+                  <Combobox
+                    options={cityOptions}
+                    value={field.value?.id ?? ''}
+                    onValueChange={handleCitySelect}
+                    onSearchChange={setCitySearch}
+                    loading={isCityLoading}
+                    disabled={isDisabled}
+                    placeholder={t('profileRequirements.cityPlaceholder')}
+                    addable={false}
+                    isError={!!fieldState.error}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
 
         {/* State / Province / Region */}
-        <FormField
-          control={form.control}
-          name={`addresses.${index}.stateProvince`}
-          render={({ field, fieldState }) => (
-            <FormItem className="flex flex-col gap-1.5 space-y-0">
-              <FormLabel className="text-sm font-semibold text-slate-900">
-                {t('profileRequirements.stateProvince')}
-              </FormLabel>
-              <FormControl>
-                <Combobox
-                  options={stateOptions}
-                  value={field.value?.id ?? ''}
-                  onValueChange={handleStateSelect}
-                  onSearchChange={setStateSearch}
-                  loading={isStateLoading}
-                  disabled={isDisabled}
-                  placeholder={t(
-                    'profileRequirements.stateProvincePlaceholder'
-                  )}
-                  addable={false}
-                  isError={!!fieldState.error}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {isFieldVisible('stateRefId') && (
+          <FormField
+            control={form.control}
+            name={`addresses.${index}.stateProvince`}
+            render={({ field, fieldState }) => (
+              <FormItem className="flex flex-col gap-1.5 space-y-0">
+                <FormLabel className="text-sm font-semibold text-slate-900">
+                  {t('profileRequirements.stateProvince')}
+                </FormLabel>
+                <FormControl>
+                  <Combobox
+                    options={stateOptions}
+                    value={field.value?.id ?? ''}
+                    onValueChange={handleStateSelect}
+                    onSearchChange={setStateSearch}
+                    loading={isStateLoading}
+                    disabled={isDisabled}
+                    placeholder={t(
+                      'profileRequirements.stateProvincePlaceholder'
+                    )}
+                    addable={false}
+                    isError={!!fieldState.error}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
 
         {/* Country */}
-        <FormField
-          control={form.control}
-          name={`addresses.${index}.country`}
-          render={({ field, fieldState }) => (
-            <FormItem className="flex flex-col gap-1.5 space-y-0">
-              <FormLabel className="text-sm font-semibold text-slate-900">
-                {t('profileRequirements.country')}
-              </FormLabel>
-              <FormControl>
-                <Combobox
-                  options={countryOptions}
-                  value={field.value?.id ?? ''}
-                  onValueChange={handleCountrySelect}
-                  onSearchChange={setCountrySearch}
-                  loading={isCountryLoading}
-                  disabled={isDisabled}
-                  placeholder={t('profileRequirements.countryPlaceholder')}
-                  addable={false}
-                  isError={!!fieldState.error}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {isFieldVisible('countryRefId') && (
+          <FormField
+            control={form.control}
+            name={`addresses.${index}.country`}
+            render={({ field, fieldState }) => (
+              <FormItem className="flex flex-col gap-1.5 space-y-0">
+                <FormLabel className="text-sm font-semibold text-slate-900">
+                  {t('profileRequirements.country')}
+                </FormLabel>
+                <FormControl>
+                  <Combobox
+                    options={countryOptions}
+                    value={field.value?.id ?? ''}
+                    onValueChange={handleCountrySelect}
+                    onSearchChange={setCountrySearch}
+                    loading={isCountryLoading}
+                    disabled={isDisabled}
+                    placeholder={t('profileRequirements.countryPlaceholder')}
+                    addable={false}
+                    isError={!!fieldState.error}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
 
         {/* Postal Code / Zip */}
-        <FormField
-          control={form.control}
-          name={`addresses.${index}.postalCode`}
-          render={({ field }) => (
-            <FormItem className="flex flex-col gap-1.5 space-y-0">
-              <FormLabel className="flex justify-between text-sm font-semibold text-slate-900">
-                <span>{t('profileRequirements.postalCode')}</span>
-                <CharacterCount
-                  maxLength={20}
-                  currentLength={field.value?.length ?? 0}
-                />
-              </FormLabel>
-              <FormControl>
-                <Input
-                  placeholder={t('profileRequirements.postalCodePlaceholder')}
-                  maxLength={20}
-                  disabled={isDisabled}
-                  className="h-9 shadow-none"
-                  {...field}
-                  onChange={e => {
-                    const sanitized = sanitizePostalCodeText(e.target.value);
-                    field.onChange(sanitized.trimStart());
-                  }}
-                  onBlur={() => {
-                    field.onBlur();
-                    checkDuplicate();
-                  }}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {isFieldVisible('postalCode') && (
+          <FormField
+            control={form.control}
+            name={`addresses.${index}.postalCode`}
+            render={({ field }) => (
+              <FormItem className="flex flex-col gap-1.5 space-y-0">
+                <FormLabel className="flex justify-between text-sm font-semibold text-slate-900">
+                  <span>{t('profileRequirements.postalCode')}</span>
+                  <CharacterCount
+                    maxLength={20}
+                    currentLength={field.value?.length ?? 0}
+                  />
+                </FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder={t('profileRequirements.postalCodePlaceholder')}
+                    maxLength={20}
+                    disabled={isDisabled}
+                    className="h-9 shadow-none"
+                    {...field}
+                    onChange={e => {
+                      const sanitized = sanitizePostalCodeText(e.target.value);
+                      field.onChange(sanitized.trimStart());
+                    }}
+                    onBlur={() => {
+                      field.onBlur();
+                      checkDuplicate();
+                    }}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
       </div>
     </div>
   );
@@ -373,6 +397,12 @@ function AddressCard({
 export default function ProfileRequirementsStep({ onNext, onBack }: StepProps) {
   const { t } = useTranslation('ats');
   const showDisableToast = useDisableSuccessToast();
+  const isFieldVisible = useTemplateFieldVisible('profileRequirement');
+  // In the Use Template flow, hide the entire Addresses group (and its add
+  // button) when the template enabled none of the address fields.
+  const hasVisibleAddressField = ADDRESS_FIELD_CODES.some(code =>
+    isFieldVisible(code)
+  );
 
   const {
     form: contextForm,
@@ -705,155 +735,164 @@ export default function ProfileRequirementsStep({ onNext, onBack }: StepProps) {
           {/* Gender & Marital Status */}
           <div className="grid grid-cols-2 gap-5 px-7 pb-8">
             {/* Gender */}
-            <FormField
-              control={form.control}
-              name="gender"
-              render={({ field }) => (
-                <FormItem className="flex flex-col gap-1 space-y-0">
-                  <FormLabel className="text-sm font-semibold text-slate-900">
-                    {t('profileRequirements.gender')}
-                  </FormLabel>
-                  <FormControl>
-                    <Select
-                      value={field.value?.id ?? ''}
-                      onValueChange={val => {
-                        const found = gendersData.find(g => g.id === val);
-                        if (found) {
-                          field.onChange({
-                            id: found.id,
-                            label: found.label,
-                          });
-                        }
-                      }}
-                      disabled={isFieldsDisabled}
-                    >
-                      <SelectTrigger className="!h-11 w-full bg-white shadow-none">
-                        <SelectValue
-                          placeholder={t(
-                            'profileRequirements.genderPlaceholder'
-                          )}
-                        />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {gendersData.map(g => (
-                          <SelectItem key={g.id} value={g.id}>
-                            {g.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {isFieldVisible('gender') && (
+              <FormField
+                control={form.control}
+                name="gender"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col gap-1 space-y-0">
+                    <FormLabel className="text-sm font-semibold text-slate-900">
+                      {t('profileRequirements.gender')}
+                    </FormLabel>
+                    <FormControl>
+                      <Select
+                        value={field.value?.id ?? ''}
+                        onValueChange={val => {
+                          const found = gendersData.find(g => g.id === val);
+                          if (found) {
+                            field.onChange({
+                              id: found.id,
+                              label: found.label,
+                            });
+                          }
+                        }}
+                        disabled={isFieldsDisabled}
+                      >
+                        <SelectTrigger className="!h-11 w-full bg-white shadow-none">
+                          <SelectValue
+                            placeholder={t(
+                              'profileRequirements.genderPlaceholder'
+                            )}
+                          />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {gendersData.map(g => (
+                            <SelectItem key={g.id} value={g.id}>
+                              {g.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             {/* Marital Status */}
-            <FormField
-              control={form.control}
-              name="maritalStatus"
-              render={({ field }) => (
-                <FormItem className="flex flex-col gap-1 space-y-0">
-                  <FormLabel className="text-sm font-semibold text-slate-900">
-                    {t('profileRequirements.maritalStatus')}
-                  </FormLabel>
-                  <FormControl>
-                    <Select
-                      value={field.value?.id ?? ''}
-                      onValueChange={val => {
-                        const found = maritalStatusesData.find(
-                          ms => ms.id === val
-                        );
-                        if (found) {
-                          field.onChange({
-                            id: found.id,
-                            label: found.label,
-                          });
-                        }
-                      }}
-                      disabled={isFieldsDisabled}
-                    >
-                      <SelectTrigger className="!h-11 w-full bg-white shadow-none">
-                        <SelectValue
-                          placeholder={t(
-                            'profileRequirements.maritalStatusPlaceholder'
-                          )}
-                        />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {maritalStatusesData.map(ms => (
-                          <SelectItem key={ms.id} value={ms.id}>
-                            {ms.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {isFieldVisible('maritalStatus') && (
+              <FormField
+                control={form.control}
+                name="maritalStatus"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col gap-1 space-y-0">
+                    <FormLabel className="text-sm font-semibold text-slate-900">
+                      {t('profileRequirements.maritalStatus')}
+                    </FormLabel>
+                    <FormControl>
+                      <Select
+                        value={field.value?.id ?? ''}
+                        onValueChange={val => {
+                          const found = maritalStatusesData.find(
+                            ms => ms.id === val
+                          );
+                          if (found) {
+                            field.onChange({
+                              id: found.id,
+                              label: found.label,
+                            });
+                          }
+                        }}
+                        disabled={isFieldsDisabled}
+                      >
+                        <SelectTrigger className="!h-11 w-full bg-white shadow-none">
+                          <SelectValue
+                            placeholder={t(
+                              'profileRequirements.maritalStatusPlaceholder'
+                            )}
+                          />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {maritalStatusesData.map(ms => (
+                            <SelectItem key={ms.id} value={ms.id}>
+                              {ms.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
           </div>
 
-          {/* Addresses section header */}
-          <div className="px-7 pt-6 pb-2">
-            <h3 className="text-base font-bold text-slate-900">
-              {t('profileRequirements.addressesTitle')}
-            </h3>
-            <p className="text-sm text-slate-500">
-              {t('profileRequirements.addressesDescription')}
-            </p>
-          </div>
+          {/* Addresses group — hidden when the template enabled no address field. */}
+          {hasVisibleAddressField && (
+            <>
+              {/* Addresses section header */}
+              <div className="px-7 pt-6 pb-2">
+                <h3 className="text-base font-bold text-slate-900">
+                  {t('profileRequirements.addressesTitle')}
+                </h3>
+                <p className="text-sm text-slate-500">
+                  {t('profileRequirements.addressesDescription')}
+                </p>
+              </div>
 
-          {/* Address cards - reverse chronological order (newest first) */}
-          <div className="flex flex-col gap-4 px-6 pt-4">
-            {[...fields]
-              .map((field, originalIndex) => ({ field, originalIndex }))
-              .reverse()
-              .map(({ field, originalIndex }) => (
-                <AddressCard
-                  key={field.id}
-                  index={originalIndex}
-                  displayNumber={originalIndex + 1}
-                  form={form}
-                  onRemove={() => remove(originalIndex)}
-                  canRemove={fields.length > 1}
-                />
-              ))}
-          </div>
+              {/* Address cards - reverse chronological order (newest first) */}
+              <div className="flex flex-col gap-4 px-6 pt-4">
+                {[...fields]
+                  .map((field, originalIndex) => ({ field, originalIndex }))
+                  .reverse()
+                  .map(({ field, originalIndex }) => (
+                    <AddressCard
+                      key={field.id}
+                      index={originalIndex}
+                      displayNumber={originalIndex + 1}
+                      form={form}
+                      onRemove={() => remove(originalIndex)}
+                      canRemove={fields.length > 1}
+                    />
+                  ))}
+              </div>
 
-          {/* Add address button */}
-          <div className="flex justify-end px-6 py-4">
-            <Button
-              type="button"
-              variant="secondary"
-              disabled={isFieldsDisabled}
-              className="size-11 rounded-lg bg-gray-200 px-3 text-sm"
-              onClick={() => {
-                if (fields.length >= MAX_ADDRESS_ENTRIES) {
-                  ErrorToast({
-                    title: 'Error',
-                    description: t(
-                      'profileRequirements.errors.maxEntries',
-                      'Exceeded maximum of {{max}} entries allowed.',
-                      { max: MAX_ADDRESS_ENTRIES }
-                    ),
-                  });
-                  return;
-                }
+              {/* Add address button */}
+              <div className="flex justify-end px-6 py-4">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  disabled={isFieldsDisabled}
+                  className="size-11 rounded-lg bg-gray-200 px-3 text-sm"
+                  onClick={() => {
+                    if (fields.length >= MAX_ADDRESS_ENTRIES) {
+                      ErrorToast({
+                        title: 'Error',
+                        description: t(
+                          'profileRequirements.errors.maxEntries',
+                          'Exceeded maximum of {{max}} entries allowed.',
+                          { max: MAX_ADDRESS_ENTRIES }
+                        ),
+                      });
+                      return;
+                    }
 
-                append({
-                  city: { id: '', label: '' },
-                  stateProvince: { id: '', label: '' },
-                  country: { id: '', label: '' },
-                  postalCode: '',
-                  isOpen: true,
-                });
-              }}
-            >
-              <Plus className="size-4 text-neutral-600!" />
-            </Button>
-          </div>
+                    append({
+                      city: { id: '', label: '' },
+                      stateProvince: { id: '', label: '' },
+                      country: { id: '', label: '' },
+                      postalCode: '',
+                      isOpen: true,
+                    });
+                  }}
+                >
+                  <Plus className="size-4 text-neutral-600!" />
+                </Button>
+              </div>
+            </>
+          )}
 
           {/* Footer: Cancel + Next */}
           <div className="sticky bottom-0 mt-auto flex items-center justify-end gap-4 bg-white px-6 py-7 shadow-[0px_-8px_6.8px_0px_rgba(0,0,0,0.04)]">
