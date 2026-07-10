@@ -568,6 +568,14 @@ function mapLicensesAndCertifications(
   }
 
   return form.licenseCertificates.map(lc => {
+    if (lc.dataTakenFromCandidate) {
+      return {
+        isEnabled: lc.isEnabled,
+        dataTakenFromCandidate: true,
+        content: [],
+      };
+    }
+
     return {
       isEnabled: lc.isEnabled,
       dataTakenFromCandidate: lc.dataTakenFromCandidate,

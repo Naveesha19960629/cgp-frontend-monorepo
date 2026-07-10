@@ -26,7 +26,7 @@ describe('toLicenseCertificatesPayload — disabled', () => {
     ]);
   });
 
-  it('preserves content when dataTakenFromCandidate is true', () => {
+  it('clears content to an empty array when dataTakenFromCandidate is true, even if entry fields are filled', () => {
     const result = toLicenseCertificatesPayload({
       isEnabled: true,
       dataTakenFromCandidate: true,
@@ -54,31 +54,7 @@ describe('toLicenseCertificatesPayload — disabled', () => {
     });
 
     expect(result).toEqual([
-      {
-        isEnabled: true,
-        dataTakenFromCandidate: true,
-        content: [
-          {
-            nameOfLicenseCert: [
-              {
-                source: 'MASTER',
-                id: 'lc-1',
-                name: 'AWS Cert',
-                type: 'CERTIFICATION',
-              },
-            ],
-            issuingOrganization: [
-              { source: 'MASTER', id: 'org-1', name: 'Amazon' },
-            ],
-            organizationLocations: [
-              { source: 'MASTER', id: 'loc-1', name: 'Colombo' },
-            ],
-            internationallyAccepted: true,
-            issueDate: '2026-06-01',
-            expirationDate: '2027-06-01',
-          },
-        ],
-      },
+      { isEnabled: true, dataTakenFromCandidate: true, content: [] },
     ]);
   });
 });

@@ -174,7 +174,7 @@ describe('toCreateVacancyPayload', () => {
     ]);
   });
 
-  it('keeps license content when dataTakenFromCandidate is true', () => {
+  it('clears license content to an empty array when dataTakenFromCandidate is true', () => {
     const payload = toCreateVacancyPayload(
       buildBaseForm({
         licenseCertificates: [
@@ -203,26 +203,7 @@ describe('toCreateVacancyPayload', () => {
     );
 
     expect(payload.data.licensesAndCertifications).toEqual([
-      {
-        isEnabled: true,
-        dataTakenFromCandidate: true,
-        content: [
-          {
-            nameOfLicenseCert: [
-              {
-                source: 'MASTER',
-                id: 'license-2',
-                type: 'CERTIFICATE',
-              },
-            ],
-            issuingOrganization: [{ source: 'MASTER', id: 'org-2' }],
-            organizationLocations: [{ source: 'MASTER', id: 'loc-2' }],
-            internationallyAccepted: true,
-            issueDate: '2026-06-18',
-            expirationDate: '2027-06-18',
-          },
-        ],
-      },
+      { isEnabled: true, dataTakenFromCandidate: true, content: [] },
     ]);
   });
 
