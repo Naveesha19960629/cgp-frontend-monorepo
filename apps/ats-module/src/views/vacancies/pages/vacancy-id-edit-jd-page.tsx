@@ -140,7 +140,7 @@ export default function VacancyIdEditJdPage() {
                 key={section.sectionKey}
                 title={t(getSectionTitleKey(section.sectionKey))}
               >
-                <div className="mt-6 grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
+                <div className="mt-6 grid grid-cols-1 items-start gap-x-6 gap-y-5 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6">
                   {section.fields.map(field => (
                     <FieldToggle
                       key={field.fieldKey}

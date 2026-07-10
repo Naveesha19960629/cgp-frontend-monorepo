@@ -64,7 +64,7 @@ function TemplateSectionCard({
       {/* When "data taken from candidate" is selected the fields stay visible
           but are toggled off and disabled (mirrors the create-vacancy
           behaviour). */}
-      <div className="mt-6 grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6">
+      <div className="mt-6 grid grid-cols-1 items-start gap-x-6 gap-y-5 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6">
         {section.fields.map(field => (
           <FieldToggle
             key={field.code}
