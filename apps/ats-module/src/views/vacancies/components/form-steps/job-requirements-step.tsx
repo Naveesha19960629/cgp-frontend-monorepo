@@ -405,7 +405,7 @@ export default function JobRequirementsStep({ onNext }: Readonly<StepProps>) {
           </div>
 
           <div className="flex flex-col gap-5 px-7 pb-6">
-            <div className="wide:grid-cols-3 grid grid-cols-1 gap-5 xl:grid-cols-2 xl:gap-x-5">
+            <div className="tri-jobreq:grid-cols-3 grid grid-cols-1 gap-5 xl:grid-cols-2 xl:gap-x-5">
               <div className="contents">
                 <FormField
                   control={form.control}

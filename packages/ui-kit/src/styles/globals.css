@@ -135,7 +135,9 @@
   --breakpoint-desktop-custom-upper: 72.0625rem; /* 1153px */
   --breakpoint-desktop-custom: 70.625rem; /* 1130px */
   --breakpoint-desktop-custom-mid: 85.9375rem; /* 1375px */
-  --breakpoint-wide: 90rem; /* 1440px */
+  --breakpoint-tri-jobreq: 95.0625rem; /* 1521px — Job Requirements top row 3-col resumes above 1520px */
+  --breakpoint-quad-honours: 110.375rem; /* 1766px — Honours 4-col resumes above 1765px */
+  --breakpoint-quad-profile: 114.125rem; /* 1826px — Profile 4-col resumes above 1825px */
 }
 
 @layer base {
