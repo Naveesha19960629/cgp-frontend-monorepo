@@ -419,7 +419,10 @@ export default function JobRequirementsStep({ onNext }: Readonly<StepProps>) {
                         </span>
                         <CharacterCount
                           maxLength={MAX_CHAR}
-                          currentLength={disciplineSearch.length}
+                          currentLength={
+                            disciplineSearch.length ||
+                            (selectedDiscipline?.label.length ?? 0)
+                          }
                         />
                       </FormLabel>
                       <FormControl>
@@ -510,7 +513,10 @@ export default function JobRequirementsStep({ onNext }: Readonly<StepProps>) {
                                 </span>
                                 <CharacterCount
                                   maxLength={MAX_CHAR}
-                                  currentLength={careerPathSearch.length}
+                                  currentLength={
+                                    careerPathSearch.length ||
+                                    (selectedCareerPath?.label.length ?? 0)
+                                  }
                                 />
                               </FormLabel>
                               <FormControl>
@@ -606,7 +612,10 @@ export default function JobRequirementsStep({ onNext }: Readonly<StepProps>) {
                             </span>
                             <CharacterCount
                               maxLength={MAX_CHAR}
-                              currentLength={careerPathSearch.length}
+                              currentLength={
+                                careerPathSearch.length ||
+                                (selectedCareerPath?.label.length ?? 0)
+                              }
                             />
                           </FormLabel>
                           <FormControl>
