@@ -98,6 +98,36 @@ interface CalendarWithTimeProps {
   formattedDateDisplay?: string;
 }
 
+/**
+ * Normalize a time string to the 24-hour "HH:mm:ss" form required by the native
+ * <input type="time"> control. Accepts 12-hour "hh:mm[:ss] AM/PM" (as produced
+ * when the value is hydrated from the API/display format) and 24-hour
+ * "HH:mm[:ss]" (as emitted by the input itself). Without this, a 12-hour value
+ * like "01:00:00 PM" was truncated to "01:00:00" and shown as 1 AM.
+ */
+function toTimeInputValue(time: string): string {
+  if (!time) return '';
+  const trimmed = time.trim();
+
+  const twelveHour = /^(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)$/i.exec(
+    trimmed
+  );
+  if (twelveHour) {
+    let hours = Number.parseInt(twelveHour[1], 10) % 12;
+    if (twelveHour[4].toUpperCase() === 'PM') hours += 12;
+    const minutes = twelveHour[2];
+    const seconds = twelveHour[3] ?? '00';
+    return `${String(hours).padStart(2, '0')}:${minutes}:${seconds}`;
+  }
+
+  const twentyFourHour = /^(\d{2}):(\d{2})(?::(\d{2}))?$/.exec(trimmed);
+  if (twentyFourHour) {
+    return `${twentyFourHour[1]}:${twentyFourHour[2]}:${twentyFourHour[3] ?? '00'}`;
+  }
+
+  return trimmed.substring(0, 8);
+}
+
 export function CalendarWithTime({
   dateValue,
   onDateChange,
@@ -130,8 +160,9 @@ export function CalendarWithTime({
     }
   };
 
-  // Pass full HH:mm:ss to the native time input (step="1" requires seconds)
-  const timeInputValue = timeValue ? timeValue.substring(0, 8) : '';
+  // The native <input type="time"> only accepts 24-hour "HH:mm:ss"; convert so a
+  // hydrated 12-hour PM value doesn't render as AM (step="1" requires seconds).
+  const timeInputValue = toTimeInputValue(timeValue);
 
   // Handle time input change — step="1" gives HH:mm:ss directly
   const handleTimeChange = (newTime: string) => {
