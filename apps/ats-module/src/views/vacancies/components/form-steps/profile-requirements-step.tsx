@@ -1,6 +1,6 @@
-import { Loader2, Plus, Trash2 } from 'lucide-react';
+import { Loader2, Plus } from 'lucide-react';
 
-import { ArrowLeft2 } from 'iconsax-reactjs';
+import { ArrowLeft2, Trash } from 'iconsax-reactjs';
 
 import { useEffect, useState } from 'react';
 import { type UseFormReturn } from 'react-hook-form';
@@ -257,20 +257,20 @@ function AddressCard({
             )}
             aria-label={t('profileRequirements.removeAddress')}
           >
-            <Trash2 className="size-5" />
+            <Trash size={24} />
           </button>
         </div>
       </div>
 
       {/* Card body */}
-      <div className="grid grid-cols-4 gap-5 px-5 pb-5">
+      <div className="wide:grid-cols-4 grid grid-cols-1 gap-5 px-5 pb-5 xl:grid-cols-2">
         {/* City */}
         {isFieldVisible('cityRefId') && (
           <FormField
             control={form.control}
             name={`addresses.${index}.city`}
             render={({ field, fieldState }) => (
-              <FormItem className="flex flex-col gap-1.5 space-y-0">
+              <FormItem className="flex min-w-0 flex-col gap-1.5 space-y-0">
                 <FormLabel className="text-sm font-semibold text-slate-900">
                   {t('profileRequirements.city')}
                 </FormLabel>
@@ -299,7 +299,7 @@ function AddressCard({
             control={form.control}
             name={`addresses.${index}.stateProvince`}
             render={({ field, fieldState }) => (
-              <FormItem className="flex flex-col gap-1.5 space-y-0">
+              <FormItem className="flex min-w-0 flex-col gap-1.5 space-y-0">
                 <FormLabel className="text-sm font-semibold text-slate-900">
                   {t('profileRequirements.stateProvince')}
                 </FormLabel>
@@ -330,7 +330,7 @@ function AddressCard({
             control={form.control}
             name={`addresses.${index}.country`}
             render={({ field, fieldState }) => (
-              <FormItem className="flex flex-col gap-1.5 space-y-0">
+              <FormItem className="flex min-w-0 flex-col gap-1.5 space-y-0">
                 <FormLabel className="text-sm font-semibold text-slate-900">
                   {t('profileRequirements.country')}
                 </FormLabel>
@@ -359,7 +359,7 @@ function AddressCard({
             control={form.control}
             name={`addresses.${index}.postalCode`}
             render={({ field }) => (
-              <FormItem className="flex flex-col gap-1.5 space-y-0">
+              <FormItem className="flex min-w-0 flex-col gap-1.5 space-y-0">
                 <FormLabel className="flex justify-between text-sm font-semibold text-slate-900">
                   <span>{t('profileRequirements.postalCode')}</span>
                   <CharacterCount
@@ -372,7 +372,7 @@ function AddressCard({
                     placeholder={t('profileRequirements.postalCodePlaceholder')}
                     maxLength={20}
                     disabled={isDisabled}
-                    className="h-9 shadow-none"
+                    className="h-11 shadow-none"
                     {...field}
                     onChange={e => {
                       const sanitized = sanitizePostalCodeText(e.target.value);
@@ -733,14 +733,14 @@ export default function ProfileRequirementsStep({ onNext, onBack }: StepProps) {
           </div>
 
           {/* Gender & Marital Status */}
-          <div className="grid grid-cols-2 gap-5 px-7 pb-8">
+          <div className="grid grid-cols-1 gap-5 px-7 pb-8 xl:grid-cols-2">
             {/* Gender */}
             {isFieldVisible('gender') && (
               <FormField
                 control={form.control}
                 name="gender"
                 render={({ field }) => (
-                  <FormItem className="flex flex-col gap-1 space-y-0">
+                  <FormItem className="flex min-w-0 flex-col gap-1 space-y-0">
                     <FormLabel className="text-sm font-semibold text-slate-900">
                       {t('profileRequirements.gender')}
                     </FormLabel>
@@ -786,7 +786,7 @@ export default function ProfileRequirementsStep({ onNext, onBack }: StepProps) {
                 control={form.control}
                 name="maritalStatus"
                 render={({ field }) => (
-                  <FormItem className="flex flex-col gap-1 space-y-0">
+                  <FormItem className="flex min-w-0 flex-col gap-1 space-y-0">
                     <FormLabel className="text-sm font-semibold text-slate-900">
                       {t('profileRequirements.maritalStatus')}
                     </FormLabel>

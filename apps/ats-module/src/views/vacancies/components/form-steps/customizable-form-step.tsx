@@ -790,6 +790,40 @@ export default function CustomizableFormStep({
     };
   }, [setForm, stepDisableRef]);
 
+  // Mirror the enabled toggle into the shared form context immediately. The
+  // step's local edits are otherwise only pushed to context on navigation
+  // (Next / step change), so a save triggered from a later step (e.g. Schedule)
+  // could persist a stale *enabled* section after the recruiter turned it off.
+  // Keying on `isEnabled` guarantees every on/off flip propagates; turning it
+  // off also clears the section so no stale form data reaches the API.
+  useEffect(() => {
+    setForm(prev => {
+      const current = prev.customizableForm;
+      if (!isEnabled) {
+        if (
+          current &&
+          !current.isEnabled &&
+          (current.forms?.length ?? 0) === 0
+        ) {
+          return prev;
+        }
+        return {
+          ...prev,
+          customizableForm: { isEnabled: false, sectionTitle: '', forms: [] },
+        };
+      }
+      if (current?.isEnabled) return prev;
+      return {
+        ...prev,
+        customizableForm: {
+          isEnabled: true,
+          sectionTitle: current?.sectionTitle ?? '',
+          forms: current?.forms ?? [],
+        },
+      };
+    });
+  }, [isEnabled, setForm]);
+
   useStepGuard(isEnabled && !sectionTitle.trim() && forms.every(isFormEmpty));
 
   useEffect(() => {
@@ -1334,6 +1368,13 @@ export default function CustomizableFormStep({
           setForms([createForm(1)]);
           setNextFormId(2);
           setIsEnabled(false);
+          // Persist the disabled/cleared state to the shared form context right
+          // away so a save triggered without re-visiting this step (e.g. via the
+          // step navigator) still sends the section as disabled with no data.
+          setForm(prev => ({
+            ...prev,
+            customizableForm: { isEnabled: false, sectionTitle: '', forms: [] },
+          }));
           removeCompletedStep(currentStepIndex);
           setShowDisableConfirm(false);
           showDisableToast(t('customizableForm.title'));

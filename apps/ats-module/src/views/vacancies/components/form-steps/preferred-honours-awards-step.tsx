@@ -182,7 +182,7 @@ function HonoursAndAwardsCard({
         {/* Collapsible body */}
         <CollapsibleContent>
           <div className="space-y-5 px-5 pb-5">
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <div className="wide:grid-cols-4 grid grid-cols-1 gap-4 xl:grid-cols-2">
               {isFieldVisible('title') && (
                 <FormField
                   control={form.control}
@@ -423,7 +423,7 @@ function HonoursAndAwardsCard({
               )}
             </div>
 
-            <div className="grid grid-cols-1 gap-x-5 gap-y-4 md:grid-cols-2">
+            <div className="grid grid-cols-1 gap-x-5 gap-y-4 xl:grid-cols-2">
               {isFieldVisible('associatedOrganizations') && (
                 <FormField
                   control={form.control}

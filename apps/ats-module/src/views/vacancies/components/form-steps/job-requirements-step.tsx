@@ -405,13 +405,13 @@ export default function JobRequirementsStep({ onNext }: Readonly<StepProps>) {
           </div>
 
           <div className="flex flex-col gap-5 px-7 pb-6">
-            <div className="grid grid-cols-2 gap-x-5">
-              <div className="grid grid-cols-2 gap-x-5">
+            <div className="wide:grid-cols-3 grid grid-cols-1 gap-5 xl:grid-cols-2 xl:gap-x-5">
+              <div className="contents">
                 <FormField
                   control={form.control}
                   name="discipline"
                   render={({ field }) => (
-                    <FormItem className="flex flex-col gap-1 space-y-0">
+                    <FormItem className="flex min-w-0 flex-col gap-1 space-y-0">
                       <FormLabel className="flex justify-between">
                         <span>
                           {t('jobRequirements.discipline')}
@@ -499,7 +499,7 @@ export default function JobRequirementsStep({ onNext }: Readonly<StepProps>) {
                   control={form.control}
                   name="careerPath"
                   render={({ field }) => (
-                    <FormItem className="flex flex-col gap-1 space-y-0">
+                    <FormItem className="flex min-w-0 flex-col gap-1 space-y-0">
                       {isCareerPathDisabled ? (
                         <Tooltip>
                           <TooltipTrigger asChild>
@@ -700,7 +700,7 @@ export default function JobRequirementsStep({ onNext }: Readonly<StepProps>) {
                 control={form.control}
                 name="level"
                 render={({ field }) => (
-                  <FormItem className="flex flex-col gap-1 space-y-0">
+                  <FormItem className="flex min-w-0 flex-col gap-1 space-y-0">
                     <FormLabel className="text-sm font-semibold text-slate-900">
                       {t('jobRequirements.level')}
                       {!isOtherDiscipline && (
@@ -730,7 +730,7 @@ export default function JobRequirementsStep({ onNext }: Readonly<StepProps>) {
                         }}
                         disabled={isJobLevelsLoading}
                       >
-                        <SelectTrigger className="!h-11 w-[304px] bg-white shadow-none">
+                        <SelectTrigger className="!h-11 w-full bg-white shadow-none">
                           <SelectValue
                             placeholder={t('jobRequirements.levelPlaceholder')}
                           />
@@ -750,12 +750,12 @@ export default function JobRequirementsStep({ onNext }: Readonly<StepProps>) {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-x-5">
+            <div className="grid grid-cols-1 gap-5 xl:grid-cols-2 xl:gap-x-5">
               <FormField
                 control={form.control}
                 name="role"
                 render={({ field }) => (
-                  <FormItem className="flex flex-col gap-1 space-y-0">
+                  <FormItem className="flex min-w-0 flex-col gap-1 space-y-0">
                     {isRoleDisabled ? (
                       <Tooltip>
                         <TooltipTrigger asChild>
@@ -925,7 +925,7 @@ export default function JobRequirementsStep({ onNext }: Readonly<StepProps>) {
                 control={form.control}
                 name="jobTitle"
                 render={({ field }) => (
-                  <FormItem className="flex flex-col gap-1 space-y-0">
+                  <FormItem className="flex min-w-0 flex-col gap-1 space-y-0">
                     <FormLabel className="flex justify-between">
                       <span>
                         {t('jobRequirements.jobTitle')}
@@ -991,12 +991,12 @@ export default function JobRequirementsStep({ onNext }: Readonly<StepProps>) {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-x-5">
+            <div className="grid grid-cols-1 gap-5 xl:grid-cols-2 xl:gap-x-5">
               <FormField
                 control={form.control}
                 name="employmentType"
                 render={({ field }) => (
-                  <FormItem className="flex flex-col gap-1 space-y-0">
+                  <FormItem className="flex min-w-0 flex-col gap-1 space-y-0">
                     <FormLabel className="text-sm font-semibold text-slate-900">
                       {t('jobRequirements.employmentType')}
                     </FormLabel>
@@ -1059,7 +1059,7 @@ export default function JobRequirementsStep({ onNext }: Readonly<StepProps>) {
                 control={form.control}
                 name="workSchedule"
                 render={({ field }) => (
-                  <FormItem className="flex flex-col gap-1 space-y-0">
+                  <FormItem className="flex min-w-0 flex-col gap-1 space-y-0">
                     <FormLabel className="text-sm font-semibold text-slate-900">
                       {t('jobRequirements.workSchedule')}
                     </FormLabel>
@@ -1119,12 +1119,12 @@ export default function JobRequirementsStep({ onNext }: Readonly<StepProps>) {
               />
             </div>
 
-            <div className="grid grid-cols-2 items-start gap-x-5">
+            <div className="grid grid-cols-1 items-start gap-5 xl:grid-cols-2 xl:gap-x-5">
               <FormField
                 control={form.control}
                 name="engagementModel"
                 render={({ field }) => (
-                  <FormItem className="flex flex-col gap-1 space-y-0">
+                  <FormItem className="flex min-w-0 flex-col gap-1 space-y-0">
                     <FormLabel className="text-sm font-semibold text-slate-900">
                       {t('jobRequirements.engagementModel')}
                     </FormLabel>
@@ -1187,7 +1187,7 @@ export default function JobRequirementsStep({ onNext }: Readonly<StepProps>) {
                 control={form.control}
                 name="description"
                 render={({ field }) => (
-                  <FormItem className="flex flex-col gap-1 space-y-0">
+                  <FormItem className="flex min-w-0 flex-col gap-1 space-y-0">
                     <FormLabel className="flex justify-between">
                       <span>{t('jobRequirements.description')}</span>
                       <CharacterCount
