@@ -16,7 +16,7 @@ export default function FieldToggle({
   return (
     <div
       className={cn(
-        'flex items-center justify-between gap-3',
+        'flex items-start justify-between gap-3',
         disabled && 'opacity-50'
       )}
     >

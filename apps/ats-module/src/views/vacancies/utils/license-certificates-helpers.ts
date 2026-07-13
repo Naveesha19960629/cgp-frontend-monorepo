@@ -44,6 +44,10 @@ const toLicenseCertificatesPayload = (
     return [{ isEnabled: false, dataTakenFromCandidate: false, content: [] }];
   }
 
+  if (values.dataTakenFromCandidate) {
+    return [{ isEnabled: true, dataTakenFromCandidate: true, content: [] }];
+  }
+
   const { entry } = values;
 
   const toRef = (item: {
