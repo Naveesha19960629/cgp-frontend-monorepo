@@ -123,7 +123,6 @@ export default function PreferredIndustryStep({
   }, [setForm, stepDisableRef]);
 
   const [industrySearch, setIndustrySearch] = useState('');
-  const [hasMaxError, setHasMaxError] = useState(false);
 
   const { data: industriesData, isLoading: isIndustriesLoading } =
     useIndustriesQuery(industrySearch);
@@ -231,7 +230,6 @@ export default function PreferredIndustryStep({
                     industries: [],
                     dataTakenFromCandidate: true,
                   });
-                  setHasMaxError(false);
                   return;
                 }
                 updatePreferredIndustries({
@@ -252,12 +250,7 @@ export default function PreferredIndustryStep({
           {isFieldVisible('industry') && (
             <div>
               <div className="mb-2 flex min-w-0 items-center justify-between gap-2">
-                <span
-                  className={cn(
-                    'min-w-0 truncate pr-2 text-sm font-semibold text-slate-700',
-                    hasMaxError && 'text-destructive'
-                  )}
-                >
+                <span className="min-w-0 truncate pr-2 text-sm font-semibold text-slate-700">
                   {t('preferredIndustries.sectionLabel')}
                 </span>
                 <CharacterCount
@@ -278,7 +271,6 @@ export default function PreferredIndustryStep({
                     max: MAX_INDUSTRIES,
                   }
                 )}
-                onErrorStateChange={setHasMaxError}
                 onChange={options => {
                   const dedupedByLabel = new Map<string, IndustryEntry>();
 

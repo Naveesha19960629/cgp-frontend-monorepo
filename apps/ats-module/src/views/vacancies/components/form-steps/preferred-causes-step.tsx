@@ -104,7 +104,6 @@ export default function PreferredCausesStep({
 
   // Cause search state for the query
   const [causeSearch, setCauseSearch] = useState('');
-  const [hasMaxError, setHasMaxError] = useState(false);
 
   // Query
   const { data: causesData, isLoading: isCausesLoading } =
@@ -209,7 +208,6 @@ export default function PreferredCausesStep({
               onCheckedChange={checked => {
                 if (checked) {
                   setSelectedCauses([]);
-                  setHasMaxError(false);
                   setDataTakenFromCandidate(true);
                 } else {
                   setDataTakenFromCandidate(false);
@@ -229,12 +227,7 @@ export default function PreferredCausesStep({
           {isFieldVisible('cause') && (
             <div>
               <div className="mb-2 flex items-center justify-between">
-                <span
-                  className={cn(
-                    'text-sm font-semibold text-slate-700',
-                    hasMaxError && 'text-destructive'
-                  )}
-                >
+                <span className="text-sm font-semibold text-slate-700">
                   {t('preferredCauses.sectionLabel')}
                 </span>
                 <CharacterCount
@@ -252,7 +245,6 @@ export default function PreferredCausesStep({
                 errorMessage={t('preferredCauses.validation.maxCauses', {
                   max: MAX_CAUSES,
                 })}
-                onErrorStateChange={setHasMaxError}
                 onChange={options => {
                   const entries: CauseEntry[] = options.map(opt => ({
                     id: opt.value,

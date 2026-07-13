@@ -104,7 +104,6 @@ export default function PreferredHobbiesStep({
 
   // Hobby search state for the query
   const [hobbySearch, setHobbySearch] = useState('');
-  const [hasMaxError, setHasMaxError] = useState(false);
 
   // Query
   const { data: hobbiesData, isLoading: isHobbiesLoading } =
@@ -209,7 +208,6 @@ export default function PreferredHobbiesStep({
               onCheckedChange={checked => {
                 if (checked) {
                   setSelectedHobbies([]);
-                  setHasMaxError(false);
                   setDataTakenFromCandidate(true);
                 } else {
                   setDataTakenFromCandidate(false);
@@ -229,12 +227,7 @@ export default function PreferredHobbiesStep({
           {isFieldVisible('hobby') && (
             <div>
               <div className="mb-2 flex items-center justify-between">
-                <span
-                  className={cn(
-                    'text-sm font-semibold text-slate-700',
-                    hasMaxError && 'text-destructive'
-                  )}
-                >
+                <span className="text-sm font-semibold text-slate-700">
                   {t('preferredHobbies.sectionLabel')}
                 </span>
                 <CharacterCount
@@ -252,7 +245,6 @@ export default function PreferredHobbiesStep({
                 errorMessage={t('preferredHobbies.validation.maxHobbies', {
                   max: MAX_HOBBIES,
                 })}
-                onErrorStateChange={setHasMaxError}
                 onChange={options => {
                   const entries: HobbyEntry[] = options.map(opt => ({
                     id: opt.value,

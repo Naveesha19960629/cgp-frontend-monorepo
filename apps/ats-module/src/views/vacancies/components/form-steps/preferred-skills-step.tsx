@@ -126,7 +126,6 @@ export default function PreferredSkillsStep({
 
   // Skill search state for the query
   const [skillSearch, setSkillSearch] = useState('');
-  const [hasMaxError, setHasMaxError] = useState(false);
 
   // Career path popover
   const [pendingSkillName, setPendingSkillName] = useState('');
@@ -444,7 +443,6 @@ export default function PreferredSkillsStep({
                 if (checked) {
                   setSelectedSkills([]);
                   setUserCreatedSkillOptions([]);
-                  setHasMaxError(false);
                   setDataTakenFromCandidate(true);
                 } else {
                   setDataTakenFromCandidate(false);
@@ -465,12 +463,7 @@ export default function PreferredSkillsStep({
             <>
               <div>
                 <div className="mb-2 flex items-center justify-between">
-                  <span
-                    className={cn(
-                      'text-sm font-semibold text-slate-700',
-                      hasMaxError && 'text-destructive'
-                    )}
-                  >
+                  <span className="text-sm font-semibold text-slate-700">
                     {t('preferredSkills.sectionLabel')}
                   </span>
                   <CharacterCount
@@ -497,7 +490,6 @@ export default function PreferredSkillsStep({
                   errorMessage={t('preferredSkills.validation.maxSkills', {
                     max: MAX_SKILLS,
                   })}
-                  onErrorStateChange={setHasMaxError}
                   onChange={handleSkillsChange}
                   options={skillOptions}
                   onSearchSync={value => {

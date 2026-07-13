@@ -104,7 +104,6 @@ export default function PreferredLanguagesStep({
 
   // Language search state for the query
   const [langSearch, setLangSearch] = useState('');
-  const [hasMaxError, setHasMaxError] = useState(false);
 
   // Query
   const { data: languagesData, isLoading: isLanguagesLoading } =
@@ -213,7 +212,6 @@ export default function PreferredLanguagesStep({
               onCheckedChange={checked => {
                 if (checked) {
                   setSelectedLanguages([]);
-                  setHasMaxError(false);
                   setDataTakenFromCandidate(true);
                 } else {
                   setDataTakenFromCandidate(false);
@@ -233,12 +231,7 @@ export default function PreferredLanguagesStep({
           {isFieldVisible('language') && (
             <div>
               <div className="mb-2 flex items-center justify-between">
-                <span
-                  className={cn(
-                    'text-sm font-semibold text-slate-700',
-                    hasMaxError && 'text-destructive'
-                  )}
-                >
+                <span className="text-sm font-semibold text-slate-700">
                   {t('preferredLanguages.sectionLabel')}
                 </span>
                 <CharacterCount
@@ -256,7 +249,6 @@ export default function PreferredLanguagesStep({
                 errorMessage={t('preferredLanguages.validation.maxLanguages', {
                   max: MAX_LANGUAGES,
                 })}
-                onErrorStateChange={setHasMaxError}
                 onChange={options => {
                   const entries: LanguageEntry[] = options.map(opt => ({
                     id: opt.value,
