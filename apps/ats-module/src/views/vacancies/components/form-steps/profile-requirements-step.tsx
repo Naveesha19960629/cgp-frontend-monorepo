@@ -252,7 +252,7 @@ function AddressCard({
             onClick={onRemove}
             disabled={!canRemove || isDisabled}
             className={cn(
-              'text-slate-400 transition-colors hover:text-red-500',
+              'text-slate-900 transition-colors hover:text-red-500',
               (!canRemove || isDisabled) && 'hidden'
             )}
             aria-label={t('profileRequirements.removeAddress')}
