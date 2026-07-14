@@ -11,10 +11,7 @@ import MessageBox from '@/components/message-box';
 import { AddOrganizationFormDialog } from '@/views/vacancies/components/dialogs';
 import StepDisableDialog from '@/views/vacancies/components/step-disable-dialog';
 import VacancyStatusBadge from '@/views/vacancies/components/vacancy-status-badge';
-import {
-  useTemplateFieldVisible,
-  useVacancyForm,
-} from '@/views/vacancies/context/vacancy-form-context';
+import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import {
   useCreateOrganizationMutation,
   useCreateSocietyMutation,
@@ -55,7 +52,6 @@ import DisableDialog from './disable-dialog';
 
 const MAX_POSITION_LENGTH = 250;
 const MAX_CLUB_SOCIETY_LENGTH = 250;
-const MAX_ORGANIZATION_LENGTH = 250;
 const MAX_SELECTIONS = 10;
 const HUNDRED_YEARS_AGO = new Date(new Date().getFullYear() - 100, 0, 1);
 const HUNDRED_YEARS_FROM_NOW = new Date(new Date().getFullYear() + 100, 11, 31);
@@ -121,12 +117,10 @@ function ClubSocietyCard({
   isLocationsLoading: boolean;
 }>) {
   const { t } = useTranslation('ats');
-  const isFieldVisible = useTemplateFieldVisible('clubsAndSocieties');
   const [locationsError, setLocationsError] = useState(false);
   const [societiesError, setSocietiesError] = useState(false);
   const [organizationsError, setOrganizationsError] = useState(false);
   const [societiesCharLimitError, setSocietiesCharLimitError] = useState(false);
-  const [orgSearchLength, setOrgSearchLength] = useState(0);
   const [openDatePopover, setOpenDatePopover] = useState<
     'startDate' | 'endDate' | null
   >(null);
@@ -174,22 +168,265 @@ function ClubSocietyCard({
           >
             {/* Row 1: Club / Society | Start Date | End Date */}
             <div className="grid grid-cols-[2fr_1fr_1fr] gap-4">
-              {isFieldVisible('clubSociety') && (
-                <div className="flex flex-col gap-1">
-                  <div className="flex h-5 items-center">
-                    <Label
-                      className={
-                        societiesError ? 'text-destructive' : undefined
-                      }
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center justify-between">
+                  <Label
+                    className={societiesError ? 'text-destructive' : undefined}
+                  >
+                    {t('preferredClubSocieties.labels.clubSociety')}
+                  </Label>
+                  <CharacterCount
+                    currentLength={entry.clubSocietySearch.length}
+                    maxLength={MAX_CLUB_SOCIETY_LENGTH}
+                  />
+                </div>
+                <MultipleSelector
+                  value={entry.clubSociety}
+                  onChange={options => {
+                    onUpdate(index, {
+                      clubSociety: options
+                        .filter(
+                          opt =>
+                            typeof opt.value === 'string' &&
+                            opt.value.length > 0
+                        )
+                        .map(opt => {
+                          const source =
+                            (opt.source as string) ?? 'USER_CREATED';
+                          const isCreatable =
+                            source === 'USER_CREATED' ||
+                            opt.value === opt.label;
+
+                          return {
+                            value: isCreatable
+                              ? opt.value.slice(0, MAX_CLUB_SOCIETY_LENGTH)
+                              : opt.value,
+                            label: isCreatable
+                              ? opt.label.slice(0, MAX_CLUB_SOCIETY_LENGTH)
+                              : opt.label,
+                            source,
+                          };
+                        }),
+                    });
+                  }}
+                  options={societies.map(s => ({
+                    value: s.id,
+                    label: s.name || s.label || '',
+                    source: s.source,
+                  }))}
+                  onSearchSync={value => {
+                    const limitedSearch = value.slice(
+                      0,
+                      MAX_CLUB_SOCIETY_LENGTH
+                    );
+
+                    setSocietiesCharLimitError(
+                      value.length >= MAX_CLUB_SOCIETY_LENGTH
+                    );
+                    onUpdate(index, { clubSocietySearch: limitedSearch });
+                    onSocietiesSearch(limitedSearch);
+                    return societies.map(s => ({
+                      value: s.id,
+                      label: s.name || s.label || '',
+                      source: s.source,
+                    }));
+                  }}
+                  keepSelectedInList
+                  inputProps={{
+                    maxLength: MAX_CLUB_SOCIETY_LENGTH,
+                  }}
+                  creatable
+                  triggerSearchOnFocus
+                  hideClearAllButton
+                  maxSelected={MAX_SELECTIONS}
+                  errorMessage={t(
+                    'preferredClubSocieties.errors.maxSelections'
+                  )}
+                  onErrorStateChange={setSocietiesError}
+                  disabled={fieldsDisabled}
+                  loading={isSocietiesLoading}
+                  placeholder={t(
+                    'preferredClubSocieties.placeholders.clubSociety'
+                  )}
+                  emptyIndicator={
+                    <p className="px-3 pb-3 text-left text-sm text-slate-500">
+                      {t('preferredClubSocieties.empty.societies')}
+                    </p>
+                  }
+                />
+                {societiesCharLimitError && (
+                  <p className="text-destructive text-xs">
+                    {t('preferredClubSocieties.errors.maxCharacters')}
+                  </p>
+                )}
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <div className="flex h-5 items-center">
+                  <Label>{t('preferredClubSocieties.labels.startDate')}</Label>
+                </div>
+                <Popover
+                  modal
+                  open={openDatePopover === 'startDate'}
+                  onOpenChange={open =>
+                    setOpenDatePopover(
+                      !fieldsDisabled && open ? 'startDate' : null
+                    )
+                  }
+                >
+                  <PopoverTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={fieldsDisabled}
+                      className={cn(
+                        'border-input flex h-11 w-full items-center justify-between rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
+                        !entry.startDate && 'text-slate-500',
+                        entry.startDate && 'text-zinc-800',
+                        'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
+                        'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
+                        'dark:bg-input/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
+                        applyTypography('body-medium'),
+                        'shadow-none!'
+                      )}
                     >
-                      {t('preferredClubSocieties.labels.clubSociety')}
-                    </Label>
-                  </div>
-                  <MultipleSelector
-                    value={entry.clubSociety}
-                    onChange={options => {
+                      {entry.startDate
+                        ? formatDate(entry.startDate)
+                        : t('preferredClubSocieties.placeholders.startDate')}
+                      <CalendarIcon
+                        variant="Linear"
+                        size={20}
+                        className="text-zinc-800"
+                      />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={parseLocalDate(entry.startDate) ?? undefined}
+                      defaultMonth={
+                        parseLocalDate(entry.startDate) ||
+                        parseLocalDate(entry.endDate) ||
+                        new Date()
+                      }
+                      onSelect={date => {
+                        onUpdate(index, {
+                          startDate: date ? formatLocalDate(date) : undefined,
+                        });
+                        setOpenDatePopover(null);
+
+                        if (entry.endDate && date) {
+                          const endDate = parseLocalDate(entry.endDate);
+                          if (endDate != null && endDate < date) {
+                            onUpdate(index, { endDate: undefined });
+                          }
+                        }
+                      }}
+                      disabled={date =>
+                        date > new Date() || date < HUNDRED_YEARS_AGO
+                      }
+                      captionLayout="dropdown"
+                      startMonth={HUNDRED_YEARS_AGO}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <div className="flex h-5 items-center">
+                  <Label>{t('preferredClubSocieties.labels.endDate')}</Label>
+                </div>
+                <Popover
+                  modal
+                  open={openDatePopover === 'endDate'}
+                  onOpenChange={open =>
+                    setOpenDatePopover(
+                      !fieldsDisabled && open ? 'endDate' : null
+                    )
+                  }
+                >
+                  <PopoverTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={fieldsDisabled}
+                      className={cn(
+                        'border-input flex h-11 w-full items-center justify-between rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
+                        !entry.endDate && 'text-slate-500',
+                        entry.endDate && 'text-zinc-800',
+                        'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
+                        'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
+                        'dark:bg-input/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
+                        applyTypography('body-medium'),
+                        'shadow-none!'
+                      )}
+                    >
+                      {entry.endDate
+                        ? formatDate(entry.endDate)
+                        : t('preferredClubSocieties.placeholders.endDate')}
+                      <CalendarIcon
+                        variant="Linear"
+                        size={20}
+                        className="text-zinc-800"
+                      />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={parseLocalDate(entry.endDate) ?? undefined}
+                      defaultMonth={
+                        parseLocalDate(entry.endDate) ||
+                        parseLocalDate(entry.startDate) ||
+                        new Date()
+                      }
+                      onSelect={date => {
+                        onUpdate(index, {
+                          endDate: date ? formatLocalDate(date) : undefined,
+                        });
+                        setOpenDatePopover(null);
+                      }}
+                      disabled={date => {
+                        const startDate = parseLocalDate(entry.startDate);
+                        return (
+                          date < HUNDRED_YEARS_AGO ||
+                          date > HUNDRED_YEARS_FROM_NOW ||
+                          (startDate != null && date < startDate)
+                        );
+                      }}
+                      captionLayout="dropdown"
+                      startMonth={HUNDRED_YEARS_AGO}
+                      endMonth={HUNDRED_YEARS_FROM_NOW}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+
+            {/* Row 2: Represented Organization | Organization Location */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex flex-col gap-1">
+                <div className="flex h-5 items-center">
+                  <Label
+                    className={
+                      organizationsError ? 'text-destructive' : undefined
+                    }
+                  >
+                    {t('preferredClubSocieties.labels.representedOrganization')}
+                  </Label>
+                </div>
+                <MultipleSelector
+                  key={orgSelectorKey}
+                  value={entry.representedOrganization}
+                  onChange={options => {
+                    // Detect newly typed item (value === label means creatable)
+                    const newItem = options.find(o => o.value === o.label);
+                    if (newItem) {
+                      onRequestAddOrganization(index, newItem.label);
+                      // Don't add yet — dialog will handle it
+                    } else {
                       onUpdate(index, {
-                        clubSociety: options
+                        representedOrganization: options
                           .filter(
                             opt =>
                               typeof opt.value === 'string' &&
@@ -198,401 +435,119 @@ function ClubSocietyCard({
                           .map(opt => {
                             const source =
                               (opt.source as string) ?? 'USER_CREATED';
-                            const isCreatable =
-                              source === 'USER_CREATED' ||
-                              opt.value === opt.label;
 
                             return {
-                              value: isCreatable
-                                ? opt.value.slice(0, MAX_CLUB_SOCIETY_LENGTH)
-                                : opt.value,
-                              label: isCreatable
-                                ? opt.label.slice(0, MAX_CLUB_SOCIETY_LENGTH)
-                                : opt.label,
+                              value: opt.value,
+                              label: opt.label,
                               source,
                             };
                           }),
                       });
-                    }}
-                    options={societies.map(s => ({
-                      value: s.id,
-                      label: s.name || s.label || '',
-                      source: s.source,
-                    }))}
-                    onSearchSync={value => {
-                      const limitedSearch = value.slice(
-                        0,
-                        MAX_CLUB_SOCIETY_LENGTH
-                      );
-
-                      setSocietiesCharLimitError(
-                        value.length >= MAX_CLUB_SOCIETY_LENGTH
-                      );
-                      onUpdate(index, { clubSocietySearch: limitedSearch });
-                      onSocietiesSearch(limitedSearch);
-                      return societies.map(s => ({
-                        value: s.id,
-                        label: s.name || s.label || '',
-                        source: s.source,
-                      }));
-                    }}
-                    keepSelectedInList
-                    inputProps={{
-                      maxLength: MAX_CLUB_SOCIETY_LENGTH,
-                    }}
-                    creatable
-                    triggerSearchOnFocus
-                    hideClearAllButton
-                    maxSelected={MAX_SELECTIONS}
-                    errorMessage={t(
-                      'preferredClubSocieties.errors.maxSelections'
-                    )}
-                    onErrorStateChange={setSocietiesError}
-                    disabled={fieldsDisabled}
-                    loading={isSocietiesLoading}
-                    placeholder={t(
-                      'preferredClubSocieties.placeholders.clubSociety'
-                    )}
-                    emptyIndicator={
-                      <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                        {t('preferredClubSocieties.empty.societies')}
-                      </p>
                     }
-                  />
-                  {societiesCharLimitError && (
-                    <p className="text-destructive text-xs">
-                      {t('preferredClubSocieties.errors.maxCharacters')}
-                    </p>
-                  )}
-                </div>
-              )}
-
-              {isFieldVisible('startDate') && (
-                <div className="flex flex-col gap-1">
-                  <div className="flex h-5 items-center">
-                    <Label>
-                      {t('preferredClubSocieties.labels.startDate')}
-                    </Label>
-                  </div>
-                  <Popover
-                    modal
-                    open={openDatePopover === 'startDate'}
-                    onOpenChange={open =>
-                      setOpenDatePopover(
-                        !fieldsDisabled && open ? 'startDate' : null
-                      )
-                    }
-                  >
-                    <PopoverTrigger asChild>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        disabled={fieldsDisabled}
-                        className={cn(
-                          'border-input flex h-11 w-full items-center justify-between rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
-                          !entry.startDate && 'text-slate-500',
-                          entry.startDate && 'text-zinc-800',
-                          'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
-                          'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
-                          'dark:bg-input/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
-                          applyTypography('body-medium'),
-                          'shadow-none!'
-                        )}
-                      >
-                        {entry.startDate
-                          ? formatDate(entry.startDate)
-                          : t('preferredClubSocieties.placeholders.startDate')}
-                        <CalendarIcon
-                          variant="Linear"
-                          size={20}
-                          className="text-zinc-800"
-                        />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={parseLocalDate(entry.startDate) ?? undefined}
-                        defaultMonth={
-                          parseLocalDate(entry.startDate) ||
-                          parseLocalDate(entry.endDate) ||
-                          new Date()
-                        }
-                        onSelect={date => {
-                          onUpdate(index, {
-                            startDate: date ? formatLocalDate(date) : undefined,
-                          });
-                          setOpenDatePopover(null);
-
-                          if (entry.endDate && date) {
-                            const endDate = parseLocalDate(entry.endDate);
-                            if (endDate != null && endDate < date) {
-                              onUpdate(index, { endDate: undefined });
-                            }
-                          }
-                        }}
-                        disabled={date =>
-                          date > new Date() || date < HUNDRED_YEARS_AGO
-                        }
-                        captionLayout="dropdown"
-                        startMonth={HUNDRED_YEARS_AGO}
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-              )}
-
-              {isFieldVisible('endDate') && (
-                <div className="flex flex-col gap-1">
-                  <div className="flex h-5 items-center">
-                    <Label>{t('preferredClubSocieties.labels.endDate')}</Label>
-                  </div>
-                  <Popover
-                    modal
-                    open={openDatePopover === 'endDate'}
-                    onOpenChange={open =>
-                      setOpenDatePopover(
-                        !fieldsDisabled && open ? 'endDate' : null
-                      )
-                    }
-                  >
-                    <PopoverTrigger asChild>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        disabled={fieldsDisabled}
-                        className={cn(
-                          'border-input flex h-11 w-full items-center justify-between rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
-                          !entry.endDate && 'text-slate-500',
-                          entry.endDate && 'text-zinc-800',
-                          'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
-                          'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
-                          'dark:bg-input/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
-                          applyTypography('body-medium'),
-                          'shadow-none!'
-                        )}
-                      >
-                        {entry.endDate
-                          ? formatDate(entry.endDate)
-                          : t('preferredClubSocieties.placeholders.endDate')}
-                        <CalendarIcon
-                          variant="Linear"
-                          size={20}
-                          className="text-zinc-800"
-                        />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={parseLocalDate(entry.endDate) ?? undefined}
-                        defaultMonth={
-                          parseLocalDate(entry.endDate) ||
-                          parseLocalDate(entry.startDate) ||
-                          new Date()
-                        }
-                        onSelect={date => {
-                          onUpdate(index, {
-                            endDate: date ? formatLocalDate(date) : undefined,
-                          });
-                          setOpenDatePopover(null);
-                        }}
-                        disabled={date => {
-                          const startDate = parseLocalDate(entry.startDate);
-                          return (
-                            date < HUNDRED_YEARS_AGO ||
-                            date > HUNDRED_YEARS_FROM_NOW ||
-                            (startDate != null && date < startDate)
-                          );
-                        }}
-                        captionLayout="dropdown"
-                        startMonth={HUNDRED_YEARS_AGO}
-                        endMonth={HUNDRED_YEARS_FROM_NOW}
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-              )}
-            </div>
-
-            {/* Row 2: Represented Organization | Organization Location */}
-            <div className="grid grid-cols-2 gap-4">
-              {isFieldVisible('organization') && (
-                <div className="flex flex-col gap-1">
-                  <div className="flex items-center justify-between">
-                    <Label
-                      className={
-                        organizationsError ? 'text-destructive' : undefined
-                      }
-                    >
-                      {t(
-                        'preferredClubSocieties.labels.representedOrganization'
-                      )}
-                    </Label>
-                    <CharacterCount
-                      currentLength={orgSearchLength}
-                      maxLength={MAX_ORGANIZATION_LENGTH}
-                    />
-                  </div>
-                  <MultipleSelector
-                    key={orgSelectorKey}
-                    value={entry.representedOrganization}
-                    onChange={options => {
-                      // Detect newly typed item (value === label means creatable)
-                      const newItem = options.find(o => o.value === o.label);
-                      if (newItem) {
-                        onRequestAddOrganization(
-                          index,
-                          newItem.label.slice(0, MAX_ORGANIZATION_LENGTH)
-                        );
-                        // Don't add yet — dialog will handle it
-                      } else {
-                        onUpdate(index, {
-                          representedOrganization: options
-                            .filter(
-                              opt =>
-                                typeof opt.value === 'string' &&
-                                opt.value.length > 0
-                            )
-                            .map(opt => {
-                              const source =
-                                (opt.source as string) ?? 'USER_CREATED';
-                              const isCreatable =
-                                source === 'USER_CREATED' ||
-                                opt.value === opt.label;
-
-                              return {
-                                value: isCreatable
-                                  ? opt.value.slice(0, MAX_ORGANIZATION_LENGTH)
-                                  : opt.value,
-                                label: isCreatable
-                                  ? opt.label.slice(0, MAX_ORGANIZATION_LENGTH)
-                                  : opt.label,
-                                source,
-                              };
-                            }),
-                        });
-                      }
-                    }}
-                    options={organizations.map(o => ({
+                  }}
+                  options={organizations.map(o => ({
+                    value: o.id,
+                    label: o.name || o.label || '',
+                    source: o.source || 'MASTER',
+                  }))}
+                  onSearchSync={value => {
+                    onOrganizationsSearch(value);
+                    return organizations.map(o => ({
                       value: o.id,
                       label: o.name || o.label || '',
                       source: o.source || 'MASTER',
-                    }))}
-                    onSearchSync={value => {
-                      const limitedSearch = value.slice(
-                        0,
-                        MAX_ORGANIZATION_LENGTH
-                      );
+                    }));
+                  }}
+                  keepSelectedInList
+                  creatable
+                  triggerSearchOnFocus
+                  hideClearAllButton
+                  maxSelected={MAX_SELECTIONS}
+                  errorMessage={t(
+                    'preferredClubSocieties.errors.maxSelections'
+                  )}
+                  onErrorStateChange={setOrganizationsError}
+                  disabled={fieldsDisabled}
+                  loading={isOrganizationsLoading}
+                  placeholder={t(
+                    'preferredClubSocieties.placeholders.representedOrganization'
+                  )}
+                  emptyIndicator={
+                    <p className="px-3 pb-3 text-left text-sm text-slate-500">
+                      {t('preferredClubSocieties.empty.organizations')}
+                    </p>
+                  }
+                />
+              </div>
 
-                      setOrgSearchLength(limitedSearch.length);
-                      onOrganizationsSearch(limitedSearch);
-                      return organizations.map(o => ({
-                        value: o.id,
-                        label: o.name || o.label || '',
-                        source: o.source || 'MASTER',
-                      }));
-                    }}
-                    keepSelectedInList
-                    inputProps={{
-                      maxLength: MAX_ORGANIZATION_LENGTH,
-                    }}
-                    creatable
-                    triggerSearchOnFocus
-                    hideClearAllButton
-                    maxSelected={MAX_SELECTIONS}
-                    errorMessage={t(
-                      'preferredClubSocieties.errors.maxSelections'
-                    )}
-                    onErrorStateChange={setOrganizationsError}
-                    disabled={fieldsDisabled}
-                    loading={isOrganizationsLoading}
-                    placeholder={t(
-                      'preferredClubSocieties.placeholders.representedOrganization'
-                    )}
-                    emptyIndicator={
-                      <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                        {t('preferredClubSocieties.empty.organizations')}
-                      </p>
-                    }
-                  />
+              <div className="flex flex-col gap-1">
+                <div className="flex h-5 items-center">
+                  <Label
+                    className={locationsError ? 'text-destructive' : undefined}
+                  >
+                    {t('preferredClubSocieties.labels.organizationLocation')}
+                  </Label>
                 </div>
-              )}
-
-              {isFieldVisible('organizationLocations') && (
-                <div className="flex flex-col gap-1">
-                  <div className="flex h-5 items-center">
-                    <Label
-                      className={
-                        locationsError ? 'text-destructive' : undefined
-                      }
-                    >
-                      {t('preferredClubSocieties.labels.organizationLocation')}
-                    </Label>
-                  </div>
-                  <MultipleSelector
-                    value={entry.organizationLocations}
-                    onChange={options => {
-                      onUpdate(index, {
-                        organizationLocations: options.map(opt => ({
-                          value: opt.value,
-                          label: opt.label,
-                        })),
-                      });
-                    }}
-                    options={locationOptions}
-                    onSearchSync={value => {
-                      onLocationsSearch(value);
-                      return locationOptions;
-                    }}
-                    showArrow
-                    keepSelectedInList
-                    hideClearAllButton
-                    maxSelected={MAX_SELECTIONS}
-                    errorMessage={t(
-                      'preferredClubSocieties.errors.maxSelections'
-                    )}
-                    onErrorStateChange={setLocationsError}
-                    disabled={fieldsDisabled}
-                    loading={isLocationsLoading}
-                    placeholder={t(
-                      'preferredClubSocieties.placeholders.organizationLocation'
-                    )}
-                    emptyIndicator={
-                      <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                        {t('preferredClubSocieties.empty.locations')}
-                      </p>
-                    }
-                  />
-                </div>
-              )}
+                <MultipleSelector
+                  value={entry.organizationLocations}
+                  onChange={options => {
+                    onUpdate(index, {
+                      organizationLocations: options.map(opt => ({
+                        value: opt.value,
+                        label: opt.label,
+                      })),
+                    });
+                  }}
+                  options={locationOptions}
+                  onSearchSync={value => {
+                    onLocationsSearch(value);
+                    return locationOptions;
+                  }}
+                  showArrow
+                  keepSelectedInList
+                  hideClearAllButton
+                  maxSelected={MAX_SELECTIONS}
+                  errorMessage={t(
+                    'preferredClubSocieties.errors.maxSelections'
+                  )}
+                  onErrorStateChange={setLocationsError}
+                  disabled={fieldsDisabled}
+                  loading={isLocationsLoading}
+                  placeholder={t(
+                    'preferredClubSocieties.placeholders.organizationLocation'
+                  )}
+                  emptyIndicator={
+                    <p className="px-3 pb-3 text-left text-sm text-slate-500">
+                      {t('preferredClubSocieties.empty.locations')}
+                    </p>
+                  }
+                />
+              </div>
             </div>
 
             {/* Row 3: Position / Role Held */}
             <div className="grid grid-cols-4 gap-4">
-              {isFieldVisible('positionRoleHeld') && (
-                <div className="col-span-1 flex flex-col gap-1">
-                  <div className="flex items-center justify-between">
-                    <Label>{t('preferredClubSocieties.labels.position')}</Label>
-                    <CharacterCount
-                      currentLength={entry.position.length}
-                      maxLength={MAX_POSITION_LENGTH}
-                    />
-                  </div>
-                  <Input
-                    value={entry.position}
-                    onChange={e => {
-                      const sanitized = sanitizePlainText(e.target.value);
-                      onUpdate(index, { position: sanitized.trimStart() });
-                    }}
+              <div className="col-span-1 flex flex-col gap-1">
+                <div className="flex items-center justify-between">
+                  <Label>{t('preferredClubSocieties.labels.position')}</Label>
+                  <CharacterCount
+                    currentLength={entry.position.length}
                     maxLength={MAX_POSITION_LENGTH}
-                    placeholder={t(
-                      'preferredClubSocieties.placeholders.position'
-                    )}
-                    className="h-11"
                   />
                 </div>
-              )}
+                <Input
+                  value={entry.position}
+                  onChange={e => {
+                    const sanitized = sanitizePlainText(e.target.value);
+                    onUpdate(index, { position: sanitized.trimStart() });
+                  }}
+                  maxLength={MAX_POSITION_LENGTH}
+                  placeholder={t(
+                    'preferredClubSocieties.placeholders.position'
+                  )}
+                  className="h-11"
+                />
+              </div>
             </div>
           </div>
         </CollapsibleContent>
