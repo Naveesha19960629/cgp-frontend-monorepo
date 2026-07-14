@@ -925,6 +925,49 @@ describe('toVacancyFormFromResponse — secondary/tertiary/license/industry', ()
     );
   });
 
+  it('preserves isEnabled/dataTakenFromCandidate when the licensesAndCertifications wrapper has an empty nested array', () => {
+    // Regression test: real API responses send an empty nested array
+    // whenever dataTakenFromCandidate is true (there is no content to
+    // persist). The normalizer used to recurse into that empty array and
+    // lose the sibling isEnabled/dataTakenFromCandidate flags, resetting
+    // the edit form's switch/checkbox back to off.
+    const result = toVacancyFormFromResponse(
+      {
+        data: {
+          licensesAndCertifications: {
+            isEnabled: true,
+            dataTakenFromCandidate: true,
+            licensesAndCertifications: [],
+          },
+        },
+      },
+      { ...FALLBACK_FORM }
+    );
+
+    expect(result.licenseCertificates?.[0].isEnabled).toBe(true);
+    expect(result.licenseCertificates?.[0].dataTakenFromCandidate).toBe(true);
+    expect(result.licenseCertificates?.[0].content).toEqual([]);
+  });
+
+  it('preserves isEnabled/dataTakenFromCandidate when the licenseCertificates wrapper has an empty nested array', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        data: {
+          licenseCertificates: {
+            isEnabled: true,
+            dataTakenFromCandidate: true,
+            licenseCertificates: [],
+          },
+        },
+      },
+      { ...FALLBACK_FORM }
+    );
+
+    expect(result.licenseCertificates?.[0].isEnabled).toBe(true);
+    expect(result.licenseCertificates?.[0].dataTakenFromCandidate).toBe(true);
+    expect(result.licenseCertificates?.[0].content).toEqual([]);
+  });
+
   it('hydrates single group object under licenseCertificates key', () => {
     const result = toVacancyFormFromResponse(
       {

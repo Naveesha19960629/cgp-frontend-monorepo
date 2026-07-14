@@ -510,12 +510,18 @@ function normalizeLicenseCertificatesSection(
   if (isRecord(rawSection)) {
     if (Array.isArray(rawSection.licenseCertificates)) {
       if (
-        rawSection.licenseCertificates.length > 0 &&
-        isRecord(rawSection.licenseCertificates[0]) &&
-        (rawSection.licenseCertificates[0].nameOfLicenseCert !== undefined ||
-          rawSection.licenseCertificates[0].issuingOrganization !== undefined ||
-          rawSection.licenseCertificates[0].organizationLocations !== undefined)
+        rawSection.licenseCertificates.length === 0 ||
+        (isRecord(rawSection.licenseCertificates[0]) &&
+          (rawSection.licenseCertificates[0].nameOfLicenseCert !== undefined ||
+            rawSection.licenseCertificates[0].issuingOrganization !==
+              undefined ||
+            rawSection.licenseCertificates[0].organizationLocations !==
+              undefined))
       ) {
+        // An empty array has no groups to disambiguate — treat it as flat
+        // content so the sibling isEnabled/dataTakenFromCandidate flags
+        // (e.g. when dataTakenFromCandidate is true and content is always
+        // sent empty) aren't discarded by the recursive call below.
         return mapLicenseContentOnly(rawSection.licenseCertificates, {
           isEnabled: rawSection.isEnabled,
           dataTakenFromCandidate: rawSection.dataTakenFromCandidate,
@@ -530,15 +536,16 @@ function normalizeLicenseCertificatesSection(
 
     if (Array.isArray(rawSection.licensesAndCertifications)) {
       if (
-        rawSection.licensesAndCertifications.length > 0 &&
-        isRecord(rawSection.licensesAndCertifications[0]) &&
-        (rawSection.licensesAndCertifications[0].nameOfLicenseCert !==
-          undefined ||
-          rawSection.licensesAndCertifications[0].issuingOrganization !==
+        rawSection.licensesAndCertifications.length === 0 ||
+        (isRecord(rawSection.licensesAndCertifications[0]) &&
+          (rawSection.licensesAndCertifications[0].nameOfLicenseCert !==
             undefined ||
-          rawSection.licensesAndCertifications[0].organizationLocations !==
-            undefined)
+            rawSection.licensesAndCertifications[0].issuingOrganization !==
+              undefined ||
+            rawSection.licensesAndCertifications[0].organizationLocations !==
+              undefined))
       ) {
+        // Same empty-array disambiguation as above.
         return mapLicenseContentOnly(rawSection.licensesAndCertifications, {
           isEnabled: rawSection.isEnabled,
           dataTakenFromCandidate: rawSection.dataTakenFromCandidate,
