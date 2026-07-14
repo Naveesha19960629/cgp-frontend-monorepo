@@ -21,9 +21,9 @@ export default function VacancyStatusBadge({
     VACANCY_STATUS_CONFIG[key as keyof typeof VACANCY_STATUS_CONFIG] ??
     VACANCY_STATUS_FALLBACK_CONFIG;
   const statusLabel = config.labelKey ? t(config.labelKey) : status;
-  const isDraft = key === 'draft';
+  const hidesApplicantCount = key === 'draft' || key === 'unpublished';
   const label =
-    !isDraft && applicantCount !== undefined
+    !hidesApplicantCount && applicantCount !== undefined
       ? `${statusLabel} - ${applicantCount} ${t('vacancies.stepBadge.applicants')}`
       : statusLabel;
 

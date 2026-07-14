@@ -762,7 +762,11 @@ export default function PreferredVolunteeringStep({
 
   const handleToggle = () => {
     if (isEnabled) {
-      setConfirmDisableOpen(true);
+      if (canNavigate) {
+        setConfirmDisableOpen(true);
+      } else {
+        setIsEnabled(false);
+      }
     } else {
       setIsEnabled(true);
     }

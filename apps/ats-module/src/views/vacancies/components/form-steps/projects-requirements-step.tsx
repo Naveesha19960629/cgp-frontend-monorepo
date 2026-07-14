@@ -102,6 +102,7 @@ function ProjectCard({
   const isFieldVisible = useTemplateFieldVisible('projects');
   const [hasMaxError, setHasMaxError] = useState(false);
   const [locationsError, setLocationsError] = useState(false);
+  const [organizationsError, setOrganizationsError] = useState(false);
   const [industriesSearch, setIndustriesSearch] = useState('');
   const [openDatePopover, setOpenDatePopover] = useState<
     'startDate' | 'endDate' | null
@@ -453,7 +454,13 @@ function ProjectCard({
               {isFieldVisible('organization') && (
                 <div className="flex flex-col gap-1">
                   <div className="flex h-5 items-center">
-                    <Label>{t('projectsRequirements.organizationName')}</Label>
+                    <Label
+                      className={
+                        organizationsError ? 'text-destructive' : undefined
+                      }
+                    >
+                      {t('projectsRequirements.organizationName')}
+                    </Label>
                   </div>
                   <MultipleSelector
                     key={orgSelectorKey}
@@ -482,6 +489,10 @@ function ProjectCard({
                     triggerSearchOnFocus
                     hideClearAllButton
                     maxSelected={10}
+                    errorMessage={t(
+                      'projectsRequirements.errors.maxSelections'
+                    )}
+                    onErrorStateChange={setOrganizationsError}
                     disabled={fieldsDisabled}
                     loading={isOrganizationsLoading}
                     placeholder={t(
@@ -644,7 +655,11 @@ export default function ProjectsRequirementsStep({
 
   const handleToggle = () => {
     if (isEnabled) {
-      setConfirmDisableOpen(true);
+      if (canNavigate) {
+        setConfirmDisableOpen(true);
+      } else {
+        setIsEnabled(false);
+      }
     } else {
       setIsEnabled(true);
     }
