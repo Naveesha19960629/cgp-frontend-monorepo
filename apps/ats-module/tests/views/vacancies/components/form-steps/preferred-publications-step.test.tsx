@@ -595,7 +595,7 @@ describe('PreferredPublicationsStep', () => {
       expect(dialog).not.toBeInTheDocument();
     });
 
-    it('shows disable dialog when toggle is turned off while enabled', async () => {
+    it('does not show disable dialog when toggle is turned off with no data', async () => {
       const user = userEvent.setup();
       renderStep();
 
@@ -604,6 +604,28 @@ describe('PreferredPublicationsStep', () => {
       await user.click(toggle);
 
       expect(toggle).toHaveAttribute('aria-checked', 'true');
+
+      // Click toggle again to disable — nothing was filled in, so it should
+      // disable immediately without asking for confirmation.
+      await user.click(toggle);
+
+      expect(toggle).toHaveAttribute('aria-checked', 'false');
+      expect(screen.queryByTestId('disable-dialog')).not.toBeInTheDocument();
+    });
+
+    it('shows disable dialog when toggle is turned off with data present', async () => {
+      const user = userEvent.setup();
+      renderStep();
+
+      // Enable the toggle first
+      const toggle = screen.getByRole('switch');
+      await user.click(toggle);
+
+      // Fill in some data
+      const publisherInput = screen.getByPlaceholderText(
+        'Enter accepted publisher'
+      );
+      await user.type(publisherInput, 'IEEE');
 
       // Click toggle again to disable
       await user.click(toggle);

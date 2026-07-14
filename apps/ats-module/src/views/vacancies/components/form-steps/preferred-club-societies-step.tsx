@@ -813,7 +813,11 @@ export default function PreferredClubSocietiesStep({
 
   const handleToggle = () => {
     if (isEnabled) {
-      setConfirmDisableOpen(true);
+      if (canNavigate) {
+        setConfirmDisableOpen(true);
+      } else {
+        setIsEnabled(false);
+      }
     } else {
       setIsEnabled(true);
     }
