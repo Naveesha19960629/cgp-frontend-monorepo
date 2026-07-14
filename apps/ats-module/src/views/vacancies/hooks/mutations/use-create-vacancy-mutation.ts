@@ -8,8 +8,18 @@ const useCreateVacancyMutation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ form, status }: { form: VacancyForm; status?: string }) =>
-      vacancyService.createVacancy(toCreateVacancyPayload(form, status)),
+    mutationFn: ({
+      form,
+      status,
+      templateId,
+    }: {
+      form: VacancyForm;
+      status?: string;
+      templateId?: string;
+    }) =>
+      vacancyService.createVacancy(
+        toCreateVacancyPayload(form, status, templateId)
+      ),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['vacancies'] });
     },

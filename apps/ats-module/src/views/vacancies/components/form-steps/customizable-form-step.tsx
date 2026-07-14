@@ -790,6 +790,40 @@ export default function CustomizableFormStep({
     };
   }, [setForm, stepDisableRef]);
 
+  // Mirror the enabled toggle into the shared form context immediately. The
+  // step's local edits are otherwise only pushed to context on navigation
+  // (Next / step change), so a save triggered from a later step (e.g. Schedule)
+  // could persist a stale *enabled* section after the recruiter turned it off.
+  // Keying on `isEnabled` guarantees every on/off flip propagates; turning it
+  // off also clears the section so no stale form data reaches the API.
+  useEffect(() => {
+    setForm(prev => {
+      const current = prev.customizableForm;
+      if (!isEnabled) {
+        if (
+          current &&
+          !current.isEnabled &&
+          (current.forms?.length ?? 0) === 0
+        ) {
+          return prev;
+        }
+        return {
+          ...prev,
+          customizableForm: { isEnabled: false, sectionTitle: '', forms: [] },
+        };
+      }
+      if (current?.isEnabled) return prev;
+      return {
+        ...prev,
+        customizableForm: {
+          isEnabled: true,
+          sectionTitle: current?.sectionTitle ?? '',
+          forms: current?.forms ?? [],
+        },
+      };
+    });
+  }, [isEnabled, setForm]);
+
   useStepGuard(isEnabled && !sectionTitle.trim() && forms.every(isFormEmpty));
 
   useEffect(() => {
@@ -1190,11 +1224,11 @@ export default function CustomizableFormStep({
                 className="rounded-xl border border-neutral-300 bg-white p-5 shadow-[0px_4px_90px_0px_rgba(0,0,0,0.07)]"
               >
                 {/* Card action buttons */}
-                <div className="flex items-center justify-between">
-                  <p className="text-base leading-6 font-bold text-slate-900">
+                <div className="flex items-start justify-between gap-3">
+                  <p className="min-w-0 flex-1 text-base leading-6 font-bold wrap-break-word text-slate-900">
                     {displayFormTitle}
                   </p>
-                  <div className="flex items-center gap-3 text-slate-500">
+                  <div className="flex shrink-0 items-center gap-3 text-slate-500">
                     <button
                       type="button"
                       aria-label="Duplicate form"
@@ -1334,6 +1368,13 @@ export default function CustomizableFormStep({
           setForms([createForm(1)]);
           setNextFormId(2);
           setIsEnabled(false);
+          // Persist the disabled/cleared state to the shared form context right
+          // away so a save triggered without re-visiting this step (e.g. via the
+          // step navigator) still sends the section as disabled with no data.
+          setForm(prev => ({
+            ...prev,
+            customizableForm: { isEnabled: false, sectionTitle: '', forms: [] },
+          }));
           removeCompletedStep(currentStepIndex);
           setShowDisableConfirm(false);
           showDisableToast(t('customizableForm.title'));

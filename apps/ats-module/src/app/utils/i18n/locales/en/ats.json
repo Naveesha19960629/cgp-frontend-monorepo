@@ -21,6 +21,9 @@
       "title": "No Search Results Found",
       "descriptionLine1": "No matching vacancy templates found.",
       "descriptionLine2": "Try adjusting your keywords or using broader search terms"
+    },
+    "useTemplate": {
+      "failedToLoadTemplate": "Failed to load the selected template. Please try again."
     }
   },
   "createTemplate": {
@@ -983,7 +986,7 @@
       "typeToSearch": "Type to search skills…"
     },
     "validation": {
-      "maxSkills": "Exceeded maximum of {{max}} skills"
+      "maxSkills": "Exceeded maximum of {{max}} selections"
     },
     "chip": {
       "remove": "Remove {{name}}"
@@ -1023,7 +1026,7 @@
       "typeToSearch": "Type to search languages…"
     },
     "validation": {
-      "maxLanguages": "Exceeded maximum of {{max}} languages"
+      "maxLanguages": "Exceeded maximum of {{max}} selections"
     },
     "chip": {
       "remove": "Remove {{name}}"
@@ -1051,7 +1054,7 @@
       "typeToSearch": "Type to search causes…"
     },
     "validation": {
-      "maxCauses": "Exceeded maximum of {{max}} causes"
+      "maxCauses": "Exceeded maximum of {{max}} selections"
     },
     "chip": {
       "remove": "Remove {{name}}"
@@ -1079,7 +1082,7 @@
       "typeToSearch": "Type to search hobbies…"
     },
     "validation": {
-      "maxHobbies": "Exceeded maximum of {{max}} hobbies"
+      "maxHobbies": "Exceeded maximum of {{max}} selections"
     },
     "chip": {
       "remove": "Remove {{name}}"
@@ -1107,7 +1110,7 @@
       "typeToSearch": "Type to search industries…"
     },
     "validation": {
-      "maxIndustries": "Exceeded maximum of {{max}} industries"
+      "maxIndustries": "Exceeded maximum of {{max}} selections"
     },
     "chip": {
       "remove": "Remove {{name}}"

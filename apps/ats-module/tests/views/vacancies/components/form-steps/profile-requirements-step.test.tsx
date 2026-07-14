@@ -129,6 +129,7 @@ vi.mock(
     return {
       ...actual,
       useVacancyForm: mockUseVacancyForm,
+      useTemplateFieldVisible: () => () => true,
     };
   }
 );

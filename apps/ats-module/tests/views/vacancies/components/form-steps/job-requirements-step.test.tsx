@@ -134,6 +134,7 @@ vi.mock('@/components/message-box', () => ({
 }));
 
 vi.mock('@/views/vacancies/context/vacancy-form-context', () => ({
+  useTemplateFieldVisible: () => () => true,
   useVacancyForm: mockUseVacancyForm,
 }));
 

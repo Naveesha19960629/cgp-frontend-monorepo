@@ -44,6 +44,7 @@ const {
 });
 
 vi.mock('@/views/vacancies/context/vacancy-form-context', () => ({
+  useTemplateFieldVisible: () => () => true,
   useVacancyForm: () => ({
     form: stableForm,
     setForm: mockSetForm,
