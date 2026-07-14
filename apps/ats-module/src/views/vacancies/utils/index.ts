@@ -38,7 +38,11 @@ export {
   toCreateVacancyPayload,
   toUpdateVacancyPayload,
 } from '@/views/vacancies/utils/vacancy-payload-helpers';
-export { toVacancyFormFromResponse } from '@/views/vacancies/utils/vacancy-edit-response-helpers';
+export {
+  toVacancyFormFromResponse,
+  normalizeCustomizableFormSection,
+} from '@/views/vacancies/utils/vacancy-edit-response-helpers';
+export { toVacancyFormFromTemplateUsePayload } from '@/views/vacancies/utils/vacancy-template-use-helpers';
 export { toVacancyViewModel } from '@/views/vacancies/utils/vacancy-view-response-helpers';
 export {
   sanitizePlainText,
@@ -47,10 +51,16 @@ export {
 export {
   TEMPLATE_SECTIONS,
   TEMPLATE_NAME_MAX_LENGTH,
+  SECTION_KEY_TO_STEP_KEY,
+  MANDATORY_TEMPLATE_STEP_KEYS,
 } from '@/views/vacancies/utils/vacancy-template-config';
 export {
   createInitialTemplateFormState,
   hasAnySelection,
   toCreateTemplatePayload,
 } from '@/views/vacancies/utils/vacancy-template-payload-helpers';
+export {
+  getSectionTitleKey,
+  getFieldLabelKey,
+} from '@/views/vacancies/utils/job-description-field-labels';
 export type { CreateVacancyPayload } from '@/views/vacancies/types';

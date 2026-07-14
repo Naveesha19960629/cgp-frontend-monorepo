@@ -37,6 +37,7 @@ vi.mock('react-i18next', () => ({
 
 const onCancel = vi.hoisted(() => vi.fn());
 vi.mock('@/views/vacancies/context/vacancy-form-context', () => ({
+  useTemplateFieldVisible: () => () => true,
   useVacancyForm: () => ({
     form: {},
     onCancel,

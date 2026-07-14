@@ -14,6 +14,10 @@ import { Input } from '@cgp/ui-kit/components/ui/input';
 import { Label } from '@cgp/ui-kit/components/ui/label';
 import { removeEmoji } from '@cgp/ui-kit/lib/utils';
 
+/**
+ * Initial "enter the vacancy title" screen shown before the wizard. Shared by the
+ * plain create flow and the Use Template flow (see new-vacancy-from-template-page).
+ */
 function VacancyTitleStep() {
   const navigate = useNavigate();
   const { form, setForm, onNext } = useVacancyForm();
@@ -114,7 +118,7 @@ function NewVacancyContent() {
   );
 }
 
-export default function NewVacancyPage() {
+function NewVacancyPage() {
   return (
     <VacancyFormProvider>
       <section className="flex min-h-0 flex-1 flex-col overflow-hidden">
@@ -123,3 +127,6 @@ export default function NewVacancyPage() {
     </VacancyFormProvider>
   );
 }
+
+export { VacancyTitleStep };
+export default NewVacancyPage;

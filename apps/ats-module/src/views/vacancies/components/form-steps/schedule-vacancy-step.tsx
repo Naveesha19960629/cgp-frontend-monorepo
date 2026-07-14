@@ -50,6 +50,7 @@ export default function ScheduleVacancyStep({
     onCancel,
     stepPersistRef,
     resolveFormUserCreatedEntries,
+    templateId,
   } = useVacancyForm();
 
   const {
@@ -126,7 +127,12 @@ export default function ScheduleVacancyStep({
   const hasPastScheduleDateTime = useMemo(() => {
     if (form.status === 'expired') return false;
 
-    if (!isScheduleChanged) {
+    // An on-hold vacancy's scheduled date is a promise to publish in the
+    // future, so an already-lapsed date is invalid and must be rescheduled —
+    // evaluate the past-date check even when the schedule is unchanged. For
+    // other statuses (e.g. live/active) an unchanged, already-past publish date
+    // is expected, so skip the check to avoid blocking edits to other fields.
+    if (!isScheduleChanged && form.status !== 'on_hold') {
       return false;
     }
 
@@ -290,6 +296,7 @@ export default function ScheduleVacancyStep({
         await createVacancy({
           form: payloadForm,
           status: targetApiStatus,
+          templateId,
         });
       }
       SuccessToast({

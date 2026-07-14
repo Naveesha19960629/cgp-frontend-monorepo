@@ -27,6 +27,7 @@ vi.mock('@cgp/ui-kit/assets/images/delete-confirm-avator.svg', () => ({
 }));
 
 vi.mock('@/views/vacancies/context/vacancy-form-context', () => ({
+  useTemplateFieldVisible: () => () => true,
   useVacancyForm: mockUseVacancyForm,
 }));
 

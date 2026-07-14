@@ -89,6 +89,7 @@ vi.mock('@/views/vacancies/components/vacancy-status-badge', () => ({
 }));
 
 vi.mock('@/views/vacancies/context/vacancy-form-context', () => ({
+  useTemplateFieldVisible: () => () => true,
   useVacancyForm: () => ({
     form: {
       licenseCertificates: [

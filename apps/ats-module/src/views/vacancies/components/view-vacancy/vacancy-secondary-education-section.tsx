@@ -1,4 +1,4 @@
-import { Clock, DocumentText, Star, TickSquare } from 'iconsax-reactjs';
+import { Autobrightness, Clock, Home, TaskSquare } from 'iconsax-reactjs';
 
 import { useTranslation } from 'react-i18next';
 
@@ -47,7 +47,7 @@ function VacancySecondaryEducationSection({
                     {entry.grade && (
                       <VacancyView.InfoRow
                         icon={
-                          <Star
+                          <Autobrightness
                             size={20}
                             className="text-slate-600"
                             variant="Bold"
@@ -72,7 +72,7 @@ function VacancySecondaryEducationSection({
                     {entry.result && (
                       <VacancyView.InfoRow
                         icon={
-                          <DocumentText
+                          <TaskSquare
                             size={20}
                             className="text-slate-600"
                             variant="Bold"
@@ -84,7 +84,7 @@ function VacancySecondaryEducationSection({
                     )}
                     {entry.acceptsHomeSchooling && (
                       <div className="flex items-center gap-1 text-sm">
-                        <TickSquare
+                        <Home
                           size={20}
                           className="text-slate-600"
                           variant="Bold"

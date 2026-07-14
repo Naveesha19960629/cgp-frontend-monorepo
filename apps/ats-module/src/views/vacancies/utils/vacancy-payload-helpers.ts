@@ -515,12 +515,15 @@ function mapIndustry(form: VacancyForm): IndustryApiPayload {
 }
 
 function mapCustomizedForm(form: VacancyForm): CustomizedFormApiPayload {
-  if (!form.customizableForm) {
+  // A disabled section carries no data — always serialize it as fully cleared so
+  // stale forms/title left in context (e.g. from a persisted step snapshot) can
+  // never reach the API and make the section look enabled on the backend.
+  if (!form.customizableForm?.isEnabled) {
     return { isEnabled: false, sectionTitle: null, forms: [] };
   }
 
   return {
-    isEnabled: form.customizableForm.isEnabled,
+    isEnabled: true,
     sectionTitle: form.customizableForm.sectionTitle || null,
     forms: form.customizableForm.forms.map((f, formIdx) => ({
       title: f.title,
@@ -568,6 +571,14 @@ function mapLicensesAndCertifications(
   }
 
   return form.licenseCertificates.map(lc => {
+    if (lc.dataTakenFromCandidate) {
+      return {
+        isEnabled: lc.isEnabled,
+        dataTakenFromCandidate: true,
+        content: [],
+      };
+    }
+
     return {
       isEnabled: lc.isEnabled,
       dataTakenFromCandidate: lc.dataTakenFromCandidate,
@@ -685,9 +696,11 @@ function toVacancyPayload(
 
 function toCreateVacancyPayload(
   form: VacancyForm,
-  status = 'UNPUBLISHED'
+  status = 'UNPUBLISHED',
+  templateId?: string
 ): CreateVacancyPayload {
-  return toVacancyPayload(form, status);
+  const payload = toVacancyPayload(form, status);
+  return templateId ? { ...payload, templateId } : payload;
 }
 
 function toUpdateVacancyPayload(

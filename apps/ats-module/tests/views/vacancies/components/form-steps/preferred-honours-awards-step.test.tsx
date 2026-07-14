@@ -67,6 +67,7 @@ vi.mock('@/views/vacancies', async importOriginal => {
 });
 
 vi.mock('@/views/vacancies/context/vacancy-form-context', () => ({
+  useTemplateFieldVisible: () => () => true,
   useVacancyForm: mockUseVacancyForm,
   VACANCY_STEPS: [],
   VacancyFormProvider: ({ children }: { children: React.ReactNode }) =>

@@ -1,6 +1,7 @@
 export { useGendersQuery } from '@/views/vacancies/hooks/queries/use-gender-query';
 export { useNextTemplateNameQuery } from '@/views/vacancies/hooks/queries/use-next-template-name-query';
 export { useVacancyTemplatesQuery } from '@/views/vacancies/hooks/queries/use-vacancy-templates-query';
+export { useVacancyTemplateByIdQuery } from '@/views/vacancies/hooks/queries/use-vacancy-template-by-id-query';
 export {
   useIndustriesQuery,
   useIndustriesSearch,
@@ -101,3 +102,7 @@ export {
 export { useVacanciesQuery } from '@/views/vacancies/hooks/queries/use-vacancies-query';
 export { useVacancyByIdQuery } from '@/views/vacancies/hooks/queries/use-vacancy-by-id-query';
 export { useVacancyFilterOptionsQuery } from '@/views/vacancies/hooks/queries/use-vacancy-filter-options-query';
+export {
+  useVacancyJobDescriptionQuery,
+  VACANCY_JOB_DESCRIPTION_QUERY_KEY,
+} from '@/views/vacancies/hooks/queries/use-vacancy-job-description-query';

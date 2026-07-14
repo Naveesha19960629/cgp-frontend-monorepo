@@ -361,7 +361,9 @@ export function Combobox({
                         {option.value === value && (
                           <CheckIcon className="size-4 shrink-0 grow-0" />
                         )}
-                        <p className="block min-w-0 truncate">{option.label}</p>
+                        <p className="block min-w-0 wrap-break-word whitespace-normal">
+                          {option.label}
+                        </p>
                       </CommandItem>
                     ))}
                   </CommandGroup>

@@ -10,7 +10,10 @@ import { useTranslation } from 'react-i18next';
 import MessageBox from '@/components/message-box';
 import StepDisableDialog from '@/views/vacancies/components/step-disable-dialog';
 import VacancyStatusBadge from '@/views/vacancies/components/vacancy-status-badge';
-import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
+import {
+  useTemplateFieldVisible,
+  useVacancyForm,
+} from '@/views/vacancies/context/vacancy-form-context';
 import { useStepGuard } from '@/views/vacancies/hooks';
 import type { StepProps } from '@/views/vacancies/types';
 import { formatDate, sanitizePlainText } from '@/views/vacancies/utils';
@@ -78,6 +81,7 @@ function PublicationCard({
   fieldsDisabled: boolean;
 }>) {
   const { t } = useTranslation('ats');
+  const isFieldVisible = useTemplateFieldVisible('publications');
 
   return (
     <Collapsible
@@ -122,203 +126,210 @@ function PublicationCard({
           >
             {/* Row 1: Accepted Publisher | Published Date From | Published Date To */}
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-              <div className="flex min-w-0 flex-col gap-1">
-                <div className="flex items-center justify-between gap-2">
-                  <Label className="min-w-0">
-                    {t('preferredPublications.labels.acceptedPublisher')}
-                  </Label>
-                  <CharacterCount
-                    currentLength={publication.acceptedPublisher.length}
+              {isFieldVisible('acceptedPublisherName') && (
+                <div className="flex min-w-0 flex-col gap-1">
+                  <div className="flex items-center justify-between gap-2">
+                    <Label className="min-w-0">
+                      {t('preferredPublications.labels.acceptedPublisher')}
+                    </Label>
+                    <CharacterCount
+                      currentLength={publication.acceptedPublisher.length}
+                      maxLength={MAX_PUBLISHER_LENGTH}
+                    />
+                  </div>
+                  <Input
+                    value={publication.acceptedPublisher}
+                    onChange={e => {
+                      const sanitized = sanitizePlainText(e.target.value);
+                      onUpdate(index, {
+                        acceptedPublisher: sanitized.trimStart(),
+                      });
+                    }}
                     maxLength={MAX_PUBLISHER_LENGTH}
+                    placeholder={t(
+                      'preferredPublications.placeholders.acceptedPublisher'
+                    )}
+                    className="h-11"
                   />
                 </div>
-                <Input
-                  value={publication.acceptedPublisher}
-                  onChange={e => {
-                    const sanitized = sanitizePlainText(e.target.value);
-                    onUpdate(index, {
-                      acceptedPublisher: sanitized.trimStart(),
-                    });
-                  }}
-                  maxLength={MAX_PUBLISHER_LENGTH}
-                  placeholder={t(
-                    'preferredPublications.placeholders.acceptedPublisher'
-                  )}
-                  className="h-11"
-                />
-              </div>
+              )}
 
-              <div className="flex min-w-0 flex-col gap-1">
-                <div className="flex min-h-5 items-center">
-                  <Label>
-                    {t('preferredPublications.labels.publishedDateFrom')}
-                  </Label>
-                </div>
-                <Popover
-                  modal
-                  open={publication.openDatePopover === 'publishedDateFrom'}
-                  onOpenChange={open =>
-                    onUpdate(index, {
-                      openDatePopover:
-                        !fieldsDisabled && open ? 'publishedDateFrom' : null,
-                    })
-                  }
-                >
-                  <PopoverTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      disabled={fieldsDisabled}
-                      className={cn(
-                        'border-input flex h-11 w-full min-w-0 items-center justify-between gap-2 rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
-                        !publication.publishedDateFrom && 'text-slate-500',
-                        publication.publishedDateFrom && 'text-zinc-800',
-                        'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
-                        'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
-                        'dark:bg-input/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
-                        applyTypography('body-medium'),
-                        'shadow-none!'
-                      )}
-                    >
-                      <span className="min-w-0 truncate text-left">
-                        {publication.publishedDateFrom
-                          ? formatDate(publication.publishedDateFrom)
-                          : t(
-                              'preferredPublications.placeholders.publishedDateFrom'
-                            )}
-                      </span>
-                      <CalendarIcon
-                        variant="Linear"
-                        size={20}
-                        className="shrink-0 text-zinc-800"
-                      />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={
-                        parseLocalDate(publication.publishedDateFrom) ??
-                        undefined
-                      }
-                      defaultMonth={
-                        parseLocalDate(publication.publishedDateFrom) ||
-                        parseLocalDate(publication.publishedDateTo) ||
-                        new Date()
-                      }
-                      onSelect={date => {
-                        onUpdate(index, {
-                          publishedDateFrom: date
-                            ? formatLocalDate(date)
-                            : undefined,
-                        });
-                        onUpdate(index, { openDatePopover: null });
-
-                        if (publication.publishedDateTo && date) {
-                          const toDate = parseLocalDate(
-                            publication.publishedDateTo
-                          );
-                          if (toDate != null && toDate < date) {
-                            onUpdate(index, { publishedDateTo: undefined });
-                          }
+              {isFieldVisible('publishedDateFrom') && (
+                <div className="flex min-w-0 flex-col gap-1">
+                  <div className="flex min-h-5 items-center">
+                    <Label>
+                      {t('preferredPublications.labels.publishedDateFrom')}
+                    </Label>
+                  </div>
+                  <Popover
+                    modal
+                    open={publication.openDatePopover === 'publishedDateFrom'}
+                    onOpenChange={open =>
+                      onUpdate(index, {
+                        openDatePopover:
+                          !fieldsDisabled && open ? 'publishedDateFrom' : null,
+                      })
+                    }
+                  >
+                    <PopoverTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled={fieldsDisabled}
+                        className={cn(
+                          'border-input flex h-11 w-full min-w-0 items-center justify-between gap-2 rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
+                          !publication.publishedDateFrom && 'text-slate-500',
+                          publication.publishedDateFrom && 'text-zinc-800',
+                          'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
+                          'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
+                          'dark:bg-input/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
+                          applyTypography('body-medium'),
+                          'shadow-none!'
+                        )}
+                      >
+                        <span className="min-w-0 truncate text-left">
+                          {publication.publishedDateFrom
+                            ? formatDate(publication.publishedDateFrom)
+                            : t(
+                                'preferredPublications.placeholders.publishedDateFrom'
+                              )}
+                        </span>
+                        <CalendarIcon
+                          variant="Linear"
+                          size={20}
+                          className="shrink-0 text-zinc-800"
+                        />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={
+                          parseLocalDate(publication.publishedDateFrom) ??
+                          undefined
                         }
-                      }}
-                      disabled={date =>
-                        isAfter(startOfDay(date), TODAY) ||
-                        isBeforeMinDate(date)
-                      }
-                      captionLayout="dropdown"
-                      startMonth={HUNDRED_YEARS_AGO}
-                      endMonth={TODAY}
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
+                        defaultMonth={
+                          parseLocalDate(publication.publishedDateFrom) ||
+                          parseLocalDate(publication.publishedDateTo) ||
+                          new Date()
+                        }
+                        onSelect={date => {
+                          onUpdate(index, {
+                            publishedDateFrom: date
+                              ? formatLocalDate(date)
+                              : undefined,
+                          });
+                          onUpdate(index, { openDatePopover: null });
 
-              <div className="flex min-w-0 flex-col gap-1">
-                <div className="flex min-h-5 items-center">
-                  <Label>
-                    {t('preferredPublications.labels.publishedDateTo')}
-                  </Label>
-                </div>
-                <Popover
-                  modal
-                  open={publication.openDatePopover === 'publishedDateTo'}
-                  onOpenChange={open =>
-                    onUpdate(index, {
-                      openDatePopover:
-                        !fieldsDisabled && open ? 'publishedDateTo' : null,
-                    })
-                  }
-                >
-                  <PopoverTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      disabled={fieldsDisabled}
-                      className={cn(
-                        'border-input flex h-11 w-full min-w-0 items-center justify-between gap-2 rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
-                        !publication.publishedDateTo && 'text-slate-500',
-                        publication.publishedDateTo && 'text-zinc-800',
-                        'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
-                        'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
-                        'dark:bg-input/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
-                        applyTypography('body-medium'),
-                        'shadow-none!'
-                      )}
-                    >
-                      <span className="min-w-0 truncate text-left">
-                        {publication.publishedDateTo
-                          ? formatDate(publication.publishedDateTo)
-                          : t(
-                              'preferredPublications.placeholders.publishedDateTo'
-                            )}
-                      </span>
-                      <CalendarIcon
-                        variant="Linear"
-                        size={20}
-                        className="shrink-0 text-zinc-800"
+                          if (publication.publishedDateTo && date) {
+                            const toDate = parseLocalDate(
+                              publication.publishedDateTo
+                            );
+                            if (toDate != null && toDate < date) {
+                              onUpdate(index, { publishedDateTo: undefined });
+                            }
+                          }
+                        }}
+                        disabled={date =>
+                          isAfter(startOfDay(date), TODAY) ||
+                          isBeforeMinDate(date)
+                        }
+                        captionLayout="dropdown"
+                        startMonth={HUNDRED_YEARS_AGO}
+                        endMonth={TODAY}
                       />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={
-                        parseLocalDate(publication.publishedDateTo) ?? undefined
-                      }
-                      defaultMonth={
-                        parseLocalDate(publication.publishedDateTo) ||
-                        parseLocalDate(publication.publishedDateFrom) ||
-                        new Date()
-                      }
-                      onSelect={date => {
-                        onUpdate(index, {
-                          publishedDateTo: date
-                            ? formatLocalDate(date)
-                            : undefined,
-                        });
-                        onUpdate(index, { openDatePopover: null });
-                      }}
-                      disabled={date => {
-                        const day = startOfDay(date);
-                        const fromDate = parseLocalDate(
-                          publication.publishedDateFrom
-                        );
-                        return (
-                          isBeforeMinDate(date) ||
-                          isAfter(day, HUNDRED_YEARS_FROM_NOW) ||
-                          (fromDate != null &&
-                            isBefore(day, startOfDay(fromDate)))
-                        );
-                      }}
-                      captionLayout="dropdown"
-                      startMonth={HUNDRED_YEARS_AGO}
-                      endMonth={HUNDRED_YEARS_FROM_NOW}
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              )}
+
+              {isFieldVisible('publishedDateTo') && (
+                <div className="flex min-w-0 flex-col gap-1">
+                  <div className="flex min-h-5 items-center">
+                    <Label>
+                      {t('preferredPublications.labels.publishedDateTo')}
+                    </Label>
+                  </div>
+                  <Popover
+                    modal
+                    open={publication.openDatePopover === 'publishedDateTo'}
+                    onOpenChange={open =>
+                      onUpdate(index, {
+                        openDatePopover:
+                          !fieldsDisabled && open ? 'publishedDateTo' : null,
+                      })
+                    }
+                  >
+                    <PopoverTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled={fieldsDisabled}
+                        className={cn(
+                          'border-input flex h-11 w-full min-w-0 items-center justify-between gap-2 rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
+                          !publication.publishedDateTo && 'text-slate-500',
+                          publication.publishedDateTo && 'text-zinc-800',
+                          'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
+                          'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
+                          'dark:bg-input/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
+                          applyTypography('body-medium'),
+                          'shadow-none!'
+                        )}
+                      >
+                        <span className="min-w-0 truncate text-left">
+                          {publication.publishedDateTo
+                            ? formatDate(publication.publishedDateTo)
+                            : t(
+                                'preferredPublications.placeholders.publishedDateTo'
+                              )}
+                        </span>
+                        <CalendarIcon
+                          variant="Linear"
+                          size={20}
+                          className="shrink-0 text-zinc-800"
+                        />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={
+                          parseLocalDate(publication.publishedDateTo) ??
+                          undefined
+                        }
+                        defaultMonth={
+                          parseLocalDate(publication.publishedDateTo) ||
+                          parseLocalDate(publication.publishedDateFrom) ||
+                          new Date()
+                        }
+                        onSelect={date => {
+                          onUpdate(index, {
+                            publishedDateTo: date
+                              ? formatLocalDate(date)
+                              : undefined,
+                          });
+                          onUpdate(index, { openDatePopover: null });
+                        }}
+                        disabled={date => {
+                          const day = startOfDay(date);
+                          const fromDate = parseLocalDate(
+                            publication.publishedDateFrom
+                          );
+                          return (
+                            isBeforeMinDate(date) ||
+                            isAfter(day, HUNDRED_YEARS_FROM_NOW) ||
+                            (fromDate != null &&
+                              isBefore(day, startOfDay(fromDate)))
+                          );
+                        }}
+                        captionLayout="dropdown"
+                        startMonth={HUNDRED_YEARS_AGO}
+                        endMonth={HUNDRED_YEARS_FROM_NOW}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              )}
             </div>
           </div>
         </CollapsibleContent>

@@ -4,10 +4,12 @@ import AtsProtectedRoute from '@/app/components/protected-route';
 import { UserProvider } from '@/app/contexts/user-context';
 import { addAtsTranslations } from '@/app/utils/i18n';
 import {
+  NewVacancyFromTemplatePage,
   NewVacancyPage,
   NewVacancyTemplatePage,
   TemplatesPage,
   VacanciesPage,
+  VacancyIdEditJdPage,
   VacancyIdEditPage,
   VacancyIdViewPage,
 } from '@/views/vacancies';
@@ -32,8 +34,13 @@ function AtsRoutes() {
         <Route index element={<VacanciesPage />} />
         <Route path="vacancies" element={<VacanciesPage />} />
         <Route path="vacancies/new" element={<NewVacancyPage />} />
+        <Route
+          path="vacancies/from-template/:templateId"
+          element={<NewVacancyFromTemplatePage />}
+        />
         <Route path="vacancies/:id/edit" element={<VacancyIdEditPage />} />
         <Route path="vacancies/:id/view" element={<VacancyIdViewPage />} />
+        <Route path="vacancies/:id/edit-jd" element={<VacancyIdEditJdPage />} />
         <Route path="find-candidate" element={<div>Find Candidate</div>} />
         <Route path="templates" element={<TemplatesPage />} />
         <Route path="templates/new" element={<NewVacancyTemplatePage />} />
@@ -57,8 +64,13 @@ function createStandaloneRouter() {
         { index: true, element: <VacanciesPage /> },
         { path: 'vacancies', element: <VacanciesPage /> },
         { path: 'vacancies/new', element: <NewVacancyPage /> },
+        {
+          path: 'vacancies/from-template/:templateId',
+          element: <NewVacancyFromTemplatePage />,
+        },
         { path: 'vacancies/:id/edit', element: <VacancyIdEditPage /> },
         { path: 'vacancies/:id/view', element: <VacancyIdViewPage /> },
+        { path: 'vacancies/:id/edit-jd', element: <VacancyIdEditJdPage /> },
         { path: 'find-candidate', element: <div>Find Candidate</div> },
         { path: 'templates', element: <TemplatesPage /> },
         { path: 'templates/new', element: <NewVacancyTemplatePage /> },

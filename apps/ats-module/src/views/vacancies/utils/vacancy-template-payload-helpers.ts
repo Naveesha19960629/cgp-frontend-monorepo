@@ -5,7 +5,10 @@ import type {
   TemplateSectionData,
   TemplateSectionState,
 } from '@/views/vacancies/types';
-import { TEMPLATE_SECTIONS } from '@/views/vacancies/utils/vacancy-template-config';
+import {
+  AUTO_INCLUDED_SECTION_FIELD_CODES,
+  TEMPLATE_SECTIONS,
+} from '@/views/vacancies/utils/vacancy-template-config';
 
 /** Builds the initial form state: all toggles off, all checkboxes unchecked. */
 export function createInitialTemplateFormState(): TemplateFormState {
@@ -72,6 +75,20 @@ export function toCreateTemplatePayload(
 
     const fieldRequest = toFieldRequest(sectionState);
     data[section.key] = section.kind === 'list' ? [fieldRequest] : fieldRequest;
+  }
+
+  // Job Requirement and Schedule are not shown on the form but must always be
+  // included in the created template with every field enabled (AC Out of Scope
+  // #2). `dataTakenFromCandidate` stays false — these are template-level fields,
+  // never sourced from the candidate profile.
+  for (const [key, fieldCodes] of Object.entries(
+    AUTO_INCLUDED_SECTION_FIELD_CODES
+  )) {
+    data[key] = {
+      isEnabled: true,
+      dataTakenFromCandidate: false,
+      content: Object.fromEntries(fieldCodes.map(code => [code, true])),
+    };
   }
 
   data.customizedForm = { isEnabled: state.customizableForm };

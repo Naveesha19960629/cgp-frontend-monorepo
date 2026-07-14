@@ -1544,4 +1544,4 @@ function toVacancyFormFromResponse(
   };
 }
 
-export { toVacancyFormFromResponse };
+export { toVacancyFormFromResponse, normalizeCustomizableFormSection };

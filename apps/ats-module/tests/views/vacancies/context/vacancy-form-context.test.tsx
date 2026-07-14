@@ -6,8 +6,10 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import {
+  DEFAULT_FORM,
   VACANCY_STEPS,
   VacancyFormProvider,
+  getEnabledStepKeys,
   useVacancyForm,
 } from '@/views/vacancies/context/vacancy-form-context';
 import type { VacancyForm } from '@/views/vacancies/types';
@@ -454,7 +456,8 @@ describe('vacancy-form-context', () => {
           expect.objectContaining({
             jobRequirements: stepValues.jobRequirements,
           }),
-          'DRAFT'
+          'DRAFT',
+          undefined
         );
       });
     });
@@ -820,5 +823,39 @@ describe('OnSaveAsDraft with vacancyId', () => {
     });
 
     expect(mockNavigate).not.toHaveBeenCalled();
+  });
+});
+
+describe('getEnabledStepKeys', () => {
+  it('returns only job-requirements for the default form', () => {
+    // DEFAULT_FORM enables job-requirements and leaves every optional section off.
+    expect(getEnabledStepKeys(DEFAULT_FORM)).toEqual(['job-requirements']);
+  });
+
+  it('includes optional steps whose section is enabled', () => {
+    const form = structuredClone(DEFAULT_FORM);
+    form.profileRequirements.isEnabled = true;
+    form.secondaryEducation[0].isEnabled = true;
+
+    const keys = getEnabledStepKeys(form);
+
+    expect(keys).toContain('job-requirements');
+    expect(keys).toContain('profile-requirements');
+    expect(keys).toContain('secondary-education');
+    expect(keys).not.toContain('preferred-industry');
+  });
+
+  it('includes schedule-vacancy only when a schedule is present', () => {
+    expect(getEnabledStepKeys(DEFAULT_FORM)).not.toContain('schedule-vacancy');
+
+    const scheduled: VacancyForm = {
+      ...DEFAULT_FORM,
+      schedule: {
+        schedulePublishAt: '2026-01-01T00:00:00Z',
+        expirationAt: '2026-02-01T00:00:00Z',
+      },
+    };
+
+    expect(getEnabledStepKeys(scheduled)).toContain('schedule-vacancy');
   });
 });

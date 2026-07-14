@@ -100,12 +100,16 @@ vi.mock('@/views/vacancies/context/vacancy-form-context', () => {
     </div>
   );
 
+  const steps = [
+    { key: 'step-one', label: 'Step One', component: StepOne },
+    { key: 'step-two', label: 'Step Two', component: StepTwo },
+  ];
+
   return {
-    VACANCY_STEPS: [
-      { key: 'step-one', label: 'Step One', component: StepOne },
-      { key: 'step-two', label: 'Step Two', component: StepTwo },
-    ],
+    VACANCY_STEPS: steps,
+    useTemplateFieldVisible: () => () => true,
     useVacancyForm: () => ({
+      visibleSteps: steps,
       currentStepIndex: 0,
       setCurrentStepIndex,
       completedSteps: new Set<number>([0]),

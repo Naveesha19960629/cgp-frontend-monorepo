@@ -73,7 +73,7 @@ export default function TemplatesToolbar({
         value={sortOrder}
         onValueChange={value => onSortOrderChange(value as TemplateSortOrder)}
       >
-        <SelectTrigger className="h-12 w-48 rounded-lg border-slate-300 bg-white text-sm font-medium text-slate-900 shadow-none">
+        <SelectTrigger className="h-12 w-fit gap-2 rounded-lg border-slate-300 bg-white px-4 text-base font-medium text-slate-600 shadow-none [&_svg]:opacity-100">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

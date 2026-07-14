@@ -5,7 +5,10 @@ import { useTranslation } from 'react-i18next';
 
 import StepDisableDialog from '@/views/vacancies/components/step-disable-dialog';
 import VacancyStatusBadge from '@/views/vacancies/components/vacancy-status-badge';
-import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
+import {
+  useTemplateFieldVisible,
+  useVacancyForm,
+} from '@/views/vacancies/context/vacancy-form-context';
 import {
   useCreateIndustryMutation,
   useDisableSuccessToast,
@@ -38,6 +41,7 @@ export default function PreferredIndustryStep({
 }: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
   const showDisableToast = useDisableSuccessToast();
+  const isFieldVisible = useTemplateFieldVisible('industry');
   const {
     form,
     setForm,
@@ -119,7 +123,6 @@ export default function PreferredIndustryStep({
   }, [setForm, stepDisableRef]);
 
   const [industrySearch, setIndustrySearch] = useState('');
-  const [hasMaxError, setHasMaxError] = useState(false);
 
   const { data: industriesData, isLoading: isIndustriesLoading } =
     useIndustriesQuery(industrySearch);
@@ -227,7 +230,6 @@ export default function PreferredIndustryStep({
                     industries: [],
                     dataTakenFromCandidate: true,
                   });
-                  setHasMaxError(false);
                   return;
                 }
                 updatePreferredIndustries({
@@ -245,93 +247,98 @@ export default function PreferredIndustryStep({
           </div>
 
           {/* Section: Industries */}
-          <div>
-            <div className="mb-2 flex min-w-0 items-center justify-between gap-2">
-              <span
-                className={cn(
-                  'min-w-0 truncate pr-2 text-sm font-semibold text-slate-700',
-                  hasMaxError && 'text-destructive'
+          {isFieldVisible('industry') && (
+            <div>
+              <div className="mb-2 flex min-w-0 items-center justify-between gap-2">
+                <span className="min-w-0 truncate pr-2 text-sm font-semibold text-slate-700">
+                  {t('preferredIndustries.sectionLabel')}
+                </span>
+                <CharacterCount
+                  maxLength={MAX_INDUSTRY_CHARS}
+                  currentLength={industrySearch.length}
+                />
+              </div>
+
+              <MultipleSelector
+                value={selectedIndustries.map(i => ({
+                  value: i.id,
+                  label: i.label,
+                  source: i.source,
+                }))}
+                errorMessage={t(
+                  'preferredIndustries.validation.maxIndustries',
+                  {
+                    max: MAX_INDUSTRIES,
+                  }
                 )}
-              >
-                {t('preferredIndustries.sectionLabel')}
-              </span>
-              <CharacterCount
-                maxLength={MAX_INDUSTRY_CHARS}
-                currentLength={industrySearch.length}
-              />
-            </div>
+                onChange={options => {
+                  const dedupedByLabel = new Map<string, IndustryEntry>();
 
-            <MultipleSelector
-              value={selectedIndustries.map(i => ({
-                value: i.id,
-                label: i.label,
-                source: i.source,
-              }))}
-              errorMessage={t('preferredIndustries.validation.maxIndustries', {
-                max: MAX_INDUSTRIES,
-              })}
-              onErrorStateChange={setHasMaxError}
-              onChange={options => {
-                const dedupedByLabel = new Map<string, IndustryEntry>();
+                  for (const opt of options) {
+                    const normalizedLabel = opt.label.trim().toLowerCase();
+                    if (
+                      !normalizedLabel ||
+                      dedupedByLabel.has(normalizedLabel)
+                    ) {
+                      continue;
+                    }
 
-                for (const opt of options) {
-                  const normalizedLabel = opt.label.trim().toLowerCase();
-                  if (!normalizedLabel || dedupedByLabel.has(normalizedLabel)) {
-                    continue;
+                    dedupedByLabel.set(normalizedLabel, {
+                      id: opt.value,
+                      label: opt.label,
+                      source: (opt.source as string) ?? 'USER_CREATED',
+                    });
                   }
 
-                  dedupedByLabel.set(normalizedLabel, {
-                    id: opt.value,
-                    label: opt.label,
-                    source: (opt.source as string) ?? 'USER_CREATED',
-                  });
-                }
-
-                const entries = Array.from(dedupedByLabel.values());
-                updatePreferredIndustries({ industries: entries });
-              }}
-              options={apiIndustries.map(i => ({
-                value: i.id,
-                label: i.label,
-                source: i.source ?? 'MASTER',
-              }))}
-              onSearchSync={value => {
-                setIndustrySearch(value);
-                return apiIndustries.map(i => ({
+                  const entries = Array.from(dedupedByLabel.values());
+                  updatePreferredIndustries({ industries: entries });
+                }}
+                options={apiIndustries.map(i => ({
                   value: i.id,
                   label: i.label,
                   source: i.source ?? 'MASTER',
-                }));
-              }}
-              keepSelectedInList
-              creatable
-              triggerSearchOnFocus
-              hideClearAllButton
-              maxSelected={MAX_INDUSTRIES}
-              disabled={!isEnabled || dataTakenFromCandidate}
-              inputProps={{ maxLength: MAX_INDUSTRY_CHARS }}
-              loading={isIndustriesLoading}
-              placeholder={t('preferredIndustries.input.placeholder')}
-              loadingIndicator={
-                <p className="px-3 pb-3 text-left">{t('common.loading')}</p>
-              }
-              emptyIndicator={
-                <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
-                  <div className="flex flex-col items-start">
-                    <img src={multiSelectInfoAvatar} alt={t('common.noData')} />
-                    <div className="mt-3 w-61 text-left">
-                      <p className="font-bold text-slate-900">
-                        {t('common.noDataTitle')}
-                      </p>
-                      <p className="text-sm font-semibold text-slate-700">
-                        {t('common.noDataDescription')}
-                      </p>
+                }))}
+                onSearchSync={value => {
+                  setIndustrySearch(value);
+                  return apiIndustries.map(i => ({
+                    value: i.id,
+                    label: i.label,
+                    source: i.source ?? 'MASTER',
+                  }));
+                }}
+                keepSelectedInList
+                creatable
+                triggerSearchOnFocus
+                hideClearAllButton
+                maxSelected={MAX_INDUSTRIES}
+                disabled={!isEnabled || dataTakenFromCandidate}
+                inputProps={{ maxLength: MAX_INDUSTRY_CHARS }}
+                loading={isIndustriesLoading}
+                placeholder={t('preferredIndustries.input.placeholder')}
+                loadingIndicator={
+                  <p className="px-3 pb-3 text-left">{t('common.loading')}</p>
+                }
+                emptyIndicator={
+                  <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
+                    <div className="flex flex-col items-start">
+                      <img
+                        src={multiSelectInfoAvatar}
+                        alt={t('common.noData')}
+                      />
+                      <div className="mt-3 w-61 text-left">
+                        <p className="font-bold text-slate-900">
+                          {t('common.noDataTitle')}
+                        </p>
+                        <p className="text-sm font-semibold text-slate-700">
+                          {t('common.noDataDescription')}
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              }
-            />
-          </div>
+                }
+              />
+            </div>
+          )}
 
           {/* Bottom padding so dropdowns are never clipped */}
           <div className="h-64" />

@@ -908,6 +908,7 @@ interface VacancyDetailPatentEntry {
 interface VacancyDetailData {
   vacancyId: string;
   baseVacancyId: string;
+  vacancyTemplateId?: string | null;
   title: string;
   status: string;
   version: number;
@@ -1165,6 +1166,7 @@ interface VacancyTableActionProps {
   onCopyLink?: () => void;
   onMakeACopy?: () => void;
   onEdit?: () => void;
+  onEditJd?: () => void;
   onDelete?: () => void;
 }
 
@@ -1657,6 +1659,8 @@ interface CreateVacancyPayload {
   title: string;
   status: string;
   lastActiveStep: string;
+  /** Set when the vacancy is created from a template, for server-side lineage. */
+  templateId?: string;
   data: {
     jobRequirement: JobRequirementApiPayload;
     profileRequirement: ProfileRequirementApiPayload[];
@@ -1783,6 +1787,62 @@ interface VacancyTemplateQueryParams {
   sortOrder?: TemplateSortOrder;
 }
 
+// ── Edit Job Description ────────────────────────────────────────────────────
+
+interface JobDescriptionField {
+  fieldKey: string;
+  isVisible: boolean;
+}
+
+interface JobDescriptionSection {
+  sectionKey: string;
+  fields: JobDescriptionField[];
+}
+
+interface VacancyJobDescription {
+  vacancyId: string;
+  sections: JobDescriptionSection[];
+}
+
+/** Local form state: sectionKey -> fieldKey -> toggle value. */
+type JobDescriptionFormState = Record<string, Record<string, boolean>>;
+
+interface JobDescriptionFieldVisibilityUpdate {
+  sectionKey: string;
+  fieldKey: string;
+  isVisible: boolean;
+}
+
+interface UpdateVacancyJobDescriptionRequest {
+  fields: JobDescriptionFieldVisibilityUpdate[];
+}
+
+// ── Use Template (create vacancy from template) ─────────────────────────────
+
+/**
+ * Pre-built POST /v1/vacancies skeleton returned by getTemplateById. Each key in
+ * `data` is either `null` (section not configured in the template → hide it) or a
+ * section object/array whose `content` map holds field-VISIBILITY booleans (true =
+ * render that field). `customizedForm` carries actual copied form data. The mapper
+ * `toVacancyFormFromTemplateUsePayload` interprets it defensively, so `data` is typed
+ * loosely here.
+ */
+interface VacancyTemplateUseRequestBody {
+  title: string;
+  status: string;
+  lastActiveStep: string;
+  templateId: string;
+  data: Record<string, unknown>;
+}
+
+/** Response payload of GET /vacancy-templates/{id} used in the "Use Template" flow. */
+interface VacancyTemplateUseResponse {
+  templateId: string;
+  templateName: string;
+  refNumber: string;
+  requestBody: VacancyTemplateUseRequestBody;
+}
+
 export type {
   CreateVacancyPayload,
   TemplateSectionKind,
@@ -1800,6 +1860,14 @@ export type {
   VacancyTemplateSearchItem,
   VacancyTemplateSearchPage,
   VacancyTemplateQueryParams,
+  JobDescriptionField,
+  JobDescriptionSection,
+  VacancyJobDescription,
+  JobDescriptionFormState,
+  JobDescriptionFieldVisibilityUpdate,
+  UpdateVacancyJobDescriptionRequest,
+  VacancyTemplateUseRequestBody,
+  VacancyTemplateUseResponse,
   JobRequirementApiPayload,
   PatentContentApiPayload,
   PatentGroupApiPayload,
