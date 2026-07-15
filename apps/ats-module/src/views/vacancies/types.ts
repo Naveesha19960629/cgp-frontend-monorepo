@@ -1167,6 +1167,7 @@ interface VacancyTableActionProps {
   onMakeACopy?: () => void;
   onEdit?: () => void;
   onEditJd?: () => void;
+  onSaveAsTemplate?: () => void;
   onDelete?: () => void;
 }
 

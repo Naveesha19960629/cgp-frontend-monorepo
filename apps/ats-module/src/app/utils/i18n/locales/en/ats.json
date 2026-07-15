@@ -427,6 +427,7 @@
         "makeACopy": "Make a Copy",
         "edit": "Edit",
         "editJd": "Edit JD",
+        "saveAsTemplate": "Save as Template",
         "delete": "Delete"
       },
       "pagination": {
