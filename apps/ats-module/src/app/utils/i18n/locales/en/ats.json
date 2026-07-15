@@ -26,6 +26,22 @@
       "failedToLoadTemplate": "Failed to load the selected template. Please try again."
     }
   },
+  "editTemplate": {
+    "heading": "Edit Template",
+    "cancel": "Cancel",
+    "update": "Update Template",
+    "loadError": "Unable to load this template. Please try again.",
+    "notifications": {
+      "success": {
+        "title": "Successfully Updated",
+        "message": "Vacancy template has been successfully updated"
+      },
+      "error": {
+        "title": "Something went wrong",
+        "message": "Failed to update vacancy template. Please try again."
+      }
+    }
+  },
   "createTemplate": {
     "heading": "Create Template",
     "nameLabel": "Template Name",

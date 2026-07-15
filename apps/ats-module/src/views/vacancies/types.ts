@@ -1743,6 +1743,16 @@ interface CreateVacancyTemplateRequest {
   data: TemplateSectionData;
 }
 
+/**
+ * Body of PUT /vacancy-templates/{id}. Same section structure as create; the
+ * Template ID is in the URL and the reference number is immutable, so neither
+ * is included here.
+ */
+interface UpdateVacancyTemplateRequest {
+  templateName: string;
+  data: TemplateSectionData;
+}
+
 interface NextTemplateName {
   templateName: string;
   refNumber?: string;
@@ -1854,6 +1864,7 @@ export type {
   CustomizableFormSectionRequest,
   TemplateSectionData,
   CreateVacancyTemplateRequest,
+  UpdateVacancyTemplateRequest,
   NextTemplateName,
   CreatedVacancyTemplate,
   TemplateSortOrder,

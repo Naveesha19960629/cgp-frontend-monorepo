@@ -50,8 +50,11 @@ export default function TemplatesPage() {
       state: { from: '/dashboard/ats/templates' },
     });
 
-  // Edit / Delete flows are handled by their own stories
-  // (DQCGP-2199 / 2200). Wired here as no-ops until those land.
+  // Edit Vacancy Template flow (DQCGP-2199).
+  const goToEdit = (id: string) =>
+    void navigate(`/dashboard/ats/templates/${id}/edit`);
+
+  // Delete flow is handled by its own story (DQCGP-2200). No-op until it lands.
   const noop = () => {};
 
   return (
@@ -86,7 +89,7 @@ export default function TemplatesPage() {
               <TemplateCard
                 key={template.vacancyTemplateId}
                 template={template}
-                onEdit={noop}
+                onEdit={goToEdit}
                 onDelete={noop}
                 onUse={goToUseTemplate}
               />

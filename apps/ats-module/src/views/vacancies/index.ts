@@ -2,6 +2,7 @@ export { default as NewVacancyPage } from '@/views/vacancies/pages/new-vacancy-p
 export { VacancyTitleStep } from '@/views/vacancies/pages/new-vacancy-page';
 export { default as NewVacancyFromTemplatePage } from '@/views/vacancies/pages/new-vacancy-from-template-page';
 export { default as NewVacancyTemplatePage } from '@/views/vacancies/pages/new-vacancy-template-page';
+export { default as EditVacancyTemplatePage } from '@/views/vacancies/pages/edit-vacancy-template-page';
 export { default as TemplatesPage } from '@/views/vacancies/pages/templates-page';
 export { default as VacanciesPage } from '@/views/vacancies/pages/vacancies-page';
 export { default as VacancyIdEditPage } from '@/views/vacancies/pages/vacancy-id-edit-page';

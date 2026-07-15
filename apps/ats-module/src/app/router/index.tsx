@@ -4,6 +4,7 @@ import AtsProtectedRoute from '@/app/components/protected-route';
 import { UserProvider } from '@/app/contexts/user-context';
 import { addAtsTranslations } from '@/app/utils/i18n';
 import {
+  EditVacancyTemplatePage,
   NewVacancyFromTemplatePage,
   NewVacancyPage,
   NewVacancyTemplatePage,
@@ -44,6 +45,10 @@ function AtsRoutes() {
         <Route path="find-candidate" element={<div>Find Candidate</div>} />
         <Route path="templates" element={<TemplatesPage />} />
         <Route path="templates/new" element={<NewVacancyTemplatePage />} />
+        <Route
+          path="templates/:id/edit"
+          element={<EditVacancyTemplatePage />}
+        />
         <Route path="*" element={<Navigate to="/not-found" replace />} />
       </Routes>
     </UserProvider>
@@ -74,6 +79,10 @@ function createStandaloneRouter() {
         { path: 'find-candidate', element: <div>Find Candidate</div> },
         { path: 'templates', element: <TemplatesPage /> },
         { path: 'templates/new', element: <NewVacancyTemplatePage /> },
+        {
+          path: 'templates/:id/edit',
+          element: <EditVacancyTemplatePage />,
+        },
       ],
     },
     {

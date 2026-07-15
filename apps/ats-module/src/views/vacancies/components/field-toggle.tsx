@@ -20,10 +20,11 @@ export default function FieldToggle({
         disabled && 'opacity-50'
       )}
     >
-      <span className="text-sm leading-5 font-normal wrap-break-word text-slate-500">
+      <span className="text-sm leading-5 font-semibold wrap-break-word text-slate-500">
         {label}
       </span>
       <Switch
+        size="lg"
         checked={checked}
         disabled={disabled}
         onCheckedChange={onToggle}
