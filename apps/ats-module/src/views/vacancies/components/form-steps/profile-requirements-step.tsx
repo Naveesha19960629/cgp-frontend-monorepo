@@ -70,6 +70,41 @@ const multiSelectInfoAvatar = new URL(
   import.meta.url
 ).href;
 
+/**
+ * The places API returns the primary entity's label as a full
+ * "City, State, Country" (or "State, Country") string, while saved values that
+ * come back from the backend are already short. `shortLabel` normalises either
+ * form down to just the leading segment (e.g. "Abbotsford") so the collapsed
+ * combobox input shows only the city/state name, never the full breadcrumb.
+ */
+function shortLabel(label?: string): string {
+  return (label ?? '').split(',')[0].trim();
+}
+
+/**
+ * Builds the full "City, State, Country" breadcrumb label used for dropdown
+ * items from the individual saved parts, so a prepended saved value matches the
+ * richer format the search results use instead of showing only the city/state.
+ */
+function buildFullLabel(...parts: (string | undefined)[]): string {
+  return parts.map(shortLabel).filter(Boolean).join(', ');
+}
+
+/**
+ * Removes options that render the same breadcrumb label (case-insensitive),
+ * keeping the first occurrence. This collapses a prepended saved value against
+ * an identical search result so the dropdown never lists a duplicate entry.
+ */
+function dedupeOptions(options: ComboboxOption[]): ComboboxOption[] {
+  const seenLabels = new Set<string>();
+  return options.filter(option => {
+    const key = option.label.trim().toLowerCase();
+    if (seenLabels.has(key)) return false;
+    seenLabels.add(key);
+    return true;
+  });
+}
+
 function isDuplicateAddress(
   addresses: ProfileRequirementsFormValues['addresses'],
   newIndex: number
@@ -161,19 +196,33 @@ function AddressCard({
   const stateValue = form.watch(`addresses.${index}.stateProvince`);
   const countryValue = form.watch(`addresses.${index}.country`);
 
-  const cityOptions: ComboboxOption[] = [
+  const cityOptions: ComboboxOption[] = dedupeOptions([
     ...(cityValue?.id && !cityData.some(c => c.city.id === cityValue.id)
-      ? [{ value: cityValue.id, label: cityValue.label }]
+      ? [
+          {
+            value: cityValue.id,
+            label: buildFullLabel(
+              cityValue.label,
+              stateValue?.label,
+              countryValue?.label
+            ),
+          },
+        ]
       : []),
     ...cityData.map(c => ({ value: c.city.id, label: c.city.label })),
-  ];
+  ]);
 
-  const stateOptions: ComboboxOption[] = [
+  const stateOptions: ComboboxOption[] = dedupeOptions([
     ...(stateValue?.id && !stateData.some(s => s.state.id === stateValue.id)
-      ? [{ value: stateValue.id, label: stateValue.label }]
+      ? [
+          {
+            value: stateValue.id,
+            label: buildFullLabel(stateValue.label, countryValue?.label),
+          },
+        ]
       : []),
     ...stateData.map(s => ({ value: s.state.id, label: s.state.label })),
-  ];
+  ]);
 
   const countryOptions: ComboboxOption[] = [
     ...(countryValue?.id &&
@@ -278,6 +327,11 @@ function AddressCard({
                   <Combobox
                     options={cityOptions}
                     value={field.value?.id ?? ''}
+                    selectedLabel={
+                      field.value?.label
+                        ? shortLabel(field.value.label)
+                        : undefined
+                    }
                     onValueChange={handleCitySelect}
                     onSearchChange={setCitySearch}
                     loading={isCityLoading}
@@ -307,6 +361,11 @@ function AddressCard({
                   <Combobox
                     options={stateOptions}
                     value={field.value?.id ?? ''}
+                    selectedLabel={
+                      field.value?.label
+                        ? shortLabel(field.value.label)
+                        : undefined
+                    }
                     onValueChange={handleStateSelect}
                     onSearchChange={setStateSearch}
                     loading={isStateLoading}
