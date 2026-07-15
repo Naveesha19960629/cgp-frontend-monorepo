@@ -31,6 +31,7 @@ export { useUpdateCandidateProfileBasicInformationsMutation } from '@/views/vaca
 export { useCreateSportMutation } from '@/views/vacancies/hooks/mutations/use-create-sport-mutation';
 export { useCreateSportLevelMutation } from '@/views/vacancies/hooks/mutations/use-create-sport-level-mutation';
 export { useDeleteVacancyMutation } from '@/views/vacancies/hooks/mutations/use-delete-vacancy-mutation';
+export { useDeleteTemplateMutation } from '@/views/vacancies/hooks/mutations/use-delete-template-mutation';
 export { useDuplicateVacancyMutation } from '@/views/vacancies/hooks/mutations/use-duplicate-vacancy-mutation';
 export { useToggleVacancyStatusMutation } from '@/views/vacancies/hooks/mutations/use-toggle-vacancy-status-mutation';
 export { useUpdateVacancyJobDescriptionMutation } from '@/views/vacancies/hooks/mutations/use-update-vacancy-job-description-mutation';

@@ -400,9 +400,16 @@ describe('ScheduleVacancyStep', () => {
       expect(mockOnSubmit).not.toHaveBeenCalled();
     });
 
-    it('calls onBack when the header back arrow is clicked', async () => {
+    it('calls onBack when the header back arrow is clicked while enabled', async () => {
       renderComponent();
+
+      fillPublish('2099-12-25', '10:00:00 AM');
+
       const backButton = screen.getAllByRole('button')[0];
+      await waitFor(() => {
+        expect(backButton).not.toBeDisabled();
+      });
+
       await userEvent.click(backButton);
       expect(mockOnBack).toHaveBeenCalled();
     });
@@ -448,6 +455,57 @@ describe('ScheduleVacancyStep', () => {
         expect(mockSetForm).toHaveBeenCalled();
       });
       expect(mockOnBack).toHaveBeenCalled();
+    });
+  });
+
+  describe('back button disabled state', () => {
+    it('disables the back button when all schedule fields are empty', () => {
+      renderComponent();
+      const backButton = screen.getAllByRole('button')[0];
+      expect(backButton).toBeDisabled();
+    });
+
+    it('does not call onBack when the disabled back button is clicked', async () => {
+      renderComponent();
+      const backButton = screen.getAllByRole('button')[0];
+      await userEvent.click(backButton);
+      expect(mockOnBack).not.toHaveBeenCalled();
+    });
+
+    it('enables the back button once the publish date is filled', async () => {
+      renderComponent();
+
+      fillPublish('2099-12-25', '');
+
+      await waitFor(() => {
+        expect(screen.getAllByRole('button')[0]).not.toBeDisabled();
+      });
+    });
+
+    it('enables the back button once the expiration date is filled', async () => {
+      renderComponent();
+
+      fillExpiration('2099-12-26', '');
+
+      await waitFor(() => {
+        expect(screen.getAllByRole('button')[0]).not.toBeDisabled();
+      });
+    });
+
+    it('enables the back button in edit mode when the step is pre-filled from saved schedule data', () => {
+      mockVacancyForm({
+        form: {
+          schedule: {
+            schedulePublishAt: '2026-06-25T10:30:00 AM',
+            expirationAt: '2026-07-15T11:59:59 PM',
+          },
+          status: 'unpublished',
+        },
+      });
+
+      renderComponent({ mode: 'edit' as const });
+
+      expect(screen.getAllByRole('button')[0]).not.toBeDisabled();
     });
   });
 

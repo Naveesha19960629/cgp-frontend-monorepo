@@ -574,7 +574,7 @@ export default function TertiaryEducationStep({
             type="button"
             aria-label={t('tertiaryEducation.back')}
             disabled={shouldDisableNavigation}
-            className="text-slate-700 transition-colors hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-40"
+            className="cursor-pointer text-slate-700 transition-colors hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-40"
             onClick={handleBack}
           >
             <ArrowLeft2 size={24} />

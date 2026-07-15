@@ -24,6 +24,18 @@
     },
     "useTemplate": {
       "failedToLoadTemplate": "Failed to load the selected template. Please try again."
+    },
+    "deleteDialog": {
+      "title": "Are you sure?",
+      "message": "Are you sure you want to delete this template? This action cannot be undone.",
+      "confirm": "Yes",
+      "cancel": "No",
+      "notifications": {
+        "successTitle": "Successfully Deleted",
+        "successMessage": "Template deleted successfully.",
+        "errorTitle": "Try Again",
+        "errorMessage": "The deletion could not be completed. Please try again."
+      }
     }
   },
   "editTemplate": {

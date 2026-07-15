@@ -65,6 +65,16 @@ export default function ScheduleVacancyStep({
   const expirationDate = watch('expirationDate');
   const expirationTime = watch('expirationTime');
 
+  // Matches the disabled-until-filled Back behavior used by every other step —
+  // this step has no isEnabled toggle, so "the enabled section" is just these
+  // four fields.
+  const shouldDisableNavigation = !(
+    publishDate ||
+    publishTime ||
+    expirationDate ||
+    expirationTime
+  );
+
   const isScheduleChanged = useMemo(() => {
     if (!form.schedule?.schedulePublishAt || !form.schedule?.expirationAt) {
       return true;
@@ -396,7 +406,8 @@ export default function ScheduleVacancyStep({
         <button
           type="button"
           aria-label={t('common.back')}
-          className="text-slate-700 transition-colors hover:text-slate-900"
+          disabled={shouldDisableNavigation}
+          className="cursor-pointer text-slate-700 transition-colors hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-40"
           onClick={handleBack}
         >
           <ArrowLeft2 size={24} />
