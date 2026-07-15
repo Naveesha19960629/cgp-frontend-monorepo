@@ -121,7 +121,7 @@ describe('toTemplateFormStateFromResponse', () => {
     expect(payload.templateName).toBe('My Template');
 
     const rebuilt = toTemplateFormStateFromResponse(
-      makeRequestBody(payload.data as Record<string, unknown>)
+      makeRequestBody(payload.data)
     );
     expect(rebuilt.sections.languages.fields.language).toBe(true);
     expect(rebuilt.customizableForm).toBe(true);
