@@ -20,7 +20,7 @@ import { applyTypography } from '@cgp/ui-kit/lib/typography';
 import { cn, removeEmoji } from '@cgp/ui-kit/lib/utils';
 
 const saveAsTemplateAvatar = new URL(
-  '../../../assets/images/save-as-template-avatar.png',
+  '../../../assets/images/delete-confirm-avator.svg',
   import.meta.url
 ).href;
 
