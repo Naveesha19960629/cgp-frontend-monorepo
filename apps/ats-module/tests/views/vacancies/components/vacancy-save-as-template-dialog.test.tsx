@@ -169,6 +169,21 @@ describe('VacancySaveAsTemplateDialog', () => {
     ).toBeInTheDocument();
   });
 
+  it('shows a skeleton instead of the input while the template name is loading', () => {
+    const { container } = render(
+      <VacancySaveAsTemplateDialog {...defaultProps} isTemplateNameLoading />
+    );
+
+    expect(
+      screen.queryByPlaceholderText(
+        'vacancySaveAsTemplateDialog.namePlaceholder'
+      )
+    ).not.toBeInTheDocument();
+    expect(
+      container.querySelector('[data-slot="skeleton"]')
+    ).toBeInTheDocument();
+  });
+
   it('does not exceed the maximum character limit', () => {
     render(<VacancySaveAsTemplateDialog {...defaultProps} />);
 

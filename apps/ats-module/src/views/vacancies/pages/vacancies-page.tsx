@@ -60,7 +60,10 @@ export default function VacanciesPage() {
   const { mutate: duplicateVacancy, isPending: isDuplicating } =
     useDuplicateVacancyMutation();
   const saveAsTemplateMutation = useSaveVacancyAsTemplateMutation();
-  const { data: nextTemplateNameResponse } = useNextTemplateNameQuery({
+  const {
+    data: nextTemplateNameResponse,
+    isLoading: isNextTemplateNameLoading,
+  } = useNextTemplateNameQuery({
     enabled: Boolean(saveAsTemplateVacancyId),
   });
 
@@ -408,6 +411,7 @@ export default function VacanciesPage() {
         }}
         onConfirm={handleSaveAsTemplateConfirm}
         isSaving={saveAsTemplateMutation.isPending}
+        isTemplateNameLoading={isNextTemplateNameLoading}
       />
       {isDuplicating && (
         <div

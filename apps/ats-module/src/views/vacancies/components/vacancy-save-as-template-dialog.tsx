@@ -15,6 +15,7 @@ import {
 } from '@cgp/ui-kit/components/ui/dialog';
 import { Input } from '@cgp/ui-kit/components/ui/input';
 import { Label } from '@cgp/ui-kit/components/ui/label';
+import { Skeleton } from '@cgp/ui-kit/components/ui/skeleton';
 import { applyTypography } from '@cgp/ui-kit/lib/typography';
 import { cn, removeEmoji } from '@cgp/ui-kit/lib/utils';
 
@@ -34,6 +35,7 @@ export default function VacancySaveAsTemplateDialog({
   onTemplateNameChange,
   onConfirm,
   isSaving = false,
+  isTemplateNameLoading = false,
 }: VacancySaveAsTemplateDialogProps) {
   const { t } = useTranslation('ats');
 
@@ -76,14 +78,20 @@ export default function VacancySaveAsTemplateDialog({
                 maxLength={TEMPLATE_NAME_MAX_LENGTH}
               />
             </Label>
-            <Input
-              value={templateName}
-              onChange={e => onTemplateNameChange(removeEmoji(e.target.value))}
-              maxLength={TEMPLATE_NAME_MAX_LENGTH}
-              disabled={isSaving}
-              className="h-11 shadow-none"
-              placeholder={t('vacancySaveAsTemplateDialog.namePlaceholder')}
-            />
+            {isTemplateNameLoading ? (
+              <Skeleton className="h-11 w-full" />
+            ) : (
+              <Input
+                value={templateName}
+                onChange={e =>
+                  onTemplateNameChange(removeEmoji(e.target.value))
+                }
+                maxLength={TEMPLATE_NAME_MAX_LENGTH}
+                disabled={isSaving}
+                className="h-11 shadow-none"
+                placeholder={t('vacancySaveAsTemplateDialog.namePlaceholder')}
+              />
+            )}
           </div>
         </div>
         <div className="grid w-full grid-cols-2 gap-3">

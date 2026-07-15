@@ -232,6 +232,23 @@ describe('VacanciesPage', () => {
       expect(screen.getByDisplayValue('Template 4')).toBeInTheDocument();
     });
 
+    it('shows a skeleton instead of the input while the next template name is loading', () => {
+      useNextTemplateNameQueryMock.mockReturnValue({
+        data: undefined,
+        isLoading: true,
+      });
+
+      render(<VacanciesPage />);
+      triggerSaveAsTemplate();
+
+      expect(screen.queryByDisplayValue('Template 4')).not.toBeInTheDocument();
+      expect(
+        screen.queryByPlaceholderText(
+          'vacancySaveAsTemplateDialog.namePlaceholder'
+        )
+      ).not.toBeInTheDocument();
+    });
+
     it('does not show the dialog before Save as Template is triggered', () => {
       render(<VacanciesPage />);
 

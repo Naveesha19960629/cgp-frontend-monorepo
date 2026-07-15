@@ -1859,6 +1859,7 @@ interface VacancySaveAsTemplateDialogProps {
   onTemplateNameChange: (value: string) => void;
   onConfirm: () => void;
   isSaving?: boolean;
+  isTemplateNameLoading?: boolean;
 }
 
 export type {
