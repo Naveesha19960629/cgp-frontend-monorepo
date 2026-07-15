@@ -354,6 +354,14 @@
         "errorMessage": "Some changes could not be saved. Please try again."
       }
     },
+    "saveAsTemplate": {
+      "notifications": {
+        "successTitle": "Template Saved",
+        "successMessage": "Vacancy has been successfully saved as a template.",
+        "errorTitle": "Failed to Save",
+        "errorMessage": "Some changes could not be saved. Please try again."
+      }
+    },
     "toggleStatusDialog": {
       "title": "Are you sure?",
       "activateMessage": "Activating will make the vacancy link active and move the vacancy to 'Live' status. Applicants will be able to view and apply for this vacancy.\nYou may also schedule an automatic activation date below. Do you wish to proceed?",
@@ -555,6 +563,15 @@
         "errorMessage": "Some changes could not be loaded. Please try again."
       }
     }
+  },
+
+  "vacancySaveAsTemplateDialog": {
+    "title": "Are you sure?",
+    "description": "This vacancy will be saved as a reusable template. Only enabled sections and configurations will be included.\nTo create this vacancy template, please provide a template name",
+    "nameLabel": "Template Name",
+    "namePlaceholder": "Enter template name",
+    "noButton": "No",
+    "yesButton": "Yes"
   },
 
   "vacancyEditCancelDialog": {

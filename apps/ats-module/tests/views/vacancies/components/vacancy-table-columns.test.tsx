@@ -51,6 +51,7 @@ const onView = vi.fn();
 const onEdit = vi.fn();
 const onDelete = vi.fn();
 const onMakeACopy = vi.fn();
+const onSaveAsTemplate = vi.fn();
 const onToggleActive = vi.fn();
 
 const sampleRow: VacancyTableColumn = {
@@ -93,6 +94,7 @@ function TableWrapper({
     onEdit,
     onDelete,
     onMakeACopy,
+    onSaveAsTemplate,
     onToggleActive,
     t,
   });
@@ -147,6 +149,7 @@ describe('createVacancyColumns', () => {
       onEdit,
       onDelete,
       onMakeACopy,
+      onSaveAsTemplate,
       onToggleActive,
       t,
     });
@@ -162,6 +165,7 @@ describe('createVacancyColumns', () => {
       onEdit,
       onDelete,
       onMakeACopy,
+      onSaveAsTemplate,
       onToggleActive,
       t,
     });
