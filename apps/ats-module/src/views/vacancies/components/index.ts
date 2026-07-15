@@ -38,6 +38,7 @@ export { default as VacancyTableEmptyState } from '@/views/vacancies/components/
 export { default as VacancySearchEmptyState } from '@/views/vacancies/components/vacancy-search-empty-state';
 export { default as VacancyLoadingState } from '@/views/vacancies/components/vacancy-loading-state';
 export { default as TemplateCard } from '@/views/vacancies/components/template-card';
+export { default as TemplateCardSkeleton } from '@/views/vacancies/components/template-card-skeleton';
 export { default as TemplatesToolbar } from '@/views/vacancies/components/templates-toolbar';
 export { default as TemplateEmptyState } from '@/views/vacancies/components/template-empty-state';
 export { default as TemplateSearchEmptyState } from '@/views/vacancies/components/template-search-empty-state';
