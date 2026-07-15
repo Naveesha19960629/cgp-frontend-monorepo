@@ -720,6 +720,65 @@ describe('toVacancyFormFromResponse — full GET response round-trip', () => {
   });
 });
 
+// ─── Preferred skills: level hydration ───────────────────────────────────────
+
+describe('toVacancyFormFromResponse — preferred skills levels', () => {
+  it('hydrates levelId and levelName from the skills section', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        data: {
+          skills: {
+            isEnabled: true,
+            dataTakenFromCandidate: false,
+            content: [
+              {
+                id: 'sk-1',
+                label: 'Java - Software Engineering',
+                source: 'MASTER',
+                levelId: 'level-1',
+                levelName: 'Senior Level',
+              },
+            ],
+          },
+        },
+      },
+      FALLBACK_FORM
+    );
+
+    expect(result.preferredSkills?.skills[0]).toMatchObject({
+      skillId: 'sk-1',
+      skillName: 'Java',
+      careerPathName: 'Software Engineering',
+      levelId: 'level-1',
+      levelName: 'Senior Level',
+    });
+  });
+
+  it('leaves level empty for legacy skills without a level', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        data: {
+          skills: {
+            isEnabled: true,
+            dataTakenFromCandidate: false,
+            content: [
+              {
+                id: 'sk-1',
+                label: 'Java - Software Engineering',
+                source: 'MASTER',
+              },
+            ],
+          },
+        },
+      },
+      FALLBACK_FORM
+    );
+
+    expect(result.preferredSkills?.skills[0].levelId).toBeUndefined();
+    expect(result.preferredSkills?.skills[0].levelName).toBeUndefined();
+  });
+});
+
 // ─── Education + License + Industry hydration coverage ───────────────────────
 
 describe('toVacancyFormFromResponse — secondary/tertiary/license/industry', () => {

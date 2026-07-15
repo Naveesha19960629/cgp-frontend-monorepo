@@ -75,6 +75,16 @@ interface MasterRef {
   source: string;
 }
 
+/**
+ * Preferred-skill payload item: a skill-career-path ref plus the selected level.
+ * Matches the backend `SkillCareerPathLevelInput` schema.
+ */
+interface SkillLevelRef {
+  id: string;
+  source: string;
+  levelId: string;
+}
+
 interface CreateCareerPathPayload {
   displayValue: string;
   discipline?: MasterRef;
@@ -651,6 +661,8 @@ interface SkillCareerPathEntry {
   careerPathName: string;
   displayValue: string;
   source?: string;
+  levelId?: string;
+  levelName?: string;
 }
 
 interface PreferredSkills {
@@ -1615,7 +1627,7 @@ interface IndustryApiPayload {
 interface SkillsApiPayload {
   isEnabled: boolean;
   dataTakenFromCandidate: boolean;
-  content: MasterRef[];
+  content: SkillLevelRef[];
 }
 
 interface LanguagesApiPayload {

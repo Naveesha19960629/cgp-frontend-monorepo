@@ -960,6 +960,10 @@ function normalizeSkillEntry(raw: unknown): SkillCareerPathEntry | null {
     careerPathName,
     displayValue: label,
     source,
+    // Legacy skills (created before skill levels existed) have no levelId; leave
+    // it empty so the recruiter is forced to re-select a level in edit mode.
+    levelId: toSafeString(raw.levelId) || undefined,
+    levelName: toSafeString(raw.levelName) || undefined,
   };
 }
 
