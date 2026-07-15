@@ -235,11 +235,9 @@ describe('VacanciesPage', () => {
     it('does not show the dialog before Save as Template is triggered', () => {
       render(<VacanciesPage />);
 
-      expect(
-        screen.queryByRole('heading', {
-          name: 'vacancySaveAsTemplateDialog.title',
-        })
-      ).not.toBeInTheDocument();
+      // The dialog's title/description are always mounted (for a11y), so
+      // assert on the portal-rendered dialog content instead.
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
 
     it('calls the mutation with the vacancy id and trimmed name, then shows a success toast', async () => {
@@ -277,11 +275,7 @@ describe('VacanciesPage', () => {
         description: 'vacancies.saveAsTemplate.notifications.successMessage',
       });
       // Dialog closes after a successful save.
-      expect(
-        screen.queryByRole('heading', {
-          name: 'vacancySaveAsTemplateDialog.title',
-        })
-      ).not.toBeInTheDocument();
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
 
     it('shows an error toast when the mutation fails', async () => {
@@ -333,11 +327,7 @@ describe('VacanciesPage', () => {
       );
 
       expect(mutate).not.toHaveBeenCalled();
-      expect(
-        screen.queryByRole('heading', {
-          name: 'vacancySaveAsTemplateDialog.title',
-        })
-      ).not.toBeInTheDocument();
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
 
     it('disables the confirm button while saving is in progress', () => {
@@ -349,8 +339,10 @@ describe('VacanciesPage', () => {
       render(<VacanciesPage />);
       triggerSaveAsTemplate();
 
+      // DialogContent renders [No, Yes, built-in close (X)] in that order —
+      // the confirm button is the second of the three.
       const buttons = screen.getAllByRole('button');
-      const confirmButton = buttons[buttons.length - 1];
+      const confirmButton = buttons[1];
       expect(confirmButton).toBeDisabled();
     });
   });

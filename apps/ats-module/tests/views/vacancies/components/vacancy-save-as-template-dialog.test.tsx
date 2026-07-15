@@ -155,16 +155,18 @@ describe('VacancySaveAsTemplateDialog', () => {
     ).toBeDisabled();
   });
 
-  it('shows a spinner and disables both buttons while isSaving is true', () => {
+  it('shows a spinner alongside the label and disables both buttons while isSaving is true', () => {
     render(<VacancySaveAsTemplateDialog {...defaultProps} isSaving />);
 
     const buttons = screen.getAllByRole('button');
     expect(buttons.every(button => button.hasAttribute('disabled'))).toBe(true);
+    // The "Yes" label stays visible alongside the spinner instead of being
+    // replaced by it, so the button doesn't resize when saving starts.
     expect(
-      screen.queryByRole('button', {
+      screen.getByRole('button', {
         name: 'vacancySaveAsTemplateDialog.yesButton',
       })
-    ).not.toBeInTheDocument();
+    ).toBeInTheDocument();
   });
 
   it('does not exceed the maximum character limit', () => {

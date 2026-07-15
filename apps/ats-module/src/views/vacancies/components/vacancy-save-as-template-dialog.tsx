@@ -60,13 +60,13 @@ export default function VacancySaveAsTemplateDialog({
           >
             {t('vacancySaveAsTemplateDialog.title')}
           </h2>
-          <p className="mt-2 text-center text-sm/5 font-normal whitespace-pre-line text-slate-900">
+          <p className="mt-2 px-12 text-center text-sm/5 font-normal whitespace-pre-line text-slate-900">
             {t('vacancySaveAsTemplateDialog.description')}
           </p>
         </div>
         <div className="w-full rounded-2xl border border-[rgba(7,80,86,0.14)] bg-white p-4 shadow-[0px_4px_90px_0px_rgba(0,0,0,0.14)]">
           <div className="flex w-full flex-col gap-1">
-            <Label className="flex w-full items-center justify-between">
+            <Label className="flex w-full items-center justify-between font-semibold">
               <span className="flex items-center gap-1">
                 {t('vacancySaveAsTemplateDialog.nameLabel')}
                 <span className="text-rose-600">*</span>
@@ -86,14 +86,14 @@ export default function VacancySaveAsTemplateDialog({
             />
           </div>
         </div>
-        <div className="flex w-full gap-3">
+        <div className="grid w-full grid-cols-2 gap-3">
           <Button
             type="button"
             variant="secondary"
             disabled={isSaving}
             onClick={() => onOpenChange(false)}
             className={cn(
-              'h-14 flex-1 rounded-lg bg-neutral-200 text-neutral-600 hover:bg-neutral-200',
+              'h-14 w-full rounded-lg bg-neutral-200 text-neutral-600 hover:bg-neutral-200',
               applyTypography('h5')
             )}
           >
@@ -103,13 +103,10 @@ export default function VacancySaveAsTemplateDialog({
             type="button"
             disabled={isSaving || !templateName.trim()}
             onClick={onConfirm}
-            className={cn('h-14 flex-1 rounded-lg', applyTypography('h5'))}
+            className={cn('h-14 w-full rounded-lg', applyTypography('h5'))}
           >
-            {isSaving ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : (
-              t('vacancySaveAsTemplateDialog.yesButton')
-            )}
+            {isSaving && <Loader2 className="size-4 animate-spin" />}
+            {t('vacancySaveAsTemplateDialog.yesButton')}
           </Button>
         </div>
       </DialogContent>
