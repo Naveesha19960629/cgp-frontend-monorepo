@@ -54,4 +54,12 @@ export const vacancyTemplateService = {
     );
     return response.data;
   },
+  deleteTemplate: async (
+    id: string
+  ): Promise<SingleRecordApiResponse<string>> => {
+    const response = await httpClient.delete<SingleRecordApiResponse<string>>(
+      `/vacancy-templates/${id}`
+    );
+    return response.data;
+  },
 };

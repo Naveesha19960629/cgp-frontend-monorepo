@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
@@ -6,16 +6,19 @@ import {
   TEMPLATE_SKELETON_COUNT,
   TemplateCard,
   TemplateCardSkeleton,
+  TemplateDeleteDialog,
   TemplateEmptyState,
   TemplateSearchEmptyState,
   TemplatesToolbar,
   VacancyTablePagination,
+  useDeleteTemplateMutation,
   useVacancyTemplatesQuery,
   useVacancyTemplatesTableParams,
 } from '@/views/vacancies';
 import type { VacancyTemplateQueryParams } from '@/views/vacancies';
 import { TABLE_PAGE_SIZE } from '@/views/vacancies/utils';
 
+import { ErrorToast, SuccessToast } from '@cgp/ui-kit/components/custom-toast';
 import { useKeycloak } from '@react-keycloak/web';
 
 const TEMPLATE_CREATE_ROUTE = '/dashboard/ats/templates/new';
@@ -25,6 +28,8 @@ export default function TemplatesPage() {
   const navigate = useNavigate();
   const { keycloak, initialized } = useKeycloak();
   const [params, setParams] = useVacancyTemplatesTableParams();
+  const [deleteTemplateId, setDeleteTemplateId] = useState<string | null>(null);
+  const deleteMutation = useDeleteTemplateMutation();
 
   const queryParams: VacancyTemplateQueryParams = useMemo(
     () => ({
@@ -75,9 +80,32 @@ export default function TemplatesPage() {
       state: { from: '/dashboard/ats/templates' },
     });
 
-  // Edit / Delete flows are handled by their own stories
-  // (DQCGP-2199 / 2200). Wired here as no-ops until those land.
+  // Edit flow is handled by its own story (DQCGP-2199). Wired here as a
+  // no-op until it lands.
   const noop = () => {};
+
+  const handleDeleteConfirm = () => {
+    if (!deleteTemplateId) return;
+    const isLastItemOnPage = templates.length === 1 && params.page > 1;
+    deleteMutation.mutate(deleteTemplateId, {
+      onSuccess: () => {
+        SuccessToast({
+          title: t('templates.deleteDialog.notifications.successTitle'),
+          description: t('templates.deleteDialog.notifications.successMessage'),
+        });
+        setDeleteTemplateId(null);
+        if (isLastItemOnPage) {
+          void setParams({ page: params.page - 1 });
+        }
+      },
+      onError: () => {
+        ErrorToast({
+          title: t('templates.deleteDialog.notifications.errorTitle'),
+          description: t('templates.deleteDialog.notifications.errorMessage'),
+        });
+      },
+    });
+  };
 
   return (
     <section className="flex h-full flex-col overflow-hidden px-7 py-5">
@@ -116,7 +144,7 @@ export default function TemplatesPage() {
                 key={template.vacancyTemplateId}
                 template={template}
                 onEdit={noop}
-                onDelete={noop}
+                onDelete={setDeleteTemplateId}
                 onUse={goToUseTemplate}
               />
             ))}
@@ -131,6 +159,15 @@ export default function TemplatesPage() {
           onPageChange={page => void setParams({ page: page + 1 })}
         />
       )}
+
+      <TemplateDeleteDialog
+        open={Boolean(deleteTemplateId)}
+        onOpenChange={open => {
+          if (!open) setDeleteTemplateId(null);
+        }}
+        onConfirm={handleDeleteConfirm}
+        isDeleting={deleteMutation.isPending}
+      />
     </section>
   );
 }
