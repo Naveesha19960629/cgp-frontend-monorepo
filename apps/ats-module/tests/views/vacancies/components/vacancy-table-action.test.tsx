@@ -299,25 +299,26 @@ describe('VacancyTableAction', () => {
     expect(
       screen.queryByText('vacancies.table.actions.makeACopy')
     ).not.toBeInTheDocument();
+    // Save as Template is always shown, regardless of availableActions.
     expect(
-      screen.queryByText('vacancies.table.actions.saveAsTemplate')
-    ).not.toBeInTheDocument();
+      screen.getByText('vacancies.table.actions.saveAsTemplate')
+    ).toBeInTheDocument();
     // EDIT_JD not in availableActions — falls back to status-based (live → show)
     expect(
       screen.getByText('vacancies.table.actions.editJd')
     ).toBeInTheDocument();
   });
 
-  it('shows saveAsTemplate when explicitly in availableActions', async () => {
+  it('always shows saveAsTemplate even when availableActions omits it', async () => {
     const user = userEvent.setup();
     render(
       <VacancyTableAction
         {...defaultProps}
         vacancy={{
           id: 'test',
-          status: 'live',
+          status: 'draft',
           applicantCount: 0,
-          availableActions: ['EDIT', 'SAVE_AS_TEMPLATE'],
+          availableActions: ['EDIT'],
         }}
       />
     );
