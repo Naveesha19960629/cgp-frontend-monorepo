@@ -1027,6 +1027,13 @@ interface VacancyDeleteDialogProps {
   isDeleting?: boolean;
 }
 
+interface TemplateDeleteDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onConfirm: () => void;
+  isDeleting?: boolean;
+}
+
 interface VacancyEditCancelDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -2041,4 +2048,5 @@ export type {
   VacancyFilterOptionsApiResponse,
   VacancyViewPatentEntry,
   VacancyViewPreferredPatents,
+  TemplateDeleteDialogProps,
 };
