@@ -830,18 +830,12 @@ export default function CustomizableFormStep({
     window.scrollTo({ top: 0, behavior: 'instant' });
   }, []);
 
+  // Real user input only. Every form is seeded with one default (empty)
+  // question, so counting question presence would always report data. Reuse
+  // isFormEmpty so a pristine section (default question, no values) counts as
+  // empty and toggling off does not prompt the disable confirmation.
   const hasFormData =
-    sectionTitle.trim().length > 0 ||
-    forms.some(
-      form =>
-        form.title.trim().length > 0 ||
-        form.questions.length > 0 ||
-        form.questions.some(
-          q =>
-            q.text.trim().length > 0 ||
-            q.options.some(o => o.value.trim().length > 0)
-        )
-    );
+    sectionTitle.trim().length > 0 || forms.some(form => !isFormEmpty(form));
 
   const isSectionTitleError = sectionTitle.length > SECTION_TITLE_MAX;
 
@@ -995,7 +989,8 @@ export default function CustomizableFormStep({
         if (f.id !== formId) return f;
         return {
           ...f,
-          questions: [...f.questions, createQuestion(f.nextQuestionId)],
+          // Reverse chronological order — newest question first (DQCGP-2303 AC 3.1.1).
+          questions: [createQuestion(f.nextQuestionId), ...f.questions],
           nextQuestionId: f.nextQuestionId + 1,
         };
       })
@@ -1067,6 +1062,9 @@ export default function CustomizableFormStep({
       if (hasFormData) {
         setShowDisableConfirm(true);
       } else {
+        // Clear any pending required-field messages so they don't linger while
+        // the section is disabled.
+        setShowValidation(false);
         setIsEnabled(false);
       }
       return;
@@ -1367,6 +1365,7 @@ export default function CustomizableFormStep({
           setSectionTitle('');
           setForms([createForm(1)]);
           setNextFormId(2);
+          setShowValidation(false);
           setIsEnabled(false);
           // Persist the disabled/cleared state to the shared form context right
           // away so a save triggered without re-visiting this step (e.g. via the
