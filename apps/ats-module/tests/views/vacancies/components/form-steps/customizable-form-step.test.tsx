@@ -957,4 +957,27 @@ describe('CustomizableFormStep', () => {
       ).toBeEnabled();
     });
   });
+
+  describe('Question ordering (M1)', () => {
+    it('adds a new question to the top (reverse chronological)', async () => {
+      const user = userEvent.setup();
+      renderComponent();
+
+      await user.click(getSectionToggle());
+
+      // The default form starts with exactly one question input.
+      let questionInputs = screen.getAllByPlaceholderText('Question');
+      expect(questionInputs).toHaveLength(1);
+      await user.type(questionInputs[0], 'First question');
+
+      // Add a second question.
+      await user.click(screen.getByRole('button', { name: 'Create Question' }));
+
+      // Newest-first: the new empty question is at index 0, the original second.
+      questionInputs = screen.getAllByPlaceholderText('Question');
+      expect(questionInputs).toHaveLength(2);
+      expect(questionInputs[0]).toHaveValue('');
+      expect(questionInputs[1]).toHaveValue('First question');
+    });
+  });
 });

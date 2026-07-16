@@ -362,6 +362,59 @@ describe('toCreateVacancyPayload — patents statuses array', () => {
       { isEnabled: false, dataTakenFromCandidate: false, content: [] },
     ]);
   });
+
+  it('maps preferred skills to {source, id, levelId} content items', () => {
+    const payload = toCreateVacancyPayload(
+      buildBaseForm({
+        preferredSkills: {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          skills: [
+            {
+              skillId: 'skill-1',
+              skillName: 'Java',
+              careerPathName: 'Software Engineering',
+              displayValue: 'Java - Software Engineering',
+              source: 'MASTER',
+              levelId: 'level-1',
+              levelName: 'Senior Level',
+            },
+          ],
+        },
+      })
+    );
+
+    expect(payload.data.skills.content).toEqual([
+      { source: 'MASTER', id: 'skill-1', levelId: 'level-1' },
+    ]);
+  });
+
+  it('clears preferred skills content when dataTakenFromCandidate is true', () => {
+    const payload = toCreateVacancyPayload(
+      buildBaseForm({
+        preferredSkills: {
+          isEnabled: true,
+          dataTakenFromCandidate: true,
+          skills: [
+            {
+              skillId: 'skill-1',
+              skillName: 'Java',
+              careerPathName: 'Software Engineering',
+              displayValue: 'Java - Software Engineering',
+              source: 'MASTER',
+              levelId: 'level-1',
+            },
+          ],
+        },
+      })
+    );
+
+    expect(payload.data.skills).toEqual({
+      isEnabled: true,
+      dataTakenFromCandidate: true,
+      content: [],
+    });
+  });
 });
 
 describe('toCreateVacancyPayload — schedule null values', () => {

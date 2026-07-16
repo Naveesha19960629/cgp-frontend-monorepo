@@ -31,6 +31,12 @@ export interface ComboboxOption {
 interface ComboboxProps {
   options: ComboboxOption[];
   value?: string;
+  /**
+   * Overrides the text shown in the closed input for the selected value.
+   * Useful when the dropdown lists a richer label (e.g. "Skill - Career Path")
+   * but the collapsed field should show a shorter one (e.g. just "Skill").
+   */
+  selectedLabel?: string;
   onValueChange?: (value: string) => void;
   placeholder?: string;
   searchPlaceholder?: string;
@@ -59,6 +65,7 @@ interface ComboboxProps {
 export function Combobox({
   options,
   value,
+  selectedLabel,
   onValueChange,
   placeholder = 'Select option...',
   searchPlaceholder: _searchPlaceholder = 'Search options...',
@@ -176,7 +183,8 @@ export function Combobox({
       return;
     }
     if (newOpen && !clearOnSelect && selectedOption) {
-      setSearchValue(selectedOption.label);
+      const displayLabel = selectedLabel ?? selectedOption.label;
+      setSearchValue(displayLabel);
       // If the selected option is not in the current options slice (e.g. it
       // came from a previous search beyond the initial page), trigger the
       // external search immediately so the list repopulates on open.
@@ -184,7 +192,7 @@ export function Combobox({
         o => o.value === selectedOption.value
       );
       if (!inCurrentOptions) {
-        onSearchChange?.(selectedOption.label);
+        onSearchChange?.(displayLabel);
       }
     }
     setOpen(newOpen);
@@ -206,7 +214,9 @@ export function Combobox({
     ? searchValue
     : open
       ? searchValue
-      : (selectedOption?.label ?? '');
+      : selectedOption
+        ? (selectedLabel ?? selectedOption.label)
+        : '';
 
   return (
     <Popover open={open} onOpenChange={handleOpenChange} modal={modal}>

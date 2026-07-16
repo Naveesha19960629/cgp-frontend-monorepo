@@ -16,23 +16,30 @@ import {
   useCreateCareerPathMutation,
   useCreateSkillCareerPathMutation,
   useDisableSuccessToast,
+  useJobLevelsQuery,
   useSkillsQuery,
   useStepGuard,
 } from '@/views/vacancies/hooks';
 import { careerPathService, skillService } from '@/views/vacancies/services';
 import type {
   CareerPathItem,
+  JobLevelItem,
   SkillCareerPathEntry,
   StepProps,
 } from '@/views/vacancies/types';
 
 import { CharacterCount } from '@cgp/ui-kit/components/character-count';
 import { Combobox } from '@cgp/ui-kit/components/combobox';
-import MultipleSelector from '@cgp/ui-kit/components/multi-select';
-import type { Option } from '@cgp/ui-kit/components/multi-select';
-import { Badge } from '@cgp/ui-kit/components/ui/badge';
+import { ErrorToast } from '@cgp/ui-kit/components/custom-toast';
 import { Button } from '@cgp/ui-kit/components/ui/button';
 import { Checkbox } from '@cgp/ui-kit/components/ui/checkbox';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@cgp/ui-kit/components/ui/select';
 import { Switch } from '@cgp/ui-kit/components/ui/switch';
 import { cn } from '@cgp/ui-kit/lib/utils';
 
@@ -40,10 +47,377 @@ const MAX_SKILLS = 10;
 const MAX_SKILL_CHARS = 100;
 const MAX_CAREER_PATH_CHARS = 100;
 
-const multiSelectInfoAvatar = new URL(
-  '../../../../assets/images/multi-select-info-avatar.svg',
-  import.meta.url
-).href;
+// Separator (en-dash / em-dash / hyphen) used in skill-career-path labels
+// e.g. "Java - Software Engineering".
+const SKILL_CAREER_PATH_SEPARATOR = /\s[–—-]\s/;
+
+/** Per-row validation flags surfaced as inline errors. */
+interface RowError {
+  careerPath?: boolean;
+  level?: boolean;
+}
+
+const createEmptyRow = (): SkillCareerPathEntry => ({
+  skillId: '',
+  skillName: '',
+  careerPathId: undefined,
+  careerPathName: '',
+  displayValue: '',
+  source: undefined,
+  levelId: undefined,
+  levelName: undefined,
+});
+
+const normalize = (value: string) => value.trim().toLowerCase();
+
+/**
+ * Levels already taken by *other* rows that share the same skill + career path
+ * as the row at `index`. Those levels are frozen in this row's Level dropdown so
+ * the same skill/career-path/level combination cannot be added twice.
+ */
+const usedLevelIdsFor = (
+  rows: SkillCareerPathEntry[],
+  index: number
+): Set<string> => {
+  const target = rows[index];
+  const used = new Set<string>();
+  if (!target?.skillName.trim()) return used;
+  rows.forEach((r, i) => {
+    if (i === index || !r.levelId) return;
+    if (
+      normalize(r.skillName) === normalize(target.skillName) &&
+      normalize(r.careerPathName) === normalize(target.careerPathName)
+    ) {
+      used.add(r.levelId);
+    }
+  });
+  return used;
+};
+
+// ── Single skill row ─────────────────────────────────────────────────────────
+
+interface PreferredSkillRowProps {
+  entry: SkillCareerPathEntry;
+  index: number;
+  isRemovable: boolean;
+  disabled: boolean;
+  error?: RowError;
+  jobLevels: JobLevelItem[];
+  isJobLevelsLoading: boolean;
+  /** Level ids frozen for this row because they duplicate another row. */
+  disabledLevelIds: Set<string>;
+  onChange: (index: number, entry: SkillCareerPathEntry) => void;
+  onRemove: (index: number) => void;
+}
+
+function PreferredSkillRow({
+  entry,
+  index,
+  isRemovable,
+  disabled,
+  error,
+  jobLevels,
+  isJobLevelsLoading,
+  disabledLevelIds,
+  onChange,
+  onRemove,
+}: Readonly<PreferredSkillRowProps>) {
+  const { t } = useTranslation('ats');
+
+  const [skillSearch, setSkillSearch] = useState('');
+  const [careerPathApiSearch, setCareerPathApiSearch] = useState('');
+  // Career paths the user typed in this session (not yet persisted to the API).
+  const [userEnteredCareerPaths, setUserEnteredCareerPaths] = useState<
+    CareerPathItem[]
+  >([]);
+
+  const { data: skillsData, isLoading: isSkillsLoading } =
+    useSkillsQuery(skillSearch);
+  const { data: careerPathsData, isLoading: isCareerPathsLoading } =
+    useCareerPathsQuery(careerPathApiSearch);
+
+  const apiSkills = useMemo(
+    () => skillsData?.data?.items?.content ?? [],
+    [skillsData]
+  );
+  const apiCareerPaths: CareerPathItem[] =
+    careerPathsData?.data?.items?.content ?? [];
+
+  const skillValue = entry.skillId || entry.skillName;
+  const skillOptions = useMemo(() => {
+    // The dropdown lists the full "Skill - Career Path" labels; once a skill is
+    // selected, only the skill name is shown in the closed field (via
+    // `selectedLabel`), while the career path is surfaced in its own field.
+    const opts = apiSkills.map(s => ({ value: s.id, label: s.label }));
+    // Keep the currently-selected entry visible even if it isn't in the
+    // latest search slice (e.g. user-created skills, or after re-search).
+    if (skillValue && !opts.some(o => o.value === skillValue)) {
+      opts.unshift({
+        value: skillValue,
+        label: entry.displayValue || entry.skillName,
+      });
+    }
+    // Dedupe by label so a user-created combination that also already exists in
+    // the master data isn't listed twice. The selected/synthetic option is
+    // unshifted first, so it wins and keeps the check mark.
+    const seen = new Set<string>();
+    return opts.filter(o => {
+      const key = normalize(o.label);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, [apiSkills, skillValue, entry.displayValue, entry.skillName]);
+
+  // If a user-created skill + career path turns out to already exist in the
+  // master data (surfaced by the search), adopt the existing record so it is
+  // reused — selecting it instead of POSTing a duplicate (rejected with 400).
+  useEffect(() => {
+    if (
+      entry.skillId ||
+      entry.source !== 'USER_CREATED' ||
+      !entry.displayValue
+    ) {
+      return;
+    }
+    const match = apiSkills.find(
+      s => normalize(s.label) === normalize(entry.displayValue)
+    );
+    if (match) {
+      onChange(index, {
+        ...entry,
+        skillId: match.id,
+        source: match.source ?? 'MASTER',
+      });
+    }
+  }, [apiSkills, entry, index, onChange]);
+
+  const careerPaths: CareerPathItem[] = [
+    ...userEnteredCareerPaths,
+    ...apiCareerPaths.filter(
+      cp =>
+        !userEnteredCareerPaths.some(
+          u => u.label.toLowerCase() === cp.label.toLowerCase()
+        )
+    ),
+  ];
+  const careerPathOptions = careerPaths.map(cp => ({
+    label: cp.label,
+    value: cp.label,
+  }));
+  if (
+    entry.careerPathName &&
+    !careerPathOptions.some(
+      o => o.value.toLowerCase() === entry.careerPathName.toLowerCase()
+    )
+  ) {
+    careerPathOptions.unshift({
+      label: entry.careerPathName,
+      value: entry.careerPathName,
+    });
+  }
+
+  // ── Field handlers ──────────────────────────────────────────────────────
+  const handleSkillSelect = (value: string) => {
+    const picked = apiSkills.find(s => s.id === value);
+    if (!picked) return;
+    const label = picked.label;
+    const sep = SKILL_CAREER_PATH_SEPARATOR.exec(label);
+    const skillName = sep ? label.slice(0, sep.index) : label;
+    const careerPathName = sep ? label.slice(sep.index + sep[0].length) : '';
+    onChange(index, {
+      ...entry,
+      skillId: picked.id,
+      skillName,
+      careerPathId: undefined,
+      careerPathName,
+      displayValue: label,
+      source: picked.source ?? 'MASTER',
+    });
+  };
+
+  const handleSkillAddNew = (text: string) => {
+    onChange(index, {
+      ...entry,
+      skillId: '',
+      skillName: text,
+      careerPathId: undefined,
+      careerPathName: '',
+      displayValue: text,
+      source: 'USER_CREATED',
+    });
+  };
+
+  // Apply a career-path change. If the career path actually changes, the
+  // skill/career-path pairing is no longer a known combination, so the row is
+  // re-classified as user-created — the pairing is checked (and created if it
+  // does not already exist) on Next.
+  const applyCareerPath = (rawValue: string) => {
+    const value = rawValue.trim();
+    const matched = apiCareerPaths.find(
+      cp => cp.label.toLowerCase() === value.toLowerCase()
+    );
+    const unchanged =
+      !!entry.skillId && normalize(value) === normalize(entry.careerPathName);
+    onChange(index, {
+      ...entry,
+      // Re-classify unless the existing combination is untouched.
+      skillId: unchanged ? entry.skillId : '',
+      source: unchanged ? entry.source : 'USER_CREATED',
+      careerPathName: value,
+      careerPathId: matched?.id,
+      displayValue: `${entry.skillName} - ${value}`,
+    });
+  };
+
+  const handleCareerPathSelect = (value: string) => applyCareerPath(value);
+
+  const handleCareerPathAddNew = (text: string) => {
+    const trimmed = text.trim();
+    const existing = careerPaths.find(
+      cp => cp.label.toLowerCase() === trimmed.toLowerCase()
+    );
+    if (!existing) {
+      setUserEnteredCareerPaths(prev => [
+        ...prev,
+        { id: crypto.randomUUID(), label: trimmed },
+      ]);
+    }
+    applyCareerPath(trimmed);
+  };
+
+  const handleLevelChange = (value: string) => {
+    const lvl = jobLevels.find(l => l.id === value);
+    onChange(index, {
+      ...entry,
+      levelId: lvl?.id,
+      levelName: lvl?.label ?? lvl?.name ?? '',
+    });
+  };
+
+  return (
+    <div className="relative pt-4" data-testid="preferred-skill-row">
+      {/* Delete row — top-right, above the row (hidden for the first, non-removable row) */}
+      {isRemovable && (
+        <button
+          type="button"
+          aria-label={t('common.delete')}
+          className={cn(
+            'absolute top-0 right-0 text-slate-900 transition-colors hover:text-slate-500',
+            disabled && 'pointer-events-none opacity-50'
+          )}
+          onClick={() => onRemove(index)}
+          disabled={disabled}
+        >
+          <X className="size-5" />
+        </button>
+      )}
+      <div className="duo-skills:grid-cols-2 duo-skills:gap-x-5 tri-skills:grid-cols-3 grid grid-cols-1 items-start gap-5">
+        {/* Skill */}
+        <div className="flex min-w-0 flex-col gap-1">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-semibold text-slate-900">
+              {t('preferredSkills.sectionLabel')}
+            </span>
+            <CharacterCount
+              maxLength={MAX_SKILL_CHARS}
+              currentLength={entry.skillName.length}
+            />
+          </div>
+          <Combobox
+            modal={false}
+            options={skillOptions}
+            value={skillValue}
+            selectedLabel={entry.skillName || undefined}
+            onValueChange={handleSkillSelect}
+            onAddNew={handleSkillAddNew}
+            onSearchChange={setSkillSearch}
+            loading={isSkillsLoading}
+            disabled={disabled}
+            maxLength={MAX_SKILL_CHARS}
+            placeholder={t('preferredSkills.input.placeholder')}
+            className="h-11 border-slate-200 bg-white text-sm"
+          />
+        </div>
+
+        {/* Career Path */}
+        <div className="flex min-w-0 flex-col gap-1">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-semibold text-slate-900">
+              {t('preferredSkills.careerPath.label')}
+              <span className="text-rose-500"> *</span>
+            </span>
+            <CharacterCount
+              maxLength={MAX_CAREER_PATH_CHARS}
+              currentLength={entry.careerPathName.length}
+            />
+          </div>
+          <Combobox
+            modal={false}
+            options={careerPathOptions}
+            value={entry.careerPathName}
+            onValueChange={handleCareerPathSelect}
+            onAddNew={handleCareerPathAddNew}
+            onSearchChange={setCareerPathApiSearch}
+            loading={isCareerPathsLoading}
+            disabled={disabled}
+            maxLength={MAX_CAREER_PATH_CHARS}
+            isError={!!error?.careerPath}
+            placeholder={t('preferredSkills.careerPath.input.placeholder')}
+            className="h-11 border-slate-200 bg-white text-sm"
+          />
+          {error?.careerPath && (
+            <p className="mt-1 text-xs text-red-500">
+              {t('preferredSkills.validation.careerPathRequired')}
+            </p>
+          )}
+        </div>
+
+        {/* Level */}
+        <div className="flex min-w-0 flex-col gap-1">
+          <span className="text-sm font-semibold text-slate-900">
+            {t('preferredSkills.level.label')}
+            <span className="text-rose-500"> *</span>
+          </span>
+          <Select
+            value={entry.levelId ?? ''}
+            onValueChange={handleLevelChange}
+            disabled={disabled || isJobLevelsLoading}
+          >
+            <SelectTrigger
+              className={cn(
+                '!h-11 w-full bg-white shadow-none',
+                error?.level && 'border-destructive'
+              )}
+            >
+              <SelectValue
+                placeholder={t('preferredSkills.level.placeholder')}
+              />
+            </SelectTrigger>
+            <SelectContent>
+              {jobLevels.map(level => (
+                <SelectItem
+                  key={level.id}
+                  value={level.id}
+                  disabled={disabledLevelIds.has(level.id)}
+                >
+                  {level.label ?? level.name ?? ''}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {error?.level && (
+            <p className="mt-1 text-xs text-red-500">
+              {t('preferredSkills.validation.levelRequired')}
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Step ─────────────────────────────────────────────────────────────────────
 
 export default function PreferredSkillsStep({
   onNext,
@@ -70,25 +444,30 @@ export default function PreferredSkillsStep({
   const [dataTakenFromCandidate, setDataTakenFromCandidate] = useState(
     form.preferredSkills?.dataTakenFromCandidate ?? false
   );
-  const [selectedSkills, setSelectedSkills] = useState<SkillCareerPathEntry[]>(
-    form.preferredSkills?.skills ?? []
-  );
-  const [userCreatedSkillOptions, setUserCreatedSkillOptions] = useState<
-    Option[]
-  >(() =>
-    (form.preferredSkills?.skills ?? [])
-      .filter(s => s.source === 'USER_CREATED' || s.source === 'PENDING')
-      .map(s => ({
-        value: s.skillId || s.skillName,
-        label: s.displayValue,
-        source: s.source,
-      }))
+  const [rows, setRows] = useState<SkillCareerPathEntry[]>(() => {
+    const existing = form.preferredSkills?.skills ?? [];
+    return existing.length > 0 ? existing : [createEmptyRow()];
+  });
+  const [rowErrors, setRowErrors] = useState<Record<number, RowError>>({});
+
+  const { data: jobLevelsData, isLoading: isJobLevelsLoading } =
+    useJobLevelsQuery();
+  const jobLevels = jobLevelsData?.data ?? [];
+
+  const { mutateAsync: createSkillCareerPath } =
+    useCreateSkillCareerPathMutation();
+  const { mutateAsync: createCareerPath } = useCreateCareerPathMutation();
+
+  const populatedRows = useMemo(
+    () => rows.filter(r => r.skillName.trim()),
+    [rows]
   );
 
   useStepGuard(
-    isEnabled && !dataTakenFromCandidate && selectedSkills.length === 0
+    isEnabled && !dataTakenFromCandidate && populatedRows.length === 0
   );
 
+  // Persist populated rows into the shared form context.
   const _skillsRef = useRef<() => void>(() => {});
   useEffect(() => {
     _skillsRef.current = () => {
@@ -97,11 +476,11 @@ export default function PreferredSkillsStep({
         preferredSkills: {
           isEnabled,
           dataTakenFromCandidate,
-          skills: selectedSkills,
+          skills: rows.filter(r => r.skillName.trim()),
         },
       }));
     };
-  }, [isEnabled, dataTakenFromCandidate, selectedSkills, setForm]);
+  }, [isEnabled, dataTakenFromCandidate, rows, setForm]);
   useEffect(() => {
     stepPersistRef.current = () => _skillsRef.current();
     return () => {
@@ -124,251 +503,187 @@ export default function PreferredSkillsStep({
     };
   }, [setForm, stepDisableRef]);
 
-  // Skill search state for the query
-  const [skillSearch, setSkillSearch] = useState('');
-
-  // Career path popover
-  const [pendingSkillName, setPendingSkillName] = useState('');
-  const [pendingSkillId, setPendingSkillId] = useState('');
-  const [careerPathSearch, setCareerPathSearch] = useState('');
-  const [careerPathApiSearch, setCareerPathApiSearch] = useState('');
-  const [careerPathError, setCareerPathError] = useState('');
-  const [isCareerPathPopoverOpen, setIsCareerPathPopoverOpen] = useState(false);
-  // Accumulates user-typed career paths within the current panel session
-  const [userEnteredCareerPaths, setUserEnteredCareerPaths] = useState<
-    CareerPathItem[]
-  >([]);
-
-  // Queries
-  const { data: skillsData, isLoading: isSkillsLoading } =
-    useSkillsQuery(skillSearch);
-  const { data: careerPathsData, isLoading: isCareerPathsLoading } =
-    useCareerPathsQuery(careerPathApiSearch);
-
-  const apiSkills = skillsData?.data?.items?.content ?? [];
-  const skillOptions = useMemo(() => {
-    const apiOptions: Option[] = apiSkills.map(s => ({
-      value: s.id,
-      label: s.label,
-      source: s.source ?? 'MASTER',
-    }));
-
-    const optionsByValue = new Map<string, Option>();
-    apiOptions.forEach(option => optionsByValue.set(option.value, option));
-    userCreatedSkillOptions.forEach(option =>
-      optionsByValue.set(option.value, option)
-    );
-
-    return Array.from(optionsByValue.values());
-  }, [apiSkills, userCreatedSkillOptions]);
-  const apiCareerPaths: CareerPathItem[] =
-    careerPathsData?.data?.items?.content ?? [];
-  const { mutateAsync: createSkillCareerPath } =
-    useCreateSkillCareerPathMutation();
-  const { mutateAsync: createCareerPath } = useCreateCareerPathMutation();
-  // Merge user-entered (first, so they appear at top) with API results, deduped
-  const careerPaths: CareerPathItem[] = [
-    ...userEnteredCareerPaths,
-    ...apiCareerPaths.filter(
-      cp =>
-        !userEnteredCareerPaths.some(
-          u => u.label.toLowerCase() === cp.label.toLowerCase()
-        )
-    ),
-  ];
-
   const [confirmDisableOpen, setConfirmDisableOpen] = useState(false);
   const [emptyDisableOpen, setEmptyDisableOpen] = useState(false);
 
-  // ── Skill selection via MultipleSelector ──────────────────────────────────
-
-  const handleSkillsChange = (options: Option[]) => {
-    // Find newly added option (present in options but not in selectedSkills)
-    const existingValues = new Set(
-      selectedSkills.map(s => s.skillId || s.skillName)
-    );
-    const newOption = options.find(
-      opt => !existingValues.has(opt.value) && !existingValues.has(opt.label)
-    );
-
-    if (newOption && !newOption.source) {
-      // User-created skill — open career path panel instead of adding directly
-      setPendingSkillId('');
-      setPendingSkillName(newOption.label);
-      setCareerPathSearch('');
-      setCareerPathError('');
-      setIsCareerPathPopoverOpen(true);
-      // Don't add to selectedSkills yet; it will be added via handleAddCareerPath
-      return;
-    }
-
-    // For removals or API-sourced additions, sync back to selectedSkills
-    const updatedSkills: SkillCareerPathEntry[] = options.map(opt => {
-      // Check if already exists in selectedSkills
-      const existing = selectedSkills.find(
-        s =>
-          s.skillId === opt.value ||
-          s.skillName === opt.value ||
-          s.displayValue === opt.label
-      );
-      if (existing) return existing;
-
-      // New API selection
-      const sepMatch = /\s[\u2013\u2014-]\s/.exec(opt.label);
-      const skillName = sepMatch
-        ? opt.label.slice(0, sepMatch.index)
-        : opt.label;
-      const careerPathName = sepMatch
-        ? opt.label.slice(sepMatch.index + sepMatch[0].length)
-        : '';
-      return {
-        skillId:
-          opt.source === 'MASTER' || opt.source === 'PENDING' ? opt.value : '',
-        skillName,
-        careerPathId: undefined,
-        careerPathName,
-        displayValue: opt.label,
-        source: typeof opt.source === 'string' ? opt.source : undefined,
-      };
+  // ── Row mutations ─────────────────────────────────────────────────────────
+  const handleRowChange = (index: number, entry: SkillCareerPathEntry) => {
+    setRows(prev => {
+      const next = prev.map((r, i) => (i === index ? entry : r));
+      // If a skill/career-path change makes this row's level collide with
+      // another row (same skill + career path + level), reset the level so the
+      // recruiter re-picks a still-available one.
+      if (entry.levelId && usedLevelIdsFor(next, index).has(entry.levelId)) {
+        next[index] = { ...entry, levelId: undefined, levelName: undefined };
+      }
+      return next;
     });
-    setSelectedSkills(updatedSkills);
+    setRowErrors(prev => {
+      if (!prev[index]) return prev;
+      const next = { ...prev };
+      delete next[index];
+      return next;
+    });
   };
 
-  // ── Career path ───────────────────────────────────────────────────────────
-
-  const handleAddCareerPath = () => {
-    if (!careerPathSearch.trim()) {
-      setCareerPathError(t('preferredSkills.careerPath.validation.required'));
-      return;
-    }
-
-    // Match only against API career paths (not user-entered ones with fake UUIDs)
-    const matchedCareerPath = apiCareerPaths.find(
-      cp => cp.label.toLowerCase() === careerPathSearch.trim().toLowerCase()
-    );
-
-    const entry: SkillCareerPathEntry = {
-      skillId: pendingSkillId,
-      skillName: pendingSkillName,
-      careerPathId: matchedCareerPath?.id,
-      careerPathName: careerPathSearch.trim(),
-      displayValue: `${pendingSkillName} - ${careerPathSearch.trim()}`,
-      source: 'USER_CREATED',
-    };
-
-    setUserCreatedSkillOptions(prev => {
-      const value = entry.skillId || entry.skillName;
-      const nextOption: Option = {
-        value,
-        label: entry.displayValue,
-        source: entry.source,
-      };
-      return [...prev.filter(option => option.value !== value), nextOption];
-    });
-    setSelectedSkills(prev => [...prev, entry]);
-    setIsCareerPathPopoverOpen(false);
-    setPendingSkillName('');
-    setPendingSkillId('');
-    setCareerPathSearch('');
-    setCareerPathApiSearch('');
-    setCareerPathError('');
-    setUserEnteredCareerPaths([]);
+  const handleRemoveRow = (index: number) => {
+    setRows(prev => prev.filter((_, i) => i !== index));
+    setRowErrors({});
   };
 
-  const handleCancelCareerPath = () => {
-    setIsCareerPathPopoverOpen(false);
-    setPendingSkillName('');
-    setPendingSkillId('');
-    setCareerPathSearch('');
-    setCareerPathApiSearch('');
-    setCareerPathError('');
-    setUserEnteredCareerPaths([]);
+  const handleAddRow = () => {
+    if (rows.length >= MAX_SKILLS) {
+      ErrorToast({
+        title: 'Error',
+        description: t('preferredSkills.validation.maxSkills', {
+          max: MAX_SKILLS,
+        }),
+      });
+      return;
+    }
+    setRows(prev => [...prev, createEmptyRow()]);
+  };
+
+  // ── Validation ──────────────────────────────────────────────────────────
+  // Duplicate combinations are prevented up-front by freezing already-used
+  // levels per skill + career path, so only mandatory fields are checked here.
+  const validate = (): boolean => {
+    const nextErrors: Record<number, RowError> = {};
+
+    rows.forEach((r, idx) => {
+      if (!r.skillName.trim()) return;
+      const err: RowError = {};
+      if (!r.careerPathName.trim()) err.careerPath = true;
+      if (!r.levelId) err.level = true;
+      if (err.careerPath || err.level) {
+        nextErrors[idx] = err;
+      }
+    });
+
+    setRowErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
   };
 
   // ── Submit ────────────────────────────────────────────────────────────────
-
   const handleNext = async () => {
-    if (isEnabled && selectedSkills.length === 0 && !dataTakenFromCandidate) {
+    if (isEnabled && populatedRows.length === 0 && !dataTakenFromCandidate) {
       setEmptyDisableOpen(true);
       return;
     }
 
-    const hasUserCreated = selectedSkills.some(
-      s => s.source === 'USER_CREATED'
-    );
+    if (isEnabled && !dataTakenFromCandidate && !validate()) {
+      return;
+    }
 
-    let resolvedSkills = selectedSkills;
-    if (hasUserCreated) {
-      resolvedSkills = await Promise.all(
-        selectedSkills.map(async entry => {
-          if (entry.source !== 'USER_CREATED') return entry;
+    let resolvedSkills = rows.filter(r => r.skillName.trim());
 
-          try {
-            // Step 1: If career path is new (no ID), POST it first
-            let resolvedCareerPathId = entry.careerPathId;
-            if (!resolvedCareerPathId && entry.careerPathName) {
-              try {
-                const cpResult = await createCareerPath(entry.careerPathName);
-                resolvedCareerPathId = cpResult.pendingId;
-              } catch (cpErr) {
-                const cpAxiosErr = cpErr as {
-                  response?: { data?: { code?: string } };
-                };
-                if (cpAxiosErr.response?.data?.code === 'MST-403') {
-                  const cpSearch = await careerPathService.getAllCareerPaths(
-                    entry.careerPathName
-                  );
-                  const existingCp = cpSearch.data?.items?.content?.find(
-                    item =>
-                      item.label.toLowerCase() ===
-                      entry.careerPathName.toLowerCase()
-                  );
-                  if (existingCp) {
-                    resolvedCareerPathId = existingCp.id;
-                  }
-                } else {
-                  throw cpErr;
-                }
-              }
-            }
+    if (isEnabled && !dataTakenFromCandidate) {
+      // Multiple rows may share the same skill + career path (with different
+      // levels). Resolve each unique skill/career-path combination exactly once
+      // so it is POSTed a single time, then apply the resulting id to every row
+      // that shares it. Career paths are likewise deduped by name.
+      const isAlreadyExists = (e: unknown) =>
+        (e as { response?: { data?: { code?: string } } }).response?.data
+          ?.code === 'MST-403';
 
-            // Step 2: POST the skill-career-path combination
-            const result = await createSkillCareerPath({
-              skillName: entry.skillName,
-              careerPathName: entry.careerPathName,
-            });
-            return {
-              ...entry,
-              skillId: result.pendingId,
-              careerPathId: resolvedCareerPathId,
-              displayValue: result.value || entry.displayValue,
-              source: 'PENDING',
-            };
-          } catch (err) {
-            const axiosErr = err as {
-              response?: { data?: { code?: string } };
-            };
-            if (axiosErr.response?.data?.code === 'MST-403') {
-              const searchResult = await skillService.getAllSkills(
-                entry.displayValue
-              );
-              const existing = searchResult.data?.items?.content?.find(
-                item =>
-                  item.label.toLowerCase() === entry.displayValue.toLowerCase()
-              );
-              if (existing) {
-                return {
-                  ...entry,
-                  skillId: existing.id,
-                  source: 'MASTER',
-                };
-              }
-            }
-            throw err;
+      const careerPathCache = new Map<string, Promise<string | undefined>>();
+      const comboCache = new Map<
+        string,
+        Promise<
+          Pick<
+            SkillCareerPathEntry,
+            'skillId' | 'careerPathId' | 'displayValue' | 'source'
+          >
+        >
+      >();
+
+      const resolveCareerPathId = async (name: string) => {
+        try {
+          const cpResult = await createCareerPath(name);
+          return cpResult.pendingId;
+        } catch (cpErr) {
+          if (!isAlreadyExists(cpErr)) throw cpErr;
+          const cpSearch = await careerPathService.getAllCareerPaths(name);
+          return cpSearch.data?.items?.content?.find(
+            item => item.label.toLowerCase() === name.toLowerCase()
+          )?.id;
+        }
+      };
+
+      const findExistingSkill = async (displayValue: string) => {
+        const res = await skillService.getAllSkills(displayValue);
+        return res?.data?.items?.content?.find(
+          item => item.label.toLowerCase() === displayValue.toLowerCase()
+        );
+      };
+
+      const resolveCombo = async (entry: SkillCareerPathEntry) => {
+        // Reuse the skill + career path if it already exists in the master data.
+        // Creating a duplicate is rejected by the BE (400), so we must select
+        // the existing record instead of POSTing again.
+        const existing = await findExistingSkill(entry.displayValue);
+        if (existing) {
+          return {
+            skillId: existing.id,
+            careerPathId: entry.careerPathId,
+            displayValue: entry.displayValue,
+            source: existing.source ?? ('MASTER' as const),
+          };
+        }
+
+        // Step 1: create the career path first if it is new (no ID).
+        let resolvedCareerPathId = entry.careerPathId;
+        if (!resolvedCareerPathId && entry.careerPathName) {
+          const cpKey = normalize(entry.careerPathName);
+          if (!careerPathCache.has(cpKey)) {
+            careerPathCache.set(
+              cpKey,
+              resolveCareerPathId(entry.careerPathName)
+            );
           }
+          resolvedCareerPathId = await careerPathCache.get(cpKey);
+        }
+
+        // Step 2: create the new skill-career-path combination.
+        try {
+          const result = await createSkillCareerPath({
+            skillName: entry.skillName,
+            careerPathName: entry.careerPathName,
+          });
+          return {
+            skillId: result.pendingId,
+            careerPathId: resolvedCareerPathId,
+            displayValue: result.value || entry.displayValue,
+            source: 'PENDING' as const,
+          };
+        } catch (err) {
+          // Fallback: if it was created concurrently, reuse the existing record.
+          if (!isAlreadyExists(err)) throw err;
+          const fallback = await findExistingSkill(entry.displayValue);
+          if (!fallback) throw err;
+          return {
+            skillId: fallback.id,
+            careerPathId: resolvedCareerPathId,
+            displayValue: entry.displayValue,
+            source: fallback.source ?? ('MASTER' as const),
+          };
+        }
+      };
+
+      resolvedSkills = await Promise.all(
+        resolvedSkills.map(async entry => {
+          if (entry.source !== 'USER_CREATED') return entry;
+          const key = `${normalize(entry.skillName)}|${normalize(
+            entry.careerPathName
+          )}`;
+          if (!comboCache.has(key)) {
+            comboCache.set(key, resolveCombo(entry));
+          }
+          const resolved = await comboCache.get(key);
+          return { ...entry, ...resolved };
         })
       );
-      setSelectedSkills(resolvedSkills);
+      setRows(resolvedSkills.length > 0 ? resolvedSkills : [createEmptyRow()]);
     }
 
     onNext({
@@ -381,14 +696,17 @@ export default function PreferredSkillsStep({
   };
 
   const isStepActionDisabled =
-    isEnabled && !dataTakenFromCandidate && selectedSkills.length === 0;
+    isEnabled && !dataTakenFromCandidate && populatedRows.length === 0;
 
-  // Persist the current step's data to the shared form context before navigating
-  // back, so edits made on this step are not lost (matches the Next flow).
   const handleBack = () => {
     stepPersistRef.current?.();
     onBack();
   };
+
+  const isSectionDisabled = !isEnabled || dataTakenFromCandidate;
+  // Levels frozen per row (already used by another row with the same
+  // skill + career path) so a duplicate combination cannot be selected.
+  const disabledLevelsPerRow = rows.map((_, i) => usedLevelIdsFor(rows, i));
 
   return (
     <div>
@@ -418,7 +736,7 @@ export default function PreferredSkillsStep({
           checked={isEnabled}
           onCheckedChange={newValue => {
             if (!newValue) {
-              if (selectedSkills.length > 0 || dataTakenFromCandidate) {
+              if (populatedRows.length > 0 || dataTakenFromCandidate) {
                 setConfirmDisableOpen(true);
               } else {
                 setIsEnabled(false);
@@ -441,8 +759,8 @@ export default function PreferredSkillsStep({
               checked={dataTakenFromCandidate}
               onCheckedChange={checked => {
                 if (checked) {
-                  setSelectedSkills([]);
-                  setUserCreatedSkillOptions([]);
+                  setRows([createEmptyRow()]);
+                  setRowErrors({});
                   setDataTakenFromCandidate(true);
                 } else {
                   setDataTakenFromCandidate(false);
@@ -461,202 +779,38 @@ export default function PreferredSkillsStep({
           {/* Section: Tools, Technologies, Skills and Frameworks */}
           {isFieldVisible('skillCareerPath') && (
             <>
-              <div>
-                <div className="mb-2 flex items-center justify-between">
-                  <span className="text-sm font-semibold text-slate-700">
-                    {t('preferredSkills.sectionLabel')}
-                  </span>
-                  <CharacterCount
-                    maxLength={MAX_SKILL_CHARS}
-                    currentLength={skillSearch.length}
+              <div className="flex flex-col gap-7">
+                {rows.map((row, index) => (
+                  <PreferredSkillRow
+                    key={index}
+                    entry={row}
+                    index={index}
+                    isRemovable={index > 0}
+                    disabled={isSectionDisabled}
+                    error={rowErrors[index]}
+                    jobLevels={jobLevels}
+                    isJobLevelsLoading={isJobLevelsLoading}
+                    disabledLevelIds={disabledLevelsPerRow[index]}
+                    onChange={handleRowChange}
+                    onRemove={handleRemoveRow}
                   />
-                </div>
-
-                <MultipleSelector
-                  key={
-                    isCareerPathPopoverOpen
-                      ? 'skills-selector-locked'
-                      : 'skills-selector-active'
-                  }
-                  className={cn(
-                    isCareerPathPopoverOpen &&
-                      'pointer-events-none cursor-default'
-                  )}
-                  value={selectedSkills.map(s => ({
-                    value: s.skillId || s.skillName,
-                    label: s.displayValue,
-                    source: s.source,
-                  }))}
-                  errorMessage={t('preferredSkills.validation.maxSkills', {
-                    max: MAX_SKILLS,
-                  })}
-                  onChange={handleSkillsChange}
-                  options={skillOptions}
-                  onSearchSync={value => {
-                    setSkillSearch(value);
-                    return skillOptions;
-                  }}
-                  keepSelectedInList
-                  creatable
-                  triggerSearchOnFocus
-                  hideClearAllButton
-                  maxSelected={MAX_SKILLS}
-                  disabled={!isEnabled || dataTakenFromCandidate}
-                  inputProps={{
-                    maxLength: MAX_SKILL_CHARS,
-                    readOnly: isCareerPathPopoverOpen,
-                    tabIndex: isCareerPathPopoverOpen ? -1 : 0,
-                  }}
-                  loading={isSkillsLoading}
-                  placeholder={t('preferredSkills.input.placeholder')}
-                  loadingIndicator={
-                    <p className="px-3 pb-3 text-left">{t('common.loading')}</p>
-                  }
-                  emptyIndicator={
-                    <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
-                      <div className="flex flex-col items-start">
-                        <img
-                          src={multiSelectInfoAvatar}
-                          alt={t('common.noData')}
-                        />
-                        <div className="mt-3 w-61 text-left">
-                          <p className="font-bold text-slate-900">
-                            {t('common.noDataTitle')}
-                          </p>
-                          <p className="text-sm font-semibold text-slate-700">
-                            {t('common.noDataDescription')}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  }
-                />
-
-                {/* Pending skill chip — shown while career path popover is open */}
-                {pendingSkillName && isCareerPathPopoverOpen && (
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    <Badge
-                      variant="chip"
-                      className="animate-fadeIn flex cursor-default items-center gap-2 pe-2 text-sm font-semibold text-slate-600 shadow-sm"
-                      style={{ borderColor: '#f59e0b', borderWidth: '1px' }}
-                    >
-                      <span className="min-w-0 break-all capitalize">
-                        {pendingSkillName}
-                      </span>
-                    </Badge>
-                  </div>
-                )}
+                ))}
               </div>
 
-              {/* Career Path Panel — inline in content flow, appears after the skill chips */}
-              {isCareerPathPopoverOpen && (
-                <div
-                  className="mt-4 max-w-128.5 overflow-hidden rounded-2xl border border-slate-200 p-4 pb-5 shadow-2xl"
-                  style={{
-                    backgroundImage:
-                      'linear-gradient(90deg, rgb(254,244,238) 24.671%, rgb(248,242,236) 37.979%, rgb(233,244,240) 99.173%, rgb(238,247,245) 166.77%)',
-                  }}
+              {/* Add row — always enabled; shows a toast if the max is exceeded */}
+              <div className="mt-6 flex justify-end pr-8">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="icon"
+                  aria-label={t('preferredSkills.addRow')}
+                  className="size-12 rounded-lg"
+                  onClick={handleAddRow}
+                  disabled={isSectionDisabled}
                 >
-                  {/* Header row: title + close */}
-                  <div className="mb-4 flex items-start justify-between">
-                    <div className="flex flex-col gap-1.5 pr-8">
-                      <h4 className="text-base font-semibold text-slate-900">
-                        {t('preferredSkills.careerPath.title')}
-                      </h4>
-                      <p className="text-sm leading-snug text-slate-600">
-                        {t('preferredSkills.careerPath.description')}
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={handleCancelCareerPath}
-                      className="flex size-8 items-center justify-center rounded text-slate-900 hover:bg-black/5"
-                    >
-                      <X className="size-5 rotate-0" />
-                    </button>
-                  </div>
-
-                  {/* White card with Combobox */}
-                  <div className="mb-3 w-full rounded-xl bg-white p-3">
-                    <div className="flex items-center justify-between gap-1">
-                      <label className="text-sm font-semibold text-slate-700">
-                        {t('preferredSkills.careerPath.label')}{' '}
-                        <span className="text-rose-500">*</span>
-                      </label>
-                      <CharacterCount
-                        currentLength={
-                          careerPathApiSearch.length ||
-                          careerPathSearch.length ||
-                          0
-                        }
-                        maxLength={MAX_CAREER_PATH_CHARS}
-                      />
-                    </div>
-
-                    <div className="mt-1">
-                      <Combobox
-                        modal={false}
-                        options={careerPaths.map(cp => ({
-                          label: cp.label,
-                          value: cp.label,
-                        }))}
-                        value={careerPathSearch}
-                        onValueChange={(value: string) => {
-                          setCareerPathSearch(value);
-                          setCareerPathError('');
-                        }}
-                        onSearchChange={setCareerPathApiSearch}
-                        loading={isCareerPathsLoading}
-                        onAddNew={(value: string) => {
-                          const trimmedValue = value.trim();
-                          const existing = careerPaths.find(
-                            cp =>
-                              cp.label.toLowerCase() ===
-                              trimmedValue.toLowerCase()
-                          );
-                          if (existing) {
-                            setCareerPathSearch(existing.label);
-                            setCareerPathError('');
-                            return;
-                          }
-                          const newCareerPath = {
-                            id: crypto.randomUUID(),
-                            label: trimmedValue,
-                          };
-                          setUserEnteredCareerPaths(prev => [
-                            ...prev,
-                            newCareerPath,
-                          ]);
-                          setCareerPathSearch(trimmedValue);
-                          setCareerPathError('');
-                        }}
-                        placeholder={t(
-                          'preferredSkills.careerPath.input.placeholder'
-                        )}
-                        className="h-11 border-slate-200 bg-white text-sm"
-                        maxLength={MAX_CAREER_PATH_CHARS}
-                        isError={!!careerPathError}
-                      />
-                    </div>
-
-                    {careerPathError && (
-                      <p className="mt-1 text-xs text-red-500">
-                        {careerPathError}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="flex justify-end">
-                    <Button
-                      onClick={handleAddCareerPath}
-                      className="h-auto w-37.75 gap-1 rounded-lg bg-teal-800 px-8 py-2 text-sm font-medium text-white shadow-sm hover:bg-teal-900"
-                    >
-                      <Plus className="size-5 stroke-2" />
-                      {t('preferredSkills.careerPath.addButton')}
-                    </Button>
-                  </div>
-                </div>
-              )}
+                  <Plus className="size-6" />
+                </Button>
+              </div>
             </>
           )}
 
@@ -671,7 +825,8 @@ export default function PreferredSkillsStep({
           if (!open) setConfirmDisableOpen(false);
         }}
         onConfirm={() => {
-          setSelectedSkills([]);
+          setRows([createEmptyRow()]);
+          setRowErrors({});
           setDataTakenFromCandidate(false);
           setIsEnabled(false);
           removeCompletedStep(currentStepIndex);
@@ -708,7 +863,6 @@ export default function PreferredSkillsStep({
       />
 
       {/* Footer — sticky at bottom of the parent scroll container */}
-      {/* ── Step footer ──────────────────────────────────────────────────── */}
       <div className="sticky bottom-0 flex items-center justify-end gap-4 bg-white px-6 py-7 shadow-[0px_-8px_6.8px_0px_rgba(0,0,0,0.04)]">
         <Button variant="secondary" className="h-12 w-48" onClick={onCancel}>
           {t('common.cancel')}

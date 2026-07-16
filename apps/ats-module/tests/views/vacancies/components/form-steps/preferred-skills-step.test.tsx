@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
-import { forwardRef, useState } from 'react';
+import { useState } from 'react';
 
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import PreferredSkillsStep from '@/views/vacancies/components/form-steps/preferred-skills-step';
@@ -9,9 +9,13 @@ import PreferredSkillsStep from '@/views/vacancies/components/form-steps/preferr
 // ── Hoisted mock refs ────────────────────────────────────────────────────────
 
 const mockSuccessToast = vi.hoisted(() => vi.fn());
+const mockErrorToast = vi.hoisted(() => vi.fn());
 const mockUseVacancyForm = vi.hoisted(() => vi.fn());
 const mockUseSkillsQuery = vi.hoisted(() => vi.fn());
 const mockUseCareerPathsQuery = vi.hoisted(() => vi.fn());
+const mockUseJobLevelsQuery = vi.hoisted(() => vi.fn());
+const mockCreateCareerPath = vi.hoisted(() => vi.fn());
+const mockCreateSkillCareerPath = vi.hoisted(() => vi.fn());
 
 // ── Module mocks ─────────────────────────────────────────────────────────────
 
@@ -21,6 +25,7 @@ vi.mock('react-i18next', () => ({
 
 vi.mock('@cgp/ui-kit/components/custom-toast', () => ({
   SuccessToast: mockSuccessToast,
+  ErrorToast: mockErrorToast,
 }));
 
 vi.mock('@cgp/ui-kit/assets/images/delete-confirm-avator.svg', () => ({
@@ -35,9 +40,12 @@ vi.mock('@/views/vacancies/context/vacancy-form-context', () => ({
 vi.mock('@/views/vacancies/hooks', () => ({
   useSkillsQuery: mockUseSkillsQuery,
   useCareerPathsQuery: mockUseCareerPathsQuery,
+  useJobLevelsQuery: mockUseJobLevelsQuery,
   useDisableSuccessToast: () => mockSuccessToast,
-  useCreateCareerPathMutation: () => ({ mutateAsync: vi.fn() }),
-  useCreateSkillCareerPathMutation: () => ({ mutateAsync: vi.fn() }),
+  useCreateCareerPathMutation: () => ({ mutateAsync: mockCreateCareerPath }),
+  useCreateSkillCareerPathMutation: () => ({
+    mutateAsync: mockCreateSkillCareerPath,
+  }),
   useStepGuard: vi.fn(),
 }));
 
@@ -46,138 +54,100 @@ vi.mock('@/views/vacancies/services', () => ({
   skillService: { getAllSkills: vi.fn() },
 }));
 
+// Combobox mock — exposes each option as a clickable button and an "add new"
+// button that forwards the current typed search value.
 vi.mock('@cgp/ui-kit/components/combobox', () => ({
   Combobox: ({
     placeholder,
     disabled,
     value,
+    options = [],
     onValueChange,
+    onAddNew,
+    onSearchChange,
   }: {
     placeholder?: string;
     disabled?: boolean;
     value?: string;
+    options?: { value: string; label: string }[];
     onValueChange?: (v: string) => void;
-  }) => (
-    <input
-      placeholder={placeholder}
-      disabled={disabled}
-      value={value ?? ''}
-      onChange={e => onValueChange?.(e.target.value)}
-    />
-  ),
+    onAddNew?: (v: string) => void;
+    onSearchChange?: (v: string) => void;
+  }) => {
+    const [search, setSearch] = useState('');
+    return (
+      <div>
+        <input
+          aria-label={placeholder}
+          placeholder={placeholder}
+          disabled={disabled}
+          value={value || search}
+          onChange={e => {
+            setSearch(e.target.value);
+            onSearchChange?.(e.target.value);
+          }}
+        />
+        {options.map(o => (
+          <button
+            type="button"
+            key={o.value}
+            onClick={() => onValueChange?.(o.value)}
+          >
+            {`opt:${placeholder}:${o.label}`}
+          </button>
+        ))}
+        <button type="button" onClick={() => onAddNew?.(search)}>
+          {`addnew:${placeholder}`}
+        </button>
+      </div>
+    );
+  },
 }));
 
 vi.mock('@cgp/ui-kit/components/character-count', () => ({
   CharacterCount: () => null,
 }));
 
-vi.mock('@cgp/ui-kit/components/multi-select', () => {
-  type Option = { value: string; label: string; source?: string };
-
-  const MockMultipleSelector = forwardRef(function MockMultipleSelector(
-    {
-      value = [],
-      options = [],
-      onChange,
-      onSearchSync,
-      placeholder,
-      disabled,
-      creatable,
-      maxSelected,
-      errorMessage,
-      onErrorStateChange,
-    }: {
-      value?: Option[];
-      options?: Option[];
-      onChange?: (opts: Option[]) => void;
-      onSearchSync?: (v: string) => Option[];
-      placeholder?: string;
-      disabled?: boolean;
-      creatable?: boolean;
-      maxSelected?: number;
-      errorMessage?: string;
-      onErrorStateChange?: (v: boolean) => void;
-      [k: string]: unknown;
-    },
-    _ref: unknown
-  ) {
-    const [open, setOpen] = useState(false);
-    const [search, setSearch] = useState('');
-    const [maxError, setMaxError] = useState(false);
-
-    const displayOptions = onSearchSync ? onSearchSync(search) : options;
-    const filtered = displayOptions.filter(
-      o =>
-        o.label.toLowerCase().includes(search.toLowerCase()) &&
-        !value.some(v => v.value === o.value)
-    );
-    const showAddNew =
-      creatable &&
-      search.trim() &&
-      !displayOptions.some(o => o.label.toLowerCase() === search.toLowerCase());
-
-    return (
-      <div data-testid="multi-selector">
-        {value.map(v => (
-          <span key={v.value} data-testid="chip">
-            {v.label}
-            <button
-              aria-label="preferredSkills.chip.remove"
-              onClick={() => onChange?.(value.filter(x => x.value !== v.value))}
-            />
-          </span>
-        ))}
-        <input
-          placeholder={placeholder}
-          disabled={disabled}
-          value={search}
-          onChange={e => {
-            setSearch(e.target.value);
-          }}
-          onFocus={() => setOpen(true)}
-        />
-        {maxError && <span>{errorMessage}</span>}
-        {open && (
-          <ul data-testid="multi-selector-options">
-            {filtered.map(o => (
-              <li
-                key={o.value}
-                onClick={() => {
-                  if (maxSelected && value.length >= maxSelected) {
-                    setMaxError(true);
-                    onErrorStateChange?.(true);
-                    return;
-                  }
-                  onChange?.([...value, o]);
-                  setSearch('');
-                }}
-              >
-                {o.label}
-              </li>
-            ))}
-            {showAddNew && (
-              <li
-                onClick={() => {
-                  if (maxSelected && value.length >= maxSelected) {
-                    setMaxError(true);
-                    onErrorStateChange?.(true);
-                    return;
-                  }
-                  onChange?.([...value, { value: search, label: search }]);
-                  setSearch('');
-                }}
-              >
-                preferredSkills.input.addNew
-              </li>
-            )}
-          </ul>
-        )}
-      </div>
-    );
-  });
-
-  return { default: MockMultipleSelector };
-});
+// Level Select mock — rendered as a native <select>.
+vi.mock('@cgp/ui-kit/components/ui/select', () => ({
+  Select: ({
+    value,
+    onValueChange,
+    disabled,
+    children,
+  }: {
+    value?: string;
+    onValueChange?: (v: string) => void;
+    disabled?: boolean;
+    children?: ReactNode;
+  }) => (
+    <select
+      data-testid="level-select"
+      value={value ?? ''}
+      disabled={disabled}
+      onChange={e => onValueChange?.(e.target.value)}
+    >
+      <option value="" />
+      {children}
+    </select>
+  ),
+  SelectContent: ({ children }: { children?: ReactNode }) => <>{children}</>,
+  SelectItem: ({
+    value,
+    children,
+    disabled,
+  }: {
+    value: string;
+    children?: ReactNode;
+    disabled?: boolean;
+  }) => (
+    <option value={value} disabled={disabled}>
+      {children}
+    </option>
+  ),
+  SelectTrigger: () => null,
+  SelectValue: () => null,
+}));
 
 vi.mock('@cgp/ui-kit/components/ui/button', () => ({
   Button: ({
@@ -220,22 +190,49 @@ vi.mock('@cgp/ui-kit/components/ui/checkbox', () => ({
   ),
 }));
 
-vi.mock('@cgp/ui-kit/components/ui/dialog', () => ({
-  Dialog: ({ open, children }: { open?: boolean; children?: ReactNode }) =>
-    open ? <>{children}</> : null,
-  DialogContent: ({ children }: { children?: ReactNode }) => (
-    <dialog open>{children}</dialog>
-  ),
-  DialogTitle: ({ children }: { children?: ReactNode }) => <h2>{children}</h2>,
-  DialogDescription: ({ children }: { children?: ReactNode }) => (
-    <p>{children}</p>
+vi.mock('@cgp/ui-kit/components/ui/switch', () => ({
+  Switch: ({
+    checked,
+    onCheckedChange,
+  }: {
+    checked?: boolean;
+    onCheckedChange?: (v: boolean) => void;
+  }) => (
+    <button
+      role="switch"
+      aria-checked={checked ?? false}
+      onClick={() => onCheckedChange?.(!checked)}
+    />
   ),
 }));
 
-vi.mock('@cgp/ui-kit/components/ui/badge', () => ({
-  Badge: ({ children }: { children?: ReactNode }) => (
-    <div data-testid="chip">{children}</div>
-  ),
+vi.mock('@cgp/ui-kit/lib/utils', () => ({
+  cn: (...args: unknown[]) => args.filter(Boolean).join(' '),
+}));
+
+vi.mock('@/views/vacancies', () => ({
+  StepDisableDialog: ({
+    open,
+    title,
+    confirmLabel,
+    cancelLabel,
+    onConfirm,
+    onOpenChange,
+  }: {
+    open?: boolean;
+    title?: string;
+    confirmLabel?: string;
+    cancelLabel?: string;
+    onConfirm?: () => void;
+    onOpenChange?: (v: boolean) => void;
+  }) =>
+    open ? (
+      <div>
+        <h2>{title}</h2>
+        <button onClick={onConfirm}>{confirmLabel}</button>
+        <button onClick={() => onOpenChange?.(false)}>{cancelLabel}</button>
+      </div>
+    ) : null,
 }));
 
 vi.mock('@/views/vacancies/components/vacancy-status-badge', () => ({
@@ -247,18 +244,30 @@ vi.mock('@/views/vacancies/components/vacancy-status-badge', () => ({
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 const API_SKILLS = [
-  { id: 'skill-1', label: 'JavaScript' },
-  { id: 'skill-2', label: 'TypeScript' },
+  { id: 'skill-1', label: 'JavaScript - Frontend', source: 'MASTER' },
+  { id: 'skill-2', label: 'TypeScript - Frontend', source: 'MASTER' },
 ];
 
 const API_CAREER_PATHS = [{ id: 'cp-1', label: 'Frontend Development' }];
 
+const LEVELS = [
+  { id: 'level-1', name: 'Entry Level' },
+  { id: 'level-2', name: 'Senior Level' },
+];
+
+const SKILL_PLACEHOLDER = 'preferredSkills.input.placeholder';
+const CAREER_PATH_PLACEHOLDER = 'preferredSkills.careerPath.input.placeholder';
+
 function makeSkillsData(content = API_SKILLS) {
-  return { data: { data: { items: { content } } } };
+  return { data: { data: { items: { content } } }, isLoading: false };
 }
 
 function makeCareerPathsData(content = API_CAREER_PATHS) {
   return { data: { data: { items: { content } } }, isLoading: false };
+}
+
+function makeLevelsData(content = LEVELS) {
+  return { data: { data: content }, isLoading: false };
 }
 
 function makeForm(
@@ -309,6 +318,8 @@ function renderStep(
   return { onNext, onBack, onSubmit, onCancel: vacancyFormState.onCancel };
 }
 
+const getRows = () => screen.queryAllByTestId('preferred-skill-row');
+
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 describe('PreferredSkillsStep', () => {
@@ -316,6 +327,7 @@ describe('PreferredSkillsStep', () => {
     vi.clearAllMocks();
     mockUseSkillsQuery.mockReturnValue(makeSkillsData());
     mockUseCareerPathsQuery.mockReturnValue(makeCareerPathsData());
+    mockUseJobLevelsQuery.mockReturnValue(makeLevelsData());
   });
 
   describe('rendering', () => {
@@ -324,41 +336,49 @@ describe('PreferredSkillsStep', () => {
       expect(screen.getByText('preferredSkills.title')).toBeInTheDocument();
     });
 
-    it('renders the toggle switch as enabled by default', () => {
+    it('renders a single non-removable row by default', () => {
       renderStep();
-      expect(screen.getByRole('switch')).toHaveAttribute(
-        'aria-checked',
-        'true'
-      );
-    });
-
-    it('renders the toggle switch as disabled when form state is disabled', () => {
-      renderStep({ isEnabled: false });
-      expect(screen.getByRole('switch')).toHaveAttribute(
-        'aria-checked',
-        'false'
-      );
-    });
-
-    it('renders the dataTakenFromCandidate checkbox', () => {
-      renderStep();
+      const rows = getRows();
+      expect(rows).toHaveLength(1);
+      // First row has no delete button.
       expect(
-        screen.getByLabelText('preferredSkills.dataTakenFromCandidate')
-      ).toBeInTheDocument();
+        within(rows[0]).queryByRole('button', { name: 'common.delete' })
+      ).not.toBeInTheDocument();
     });
 
-    it('renders the section label', () => {
+    it('renders the skill, career path and level fields per row', () => {
       renderStep();
+      const row = getRows()[0];
       expect(
-        screen.getByText('preferredSkills.sectionLabel')
+        within(row).getByPlaceholderText(SKILL_PLACEHOLDER)
       ).toBeInTheDocument();
+      expect(
+        within(row).getByPlaceholderText(CAREER_PATH_PLACEHOLDER)
+      ).toBeInTheDocument();
+      expect(within(row).getByTestId('level-select')).toBeInTheDocument();
     });
 
-    it('renders the skill search input', () => {
-      renderStep();
+    it('does not list a skill option twice when a user-created combination also exists in master data', () => {
+      // Row is user-created "JavaScript - Frontend"; the API also returns the
+      // same "JavaScript - Frontend" (skill-1) — it must appear only once.
+      renderStep({
+        skills: [
+          {
+            skillId: '',
+            skillName: 'JavaScript',
+            careerPathName: 'Frontend',
+            displayValue: 'JavaScript - Frontend',
+            source: 'USER_CREATED',
+          },
+        ],
+      });
+
+      const row = getRows()[0];
       expect(
-        screen.getByPlaceholderText('preferredSkills.input.placeholder')
-      ).toBeInTheDocument();
+        within(row).getAllByText(
+          `opt:${SKILL_PLACEHOLDER}:JavaScript - Frontend`
+        )
+      ).toHaveLength(1);
     });
 
     it('renders Cancel and Next buttons', () => {
@@ -368,8 +388,37 @@ describe('PreferredSkillsStep', () => {
     });
   });
 
+  describe('add / remove rows', () => {
+    it('adds a new row when the add button is clicked', async () => {
+      const user = userEvent.setup();
+      renderStep();
+
+      await user.click(
+        screen.getByRole('button', { name: 'preferredSkills.addRow' })
+      );
+
+      expect(getRows()).toHaveLength(2);
+    });
+
+    it('shows a delete button on additional rows and removes them', async () => {
+      const user = userEvent.setup();
+      renderStep();
+
+      await user.click(
+        screen.getByRole('button', { name: 'preferredSkills.addRow' })
+      );
+      const secondRow = getRows()[1];
+      const deleteBtn = within(secondRow).getByRole('button', {
+        name: 'common.delete',
+      });
+      await user.click(deleteBtn);
+
+      expect(getRows()).toHaveLength(1);
+    });
+  });
+
   describe('toggle', () => {
-    it('opens confirmDisableDialog when toggle is clicked while enabled and has data', async () => {
+    it('opens confirmDisableDialog when disabled while it has data', async () => {
       const user = userEvent.setup();
       renderStep({
         skills: [
@@ -378,6 +427,8 @@ describe('PreferredSkillsStep', () => {
             skillName: 'JavaScript',
             careerPathName: 'Frontend',
             displayValue: 'JavaScript - Frontend',
+            source: 'MASTER',
+            levelId: 'level-1',
           },
         ],
       });
@@ -391,21 +442,19 @@ describe('PreferredSkillsStep', () => {
       });
     });
 
-    it('disables directly when toggle is clicked with no data', async () => {
+    it('disables directly when toggled off with no data', async () => {
       const user = userEvent.setup();
       renderStep();
 
       await user.click(screen.getByRole('switch'));
 
-      await waitFor(() => {
-        expect(screen.getByRole('switch')).toHaveAttribute(
-          'aria-checked',
-          'false'
-        );
-      });
+      expect(screen.getByRole('switch')).toHaveAttribute(
+        'aria-checked',
+        'false'
+      );
     });
 
-    it('enables the step when toggle is clicked while disabled', async () => {
+    it('enables the step when toggled on while disabled', async () => {
       const user = userEvent.setup();
       renderStep({ isEnabled: false });
 
@@ -428,6 +477,8 @@ describe('PreferredSkillsStep', () => {
             skillName: 'JavaScript',
             careerPathName: 'Frontend',
             displayValue: 'JavaScript - Frontend',
+            source: 'MASTER',
+            levelId: 'level-1',
           },
         ],
       });
@@ -436,7 +487,21 @@ describe('PreferredSkillsStep', () => {
       return { user, ...handlers };
     }
 
-    it('closes without disabling when Cancel is clicked', async () => {
+    it('disables the step and fires the toast when confirmed', async () => {
+      const { user } = await openConfirmDialog();
+
+      await user.click(
+        screen.getByText('preferredSkills.confirmDisableDialog.disable')
+      );
+
+      expect(screen.getByRole('switch')).toHaveAttribute(
+        'aria-checked',
+        'false'
+      );
+      expect(mockSuccessToast).toHaveBeenCalledWith('preferredSkills.title');
+    });
+
+    it('keeps the section enabled when cancelled', async () => {
       const { user } = await openConfirmDialog();
 
       await user.click(
@@ -451,255 +516,317 @@ describe('PreferredSkillsStep', () => {
         'true'
       );
     });
-
-    it('disables the step when Disable is clicked', async () => {
-      const { user } = await openConfirmDialog();
-
-      await user.click(
-        screen.getByText('preferredSkills.confirmDisableDialog.disable')
-      );
-
-      await waitFor(() => {
-        expect(screen.getByRole('switch')).toHaveAttribute(
-          'aria-checked',
-          'false'
-        );
-      });
-    });
-
-    it('fires SuccessToast when Disable is clicked', async () => {
-      const { user } = await openConfirmDialog();
-
-      await user.click(
-        screen.getByText('preferredSkills.confirmDisableDialog.disable')
-      );
-
-      expect(mockSuccessToast).toHaveBeenCalledWith('preferredSkills.title');
-    });
   });
 
-  describe('emptyDisableDialog', () => {
-    it('keeps Next disabled when enabled with no items selected', async () => {
-      const user = userEvent.setup();
-      const { onNext } = renderStep();
-      const nextButton = screen.getByText('common.next');
-
-      expect(nextButton).toBeDisabled();
-
-      await user.click(nextButton);
-
-      expect(
-        screen.queryByText('preferredSkills.emptyDisableDialog.title')
-      ).not.toBeInTheDocument();
-      expect(onNext).not.toHaveBeenCalled();
+  describe('validation', () => {
+    it('keeps Next disabled while enabled with no populated rows', () => {
+      renderStep();
+      expect(screen.getByText('common.next')).toBeDisabled();
     });
 
-    it('does not show when dataTakenFromCandidate is checked', async () => {
+    it('shows level-required error when a skill has no level', async () => {
       const user = userEvent.setup();
       const { onNext } = renderStep();
 
+      // Select an existing skill (auto-fills career path, leaves level empty).
       await user.click(
-        screen.getByLabelText('preferredSkills.dataTakenFromCandidate')
+        screen.getByText(`opt:${SKILL_PLACEHOLDER}:JavaScript - Frontend`)
       );
       await user.click(screen.getByText('common.next'));
 
       expect(
-        screen.queryByText('preferredSkills.emptyDisableDialog.title')
-      ).not.toBeInTheDocument();
-      expect(onNext).toHaveBeenCalledTimes(1);
-    });
-
-    it('does not open emptyDisableDialog while Next is disabled', async () => {
-      const user = userEvent.setup();
-      const { onNext } = renderStep();
-
-      await user.click(screen.getByText('common.next'));
-
-      expect(
-        screen.queryByText('preferredSkills.emptyDisableDialog.title')
-      ).not.toBeInTheDocument();
-      expect(onNext).not.toHaveBeenCalled();
-    });
-
-    it('does not call onNext with disabled payload while Next is disabled', async () => {
-      const user = userEvent.setup();
-      const { onNext } = renderStep();
-
-      await user.click(screen.getByText('common.next'));
-      expect(
-        screen.queryByText('preferredSkills.emptyDisableDialog.title')
-      ).not.toBeInTheDocument();
-
-      expect(onNext).not.toHaveBeenCalled();
-    });
-
-    it('does not fire SuccessToast while Next is disabled', async () => {
-      const user = userEvent.setup();
-      renderStep();
-
-      await user.click(screen.getByText('common.next'));
-      expect(
-        screen.queryByText('preferredSkills.emptyDisableDialog.title')
-      ).not.toBeInTheDocument();
-
-      expect(mockSuccessToast).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('skill search and dropdown', () => {
-    it('shows API skills in the dropdown when the input is clicked', async () => {
-      const user = userEvent.setup();
-      renderStep();
-
-      await user.click(
-        screen.getByPlaceholderText('preferredSkills.input.placeholder')
-      );
-
-      expect(screen.getByText('JavaScript')).toBeInTheDocument();
-      expect(screen.getByText('TypeScript')).toBeInTheDocument();
-    });
-
-    it('shows "add new" option when typing an unrecognised skill name', async () => {
-      const user = userEvent.setup();
-      renderStep();
-
-      const input = screen.getByPlaceholderText(
-        'preferredSkills.input.placeholder'
-      );
-      await user.click(input);
-      await user.type(input, 'Rust');
-
-      expect(
-        screen.getByText('preferredSkills.input.addNew')
+        screen.getByText('preferredSkills.validation.levelRequired')
       ).toBeInTheDocument();
+      expect(onNext).not.toHaveBeenCalled();
     });
 
-    it('selects an API skill directly and adds a chip without opening the career path panel', async () => {
+    it('shows career-path-required error when a new skill has no career path', async () => {
       const user = userEvent.setup();
-      renderStep();
+      const { onNext } = renderStep();
 
-      await user.click(
-        screen.getByPlaceholderText('preferredSkills.input.placeholder')
-      );
-      await user.click(screen.getByText('JavaScript'));
+      const skillInput = screen.getByPlaceholderText(SKILL_PLACEHOLDER);
+      await user.type(skillInput, 'Rust');
+      await user.click(screen.getByText(`addnew:${SKILL_PLACEHOLDER}`));
+      // Pick a level but leave career path empty.
+      await user.selectOptions(screen.getByTestId('level-select'), 'level-1');
+      await user.click(screen.getByText('common.next'));
 
       expect(
-        screen.queryByText('preferredSkills.careerPath.title')
-      ).not.toBeInTheDocument();
-      expect(screen.getAllByTestId('chip').length).toBeGreaterThan(0);
+        screen.getByText('preferredSkills.validation.careerPathRequired')
+      ).toBeInTheDocument();
+      expect(onNext).not.toHaveBeenCalled();
     });
 
-    it('removes a skill chip when the remove button is clicked', async () => {
+    it('freezes a level already used by another row with the same skill + career path', async () => {
       const user = userEvent.setup();
       renderStep();
 
+      // Row 1: existing skill + level-1
+      let row = getRows()[0];
       await user.click(
-        screen.getByPlaceholderText('preferredSkills.input.placeholder')
+        within(row).getByText(`opt:${SKILL_PLACEHOLDER}:JavaScript - Frontend`)
       );
-      await user.click(screen.getByText('JavaScript'));
-      expect(screen.getAllByTestId('chip').length).toBeGreaterThan(0);
+      await user.selectOptions(
+        within(row).getByTestId('level-select'),
+        'level-1'
+      );
 
+      // Add row 2 with the same skill + career path.
       await user.click(
-        screen.getByRole('button', { name: 'preferredSkills.chip.remove' })
+        screen.getByRole('button', { name: 'preferredSkills.addRow' })
+      );
+      row = getRows()[1];
+      await user.click(
+        within(row).getByText(`opt:${SKILL_PLACEHOLDER}:JavaScript - Frontend`)
       );
 
-      expect(screen.queryAllByTestId('chip')).toHaveLength(0);
+      // level-1 (Entry Level) is frozen in row 2; level-2 (Senior Level) is free.
+      expect(
+        within(row).getByRole('option', { name: 'Entry Level' })
+      ).toBeDisabled();
+      expect(
+        within(row).getByRole('option', { name: 'Senior Level' })
+      ).toBeEnabled();
     });
 
-    it('shows max-skills error when the selection limit is reached', async () => {
+    it('resets the level when a change would create a duplicate combination', async () => {
+      const user = userEvent.setup();
+      renderStep();
+
+      // Row 1: JavaScript - Frontend + level-2
+      let row = getRows()[0];
+      await user.click(
+        within(row).getByText(`opt:${SKILL_PLACEHOLDER}:JavaScript - Frontend`)
+      );
+      await user.selectOptions(
+        within(row).getByTestId('level-select'),
+        'level-2'
+      );
+
+      // Row 2: TypeScript - Frontend + level-2 (no collision yet)
+      await user.click(
+        screen.getByRole('button', { name: 'preferredSkills.addRow' })
+      );
+      row = getRows()[1];
+      await user.click(
+        within(row).getByText(`opt:${SKILL_PLACEHOLDER}:TypeScript - Frontend`)
+      );
+      await user.selectOptions(
+        within(row).getByTestId('level-select'),
+        'level-2'
+      );
+      expect(within(row).getByTestId('level-select')).toHaveValue('level-2');
+
+      // Change row 2's skill to JavaScript → now duplicates row 1 → level resets.
+      await user.click(
+        within(row).getByText(`opt:${SKILL_PLACEHOLDER}:JavaScript - Frontend`)
+      );
+      expect(within(getRows()[1]).getByTestId('level-select')).toHaveValue('');
+    });
+  });
+
+  describe('add button (max limit)', () => {
+    it('shows an error toast instead of adding when the max is exceeded', async () => {
+      const user = userEvent.setup();
       const tenSkills = Array.from({ length: 10 }, (_, i) => ({
-        skillId: `selected-${i}`,
+        skillId: `skill-${i}`,
         skillName: `Skill ${i}`,
-        careerPathId: undefined,
-        careerPathName: '',
-        displayValue: `Skill ${i}`,
+        careerPathName: 'Frontend',
+        displayValue: `Skill ${i} - Frontend`,
+        source: 'MASTER',
+        levelId: 'level-1',
       }));
       renderStep({ skills: tenSkills });
 
-      const user = userEvent.setup();
-      await user.click(
-        screen.getByPlaceholderText('preferredSkills.input.placeholder')
-      );
-      await user.click(screen.getByText('JavaScript')); // 11th — triggers max error
-
-      await waitFor(() => {
-        expect(
-          screen.getByText('preferredSkills.validation.maxSkills')
-        ).toBeInTheDocument();
+      expect(getRows()).toHaveLength(10);
+      const addButton = screen.getByRole('button', {
+        name: 'preferredSkills.addRow',
       });
+      expect(addButton).toBeEnabled();
+
+      await user.click(addButton);
+
+      expect(mockErrorToast).toHaveBeenCalledTimes(1);
+      expect(getRows()).toHaveLength(10);
     });
   });
 
-  describe('career path panel', () => {
-    async function openCareerPathPanel() {
+  describe('submit', () => {
+    it('calls onNext with a skill carrying levelId', async () => {
       const user = userEvent.setup();
-      const handlers = renderStep();
+      const { onNext } = renderStep();
 
-      const skillInput = screen.getByPlaceholderText(
-        'preferredSkills.input.placeholder'
-      );
-      await user.click(skillInput);
-      await user.type(skillInput, 'MyCustomSkill');
-      await user.click(screen.getByText('preferredSkills.input.addNew'));
-      await screen.findByText('preferredSkills.careerPath.title');
-
-      return { user, ...handlers };
-    }
-
-    it('opens the career path panel when "Add new" is clicked for a custom skill', async () => {
-      await openCareerPathPanel();
-
-      expect(
-        screen.getByText('preferredSkills.careerPath.title')
-      ).toBeInTheDocument();
-    });
-
-    it('shows validation error when Add is clicked with an empty career path input', async () => {
-      const { user } = await openCareerPathPanel();
-
+      const row = getRows()[0];
       await user.click(
-        screen.getByText('preferredSkills.careerPath.addButton')
+        within(row).getByText(`opt:${SKILL_PLACEHOLDER}:JavaScript - Frontend`)
       );
-
-      expect(
-        screen.getByText('preferredSkills.careerPath.validation.required')
-      ).toBeInTheDocument();
-    });
-
-    it('adds a skill chip after entering a career path name', async () => {
-      const { user } = await openCareerPathPanel();
-
-      const cpInput = screen.getByPlaceholderText(
-        'preferredSkills.careerPath.input.placeholder'
+      await user.selectOptions(
+        within(row).getByTestId('level-select'),
+        'level-2'
       );
-      await user.type(cpInput, 'Frontend');
-      await user.click(
-        screen.getByText('preferredSkills.careerPath.addButton')
-      );
+      await user.click(screen.getByText('common.next'));
 
-      await waitFor(() => {
-        // Career path panel should be gone
-        expect(
-          screen.queryByText('preferredSkills.careerPath.title')
-        ).not.toBeInTheDocument();
-        // Chip should appear
-        expect(screen.getAllByTestId('chip').length).toBeGreaterThan(0);
+      expect(onNext).toHaveBeenCalledWith({
+        preferredSkills: {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          skills: [
+            expect.objectContaining({
+              skillId: 'skill-1',
+              skillName: 'JavaScript',
+              careerPathName: 'Frontend',
+              levelId: 'level-2',
+              levelName: 'Senior Level',
+              source: 'MASTER',
+            }),
+          ],
+        },
       });
     });
 
-    it('renders the career path input placeholder', async () => {
-      await openCareerPathPanel();
+    it('resolves a user-created skill via createSkillCareerPath before submit', async () => {
+      mockCreateCareerPath.mockResolvedValue({ pendingId: 'cp-pending' });
+      mockCreateSkillCareerPath.mockResolvedValue({
+        pendingId: 'pending-1',
+        value: 'Rust - Systems',
+      });
+      const user = userEvent.setup();
+      const { onNext } = renderStep();
 
-      expect(
-        screen.getByPlaceholderText(
-          'preferredSkills.careerPath.input.placeholder'
-        )
-      ).toBeInTheDocument();
+      const row = getRows()[0];
+      await user.type(
+        within(row).getByPlaceholderText(SKILL_PLACEHOLDER),
+        'Rust'
+      );
+      await user.click(within(row).getByText(`addnew:${SKILL_PLACEHOLDER}`));
+      await user.type(
+        within(row).getByPlaceholderText(CAREER_PATH_PLACEHOLDER),
+        'Systems'
+      );
+      await user.click(
+        within(row).getByText(`addnew:${CAREER_PATH_PLACEHOLDER}`)
+      );
+      await user.selectOptions(
+        within(row).getByTestId('level-select'),
+        'level-1'
+      );
+      await user.click(screen.getByText('common.next'));
+
+      await waitFor(() => {
+        expect(mockCreateSkillCareerPath).toHaveBeenCalledWith({
+          skillName: 'Rust',
+          careerPathName: 'Systems',
+        });
+      });
+      const arg = onNext.mock.calls[0]?.[0] as {
+        preferredSkills: { skills: Array<Record<string, unknown>> };
+      };
+      expect(arg.preferredSkills.skills[0]).toMatchObject({
+        skillId: 'pending-1',
+        source: 'PENDING',
+        levelId: 'level-1',
+      });
+    });
+
+    it('POSTs a shared skill + career path only once and reuses the id across rows', async () => {
+      mockCreateCareerPath.mockResolvedValue({ pendingId: 'cp-pending' });
+      mockCreateSkillCareerPath.mockResolvedValue({
+        pendingId: 'pending-1',
+        value: 'Rust - Systems',
+      });
+      const user = userEvent.setup();
+      const { onNext } = renderStep();
+
+      const fillRow = async (rowEl: HTMLElement, level: string) => {
+        await user.type(
+          within(rowEl).getByPlaceholderText(SKILL_PLACEHOLDER),
+          'Rust'
+        );
+        await user.click(
+          within(rowEl).getByText(`addnew:${SKILL_PLACEHOLDER}`)
+        );
+        await user.type(
+          within(rowEl).getByPlaceholderText(CAREER_PATH_PLACEHOLDER),
+          'Systems'
+        );
+        await user.click(
+          within(rowEl).getByText(`addnew:${CAREER_PATH_PLACEHOLDER}`)
+        );
+        await user.selectOptions(
+          within(rowEl).getByTestId('level-select'),
+          level
+        );
+      };
+
+      // Two rows with the SAME skill + career path but different levels.
+      await fillRow(getRows()[0], 'level-1');
+      await user.click(
+        screen.getByRole('button', { name: 'preferredSkills.addRow' })
+      );
+      await fillRow(getRows()[1], 'level-2');
+
+      await user.click(screen.getByText('common.next'));
+
+      await waitFor(() => expect(onNext).toHaveBeenCalled());
+      // Only one POST for the shared combination.
+      expect(mockCreateSkillCareerPath).toHaveBeenCalledTimes(1);
+
+      const arg = onNext.mock.calls[0]?.[0] as {
+        preferredSkills: { skills: Array<Record<string, unknown>> };
+      };
+      expect(arg.preferredSkills.skills).toHaveLength(2);
+      // Same resolved pending id applied to both rows, each keeping its level.
+      expect(arg.preferredSkills.skills[0]).toMatchObject({
+        skillId: 'pending-1',
+        source: 'PENDING',
+        levelId: 'level-1',
+      });
+      expect(arg.preferredSkills.skills[1]).toMatchObject({
+        skillId: 'pending-1',
+        source: 'PENDING',
+        levelId: 'level-2',
+      });
+    });
+
+    it('reuses an existing skill + career path instead of POSTing a duplicate', async () => {
+      const user = userEvent.setup();
+      // Row is user-created "JavaScript - Frontend", which already exists in the
+      // master data (API_SKILLS → skill-1). It should be adopted as the existing
+      // record and NOT re-POSTed.
+      const { onNext } = renderStep({
+        skills: [
+          {
+            skillId: '',
+            skillName: 'JavaScript',
+            careerPathName: 'Frontend',
+            displayValue: 'JavaScript - Frontend',
+            source: 'USER_CREATED',
+          },
+        ],
+      });
+
+      await user.selectOptions(
+        within(getRows()[0]).getByTestId('level-select'),
+        'level-1'
+      );
+      await user.click(screen.getByText('common.next'));
+
+      await waitFor(() => expect(onNext).toHaveBeenCalled());
+      expect(mockCreateSkillCareerPath).not.toHaveBeenCalled();
+
+      const arg = onNext.mock.calls[0]?.[0] as {
+        preferredSkills: { skills: Array<Record<string, unknown>> };
+      };
+      expect(arg.preferredSkills.skills[0]).toMatchObject({
+        skillId: 'skill-1',
+        source: 'MASTER',
+        levelId: 'level-1',
+      });
     });
   });
 
   describe('dataTakenFromCandidate', () => {
-    it('disables the skill search input when checked', async () => {
+    it('disables the row fields when checked', async () => {
       const user = userEvent.setup();
       renderStep();
 
@@ -707,12 +834,10 @@ describe('PreferredSkillsStep', () => {
         screen.getByLabelText('preferredSkills.dataTakenFromCandidate')
       );
 
-      expect(
-        screen.getByPlaceholderText('preferredSkills.input.placeholder')
-      ).toBeDisabled();
+      expect(screen.getByPlaceholderText(SKILL_PLACEHOLDER)).toBeDisabled();
     });
 
-    it('calls onNext directly without emptyDisableDialog when checked', async () => {
+    it('calls onNext with empty skills when checked', async () => {
       const user = userEvent.setup();
       const { onNext } = renderStep();
 
@@ -732,7 +857,7 @@ describe('PreferredSkillsStep', () => {
   });
 
   describe('footer navigation', () => {
-    it('calls onCancel from vacancy form context when Cancel is clicked', async () => {
+    it('calls onCancel when Cancel is clicked', async () => {
       const user = userEvent.setup();
       const { onCancel } = renderStep();
 
@@ -748,9 +873,10 @@ describe('PreferredSkillsStep', () => {
           {
             skillId: 'skill-1',
             skillName: 'JavaScript',
-            careerPathId: 'cp-1',
             careerPathName: 'Frontend',
             displayValue: 'JavaScript - Frontend',
+            source: 'MASTER',
+            levelId: 'level-1',
           },
         ],
       });
@@ -759,91 +885,65 @@ describe('PreferredSkillsStep', () => {
 
       expect(onBack).toHaveBeenCalledTimes(1);
     });
-
-    it('calls onNext with selected skills when Next is clicked', async () => {
-      const user = userEvent.setup();
-      const { onNext } = renderStep();
-
-      await user.click(
-        screen.getByPlaceholderText('preferredSkills.input.placeholder')
-      );
-      await user.click(screen.getByText('JavaScript'));
-      await user.click(screen.getByText('common.next'));
-
-      expect(onNext).toHaveBeenCalledWith({
-        preferredSkills: {
-          isEnabled: true,
-          dataTakenFromCandidate: false,
-          skills: [
-            expect.objectContaining({
-              skillId: 'skill-1',
-              skillName: 'JavaScript',
-            }),
-          ],
-        },
-      });
-    });
   });
 
   describe('edit mode', () => {
-    it('renders with mode="create" by default and does not show VacancyStatusBadge', () => {
+    it('does not show VacancyStatusBadge in create mode', () => {
       renderStep({}, { mode: 'create' });
-
       expect(
         screen.queryByTestId('vacancy-status-badge')
       ).not.toBeInTheDocument();
     });
 
-    it('renders VacancyStatusBadge when mode="edit" and vacancyStatus exists', () => {
+    it('shows VacancyStatusBadge when mode="edit" and status exists', () => {
       renderStep({ status: 'published' }, { mode: 'edit' });
-
-      expect(screen.getByTestId('vacancy-status-badge')).toBeInTheDocument();
       expect(screen.getByTestId('vacancy-status-badge')).toHaveTextContent(
         'published'
       );
     });
 
-    it('does not render VacancyStatusBadge when mode="edit" but vacancyStatus is undefined', () => {
-      renderStep({}, { mode: 'edit' });
-
-      expect(
-        screen.queryByTestId('vacancy-status-badge')
-      ).not.toBeInTheDocument();
-    });
-
-    it('does not render VacancyStatusBadge by default when no mode prop is provided', () => {
-      renderStep({});
-
-      expect(
-        screen.queryByTestId('vacancy-status-badge')
-      ).not.toBeInTheDocument();
-    });
-
-    it('preserves all functionality when mode="edit"', async () => {
-      const user = userEvent.setup();
-      const { onNext } = renderStep(
+    it('hydrates an existing skill row with its stored level', () => {
+      renderStep(
         {
-          skills: [{ skillId: 'skill-1', skillName: 'JavaScript' }],
+          skills: [
+            {
+              skillId: 'skill-1',
+              skillName: 'JavaScript',
+              careerPathName: 'Frontend',
+              displayValue: 'JavaScript - Frontend',
+              source: 'MASTER',
+              levelId: 'level-2',
+              levelName: 'Senior Level',
+            },
+          ],
           status: 'published',
         },
         { mode: 'edit' }
       );
 
-      expect(screen.getByTestId('vacancy-status-badge')).toBeInTheDocument();
+      const row = getRows()[0];
+      expect(within(row).getByTestId('level-select')).toHaveValue('level-2');
+    });
 
-      // Verify section heading and toggle are still present
-      expect(screen.getByText('preferredSkills.title')).toBeInTheDocument();
-
-      // Verify selection works
-      await user.click(
-        screen.getByPlaceholderText('preferredSkills.input.placeholder')
+    it('leaves the level empty for a legacy skill without a level', () => {
+      renderStep(
+        {
+          skills: [
+            {
+              skillId: 'skill-1',
+              skillName: 'JavaScript',
+              careerPathName: 'Frontend',
+              displayValue: 'JavaScript - Frontend',
+              source: 'MASTER',
+            },
+          ],
+          status: 'published',
+        },
+        { mode: 'edit' }
       );
-      await user.click(screen.getByText('TypeScript'));
 
-      // Verify navigation works
-      await user.click(screen.getByText('common.next'));
-
-      expect(onNext).toHaveBeenCalled();
+      const row = getRows()[0];
+      expect(within(row).getByTestId('level-select')).toHaveValue('');
     });
   });
 });

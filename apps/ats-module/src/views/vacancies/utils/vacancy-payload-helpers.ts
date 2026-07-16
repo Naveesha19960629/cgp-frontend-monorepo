@@ -410,6 +410,7 @@ function mapPreferredSkills(form: VacancyForm): SkillsApiPayload {
     content: form.preferredSkills.skills.map(s => ({
       source: s.source ?? 'MASTER',
       id: s.skillId,
+      levelId: s.levelId ?? '',
     })),
   };
 }

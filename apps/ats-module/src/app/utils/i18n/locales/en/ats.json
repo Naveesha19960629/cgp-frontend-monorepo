@@ -38,6 +38,22 @@
       }
     }
   },
+  "editTemplate": {
+    "heading": "Edit Template",
+    "cancel": "Cancel",
+    "update": "Update Template",
+    "loadError": "Unable to load this template. Please try again.",
+    "notifications": {
+      "success": {
+        "title": "Successfully Updated",
+        "message": "Vacancy template has been successfully updated"
+      },
+      "error": {
+        "title": "Something went wrong",
+        "message": "Failed to update vacancy template. Please try again."
+      }
+    }
+  },
   "createTemplate": {
     "heading": "Create Template",
     "nameLabel": "Template Name",
@@ -1024,10 +1040,17 @@
       "typeToSearch": "Type to search skills…"
     },
     "validation": {
-      "maxSkills": "Exceeded maximum of {{max}} selections"
+      "maxSkills": "Exceeded maximum of {{max}} selections",
+      "careerPathRequired": "Career Path is required.",
+      "levelRequired": "Level is required."
     },
     "chip": {
       "remove": "Remove {{name}}"
+    },
+    "addRow": "Add preferred skill",
+    "level": {
+      "label": "Level",
+      "placeholder": "Select level"
     },
     "careerPath": {
       "title": "Add Career Path",
@@ -1036,9 +1059,6 @@
       "addButton": "Add Now",
       "input": {
         "placeholder": "Select or add career path"
-      },
-      "validation": {
-        "required": "Please select or add a Career Path to continue"
       }
     },
     "confirmDisableDialog": {

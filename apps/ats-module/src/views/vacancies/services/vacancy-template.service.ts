@@ -4,6 +4,7 @@ import type {
   NextTemplateName,
   SaveVacancyAsTemplatePayload,
   SingleRecordApiResponse,
+  UpdateVacancyTemplateRequest,
   VacancyTemplateQueryParams,
   VacancyTemplateSearchPage,
   VacancyTemplateUseResponse,
@@ -42,6 +43,17 @@ export const vacancyTemplateService = {
     const response = await httpClient.post<
       SingleRecordApiResponse<CreatedVacancyTemplate>
     >('/vacancy-templates', payload);
+    return response.data;
+  },
+  // NOTE: the backend PUT endpoint is not live yet (DQCGP-2199); this call will
+  // 404 until it lands. The rest of the Edit Template flow is complete.
+  updateTemplate: async (
+    id: string,
+    payload: UpdateVacancyTemplateRequest
+  ): Promise<SingleRecordApiResponse<CreatedVacancyTemplate>> => {
+    const response = await httpClient.put<
+      SingleRecordApiResponse<CreatedVacancyTemplate>
+    >(`/vacancy-templates/${id}`, payload);
     return response.data;
   },
   saveVacancyAsTemplate: async (

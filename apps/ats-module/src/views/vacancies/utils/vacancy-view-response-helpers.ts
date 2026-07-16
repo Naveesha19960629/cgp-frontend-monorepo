@@ -661,7 +661,9 @@ function normalizeCustomizableForm(
               )
               .filter(Boolean),
             scaleFrom: toSafeNumber(linearScale.startValue ?? question.from),
-            scaleTo: toSafeNumber(linearScale.endValue ?? question.to),
+            // Floor the scale end at 2 (the picker's minimum), matching the edit
+            // normalizer, so malformed/missing data can't render a 0→0 scale.
+            scaleTo: toSafeNumber(linearScale.endValue ?? question.to) || 2,
             startLabel: toSafeString(
               linearScale.startLabel ?? question.startLabel
             ),

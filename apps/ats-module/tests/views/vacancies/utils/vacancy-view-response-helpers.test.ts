@@ -169,7 +169,9 @@ describe('toVacancyViewModel', () => {
               required: true,
               options: [],
               scaleFrom: 0,
-              scaleTo: 0,
+              // scaleTo floors at 2 (picker minimum), matching the edit
+              // normalizer; irrelevant for non-scale types but kept consistent.
+              scaleTo: 2,
               startLabel: '',
               endLabel: '',
             },
@@ -187,6 +189,37 @@ describe('toVacancyViewModel', () => {
         },
       ],
     });
+  });
+
+  it('floors a linear-scale end value of 0 to 2 in the view (M2, matches edit)', () => {
+    const model = toVacancyViewModel({
+      title: 'Malformed scale vacancy',
+      data: {
+        customizableForms: [
+          {
+            isEnabled: true,
+            sectionTitle: 'Scale',
+            forms: [
+              {
+                title: 'Form 01',
+                questions: [
+                  {
+                    questionText: 'Rate it',
+                    questionType: 'LINEAR_SCALE',
+                    required: false,
+                    linearScale: { startValue: 0, endValue: 0 },
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    });
+
+    const question = model.customizableForm?.forms[0].questions[0];
+    expect(question?.scaleFrom).toBe(0);
+    expect(question?.scaleTo).toBe(2);
   });
 
   it('maps preferred projects from projectsRequirements shape', () => {

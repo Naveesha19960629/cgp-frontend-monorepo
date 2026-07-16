@@ -290,59 +290,97 @@ async function resolveSkillEntries(
   const hasUserCreated = skills.some(skill => skill.source === 'USER_CREATED');
   if (!hasUserCreated) return skills;
 
+  const key = (value: string) => value.trim().toLowerCase();
+
+  // Resolve each unique skill + career path (and each career path) exactly once
+  // so shared combinations are POSTed a single time; the same id is then applied
+  // to every row that shares it.
+  const careerPathCache = new Map<string, Promise<string | undefined>>();
+  const comboCache = new Map<
+    string,
+    Promise<
+      Pick<
+        SkillCareerPathEntry,
+        'skillId' | 'careerPathId' | 'displayValue' | 'source'
+      >
+    >
+  >();
+
+  const resolveCareerPathId = async (name: string) => {
+    try {
+      const cpResult = await deps.createCareerPath(name);
+      return cpResult.pendingId;
+    } catch (cpErr) {
+      if (!isAlreadyExistsError(cpErr)) throw cpErr;
+      const cpSearch = await careerPathService.getAllCareerPaths(name);
+      return cpSearch.data?.items?.content?.find(
+        item => item.label.toLowerCase() === name.toLowerCase()
+      )?.id;
+    }
+  };
+
+  const findExistingSkill = async (displayValue: string) => {
+    const res = await skillService.getAllSkills(displayValue);
+    return res?.data?.items?.content?.find(
+      item => item.label.toLowerCase() === displayValue.toLowerCase()
+    );
+  };
+
+  const resolveCombo = async (entry: SkillCareerPathEntry) => {
+    // Reuse the skill + career path if it already exists — creating a duplicate
+    // is rejected by the BE (400), so select the existing record instead.
+    const existing = await findExistingSkill(entry.displayValue);
+    if (existing) {
+      return {
+        skillId: existing.id,
+        careerPathId: entry.careerPathId,
+        displayValue: entry.displayValue,
+        source: existing.source ?? ('MASTER' as const),
+      };
+    }
+
+    let resolvedCareerPathId = entry.careerPathId;
+    if (!resolvedCareerPathId && entry.careerPathName) {
+      const cpKey = key(entry.careerPathName);
+      if (!careerPathCache.has(cpKey)) {
+        careerPathCache.set(cpKey, resolveCareerPathId(entry.careerPathName));
+      }
+      resolvedCareerPathId = await careerPathCache.get(cpKey);
+    }
+
+    try {
+      const result = await deps.createSkillCareerPath({
+        skillName: entry.skillName,
+        careerPathName: entry.careerPathName,
+      });
+      return {
+        skillId: result.pendingId,
+        careerPathId: resolvedCareerPathId,
+        displayValue: result.value || entry.displayValue,
+        source: 'PENDING' as const,
+      };
+    } catch (err) {
+      if (!isAlreadyExistsError(err)) throw err;
+      const fallback = await findExistingSkill(entry.displayValue);
+      if (!fallback) throw err;
+      return {
+        skillId: fallback.id,
+        careerPathId: resolvedCareerPathId,
+        displayValue: entry.displayValue,
+        source: fallback.source ?? ('MASTER' as const),
+      };
+    }
+  };
+
   return Promise.all(
     skills.map(async entry => {
       if (entry.source !== 'USER_CREATED') return entry;
-
-      try {
-        let resolvedCareerPathId = entry.careerPathId;
-        if (!resolvedCareerPathId && entry.careerPathName) {
-          try {
-            const cpResult = await deps.createCareerPath(entry.careerPathName);
-            resolvedCareerPathId = cpResult.pendingId;
-          } catch (cpErr) {
-            if (isAlreadyExistsError(cpErr)) {
-              const cpSearch = await careerPathService.getAllCareerPaths(
-                entry.careerPathName
-              );
-              const existingCp = cpSearch.data?.items?.content?.find(
-                item =>
-                  item.label.toLowerCase() ===
-                  entry.careerPathName.toLowerCase()
-              );
-              if (existingCp) resolvedCareerPathId = existingCp.id;
-            } else {
-              throw cpErr;
-            }
-          }
-        }
-
-        const result = await deps.createSkillCareerPath({
-          skillName: entry.skillName,
-          careerPathName: entry.careerPathName,
-        });
-        return {
-          ...entry,
-          skillId: result.pendingId,
-          careerPathId: resolvedCareerPathId,
-          displayValue: result.value || entry.displayValue,
-          source: 'PENDING',
-        };
-      } catch (err) {
-        if (isAlreadyExistsError(err)) {
-          const searchResult = await skillService.getAllSkills(
-            entry.displayValue
-          );
-          const existing = searchResult.data?.items?.content?.find(
-            item =>
-              item.label.toLowerCase() === entry.displayValue.toLowerCase()
-          );
-          if (existing) {
-            return { ...entry, skillId: existing.id, source: 'MASTER' };
-          }
-        }
-        throw err;
+      const comboKey = `${key(entry.skillName)}|${key(entry.careerPathName)}`;
+      if (!comboCache.has(comboKey)) {
+        comboCache.set(comboKey, resolveCombo(entry));
       }
+      const resolved = await comboCache.get(comboKey);
+      return { ...entry, ...resolved };
     })
   );
 }

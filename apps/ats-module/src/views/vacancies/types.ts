@@ -75,6 +75,16 @@ interface MasterRef {
   source: string;
 }
 
+/**
+ * Preferred-skill payload item: a skill-career-path ref plus the selected level.
+ * Matches the backend `SkillCareerPathLevelInput` schema.
+ */
+interface SkillLevelRef {
+  id: string;
+  source: string;
+  levelId: string;
+}
+
 interface CreateCareerPathPayload {
   displayValue: string;
   discipline?: MasterRef;
@@ -651,6 +661,8 @@ interface SkillCareerPathEntry {
   careerPathName: string;
   displayValue: string;
   source?: string;
+  levelId?: string;
+  levelName?: string;
 }
 
 interface PreferredSkills {
@@ -1626,7 +1638,7 @@ interface IndustryApiPayload {
 interface SkillsApiPayload {
   isEnabled: boolean;
   dataTakenFromCandidate: boolean;
-  content: MasterRef[];
+  content: SkillLevelRef[];
 }
 
 interface LanguagesApiPayload {
@@ -1751,6 +1763,16 @@ type TemplateSectionData = Record<
 interface CreateVacancyTemplateRequest {
   templateName: string;
   refNumber?: string;
+  data: TemplateSectionData;
+}
+
+/**
+ * Body of PUT /vacancy-templates/{id}. Same section structure as create; the
+ * Template ID is in the URL and the reference number is immutable, so neither
+ * is included here.
+ */
+interface UpdateVacancyTemplateRequest {
+  templateName: string;
   data: TemplateSectionData;
 }
 
@@ -1882,6 +1904,7 @@ export type {
   CustomizableFormSectionRequest,
   TemplateSectionData,
   CreateVacancyTemplateRequest,
+  UpdateVacancyTemplateRequest,
   NextTemplateName,
   CreatedVacancyTemplate,
   TemplateSortOrder,
