@@ -1,6 +1,7 @@
 export { useCreateIndustryMutation } from '@/views/vacancies/hooks/mutations/use-create-industry-mutation';
 export { useCreateTemplateMutation } from '@/views/vacancies/hooks/mutations/use-create-template-mutation';
 export { useUpdateTemplateMutation } from '@/views/vacancies/hooks/mutations/use-update-template-mutation';
+export { useSaveVacancyAsTemplateMutation } from '@/views/vacancies/hooks/mutations/use-save-vacancy-as-template-mutation';
 export { useCreateOrganizationMutation } from '@/views/vacancies/hooks/mutations/use-create-organization-mutation';
 export { useCreateSocietyMutation } from '@/views/vacancies/hooks/mutations/use-create-society-mutation';
 export { useAddSchoolMutation } from '@/views/vacancies/hooks/mutations/use-add-school-mutation';

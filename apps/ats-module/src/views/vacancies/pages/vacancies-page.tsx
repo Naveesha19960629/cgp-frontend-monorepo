@@ -15,6 +15,7 @@ import {
   VacancyDeleteDialog,
   VacancyFilteringSection,
   VacancyLoadingState,
+  VacancySaveAsTemplateDialog,
   VacancySearchEmptyState,
   VacancyTableEmptyState,
   VacancyTablePagination,
@@ -22,6 +23,8 @@ import {
   createVacancyColumns,
   useDeleteVacancyMutation,
   useDuplicateVacancyMutation,
+  useNextTemplateNameQuery,
+  useSaveVacancyAsTemplateMutation,
   useToggleVacancyStatusMutation,
 } from '@/views/vacancies';
 import { TABLE_PAGE_SIZE } from '@/views/vacancies/utils';
@@ -47,10 +50,22 @@ export default function VacanciesPage() {
     id: string;
     action: VacancyToggleAction;
   } | null>(null);
+  const [saveAsTemplateVacancyId, setSaveAsTemplateVacancyId] = useState<
+    string | null
+  >(null);
+  const [templateName, setTemplateName] = useState('');
+  const [isTemplateNameDirty, setIsTemplateNameDirty] = useState(false);
   const deleteMutation = useDeleteVacancyMutation();
   const toggleStatusMutation = useToggleVacancyStatusMutation();
   const { mutate: duplicateVacancy, isPending: isDuplicating } =
     useDuplicateVacancyMutation();
+  const saveAsTemplateMutation = useSaveVacancyAsTemplateMutation();
+  const {
+    data: nextTemplateNameResponse,
+    isLoading: isNextTemplateNameLoading,
+  } = useNextTemplateNameQuery({
+    enabled: Boolean(saveAsTemplateVacancyId),
+  });
 
   const queryParams: VacancyQueryParams = useMemo(
     () => ({
@@ -171,6 +186,34 @@ export default function VacanciesPage() {
     [duplicateVacancy, t]
   );
 
+  const handleCopyLink = useCallback(
+    (vacancyLink: string) => {
+      if (!vacancyLink) {
+        ErrorToast({
+          title: t('vacancies.copyLink.notifications.errorTitle'),
+          description: t('vacancies.copyLink.notifications.errorMessage'),
+        });
+        return;
+      }
+
+      navigator.clipboard
+        .writeText(vacancyLink)
+        .then(() => {
+          SuccessToast({
+            title: t('vacancies.copyLink.notifications.successTitle'),
+            description: t('vacancies.copyLink.notifications.successMessage'),
+          });
+        })
+        .catch(() => {
+          ErrorToast({
+            title: t('vacancies.copyLink.notifications.errorTitle'),
+            description: t('vacancies.copyLink.notifications.errorMessage'),
+          });
+        });
+    },
+    [t]
+  );
+
   const handleToggleConfirm = () => {
     if (!toggleTarget) return;
     const { id, action } = toggleTarget;
@@ -216,6 +259,49 @@ export default function VacanciesPage() {
     });
   };
 
+  // Pre-fill the system-generated template name once it loads, unless the
+  // recruiter has already edited the field.
+  useEffect(() => {
+    const autoName = nextTemplateNameResponse?.data?.templateName;
+    if (saveAsTemplateVacancyId && autoName && !isTemplateNameDirty) {
+      setTemplateName(autoName);
+    }
+  }, [nextTemplateNameResponse, saveAsTemplateVacancyId, isTemplateNameDirty]);
+
+  const handleSaveAsTemplateOpenChange = (open: boolean) => {
+    if (!open) {
+      setSaveAsTemplateVacancyId(null);
+      setTemplateName('');
+      setIsTemplateNameDirty(false);
+    }
+  };
+
+  const handleSaveAsTemplateConfirm = () => {
+    if (!saveAsTemplateVacancyId || !templateName.trim()) return;
+    saveAsTemplateMutation.mutate(
+      { vacancyId: saveAsTemplateVacancyId, templateName: templateName.trim() },
+      {
+        onSuccess: () => {
+          SuccessToast({
+            title: t('vacancies.saveAsTemplate.notifications.successTitle'),
+            description: t(
+              'vacancies.saveAsTemplate.notifications.successMessage'
+            ),
+          });
+          handleSaveAsTemplateOpenChange(false);
+        },
+        onError: () => {
+          ErrorToast({
+            title: t('vacancies.saveAsTemplate.notifications.errorTitle'),
+            description: t(
+              'vacancies.saveAsTemplate.notifications.errorMessage'
+            ),
+          });
+        },
+      }
+    );
+  };
+
   const columns = useMemo(
     () =>
       createVacancyColumns({
@@ -228,11 +314,22 @@ export default function VacanciesPage() {
           void navigate(`/dashboard/ats/vacancies/${vacancyId}/edit`),
         onDelete: (vacancyId: string) => setDeleteVacancyId(vacancyId),
         onMakeACopy: handleMakeACopy,
+        onSaveAsTemplate: (vacancyId: string) =>
+          setSaveAsTemplateVacancyId(vacancyId),
         onToggleActive: (vacancyId: string, action: VacancyToggleAction) =>
           setToggleTarget({ id: vacancyId, action }),
+        onCopyLink: handleCopyLink,
         t,
       }),
-    [params.sortBy, params.sortOrder, handleSort, handleMakeACopy, navigate, t]
+    [
+      params.sortBy,
+      params.sortOrder,
+      handleSort,
+      handleMakeACopy,
+      handleCopyLink,
+      navigate,
+      t,
+    ]
   );
 
   const table = useReactTable<VacancyTableColumn>({
@@ -340,6 +437,18 @@ export default function VacanciesPage() {
         onConfirm={handleToggleConfirm}
         onSchedule={handleToggleSchedule}
         isToggling={toggleStatusMutation.isPending}
+      />
+      <VacancySaveAsTemplateDialog
+        open={Boolean(saveAsTemplateVacancyId)}
+        onOpenChange={handleSaveAsTemplateOpenChange}
+        templateName={templateName}
+        onTemplateNameChange={value => {
+          setTemplateName(value);
+          setIsTemplateNameDirty(true);
+        }}
+        onConfirm={handleSaveAsTemplateConfirm}
+        isSaving={saveAsTemplateMutation.isPending}
+        isTemplateNameLoading={isNextTemplateNameLoading}
       />
       {isDuplicating && (
         <div

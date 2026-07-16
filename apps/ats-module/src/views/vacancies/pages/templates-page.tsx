@@ -1,20 +1,22 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
 import {
+  TEMPLATE_SKELETON_COUNT,
   TemplateCard,
+  TemplateCardSkeleton,
   TemplateDeleteDialog,
   TemplateEmptyState,
   TemplateSearchEmptyState,
   TemplatesToolbar,
-  VacancyLoadingState,
   VacancyTablePagination,
   useDeleteTemplateMutation,
   useVacancyTemplatesQuery,
   useVacancyTemplatesTableParams,
 } from '@/views/vacancies';
 import type { VacancyTemplateQueryParams } from '@/views/vacancies';
+import { TABLE_PAGE_SIZE } from '@/views/vacancies/utils';
 
 import { ErrorToast, SuccessToast } from '@cgp/ui-kit/components/custom-toast';
 import { useKeycloak } from '@react-keycloak/web';
@@ -39,13 +41,36 @@ export default function TemplatesPage() {
     [params]
   );
 
-  const { data: response, isLoading } = useVacancyTemplatesQuery(queryParams, {
+  const { data: response, isFetching } = useVacancyTemplatesQuery(queryParams, {
     enabled: initialized && !!keycloak.authenticated,
   });
 
   const templates = response?.data?.content ?? [];
   const totalPages = response?.data?.totalPages ?? 0;
   const hasActiveSearch = Boolean(params.search);
+
+  useEffect(() => {
+    // Detect reload: beforeunload sets this key; a shared-link open (new tab/session)
+    // has an empty sessionStorage and never finds it.
+    const wasHere = sessionStorage.getItem('templates_page_loaded');
+    sessionStorage.removeItem('templates_page_loaded');
+
+    if (wasHere) {
+      void setParams({
+        page: 1,
+        size: TABLE_PAGE_SIZE,
+        search: '',
+        sortOrder: 'NEWEST',
+      });
+    }
+
+    const markUnload = () =>
+      sessionStorage.setItem('templates_page_loaded', '1');
+    window.addEventListener('beforeunload', markUnload);
+    return () => window.removeEventListener('beforeunload', markUnload);
+    // setParams is stable; this must only run once on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const goToCreate = () => void navigate(TEMPLATE_CREATE_ROUTE);
 
@@ -100,8 +125,12 @@ export default function TemplatesPage() {
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto">
-        {isLoading ? (
-          <VacancyLoadingState />
+        {isFetching ? (
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {Array.from({ length: TEMPLATE_SKELETON_COUNT }, (_, index) => (
+              <TemplateCardSkeleton key={index} />
+            ))}
+          </div>
         ) : templates.length === 0 ? (
           hasActiveSearch ? (
             <TemplateSearchEmptyState />
@@ -123,7 +152,7 @@ export default function TemplatesPage() {
         )}
       </div>
 
-      {!isLoading && templates.length > 0 && (
+      {!isFetching && templates.length > 0 && (
         <VacancyTablePagination
           currentPage={params.page - 1}
           totalPages={totalPages}

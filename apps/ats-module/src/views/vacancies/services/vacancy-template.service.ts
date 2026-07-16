@@ -2,6 +2,7 @@ import type {
   CreateVacancyTemplateRequest,
   CreatedVacancyTemplate,
   NextTemplateName,
+  SaveVacancyAsTemplatePayload,
   SingleRecordApiResponse,
   UpdateVacancyTemplateRequest,
   VacancyTemplateQueryParams,
@@ -53,6 +54,16 @@ export const vacancyTemplateService = {
     const response = await httpClient.put<
       SingleRecordApiResponse<CreatedVacancyTemplate>
     >(`/vacancy-templates/${id}`, payload);
+    return response.data;
+  },
+  saveVacancyAsTemplate: async (
+    payload: SaveVacancyAsTemplatePayload
+  ): Promise<SingleRecordApiResponse<string>> => {
+    const { vacancyId, templateName } = payload;
+    const response = await httpClient.post<SingleRecordApiResponse<string>>(
+      `/vacancies/${vacancyId}/templates`,
+      { templateName }
+    );
     return response.data;
   },
   deleteTemplate: async (

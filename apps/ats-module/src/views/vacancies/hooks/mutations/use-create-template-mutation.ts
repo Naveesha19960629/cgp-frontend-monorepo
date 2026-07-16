@@ -10,6 +10,11 @@ interface CreateTemplateArgs {
   refNumber?: string;
 }
 
+const NEXT_TEMPLATE_NAME_QUERY_KEY = [
+  'vacancy-templates',
+  'next-template-name',
+] as const;
+
 const useCreateTemplateMutation = () => {
   const queryClient = useQueryClient();
 
@@ -20,6 +25,9 @@ const useCreateTemplateMutation = () => {
       ),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['vacancy-templates'] });
+      void queryClient.invalidateQueries({
+        queryKey: NEXT_TEMPLATE_NAME_QUERY_KEY,
+      });
     },
   });
 };

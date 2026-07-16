@@ -1,6 +1,6 @@
 import { FileEdit, History, MoreVertical, UserSearch } from 'lucide-react';
 
-import { Edit2, Link21, Simcard2, Trash } from 'iconsax-reactjs';
+import { Edit2, Link21, Save2, Simcard2, Trash } from 'iconsax-reactjs';
 
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -23,6 +23,7 @@ export default function VacancyTableAction({
   onMakeACopy,
   onEdit,
   onEditJd,
+  onSaveAsTemplate,
   onDelete,
 }: VacancyTableActionProps) {
   const { t } = useTranslation('ats');
@@ -44,21 +45,27 @@ export default function VacancyTableAction({
   const showDuplicate = availableActions
     ? availableActions.includes('MAKE_A_COPY')
     : isUnpublished || isLive || isExpired || isOnHold;
+  // Version History is not available for Unpublished vacancies.
   const showVersionHistory = availableActions
     ? availableActions.includes('VERSION_CONTROL')
-    : isUnpublished || isLive || isExpired || isOnHold;
+    : isLive || isExpired || isOnHold;
   const showCopyLink = availableActions
     ? availableActions.includes('COPY_LINK')
     : isUnpublished || isLive || isExpired || isOnHold;
   const showMatchCandidates = availableActions
     ? availableActions.includes('MATCH_CANDIDATE')
     : (isLive || isExpired || isOnHold) && hasApplicants;
+  // Delete is available for Draft/Unpublished, and for Live/Expired/On hold
+  // only while the vacancy has no applicants yet.
   const showDelete = availableActions
     ? availableActions.includes('DELETE')
-    : isDraft || isUnpublished || (isLive && !hasApplicants);
+    : isDraft ||
+      isUnpublished ||
+      ((isLive || isExpired || isOnHold) && !hasApplicants);
   const showEditJd = availableActions?.includes('EDIT_JD')
     ? true
     : isUnpublished || isLive || isExpired || isOnHold;
+  const showSaveAsTemplate = true;
 
   const handleEdit = () => {
     if (onEdit) {
@@ -116,15 +123,6 @@ export default function VacancyTableAction({
             {t('vacancies.table.actions.editJd')}
           </DropdownMenuItem>
         )}
-        {showDuplicate && (
-          <DropdownMenuItem
-            className="gap-2 px-3 py-3 text-sm font-medium text-slate-500"
-            onClick={onMakeACopy}
-          >
-            <Simcard2 className="size-4 shrink-0" />
-            {t('vacancies.table.actions.makeACopy')}
-          </DropdownMenuItem>
-        )}
         {showMatchCandidates && (
           <DropdownMenuItem
             className="gap-2 px-3 py-3 text-sm font-medium text-slate-500"
@@ -132,6 +130,15 @@ export default function VacancyTableAction({
           >
             <UserSearch className="size-4 shrink-0" />
             {t('vacancies.table.actions.matchCandidate')}
+          </DropdownMenuItem>
+        )}
+        {showCopyLink && (
+          <DropdownMenuItem
+            className="gap-2 px-3 py-3 text-sm font-medium text-slate-500"
+            onClick={onCopyLink}
+          >
+            <Link21 className="size-4 shrink-0" />
+            {t('vacancies.table.actions.copyLink')}
           </DropdownMenuItem>
         )}
         {showVersionHistory && (
@@ -143,13 +150,22 @@ export default function VacancyTableAction({
             {t('vacancies.table.actions.versionHistory')}
           </DropdownMenuItem>
         )}
-        {showCopyLink && (
+        {showSaveAsTemplate && (
           <DropdownMenuItem
             className="gap-2 px-3 py-3 text-sm font-medium text-slate-500"
-            onClick={onCopyLink}
+            onClick={onSaveAsTemplate}
           >
-            <Link21 className="size-4 shrink-0" />
-            {t('vacancies.table.actions.copyLink')}
+            <Save2 className="size-4 shrink-0" />
+            {t('vacancies.table.actions.saveAsTemplate')}
+          </DropdownMenuItem>
+        )}
+        {showDuplicate && (
+          <DropdownMenuItem
+            className="gap-2 px-3 py-3 text-sm font-medium text-slate-500"
+            onClick={onMakeACopy}
+          >
+            <Simcard2 className="size-4 shrink-0" />
+            {t('vacancies.table.actions.makeACopy')}
           </DropdownMenuItem>
         )}
         {showDelete && (
