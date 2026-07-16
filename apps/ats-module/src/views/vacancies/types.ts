@@ -1101,6 +1101,7 @@ interface VacancyTableColumn {
   version: number;
   status: string;
   availableActions: string[];
+  vacancyLink: string;
 }
 
 interface VacancyFilteringSectionProps {
@@ -1202,6 +1203,7 @@ interface CreateColumnsOptions {
   onMakeACopy: (vacancyId: string) => void;
   onSaveAsTemplate: (vacancyId: string) => void;
   onToggleActive: (vacancyId: string, action: VacancyToggleAction) => void;
+  onCopyLink: (vacancyLink: string) => void;
   t: (key: string) => string;
 }
 

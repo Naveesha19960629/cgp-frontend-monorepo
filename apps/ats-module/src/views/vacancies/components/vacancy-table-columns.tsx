@@ -55,6 +55,7 @@ const createVacancyColumns = ({
   onMakeACopy,
   onSaveAsTemplate,
   onToggleActive,
+  onCopyLink,
   t,
 }: CreateColumnsOptions): ColumnDef<VacancyTableColumn>[] => [
   {
@@ -352,6 +353,7 @@ const createVacancyColumns = ({
         onDelete={() => onDelete(row.original.vacancyId)}
         onMakeACopy={() => onMakeACopy(row.original.vacancyId)}
         onSaveAsTemplate={() => onSaveAsTemplate(row.original.vacancyId)}
+        onCopyLink={() => onCopyLink(row.original.vacancyLink)}
       />
     ),
     size: 50,

@@ -18,7 +18,13 @@ vi.mock('@/views/vacancies', async importOriginal => {
   const actual = await importOriginal<typeof import('@/views/vacancies')>();
   return {
     ...actual,
-    VacancyTableAction: () => <div data-testid="vacancy-table-action" />,
+    VacancyTableAction: ({ onCopyLink }: { onCopyLink?: () => void }) => (
+      <div data-testid="vacancy-table-action">
+        <button type="button" onClick={onCopyLink}>
+          copy-link
+        </button>
+      </div>
+    ),
   };
 });
 
@@ -53,6 +59,7 @@ const onDelete = vi.fn();
 const onMakeACopy = vi.fn();
 const onSaveAsTemplate = vi.fn();
 const onToggleActive = vi.fn();
+const onCopyLink = vi.fn();
 
 const sampleRow: VacancyTableColumn = {
   vacancyId: 'f4e3d2c1-b0a9-8f7e-6d5c-4b3a2f1e0d9c',
@@ -75,6 +82,8 @@ const sampleRow: VacancyTableColumn = {
   version: 1,
   status: 'ON_HOLD',
   availableActions: ['VIEW', 'EDIT', 'CLOSE'],
+  vacancyLink:
+    'http://localhost:5173/jobs/f4e3d2c1-b0a9-8f7e-6d5c-4b3a2f1e0d9c',
 };
 
 function TableWrapper({
@@ -96,6 +105,7 @@ function TableWrapper({
     onMakeACopy,
     onSaveAsTemplate,
     onToggleActive,
+    onCopyLink,
     t,
   });
   const table = useReactTable({
@@ -151,6 +161,7 @@ describe('createVacancyColumns', () => {
       onMakeACopy,
       onSaveAsTemplate,
       onToggleActive,
+      onCopyLink,
       t,
     });
     expect(cols).toHaveLength(17);
@@ -167,6 +178,7 @@ describe('createVacancyColumns', () => {
       onMakeACopy,
       onSaveAsTemplate,
       onToggleActive,
+      onCopyLink,
       t,
     });
     const ids = cols.map(
@@ -245,6 +257,15 @@ describe('createVacancyColumns', () => {
   it('renders the actions cell', () => {
     render(<TableWrapper data={[sampleRow]} />);
     expect(screen.getByTestId('vacancy-table-action')).toBeInTheDocument();
+  });
+
+  it('calls onCopyLink with the row vacancyLink when the copy link action is triggered', async () => {
+    const user = userEvent.setup();
+    render(<TableWrapper data={[sampleRow]} />);
+
+    await user.click(screen.getByText('copy-link'));
+
+    expect(onCopyLink).toHaveBeenCalledWith(sampleRow.vacancyLink);
   });
 
   it('calls onSort with the column key when a sortable header is clicked', async () => {

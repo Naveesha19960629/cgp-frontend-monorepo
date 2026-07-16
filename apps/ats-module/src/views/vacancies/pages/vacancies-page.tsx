@@ -186,6 +186,34 @@ export default function VacanciesPage() {
     [duplicateVacancy, t]
   );
 
+  const handleCopyLink = useCallback(
+    (vacancyLink: string) => {
+      if (!vacancyLink) {
+        ErrorToast({
+          title: t('vacancies.copyLink.notifications.errorTitle'),
+          description: t('vacancies.copyLink.notifications.errorMessage'),
+        });
+        return;
+      }
+
+      navigator.clipboard
+        .writeText(vacancyLink)
+        .then(() => {
+          SuccessToast({
+            title: t('vacancies.copyLink.notifications.successTitle'),
+            description: t('vacancies.copyLink.notifications.successMessage'),
+          });
+        })
+        .catch(() => {
+          ErrorToast({
+            title: t('vacancies.copyLink.notifications.errorTitle'),
+            description: t('vacancies.copyLink.notifications.errorMessage'),
+          });
+        });
+    },
+    [t]
+  );
+
   const handleToggleConfirm = () => {
     if (!toggleTarget) return;
     const { id, action } = toggleTarget;
@@ -290,9 +318,18 @@ export default function VacanciesPage() {
           setSaveAsTemplateVacancyId(vacancyId),
         onToggleActive: (vacancyId: string, action: VacancyToggleAction) =>
           setToggleTarget({ id: vacancyId, action }),
+        onCopyLink: handleCopyLink,
         t,
       }),
-    [params.sortBy, params.sortOrder, handleSort, handleMakeACopy, navigate, t]
+    [
+      params.sortBy,
+      params.sortOrder,
+      handleSort,
+      handleMakeACopy,
+      handleCopyLink,
+      navigate,
+      t,
+    ]
   );
 
   const table = useReactTable<VacancyTableColumn>({

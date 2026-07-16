@@ -1,4 +1,4 @@
-import { act, render, screen } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import VacanciesPage from '@/views/vacancies/pages/vacancies-page';
@@ -361,6 +361,71 @@ describe('VacanciesPage', () => {
       const buttons = screen.getAllByRole('button');
       const confirmButton = buttons[1];
       expect(confirmButton).toBeDisabled();
+    });
+
+    describe('copy vacancy link', () => {
+      const getOnCopyLink = () => {
+        const options = createVacancyColumnsMock.mock.calls.at(-1)?.[0] as {
+          onCopyLink: (vacancyLink: string) => void;
+        };
+        return options.onCopyLink;
+      };
+
+      it('copies the vacancy link and shows a success toast', async () => {
+        const writeText = vi.fn().mockResolvedValue(undefined);
+        Object.defineProperty(navigator, 'clipboard', {
+          value: { writeText },
+          configurable: true,
+        });
+
+        render(<VacanciesPage />);
+        getOnCopyLink()(
+          'http://localhost:5173/jobs/85f9b624-ee93-46d0-b8d6-5cea49a8597a'
+        );
+
+        await waitFor(() => expect(mockSuccessToast).toHaveBeenCalled());
+        expect(writeText).toHaveBeenCalledWith(
+          'http://localhost:5173/jobs/85f9b624-ee93-46d0-b8d6-5cea49a8597a'
+        );
+        expect(mockSuccessToast).toHaveBeenCalledWith({
+          title: 'vacancies.copyLink.notifications.successTitle',
+          description: 'vacancies.copyLink.notifications.successMessage',
+        });
+      });
+
+      it('shows an error toast when the clipboard write fails', async () => {
+        const writeText = vi.fn().mockRejectedValue(new Error('denied'));
+        Object.defineProperty(navigator, 'clipboard', {
+          value: { writeText },
+          configurable: true,
+        });
+
+        render(<VacanciesPage />);
+        getOnCopyLink()('http://localhost:5173/jobs/abc');
+
+        await waitFor(() => expect(mockErrorToast).toHaveBeenCalled());
+        expect(mockErrorToast).toHaveBeenCalledWith({
+          title: 'vacancies.copyLink.notifications.errorTitle',
+          description: 'vacancies.copyLink.notifications.errorMessage',
+        });
+      });
+
+      it('shows an error toast without touching the clipboard when vacancyLink is empty', () => {
+        const writeText = vi.fn();
+        Object.defineProperty(navigator, 'clipboard', {
+          value: { writeText },
+          configurable: true,
+        });
+
+        render(<VacanciesPage />);
+        getOnCopyLink()('');
+
+        expect(writeText).not.toHaveBeenCalled();
+        expect(mockErrorToast).toHaveBeenCalledWith({
+          title: 'vacancies.copyLink.notifications.errorTitle',
+          description: 'vacancies.copyLink.notifications.errorMessage',
+        });
+      });
     });
   });
 });
