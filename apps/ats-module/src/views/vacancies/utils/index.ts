@@ -18,6 +18,7 @@ export {
   EMPTY_STATE_ROW_WIDTHS,
   TWELVE_HOUR_TIME_REGEX,
   TWENTY_FOUR_HOUR_TIME_REGEX,
+  TEMPLATE_SKELETON_COUNT,
 } from '@/views/vacancies/utils/constants';
 export {
   isUrlProtocolValid,

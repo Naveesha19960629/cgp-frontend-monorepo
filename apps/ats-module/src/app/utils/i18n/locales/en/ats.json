@@ -366,6 +366,14 @@
         "errorMessage": "Some changes could not be saved. Please try again."
       }
     },
+    "saveAsTemplate": {
+      "notifications": {
+        "successTitle": "Successfully Saved",
+        "successMessage": "Vacancy template saved successfully.",
+        "errorTitle": "Failed to Save",
+        "errorMessage": "Some changes could not be saved. Please try again."
+      }
+    },
     "copyLink": {
       "notifications": {
         "successTitle": "Link Copied",
@@ -447,6 +455,7 @@
         "makeACopy": "Make a Copy",
         "edit": "Edit",
         "editJd": "Edit JD",
+        "saveAsTemplate": "Save as Template",
         "delete": "Delete"
       },
       "pagination": {
@@ -574,6 +583,15 @@
         "errorMessage": "Some changes could not be loaded. Please try again."
       }
     }
+  },
+
+  "vacancySaveAsTemplateDialog": {
+    "title": "Are you sure?",
+    "description": "This vacancy will be saved as a reusable template. Only enabled sections and configurations will be included.\nTo create this vacancy template, please provide a template name.",
+    "nameLabel": "Template Name",
+    "namePlaceholder": "Enter template name",
+    "noButton": "No",
+    "yesButton": "Yes"
   },
 
   "vacancyEditCancelDialog": {

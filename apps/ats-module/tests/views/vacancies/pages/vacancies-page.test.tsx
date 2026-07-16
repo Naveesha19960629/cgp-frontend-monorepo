@@ -1,7 +1,8 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import VacanciesPage from '@/views/vacancies/pages/vacancies-page';
+import type { CreateColumnsOptions } from '@/views/vacancies/types';
 
 const navigate = vi.fn();
 const useVacanciesQueryMock = vi.fn();
@@ -9,7 +10,9 @@ const useVacancyTableParamsMock = vi.fn();
 const useDeleteVacancyMutationMock = vi.fn();
 const useDuplicateVacancyMutationMock = vi.fn();
 const useToggleVacancyStatusMutationMock = vi.fn();
-const createVacancyColumnsMock = vi.fn((_options: unknown) => []);
+const useNextTemplateNameQueryMock = vi.fn();
+const useSaveVacancyAsTemplateMutationMock = vi.fn();
+const createVacancyColumnsMock = vi.fn((_options: CreateColumnsOptions) => []);
 const mockSuccessToast = vi.fn();
 const mockErrorToast = vi.fn();
 
@@ -64,6 +67,11 @@ vi.mock('@/views/vacancies', async importOriginal => {
     useDuplicateVacancyMutation: () => useDuplicateVacancyMutationMock(),
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     useToggleVacancyStatusMutation: () => useToggleVacancyStatusMutationMock(),
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    useNextTemplateNameQuery: () => useNextTemplateNameQueryMock(),
+    useSaveVacancyAsTemplateMutation: () =>
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+      useSaveVacancyAsTemplateMutationMock(),
     VacancyDataTable: () => <div data-testid="vacancy-data-table" />,
     VacancyFilteringSection: () => (
       <div data-testid="vacancy-filtering-section" />
@@ -74,8 +82,8 @@ vi.mock('@/views/vacancies', async importOriginal => {
     VacancyTablePagination: () => (
       <div data-testid="vacancy-table-pagination" />
     ),
-    createVacancyColumns: (options: unknown) =>
-      createVacancyColumnsMock(options) as never,
+    createVacancyColumns: (options: CreateColumnsOptions) =>
+      createVacancyColumnsMock(options) as [],
   };
 });
 
@@ -96,6 +104,13 @@ describe('VacanciesPage', () => {
       isPending: false,
     });
     useToggleVacancyStatusMutationMock.mockReturnValue({
+      mutate: vi.fn(),
+      isPending: false,
+    });
+    useNextTemplateNameQueryMock.mockReturnValue({
+      data: { data: { templateName: 'Template 4', refNumber: 'REF-4' } },
+    });
+    useSaveVacancyAsTemplateMutationMock.mockReturnValue({
       mutate: vi.fn(),
       isPending: false,
     });
@@ -198,67 +213,218 @@ describe('VacanciesPage', () => {
     ).not.toBeInTheDocument();
   });
 
-  describe('copy vacancy link', () => {
-    const getOnCopyLink = () => {
-      const options = createVacancyColumnsMock.mock.calls.at(-1)?.[0] as {
-        onCopyLink: (vacancyLink: string) => void;
-      };
-      return options.onCopyLink;
+  describe('Save as Template dialog', () => {
+    const triggerSaveAsTemplate = (vacancyId = 'vacancy-1') => {
+      const options = createVacancyColumnsMock.mock.calls[0][0];
+      act(() => options.onSaveAsTemplate(vacancyId));
     };
 
-    it('copies the vacancy link and shows a success toast', async () => {
-      const writeText = vi.fn().mockResolvedValue(undefined);
-      Object.defineProperty(navigator, 'clipboard', {
-        value: { writeText },
-        configurable: true,
+    it('opens the dialog pre-filled with the system-generated template name', () => {
+      render(<VacanciesPage />);
+
+      triggerSaveAsTemplate();
+
+      expect(
+        screen.getByRole('heading', {
+          name: 'vacancySaveAsTemplateDialog.title',
+        })
+      ).toBeInTheDocument();
+      expect(screen.getByDisplayValue('Template 4')).toBeInTheDocument();
+    });
+
+    it('shows a skeleton instead of the input while the next template name is loading', () => {
+      useNextTemplateNameQueryMock.mockReturnValue({
+        data: undefined,
+        isLoading: true,
       });
 
       render(<VacanciesPage />);
-      getOnCopyLink()(
-        'http://localhost:5173/jobs/85f9b624-ee93-46d0-b8d6-5cea49a8597a'
+      triggerSaveAsTemplate();
+
+      expect(screen.queryByDisplayValue('Template 4')).not.toBeInTheDocument();
+      expect(
+        screen.queryByPlaceholderText(
+          'vacancySaveAsTemplateDialog.namePlaceholder'
+        )
+      ).not.toBeInTheDocument();
+    });
+
+    it('does not show the dialog before Save as Template is triggered', () => {
+      render(<VacanciesPage />);
+
+      // The dialog's title/description are always mounted (for a11y), so
+      // assert on the portal-rendered dialog content instead.
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+
+    it('calls the mutation with the vacancy id and trimmed name, then shows a success toast', async () => {
+      const user = userEvent.setup();
+      const mutate = vi.fn(
+        (_payload: unknown, opts: { onSuccess: () => void }) => opts.onSuccess()
+      );
+      useSaveVacancyAsTemplateMutationMock.mockReturnValue({
+        mutate,
+        isPending: false,
+      });
+
+      render(<VacanciesPage />);
+      triggerSaveAsTemplate('vacancy-1');
+
+      const input = screen.getByDisplayValue('Template 4');
+      await user.clear(input);
+      await user.type(input, '  My Custom Template  ');
+
+      await user.click(
+        screen.getByRole('button', {
+          name: 'vacancySaveAsTemplateDialog.yesButton',
+        })
       );
 
-      await waitFor(() => expect(mockSuccessToast).toHaveBeenCalled());
-      expect(writeText).toHaveBeenCalledWith(
-        'http://localhost:5173/jobs/85f9b624-ee93-46d0-b8d6-5cea49a8597a'
+      expect(mutate).toHaveBeenCalledWith(
+        { vacancyId: 'vacancy-1', templateName: 'My Custom Template' },
+        expect.objectContaining({
+          onSuccess: expect.any(Function) as unknown,
+          onError: expect.any(Function) as unknown,
+        })
       );
       expect(mockSuccessToast).toHaveBeenCalledWith({
-        title: 'vacancies.copyLink.notifications.successTitle',
-        description: 'vacancies.copyLink.notifications.successMessage',
+        title: 'vacancies.saveAsTemplate.notifications.successTitle',
+        description: 'vacancies.saveAsTemplate.notifications.successMessage',
       });
+      // Dialog closes after a successful save.
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
 
-    it('shows an error toast when the clipboard write fails', async () => {
-      const writeText = vi.fn().mockRejectedValue(new Error('denied'));
-      Object.defineProperty(navigator, 'clipboard', {
-        value: { writeText },
-        configurable: true,
+    it('shows an error toast when the mutation fails', async () => {
+      const user = userEvent.setup();
+      const mutate = vi.fn((_payload: unknown, opts: { onError: () => void }) =>
+        opts.onError()
+      );
+      useSaveVacancyAsTemplateMutationMock.mockReturnValue({
+        mutate,
+        isPending: false,
       });
 
       render(<VacanciesPage />);
-      getOnCopyLink()('http://localhost:5173/jobs/abc');
+      triggerSaveAsTemplate('vacancy-1');
 
-      await waitFor(() => expect(mockErrorToast).toHaveBeenCalled());
+      await user.click(
+        screen.getByRole('button', {
+          name: 'vacancySaveAsTemplateDialog.yesButton',
+        })
+      );
+
       expect(mockErrorToast).toHaveBeenCalledWith({
-        title: 'vacancies.copyLink.notifications.errorTitle',
-        description: 'vacancies.copyLink.notifications.errorMessage',
+        title: 'vacancies.saveAsTemplate.notifications.errorTitle',
+        description: 'vacancies.saveAsTemplate.notifications.errorMessage',
       });
+      // Dialog stays open on failure so the recruiter can retry.
+      expect(
+        screen.getByRole('heading', {
+          name: 'vacancySaveAsTemplateDialog.title',
+        })
+      ).toBeInTheDocument();
     });
 
-    it('shows an error toast without touching the clipboard when vacancyLink is empty', () => {
-      const writeText = vi.fn();
-      Object.defineProperty(navigator, 'clipboard', {
-        value: { writeText },
-        configurable: true,
+    it('closes the dialog without saving when No is clicked', async () => {
+      const user = userEvent.setup();
+      const mutate = vi.fn();
+      useSaveVacancyAsTemplateMutationMock.mockReturnValue({
+        mutate,
+        isPending: false,
       });
 
       render(<VacanciesPage />);
-      getOnCopyLink()('');
+      triggerSaveAsTemplate();
 
-      expect(writeText).not.toHaveBeenCalled();
-      expect(mockErrorToast).toHaveBeenCalledWith({
-        title: 'vacancies.copyLink.notifications.errorTitle',
-        description: 'vacancies.copyLink.notifications.errorMessage',
+      await user.click(
+        screen.getByRole('button', {
+          name: 'vacancySaveAsTemplateDialog.noButton',
+        })
+      );
+
+      expect(mutate).not.toHaveBeenCalled();
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+
+    it('disables the confirm button while saving is in progress', () => {
+      useSaveVacancyAsTemplateMutationMock.mockReturnValue({
+        mutate: vi.fn(),
+        isPending: true,
+      });
+
+      render(<VacanciesPage />);
+      triggerSaveAsTemplate();
+
+      // DialogContent renders [No, Yes, built-in close (X)] in that order —
+      // the confirm button is the second of the three.
+      const buttons = screen.getAllByRole('button');
+      const confirmButton = buttons[1];
+      expect(confirmButton).toBeDisabled();
+    });
+
+    describe('copy vacancy link', () => {
+      const getOnCopyLink = () => {
+        const options = createVacancyColumnsMock.mock.calls.at(-1)?.[0] as {
+          onCopyLink: (vacancyLink: string) => void;
+        };
+        return options.onCopyLink;
+      };
+
+      it('copies the vacancy link and shows a success toast', async () => {
+        const writeText = vi.fn().mockResolvedValue(undefined);
+        Object.defineProperty(navigator, 'clipboard', {
+          value: { writeText },
+          configurable: true,
+        });
+
+        render(<VacanciesPage />);
+        getOnCopyLink()(
+          'http://localhost:5173/jobs/85f9b624-ee93-46d0-b8d6-5cea49a8597a'
+        );
+
+        await waitFor(() => expect(mockSuccessToast).toHaveBeenCalled());
+        expect(writeText).toHaveBeenCalledWith(
+          'http://localhost:5173/jobs/85f9b624-ee93-46d0-b8d6-5cea49a8597a'
+        );
+        expect(mockSuccessToast).toHaveBeenCalledWith({
+          title: 'vacancies.copyLink.notifications.successTitle',
+          description: 'vacancies.copyLink.notifications.successMessage',
+        });
+      });
+
+      it('shows an error toast when the clipboard write fails', async () => {
+        const writeText = vi.fn().mockRejectedValue(new Error('denied'));
+        Object.defineProperty(navigator, 'clipboard', {
+          value: { writeText },
+          configurable: true,
+        });
+
+        render(<VacanciesPage />);
+        getOnCopyLink()('http://localhost:5173/jobs/abc');
+
+        await waitFor(() => expect(mockErrorToast).toHaveBeenCalled());
+        expect(mockErrorToast).toHaveBeenCalledWith({
+          title: 'vacancies.copyLink.notifications.errorTitle',
+          description: 'vacancies.copyLink.notifications.errorMessage',
+        });
+      });
+
+      it('shows an error toast without touching the clipboard when vacancyLink is empty', () => {
+        const writeText = vi.fn();
+        Object.defineProperty(navigator, 'clipboard', {
+          value: { writeText },
+          configurable: true,
+        });
+
+        render(<VacanciesPage />);
+        getOnCopyLink()('');
+
+        expect(writeText).not.toHaveBeenCalled();
+        expect(mockErrorToast).toHaveBeenCalledWith({
+          title: 'vacancies.copyLink.notifications.errorTitle',
+          description: 'vacancies.copyLink.notifications.errorMessage',
+        });
       });
     });
   });

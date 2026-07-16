@@ -66,6 +66,8 @@ const EMPTY_STATE_ROW_WIDTHS = [
 const TWELVE_HOUR_TIME_REGEX = /^(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)$/i;
 const TWENTY_FOUR_HOUR_TIME_REGEX = /^(\d{2}):(\d{2})(?::(\d{2}))?$/;
 
+const TEMPLATE_SKELETON_COUNT = 8;
+
 export {
   URL_PROTOCOL_HTTP,
   URL_PROTOCOL_HTTPS,
@@ -77,4 +79,5 @@ export {
   EMPTY_STATE_ROW_WIDTHS,
   TWELVE_HOUR_TIME_REGEX,
   TWENTY_FOUR_HOUR_TIME_REGEX,
+  TEMPLATE_SKELETON_COUNT,
 };

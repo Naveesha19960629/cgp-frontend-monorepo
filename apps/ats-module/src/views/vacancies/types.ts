@@ -1175,6 +1175,7 @@ interface VacancyTableActionProps {
   onMakeACopy?: () => void;
   onEdit?: () => void;
   onEditJd?: () => void;
+  onSaveAsTemplate?: () => void;
   onDelete?: () => void;
 }
 
@@ -1200,6 +1201,7 @@ interface CreateColumnsOptions {
   onEdit: (vacancyId: string) => void;
   onDelete: (vacancyId: string) => void;
   onMakeACopy: (vacancyId: string) => void;
+  onSaveAsTemplate: (vacancyId: string) => void;
   onToggleActive: (vacancyId: string, action: VacancyToggleAction) => void;
   onCopyLink: (vacancyLink: string) => void;
   t: (key: string) => string;
@@ -1852,6 +1854,23 @@ interface VacancyTemplateUseResponse {
   requestBody: VacancyTemplateUseRequestBody;
 }
 
+// ── Save Vacancy as Template (quick save from the vacancy list) ────────────
+
+interface SaveVacancyAsTemplatePayload {
+  vacancyId: string;
+  templateName: string;
+}
+
+interface VacancySaveAsTemplateDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  templateName: string;
+  onTemplateNameChange: (value: string) => void;
+  onConfirm: () => void;
+  isSaving?: boolean;
+  isTemplateNameLoading?: boolean;
+}
+
 export type {
   CreateVacancyPayload,
   TemplateSectionKind,
@@ -1877,6 +1896,8 @@ export type {
   UpdateVacancyJobDescriptionRequest,
   VacancyTemplateUseRequestBody,
   VacancyTemplateUseResponse,
+  SaveVacancyAsTemplatePayload,
+  VacancySaveAsTemplateDialogProps,
   JobRequirementApiPayload,
   PatentContentApiPayload,
   PatentGroupApiPayload,

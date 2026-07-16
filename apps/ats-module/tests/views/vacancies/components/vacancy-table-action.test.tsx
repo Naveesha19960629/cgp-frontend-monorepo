@@ -20,9 +20,11 @@ describe('VacancyTableAction', () => {
   const onCopyLink = vi.fn();
   const onMakeACopy = vi.fn();
   const onEdit = vi.fn();
+  const onSaveAsTemplate = vi.fn();
   const onDelete = vi.fn();
 
-  // unpublished + no applicants: Edit, Duplicate, Version History, Copy Link, Delete
+  // unpublished + no applicants: Edit, Make a Copy, Delete, Copy Link, Save as Template
+  // (no Version History, no Match Candidate)
   const defaultProps = {
     vacancy: {
       id: 'test-vacancy-id',
@@ -34,6 +36,7 @@ describe('VacancyTableAction', () => {
     onCopyLink,
     onMakeACopy,
     onEdit,
+    onSaveAsTemplate,
     onDelete,
   };
 
@@ -61,14 +64,18 @@ describe('VacancyTableAction', () => {
       screen.getByText('vacancies.table.actions.makeACopy')
     ).toBeInTheDocument();
     expect(
-      screen.getByText('vacancies.table.actions.versionHistory')
+      screen.getByText('vacancies.table.actions.copyLink')
     ).toBeInTheDocument();
     expect(
-      screen.getByText('vacancies.table.actions.copyLink')
+      screen.getByText('vacancies.table.actions.saveAsTemplate')
     ).toBeInTheDocument();
     expect(
       screen.getByText('vacancies.table.actions.delete')
     ).toBeInTheDocument();
+    // Version History is explicitly excluded for Unpublished vacancies.
+    expect(
+      screen.queryByText('vacancies.table.actions.versionHistory')
+    ).not.toBeInTheDocument();
     // Match candidates not shown for unpublished
     expect(
       screen.queryByText('vacancies.table.actions.matchCandidate')
@@ -92,11 +99,80 @@ describe('VacancyTableAction', () => {
       screen.getByText('vacancies.table.actions.editJd')
     ).toBeInTheDocument();
     expect(
+      screen.getByText('vacancies.table.actions.versionHistory')
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('vacancies.table.actions.saveAsTemplate')
+    ).toBeInTheDocument();
+    expect(
       screen.queryByText('vacancies.table.actions.delete')
     ).not.toBeInTheDocument();
   });
 
-  it('hides duplicate, version history, copy link, and match candidates for draft vacancy', async () => {
+  it('shows delete and version history but hides match candidates for live vacancy with 0 applicants', async () => {
+    const user = userEvent.setup();
+    render(
+      <VacancyTableAction
+        {...defaultProps}
+        vacancy={{ id: 'test', status: 'live', applicantCount: 0 }}
+      />
+    );
+    await user.click(screen.getByRole('button'));
+
+    expect(
+      screen.getByText('vacancies.table.actions.delete')
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('vacancies.table.actions.versionHistory')
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText('vacancies.table.actions.matchCandidate')
+    ).not.toBeInTheDocument();
+  });
+
+  it.each([['expired'], ['onhold'], ['on_hold']])(
+    'shows delete for %s vacancy with 0 applicants',
+    async status => {
+      const user = userEvent.setup();
+      render(
+        <VacancyTableAction
+          {...defaultProps}
+          vacancy={{ id: 'test', status, applicantCount: 0 }}
+        />
+      );
+      await user.click(screen.getByRole('button'));
+
+      expect(
+        screen.getByText('vacancies.table.actions.delete')
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByText('vacancies.table.actions.matchCandidate')
+      ).not.toBeInTheDocument();
+    }
+  );
+
+  it.each([['expired'], ['onhold'], ['on_hold']])(
+    'hides delete but shows match candidates for %s vacancy with applicants',
+    async status => {
+      const user = userEvent.setup();
+      render(
+        <VacancyTableAction
+          {...defaultProps}
+          vacancy={{ id: 'test', status, applicantCount: 2 }}
+        />
+      );
+      await user.click(screen.getByRole('button'));
+
+      expect(
+        screen.queryByText('vacancies.table.actions.delete')
+      ).not.toBeInTheDocument();
+      expect(
+        screen.getByText('vacancies.table.actions.matchCandidate')
+      ).toBeInTheDocument();
+    }
+  );
+
+  it('shows only edit, save as template and delete for draft vacancy', async () => {
     const user = userEvent.setup();
     render(
       <VacancyTableAction
@@ -108,6 +184,9 @@ describe('VacancyTableAction', () => {
 
     expect(
       screen.getByText('vacancies.table.actions.edit')
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('vacancies.table.actions.saveAsTemplate')
     ).toBeInTheDocument();
     expect(
       screen.getByText('vacancies.table.actions.delete')
@@ -137,12 +216,22 @@ describe('VacancyTableAction', () => {
     ],
     ['onCopyLink', 'vacancies.table.actions.copyLink', onCopyLink],
     ['onMakeACopy', 'vacancies.table.actions.makeACopy', onMakeACopy],
+    [
+      'onSaveAsTemplate',
+      'vacancies.table.actions.saveAsTemplate',
+      onSaveAsTemplate,
+    ],
     ['onDelete', 'vacancies.table.actions.delete', onDelete],
   ])(
     'calls %s callback when its menu item is clicked',
     async (_name, label, callback) => {
       const user = userEvent.setup();
-      render(<VacancyTableAction {...defaultProps} />);
+      render(
+        <VacancyTableAction
+          {...defaultProps}
+          vacancy={{ id: 'test', status: 'live', applicantCount: 0 }}
+        />
+      );
       await user.click(screen.getByRole('button'));
       await user.click(screen.getByText(label));
       expect(callback).toHaveBeenCalledTimes(1);
@@ -210,9 +299,33 @@ describe('VacancyTableAction', () => {
     expect(
       screen.queryByText('vacancies.table.actions.makeACopy')
     ).not.toBeInTheDocument();
+    // Save as Template is always shown, regardless of availableActions.
+    expect(
+      screen.getByText('vacancies.table.actions.saveAsTemplate')
+    ).toBeInTheDocument();
     // EDIT_JD not in availableActions — falls back to status-based (live → show)
     expect(
       screen.getByText('vacancies.table.actions.editJd')
+    ).toBeInTheDocument();
+  });
+
+  it('always shows saveAsTemplate even when availableActions omits it', async () => {
+    const user = userEvent.setup();
+    render(
+      <VacancyTableAction
+        {...defaultProps}
+        vacancy={{
+          id: 'test',
+          status: 'draft',
+          applicantCount: 0,
+          availableActions: ['EDIT'],
+        }}
+      />
+    );
+    await user.click(screen.getByRole('button'));
+
+    expect(
+      screen.getByText('vacancies.table.actions.saveAsTemplate')
     ).toBeInTheDocument();
   });
 
