@@ -366,6 +366,14 @@
         "errorMessage": "Some changes could not be saved. Please try again."
       }
     },
+    "copyLink": {
+      "notifications": {
+        "successTitle": "Link Copied",
+        "successMessage": "Vacancy link has been copied to your clipboard.",
+        "errorTitle": "Failed to Copy",
+        "errorMessage": "Could not copy the vacancy link. Please try again."
+      }
+    },
     "toggleStatusDialog": {
       "title": "Are you sure?",
       "activateMessage": "Activating will make the vacancy link active and move the vacancy to 'Live' status. Applicants will be able to view and apply for this vacancy.\nYou may also schedule an automatic activation date below. Do you wish to proceed?",

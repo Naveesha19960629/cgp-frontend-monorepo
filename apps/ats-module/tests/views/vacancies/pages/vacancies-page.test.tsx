@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import VacanciesPage from '@/views/vacancies/pages/vacancies-page';
@@ -9,6 +9,9 @@ const useVacancyTableParamsMock = vi.fn();
 const useDeleteVacancyMutationMock = vi.fn();
 const useDuplicateVacancyMutationMock = vi.fn();
 const useToggleVacancyStatusMutationMock = vi.fn();
+const createVacancyColumnsMock = vi.fn(() => []);
+const mockSuccessToast = vi.fn();
+const mockErrorToast = vi.fn();
 
 const defaultParams = {
   page: 0,
@@ -42,6 +45,11 @@ vi.mock('react-router-dom', async importOriginal => {
   };
 });
 
+vi.mock('@cgp/ui-kit/components/custom-toast', () => ({
+  SuccessToast: (...args: unknown[]) => mockSuccessToast(...args) as unknown,
+  ErrorToast: (...args: unknown[]) => mockErrorToast(...args) as unknown,
+}));
+
 vi.mock('@/views/vacancies', async importOriginal => {
   const actual = await importOriginal<typeof import('@/views/vacancies')>();
   return {
@@ -66,7 +74,8 @@ vi.mock('@/views/vacancies', async importOriginal => {
     VacancyTablePagination: () => (
       <div data-testid="vacancy-table-pagination" />
     ),
-    createVacancyColumns: () => [],
+    createVacancyColumns: (options: unknown) =>
+      createVacancyColumnsMock(options) as never,
   };
 });
 
@@ -187,5 +196,70 @@ describe('VacanciesPage', () => {
     expect(
       screen.queryByTestId('vacancy-table-empty-state')
     ).not.toBeInTheDocument();
+  });
+
+  describe('copy vacancy link', () => {
+    const getOnCopyLink = () => {
+      const options = createVacancyColumnsMock.mock.calls.at(-1)?.[0] as {
+        onCopyLink: (vacancyLink: string) => void;
+      };
+      return options.onCopyLink;
+    };
+
+    it('copies the vacancy link and shows a success toast', async () => {
+      const writeText = vi.fn().mockResolvedValue(undefined);
+      Object.defineProperty(navigator, 'clipboard', {
+        value: { writeText },
+        configurable: true,
+      });
+
+      render(<VacanciesPage />);
+      getOnCopyLink()(
+        'http://localhost:5173/jobs/85f9b624-ee93-46d0-b8d6-5cea49a8597a'
+      );
+
+      await waitFor(() => expect(mockSuccessToast).toHaveBeenCalled());
+      expect(writeText).toHaveBeenCalledWith(
+        'http://localhost:5173/jobs/85f9b624-ee93-46d0-b8d6-5cea49a8597a'
+      );
+      expect(mockSuccessToast).toHaveBeenCalledWith({
+        title: 'vacancies.copyLink.notifications.successTitle',
+        description: 'vacancies.copyLink.notifications.successMessage',
+      });
+    });
+
+    it('shows an error toast when the clipboard write fails', async () => {
+      const writeText = vi.fn().mockRejectedValue(new Error('denied'));
+      Object.defineProperty(navigator, 'clipboard', {
+        value: { writeText },
+        configurable: true,
+      });
+
+      render(<VacanciesPage />);
+      getOnCopyLink()('http://localhost:5173/jobs/abc');
+
+      await waitFor(() => expect(mockErrorToast).toHaveBeenCalled());
+      expect(mockErrorToast).toHaveBeenCalledWith({
+        title: 'vacancies.copyLink.notifications.errorTitle',
+        description: 'vacancies.copyLink.notifications.errorMessage',
+      });
+    });
+
+    it('shows an error toast without touching the clipboard when vacancyLink is empty', () => {
+      const writeText = vi.fn();
+      Object.defineProperty(navigator, 'clipboard', {
+        value: { writeText },
+        configurable: true,
+      });
+
+      render(<VacanciesPage />);
+      getOnCopyLink()('');
+
+      expect(writeText).not.toHaveBeenCalled();
+      expect(mockErrorToast).toHaveBeenCalledWith({
+        title: 'vacancies.copyLink.notifications.errorTitle',
+        description: 'vacancies.copyLink.notifications.errorMessage',
+      });
+    });
   });
 });
