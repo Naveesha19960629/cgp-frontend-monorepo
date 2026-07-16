@@ -9,7 +9,7 @@ const useVacancyTableParamsMock = vi.fn();
 const useDeleteVacancyMutationMock = vi.fn();
 const useDuplicateVacancyMutationMock = vi.fn();
 const useToggleVacancyStatusMutationMock = vi.fn();
-const createVacancyColumnsMock = vi.fn(() => []);
+const createVacancyColumnsMock = vi.fn((_options: unknown) => []);
 const mockSuccessToast = vi.fn();
 const mockErrorToast = vi.fn();
 
