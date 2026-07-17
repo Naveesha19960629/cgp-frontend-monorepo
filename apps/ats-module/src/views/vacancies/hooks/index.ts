@@ -34,6 +34,7 @@ export {
   useScheduleVacancyForm,
   toScheduleVacancyPayload,
   parseBackendDatetime,
+  from24Hour,
   type ScheduleVacancyFormValues,
 } from '@/views/vacancies/hooks/use-schedule-vacancy-form';
 export {

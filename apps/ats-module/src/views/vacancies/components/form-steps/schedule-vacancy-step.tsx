@@ -15,6 +15,7 @@ import VacancyStatusBadge from '@/views/vacancies/components/vacancy-status-badg
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import {
   type ScheduleVacancyFormValues,
+  from24Hour,
   parseBackendDatetime,
   toScheduleVacancyPayload,
   useCreateVacancyMutation,
@@ -223,10 +224,11 @@ export default function ScheduleVacancyStep({
         return;
       }
 
-      // Partial data — store 24-hour datetime strings so parseBackendDatetime
-      // can recover the values when the user returns to this step
+      // Partial data — still send the AM/PM format the backend expects
+      // (parseBackendDatetime can recover either format when the user
+      // returns to this step).
       const buildPartialAt = (date: string, time: string) =>
-        date || time ? `${date}T${time.trim()}` : '';
+        date || time ? `${date}T${from24Hour(time.trim())}` : '';
 
       setForm(prev => ({
         ...prev,
