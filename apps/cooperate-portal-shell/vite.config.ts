@@ -53,6 +53,7 @@ export default defineConfig({
         '@base-ui/react': { singleton: true, eager: true },
         cmdk: { singleton: true, eager: true },
         '@radix-ui/react-dialog': { singleton: true, eager: true },
+        '@radix-ui/react-dropdown-menu': { singleton: true, eager: true },
         '@radix-ui/react-popover': { singleton: true, eager: true },
         sonner: { singleton: true, eager: true },
       },
@@ -74,6 +75,7 @@ export default defineConfig({
       '@react-keycloak/web',
       'nuqs',
       '@radix-ui/react-dialog',
+      '@radix-ui/react-dropdown-menu',
     ],
   },
 
