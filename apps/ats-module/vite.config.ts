@@ -43,6 +43,7 @@ export default defineConfig(({ mode }) => {
           '@base-ui/react': { singleton: true },
           cmdk: { singleton: true },
           '@radix-ui/react-dialog': { singleton: true },
+          '@radix-ui/react-dropdown-menu': { singleton: true },
           '@radix-ui/react-popover': { singleton: true },
           sonner: { singleton: true },
         },
@@ -63,6 +64,7 @@ export default defineConfig(({ mode }) => {
         '@react-keycloak/web',
         'nuqs',
         '@radix-ui/react-dialog',
+        '@radix-ui/react-dropdown-menu',
       ],
     },
     server: {

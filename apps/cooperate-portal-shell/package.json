@@ -1,7 +1,7 @@
 {
   "name": "cooperate-portal-shell",
   "private": true,
-  "version": "0.1.90",
+  "version": "0.1.91",
   "type": "module",
   "nx": {
     "projectType": "application"
@@ -21,6 +21,7 @@
     "@cgp/ui-kit": "workspace:*",
     "@hookform/resolvers": "^3.9.1",
     "@radix-ui/react-dialog": "^1.1.15",
+    "@radix-ui/react-dropdown-menu": "^2.1.4",
     "@radix-ui/react-popover": "^1.1.4",
     "@react-keycloak/web": "^3.4.0",
     "@tanstack/react-query": "^5.80.5",
