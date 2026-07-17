@@ -191,6 +191,7 @@ export {
   useScheduleVacancyForm,
   toScheduleVacancyPayload,
   to24Hour,
+  from24Hour,
   parseBackendDatetime,
 };
 export type { ScheduleVacancyFormValues };

@@ -456,6 +456,53 @@ describe('ScheduleVacancyStep', () => {
       });
       expect(mockOnBack).toHaveBeenCalled();
     });
+
+    // Regression test for DQCGP-3273 — the real CalendarWithTime's native
+    // <input type="time"> always emits 24-hour "HH:mm:ss" (never AM/PM), so
+    // when only one of the two schedule pairs is filled, the persisted
+    // partial value must still be converted to the "hh:mm:ss AM/PM" format
+    // the backend expects — not sent as a bare 24-hour string.
+    it('formats a partial publish-only save as 12-hour AM/PM, not a bare 24-hour string', async () => {
+      renderComponent();
+
+      fillPublish('2099-12-25', '22:00:00');
+
+      const backButton = screen.getAllByRole('button')[0];
+      await userEvent.click(backButton);
+
+      await waitFor(() => {
+        expect(mockSetForm).toHaveBeenCalled();
+      });
+
+      const updater = mockSetForm.mock.calls[0][0] as (prev: unknown) => {
+        schedule?: { schedulePublishAt?: string; expirationAt?: string };
+      };
+      const result = updater({ schedule: undefined });
+
+      expect(result.schedule?.schedulePublishAt).toBe('2099-12-25T10:00:00 PM');
+      expect(result.schedule?.expirationAt).toBe('');
+    });
+
+    it('formats a partial expiration-only save as 12-hour AM/PM, not a bare 24-hour string', async () => {
+      renderComponent();
+
+      fillExpiration('2099-12-26', '05:30:00');
+
+      const backButton = screen.getAllByRole('button')[0];
+      await userEvent.click(backButton);
+
+      await waitFor(() => {
+        expect(mockSetForm).toHaveBeenCalled();
+      });
+
+      const updater = mockSetForm.mock.calls[0][0] as (prev: unknown) => {
+        schedule?: { schedulePublishAt?: string; expirationAt?: string };
+      };
+      const result = updater({ schedule: undefined });
+
+      expect(result.schedule?.expirationAt).toBe('2099-12-26T05:30:00 AM');
+      expect(result.schedule?.schedulePublishAt).toBe('');
+    });
   });
 
   describe('back button disabled state', () => {
