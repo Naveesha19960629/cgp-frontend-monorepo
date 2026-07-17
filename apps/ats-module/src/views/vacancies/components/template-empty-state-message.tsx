@@ -1,5 +1,5 @@
 const emptyStateImage = new URL(
-  '../../../assets/images/templateSearchImg.png',
+  '../../../assets/images/templateSearchImg.svg',
   import.meta.url
 ).href;
 
@@ -34,12 +34,8 @@ export default function TemplateEmptyStateMessage({
 
       <div className="relative z-10 flex flex-col items-center gap-6">
         {/* Circle gradient matches the rendered Figma Ellipse 764 (green diagonal). */}
-        <div className="relative size-32.5 shrink-0 overflow-hidden rounded-full bg-[linear-gradient(135deg,#3fb08d,#6cc1a7)]">
-          <img
-            src={emptyStateImage}
-            alt=""
-            className="absolute -bottom-4 left-1/2 h-[105%] w-auto max-w-none -translate-x-1/2"
-          />
+        <div className="relative size-32.5 shrink-0 overflow-hidden rounded-full">
+          <img src={emptyStateImage} alt="" className="" />
         </div>
         <div className="flex flex-col gap-2">
           <p className="text-4xl/10 font-bold tracking-[-0.75px] text-slate-900">
