@@ -157,7 +157,7 @@ export default function PreferredHobbiesStep({
   };
 
   return (
-    <div>
+    <div className="flex min-h-full flex-1 flex-col">
       {/* ── Section Header ──────────────────────────────────────────── */}
       <div className="flex items-center justify-between px-7 py-8">
         <div className="flex items-center gap-2">
@@ -348,7 +348,7 @@ export default function PreferredHobbiesStep({
       />
 
       {/* ── Step footer ──────────────────────────────────────────────────── */}
-      <div className="sticky bottom-0 flex items-center justify-end gap-4 bg-white px-6 py-7 shadow-[0px_-8px_6.8px_0px_rgba(0,0,0,0.04)]">
+      <div className="sticky bottom-0 mt-auto flex items-center justify-end gap-4 bg-white px-6 py-7 shadow-[0px_-8px_6.8px_0px_rgba(0,0,0,0.04)]">
         <Button variant="secondary" className="h-12 w-48" onClick={onCancel}>
           {t('common.cancel')}
         </Button>
