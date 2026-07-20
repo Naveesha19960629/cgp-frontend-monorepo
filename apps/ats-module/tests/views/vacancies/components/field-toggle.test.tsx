@@ -45,4 +45,31 @@ describe('FieldToggle', () => {
     await user.click(toggle);
     expect(onToggle).not.toHaveBeenCalled();
   });
+
+  describe('long label wrapping inside a grid column', () => {
+    /**
+     * Regression test: in a fixed-column grid layout (see
+     * vacancy-id-edit-jd-page.tsx / template-form-body.tsx), a flex/grid
+     * item's default min-width is content-based, so a long, largely
+     * unbreakable label (e.g. "License/Certification") would overflow past
+     * its own column and get visually covered by the next field's toggle
+     * instead of wrapping. `min-w-0` lets the item shrink to the column's
+     * width, and `wrap-anywhere` (unlike `wrap-break-word`) actually reduces
+     * the text's min-content size so it wraps instead of overflowing.
+     */
+    it('lets the row shrink below the label content width', () => {
+      render(
+        <FieldToggle
+          label="Name of the License/Certification"
+          checked
+          onToggle={onToggle}
+        />
+      );
+
+      const label = screen.getByText('Name of the License/Certification');
+      expect(label).toHaveClass('min-w-0');
+      expect(label).toHaveClass('wrap-anywhere');
+      expect(label.parentElement).toHaveClass('min-w-0');
+    });
+  });
 });

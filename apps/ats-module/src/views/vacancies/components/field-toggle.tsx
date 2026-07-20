@@ -16,11 +16,11 @@ export default function FieldToggle({
   return (
     <div
       className={cn(
-        'flex items-start justify-between gap-3',
+        'flex min-w-0 items-start justify-between gap-3',
         disabled && 'opacity-50'
       )}
     >
-      <span className="text-sm leading-5 font-semibold wrap-break-word text-slate-500">
+      <span className="min-w-0 text-sm leading-5 font-semibold wrap-anywhere text-slate-500">
         {label}
       </span>
       <Switch
