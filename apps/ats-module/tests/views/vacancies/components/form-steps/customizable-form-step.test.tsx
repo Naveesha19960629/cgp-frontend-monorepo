@@ -959,7 +959,7 @@ describe('CustomizableFormStep', () => {
   });
 
   describe('Question ordering (M1)', () => {
-    it('adds a new question to the top (reverse chronological)', async () => {
+    it('appends a new question to the end (chronological)', async () => {
       const user = userEvent.setup();
       renderComponent();
 
@@ -973,11 +973,11 @@ describe('CustomizableFormStep', () => {
       // Add a second question.
       await user.click(screen.getByRole('button', { name: 'Create Question' }));
 
-      // Newest-first: the new empty question is at index 0, the original second.
+      // Oldest-first: the original question stays at index 0, the new empty one is appended.
       questionInputs = screen.getAllByPlaceholderText('Question');
       expect(questionInputs).toHaveLength(2);
-      expect(questionInputs[0]).toHaveValue('');
-      expect(questionInputs[1]).toHaveValue('First question');
+      expect(questionInputs[0]).toHaveValue('First question');
+      expect(questionInputs[1]).toHaveValue('');
     });
   });
 });
