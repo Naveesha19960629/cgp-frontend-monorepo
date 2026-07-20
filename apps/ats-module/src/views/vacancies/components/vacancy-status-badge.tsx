@@ -29,6 +29,7 @@ export default function VacancyStatusBadge({
 
   return (
     <span
+      data-testid={`vacancy-${key}`}
       className={cn(
         'inline-flex items-center justify-center rounded-[8px] border px-3 py-2 text-[14px] leading-5 font-semibold whitespace-nowrap',
         config.bg,

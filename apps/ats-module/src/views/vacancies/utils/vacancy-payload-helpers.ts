@@ -219,8 +219,8 @@ function mapHonoursAndAwards(form: VacancyForm): HonoursGroupApiPayload[] {
           id: l.value,
         })),
         issuedBy: h.issuedBy,
-        issuedFromDate: formatOptionalDate(h.issuedDateFrom),
-        issuedToDate: formatOptionalDate(h.issuedDateTo),
+        issuedFromDate: formatOptionalDate(h.issuedDateFrom ?? undefined),
+        issuedToDate: formatOptionalDate(h.issuedDateTo ?? undefined),
       })),
     },
   ];

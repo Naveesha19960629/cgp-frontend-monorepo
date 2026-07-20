@@ -225,6 +225,7 @@ export function Combobox({
           ref={inputRef}
           type="text"
           role="combobox"
+          data-testid="form-combobox-input"
           aria-expanded={open}
           aria-invalid={isError || undefined}
           value={inputDisplayValue}

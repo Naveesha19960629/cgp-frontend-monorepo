@@ -627,8 +627,8 @@ interface HonourLocationSchemaType {
 interface HonourEntrySchemaType {
   title: string;
   issuedBy: string;
-  issuedDateFrom?: Date | undefined;
-  issuedDateTo?: Date | undefined;
+  issuedDateFrom?: Date | null | undefined;
+  issuedDateTo?: Date | null | undefined;
   associatedOrganizations: HonourOrganizationSchemaType[];
   organizationLocations: HonourLocationSchemaType[];
   isOpen: boolean;

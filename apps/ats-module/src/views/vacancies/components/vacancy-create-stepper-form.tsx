@@ -151,6 +151,7 @@ export default function VacancyCreateStepperForm({
                         'flex w-full flex-col',
                         isDisabled && 'cursor-not-allowed'
                       )}
+                      data-testid={`${step.key}-tab-${index === currentStepIndex ? 'active' : 'inactive'}`}
                     >
                       <TabsTrigger
                         value={step.key}
@@ -168,6 +169,7 @@ export default function VacancyCreateStepperForm({
                             index === currentStepIndex &&
                               'text-brand-primary-500 font-bold'
                           )}
+                          data-testid={`${step.key}-vacancyTab-label`}
                         >
                           {step.label}
                         </span>

@@ -35,8 +35,9 @@ function SortableHeader({
       variant="ghost"
       className="h-auto gap-1 p-0 font-bold text-slate-900 hover:bg-transparent"
       onClick={() => onSort(columnKey)}
+      data-testid={`${columnKey}-sort-button`}
     >
-      {label}
+      <span data-testid={`${columnKey}-col-label`}>{label}</span>
       <span className="flex flex-col">
         <ChevronUp className={`size-4! ${upClass} text-slate-500`} />
         <ChevronDown className={`-mt-2 size-4! ${downClass} text-slate-500`} />
@@ -84,7 +85,9 @@ const createVacancyColumns = ({
   {
     id: 'vacancyId',
     accessorKey: 'vacancyId',
-    header: t('vacancies.table.columns.id'),
+    header: () => (
+      <span data-testid="id-col-label">{t('vacancies.table.columns.id')}</span>
+    ),
     cell: ({ row }) => {
       const id = row.original.vacancyId;
       const shortId = id.slice(0, 4).toUpperCase();
@@ -148,7 +151,11 @@ const createVacancyColumns = ({
   },
   {
     accessorKey: 'careerPath',
-    header: t('vacancies.table.columns.careerPath'),
+    header: () => (
+      <span data-testid="careerPath-col-label">
+        {t('vacancies.table.columns.careerPath')}
+      </span>
+    ),
     cell: ({ row }) => (
       <span className="text-sm text-slate-600">{row.original.careerPath}</span>
     ),
@@ -190,7 +197,11 @@ const createVacancyColumns = ({
   },
   {
     accessorKey: 'createdBy',
-    header: t('vacancies.table.columns.createdBy'),
+    header: () => (
+      <span data-testid="createdBy-col-label">
+        {t('vacancies.table.columns.createdBy')}
+      </span>
+    ),
     cell: ({ row }) => (
       <span className="text-sm text-slate-600">{row.original.createdBy}</span>
     ),
@@ -244,7 +255,10 @@ const createVacancyColumns = ({
       />
     ),
     cell: ({ row }) => (
-      <span className="text-sm text-slate-600">
+      <span
+        className="text-sm text-slate-600"
+        data-testid={`vacancy-applicants-${row.original.applicantCount}`}
+      >
         {row.original.applicantCount}
       </span>
     ),
@@ -303,7 +317,9 @@ const createVacancyColumns = ({
   {
     accessorKey: 'status',
     header: () => (
-      <div className="px-6">{t('vacancies.table.columns.status')}</div>
+      <div className="px-6" data-testid="status-col-label">
+        {t('vacancies.table.columns.status')}
+      </div>
     ),
     cell: ({ row }) => {
       const { status } = row.original;

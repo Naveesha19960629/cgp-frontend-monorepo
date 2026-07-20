@@ -142,7 +142,10 @@ function HonoursAndAwardsCard({
       <div className="rounded-xl border border-neutral-300 bg-white shadow-[0px_4px_90px_0px_rgba(0,0,0,0.07)]">
         {/* Card header */}
         <div className="flex items-center justify-between px-5 py-5">
-          <span className="text-base font-bold text-slate-900">
+          <span
+            data-testid="preferredHonoursAwards-honourTitle-label"
+            className="text-base font-bold text-slate-900"
+          >
             {t('preferredHonoursAwards.honourTitle', {
               number: String(index + 1).padStart(2, '0'),
             })}
@@ -189,7 +192,10 @@ function HonoursAndAwardsCard({
                   name={`honoursAndAwards.${index}.title`}
                   render={({ field }) => (
                     <FormItem className="flex flex-col gap-1.5 space-y-0">
-                      <FormLabel className="flex justify-between">
+                      <FormLabel
+                        data-testid="preferredHonoursAwards-titleOfHonourOrAward-label"
+                        className="flex justify-between"
+                      >
                         <span>
                           {t('preferredHonoursAwards.titleOfHonourOrAward')}
                         </span>
@@ -226,7 +232,10 @@ function HonoursAndAwardsCard({
                   name={`honoursAndAwards.${index}.issuedBy`}
                   render={({ field }) => (
                     <FormItem className="flex flex-col gap-1.5 space-y-0">
-                      <FormLabel className="flex justify-between">
+                      <FormLabel
+                        data-testid="preferredHonoursAwards-issuedBy-label"
+                        className="flex justify-between"
+                      >
                         <span>{t('preferredHonoursAwards.issuedBy')}</span>
                         <CharacterCount
                           maxLength={100}
@@ -261,7 +270,10 @@ function HonoursAndAwardsCard({
                   name={`honoursAndAwards.${index}.issuedDateFrom`}
                   render={({ field }) => (
                     <FormItem className="flex w-full flex-col gap-1 space-y-0">
-                      <FormLabel className="text-sm font-semibold text-slate-900">
+                      <FormLabel
+                        data-testid="preferredHonoursAwards-issuedDateFrom-label"
+                        className="text-sm font-semibold text-slate-900"
+                      >
                         {t('preferredHonoursAwards.issuedDateFrom')}
                       </FormLabel>
                       <Popover
@@ -309,7 +321,7 @@ function HonoursAndAwardsCard({
                         <PopoverContent className="w-auto p-0" align="start">
                           <Calendar
                             mode="single"
-                            selected={field.value}
+                            selected={field.value ?? undefined}
                             defaultMonth={field.value ?? new Date()}
                             onSelect={date => {
                               field.onChange(date);
@@ -320,7 +332,7 @@ function HonoursAndAwardsCard({
                               if (issuedDateTo && date && issuedDateTo < date) {
                                 form.setValue(
                                   `honoursAndAwards.${index}.issuedDateTo`,
-                                  undefined
+                                  null
                                 );
                               }
                             }}
@@ -345,7 +357,10 @@ function HonoursAndAwardsCard({
                   name={`honoursAndAwards.${index}.issuedDateTo`}
                   render={({ field }) => (
                     <FormItem className="flex w-full flex-col gap-1 space-y-0">
-                      <FormLabel className="text-sm font-semibold text-slate-900">
+                      <FormLabel
+                        data-testid="preferredHonoursAwards-issuedDateTo-label"
+                        className="text-sm font-semibold text-slate-900"
+                      >
                         {t('preferredHonoursAwards.issuedDateTo')}
                       </FormLabel>
                       <Popover
@@ -393,7 +408,7 @@ function HonoursAndAwardsCard({
                         <PopoverContent className="w-auto p-0" align="start">
                           <Calendar
                             mode="single"
-                            selected={field.value}
+                            selected={field.value ?? undefined}
                             defaultMonth={field.value ?? new Date()}
                             onSelect={date => {
                               field.onChange(date);
@@ -431,6 +446,7 @@ function HonoursAndAwardsCard({
                   render={({ field }) => (
                     <FormItem className="flex flex-col gap-1.5 space-y-0">
                       <FormLabel
+                        data-testid="preferredHonoursAwards-associatedOrganization-label"
                         className={cn(
                           'text-sm font-semibold text-slate-900',
                           hasOrganizationMaxError && 'text-destructive'
@@ -555,6 +571,7 @@ function HonoursAndAwardsCard({
                     return (
                       <FormItem className="flex flex-col gap-1.5 space-y-0">
                         <FormLabel
+                          data-testid="preferredHonoursAwards-organizationLocation-label"
                           className={cn(
                             'text-sm font-semibold text-slate-900',
                             hasLocationMaxError && 'text-destructive'
@@ -728,8 +745,8 @@ export default function PreferredHonoursAwardsStep({
       {
         title: '',
         issuedBy: '',
-        issuedDateFrom: undefined,
-        issuedDateTo: undefined,
+        issuedDateFrom: null,
+        issuedDateTo: null,
         associatedOrganizations: [],
         organizationLocations: [],
         isOpen: true,
@@ -748,8 +765,8 @@ export default function PreferredHonoursAwardsStep({
       {
         title: '',
         issuedBy: '',
-        issuedDateFrom: undefined,
-        issuedDateTo: undefined,
+        issuedDateFrom: null,
+        issuedDateTo: null,
         associatedOrganizations: [],
         organizationLocations: [],
         isOpen: true,
@@ -834,8 +851,8 @@ export default function PreferredHonoursAwardsStep({
         {
           title: '',
           issuedBy: '',
-          issuedDateFrom: undefined,
-          issuedDateTo: undefined,
+          issuedDateFrom: null,
+          issuedDateTo: null,
           associatedOrganizations: [],
           organizationLocations: [],
           isOpen: true,
@@ -849,6 +866,7 @@ export default function PreferredHonoursAwardsStep({
     <>
       <Form {...form}>
         <form
+          data-testid="preferredHonoursAwards-section-form"
           onSubmit={e => {
             void form.handleSubmit(handleSubmit)(e);
           }}
@@ -878,7 +896,10 @@ export default function PreferredHonoursAwardsStep({
               >
                 <ArrowLeft2 size={24} />
               </button>
-              <h2 className="text-xl font-bold tracking-tight text-slate-900">
+              <h2
+                data-testid="preferredHonoursAwards-header-label"
+                className="text-xl font-bold tracking-tight text-slate-900"
+              >
                 {t('preferredHonoursAwards.title')}
               </h2>
               {mode === 'edit' && contextForm.status ? (
@@ -894,6 +915,7 @@ export default function PreferredHonoursAwardsStep({
                 <Switch
                   checked={field.value}
                   size="lg"
+                  data-testid="toggle-on-off-switch"
                   onCheckedChange={checked => {
                     if (!checked) {
                       const hasChecked = form.getValues(

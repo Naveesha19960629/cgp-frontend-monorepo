@@ -139,7 +139,10 @@ export function AppSidebar() {
                           className="size-6! text-slate-600"
                         />
                         <span>{t(item.labelKey)}</span>
-                        <ArrowDown2 className="ml-auto size-6! text-slate-600 transition-transform duration-200 group-data-[state=closed]/collapsible:-rotate-180" />
+                        <ArrowDown2
+                          className="ml-auto size-6! text-slate-600 transition-transform duration-200 group-data-[state=closed]/collapsible:-rotate-180"
+                          data-testid="vacancies-expand-collapse"
+                        />
                       </SidebarMenuButton>
                     </CollapsibleTrigger>
                   </SidebarMenuItem>
@@ -154,6 +157,7 @@ export function AppSidebar() {
                               asChild
                               isActive={isActive}
                               className={subButtonClass}
+                              data-testid={`${child.labelKey.split('.').pop()}-menu-item`}
                             >
                               <Link to={child.href}>
                                 <span>{t(child.labelKey)}</span>

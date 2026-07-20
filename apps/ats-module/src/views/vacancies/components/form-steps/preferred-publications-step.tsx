@@ -91,7 +91,10 @@ function PublicationCard({
       <div className="rounded-xl border border-neutral-300 bg-white shadow-[0px_4px_90px_0px_rgba(0,0,0,0.07)]">
         {/* Card header */}
         <div className="flex items-center justify-between px-5 py-5">
-          <span className="text-base font-bold text-slate-900">
+          <span
+            data-testid="preferredPublications-cardTitle-label"
+            className="text-base font-bold text-slate-900"
+          >
             {t('preferredPublications.cardTitle', {
               number: String(index + 1).padStart(2, '0'),
             })}
@@ -129,7 +132,10 @@ function PublicationCard({
               {isFieldVisible('acceptedPublisherName') && (
                 <div className="flex min-w-0 flex-col gap-1">
                   <div className="flex items-center justify-between gap-2">
-                    <Label className="min-w-0">
+                    <Label
+                      data-testid="preferredPublications-acceptedPublisher-label"
+                      className="min-w-0"
+                    >
                       {t('preferredPublications.labels.acceptedPublisher')}
                     </Label>
                     <CharacterCount
@@ -157,7 +163,7 @@ function PublicationCard({
               {isFieldVisible('publishedDateFrom') && (
                 <div className="flex min-w-0 flex-col gap-1">
                   <div className="flex min-h-5 items-center">
-                    <Label>
+                    <Label data-testid="preferredPublications-publishedDateFrom-label">
                       {t('preferredPublications.labels.publishedDateFrom')}
                     </Label>
                   </div>
@@ -246,7 +252,7 @@ function PublicationCard({
               {isFieldVisible('publishedDateTo') && (
                 <div className="flex min-w-0 flex-col gap-1">
                   <div className="flex min-h-5 items-center">
-                    <Label>
+                    <Label data-testid="preferredPublications-publishedDateTo-label">
                       {t('preferredPublications.labels.publishedDateTo')}
                     </Label>
                   </div>
@@ -510,7 +516,10 @@ export default function PreferredPublicationsStep({
 
   return (
     <>
-      <div className="flex flex-1 flex-col">
+      <div
+        data-testid="preferredPublications-section-form"
+        className="flex flex-1 flex-col"
+      >
         {/* ── Informational Banner ──────────────────────────────────────── */}
         <MessageBox
           fields={[
@@ -536,7 +545,10 @@ export default function PreferredPublicationsStep({
             >
               <ArrowLeft2 size={24} />
             </button>
-            <h2 className="text-xl font-bold tracking-tight text-slate-900">
+            <h2
+              data-testid="preferredPublications-header-label"
+              className="text-xl font-bold tracking-tight text-slate-900"
+            >
               {t('preferredPublications.title')}
             </h2>
             {mode === 'edit' && vacancyStatus ? (
@@ -546,6 +558,7 @@ export default function PreferredPublicationsStep({
           <SwitchPrimitive.Root
             checked={isEnabled}
             onCheckedChange={handleToggle}
+            data-testid="toggle-on-off-switch"
             className={cn(
               'focus-visible:ring-ring/50 inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent shadow-xs transition-colors outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50',
               isEnabled ? 'bg-brand-primary-500' : 'bg-slate-300'
@@ -589,6 +602,7 @@ export default function PreferredPublicationsStep({
           />
           <Label
             htmlFor="publicationsDataTakenFromCandidate"
+            data-testid="preferredPublications-dataTakenFromCandidate-label"
             className="cursor-pointer text-sm leading-snug font-medium text-slate-900"
           >
             {t('preferredPublications.dataTakenFromCandidate')}

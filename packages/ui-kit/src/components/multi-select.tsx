@@ -638,6 +638,7 @@ const MultipleSelector = React.forwardRef<
                   <CommandPrimitive.Input
                     {...inputProps}
                     ref={inputRef}
+                    data-testid="form-combobox-input"
                     value={inputValue}
                     disabled={disabled}
                     onValueChange={value => {

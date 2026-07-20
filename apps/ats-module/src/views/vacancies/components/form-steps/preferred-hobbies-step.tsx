@@ -157,7 +157,7 @@ export default function PreferredHobbiesStep({
   };
 
   return (
-    <div>
+    <div data-testid="preferredHobbies-section-form">
       {/* ── Section Header ──────────────────────────────────────────── */}
       <div className="flex items-center justify-between px-7 py-8">
         <div className="flex items-center gap-2">
@@ -173,7 +173,10 @@ export default function PreferredHobbiesStep({
           >
             <ArrowLeft2 size={24} />
           </button>
-          <h2 className="text-xl font-bold tracking-tight text-slate-900">
+          <h2
+            data-testid="preferredHobbies-header-label"
+            className="text-xl font-bold tracking-tight text-slate-900"
+          >
             {t('preferredHobbies.title')}
           </h2>
           {mode === 'edit' && vacancyStatus ? (
@@ -182,6 +185,7 @@ export default function PreferredHobbiesStep({
         </div>
         <Switch
           checked={isEnabled}
+          data-testid="toggle-on-off-switch"
           onCheckedChange={newValue => {
             if (!newValue) {
               if (selectedHobbies.length > 0 || dataTakenFromCandidate) {
@@ -217,6 +221,7 @@ export default function PreferredHobbiesStep({
             />
             <label
               htmlFor="hobbies-data-from-candidate"
+              data-testid="preferredHobbies-dataTakenFromCandidate-label"
               className="cursor-pointer text-sm text-slate-600"
             >
               {t('preferredHobbies.dataTakenFromCandidate')}
@@ -227,7 +232,10 @@ export default function PreferredHobbiesStep({
           {isFieldVisible('hobby') && (
             <div>
               <div className="mb-2 flex items-center justify-between">
-                <span className="text-sm font-semibold text-slate-700">
+                <span
+                  data-testid="preferredHobbies-sectionLabel-label"
+                  className="text-sm font-semibold text-slate-700"
+                >
                   {t('preferredHobbies.sectionLabel')}
                 </span>
                 <CharacterCount

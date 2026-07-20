@@ -104,7 +104,10 @@ function PatentCard({
       <div className="rounded-xl border border-neutral-300 bg-white shadow-[0px_4px_90px_0px_rgba(0,0,0,0.07)]">
         {/* Card header */}
         <div className="flex items-center justify-between px-5 py-5">
-          <span className="text-base font-bold text-slate-900">
+          <span
+            data-testid="preferredPatents-patentTitle-label"
+            className="text-base font-bold text-slate-900"
+          >
             {t('preferredPatents.patentTitle', {
               number: String(index + 1).padStart(2, '0'),
             })}
@@ -144,7 +147,10 @@ function PatentCard({
                 render={({ field }) => {
                   return (
                     <FormItem className="flex flex-col gap-1.5 space-y-0">
-                      <FormLabel className="flex justify-between">
+                      <FormLabel
+                        data-testid="preferredPatents-relatedIndustry-label"
+                        className="flex justify-between"
+                      >
                         <p
                           className={
                             hasMaxError ? 'text-destructive' : undefined
@@ -248,7 +254,10 @@ function PatentCard({
                 name={`patents.${index}.statuses`}
                 render={({ field }) => (
                   <FormItem className="flex flex-col gap-1.5 space-y-0">
-                    <FormLabel className="text-sm font-semibold text-slate-900">
+                    <FormLabel
+                      data-testid="preferredPatents-status-label"
+                      className="text-sm font-semibold text-slate-900"
+                    >
                       {t('preferredPatents.status')}
                     </FormLabel>
                     <FormControl>
@@ -312,7 +321,10 @@ function PatentCard({
                   name={`patents.${index}.fromDate`}
                   render={({ field }) => (
                     <FormItem className="flex w-full flex-col gap-1 space-y-0">
-                      <FormLabel className="text-sm font-semibold text-slate-900">
+                      <FormLabel
+                        data-testid="preferredPatents-from-label"
+                        className="text-sm font-semibold text-slate-900"
+                      >
                         {t('preferredPatents.from')}
                       </FormLabel>
                       <Popover
@@ -409,7 +421,10 @@ function PatentCard({
                   name={`patents.${index}.toDate`}
                   render={({ field }) => (
                     <FormItem className="flex w-full flex-col gap-1 space-y-0">
-                      <FormLabel className="text-sm font-semibold text-slate-900">
+                      <FormLabel
+                        data-testid="preferredPatents-to-label"
+                        className="text-sm font-semibold text-slate-900"
+                      >
                         {t('preferredPatents.to')}
                       </FormLabel>
                       <Popover
@@ -725,6 +740,7 @@ export default function PreferredPatentsStep({ onNext, onBack }: StepProps) {
     <>
       <Form {...form}>
         <form
+          data-testid="preferredPatents-section-form"
           onSubmit={e => {
             void form.handleSubmit(handleSubmit)(e);
           }}
@@ -755,7 +771,10 @@ export default function PreferredPatentsStep({ onNext, onBack }: StepProps) {
               >
                 <ArrowLeft2 size={24} />
               </button>
-              <h2 className="text-xl font-bold tracking-tight text-slate-900">
+              <h2
+                data-testid="preferredPatents-header-label"
+                className="text-xl font-bold tracking-tight text-slate-900"
+              >
                 {t('preferredPatents.title')}
               </h2>
               <VacancyStatusBadge
@@ -773,6 +792,7 @@ export default function PreferredPatentsStep({ onNext, onBack }: StepProps) {
                   checked={field.value}
                   size="lg"
                   className="cursor-pointer"
+                  data-testid="toggle-on-off-switch"
                   onCheckedChange={checked => {
                     if (!checked) {
                       const hasChecked = form.getValues(

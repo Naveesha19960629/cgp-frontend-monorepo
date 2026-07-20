@@ -177,7 +177,10 @@ function SportCard({
       <div className="rounded-xl border border-neutral-300 bg-white shadow-[0px_4px_90px_0px_rgba(0,0,0,0.07)]">
         {/* Card header */}
         <div className="flex items-center justify-between px-5 py-5">
-          <span className="text-base font-bold text-slate-900">
+          <span
+            data-testid="preferredSports-cardTitle-label"
+            className="text-base font-bold text-slate-900"
+          >
             {t('preferredSports.cardTitle', {
               number: String(index + 1).padStart(2, '0'),
             })}
@@ -216,6 +219,7 @@ function SportCard({
                 <div className="flex flex-col gap-1">
                   <div className="flex items-center justify-between">
                     <Label
+                      data-testid="preferredSports-sport-label"
                       className={sportsError ? 'text-destructive' : undefined}
                     >
                       {t('preferredSports.labels.sport')}
@@ -298,6 +302,7 @@ function SportCard({
                 <div className="flex flex-col gap-1">
                   <div className="flex h-5 items-center">
                     <Label
+                      data-testid="preferredSports-organizationLocation-label"
                       className={
                         locationsError ? 'text-destructive' : undefined
                       }
@@ -347,6 +352,7 @@ function SportCard({
                 <div className="flex flex-col gap-1">
                   <div className="flex h-5 items-center">
                     <Label
+                      data-testid="preferredSports-levelRepresented-label"
                       className={levelsError ? 'text-destructive' : undefined}
                     >
                       {t('preferredSports.labels.levelRepresented')}
@@ -399,6 +405,7 @@ function SportCard({
                 <div className="flex flex-col gap-1">
                   <div className="flex h-5 items-center">
                     <Label
+                      data-testid="preferredSports-representedOrganization-label"
                       className={
                         organizationsError ? 'text-destructive' : undefined
                       }
@@ -469,7 +476,9 @@ function SportCard({
               {isFieldVisible('positionRoleHeld') && (
                 <div className="flex min-w-0 flex-col gap-1">
                   <div className="flex items-center justify-between gap-2">
-                    <Label>{t('preferredSports.labels.position')}</Label>
+                    <Label data-testid="preferredSports-position-label">
+                      {t('preferredSports.labels.position')}
+                    </Label>
                     <CharacterCount
                       currentLength={entry.position.length}
                       maxLength={MAX_POSITION_LENGTH}
@@ -491,7 +500,9 @@ function SportCard({
               {isFieldVisible('startDate') && (
                 <div className="flex min-w-0 flex-col gap-1">
                   <div className="flex min-h-5 items-center">
-                    <Label>{t('preferredSports.labels.startDate')}</Label>
+                    <Label data-testid="preferredSports-startDate-label">
+                      {t('preferredSports.labels.startDate')}
+                    </Label>
                   </div>
                   <Popover
                     modal
@@ -568,7 +579,9 @@ function SportCard({
               {isFieldVisible('endDate') && (
                 <div className="flex min-w-0 flex-col gap-1">
                   <div className="flex min-h-5 items-center">
-                    <Label>{t('preferredSports.labels.endDate')}</Label>
+                    <Label data-testid="preferredSports-endDate-label">
+                      {t('preferredSports.labels.endDate')}
+                    </Label>
                   </div>
                   <Popover
                     modal
@@ -1012,7 +1025,10 @@ export default function PreferredSportsStep({
 
   return (
     <>
-      <div className="flex flex-1 flex-col">
+      <div
+        data-testid="preferredSports-section-form"
+        className="flex flex-1 flex-col"
+      >
         {/* ── Informational Banner ──────────────────────────────────────── */}
         <MessageBox
           fields={[
@@ -1040,7 +1056,10 @@ export default function PreferredSportsStep({
             >
               <ArrowLeft2 size={24} />
             </button>
-            <h2 className="text-xl font-bold tracking-tight text-slate-900">
+            <h2
+              data-testid="preferredSports-header-label"
+              className="text-xl font-bold tracking-tight text-slate-900"
+            >
               {t('preferredSports.title')}
             </h2>
             {mode === 'edit' && vacancyStatus ? (
@@ -1050,6 +1069,7 @@ export default function PreferredSportsStep({
           <SwitchPrimitive.Root
             checked={isEnabled}
             onCheckedChange={handleToggle}
+            data-testid="toggle-on-off-switch"
             className={cn(
               'focus-visible:ring-ring/50 inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent shadow-xs transition-colors outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50',
               isEnabled ? 'bg-brand-primary-500' : 'bg-slate-300'
@@ -1079,6 +1099,7 @@ export default function PreferredSportsStep({
           />
           <Label
             htmlFor="sportsDataTakenFromCandidate"
+            data-testid="preferredSports-dataTakenFromCandidate-label"
             className="cursor-pointer text-sm leading-snug font-medium text-slate-900"
           >
             {t('preferredSports.dataTakenFromCandidate')}

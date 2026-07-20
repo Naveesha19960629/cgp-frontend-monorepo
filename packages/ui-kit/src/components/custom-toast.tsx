@@ -39,6 +39,13 @@ function Toast({
       onKeyDown={e => e.stopPropagation()}
     >
       <div
+        data-testid={
+          type === 'success'
+            ? 'toast-success-message'
+            : type === 'error'
+              ? 'toast-error-message'
+              : undefined
+        }
         className="relative z-9999 rounded-2xl bg-white"
         style={{ fontFamily: 'Plus Jakarta Sans Variable, sans-serif' }}
       >

@@ -290,7 +290,10 @@ function AddressCard({
     <div className="rounded-xl border border-neutral-300 bg-white shadow-[0px_4px_90px_0px_rgba(0,0,0,0.07)]">
       {/* Card header */}
       <div className="flex items-center justify-between px-5 py-5">
-        <span className="text-base font-bold text-slate-900">
+        <span
+          data-testid={`profileRequirements-addressTitle-${index}-label`}
+          className="text-base font-bold text-slate-900"
+        >
           {t('profileRequirements.addressTitle', {
             number: String(displayNumber).padStart(2, '0'),
           })}
@@ -320,7 +323,10 @@ function AddressCard({
             name={`addresses.${index}.city`}
             render={({ field, fieldState }) => (
               <FormItem className="flex min-w-0 flex-col gap-1.5 space-y-0">
-                <FormLabel className="text-sm font-semibold text-slate-900">
+                <FormLabel
+                  data-testid={`profileRequirements-city-${index}-label`}
+                  className="text-sm font-semibold text-slate-900"
+                >
                   {t('profileRequirements.city')}
                 </FormLabel>
                 <FormControl>
@@ -354,7 +360,10 @@ function AddressCard({
             name={`addresses.${index}.stateProvince`}
             render={({ field, fieldState }) => (
               <FormItem className="flex min-w-0 flex-col gap-1.5 space-y-0">
-                <FormLabel className="text-sm font-semibold text-slate-900">
+                <FormLabel
+                  data-testid={`profileRequirements-stateProvince-${index}-label`}
+                  className="text-sm font-semibold text-slate-900"
+                >
                   {t('profileRequirements.stateProvince')}
                 </FormLabel>
                 <FormControl>
@@ -390,7 +399,10 @@ function AddressCard({
             name={`addresses.${index}.country`}
             render={({ field, fieldState }) => (
               <FormItem className="flex min-w-0 flex-col gap-1.5 space-y-0">
-                <FormLabel className="text-sm font-semibold text-slate-900">
+                <FormLabel
+                  data-testid={`profileRequirements-country-${index}-label`}
+                  className="text-sm font-semibold text-slate-900"
+                >
                   {t('profileRequirements.country')}
                 </FormLabel>
                 <FormControl>
@@ -419,7 +431,10 @@ function AddressCard({
             name={`addresses.${index}.postalCode`}
             render={({ field }) => (
               <FormItem className="flex min-w-0 flex-col gap-1.5 space-y-0">
-                <FormLabel className="flex justify-between text-sm font-semibold text-slate-900">
+                <FormLabel
+                  data-testid={`profileRequirements-postalCode-${index}-label`}
+                  className="flex justify-between text-sm font-semibold text-slate-900"
+                >
                   <span>{t('profileRequirements.postalCode')}</span>
                   <CharacterCount
                     maxLength={20}
@@ -682,6 +697,7 @@ export default function ProfileRequirementsStep({ onNext, onBack }: StepProps) {
       `}</style>
       <Form {...form}>
         <form
+          data-testid="profileRequirements-section-form"
           onSubmit={e => {
             void form.handleSubmit(handleSubmit)(e);
           }}
@@ -716,7 +732,10 @@ export default function ProfileRequirementsStep({ onNext, onBack }: StepProps) {
               >
                 <ArrowLeft2 size={24} />
               </button>
-              <h2 className="text-xl font-bold tracking-tight text-slate-900">
+              <h2
+                data-testid="profileRequirements-header-label"
+                className="text-xl font-bold tracking-tight text-slate-900"
+              >
                 {t('profileRequirements.title')}
               </h2>
               <VacancyStatusBadge
@@ -733,6 +752,7 @@ export default function ProfileRequirementsStep({ onNext, onBack }: StepProps) {
                 <Switch
                   checked={field.value}
                   size="lg"
+                  data-testid="toggle-on-off-switch"
                   onCheckedChange={checked => {
                     if (!checked) {
                       const hasChecked = form.getValues(
@@ -782,6 +802,7 @@ export default function ProfileRequirementsStep({ onNext, onBack }: StepProps) {
                   />
                   <label
                     htmlFor="data-from-candidate"
+                    data-testid="profileRequirements-dataTakenFromCandidate-label"
                     className="cursor-pointer text-sm font-medium text-slate-900"
                   >
                     {t('profileRequirements.dataTakenFromCandidate')}
@@ -800,7 +821,10 @@ export default function ProfileRequirementsStep({ onNext, onBack }: StepProps) {
                 name="gender"
                 render={({ field }) => (
                   <FormItem className="flex min-w-0 flex-col gap-1 space-y-0">
-                    <FormLabel className="text-sm font-semibold text-slate-900">
+                    <FormLabel
+                      data-testid="profileRequirements-gender-label"
+                      className="text-sm font-semibold text-slate-900"
+                    >
                       {t('profileRequirements.gender')}
                     </FormLabel>
                     <FormControl>
@@ -846,7 +870,10 @@ export default function ProfileRequirementsStep({ onNext, onBack }: StepProps) {
                 name="maritalStatus"
                 render={({ field }) => (
                   <FormItem className="flex min-w-0 flex-col gap-1 space-y-0">
-                    <FormLabel className="text-sm font-semibold text-slate-900">
+                    <FormLabel
+                      data-testid="profileRequirements-maritalStatus-label"
+                      className="text-sm font-semibold text-slate-900"
+                    >
                       {t('profileRequirements.maritalStatus')}
                     </FormLabel>
                     <FormControl>
@@ -893,7 +920,10 @@ export default function ProfileRequirementsStep({ onNext, onBack }: StepProps) {
             <>
               {/* Addresses section header */}
               <div className="px-7 pt-6 pb-2">
-                <h3 className="text-base font-bold text-slate-900">
+                <h3
+                  data-testid="profileRequirements-addressesTitle-label"
+                  className="text-base font-bold text-slate-900"
+                >
                   {t('profileRequirements.addressesTitle')}
                 </h3>
                 <p className="text-sm text-slate-500">

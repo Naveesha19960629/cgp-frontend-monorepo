@@ -157,7 +157,7 @@ export default function PreferredCausesStep({
   };
 
   return (
-    <div>
+    <div data-testid="preferredCauses-section-form">
       {/* ── Section Header ──────────────────────────────────────────── */}
       <div className="flex items-center justify-between px-7 py-8">
         <div className="flex items-center gap-2">
@@ -173,7 +173,10 @@ export default function PreferredCausesStep({
           >
             <ArrowLeft2 size={24} />
           </button>
-          <h2 className="text-xl font-bold tracking-tight text-slate-900">
+          <h2
+            data-testid="preferredCauses-header-label"
+            className="text-xl font-bold tracking-tight text-slate-900"
+          >
             {t('preferredCauses.title')}
           </h2>
           {mode === 'edit' && vacancyStatus ? (
@@ -182,6 +185,7 @@ export default function PreferredCausesStep({
         </div>
         <Switch
           checked={isEnabled}
+          data-testid="toggle-on-off-switch"
           onCheckedChange={newValue => {
             if (!newValue) {
               if (selectedCauses.length > 0 || dataTakenFromCandidate) {
@@ -217,6 +221,7 @@ export default function PreferredCausesStep({
             />
             <label
               htmlFor="causes-data-from-candidate"
+              data-testid="preferredCauses-dataTakenFromCandidate-label"
               className="cursor-pointer text-sm text-slate-600"
             >
               {t('preferredCauses.dataTakenFromCandidate')}
@@ -227,7 +232,10 @@ export default function PreferredCausesStep({
           {isFieldVisible('cause') && (
             <div>
               <div className="mb-2 flex items-center justify-between">
-                <span className="text-sm font-semibold text-slate-700">
+                <span
+                  data-testid="preferredCauses-sectionLabel-label"
+                  className="text-sm font-semibold text-slate-700"
+                >
                   {t('preferredCauses.sectionLabel')}
                 </span>
                 <CharacterCount

@@ -174,7 +174,10 @@ export function AddSchoolDialog({
                 variant="Linear"
                 onClick={() => handleDialogChange(false)}
               />
-              <p className={clsx('text-2xl font-bold text-slate-900')}>
+              <p
+                data-testid="addSchoolDialog-header-label"
+                className={clsx('text-2xl font-bold text-slate-900')}
+              >
                 {t('secondaryEducation.addSchoolDialog.title')}
               </p>
             </div>
@@ -187,10 +190,16 @@ export function AddSchoolDialog({
             >
               <Add className="size-6 rotate-45 text-slate-900" />
             </Button>
-            <DialogTitle className="hidden">
+            <DialogTitle
+              data-testid="addSchoolDialog-title-label"
+              className="hidden"
+            >
               {t('secondaryEducation.addSchoolDialog.title')}
             </DialogTitle>
-            <DialogDescription className="hidden">
+            <DialogDescription
+              data-testid="addSchoolDialog-description-label"
+              className="hidden"
+            >
               {t('secondaryEducation.addSchoolDialog.title')}
             </DialogDescription>
           </div>
@@ -201,7 +210,10 @@ export function AddSchoolDialog({
             <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2">
               {/* School Name */}
               <div className="flex flex-col gap-1">
-                <Label className="flex w-full items-center justify-between">
+                <Label
+                  data-testid="addSchoolDialog-schoolName-label"
+                  className="flex w-full items-center justify-between"
+                >
                   <span className="flex items-center gap-1">
                     {t('secondaryEducation.addSchoolDialog.schoolName')}
                     <span className="text-rose-600">*</span>
@@ -301,7 +313,10 @@ export function AddSchoolDialog({
 
               {/* School Location */}
               <div className="flex flex-col gap-1">
-                <Label className="flex w-full items-center justify-between leading-5">
+                <Label
+                  data-testid="addSchoolDialog-schoolLocation-label"
+                  className="flex w-full items-center justify-between leading-5"
+                >
                   <span className="flex items-center gap-1">
                     {t('secondaryEducation.addSchoolDialog.schoolLocation')}
                     <span className="text-rose-600">*</span>
@@ -350,7 +365,10 @@ export function AddSchoolDialog({
 
               {/* School URL */}
               <div className="flex flex-col gap-1">
-                <Label className="flex w-full items-center justify-between">
+                <Label
+                  data-testid="addSchoolDialog-schoolUrl-label"
+                  className="flex w-full items-center justify-between"
+                >
                   <span>
                     {t('secondaryEducation.addSchoolDialog.schoolUrl')}
                   </span>

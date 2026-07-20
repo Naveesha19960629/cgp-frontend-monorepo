@@ -402,7 +402,10 @@ export default function ScheduleVacancyStep({
   };
 
   return (
-    <div className="flex min-h-full flex-col">
+    <div
+      data-testid="scheduleVacancy-section-form"
+      className="flex min-h-full flex-col"
+    >
       {/* ── Header ─────────────────────────────────────────────────── */}
       <div className="flex items-center gap-2 px-7 py-8">
         <button
@@ -414,7 +417,10 @@ export default function ScheduleVacancyStep({
         >
           <ArrowLeft2 size={24} />
         </button>
-        <h2 className="text-xl font-bold tracking-tight text-slate-900">
+        <h2
+          data-testid="scheduleVacancy-header-label"
+          className="text-xl font-bold tracking-tight text-slate-900"
+        >
           {t('scheduleVacancy.title')}
         </h2>
         {(() => {
@@ -430,7 +436,10 @@ export default function ScheduleVacancyStep({
         <div className="flex flex-wrap gap-4">
           {/* ── Scheduled Publish Date & Time ── */}
           <div className="flex w-76 flex-col gap-1">
-            <Label className="text-sm font-semibold text-slate-700">
+            <Label
+              data-testid="scheduleVacancy-publishDateLabel-label"
+              className="text-sm font-semibold text-slate-700"
+            >
               {t('scheduleVacancy.publishDateLabel')}{' '}
               <span className="text-destructive">*</span>
             </Label>
@@ -482,7 +491,10 @@ export default function ScheduleVacancyStep({
 
           {/* ── Expiration Date & Time ── */}
           <div className="flex w-76 flex-col gap-1">
-            <Label className="text-sm font-semibold text-slate-700">
+            <Label
+              data-testid="scheduleVacancy-expirationDateLabel-label"
+              className="text-sm font-semibold text-slate-700"
+            >
               {t('scheduleVacancy.expirationDateLabel')}{' '}
               <span className="text-destructive">*</span>
             </Label>
