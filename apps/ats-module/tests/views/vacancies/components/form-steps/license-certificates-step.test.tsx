@@ -153,12 +153,17 @@ vi.mock('@cgp/ui-kit/components/multi-select', () => ({
     placeholder,
     value = [],
     onChange,
+    inputProps,
   }: {
     placeholder?: string;
     value?: { value: string; label: string; source?: string }[];
     onChange?: (
       opts: { value: string; label: string; source?: string }[]
     ) => void;
+    inputProps?: {
+      maxLength?: number;
+      onValueChange?: (value: string) => void;
+    };
   }) => {
     if (placeholder !== 'licenseCertificates.placeholders.nameOfLicenseCert') {
       return <div data-testid={`selector-${placeholder ?? 'other'}`} />;
@@ -170,6 +175,11 @@ vi.mock('@cgp/ui-kit/components/multi-select', () => ({
     return (
       <div>
         <div data-testid="license-count">{value.length}</div>
+        <input
+          data-testid="name-of-license-cert-input"
+          maxLength={inputProps?.maxLength}
+          onChange={e => inputProps?.onValueChange?.(e.target.value)}
+        />
         <button type="button" onClick={() => onChange?.(options10)}>
           set-10
         </button>
@@ -369,6 +379,45 @@ describe('LicenseCertificatesStep', () => {
     expect(payload.licenseCertificates.entry.nameOfLicenseCert).toHaveLength(
       10
     );
+  });
+
+  describe('live character counter for name of license/certification', () => {
+    it('shows a live character count as the user types', async () => {
+      const user = userEvent.setup();
+
+      render(
+        <LicenseCertificatesStep
+          onNext={vi.fn()}
+          onBack={vi.fn()}
+          onSubmit={vi.fn()}
+        />
+      );
+
+      expect(screen.getByRole('status')).toHaveTextContent('0/200');
+
+      await user.type(screen.getByTestId('name-of-license-cert-input'), 'AWS');
+
+      expect(screen.getByRole('status')).toHaveTextContent('3/200');
+    });
+
+    it('resets the character count once a selection is committed', async () => {
+      const user = userEvent.setup();
+
+      render(
+        <LicenseCertificatesStep
+          onNext={vi.fn()}
+          onBack={vi.fn()}
+          onSubmit={vi.fn()}
+        />
+      );
+
+      await user.type(screen.getByTestId('name-of-license-cert-input'), 'AWS');
+      expect(screen.getByRole('status')).toHaveTextContent('3/200');
+
+      await user.click(screen.getByRole('button', { name: 'set-10' }));
+
+      expect(screen.getByRole('status')).toHaveTextContent('0/200');
+    });
   });
 
   describe('Step guard behavior with pending licenses (fix verification)', () => {
