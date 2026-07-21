@@ -70,6 +70,23 @@ export default function EditVacancyTemplatePage() {
     );
   };
 
+  const renderBody = () => {
+    if (isLoading) return <VacancyLoadingState />;
+    if (isError || !template) {
+      return (
+        <p className="pt-10 text-sm text-slate-500">
+          {t('editTemplate.loadError')}
+        </p>
+      );
+    }
+    return (
+      <TemplateFormBody
+        form={form}
+        setDataTakenFromCandidate={setDataTakenFromCandidate}
+      />
+    );
+  };
+
   return (
     <section className="flex min-h-0 flex-1 flex-col overflow-hidden">
       <VacancyTemplatePageHeader
@@ -79,20 +96,7 @@ export default function EditVacancyTemplatePage() {
       />
 
       {/* Body */}
-      <div className="flex-1 overflow-y-auto px-7 pb-6">
-        {isLoading ? (
-          <VacancyLoadingState />
-        ) : isError || !template ? (
-          <p className="pt-10 text-sm text-slate-500">
-            {t('editTemplate.loadError')}
-          </p>
-        ) : (
-          <TemplateFormBody
-            form={form}
-            setDataTakenFromCandidate={setDataTakenFromCandidate}
-          />
-        )}
-      </div>
+      <div className="flex-1 overflow-y-auto px-7 pb-6">{renderBody()}</div>
 
       {/* Footer */}
       <footer className="flex justify-end gap-3 border-t border-slate-200 px-7 py-7">
