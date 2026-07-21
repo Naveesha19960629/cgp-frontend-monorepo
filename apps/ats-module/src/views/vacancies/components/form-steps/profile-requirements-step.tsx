@@ -6,6 +6,8 @@ import { useEffect, useState } from 'react';
 import { type UseFormReturn } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
+import { useQueryClient } from '@tanstack/react-query';
+
 import MessageBox from '@/components/message-box';
 import { StepDisableDialog, VacancyStatusBadge } from '@/views/vacancies';
 import {
@@ -23,6 +25,7 @@ import {
   useStepGuard,
 } from '@/views/vacancies/hooks';
 import type { ProfileRequirementsFormValues } from '@/views/vacancies/hooks/use-profile-requirements-form';
+import { placesService } from '@/views/vacancies/services';
 import type { StepProps } from '@/views/vacancies/types';
 import { sanitizePostalCodeText } from '@/views/vacancies/utils';
 
@@ -88,6 +91,21 @@ function shortLabel(label?: string): string {
  */
 function buildFullLabel(...parts: (string | undefined)[]): string {
   return parts.map(shortLabel).filter(Boolean).join(', ');
+}
+
+/**
+ * Normalises a place entity into a `{ id, label }` option. The places API
+ * returns a city's parent state/country (and a state's parent country) as
+ * labels only, without an id. Falling back to the label as the id lets the
+ * combobox still render and round-trip the auto-filled value; a later direct
+ * state/country search replaces it with the real ref id.
+ */
+function toPlaceOption(item?: { id?: string; label?: string }): {
+  id: string;
+  label: string;
+} {
+  const label = item?.label ?? '';
+  return { id: item?.id || label, label };
 }
 
 /**
@@ -158,10 +176,72 @@ function AddressCard({
 }) {
   const { t } = useTranslation('ats');
   const isFieldVisible = useTemplateFieldVisible('profileRequirement');
+  const queryClient = useQueryClient();
 
   const [citySearch, setCitySearch] = useState('');
   const [stateSearch, setStateSearch] = useState('');
   const [countrySearch, setCountrySearch] = useState('');
+
+  // The places CITY endpoint returns a city's parent state/country as labels
+  // only (no id), so the backend rejects the payload when those labels are sent
+  // as `stateRefId`/`countryRefId`. These resolvers look the real ref id up from
+  // the dedicated STATE/COUNTRY endpoints (reusing the react-query cache) and
+  // fall back to the label only when no match is found.
+  const resolveCountry = async (item?: {
+    id?: string;
+    label?: string;
+  }): Promise<{ id: string; label: string }> => {
+    if (item?.id) return { id: item.id, label: item.label ?? '' };
+    const search = shortLabel(item?.label);
+    if (!search) return { id: '', label: '' };
+    try {
+      const results = await queryClient.fetchQuery({
+        queryKey: ['places', 'country', search],
+        queryFn: () => placesService.getByCountry(search),
+        staleTime: 5 * 60 * 1000,
+      });
+      const match =
+        results.find(
+          c =>
+            shortLabel(c.country.label).toLowerCase() === search.toLowerCase()
+        ) ?? results[0];
+      if (match) return { id: match.country.id, label: match.country.label };
+    } catch {
+      // fall through to label-only fallback
+    }
+    return toPlaceOption(item);
+  };
+
+  const resolveState = async (
+    item?: { id?: string; label?: string },
+    countryLabel?: string
+  ): Promise<{ id: string; label: string }> => {
+    if (item?.id) return { id: item.id, label: item.label ?? '' };
+    const search = shortLabel(item?.label);
+    if (!search) return { id: '', label: '' };
+    try {
+      const results = await queryClient.fetchQuery({
+        queryKey: ['places', 'state', search],
+        queryFn: () => placesService.getByState(search),
+        staleTime: 5 * 60 * 1000,
+      });
+      const country = shortLabel(countryLabel).toLowerCase();
+      const match =
+        results.find(
+          s =>
+            shortLabel(s.state.label).toLowerCase() === search.toLowerCase() &&
+            (!country || shortLabel(s.country.label).toLowerCase() === country)
+        ) ??
+        results.find(
+          s => shortLabel(s.state.label).toLowerCase() === search.toLowerCase()
+        ) ??
+        results[0];
+      if (match) return { id: match.state.id, label: match.state.label };
+    } catch {
+      // fall through to label-only fallback
+    }
+    return toPlaceOption(item);
+  };
 
   const isEnabled = form.watch('isEnabled');
   const dataTakenFromCandidate = form.watch('dataTakenFromCandidate');
@@ -185,12 +265,18 @@ function AddressCard({
     }
   };
 
-  const { data: cityData = [], isFetching: isCityLoading } =
-    usePlacesCityQuery(citySearch);
+  // Search the places endpoints with the leading segment only (the city/state
+  // name), so pasting a full "City, State, Country" breadcrumb still hits the
+  // canonical name-based lookup. Searching with the full breadcrumb makes the
+  // backend fall back to a geocode match that returns a different (Google Place)
+  // id for the same place, producing inconsistent `cityRefId`s across entries.
+  const { data: cityData = [], isFetching: isCityLoading } = usePlacesCityQuery(
+    shortLabel(citySearch)
+  );
   const { data: stateData = [], isFetching: isStateLoading } =
-    usePlacesStateQuery(stateSearch);
+    usePlacesStateQuery(shortLabel(stateSearch));
   const { data: countryData = [], isFetching: isCountryLoading } =
-    usePlacesCountryQuery(countrySearch);
+    usePlacesCountryQuery(shortLabel(countrySearch));
 
   const cityValue = form.watch(`addresses.${index}.city`);
   const stateValue = form.watch(`addresses.${index}.stateProvince`);
@@ -209,7 +295,10 @@ function AddressCard({
           },
         ]
       : []),
-    ...cityData.map(c => ({ value: c.city.id, label: c.city.label })),
+    ...cityData.map(c => ({
+      value: c.city.id,
+      label: buildFullLabel(c.city.label, c.state?.label, c.country.label),
+    })),
   ]);
 
   const stateOptions: ComboboxOption[] = dedupeOptions([
@@ -221,7 +310,10 @@ function AddressCard({
           },
         ]
       : []),
-    ...stateData.map(s => ({ value: s.state.id, label: s.state.label })),
+    ...stateData.map(s => ({
+      value: s.state.id,
+      label: buildFullLabel(s.state.label, s.country.label),
+    })),
   ]);
 
   const countryOptions: ComboboxOption[] = [
@@ -238,41 +330,49 @@ function AddressCard({
   const handleCitySelect = (val: string) => {
     const r = cityData.find(c => c.city.id === val);
     if (!r) return;
-    form.setValue(
-      `addresses.${index}.city`,
-      { id: r.city.id, label: r.city.label },
-      { shouldValidate: true }
-    );
-    if (r.state?.id) {
-      form.setValue(
-        `addresses.${index}.stateProvince`,
-        { id: r.state.id, label: r.state.label },
-        { shouldValidate: true }
-      );
-    }
-    form.setValue(
-      `addresses.${index}.country`,
-      { id: r.country.id, label: r.country.label },
-      { shouldValidate: true }
-    );
-    // Real-time duplicate check after all fields are set
-    setTimeout(() => checkDuplicate(), 0);
+    form.setValue(`addresses.${index}.city`, toPlaceOption(r.city), {
+      shouldValidate: true,
+    });
+    // Show the labels immediately, then swap in the real ref ids once resolved
+    // so the payload carries ids rather than the label-only fallback.
+    form.setValue(`addresses.${index}.stateProvince`, toPlaceOption(r.state), {
+      shouldValidate: true,
+    });
+    form.setValue(`addresses.${index}.country`, toPlaceOption(r.country), {
+      shouldValidate: true,
+    });
+    void (async () => {
+      const [state, country] = await Promise.all([
+        resolveState(r.state, r.country?.label),
+        resolveCountry(r.country),
+      ]);
+      form.setValue(`addresses.${index}.stateProvince`, state, {
+        shouldValidate: true,
+      });
+      form.setValue(`addresses.${index}.country`, country, {
+        shouldValidate: true,
+      });
+      // Real-time duplicate check after all fields are set
+      checkDuplicate();
+    })();
   };
 
   const handleStateSelect = (val: string) => {
     const r = stateData.find(s => s.state.id === val);
     if (!r) return;
-    form.setValue(
-      `addresses.${index}.stateProvince`,
-      { id: r.state.id, label: r.state.label },
-      { shouldValidate: true }
-    );
-    form.setValue(
-      `addresses.${index}.country`,
-      { id: r.country.id, label: r.country.label },
-      { shouldValidate: true }
-    );
-    setTimeout(() => checkDuplicate(), 0);
+    form.setValue(`addresses.${index}.stateProvince`, toPlaceOption(r.state), {
+      shouldValidate: true,
+    });
+    form.setValue(`addresses.${index}.country`, toPlaceOption(r.country), {
+      shouldValidate: true,
+    });
+    void (async () => {
+      const country = await resolveCountry(r.country);
+      form.setValue(`addresses.${index}.country`, country, {
+        shouldValidate: true,
+      });
+      checkDuplicate();
+    })();
   };
 
   const handleCountrySelect = (val: string) => {
