@@ -124,7 +124,10 @@ export function AddLicenseCertDialog({
                 variant="Linear"
                 onClick={() => handleDialogChange(false)}
               />
-              <p className={clsx('text-2xl font-bold text-slate-900')}>
+              <p
+                data-testid="addLicenseCertDialog-header-label"
+                className={clsx('text-2xl font-bold text-slate-900')}
+              >
                 {t('licenseCertificates.addLicenseCertDialog.title')}
               </p>
             </div>
@@ -137,10 +140,16 @@ export function AddLicenseCertDialog({
             >
               <Add className="size-6 rotate-45 text-slate-900" />
             </Button>
-            <DialogTitle className="hidden">
+            <DialogTitle
+              data-testid="addLicenseCertDialog-title-label"
+              className="hidden"
+            >
               {t('licenseCertificates.addLicenseCertDialog.title')}
             </DialogTitle>
-            <DialogDescription className="hidden">
+            <DialogDescription
+              data-testid="addLicenseCertDialog-description-label"
+              className="hidden"
+            >
               {t('licenseCertificates.addLicenseCertDialog.title')}
             </DialogDescription>
           </div>
@@ -151,7 +160,10 @@ export function AddLicenseCertDialog({
             <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2">
               {/* Type */}
               <div className="flex flex-col gap-1">
-                <Label className="flex w-full items-center justify-between leading-5">
+                <Label
+                  data-testid="addLicenseCertDialog-type-label"
+                  className="flex w-full items-center justify-between leading-5"
+                >
                   <span className="flex items-center gap-1">
                     {t('licenseCertificates.addLicenseCertDialog.type')}
                     <span className="text-rose-600">*</span>
@@ -191,7 +203,10 @@ export function AddLicenseCertDialog({
 
               {/* Name */}
               <div className="flex flex-col gap-1">
-                <Label className="flex w-full items-center justify-between">
+                <Label
+                  data-testid="addLicenseCertDialog-name-label"
+                  className="flex w-full items-center justify-between"
+                >
                   <span className="flex items-center gap-1">
                     {nameLabel}
                     <span className="text-rose-600">*</span>

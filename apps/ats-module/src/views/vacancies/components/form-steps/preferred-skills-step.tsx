@@ -709,7 +709,7 @@ export default function PreferredSkillsStep({
   const disabledLevelsPerRow = rows.map((_, i) => usedLevelIdsFor(rows, i));
 
   return (
-    <div className="flex min-h-full flex-1 flex-col">
+    <div className="flex min-h-full flex-1 flex-col" data-testid="preferredSkills-section-form">
       {/* ── Section Header ──────────────────────────────────────────── */}
       <div className="flex items-center justify-between px-7 py-8">
         <div className="flex items-center gap-2">
@@ -725,7 +725,10 @@ export default function PreferredSkillsStep({
           >
             <ArrowLeft2 size={24} />
           </button>
-          <h2 className="text-xl font-bold tracking-tight text-slate-900">
+          <h2
+            data-testid="preferredSkills-header-label"
+            className="text-xl font-bold tracking-tight text-slate-900"
+          >
             {t('preferredSkills.title')}
           </h2>
           {mode === 'edit' && vacancyStatus ? (
@@ -734,6 +737,7 @@ export default function PreferredSkillsStep({
         </div>
         <Switch
           checked={isEnabled}
+          data-testid="toggle-on-off-switch"
           onCheckedChange={newValue => {
             if (!newValue) {
               if (populatedRows.length > 0 || dataTakenFromCandidate) {
@@ -770,6 +774,7 @@ export default function PreferredSkillsStep({
             />
             <label
               htmlFor="data-from-candidate"
+              data-testid="preferredSkills-dataTakenFromCandidate-label"
               className="cursor-pointer text-sm text-slate-600"
             >
               {t('preferredSkills.dataTakenFromCandidate')}

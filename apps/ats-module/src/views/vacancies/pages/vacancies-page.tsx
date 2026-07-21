@@ -382,6 +382,7 @@ export default function VacanciesPage() {
               {!isLoading && (
                 <Button
                   className="h-12 w-45 shrink-0 gap-1"
+                  data-testid="create-vacancy-button"
                   onClick={() => {
                     void navigate('/dashboard/ats/vacancies/new');
                   }}

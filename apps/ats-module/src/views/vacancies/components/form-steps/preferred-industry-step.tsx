@@ -179,7 +179,7 @@ export default function PreferredIndustryStep({
   };
 
   return (
-    <div className="flex min-h-full flex-1 flex-col">
+    <div className="flex min-h-full flex-1 flex-col" data-testid="preferredIndustries-section-form">
       {/* ── Section Header ──────────────────────────────────────────── */}
       <div className="flex items-center justify-between px-7 py-8">
         <div className="flex items-center gap-2">
@@ -192,7 +192,10 @@ export default function PreferredIndustryStep({
           >
             <ArrowLeft2 size={24} />
           </button>
-          <h2 className="text-xl font-bold tracking-tight text-slate-900">
+          <h2
+            data-testid="preferredIndustries-header-label"
+            className="text-xl font-bold tracking-tight text-slate-900"
+          >
             {t('preferredIndustries.title')}
           </h2>
           {mode === 'edit' && form.status ? (
@@ -202,6 +205,7 @@ export default function PreferredIndustryStep({
         <Switch
           checked={isEnabled}
           size="lg"
+          data-testid="toggle-on-off-switch"
           onCheckedChange={newValue => {
             if (!newValue) {
               if (selectedIndustries.length > 0 || dataTakenFromCandidate) {
@@ -250,7 +254,10 @@ export default function PreferredIndustryStep({
           {isFieldVisible('industry') && (
             <div>
               <div className="mb-2 flex min-w-0 items-center justify-between gap-2">
-                <span className="min-w-0 truncate pr-2 text-sm font-semibold text-slate-700">
+                <span
+                  data-testid="preferredIndustries-sectionLabel-label"
+                  className="min-w-0 truncate pr-2 text-sm font-semibold text-slate-700"
+                >
                   {t('preferredIndustries.sectionLabel')}
                 </span>
                 <CharacterCount

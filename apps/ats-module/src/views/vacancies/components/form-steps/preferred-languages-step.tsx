@@ -161,7 +161,7 @@ export default function PreferredLanguagesStep({
   };
 
   return (
-    <div className="flex min-h-full flex-1 flex-col">
+    <div className="flex min-h-full flex-1 flex-col" data-testid="preferredLanguages-section-form">
       {/* ── Section Header ──────────────────────────────────────────── */}
       <div className="flex items-center justify-between px-7 py-8">
         <div className="flex items-center gap-2">
@@ -177,7 +177,10 @@ export default function PreferredLanguagesStep({
           >
             <ArrowLeft2 size={24} />
           </button>
-          <h2 className="text-xl font-bold tracking-tight text-slate-900">
+          <h2
+            data-testid="preferredLanguages-header-label"
+            className="text-xl font-bold tracking-tight text-slate-900"
+          >
             {t('preferredLanguages.title')}
           </h2>
           {mode === 'edit' && vacancyStatus ? (
@@ -186,6 +189,7 @@ export default function PreferredLanguagesStep({
         </div>
         <Switch
           checked={isEnabled}
+          data-testid="toggle-on-off-switch"
           onCheckedChange={newValue => {
             if (!newValue) {
               if (selectedLanguages.length > 0 || dataTakenFromCandidate) {
@@ -231,7 +235,10 @@ export default function PreferredLanguagesStep({
           {isFieldVisible('language') && (
             <div>
               <div className="mb-2 flex items-center justify-between">
-                <span className="text-sm font-semibold text-slate-700">
+                <span
+                  data-testid="preferredLanguages-sectionLabel-label"
+                  className="text-sm font-semibold text-slate-700"
+                >
                   {t('preferredLanguages.sectionLabel')}
                 </span>
                 <CharacterCount

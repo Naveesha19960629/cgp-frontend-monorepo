@@ -51,7 +51,12 @@ export default function HeaderControls() {
         </Avatar>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="p-0!">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="p-0!"
+              data-testid="profile-expand-button"
+            >
               <ArrowDown2 size="16" />
             </Button>
           </DropdownMenuTrigger>

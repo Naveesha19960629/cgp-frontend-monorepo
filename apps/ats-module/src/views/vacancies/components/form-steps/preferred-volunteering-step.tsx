@@ -137,7 +137,10 @@ function VolunteeringCard({
       <div className="rounded-xl border border-neutral-300 bg-white shadow-[0px_4px_90px_0px_rgba(0,0,0,0.07)]">
         {/* Card header */}
         <div className="flex items-center justify-between px-5 py-5">
-          <span className="text-base font-bold text-slate-900">
+          <span
+            data-testid="preferredVolunteering-cardTitle-label"
+            className="text-base font-bold text-slate-900"
+          >
             {t('preferredVolunteering.cardTitle', {
               number: String(index + 1).padStart(2, '0'),
             })}
@@ -175,7 +178,7 @@ function VolunteeringCard({
               {isFieldVisible('organization') && (
                 <div className="flex flex-col gap-1">
                   <div className="flex h-5 items-center">
-                    <Label>
+                    <Label data-testid="preferredVolunteering-organizationName-label">
                       {t('preferredVolunteering.labels.organizationName')}
                     </Label>
                   </div>
@@ -238,6 +241,7 @@ function VolunteeringCard({
                 <div className="flex flex-col gap-1">
                   <div className="flex h-5 items-center">
                     <Label
+                      data-testid="preferredVolunteering-organizationLocation-label"
                       className={
                         locationsError ? 'text-destructive' : undefined
                       }
@@ -288,7 +292,9 @@ function VolunteeringCard({
               {isFieldVisible('cause') && (
                 <div className="flex flex-col gap-1">
                   <div className="flex items-center justify-between">
-                    <Label>{t('preferredVolunteering.labels.cause')}</Label>
+                    <Label data-testid="preferredVolunteering-cause-label">
+                      {t('preferredVolunteering.labels.cause')}
+                    </Label>
                     <CharacterCount
                       currentLength={entry.causeSearch.length}
                       maxLength={MAX_CAUSE_LENGTH}
@@ -348,7 +354,9 @@ function VolunteeringCard({
               {isFieldVisible('positionRole') && (
                 <div className="flex flex-col gap-1">
                   <div className="flex items-center justify-between">
-                    <Label>{t('preferredVolunteering.labels.position')}</Label>
+                    <Label data-testid="preferredVolunteering-position-label">
+                      {t('preferredVolunteering.labels.position')}
+                    </Label>
                     <CharacterCount
                       currentLength={entry.position.length}
                       maxLength={MAX_POSITION_LENGTH}
@@ -372,7 +380,9 @@ function VolunteeringCard({
               {isFieldVisible('startDate') && (
                 <div className="flex flex-col gap-1">
                   <div className="flex h-5 items-center">
-                    <Label>{t('preferredVolunteering.labels.startDate')}</Label>
+                    <Label data-testid="preferredVolunteering-startDate-label">
+                      {t('preferredVolunteering.labels.startDate')}
+                    </Label>
                   </div>
                   <Popover
                     modal
@@ -446,7 +456,9 @@ function VolunteeringCard({
               {isFieldVisible('endDate') && (
                 <div className="flex flex-col gap-1">
                   <div className="flex h-5 items-center">
-                    <Label>{t('preferredVolunteering.labels.endDate')}</Label>
+                    <Label data-testid="preferredVolunteering-endDate-label">
+                      {t('preferredVolunteering.labels.endDate')}
+                    </Label>
                   </div>
                   <Popover
                     modal
@@ -829,7 +841,10 @@ export default function PreferredVolunteeringStep({
 
   return (
     <>
-      <div className="flex flex-1 flex-col">
+      <div
+        data-testid="preferredVolunteering-section-form"
+        className="flex flex-1 flex-col"
+      >
         {/* ── Informational Banner ──────────────────────────────────────── */}
         <MessageBox
           fields={[
@@ -857,7 +872,10 @@ export default function PreferredVolunteeringStep({
             >
               <ArrowLeft2 size={24} />
             </button>
-            <h2 className="text-xl font-bold tracking-tight text-slate-900">
+            <h2
+              data-testid="preferredVolunteering-header-label"
+              className="text-xl font-bold tracking-tight text-slate-900"
+            >
               {t('preferredVolunteering.title')}
             </h2>
             {mode === 'edit' && vacancyStatus ? (
@@ -867,6 +885,7 @@ export default function PreferredVolunteeringStep({
           <SwitchPrimitive.Root
             checked={isEnabled}
             onCheckedChange={handleToggle}
+            data-testid="toggle-on-off-switch"
             className={cn(
               'focus-visible:ring-ring/50 inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent shadow-xs transition-colors outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50',
               isEnabled ? 'bg-brand-primary-500' : 'bg-slate-300'
@@ -896,6 +915,7 @@ export default function PreferredVolunteeringStep({
           />
           <Label
             htmlFor="volunteeringDataTakenFromCandidate"
+            data-testid="preferredVolunteering-dataTakenFromCandidate-label"
             className="cursor-pointer text-sm leading-snug font-medium text-slate-900"
           >
             {t('preferredVolunteering.dataTakenFromCandidate')}

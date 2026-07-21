@@ -410,7 +410,10 @@ export default function LicenseCertificatesStep({
 
   return (
     <Form {...form}>
-      <div className="flex flex-col">
+      <div
+        data-testid="licenseCertificates-section-form"
+        className="flex flex-col"
+      >
         {/* ── Informational Banner ─────────────────────────────────────────── */}
         <MessageBox
           fields={[
@@ -435,7 +438,10 @@ export default function LicenseCertificatesStep({
             >
               <ArrowLeft2 size={24} />
             </button>
-            <h2 className="text-xl font-bold tracking-tight text-slate-900">
+            <h2
+              data-testid="licenseCertificates-header-label"
+              className="text-xl font-bold tracking-tight text-slate-900"
+            >
               {t('licenseCertificates.title')}
             </h2>
             {mode === 'edit' && vacancyForm.status ? (
@@ -449,6 +455,7 @@ export default function LicenseCertificatesStep({
               <Switch
                 checked={field.value}
                 size="lg"
+                data-testid="toggle-on-off-switch"
                 onCheckedChange={newValue => {
                   if (!newValue && checkHasFilledData()) {
                     setConfirmDisableOpen(true);
@@ -485,6 +492,7 @@ export default function LicenseCertificatesStep({
           />
           <Label
             htmlFor="licenseCertDataTakenFromCandidate"
+            data-testid="licenseCertificates-collectFromCandidates-label"
             className="cursor-pointer leading-snug wrap-break-word"
           >
             {t('licenseCertificates.collectFromCandidates')}
@@ -496,7 +504,10 @@ export default function LicenseCertificatesStep({
           <div className="rounded-xl border border-neutral-300 bg-white shadow-[0px_4px_90px_0px_rgba(0,0,0,0.07)]">
             {/* Card header */}
             <div className="flex items-center justify-between px-5 py-5">
-              <h3 className="text-sm font-semibold text-slate-900">
+              <h3
+                data-testid="licenseCertificates-sectionTitle-label"
+                className="text-sm font-semibold text-slate-900"
+              >
                 {t('licenseCertificates.sectionTitle')} 01
               </h3>
               <ChevronUpIcon className="h-5 w-5 text-slate-300" />
@@ -514,7 +525,10 @@ export default function LicenseCertificatesStep({
                 {isFieldVisible('nameOfLicenseCert') && (
                   <div className="flex min-w-0 flex-col gap-1">
                     <div className="flex min-w-0 items-center justify-between gap-2">
-                      <Label className="shrink-0">
+                      <Label
+                        data-testid="licenseCertificates-nameOfLicenseCert-label"
+                        className="shrink-0"
+                      >
                         {t('licenseCertificates.nameOfLicenseCert')}
                       </Label>
                       <CharacterCount
@@ -618,7 +632,10 @@ export default function LicenseCertificatesStep({
                 {isFieldVisible('issuingOrganization') && (
                   <div className="flex min-w-0 flex-col gap-1">
                     <div className="flex h-5 items-center">
-                      <Label className="shrink-0">
+                      <Label
+                        data-testid="licenseCertificates-issuingOrganization-label"
+                        className="shrink-0"
+                      >
                         {t('licenseCertificates.issuingOrganization')}
                       </Label>
                     </div>
@@ -713,7 +730,10 @@ export default function LicenseCertificatesStep({
                 {isFieldVisible('organizationLocations') && (
                   <div className="flex min-w-0 flex-col gap-1">
                     <div className="flex h-5 items-center">
-                      <Label className="shrink-0">
+                      <Label
+                        data-testid="licenseCertificates-organizationLocations-label"
+                        className="shrink-0"
+                      >
                         {t('licenseCertificates.organizationLocations')}
                       </Label>
                     </div>
@@ -794,7 +814,7 @@ export default function LicenseCertificatesStep({
                       render={({ field }) => (
                         <FormItem className="flex w-full flex-col gap-1 space-y-0">
                           <div className="flex h-5 items-center">
-                            <FormLabel>
+                            <FormLabel data-testid="licenseCertificates-issueDate-label">
                               {t('licenseCertificates.issueDate')}
                             </FormLabel>
                           </div>
@@ -897,7 +917,7 @@ export default function LicenseCertificatesStep({
                       render={({ field }) => (
                         <FormItem className="flex w-full flex-col gap-1 space-y-0">
                           <div className="flex h-5 items-center">
-                            <FormLabel>
+                            <FormLabel data-testid="licenseCertificates-expirationDate-label">
                               {t('licenseCertificates.expirationDate')}
                             </FormLabel>
                           </div>
@@ -1009,6 +1029,7 @@ export default function LicenseCertificatesStep({
                   />
                   <Label
                     htmlFor="internationallyAccepted"
+                    data-testid="licenseCertificates-internationallyAccepted-label"
                     className="cursor-pointer leading-snug wrap-break-word"
                   >
                     {t('licenseCertificates.internationallyAccepted')}

@@ -372,6 +372,7 @@ export default function JobRequirementsStep({ onNext }: Readonly<StepProps>) {
       `}</style>
       <Form {...form}>
         <form
+          data-testid="jobRequirements-section-form"
           onSubmit={e => {
             void form.handleSubmit(handleSubmit)(e);
           }}
@@ -394,7 +395,10 @@ export default function JobRequirementsStep({ onNext }: Readonly<StepProps>) {
 
           <div className="flex items-center justify-between px-7 py-8">
             <div className="flex items-center gap-2">
-              <h2 className="text-xl font-bold tracking-tight text-slate-900">
+              <h2
+                data-testid="jobRequirements-header-label"
+                className="text-xl font-bold tracking-tight text-slate-900"
+              >
                 {t('jobRequirements.sectionTitle')}
               </h2>
               <VacancyStatusBadge
@@ -412,7 +416,10 @@ export default function JobRequirementsStep({ onNext }: Readonly<StepProps>) {
                   name="discipline"
                   render={({ field }) => (
                     <FormItem className="flex min-w-0 flex-col gap-1 space-y-0">
-                      <FormLabel className="flex justify-between">
+                      <FormLabel
+                        data-testid="jobRequirements-discipline-label"
+                        className="flex justify-between"
+                      >
                         <span>
                           {t('jobRequirements.discipline')}
                           <span className="text-destructive ml-0.5">*</span>
@@ -504,7 +511,10 @@ export default function JobRequirementsStep({ onNext }: Readonly<StepProps>) {
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <div className="flex flex-col gap-1">
-                              <FormLabel className="flex justify-between">
+                              <FormLabel
+                                data-testid="jobRequirements-careerPath-label"
+                                className="flex justify-between"
+                              >
                                 <span>
                                   {t('jobRequirements.careerPath')}
                                   <span className="text-destructive ml-0.5">
@@ -605,7 +615,10 @@ export default function JobRequirementsStep({ onNext }: Readonly<StepProps>) {
                         </Tooltip>
                       ) : (
                         <>
-                          <FormLabel className="flex justify-between">
+                          <FormLabel
+                            data-testid="jobRequirements-careerPath-label"
+                            className="flex justify-between"
+                          >
                             <span>
                               {t('jobRequirements.careerPath')}
                               <span className="text-destructive ml-0.5">*</span>
@@ -701,7 +714,10 @@ export default function JobRequirementsStep({ onNext }: Readonly<StepProps>) {
                 name="level"
                 render={({ field }) => (
                   <FormItem className="flex min-w-0 flex-col gap-1 space-y-0">
-                    <FormLabel className="text-sm font-semibold text-slate-900">
+                    <FormLabel
+                      data-testid="jobRequirements-level-label"
+                      className="text-sm font-semibold text-slate-900"
+                    >
                       {t('jobRequirements.level')}
                       {!isOtherDiscipline && (
                         <span className="text-destructive ml-0.5">*</span>
@@ -760,7 +776,10 @@ export default function JobRequirementsStep({ onNext }: Readonly<StepProps>) {
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <div className="flex flex-col gap-1">
-                            <FormLabel className="flex justify-between">
+                            <FormLabel
+                              data-testid="jobRequirements-role-label"
+                              className="flex justify-between"
+                            >
                               <span>
                                 {t('jobRequirements.role')}
                                 {!isOtherDiscipline && (
@@ -847,7 +866,10 @@ export default function JobRequirementsStep({ onNext }: Readonly<StepProps>) {
                       </Tooltip>
                     ) : (
                       <>
-                        <FormLabel className="flex justify-between">
+                        <FormLabel
+                          data-testid="jobRequirements-role-label"
+                          className="flex justify-between"
+                        >
                           <span>
                             {t('jobRequirements.role')}
                             {!isOtherDiscipline && (
@@ -926,7 +948,10 @@ export default function JobRequirementsStep({ onNext }: Readonly<StepProps>) {
                 name="jobTitle"
                 render={({ field }) => (
                   <FormItem className="flex min-w-0 flex-col gap-1 space-y-0">
-                    <FormLabel className="flex justify-between">
+                    <FormLabel
+                      data-testid="jobRequirements-jobTitle-label"
+                      className="flex justify-between"
+                    >
                       <span>
                         {t('jobRequirements.jobTitle')}
                         <span className="text-destructive ml-0.5">*</span>
@@ -997,7 +1022,10 @@ export default function JobRequirementsStep({ onNext }: Readonly<StepProps>) {
                 name="employmentType"
                 render={({ field }) => (
                   <FormItem className="flex min-w-0 flex-col gap-1 space-y-0">
-                    <FormLabel className="text-sm font-semibold text-slate-900">
+                    <FormLabel
+                      data-testid="jobRequirements-employmentType-label"
+                      className="text-sm font-semibold text-slate-900"
+                    >
                       {t('jobRequirements.employmentType')}
                     </FormLabel>
                     <FormControl>
@@ -1060,7 +1088,10 @@ export default function JobRequirementsStep({ onNext }: Readonly<StepProps>) {
                 name="workSchedule"
                 render={({ field }) => (
                   <FormItem className="flex min-w-0 flex-col gap-1 space-y-0">
-                    <FormLabel className="text-sm font-semibold text-slate-900">
+                    <FormLabel
+                      data-testid="jobRequirements-workSchedule-label"
+                      className="text-sm font-semibold text-slate-900"
+                    >
                       {t('jobRequirements.workSchedule')}
                     </FormLabel>
                     <FormControl>
@@ -1125,7 +1156,10 @@ export default function JobRequirementsStep({ onNext }: Readonly<StepProps>) {
                 name="engagementModel"
                 render={({ field }) => (
                   <FormItem className="flex min-w-0 flex-col gap-1 space-y-0">
-                    <FormLabel className="text-sm font-semibold text-slate-900">
+                    <FormLabel
+                      data-testid="jobRequirements-engagementModel-label"
+                      className="text-sm font-semibold text-slate-900"
+                    >
                       {t('jobRequirements.engagementModel')}
                     </FormLabel>
                     <FormControl>
@@ -1188,7 +1222,10 @@ export default function JobRequirementsStep({ onNext }: Readonly<StepProps>) {
                 name="description"
                 render={({ field }) => (
                   <FormItem className="flex min-w-0 flex-col gap-1 space-y-0">
-                    <FormLabel className="flex justify-between">
+                    <FormLabel
+                      data-testid="jobRequirements-description-label"
+                      className="flex justify-between"
+                    >
                       <span>{t('jobRequirements.description')}</span>
                       <CharacterCount
                         maxLength={MAX_DESCRIPTION}

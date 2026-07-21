@@ -552,7 +552,7 @@ export default function TertiaryEducationStep({
   };
 
   return (
-    <div className="flex flex-col">
+    <div data-testid="tertiaryEducation-section-form" className="flex flex-col">
       {/* -- Informational Banner ------------------------------------------ */}
       <MessageBox
         fields={[
@@ -579,7 +579,10 @@ export default function TertiaryEducationStep({
           >
             <ArrowLeft2 size={24} />
           </button>
-          <h2 className="text-xl font-bold tracking-tight text-slate-900">
+          <h2
+            data-testid="tertiaryEducation-header-label"
+            className="text-xl font-bold tracking-tight text-slate-900"
+          >
             {t('tertiaryEducation.title')}
           </h2>
           {mode === 'edit' && vacancyForm.status ? (
@@ -593,6 +596,7 @@ export default function TertiaryEducationStep({
             <Switch
               checked={field.value}
               size="lg"
+              data-testid="toggle-on-off-switch"
               onCheckedChange={newValue => {
                 if (!newValue && checkHasFilledData()) {
                   setConfirmDisableOpen(true);
@@ -629,6 +633,7 @@ export default function TertiaryEducationStep({
         />
         <Label
           htmlFor="tertiaryDataTakenFromCandidate"
+          data-testid="tertiaryEducation-collectFromCandidates-label"
           className="cursor-pointer leading-snug wrap-break-word"
         >
           {t('tertiaryEducation.collectFromCandidates')}
@@ -642,7 +647,10 @@ export default function TertiaryEducationStep({
         <div className="rounded-xl border border-neutral-300 bg-white shadow-[0px_4px_90px_0px_rgba(0,0,0,0.07)]">
           {/* Card header */}
           <div className="flex items-center justify-between px-5 py-5">
-            <h3 className="text-sm font-semibold text-slate-900">
+            <h3
+              data-testid="tertiaryEducation-sectionTitle-label"
+              className="text-sm font-semibold text-slate-900"
+            >
               {t('tertiaryEducation.sectionTitle')} 01
             </h3>
             <ChevronUpIcon className="h-5 w-5 text-slate-300" />
@@ -660,7 +668,10 @@ export default function TertiaryEducationStep({
               {isFieldVisible('qualificationName') && (
                 <div className="flex min-w-0 flex-col gap-1 xl:col-span-2">
                   <div className="flex min-w-0 items-center justify-between gap-2">
-                    <Label className="truncate pr-2">
+                    <Label
+                      data-testid="tertiaryEducation-qualificationName-label"
+                      className="truncate pr-2"
+                    >
                       {t('tertiaryEducation.qualificationName')}
                     </Label>
                     <CharacterCount
@@ -736,7 +747,10 @@ export default function TertiaryEducationStep({
               {isFieldVisible('grade') && (
                 <div className="flex min-w-0 flex-col gap-1">
                   <div className="flex min-w-0 items-center justify-between gap-2">
-                    <Label className="truncate pr-2">
+                    <Label
+                      data-testid="tertiaryEducation-grade-label"
+                      className="truncate pr-2"
+                    >
                       {t('tertiaryEducation.grade')}
                     </Label>
                     <Controller
@@ -771,7 +785,7 @@ export default function TertiaryEducationStep({
               {isFieldVisible('tertiaryAwardingBodyLocations') && (
                 <div className="flex flex-col gap-1">
                   <div className="flex h-5 items-center">
-                    <Label>
+                    <Label data-testid="tertiaryEducation-tertiaryAwardingBodyLocations-label">
                       {t('tertiaryEducation.tertiaryAwardingBodyLocations')}
                     </Label>
                   </div>
@@ -831,7 +845,9 @@ export default function TertiaryEducationStep({
               {isFieldVisible('batch') && (
                 <div className="flex flex-col gap-1">
                   <div className="flex items-center justify-between">
-                    <Label>{t('tertiaryEducation.batch')}</Label>
+                    <Label data-testid="tertiaryEducation-batch-label">
+                      {t('tertiaryEducation.batch')}
+                    </Label>
                     <CharacterCount
                       currentLength={batchInput.length}
                       maxLength={100}
@@ -906,7 +922,9 @@ export default function TertiaryEducationStep({
               {isFieldVisible('tertiaryAwardingBody') && (
                 <div className="flex flex-col gap-1">
                   <div className="flex h-5 items-center">
-                    <Label>{t('tertiaryEducation.tertiaryAwardingBody')}</Label>
+                    <Label data-testid="tertiaryEducation-tertiaryAwardingBody-label">
+                      {t('tertiaryEducation.tertiaryAwardingBody')}
+                    </Label>
                   </div>
                   <Controller
                     control={control}
@@ -988,7 +1006,9 @@ export default function TertiaryEducationStep({
               {isFieldVisible('levelOfQualification') && (
                 <div className="flex flex-col gap-1">
                   <div className="flex items-center justify-between">
-                    <Label>{t('tertiaryEducation.levelOfQualification')}</Label>
+                    <Label data-testid="tertiaryEducation-levelOfQualification-label">
+                      {t('tertiaryEducation.levelOfQualification')}
+                    </Label>
                     <CharacterCount
                       currentLength={levelInput.length}
                       maxLength={100}
@@ -1065,7 +1085,9 @@ export default function TertiaryEducationStep({
               {isFieldVisible('specialization') && (
                 <div className="flex flex-col gap-1">
                   <div className="flex items-center justify-between">
-                    <Label>{t('tertiaryEducation.specialization')}</Label>
+                    <Label data-testid="tertiaryEducation-specialization-label">
+                      {t('tertiaryEducation.specialization')}
+                    </Label>
                     <CharacterCount
                       currentLength={specializationInput.length}
                       maxLength={100}
@@ -1139,7 +1161,9 @@ export default function TertiaryEducationStep({
               {isFieldVisible('studyMode') && (
                 <div className="flex flex-col gap-1">
                   <div className="flex h-5 items-center">
-                    <Label>{t('tertiaryEducation.studyMode')}</Label>
+                    <Label data-testid="tertiaryEducation-studyMode-label">
+                      {t('tertiaryEducation.studyMode')}
+                    </Label>
                   </div>
                   <Controller
                     control={control}
@@ -1199,7 +1223,9 @@ export default function TertiaryEducationStep({
             <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
               {isFieldVisible('studyPattern') && (
                 <div className="flex flex-col gap-1">
-                  <Label>{t('tertiaryEducation.studyPattern')}</Label>
+                  <Label data-testid="tertiaryEducation-studyPattern-label">
+                    {t('tertiaryEducation.studyPattern')}
+                  </Label>
                   <Controller
                     control={control}
                     name="entries.0.studyPattern"
@@ -1255,7 +1281,9 @@ export default function TertiaryEducationStep({
 
               {isFieldVisible('deliverySchedule') && (
                 <div className="flex flex-col gap-1">
-                  <Label>{t('tertiaryEducation.deliverySchedule')}</Label>
+                  <Label data-testid="tertiaryEducation-deliverySchedule-label">
+                    {t('tertiaryEducation.deliverySchedule')}
+                  </Label>
                   <Controller
                     control={control}
                     name="entries.0.deliverySchedule"
@@ -1315,7 +1343,9 @@ export default function TertiaryEducationStep({
               {isFieldVisible('department') && (
                 <div className="flex flex-col gap-1">
                   <div className="flex items-center justify-between">
-                    <Label>{t('tertiaryEducation.department')}</Label>
+                    <Label data-testid="tertiaryEducation-department-label">
+                      {t('tertiaryEducation.department')}
+                    </Label>
                     <CharacterCount
                       currentLength={departmentInput.length}
                       maxLength={100}
@@ -1389,7 +1419,9 @@ export default function TertiaryEducationStep({
               {isFieldVisible('faculty') && (
                 <div className="flex flex-col gap-1">
                   <div className="flex items-center justify-between">
-                    <Label>{t('tertiaryEducation.faculty')}</Label>
+                    <Label data-testid="tertiaryEducation-faculty-label">
+                      {t('tertiaryEducation.faculty')}
+                    </Label>
                     <CharacterCount
                       currentLength={facultyInput.length}
                       maxLength={100}

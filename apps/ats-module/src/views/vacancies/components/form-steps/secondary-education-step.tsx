@@ -515,7 +515,10 @@ export default function SecondaryEducationStep({
 
   return (
     <Form {...form}>
-      <div className="flex flex-col">
+      <div
+        data-testid="secondaryEducation-section-form"
+        className="flex flex-col"
+      >
         {/* -- Informational Banner ------------------------------------------ */}
         <MessageBox
           fields={[
@@ -539,7 +542,10 @@ export default function SecondaryEducationStep({
             >
               <ArrowLeft2 size={24} />
             </button>
-            <h2 className="text-xl font-bold tracking-tight text-slate-900">
+            <h2
+              data-testid="secondaryEducation-header-label"
+              className="text-xl font-bold tracking-tight text-slate-900"
+            >
               {t('secondaryEducation.title')}
             </h2>
             {mode === 'edit' && vacancyForm.status ? (
@@ -553,6 +559,7 @@ export default function SecondaryEducationStep({
               <Switch
                 checked={field.value}
                 size="lg"
+                data-testid="toggle-on-off-switch"
                 onCheckedChange={newValue => {
                   if (!newValue && checkHasFilledData()) {
                     setConfirmDisableOpen(true);
@@ -589,6 +596,7 @@ export default function SecondaryEducationStep({
           />
           <Label
             htmlFor="dataTakenFromCandidate"
+            data-testid="secondaryEducation-collectFromCandidates-label"
             className="cursor-pointer leading-snug"
           >
             {t('secondaryEducation.collectFromCandidates')}
@@ -602,7 +610,10 @@ export default function SecondaryEducationStep({
           <div className="rounded-xl border border-neutral-300 bg-white shadow-[0px_4px_90px_0px_rgba(0,0,0,0.07)]">
             {/* Card header � always active, chevron always muted */}
             <div className="flex items-center justify-between px-5 py-5">
-              <h3 className="text-sm font-semibold text-slate-900">
+              <h3
+                data-testid="secondaryEducation-sectionTitle-label"
+                className="text-sm font-semibold text-slate-900"
+              >
                 {t('secondaryEducation.sectionTitle')} 01
               </h3>
               <ChevronUpIcon className="h-5 w-5 text-slate-300" />
@@ -633,6 +644,7 @@ export default function SecondaryEducationStep({
                   />
                   <Label
                     htmlFor="acceptsHomeSchooling"
+                    data-testid="secondaryEducation-acceptsHomeSchooling-label"
                     className="cursor-pointer"
                   >
                     {t('secondaryEducation.acceptsHomeSchooling')}
@@ -644,7 +656,10 @@ export default function SecondaryEducationStep({
               <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
                 {isFieldVisible('schools') && (
                   <div className="flex min-w-0 flex-col gap-1">
-                    <Label className="truncate">
+                    <Label
+                      data-testid="secondaryEducation-schoolName-label"
+                      className="truncate"
+                    >
                       {t('secondaryEducation.schoolName')}
                     </Label>
                     <Controller
@@ -729,7 +744,10 @@ export default function SecondaryEducationStep({
 
                 {isFieldVisible('schoolLocations') && (
                   <div className="flex min-w-0 flex-col gap-1">
-                    <Label className="truncate">
+                    <Label
+                      data-testid="secondaryEducation-schoolLocation-label"
+                      className="truncate"
+                    >
                       {t('secondaryEducation.schoolLocation')}
                     </Label>
                     <Controller
@@ -791,7 +809,10 @@ export default function SecondaryEducationStep({
                 {isFieldVisible('grade') && (
                   <div className="flex min-w-0 flex-col gap-1">
                     <div className="flex min-w-0 items-center justify-between gap-2">
-                      <Label className="shrink-0">
+                      <Label
+                        data-testid="secondaryEducation-grade-label"
+                        className="shrink-0"
+                      >
                         {t('secondaryEducation.grade')}
                       </Label>
                       <Controller
@@ -829,7 +850,7 @@ export default function SecondaryEducationStep({
                     render={({ field }) => (
                       <FormItem className="flex w-full flex-col gap-1 space-y-0">
                         <div className="flex h-5 items-center">
-                          <FormLabel>
+                          <FormLabel data-testid="secondaryEducation-startDate-label">
                             {t('secondaryEducation.startDate')}
                           </FormLabel>
                         </div>
@@ -926,7 +947,7 @@ export default function SecondaryEducationStep({
                     render={({ field }) => (
                       <FormItem className="flex w-full flex-col gap-1 space-y-0">
                         <div className="flex h-5 items-center">
-                          <FormLabel>
+                          <FormLabel data-testid="secondaryEducation-endDate-label">
                             {t('secondaryEducation.endDate')}
                           </FormLabel>
                         </div>
@@ -1011,7 +1032,10 @@ export default function SecondaryEducationStep({
                 {isFieldVisible('examinations') && (
                   <div className="flex min-w-0 flex-col gap-1">
                     <div className="flex min-w-0 items-center justify-between gap-2">
-                      <Label className="shrink-0">
+                      <Label
+                        data-testid="secondaryEducation-examination-label"
+                        className="shrink-0"
+                      >
                         {t('secondaryEducation.examination')}
                       </Label>
                       <CharacterCount
@@ -1087,7 +1111,10 @@ export default function SecondaryEducationStep({
                 {isFieldVisible('secondaryAwardingBody') && (
                   <div className="flex min-w-0 flex-col gap-1">
                     <div className="flex min-w-0 items-center justify-between gap-2">
-                      <Label className="shrink-0">
+                      <Label
+                        data-testid="secondaryEducation-awardingBody-label"
+                        className="shrink-0"
+                      >
                         {t('secondaryEducation.awardingBody')}
                       </Label>
                       <CharacterCount
@@ -1166,7 +1193,10 @@ export default function SecondaryEducationStep({
                 {isFieldVisible('fieldsOfStudy') && (
                   <div className="flex min-w-0 flex-col gap-1">
                     <div className="flex min-w-0 items-center justify-between gap-2">
-                      <Label className="shrink-0">
+                      <Label
+                        data-testid="secondaryEducation-fieldOfStudy-label"
+                        className="shrink-0"
+                      >
                         {t('secondaryEducation.fieldOfStudy')}
                       </Label>
                       <CharacterCount
@@ -1242,7 +1272,10 @@ export default function SecondaryEducationStep({
                 {isFieldVisible('result') && (
                   <div className="flex min-w-0 flex-col gap-1">
                     <div className="flex min-w-0 items-center justify-between gap-2">
-                      <Label className="shrink-0">
+                      <Label
+                        data-testid="secondaryEducation-results-label"
+                        className="shrink-0"
+                      >
                         {t('secondaryEducation.results')}
                       </Label>
                       <Controller

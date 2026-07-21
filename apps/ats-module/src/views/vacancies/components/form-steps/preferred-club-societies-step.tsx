@@ -120,7 +120,6 @@ function ClubSocietyCard({
   const [locationsError, setLocationsError] = useState(false);
   const [societiesError, setSocietiesError] = useState(false);
   const [organizationsError, setOrganizationsError] = useState(false);
-  const [societiesCharLimitError, setSocietiesCharLimitError] = useState(false);
   const [openDatePopover, setOpenDatePopover] = useState<
     'startDate' | 'endDate' | null
   >(null);
@@ -133,7 +132,10 @@ function ClubSocietyCard({
       <div className="rounded-xl border border-neutral-300 bg-white shadow-[0px_4px_90px_0px_rgba(0,0,0,0.07)]">
         {/* Card header */}
         <div className="flex items-center justify-between px-5 py-5">
-          <span className="text-base font-bold text-slate-900">
+          <span
+            data-testid="preferredClubSocieties-cardTitle-label"
+            className="text-base font-bold text-slate-900"
+          >
             {t('preferredClubSocieties.cardTitle', {
               number: String(index + 1).padStart(2, '0'),
             })}
@@ -171,6 +173,7 @@ function ClubSocietyCard({
               <div className="flex flex-col gap-1">
                 <div className="flex items-center justify-between">
                   <Label
+                    data-testid="preferredClubSocieties-clubSociety-label"
                     className={societiesError ? 'text-destructive' : undefined}
                   >
                     {t('preferredClubSocieties.labels.clubSociety')}
@@ -220,9 +223,6 @@ function ClubSocietyCard({
                       MAX_CLUB_SOCIETY_LENGTH
                     );
 
-                    setSocietiesCharLimitError(
-                      value.length >= MAX_CLUB_SOCIETY_LENGTH
-                    );
                     onUpdate(index, { clubSocietySearch: limitedSearch });
                     onSocietiesSearch(limitedSearch);
                     return societies.map(s => ({
@@ -254,16 +254,13 @@ function ClubSocietyCard({
                     </p>
                   }
                 />
-                {societiesCharLimitError && (
-                  <p className="text-destructive text-xs">
-                    {t('preferredClubSocieties.errors.maxCharacters')}
-                  </p>
-                )}
               </div>
 
               <div className="flex flex-col gap-1">
                 <div className="flex h-5 items-center">
-                  <Label>{t('preferredClubSocieties.labels.startDate')}</Label>
+                  <Label data-testid="preferredClubSocieties-startDate-label">
+                    {t('preferredClubSocieties.labels.startDate')}
+                  </Label>
                 </div>
                 <Popover
                   modal
@@ -334,7 +331,9 @@ function ClubSocietyCard({
 
               <div className="flex flex-col gap-1">
                 <div className="flex h-5 items-center">
-                  <Label>{t('preferredClubSocieties.labels.endDate')}</Label>
+                  <Label data-testid="preferredClubSocieties-endDate-label">
+                    {t('preferredClubSocieties.labels.endDate')}
+                  </Label>
                 </div>
                 <Popover
                   modal
@@ -408,6 +407,7 @@ function ClubSocietyCard({
               <div className="flex flex-col gap-1">
                 <div className="flex h-5 items-center">
                   <Label
+                    data-testid="preferredClubSocieties-representedOrganization-label"
                     className={
                       organizationsError ? 'text-destructive' : undefined
                     }
@@ -483,6 +483,7 @@ function ClubSocietyCard({
               <div className="flex flex-col gap-1">
                 <div className="flex h-5 items-center">
                   <Label
+                    data-testid="preferredClubSocieties-organizationLocation-label"
                     className={locationsError ? 'text-destructive' : undefined}
                   >
                     {t('preferredClubSocieties.labels.organizationLocation')}
@@ -529,7 +530,9 @@ function ClubSocietyCard({
             <div className="grid grid-cols-4 gap-4">
               <div className="col-span-1 flex flex-col gap-1">
                 <div className="flex items-center justify-between">
-                  <Label>{t('preferredClubSocieties.labels.position')}</Label>
+                  <Label data-testid="preferredClubSocieties-position-label">
+                    {t('preferredClubSocieties.labels.position')}
+                  </Label>
                   <CharacterCount
                     currentLength={entry.position.length}
                     maxLength={MAX_POSITION_LENGTH}
@@ -918,7 +921,10 @@ export default function PreferredClubSocietiesStep({
 
   return (
     <>
-      <div className="flex flex-1 flex-col">
+      <div
+        data-testid="preferredClubSocieties-section-form"
+        className="flex flex-1 flex-col"
+      >
         {/* ── Informational Banner ──────────────────────────────────────── */}
         <MessageBox
           fields={[
@@ -946,7 +952,10 @@ export default function PreferredClubSocietiesStep({
             >
               <ArrowLeft2 size={24} />
             </button>
-            <h2 className="text-xl font-bold tracking-tight text-slate-900">
+            <h2
+              data-testid="preferredClubSocieties-header-label"
+              className="text-xl font-bold tracking-tight text-slate-900"
+            >
               {t('preferredClubSocieties.title')}
             </h2>
             {mode === 'edit' && vacancyStatus ? (
@@ -956,6 +965,7 @@ export default function PreferredClubSocietiesStep({
           <SwitchPrimitive.Root
             checked={isEnabled}
             onCheckedChange={handleToggle}
+            data-testid="toggle-on-off-switch"
             className={cn(
               'focus-visible:ring-ring/50 inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent shadow-xs transition-colors outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50',
               isEnabled ? 'bg-brand-primary-500' : 'bg-slate-300'
@@ -985,6 +995,7 @@ export default function PreferredClubSocietiesStep({
           />
           <Label
             htmlFor="clubSocietiesDataTakenFromCandidate"
+            data-testid="preferredClubSocieties-dataTakenFromCandidate-label"
             className="cursor-pointer text-sm leading-snug font-medium text-slate-900"
           >
             {t('preferredClubSocieties.dataTakenFromCandidate')}

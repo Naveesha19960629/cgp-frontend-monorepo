@@ -28,6 +28,7 @@ export default function FieldToggle({
         checked={checked}
         disabled={disabled}
         onCheckedChange={onToggle}
+        data-testid="toggle-on-off-switch"
       />
     </div>
   );

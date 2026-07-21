@@ -116,7 +116,10 @@ function ProjectCard({
       <div className="rounded-xl border border-neutral-300 bg-white shadow-[0px_4px_90px_0px_rgba(0,0,0,0.07)]">
         {/* Card header */}
         <div className="flex items-center justify-between px-5 py-5">
-          <span className="text-base font-bold text-slate-900">
+          <span
+            data-testid={`projectsRequirements-projectCard-${index}-label`}
+            className="text-base font-bold text-slate-900"
+          >
             {t('projectsRequirements.projectCard', {
               number: String(index + 1).padStart(2, '0'),
             })}
@@ -164,7 +167,11 @@ function ProjectCard({
               {isFieldVisible('startDate') && (
                 <div className="flex flex-col gap-1">
                   <div className="flex h-5 items-center">
-                    <Label>{t('projectsRequirements.startDate')}</Label>
+                    <Label
+                      data-testid={`projectsRequirements-startDate-${index}-label`}
+                    >
+                      {t('projectsRequirements.startDate')}
+                    </Label>
                   </div>
                   <Popover
                     modal
@@ -239,7 +246,11 @@ function ProjectCard({
               {isFieldVisible('endDate') && (
                 <div className="flex flex-col gap-1">
                   <div className="flex h-5 items-center">
-                    <Label>{t('projectsRequirements.endDate')}</Label>
+                    <Label
+                      data-testid={`projectsRequirements-endDate-${index}-label`}
+                    >
+                      {t('projectsRequirements.endDate')}
+                    </Label>
                   </div>
                   <Popover
                     modal
@@ -312,6 +323,7 @@ function ProjectCard({
                 <div className="flex flex-col gap-1">
                   <div className="flex items-center justify-between">
                     <Label
+                      data-testid={`projectsRequirements-relatedIndustry-${index}-label`}
                       className={hasMaxError ? 'text-destructive' : undefined}
                     >
                       {t('projectsRequirements.relatedIndustry')}
@@ -398,6 +410,7 @@ function ProjectCard({
                 <div className="flex flex-col gap-1">
                   <div className="flex h-5 items-center">
                     <Label
+                      data-testid={`projectsRequirements-organizationLocation-${index}-label`}
                       className={
                         locationsError ? 'text-destructive' : undefined
                       }
@@ -455,6 +468,7 @@ function ProjectCard({
                 <div className="flex flex-col gap-1">
                   <div className="flex h-5 items-center">
                     <Label
+                      data-testid={`projectsRequirements-organizationName-${index}-label`}
                       className={
                         organizationsError ? 'text-destructive' : undefined
                       }
@@ -893,7 +907,10 @@ export default function ProjectsRequirementsStep({
 
   return (
     <>
-      <div className="flex flex-1 flex-col">
+      <div
+        data-testid="projectsRequirements-section-form"
+        className="flex flex-1 flex-col"
+      >
         {/* ── Informational Banner ──────────────────────────────────────── */}
         <MessageBox
           fields={[
@@ -921,7 +938,10 @@ export default function ProjectsRequirementsStep({
             >
               <ArrowLeft2 size={24} />
             </button>
-            <h2 className="text-xl font-bold tracking-tight text-slate-900">
+            <h2
+              data-testid="projectsRequirements-header-label"
+              className="text-xl font-bold tracking-tight text-slate-900"
+            >
               {t('projectsRequirements.title')}
             </h2>
             {mode === 'edit' && vacancyStatus ? (
@@ -933,6 +953,7 @@ export default function ProjectsRequirementsStep({
             checked={isEnabled}
             onCheckedChange={handleToggle}
             size="lg"
+            data-testid="toggle-on-off-switch"
           />
         </div>
 
@@ -950,6 +971,7 @@ export default function ProjectsRequirementsStep({
           />
           <Label
             htmlFor="projectsDataTakenFromCandidate"
+            data-testid="projectsRequirements-dataTakenFromCandidate-label"
             className="cursor-pointer text-sm font-medium text-slate-900"
           >
             {t('projectsRequirements.dataTakenFromCandidate')}

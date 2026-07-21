@@ -292,7 +292,10 @@ function QuestionCard({
         {/* Question text */}
         <div className="flex flex-col gap-1.5">
           <div className="flex items-center justify-between">
-            <label className="text-sm font-semibold text-slate-900">
+            <label
+              data-testid={`customizableForm-questionLabel-${question.id}-label`}
+              className="text-sm font-semibold text-slate-900"
+            >
               {t('customizableForm.question.questionLabel')}
               <span className="ml-0.5 text-red-500">*</span>
             </label>
@@ -326,7 +329,10 @@ function QuestionCard({
             showValidation && question.type === '' ? 'true' : undefined
           }
         >
-          <label className="text-sm font-semibold text-slate-900">
+          <label
+            data-testid={`customizableForm-typeLabel-${question.id}-label`}
+            className="text-sm font-semibold text-slate-900"
+          >
             {t('customizableForm.question.typeLabel')}
             <span className="ml-0.5 text-red-500">*</span>
           </label>
@@ -590,7 +596,10 @@ function QuestionCard({
           {/* From / To */}
           <div className="flex gap-4">
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-semibold text-slate-900">
+              <label
+                data-testid={`customizableForm-from-${question.id}-label`}
+                className="text-sm font-semibold text-slate-900"
+              >
                 {t('customizableForm.question.from')}
               </label>
               <Select
@@ -611,7 +620,10 @@ function QuestionCard({
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm font-semibold text-slate-900">
+              <label
+                data-testid={`customizableForm-to-${question.id}-label`}
+                className="text-sm font-semibold text-slate-900"
+              >
                 {t('customizableForm.question.to')}
               </label>
               <Select
@@ -636,7 +648,10 @@ function QuestionCard({
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center justify-between">
-                <label className="text-sm font-semibold text-slate-900">
+                <label
+                  data-testid={`customizableForm-startLabel-${question.id}-label`}
+                  className="text-sm font-semibold text-slate-900"
+                >
                   {t('customizableForm.question.startLabel')}
                 </label>
                 <CharacterCount
@@ -655,7 +670,10 @@ function QuestionCard({
 
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center justify-between">
-                <label className="text-sm font-semibold text-slate-900">
+                <label
+                  data-testid={`customizableForm-endLabel-${question.id}-label`}
+                  className="text-sm font-semibold text-slate-900"
+                >
                   {t('customizableForm.question.endLabel')}
                 </label>
                 <CharacterCount
@@ -705,13 +723,17 @@ function QuestionCard({
         </button>
         <div className="h-5 w-px bg-slate-200" />
         <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold text-slate-700">
+          <span
+            data-testid={`customizableForm-required-${question.id}-label`}
+            className="text-sm font-semibold text-slate-700"
+          >
             {t('customizableForm.question.required')}
           </span>
           <Switch
             checked={question.required}
             onCheckedChange={val => set({ required: val })}
             size="lg"
+            data-testid="toggle-button"
           />
         </div>
       </div>
@@ -1146,7 +1168,7 @@ export default function CustomizableFormStep({
   // ── Render ──────────────────────────────────────────────────────────────
 
   return (
-    <div ref={containerRef}>
+    <div data-testid="customizableForm-section-form" ref={containerRef}>
       {/* Header row */}
       <div className="flex items-center justify-between px-7 pt-7 pb-4">
         <div className="flex items-center gap-2">
@@ -1158,7 +1180,10 @@ export default function CustomizableFormStep({
           >
             <ArrowLeft2 size={24} />
           </button>
-          <h2 className="text-xl font-bold tracking-[-0.1px] text-slate-900">
+          <h2
+            data-testid="customizableForm-header-label"
+            className="text-xl font-bold tracking-[-0.1px] text-slate-900"
+          >
             {t('customizableForm.title')}
           </h2>
           {mode === 'edit' && form.status ? (
@@ -1170,6 +1195,7 @@ export default function CustomizableFormStep({
           checked={isEnabled}
           onCheckedChange={handleToggleEnabled}
           size="lg"
+          data-testid="toggle-on-off-switch"
         />
       </div>
 
@@ -1207,7 +1233,10 @@ export default function CustomizableFormStep({
         </div>
 
         {/* Form Builder heading */}
-        <h3 className="mt-10 mb-6 text-lg leading-6 font-bold text-slate-900">
+        <h3
+          data-testid="customizableForm-formBuilderTitle-label"
+          className="mt-10 mb-6 text-lg leading-6 font-bold text-slate-900"
+        >
           {t('customizableForm.formBuilderTitle')}
         </h3>
 
@@ -1224,7 +1253,10 @@ export default function CustomizableFormStep({
               >
                 {/* Card action buttons */}
                 <div className="flex items-start justify-between gap-3">
-                  <p className="min-w-0 flex-1 text-base leading-6 font-bold wrap-break-word text-slate-900">
+                  <p
+                    data-testid={`customizableForm-formTitle-${form.id}-label`}
+                    className="min-w-0 flex-1 text-base leading-6 font-bold wrap-break-word text-slate-900"
+                  >
                     {displayFormTitle}
                   </p>
                   <div className="flex shrink-0 items-center gap-3 text-slate-500">

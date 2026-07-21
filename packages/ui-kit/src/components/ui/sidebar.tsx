@@ -264,6 +264,7 @@ function SidebarTrigger({
     <Button
       data-sidebar="trigger"
       data-slot="sidebar-trigger"
+      data-testid="sideMenu-expand-collapse"
       variant="ghost"
       size="lg"
       className={cn(className)}

@@ -174,7 +174,10 @@ export function AddAwardingBodyDialog({
                 variant="Linear"
                 onClick={() => handleDialogChange(false)}
               />
-              <p className={clsx('text-2xl font-bold text-slate-900')}>
+              <p
+                data-testid="addAwardingBodyDialog-header-label"
+                className={clsx('text-2xl font-bold text-slate-900')}
+              >
                 {t('tertiaryEducation.addAwardingBodyDialog.title')}
               </p>
             </div>
@@ -187,10 +190,16 @@ export function AddAwardingBodyDialog({
             >
               <Add className="size-6 rotate-45 text-slate-900" />
             </Button>
-            <DialogTitle className="hidden">
+            <DialogTitle
+              data-testid="addAwardingBodyDialog-title-label"
+              className="hidden"
+            >
               {t('tertiaryEducation.addAwardingBodyDialog.title')}
             </DialogTitle>
-            <DialogDescription className="hidden">
+            <DialogDescription
+              data-testid="addAwardingBodyDialog-description-label"
+              className="hidden"
+            >
               {t('tertiaryEducation.addAwardingBodyDialog.title')}
             </DialogDescription>
           </div>
@@ -201,7 +210,10 @@ export function AddAwardingBodyDialog({
             <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2">
               {/* Awarding Body Name */}
               <div className="flex flex-col gap-1">
-                <Label className="flex w-full items-center justify-between">
+                <Label
+                  data-testid="addAwardingBodyDialog-name-label"
+                  className="flex w-full items-center justify-between"
+                >
                   <span className="flex items-center gap-1">
                     {t('tertiaryEducation.addAwardingBodyDialog.name')}
                     <span className="text-rose-600">*</span>
@@ -301,7 +313,10 @@ export function AddAwardingBodyDialog({
 
               {/* Awarding Body Location */}
               <div className="flex flex-col gap-1">
-                <Label className="flex w-full items-center justify-between leading-5">
+                <Label
+                  data-testid="addAwardingBodyDialog-location-label"
+                  className="flex w-full items-center justify-between leading-5"
+                >
                   <span className="flex items-center gap-1">
                     {t('tertiaryEducation.addAwardingBodyDialog.location')}
                     <span className="text-rose-600">*</span>
@@ -350,7 +365,10 @@ export function AddAwardingBodyDialog({
 
               {/* Awarding Body URL */}
               <div className="flex flex-col gap-1">
-                <Label className="flex w-full items-center justify-between">
+                <Label
+                  data-testid="addAwardingBodyDialog-url-label"
+                  className="flex w-full items-center justify-between"
+                >
                   <span>
                     {t('tertiaryEducation.addAwardingBodyDialog.url')}
                   </span>

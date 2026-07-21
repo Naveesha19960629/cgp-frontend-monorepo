@@ -20,8 +20,8 @@ const honourLocationSchema = z.object({
 const honourEntrySchema = z.object({
   title: z.string().max(250),
   issuedBy: z.string().max(100),
-  issuedDateFrom: z.date().optional(),
-  issuedDateTo: z.date().optional(),
+  issuedDateFrom: z.date().nullable().optional(),
+  issuedDateTo: z.date().nullable().optional(),
   associatedOrganizations: z.array(honourOrganizationSchema),
   organizationLocations: z.array(honourLocationSchema),
   isOpen: z.boolean(),

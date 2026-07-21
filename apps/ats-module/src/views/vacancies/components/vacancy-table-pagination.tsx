@@ -61,6 +61,7 @@ export default function VacancyTablePagination({
         className="h-10 w-32 gap-1 border-slate-300 bg-slate-50 text-slate-900 hover:bg-slate-100"
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 0}
+        data-testid="back-table-button"
       >
         <ChevronLeft className="size-5" />
         {t('vacancies.table.pagination.back')}
@@ -100,6 +101,7 @@ export default function VacancyTablePagination({
         className="h-10 w-32 gap-1 border-slate-300 bg-slate-50 text-slate-900 hover:bg-slate-100"
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage >= effectiveTotal - 1}
+        data-testid="next-table-button"
       >
         {t('vacancies.table.pagination.next')}
         <ChevronRight className="size-4" />
