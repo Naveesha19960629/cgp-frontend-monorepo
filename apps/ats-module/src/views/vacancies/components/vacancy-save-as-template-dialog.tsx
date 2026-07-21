@@ -36,7 +36,7 @@ export default function VacancySaveAsTemplateDialog({
   onConfirm,
   isSaving = false,
   isTemplateNameLoading = false,
-}: VacancySaveAsTemplateDialogProps) {
+}: Readonly<VacancySaveAsTemplateDialogProps>) {
   const { t } = useTranslation('ats');
 
   return (

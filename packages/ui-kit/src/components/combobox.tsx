@@ -210,13 +210,12 @@ export function Combobox({
     }
   };
 
-  const inputDisplayValue = clearOnSelect
-    ? searchValue
-    : open
-      ? searchValue
-      : selectedOption
-        ? (selectedLabel ?? selectedOption.label)
-        : '';
+  const getInputDisplayValue = (): string => {
+    if (clearOnSelect || open) return searchValue;
+    if (!selectedOption) return '';
+    return selectedLabel ?? selectedOption.label;
+  };
+  const inputDisplayValue = getInputDisplayValue();
 
   return (
     <Popover open={open} onOpenChange={handleOpenChange} modal={modal}>

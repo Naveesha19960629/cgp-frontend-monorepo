@@ -23,12 +23,12 @@ function TemplateSectionCard({
   state,
   onToggleField,
   onToggleCandidateData,
-}: {
+}: Readonly<{
   section: TemplateSectionConfig;
   state: TemplateFormState['sections'][string];
   onToggleField: (fieldCode: string, value: boolean) => void;
   onToggleCandidateData: (value: boolean) => void;
-}) {
+}>) {
   const { t } = useTranslation('ats');
   const checkboxId = `data-from-candidate-${section.key}`;
 
@@ -80,10 +80,10 @@ function TemplateSectionCard({
 export default function TemplateFormBody({
   form,
   setDataTakenFromCandidate,
-}: {
+}: Readonly<{
   form: UseFormReturn<VacancyTemplateFormValues>;
   setDataTakenFromCandidate: (sectionKey: string, value: boolean) => void;
-}) {
+}>) {
   const { t } = useTranslation('ats');
   const values = form.watch();
   const nameErrorKey = form.formState.errors.templateName?.message;

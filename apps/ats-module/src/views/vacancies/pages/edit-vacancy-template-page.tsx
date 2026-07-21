@@ -1,26 +1,24 @@
-import { ChevronLeft } from 'lucide-react';
-
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import TemplateFormBody from '@/views/vacancies/components/template-form-body';
 import VacancyLoadingState from '@/views/vacancies/components/vacancy-loading-state';
+import VacancyTemplatePageHeader from '@/views/vacancies/components/vacancy-template-page-header';
 import {
+  useTemplateSaveToastHandlers,
   useUpdateTemplateMutation,
   useVacancyTemplateByIdQuery,
   useVacancyTemplateForm,
 } from '@/views/vacancies/hooks';
+import { TEMPLATES_LIST_ROUTE } from '@/views/vacancies/utils/constants';
 import { TEMPLATE_NAME_MAX_LENGTH } from '@/views/vacancies/utils/vacancy-template-config';
 import {
   hasAnySelection,
   toTemplateFormStateFromResponse,
 } from '@/views/vacancies/utils/vacancy-template-payload-helpers';
 
-import { ErrorToast, SuccessToast } from '@cgp/ui-kit/components/custom-toast';
 import { Button } from '@cgp/ui-kit/components/ui/button';
-
-const TEMPLATES_LIST_ROUTE = '/dashboard/ats/templates';
 
 export default function EditVacancyTemplatePage() {
   const { t } = useTranslation('ats');
@@ -36,6 +34,7 @@ export default function EditVacancyTemplatePage() {
     isError,
   } = useVacancyTemplateByIdQuery(id);
   const updateTemplate = useUpdateTemplateMutation();
+  const saveToastHandlers = useTemplateSaveToastHandlers('editTemplate');
 
   const template = response?.data;
   const refNumber = template?.refNumber ?? '';
@@ -67,46 +66,17 @@ export default function EditVacancyTemplatePage() {
 
     updateTemplate.mutate(
       { id, state: values, templateName: values.templateName },
-      {
-        onSuccess: () => {
-          SuccessToast({
-            title: t('editTemplate.notifications.success.title'),
-            description: t('editTemplate.notifications.success.message'),
-          });
-          void navigate(TEMPLATES_LIST_ROUTE);
-        },
-        onError: () => {
-          ErrorToast({
-            title: t('editTemplate.notifications.error.title'),
-            description: t('editTemplate.notifications.error.message'),
-          });
-        },
-      }
+      saveToastHandlers
     );
   };
 
   return (
     <section className="flex min-h-0 flex-1 flex-col overflow-hidden">
-      {/* Header — only the back arrow navigates; the title is plain text. */}
-      <header className="flex items-center justify-between px-7 pt-6">
-        <div className="flex items-center gap-2 text-2xl leading-8 font-bold tracking-[-0.144px] text-slate-900">
-          <button
-            type="button"
-            aria-label={t('common.back')}
-            onClick={handleCancel}
-            className="flex cursor-pointer items-center rounded-md focus-visible:ring-2 focus-visible:ring-slate-200 focus-visible:outline-none"
-          >
-            <ChevronLeft className="size-6" />
-          </button>
-          <span>{t('editTemplate.heading')}</span>
-        </div>
-        {/* System-generated Template ID (#T…), display-only (AC 3). */}
-        {refNumber && (
-          <span className="text-xs font-medium text-slate-400">
-            {refNumber}
-          </span>
-        )}
-      </header>
+      <VacancyTemplatePageHeader
+        headingKey="editTemplate.heading"
+        refNumber={refNumber}
+        onBack={handleCancel}
+      />
 
       {/* Body */}
       <div className="flex-1 overflow-y-auto px-7 pb-6">

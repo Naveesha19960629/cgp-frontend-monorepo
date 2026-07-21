@@ -70,6 +70,9 @@ const createEmptyRow = (): SkillCareerPathEntry => ({
 
 const normalize = (value: string) => value.trim().toLowerCase();
 
+const hasSkillName = (entry: SkillCareerPathEntry): boolean =>
+  Boolean(entry.skillName.trim());
+
 /**
  * Levels already taken by *other* rows that share the same skill + career path
  * as the row at `index`. Those levels are frozen in this row's Level dropdown so
@@ -274,7 +277,7 @@ function PreferredSkillRow({
 
   const handleCareerPathAddNew = (text: string) => {
     const trimmed = text.trim();
-    const existing = careerPaths.find(
+    const existing = careerPaths.some(
       cp => cp.label.toLowerCase() === trimmed.toLowerCase()
     );
     if (!existing) {
@@ -449,6 +452,12 @@ export default function PreferredSkillsStep({
     return existing.length > 0 ? existing : [createEmptyRow()];
   });
   const [rowErrors, setRowErrors] = useState<Record<number, RowError>>({});
+  // Stable per-row identity for React keys — `rows` has no id of its own (it's
+  // the exact payload shape sent to the backend), so a fresh key is minted
+  // whenever a row is added or the list is reset, and dropped when removed.
+  const [rowKeys, setRowKeys] = useState<string[]>(() =>
+    rows.map(() => crypto.randomUUID())
+  );
 
   const { data: jobLevelsData, isLoading: isJobLevelsLoading } =
     useJobLevelsQuery();
@@ -458,10 +467,7 @@ export default function PreferredSkillsStep({
     useCreateSkillCareerPathMutation();
   const { mutateAsync: createCareerPath } = useCreateCareerPathMutation();
 
-  const populatedRows = useMemo(
-    () => rows.filter(r => r.skillName.trim()),
-    [rows]
-  );
+  const populatedRows = useMemo(() => rows.filter(hasSkillName), [rows]);
 
   useStepGuard(
     isEnabled && !dataTakenFromCandidate && populatedRows.length === 0
@@ -476,7 +482,7 @@ export default function PreferredSkillsStep({
         preferredSkills: {
           isEnabled,
           dataTakenFromCandidate,
-          skills: rows.filter(r => r.skillName.trim()),
+          skills: rows.filter(hasSkillName),
         },
       }));
     };
@@ -528,6 +534,7 @@ export default function PreferredSkillsStep({
 
   const handleRemoveRow = (index: number) => {
     setRows(prev => prev.filter((_, i) => i !== index));
+    setRowKeys(prev => prev.filter((_, i) => i !== index));
     setRowErrors({});
   };
 
@@ -541,6 +548,7 @@ export default function PreferredSkillsStep({
       });
       return;
     }
+    setRowKeys(prev => [...prev, crypto.randomUUID()]);
     setRows(prev => [...prev, createEmptyRow()]);
   };
 
@@ -575,7 +583,7 @@ export default function PreferredSkillsStep({
       return;
     }
 
-    let resolvedSkills = rows.filter(r => r.skillName.trim());
+    let resolvedSkills = rows.filter(hasSkillName);
 
     if (isEnabled && !dataTakenFromCandidate) {
       // Multiple rows may share the same skill + career path (with different
@@ -683,6 +691,11 @@ export default function PreferredSkillsStep({
           return { ...entry, ...resolved };
         })
       );
+      setRowKeys(prev =>
+        resolvedSkills.length > 0
+          ? resolvedSkills.map((_, i) => prev[i] ?? crypto.randomUUID())
+          : [crypto.randomUUID()]
+      );
       setRows(resolvedSkills.length > 0 ? resolvedSkills : [createEmptyRow()]);
     }
 
@@ -709,7 +722,10 @@ export default function PreferredSkillsStep({
   const disabledLevelsPerRow = rows.map((_, i) => usedLevelIdsFor(rows, i));
 
   return (
-    <div className="flex min-h-full flex-1 flex-col" data-testid="preferredSkills-section-form">
+    <div
+      className="flex min-h-full flex-1 flex-col"
+      data-testid="preferredSkills-section-form"
+    >
       {/* ── Section Header ──────────────────────────────────────────── */}
       <div className="flex items-center justify-between px-7 py-8">
         <div className="flex items-center gap-2">
@@ -763,6 +779,7 @@ export default function PreferredSkillsStep({
               checked={dataTakenFromCandidate}
               onCheckedChange={checked => {
                 if (checked) {
+                  setRowKeys([crypto.randomUUID()]);
                   setRows([createEmptyRow()]);
                   setRowErrors({});
                   setDataTakenFromCandidate(true);
@@ -787,7 +804,7 @@ export default function PreferredSkillsStep({
               <div className="flex flex-col gap-7">
                 {rows.map((row, index) => (
                   <PreferredSkillRow
-                    key={index}
+                    key={rowKeys[index] ?? index}
                     entry={row}
                     index={index}
                     isRemovable={index > 0}
@@ -830,6 +847,7 @@ export default function PreferredSkillsStep({
           if (!open) setConfirmDisableOpen(false);
         }}
         onConfirm={() => {
+          setRowKeys([crypto.randomUUID()]);
           setRows([createEmptyRow()]);
           setRowErrors({});
           setDataTakenFromCandidate(false);

@@ -19,6 +19,12 @@ interface ToastProps {
   type?: 'success' | 'error' | 'warning';
 }
 
+const TOAST_TEST_IDS: Partial<Record<NonNullable<ToastProps['type']>, string>> =
+  {
+    success: 'toast-success-message',
+    error: 'toast-error-message',
+  };
+
 function Toast({
   id,
   dismissIds,
@@ -39,13 +45,7 @@ function Toast({
       onKeyDown={e => e.stopPropagation()}
     >
       <div
-        data-testid={
-          type === 'success'
-            ? 'toast-success-message'
-            : type === 'error'
-              ? 'toast-error-message'
-              : undefined
-        }
+        data-testid={type ? TOAST_TEST_IDS[type] : undefined}
         className="relative z-9999 rounded-2xl bg-white"
         style={{ fontFamily: 'Plus Jakarta Sans Variable, sans-serif' }}
       >

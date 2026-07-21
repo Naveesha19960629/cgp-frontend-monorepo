@@ -19,6 +19,7 @@ export {
   TWELVE_HOUR_TIME_REGEX,
   TWENTY_FOUR_HOUR_TIME_REGEX,
   TEMPLATE_SKELETON_COUNT,
+  TEMPLATES_LIST_ROUTE,
 } from '@/views/vacancies/utils/constants';
 export {
   isUrlProtocolValid,

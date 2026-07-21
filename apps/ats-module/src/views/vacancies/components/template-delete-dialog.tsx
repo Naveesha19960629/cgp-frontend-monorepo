@@ -25,7 +25,7 @@ export default function TemplateDeleteDialog({
   onOpenChange,
   onConfirm,
   isDeleting = false,
-}: TemplateDeleteDialogProps) {
+}: Readonly<TemplateDeleteDialogProps>) {
   const { t } = useTranslation('ats');
 
   return (

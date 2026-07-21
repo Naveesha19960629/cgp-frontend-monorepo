@@ -81,7 +81,7 @@ function QuestionCard({
               <div className="flex flex-wrap gap-3">
                 {question.options.map((option, index) => (
                   <Badge
-                    key={index}
+                    key={`${option}-${index}`}
                     variant="chip"
                     className="max-w-full wrap-break-word whitespace-normal"
                   >

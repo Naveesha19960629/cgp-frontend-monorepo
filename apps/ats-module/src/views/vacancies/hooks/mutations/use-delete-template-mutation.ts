@@ -8,7 +8,7 @@ const useDeleteTemplateMutation = () => {
   return useMutation({
     mutationFn: (id: string) => vacancyTemplateService.deleteTemplate(id),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['vacancy-templates'] });
+      queryClient.invalidateQueries({ queryKey: ['vacancy-templates'] });
     },
   });
 };
