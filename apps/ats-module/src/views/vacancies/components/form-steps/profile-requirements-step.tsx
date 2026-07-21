@@ -108,6 +108,19 @@ function toPlaceOption(item?: { id?: string; label?: string }): {
   return { id: item?.id || label, label };
 }
 
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * A real backend ref id is a UUID, optionally a compound "uuid|uuid" whose
+ * leading segment is a UUID. A bare label ("Vietnam") or a Google Place id
+ * ("ChIJ…") is NOT a valid state/country ref id — those must be resolved via
+ * the dedicated STATE/COUNTRY endpoints before they can be sent to the backend.
+ */
+function isValidRefId(id?: string): boolean {
+  return !!id && UUID_RE.test(id.split('|')[0]);
+}
+
 /**
  * Removes options that render the same breadcrumb label (case-insensitive),
  * keeping the first occurrence. This collapses a prepended saved value against
@@ -123,6 +136,26 @@ function dedupeOptions(options: ComboboxOption[]): ComboboxOption[] {
   });
 }
 
+/**
+ * Builds a comparison key for an address from its normalised labels (+ postal),
+ * not its ids. The same place can carry different ids at different moments — a
+ * label-only fallback before the ref id resolves, a Google Place id vs a
+ * compound "uuid|uuid", etc. — so comparing ids lets visually-identical entries
+ * slip past duplicate detection. Labels are what the user sees as "the same".
+ */
+function addressKey(
+  addr: ProfileRequirementsFormValues['addresses'][number]
+): string {
+  return [
+    shortLabel(addr.city.label),
+    shortLabel(addr.stateProvince.label),
+    shortLabel(addr.country.label),
+    addr.postalCode.trim(),
+  ]
+    .join('|')
+    .toLowerCase();
+}
+
 function isDuplicateAddress(
   addresses: ProfileRequirementsFormValues['addresses'],
   newIndex: number
@@ -130,18 +163,14 @@ function isDuplicateAddress(
   const target = addresses[newIndex];
   if (!target) return false;
   const hasValue =
-    target.city.id ||
-    target.stateProvince.id ||
-    target.country.id ||
+    target.city.label.trim() ||
+    target.stateProvince.label.trim() ||
+    target.country.label.trim() ||
     target.postalCode.trim();
   if (!hasValue) return false;
+  const targetKey = addressKey(target);
   return addresses.some(
-    (addr, i) =>
-      i !== newIndex &&
-      addr.city.id === target.city.id &&
-      addr.stateProvince.id === target.stateProvince.id &&
-      addr.country.id === target.country.id &&
-      addr.postalCode.trim() === target.postalCode.trim()
+    (addr, i) => i !== newIndex && addressKey(addr) === targetKey
   );
 }
 
@@ -191,7 +220,8 @@ function AddressCard({
     id?: string;
     label?: string;
   }): Promise<{ id: string; label: string }> => {
-    if (item?.id) return { id: item.id, label: item.label ?? '' };
+    if (isValidRefId(item?.id))
+      return { id: item!.id!, label: item?.label ?? '' };
     const search = shortLabel(item?.label);
     if (!search) return { id: '', label: '' };
     try {
@@ -216,7 +246,8 @@ function AddressCard({
     item?: { id?: string; label?: string },
     countryLabel?: string
   ): Promise<{ id: string; label: string }> => {
-    if (item?.id) return { id: item.id, label: item.label ?? '' };
+    if (isValidRefId(item?.id))
+      return { id: item!.id!, label: item?.label ?? '' };
     const search = shortLabel(item?.label);
     if (!search) return { id: '', label: '' };
     try {
