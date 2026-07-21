@@ -376,7 +376,7 @@ export default function JobRequirementsStep({ onNext }: Readonly<StepProps>) {
           onSubmit={e => {
             void form.handleSubmit(handleSubmit)(e);
           }}
-          className="flex flex-col"
+          className="flex min-h-full flex-1 flex-col"
         >
           <MessageBox
             fields={[
@@ -1249,7 +1249,7 @@ export default function JobRequirementsStep({ onNext }: Readonly<StepProps>) {
             </div>
           </div>
 
-          <div className="sticky bottom-0 flex items-center justify-end gap-4 bg-white px-6 py-7 shadow-[0px_-8px_6.8px_0px_rgba(0,0,0,0.04)]">
+          <div className="sticky bottom-0 mt-auto flex items-center justify-end gap-4 bg-white px-6 py-7 shadow-[0px_-8px_6.8px_0px_rgba(0,0,0,0.04)]">
             <Button
               type="button"
               variant="secondary"

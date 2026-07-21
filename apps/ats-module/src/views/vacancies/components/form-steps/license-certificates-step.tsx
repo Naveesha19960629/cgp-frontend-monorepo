@@ -35,6 +35,7 @@ import {
   formatLocalDate,
 } from '@/views/vacancies/utils/date-timezone-safe';
 
+import { CharacterCount } from '@cgp/ui-kit/components/character-count';
 import { ErrorToast } from '@cgp/ui-kit/components/custom-toast';
 import MultipleSelector from '@cgp/ui-kit/components/multi-select';
 import { Button } from '@cgp/ui-kit/components/ui/button';
@@ -212,6 +213,9 @@ export default function LicenseCertificatesStep({
       stepDisableRef.current = null;
     };
   }, [setForm, stepDisableRef]);
+
+  // ── Creatable input tracking (for character count) ──────────────────────
+  const [nameOfLicenseCertInput, setNameOfLicenseCertInput] = useState('');
 
   // ── Add License/Cert dialog state ────────────────────────────────────────
   const addLicenseCertMutation = useAddLicenseCertificateMutation();
@@ -520,13 +524,17 @@ export default function LicenseCertificatesStep({
               <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
                 {isFieldVisible('nameOfLicenseCert') && (
                   <div className="flex min-w-0 flex-col gap-1">
-                    <div className="flex h-5 items-center">
+                    <div className="flex min-w-0 items-center justify-between gap-2">
                       <Label
                         data-testid="licenseCertificates-nameOfLicenseCert-label"
                         className="shrink-0"
                       >
                         {t('licenseCertificates.nameOfLicenseCert')}
                       </Label>
+                      <CharacterCount
+                        currentLength={nameOfLicenseCertInput.length}
+                        maxLength={200}
+                      />
                     </div>
                     <Controller
                       control={control}
@@ -559,6 +567,7 @@ export default function LicenseCertificatesStep({
                             }
                             if (options.length <= MAX_SELECTIONS)
                               clearMax('nameOfLicenseCert');
+                            setNameOfLicenseCertInput('');
                             const newItem = options.find(
                               o => o.value === o.label
                             );
@@ -606,6 +615,11 @@ export default function LicenseCertificatesStep({
                               </div>
                             </div>
                           }
+                          inputProps={{
+                            maxLength: 200,
+                            onValueChange: val =>
+                              setNameOfLicenseCertInput(val),
+                          }}
                           placeholder={t(
                             'licenseCertificates.placeholders.nameOfLicenseCert'
                           )}

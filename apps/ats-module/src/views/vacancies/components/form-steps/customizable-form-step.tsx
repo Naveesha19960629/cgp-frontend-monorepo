@@ -1011,8 +1011,9 @@ export default function CustomizableFormStep({
         if (f.id !== formId) return f;
         return {
           ...f,
-          // Reverse chronological order — newest question first (DQCGP-2303 AC 3.1.1).
-          questions: [createQuestion(f.nextQuestionId), ...f.questions],
+          // Chronological order — newest question appended at the end, matching
+          // form ordering (DQCGP-2303 comment 2026-07-17, supersedes AC 3.1.1).
+          questions: [...f.questions, createQuestion(f.nextQuestionId)],
           nextQuestionId: f.nextQuestionId + 1,
         };
       })
