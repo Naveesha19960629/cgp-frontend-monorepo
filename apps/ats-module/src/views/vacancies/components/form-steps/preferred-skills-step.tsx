@@ -709,7 +709,10 @@ export default function PreferredSkillsStep({
   const disabledLevelsPerRow = rows.map((_, i) => usedLevelIdsFor(rows, i));
 
   return (
-    <div className="flex min-h-full flex-1 flex-col" data-testid="preferredSkills-section-form">
+    <div
+      className="flex min-h-full flex-1 flex-col"
+      data-testid="preferredSkills-section-form"
+    >
       {/* ── Section Header ──────────────────────────────────────────── */}
       <div className="flex items-center justify-between px-7 py-8">
         <div className="flex items-center gap-2">
