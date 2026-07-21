@@ -335,7 +335,11 @@ function AddressCard({
                     value={field.value?.id ?? ''}
                     selectedLabel={
                       field.value?.label
-                        ? shortLabel(field.value.label)
+                        ? buildFullLabel(
+                            field.value.label,
+                            stateValue?.label,
+                            countryValue?.label
+                          )
                         : undefined
                     }
                     onValueChange={handleCitySelect}
@@ -372,7 +376,7 @@ function AddressCard({
                     value={field.value?.id ?? ''}
                     selectedLabel={
                       field.value?.label
-                        ? shortLabel(field.value.label)
+                        ? buildFullLabel(field.value.label, countryValue?.label)
                         : undefined
                     }
                     onValueChange={handleStateSelect}
