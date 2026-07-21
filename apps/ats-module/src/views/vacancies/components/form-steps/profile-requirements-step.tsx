@@ -15,6 +15,7 @@ import {
   useVacancyForm,
 } from '@/views/vacancies/context/vacancy-form-context';
 import {
+  PLACES_STALE_TIME,
   useDisableSuccessToast,
   useGendersQuery,
   useMaritalStatusesQuery,
@@ -228,7 +229,7 @@ function AddressCard({
       const results = await queryClient.fetchQuery({
         queryKey: ['places', 'country', search],
         queryFn: () => placesService.getByCountry(search),
-        staleTime: 5 * 60 * 1000,
+        staleTime: PLACES_STALE_TIME,
       });
       const match =
         results.find(
@@ -254,7 +255,7 @@ function AddressCard({
       const results = await queryClient.fetchQuery({
         queryKey: ['places', 'state', search],
         queryFn: () => placesService.getByState(search),
-        staleTime: 5 * 60 * 1000,
+        staleTime: PLACES_STALE_TIME,
       });
       const country = shortLabel(countryLabel).toLowerCase();
       const match =
