@@ -44,6 +44,7 @@ export { default as TemplatesToolbar } from '@/views/vacancies/components/templa
 export { default as TemplateEmptyState } from '@/views/vacancies/components/template-empty-state';
 export { default as TemplateSearchEmptyState } from '@/views/vacancies/components/template-search-empty-state';
 export { default as TemplateDeleteDialog } from '@/views/vacancies/components/template-delete-dialog';
+export { default as TemplateCancelDialog } from '@/views/vacancies/components/template-cancel-dialog';
 export { default as FieldToggle } from '@/views/vacancies/components/field-toggle';
 export { default as SectionCard } from '@/views/vacancies/components/section-card';
 export * from '@/views/vacancies/components/view-vacancy';

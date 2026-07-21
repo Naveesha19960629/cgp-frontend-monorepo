@@ -1052,6 +1052,12 @@ interface VacancyEditCancelDialogProps {
   onConfirm: () => void;
 }
 
+interface TemplateCancelDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onConfirm: () => void;
+}
+
 interface VacancyRescheduleConfirmDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -2064,6 +2070,7 @@ export type {
   VacancyCancelDialogProps,
   VacancyDeleteDialogProps,
   VacancyEditCancelDialogProps,
+  TemplateCancelDialogProps,
   VacancyRescheduleConfirmDialogProps,
   VacancyNoRescheduleConfirmDialogProps,
   VacancyToggleAction,
