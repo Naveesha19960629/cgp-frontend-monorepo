@@ -11,6 +11,11 @@ import {
   AUTO_INCLUDED_SECTION_FIELD_CODES,
   TEMPLATE_SECTIONS,
 } from '@/views/vacancies/utils/vacancy-template-config';
+import {
+  collectFieldFlags,
+  isRecord,
+  unwrapSection,
+} from '@/views/vacancies/utils/vacancy-template-tree-helpers';
 
 /** Builds the initial form state: all toggles off, all checkboxes unchecked. */
 export function createInitialTemplateFormState(): TemplateFormState {
@@ -135,34 +140,6 @@ export function toUpdateTemplatePayload(
   };
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
-/**
- * Flattens a section `content` map into `fieldCode -> enabled`. Most fields sit
- * at the top level, but some sections nest fields inside a group array/object
- * (e.g. `profileRequirement` wraps the address fields in a `content.addresses`
- * array). We descend into nested objects/arrays and lift every leaf boolean up
- * by its field code — mirrors `collectFieldFlags` in the Use-Template mapper.
- */
-function collectFieldFlags(
-  node: Record<string, unknown>,
-  out: Record<string, boolean>
-): void {
-  for (const [code, value] of Object.entries(node)) {
-    if (typeof value === 'boolean') {
-      out[code] = value;
-    } else if (Array.isArray(value)) {
-      for (const item of value) {
-        if (isRecord(item)) collectFieldFlags(item, out);
-      }
-    } else if (isRecord(value)) {
-      collectFieldFlags(value, out);
-    }
-  }
-}
-
 /**
  * Reverse of {@link buildTemplateData}: rehydrates the Edit Template form state
  * from the `requestBody` returned by GET /vacancy-templates/{id}.
@@ -181,10 +158,7 @@ export function toTemplateFormStateFromResponse(
   const data = isRecord(requestBody?.data) ? requestBody.data : {};
 
   for (const section of TEMPLATE_SECTIONS) {
-    const raw = data[section.key];
-    const entry = isRecord(Array.isArray(raw) ? raw[0] : raw)
-      ? ((Array.isArray(raw) ? raw[0] : raw) as Record<string, unknown>)
-      : null;
+    const entry = unwrapSection(data[section.key]);
     if (!entry) continue;
 
     const sectionState = state.sections[section.key];

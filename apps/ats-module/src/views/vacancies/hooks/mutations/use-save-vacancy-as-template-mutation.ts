@@ -10,7 +10,7 @@ const useSaveVacancyAsTemplateMutation = () => {
     mutationFn: (payload: SaveVacancyAsTemplatePayload) =>
       vacancyTemplateService.saveVacancyAsTemplate(payload),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['vacancy-templates'] });
+      queryClient.invalidateQueries({ queryKey: ['vacancy-templates'] });
     },
   });
 };

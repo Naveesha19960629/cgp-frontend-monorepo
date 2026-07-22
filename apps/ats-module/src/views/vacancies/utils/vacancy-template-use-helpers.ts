@@ -22,6 +22,11 @@ import {
   MANDATORY_TEMPLATE_STEP_KEYS,
   SECTION_KEY_TO_STEP_KEY,
 } from '@/views/vacancies/utils/vacancy-template-config';
+import {
+  collectFieldFlags,
+  isRecord,
+  unwrapSection,
+} from '@/views/vacancies/utils/vacancy-template-tree-helpers';
 
 interface TemplateUseMapResult {
   form: VacancyForm;
@@ -31,42 +36,6 @@ interface TemplateUseMapResult {
 
 interface SectionFlags {
   dataTakenFromCandidate: boolean;
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
-/** Sections serialise as a single object or a one-item array; unwrap to the object. */
-function unwrapSection(value: unknown): Record<string, unknown> | null {
-  const entry: unknown = Array.isArray(value) ? value[0] : value;
-  return isRecord(entry) ? entry : null;
-}
-
-/**
- * Flattens a section `content` map into `fieldCode -> visibility`. Most fields
- * sit at the top level, but some sections wrap their fields in a nested group
- * array/object (e.g. `profileRequirement` nests the address fields inside an
- * `addresses` array: `content.addresses[0].{cityRefId,stateRefId,...}`). We
- * descend into nested objects/arrays and lift every leaf boolean up by its
- * field code so `useTemplateFieldVisible` can resolve it — otherwise gated
- * fields like `stateRefId` stay hidden even when the template enabled them.
- */
-function collectFieldFlags(
-  node: Record<string, unknown>,
-  out: Record<string, boolean>
-): void {
-  for (const [code, value] of Object.entries(node)) {
-    if (typeof value === 'boolean') {
-      out[code] = value;
-    } else if (Array.isArray(value)) {
-      for (const item of value) {
-        if (isRecord(item)) collectFieldFlags(item, out);
-      }
-    } else if (isRecord(value)) {
-      collectFieldFlags(value, out);
-    }
-  }
 }
 
 function readContentFlags(

@@ -20,8 +20,8 @@ const useUpdateTemplateMutation = () => {
         toUpdateTemplatePayload(state, templateName)
       ),
     onSuccess: (_data, { id }) => {
-      void queryClient.invalidateQueries({ queryKey: ['vacancy-templates'] });
-      void queryClient.invalidateQueries({
+      queryClient.invalidateQueries({ queryKey: ['vacancy-templates'] });
+      queryClient.invalidateQueries({
         queryKey: ['vacancy-template', id],
       });
     },

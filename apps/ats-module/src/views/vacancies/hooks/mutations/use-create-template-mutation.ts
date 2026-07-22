@@ -24,8 +24,8 @@ const useCreateTemplateMutation = () => {
         toCreateTemplatePayload(state, templateName, refNumber)
       ),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['vacancy-templates'] });
-      void queryClient.invalidateQueries({
+      queryClient.invalidateQueries({ queryKey: ['vacancy-templates'] });
+      queryClient.invalidateQueries({
         queryKey: NEXT_TEMPLATE_NAME_QUERY_KEY,
       });
     },

@@ -68,6 +68,8 @@ const TWENTY_FOUR_HOUR_TIME_REGEX = /^(\d{2}):(\d{2})(?::(\d{2}))?$/;
 
 const TEMPLATE_SKELETON_COUNT = 8;
 
+const TEMPLATES_LIST_ROUTE = '/dashboard/ats/templates';
+
 export {
   URL_PROTOCOL_HTTP,
   URL_PROTOCOL_HTTPS,
@@ -80,4 +82,5 @@ export {
   TWELVE_HOUR_TIME_REGEX,
   TWENTY_FOUR_HOUR_TIME_REGEX,
   TEMPLATE_SKELETON_COUNT,
+  TEMPLATES_LIST_ROUTE,
 };
