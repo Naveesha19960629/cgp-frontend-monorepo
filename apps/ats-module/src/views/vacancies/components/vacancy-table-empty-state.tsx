@@ -20,6 +20,15 @@ export default function VacancyTableEmptyState() {
   const { t } = useTranslation('ats');
   const navigate = useNavigate();
 
+  const skeletonColumnKeys = Array.from(
+    { length: 7 },
+    (_, i) => `skeleton-col-${i}`
+  );
+  const skeletonRowKeys = Array.from(
+    { length: TABLE_PAGE_SIZE },
+    (_, i) => `skeleton-row-${i}`
+  );
+
   return (
     <div className="relative h-full overflow-hidden rounded-md border border-slate-200">
       {/* Non-scrollable skeleton table background */}
@@ -41,9 +50,9 @@ export default function VacancyTableEmptyState() {
               className="h-11 border-b border-slate-200 bg-slate-100"
               style={{ minWidth: 317, width: 'auto' }}
             />
-            {Array.from({ length: 7 }).map((_, i) => (
+            {skeletonColumnKeys.map(columnKey => (
               <th
-                key={i}
+                key={columnKey}
                 className="h-11 border-b border-slate-200 bg-slate-100"
                 style={{ width: 189, minWidth: 189 }}
               />
@@ -51,8 +60,8 @@ export default function VacancyTableEmptyState() {
           </tr>
         </thead>
         <tbody>
-          {Array.from({ length: TABLE_PAGE_SIZE }).map((_, rowIndex) => (
-            <tr key={rowIndex} className="h-18">
+          {skeletonRowKeys.map((rowKey, rowIndex) => (
+            <tr key={rowKey} className="h-18">
               <td
                 className={cn(
                   'px-6 py-4',
@@ -79,9 +88,9 @@ export default function VacancyTableEmptyState() {
                   )}
                 />
               </td>
-              {Array.from({ length: 7 }).map((_, colIndex) => (
+              {skeletonColumnKeys.map((columnKey, _colIndex) => (
                 <td
-                  key={colIndex}
+                  key={columnKey}
                   className={cn(
                     'px-6 py-4',
                     rowIndex < TABLE_PAGE_SIZE - 1 &&
