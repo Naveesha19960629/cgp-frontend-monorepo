@@ -63,21 +63,29 @@ export function AddLicenseCertDialog({
     if (!isOpen) onClose();
   };
 
-  const nameLabel =
-    certType === 'LICENSE'
-      ? t('licenseCertificates.addLicenseCertDialog.nameLicense')
-      : certType === 'CERTIFICATION'
-        ? t('licenseCertificates.addLicenseCertDialog.nameCertification')
-        : t('licenseCertificates.addLicenseCertDialog.nameDefault');
+  let nameLabel: string;
+  if (certType === 'LICENSE') {
+    nameLabel = t('licenseCertificates.addLicenseCertDialog.nameLicense');
+  } else if (certType === 'CERTIFICATION') {
+    nameLabel = t('licenseCertificates.addLicenseCertDialog.nameCertification');
+  } else {
+    nameLabel = t('licenseCertificates.addLicenseCertDialog.nameDefault');
+  }
 
-  const namePlaceholder =
-    certType === 'LICENSE'
-      ? t('licenseCertificates.addLicenseCertDialog.namePlaceholderLicense')
-      : certType === 'CERTIFICATION'
-        ? t(
-            'licenseCertificates.addLicenseCertDialog.namePlaceholderCertification'
-          )
-        : t('licenseCertificates.addLicenseCertDialog.namePlaceholderDefault');
+  let namePlaceholder: string;
+  if (certType === 'LICENSE') {
+    namePlaceholder = t(
+      'licenseCertificates.addLicenseCertDialog.namePlaceholderLicense'
+    );
+  } else if (certType === 'CERTIFICATION') {
+    namePlaceholder = t(
+      'licenseCertificates.addLicenseCertDialog.namePlaceholderCertification'
+    );
+  } else {
+    namePlaceholder = t(
+      'licenseCertificates.addLicenseCertDialog.namePlaceholderDefault'
+    );
+  }
 
   const handleAdd = () => {
     let hasError = false;

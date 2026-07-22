@@ -23,8 +23,8 @@ import {
   useStepGuard,
 } from '@/views/vacancies/hooks';
 import type {
+  PreferredHonoursAwardsSchema,
   StepProps,
-  preferredHonoursAwardsSchema,
 } from '@/views/vacancies/types';
 import { resolveUserCreatedOrganizations } from '@/views/vacancies/utils';
 import { DATE_DISPLAY_FORMAT } from '@/views/vacancies/utils/constants';
@@ -65,7 +65,7 @@ const multiSelectInfoAvatar = new URL(
   import.meta.url
 ).href;
 
-function hasHonoursData(data: preferredHonoursAwardsSchema): boolean {
+function hasHonoursData(data: PreferredHonoursAwardsSchema): boolean {
   return data.honoursAndAwards.some(
     honour =>
       honour.title.trim().length > 0 ||
@@ -79,7 +79,7 @@ function hasHonoursData(data: preferredHonoursAwardsSchema): boolean {
 
 interface HonoursAndAwardsCardProps {
   index: number;
-  form: UseFormReturn<preferredHonoursAwardsSchema>;
+  form: UseFormReturn<PreferredHonoursAwardsSchema>;
   onRemove: () => void;
   onOpenAddOrganizationDialog: (name: string, honorIndex: number) => void;
 }
@@ -727,7 +727,7 @@ export default function PreferredHonoursAwardsStep({
   const canNavigate =
     !isEnabled || dataTakenFromCandidate || hasHonoursData(form.getValues());
 
-  const persistCurrentStepData = (data: preferredHonoursAwardsSchema) => {
+  const persistCurrentStepData = (data: PreferredHonoursAwardsSchema) => {
     setForm(prev => ({
       ...prev,
       preferredHonoursAwards: {
@@ -782,7 +782,7 @@ export default function PreferredHonoursAwardsStep({
     });
   };
 
-  const handleSubmit = async (data: preferredHonoursAwardsSchema) => {
+  const handleSubmit = async (data: PreferredHonoursAwardsSchema) => {
     if (
       data.isEnabled &&
       !data.dataTakenFromCandidate &&

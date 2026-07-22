@@ -6,12 +6,12 @@ import type { VacancyViewModel } from '@/views/vacancies/types';
 
 function VacancyIndustriesSection({
   preferredIndustries,
-}: {
-  preferredIndustries?: VacancyViewModel['preferredIndustries'];
-}) {
+}: Readonly<{
+  preferredIndustries: VacancyViewModel['preferredIndustries'];
+}>) {
   const { t } = useTranslation('ats');
 
-  if (!preferredIndustries || !preferredIndustries.isEnabled) {
+  if (!preferredIndustries?.isEnabled) {
     return null;
   }
 

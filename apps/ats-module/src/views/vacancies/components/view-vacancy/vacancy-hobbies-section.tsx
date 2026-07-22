@@ -6,12 +6,12 @@ import type { VacancyViewModel } from '@/views/vacancies/types';
 
 function VacancyHobbiesSection({
   preferredHobbies,
-}: {
-  preferredHobbies?: VacancyViewModel['preferredHobbies'];
-}) {
+}: Readonly<{
+  preferredHobbies: VacancyViewModel['preferredHobbies'];
+}>) {
   const { t } = useTranslation('ats');
 
-  if (!preferredHobbies || !preferredHobbies.isEnabled) {
+  if (!preferredHobbies?.isEnabled) {
     return null;
   }
 

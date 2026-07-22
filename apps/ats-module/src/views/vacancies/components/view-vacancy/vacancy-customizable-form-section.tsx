@@ -29,11 +29,11 @@ function MetaField({
   label,
   value,
   className = '',
-}: {
+}: Readonly<{
   label: string;
   value: string;
   className?: string;
-}) {
+}>) {
   return (
     <div className={`flex min-w-0 flex-col gap-1.5 ${className}`}>
       <p className="text-sm font-semibold wrap-break-word text-slate-500">
@@ -48,9 +48,9 @@ function MetaField({
 
 function QuestionCard({
   question,
-}: {
+}: Readonly<{
   question: VacancyViewCustomizableFormQuestion;
-}) {
+}>) {
   const { t } = useTranslation('ats');
 
   const typeLabel = question.type
@@ -137,9 +137,9 @@ function QuestionCard({
 
 function VacancyCustomizableFormSection({
   customizableForm,
-}: {
-  customizableForm?: VacancyViewModel['customizableForm'];
-}) {
+}: Readonly<{
+  customizableForm: VacancyViewModel['customizableForm'];
+}>) {
   const { t } = useTranslation('ats');
 
   if (
@@ -159,7 +159,7 @@ function VacancyCustomizableFormSection({
 
       {customizableForm.forms.map((form, formIndex) => (
         <article
-          key={formIndex}
+          key={`${form.title || 'untitled'}-${formIndex}`}
           className="flex flex-col gap-4 rounded-[12px] bg-white p-4"
         >
           <div className="flex items-center gap-1 text-sm">
@@ -175,7 +175,10 @@ function VacancyCustomizableFormSection({
 
           <div className="flex flex-col gap-4">
             {form.questions.map((question, qIndex) => (
-              <QuestionCard key={qIndex} question={question} />
+              <QuestionCard
+                key={`${question.text || 'question'}-${qIndex}`}
+                question={question}
+              />
             ))}
           </div>
         </article>
