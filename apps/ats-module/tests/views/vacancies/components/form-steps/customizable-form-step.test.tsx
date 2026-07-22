@@ -980,4 +980,71 @@ describe('CustomizableFormStep', () => {
       expect(questionInputs[1]).toHaveValue('');
     });
   });
+
+  describe('Question Management', () => {
+    it('duplicates a question when the duplicate button is clicked', async () => {
+      const user = userEvent.setup();
+      renderComponent();
+
+      await user.click(getSectionToggle());
+
+      const questionInput = screen.getByPlaceholderText('Question');
+      await user.type(questionInput, 'Original question');
+
+      await user.click(
+        screen.getByRole('button', { name: 'Duplicate question' })
+      );
+
+      const questionInputs = screen.getAllByPlaceholderText('Question');
+      expect(questionInputs).toHaveLength(2);
+      expect(questionInputs[0]).toHaveValue('Original question');
+      expect(questionInputs[1]).toHaveValue('Original question');
+    });
+
+    it('does not duplicate an empty question', async () => {
+      const user = userEvent.setup();
+      renderComponent();
+
+      await user.click(getSectionToggle());
+
+      expect(
+        screen.getByRole('button', { name: 'Duplicate question' })
+      ).toBeDisabled();
+    });
+
+    it('removes a question when the delete button is clicked, but disables deletion when only 1 question remains', async () => {
+      const user = userEvent.setup();
+      renderComponent();
+
+      await user.click(getSectionToggle());
+
+      const deleteButtonsInitial = screen.getAllByRole('button', {
+        name: 'Delete question',
+      });
+      expect(deleteButtonsInitial[0]).toBeDisabled();
+
+      await user.click(screen.getByRole('button', { name: 'Create Question' }));
+
+      const deleteButtonsAfterAdd = screen.getAllByRole('button', {
+        name: 'Delete question',
+      });
+      expect(deleteButtonsAfterAdd).toHaveLength(2);
+      expect(deleteButtonsAfterAdd[0]).toBeEnabled();
+
+      await user.click(deleteButtonsAfterAdd[1]);
+
+      const confirmButton = screen.getByRole('button', {
+        name: 'customizableForm.deleteQuestionModal.delete',
+      });
+      await user.click(confirmButton);
+
+      const questionInputs = screen.getAllByPlaceholderText('Question');
+      expect(questionInputs).toHaveLength(1);
+
+      const deleteButtonsFinal = screen.getAllByRole('button', {
+        name: 'Delete question',
+      });
+      expect(deleteButtonsFinal[0]).toBeDisabled();
+    });
+  });
 });

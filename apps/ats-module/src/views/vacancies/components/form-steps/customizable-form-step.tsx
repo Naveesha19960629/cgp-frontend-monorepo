@@ -983,7 +983,7 @@ export default function CustomizableFormStep({
     const parseTitle = (title: string) => {
       if (title.startsWith(prefix)) {
         const remaining = title.slice(prefix.length);
-        const suffixMatch = /^(.*?)\s*\((\d+)\)$/.exec(remaining);
+        const suffixMatch = /^(.*?)\((\d+)\)$/.exec(remaining);
         if (suffixMatch) {
           return {
             baseTitle: prefix + suffixMatch[1].trim(),
