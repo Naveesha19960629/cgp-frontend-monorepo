@@ -1,5 +1,6 @@
 import { Loader2 } from 'lucide-react';
 
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { VacancyToggleStatusDialogProps } from '@/views/vacancies/types';
@@ -27,9 +28,18 @@ export default function VacancyToggleStatusDialog({
   onConfirm,
   onSchedule,
   isToggling = false,
-}: VacancyToggleStatusDialogProps) {
+}: Readonly<VacancyToggleStatusDialogProps>) {
   const { t } = useTranslation('ats');
   const isActivate = action === 'ACTIVATE';
+
+  let confirmButtonContent: ReactNode;
+  if (isToggling) {
+    confirmButtonContent = <Loader2 className="size-4 animate-spin" />;
+  } else if (isActivate) {
+    confirmButtonContent = t('vacancies.toggleStatusDialog.activate');
+  } else {
+    confirmButtonContent = t('vacancies.toggleStatusDialog.deactivate');
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -93,15 +103,7 @@ export default function VacancyToggleStatusDialog({
               applyTypography('h5')
             )}
           >
-            {isToggling ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : (
-              t(
-                isActivate
-                  ? 'vacancies.toggleStatusDialog.activate'
-                  : 'vacancies.toggleStatusDialog.deactivate'
-              )
-            )}
+            {confirmButtonContent}
           </Button>
         </div>
       </DialogContent>

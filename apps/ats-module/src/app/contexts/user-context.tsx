@@ -4,6 +4,7 @@ import {
   startTransition,
   useContext,
   useEffect,
+  useMemo,
   useState,
 } from 'react';
 
@@ -39,7 +40,7 @@ function useUser(): UserContextValue {
   return ctx;
 }
 
-function UserProvider({ children }: { children: ReactNode }) {
+function UserProvider({ children }: Readonly<{ children: ReactNode }>) {
   const { keycloak, initialized } = useKeycloak();
   const isLoggedIn = initialized && keycloak.authenticated === true;
   const [user, setUser] = useState<User | null>(null);
@@ -95,8 +96,10 @@ function UserProvider({ children }: { children: ReactNode }) {
     );
   }, [initialized, isLoggedIn, keycloak]);
 
+  const contextValue = useMemo<UserContextValue>(() => ({ user }), [user]);
+
   return (
-    <UserContext.Provider value={{ user }}>{children}</UserContext.Provider>
+    <UserContext.Provider value={contextValue}>{children}</UserContext.Provider>
   );
 }
 

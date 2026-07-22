@@ -48,10 +48,21 @@ export default function VacancyTablePagination({
   currentPage,
   totalPages,
   onPageChange,
-}: VacancyTablePaginationProps) {
+}: Readonly<VacancyTablePaginationProps>) {
   const { t } = useTranslation('ats');
   const effectiveTotal = Math.max(1, totalPages);
   const pageNumbers = getPageNumbers(currentPage, effectiveTotal);
+  // Derive a stable, data-based key for each entry up front (rather than the
+  // array index) — an ellipsis is uniquely identified by the numeric pages
+  // surrounding it, since there are at most two ellipses and their neighbours
+  // always differ.
+  const pageItems = pageNumbers.map((page, idx) => ({
+    page,
+    key:
+      page === '...'
+        ? `ellipsis-${pageNumbers[idx - 1]}-${pageNumbers[idx + 1]}`
+        : `page-${page}`,
+  }));
 
   return (
     <div className="flex items-center justify-between pt-5">
@@ -68,17 +79,17 @@ export default function VacancyTablePagination({
       </Button>
 
       <div className="flex items-center gap-1">
-        {pageNumbers.map((page, idx) =>
+        {pageItems.map(({ page, key }) =>
           page === '...' ? (
             <span
-              key={`ellipsis-${idx}`}
+              key={key}
               className="flex size-9 items-center justify-center text-sm text-slate-400"
             >
               ...
             </span>
           ) : (
             <Button
-              key={page}
+              key={key}
               variant="ghost"
               size="sm"
               className={cn(

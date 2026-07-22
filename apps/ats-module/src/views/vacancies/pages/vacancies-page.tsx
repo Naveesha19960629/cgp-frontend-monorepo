@@ -1,10 +1,10 @@
 import { Add } from 'iconsax-reactjs';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
-import { useVacanciesQuery, useVacancyTableParams } from '@/views/vacancies';
 import type {
   VacancyQueryParams,
   VacancyTableColumn,
@@ -26,6 +26,8 @@ import {
   useNextTemplateNameQuery,
   useSaveVacancyAsTemplateMutation,
   useToggleVacancyStatusMutation,
+  useVacanciesQuery,
+  useVacancyTableParams,
 } from '@/views/vacancies';
 import { TABLE_PAGE_SIZE } from '@/views/vacancies/utils';
 
@@ -348,6 +350,27 @@ export default function VacanciesPage() {
     },
   });
 
+  let tableContent: ReactNode;
+  if (isLoading) {
+    tableContent = <VacancyLoadingState />;
+  } else if (data.length === 0) {
+    tableContent = hasActiveFilters ? (
+      <VacancySearchEmptyState />
+    ) : (
+      <VacancyTableEmptyState />
+    );
+  } else {
+    tableContent = (
+      <VacancyDataTable
+        table={table}
+        isLoading={isFetching}
+        onRowClick={row =>
+          void navigate(`/dashboard/ats/vacancies/${row.vacancyId}/view`)
+        }
+      />
+    );
+  }
+
   return (
     <>
       <section className="flex h-full flex-col overflow-hidden px-7 py-5">
@@ -394,25 +417,7 @@ export default function VacanciesPage() {
             </div>
           )}
         </div>
-        <div className="min-h-0 flex-1 overflow-hidden">
-          {isLoading ? (
-            <VacancyLoadingState />
-          ) : data.length === 0 ? (
-            hasActiveFilters ? (
-              <VacancySearchEmptyState />
-            ) : (
-              <VacancyTableEmptyState />
-            )
-          ) : (
-            <VacancyDataTable
-              table={table}
-              isLoading={isFetching}
-              onRowClick={row =>
-                void navigate(`/dashboard/ats/vacancies/${row.vacancyId}/view`)
-              }
-            />
-          )}
-        </div>
+        <div className="min-h-0 flex-1 overflow-hidden">{tableContent}</div>
         {!isLoading && data.length > 0 && (
           <VacancyTablePagination
             currentPage={params.page - 1}
