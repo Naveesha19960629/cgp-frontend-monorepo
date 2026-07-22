@@ -1058,6 +1058,16 @@ interface TemplateCancelDialogProps {
   onConfirm: () => void;
 }
 
+interface SimpleConfirmDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onConfirm: () => void;
+  titleKey: string;
+  descriptionKey: string;
+  cancelLabelKey: string;
+  confirmLabelKey: string;
+}
+
 interface VacancyRescheduleConfirmDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -2071,6 +2081,7 @@ export type {
   VacancyDeleteDialogProps,
   VacancyEditCancelDialogProps,
   TemplateCancelDialogProps,
+  SimpleConfirmDialogProps,
   VacancyRescheduleConfirmDialogProps,
   VacancyNoRescheduleConfirmDialogProps,
   VacancyToggleAction,
