@@ -47,11 +47,15 @@ function useVacancyTemplateForm() {
    * fields are then rendered disabled by the page.
    */
   const setDataTakenFromCandidate = (sectionKey: string, value: boolean) => {
-    form.setValue(`sections.${sectionKey}.dataTakenFromCandidate`, value);
+    form.setValue(`sections.${sectionKey}.dataTakenFromCandidate`, value, {
+      shouldDirty: true,
+    });
     if (value) {
       const section = TEMPLATE_SECTIONS.find(s => s.key === sectionKey);
       section?.fields.forEach(field =>
-        form.setValue(`sections.${sectionKey}.fields.${field.code}`, false)
+        form.setValue(`sections.${sectionKey}.fields.${field.code}`, false, {
+          shouldDirty: true,
+        })
       );
     }
   };

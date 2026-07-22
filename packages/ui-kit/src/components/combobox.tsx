@@ -145,13 +145,22 @@ export function Combobox({
   }, [open, debouncedSearchChange]);
 
   const filteredOptions = React.useMemo(() => {
-    const trimmedSearch = searchValue.trimStart().trimEnd();
+    const trimmedSearch = searchValue.trimStart().trimEnd().toLowerCase();
     if (!trimmedSearch) return options;
-    return options.filter(
-      option =>
-        option.label.toLowerCase().includes(trimmedSearch.toLowerCase()) ||
-        option.value.toLowerCase().includes(trimmedSearch.toLowerCase())
-    );
+    return options.filter(option => {
+      const label = option.label.toLowerCase();
+      const value = option.value.toLowerCase();
+      return (
+        label.includes(trimmedSearch) ||
+        value.includes(trimmedSearch) ||
+        // Handles pasting (or reopening) a full "City, State, Country"
+        // breadcrumb: the server matches on the leading segment but returns a
+        // short label (e.g. "Ada"), so the typed text is a superset of the
+        // option label. Without this the server result would be filtered out
+        // and the field would wrongly show "No Data Found".
+        (label.length > 0 && trimmedSearch.includes(label))
+      );
+    });
   }, [options, searchValue]);
 
   const searchValueExists = React.useMemo(() => {

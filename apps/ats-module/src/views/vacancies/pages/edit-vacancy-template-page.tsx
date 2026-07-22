@@ -1,7 +1,8 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 
+import TemplateCancelDialog from '@/views/vacancies/components/template-cancel-dialog';
 import TemplateFormBody from '@/views/vacancies/components/template-form-body';
 import VacancyLoadingState from '@/views/vacancies/components/vacancy-loading-state';
 import VacancyTemplatePageHeader from '@/views/vacancies/components/vacancy-template-page-header';
@@ -27,6 +28,10 @@ export default function EditVacancyTemplatePage() {
 
   const { form, setDataTakenFromCandidate } = useVacancyTemplateForm();
   const values = form.watch();
+  // Read `isDirty` during render so RHF's formState proxy subscribes to it —
+  // otherwise reading it only inside the cancel handler returns a stale `false`.
+  const { isDirty } = form.formState;
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
 
   const {
     data: response,
@@ -57,7 +62,18 @@ export default function EditVacancyTemplatePage() {
     values.templateName.length <= TEMPLATE_NAME_MAX_LENGTH &&
     hasAnySelection(values);
 
+  // Cancel with unsaved changes → confirm first; a pristine form leaves
+  // straight away (DQCGP-2202).
   const handleCancel = () => {
+    if (isDirty) {
+      setShowCancelDialog(true);
+      return;
+    }
+    void navigate(TEMPLATES_LIST_ROUTE);
+  };
+
+  const handleCancelConfirm = () => {
+    setShowCancelDialog(false);
     void navigate(TEMPLATES_LIST_ROUTE);
   };
 
@@ -116,6 +132,12 @@ export default function EditVacancyTemplatePage() {
           {t('editTemplate.update')}
         </Button>
       </footer>
+
+      <TemplateCancelDialog
+        open={showCancelDialog}
+        onOpenChange={setShowCancelDialog}
+        onConfirm={handleCancelConfirm}
+      />
     </section>
   );
 }

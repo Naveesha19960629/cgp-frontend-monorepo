@@ -769,6 +769,7 @@ export default function SecondaryEducationStep({
                               ? t('secondaryEducation.errors.maxSelections')
                               : undefined
                           }
+                          hideClearAllButton
                           triggerSearchOnFocus
                           keepSelectedInList
                           loadingIndicator={

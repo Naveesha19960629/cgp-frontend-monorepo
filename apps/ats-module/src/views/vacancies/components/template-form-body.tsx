@@ -123,7 +123,8 @@ export default function TemplateFormBody({
             onToggleField={(fieldCode, value) =>
               form.setValue(
                 `sections.${section.key}.fields.${fieldCode}`,
-                value
+                value,
+                { shouldDirty: true }
               )
             }
             onToggleCandidateData={value =>
@@ -142,7 +143,7 @@ export default function TemplateFormBody({
               size="lg"
               checked={values.customizableForm}
               onCheckedChange={value =>
-                form.setValue('customizableForm', value)
+                form.setValue('customizableForm', value, { shouldDirty: true })
               }
             />
           </div>

@@ -54,6 +54,12 @@
       }
     }
   },
+  "templateCancelDialog": {
+    "title": "Are you sure?",
+    "description": "Are you sure you want to leave without saving your changes? Any unsaved changes will be lost.",
+    "noButton": "No",
+    "yesButton": "Yes"
+  },
   "createTemplate": {
     "heading": "Create Template",
     "nameLabel": "Template Name",

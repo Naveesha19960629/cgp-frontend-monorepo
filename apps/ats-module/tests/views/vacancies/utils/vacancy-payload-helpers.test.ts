@@ -458,3 +458,63 @@ describe('toCreateVacancyPayload — schedule null values', () => {
     });
   });
 });
+
+describe('toCreateVacancyPayload — profile requirement addresses', () => {
+  it('maps only the leading segment of a compound city ref id', () => {
+    const payload = toCreateVacancyPayload(
+      buildBaseForm({
+        profileRequirements: {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          gender: { id: '', label: '' },
+          maritalStatus: { id: '', label: '' },
+          addresses: [
+            {
+              city: {
+                id: '0b7f816b-ec39-4075-b421-ec47cb8968de|aaaaaaaa-bbbb',
+                label: 'Gampaha',
+              },
+              stateProvince: { id: 'state-ref-id', label: 'Western Province' },
+              country: { id: 'country-ref-id', label: 'Sri Lanka' },
+              postalCode: '11500',
+              isOpen: false,
+            },
+          ],
+        },
+      })
+    );
+
+    expect(payload.data.profileRequirement[0].content.addresses[0]).toEqual({
+      cityRefId: '0b7f816b-ec39-4075-b421-ec47cb8968de',
+      stateRefId: 'state-ref-id',
+      countryRefId: 'country-ref-id',
+      postalCode: '11500',
+    });
+  });
+
+  it('passes through a plain (non-compound) city ref id unchanged', () => {
+    const payload = toCreateVacancyPayload(
+      buildBaseForm({
+        profileRequirements: {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          gender: { id: '', label: '' },
+          maritalStatus: { id: '', label: '' },
+          addresses: [
+            {
+              city: { id: 'ChIJA3B6D9FT4joRjYPTMk0uCzI', label: 'Ada' },
+              stateProvince: { id: 'state-ref-id', label: 'Oklahoma' },
+              country: { id: 'country-ref-id', label: 'United States' },
+              postalCode: '',
+              isOpen: false,
+            },
+          ],
+        },
+      })
+    );
+
+    expect(
+      payload.data.profileRequirement[0].content.addresses[0].cityRefId
+    ).toBe('ChIJA3B6D9FT4joRjYPTMk0uCzI');
+  });
+});

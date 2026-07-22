@@ -146,7 +146,9 @@ function mapProfileRequirement(
         gender: pr.gender?.id ?? '',
         maritalStatus: pr.maritalStatus?.id ?? '',
         addresses: pr.addresses.map(addr => ({
-          cityRefId: addr.city?.id ?? '',
+          // The city option id can be a compound "cityRefId|extra" value; the
+          // backend expects only the leading city ref id.
+          cityRefId: (addr.city?.id ?? '').split('|')[0],
           stateRefId: addr.stateProvince?.id ?? '',
           countryRefId: addr.country?.id ?? '',
           postalCode: addr.postalCode ?? '',
