@@ -8,7 +8,7 @@ import type { RouteError } from '@/app/types';
 import { Button } from '@cgp/ui-kit/components/ui/button';
 import { applyTypography } from '@cgp/ui-kit/lib/typography';
 
-export default function ErrorPage({ error }: { error?: Error }) {
+export default function ErrorPage({ error }: Readonly<{ error?: Error }>) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const routerError = useRouteError() as RouteError;
