@@ -1,9 +1,10 @@
 import { ChevronLeft } from 'lucide-react';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
+import TemplateCancelDialog from '@/views/vacancies/components/template-cancel-dialog';
 import TemplateFormBody from '@/views/vacancies/components/template-form-body';
 import {
   useCreateTemplateMutation,
@@ -24,6 +25,10 @@ export default function NewVacancyTemplatePage() {
 
   const { form, setDataTakenFromCandidate } = useVacancyTemplateForm();
   const values = form.watch();
+  // Read `isDirty` during render so RHF's formState proxy subscribes to it —
+  // otherwise reading it only inside the cancel handler returns a stale `false`.
+  const { isDirty } = form.formState;
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
 
   const { data: nextNameResponse } = useNextTemplateNameQuery();
   const createTemplate = useCreateTemplateMutation();
@@ -32,10 +37,13 @@ export default function NewVacancyTemplatePage() {
   const refNumber = nextNameResponse?.data?.refNumber ?? '';
 
   // Pre-fill the auto-generated name once it loads, unless the recruiter has
-  // already edited the field. `setValue` is RHF state, not React state.
+  // already edited the field.
   useEffect(() => {
     if (autoName && !form.formState.dirtyFields.templateName) {
-      form.setValue('templateName', autoName);
+      // reset (not setValue) so the generated name becomes the pristine
+      // baseline — an untouched form stays non-dirty and cancels without the
+      // confirmation prompt (DQCGP-2202 AC.1).
+      form.reset({ ...form.getValues(), templateName: autoName });
     }
   }, [autoName, form]);
 
@@ -44,7 +52,18 @@ export default function NewVacancyTemplatePage() {
     values.templateName.length <= TEMPLATE_NAME_MAX_LENGTH &&
     hasAnySelection(values);
 
+  // Cancel with unsaved changes → confirm first; a pristine form leaves
+  // straight away (DQCGP-2202).
   const handleCancel = () => {
+    if (isDirty) {
+      setShowCancelDialog(true);
+      return;
+    }
+    void navigate(TEMPLATES_LIST_ROUTE);
+  };
+
+  const handleCancelConfirm = () => {
+    setShowCancelDialog(false);
     void navigate(TEMPLATES_LIST_ROUTE);
   };
 
@@ -119,6 +138,12 @@ export default function NewVacancyTemplatePage() {
           {t('createTemplate.create')}
         </Button>
       </footer>
+
+      <TemplateCancelDialog
+        open={showCancelDialog}
+        onOpenChange={setShowCancelDialog}
+        onConfirm={handleCancelConfirm}
+      />
     </section>
   );
 }

@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react';
 
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
@@ -320,12 +322,17 @@ function renderStep(
   const onSubmit = vi.fn();
   const formValue = makeForm(formOverrides);
   mockUseVacancyForm.mockReturnValue(formValue);
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
   render(
-    <ProfileRequirementsStep
-      onNext={onNext}
-      onBack={onBack}
-      onSubmit={onSubmit}
-    />
+    <QueryClientProvider client={queryClient}>
+      <ProfileRequirementsStep
+        onNext={onNext}
+        onBack={onBack}
+        onSubmit={onSubmit}
+      />
+    </QueryClientProvider>
   );
   return {
     onNext,

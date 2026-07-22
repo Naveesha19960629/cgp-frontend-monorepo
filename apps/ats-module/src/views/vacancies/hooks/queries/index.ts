@@ -8,6 +8,8 @@ export {
 } from '@/views/vacancies/hooks/queries/use-industries-query';
 export { useMaritalStatusesQuery } from '@/views/vacancies/hooks/queries/use-marital-statuses-query';
 export {
+  PLACES_STALE_TIME,
+  PLACES_GC_TIME,
   usePlacesCityQuery,
   usePlacesStateQuery,
   usePlacesCountryQuery,

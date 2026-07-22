@@ -157,7 +157,10 @@ export default function PreferredHobbiesStep({
   };
 
   return (
-    <div className="flex min-h-full flex-1 flex-col" data-testid="preferredHobbies-section-form">
+    <div
+      className="flex min-h-full flex-1 flex-col"
+      data-testid="preferredHobbies-section-form"
+    >
       {/* ── Section Header ──────────────────────────────────────────── */}
       <div className="flex items-center justify-between px-7 py-8">
         <div className="flex items-center gap-2">
