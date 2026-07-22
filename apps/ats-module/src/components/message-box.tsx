@@ -21,7 +21,7 @@ type MessageBoxProps = {
   fields: string[];
 };
 
-export default function MessageBox({ fields }: MessageBoxProps) {
+export default function MessageBox({ fields }: Readonly<MessageBoxProps>) {
   const { t } = useTranslation('ats');
   return (
     <div
@@ -53,7 +53,11 @@ export default function MessageBox({ fields }: MessageBoxProps) {
         </Tooltip>
         {t('preferredPatents.bannerDescription')}
       </p>
-      <img src={messageBoxAvatar} className="absolute right-6 bottom-0" />
+      <img
+        src={messageBoxAvatar}
+        alt=""
+        className="absolute right-6 bottom-0"
+      />
     </div>
   );
 }

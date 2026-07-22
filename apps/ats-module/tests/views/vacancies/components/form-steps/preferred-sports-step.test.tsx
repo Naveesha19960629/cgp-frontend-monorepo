@@ -225,7 +225,11 @@ describe('PreferredSportsStep', () => {
     vi.clearAllMocks();
   });
 
-  it('renders the step title', () => {
+  it.each([
+    ['renders the step title', 'Preferred Sports'],
+    ['renders the informational banner', 'message-box'],
+    ['renders the first sport card by default', 'Sports 01'],
+  ])('%s', (_description, expectedText) => {
     render(
       <PreferredSportsStep
         onNext={mockOnNext}
@@ -233,29 +237,7 @@ describe('PreferredSportsStep', () => {
         onSubmit={vi.fn()}
       />
     );
-    expect(screen.getByText('Preferred Sports')).toBeInTheDocument();
-  });
-
-  it('renders the informational banner', () => {
-    render(
-      <PreferredSportsStep
-        onNext={mockOnNext}
-        onBack={mockOnBack}
-        onSubmit={vi.fn()}
-      />
-    );
-    expect(screen.getByText('message-box')).toBeInTheDocument();
-  });
-
-  it('renders the first sport card by default', () => {
-    render(
-      <PreferredSportsStep
-        onNext={mockOnNext}
-        onBack={mockOnBack}
-        onSubmit={vi.fn()}
-      />
-    );
-    expect(screen.getByText('Sports 01')).toBeInTheDocument();
+    expect(screen.getByText(expectedText)).toBeInTheDocument();
   });
 
   it('renders all form fields', () => {

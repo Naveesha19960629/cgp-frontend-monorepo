@@ -8,7 +8,7 @@ export default function VacancyActiveToggle({
   isActive,
   onToggle,
   disabled = false,
-}: VacancyActiveToggleProps) {
+}: Readonly<VacancyActiveToggleProps>) {
   const { t } = useTranslation('ats');
 
   return (

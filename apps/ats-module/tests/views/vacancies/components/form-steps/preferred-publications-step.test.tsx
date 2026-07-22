@@ -327,27 +327,39 @@ describe('PreferredPublicationsStep', () => {
       expect(screen.getByText('Publication 01')).toBeInTheDocument();
     });
 
-    it('renders Accepted Publisher input with character count', () => {
+    test.each([
+      {
+        description: 'renders Accepted Publisher input with character count',
+        label: 'Accepted Publisher',
+        assertExtra: () => {
+          expect(
+            screen.getByPlaceholderText('Enter accepted publisher')
+          ).toBeInTheDocument();
+          expect(screen.getByText('0/250')).toBeInTheDocument();
+        },
+      },
+      {
+        description: 'renders Published Date From field',
+        label: 'Published Date From',
+        assertExtra: () => {
+          expect(
+            screen.getByText('Select published date from')
+          ).toBeInTheDocument();
+        },
+      },
+      {
+        description: 'renders Published Date To field',
+        label: 'Published Date To',
+        assertExtra: () => {
+          expect(
+            screen.getByText('Select published date to')
+          ).toBeInTheDocument();
+        },
+      },
+    ])('$description', ({ label, assertExtra }) => {
       renderStep();
-      expect(screen.getByText('Accepted Publisher')).toBeInTheDocument();
-      expect(
-        screen.getByPlaceholderText('Enter accepted publisher')
-      ).toBeInTheDocument();
-      expect(screen.getByText('0/250')).toBeInTheDocument();
-    });
-
-    it('renders Published Date From field', () => {
-      renderStep();
-      expect(screen.getByText('Published Date From')).toBeInTheDocument();
-      expect(
-        screen.getByText('Select published date from')
-      ).toBeInTheDocument();
-    });
-
-    it('renders Published Date To field', () => {
-      renderStep();
-      expect(screen.getByText('Published Date To')).toBeInTheDocument();
-      expect(screen.getByText('Select published date to')).toBeInTheDocument();
+      expect(screen.getByText(label)).toBeInTheDocument();
+      assertExtra();
     });
 
     it('renders add entry button', () => {

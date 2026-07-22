@@ -386,25 +386,19 @@ describe('ProfileRequirementsStep', () => {
       expect(screen.getByTestId('message-box')).toBeInTheDocument();
     });
 
-    it('renders the gender field label', () => {
+    test.each([
+      ['renders the gender field label', 'profileRequirements.gender'],
+      [
+        'renders the marital status field label',
+        'profileRequirements.maritalStatus',
+      ],
+      [
+        'renders the addresses section title',
+        'profileRequirements.addressesTitle',
+      ],
+    ])('%s', (_description, expectedText) => {
       renderStep();
-      expect(
-        screen.getByText('profileRequirements.gender')
-      ).toBeInTheDocument();
-    });
-
-    it('renders the marital status field label', () => {
-      renderStep();
-      expect(
-        screen.getByText('profileRequirements.maritalStatus')
-      ).toBeInTheDocument();
-    });
-
-    it('renders the addresses section title', () => {
-      renderStep();
-      expect(
-        screen.getByText('profileRequirements.addressesTitle')
-      ).toBeInTheDocument();
+      expect(screen.getByText(expectedText)).toBeInTheDocument();
     });
 
     it('renders Cancel and Next buttons', () => {
@@ -632,30 +626,17 @@ describe('ProfileRequirementsStep', () => {
       ).toBeInTheDocument();
     });
 
-    it('renders city field label', () => {
+    test.each([
+      ['renders city field label', 'profileRequirements.city'],
+      [
+        'renders state/province field label',
+        'profileRequirements.stateProvince',
+      ],
+      ['renders country field label', 'profileRequirements.country'],
+      ['renders postal code field label', 'profileRequirements.postalCode'],
+    ])('%s', (_description, expectedText) => {
       renderStep();
-      expect(screen.getByText('profileRequirements.city')).toBeInTheDocument();
-    });
-
-    it('renders state/province field label', () => {
-      renderStep();
-      expect(
-        screen.getByText('profileRequirements.stateProvince')
-      ).toBeInTheDocument();
-    });
-
-    it('renders country field label', () => {
-      renderStep();
-      expect(
-        screen.getByText('profileRequirements.country')
-      ).toBeInTheDocument();
-    });
-
-    it('renders postal code field label', () => {
-      renderStep();
-      expect(
-        screen.getByText('profileRequirements.postalCode')
-      ).toBeInTheDocument();
+      expect(screen.getByText(expectedText)).toBeInTheDocument();
     });
   });
 });

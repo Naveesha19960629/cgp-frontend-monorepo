@@ -120,7 +120,7 @@ describe('projectService', () => {
       );
 
       expect(result.content).toEqual([]);
-      expect(result.content.length).toBe(0);
+      expect(result.content).toHaveLength(0);
     });
   });
 

@@ -111,7 +111,7 @@ describe('useLocationsQuery', () => {
       expect(result.current.isLoading).toBe(false);
     });
 
-    expect(result.current.data.length).toBe(0);
+    expect(result.current.data).toHaveLength(0);
   });
 
   it('should have id and label properties', async () => {

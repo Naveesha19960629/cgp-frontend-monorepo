@@ -19,7 +19,7 @@ function SortableHeader({
   currentSortBy,
   currentSortOrder,
   onSort,
-}: SortableHeaderProps) {
+}: Readonly<SortableHeaderProps>) {
   const isActive = currentSortBy === columnKey;
   const upClass =
     isActive && currentSortOrder === 'asc'

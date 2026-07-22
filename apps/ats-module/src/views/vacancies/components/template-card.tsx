@@ -20,7 +20,7 @@ export default function TemplateCard({
   onEdit,
   onDelete,
   onUse,
-}: TemplateCardProps) {
+}: Readonly<TemplateCardProps>) {
   const { t } = useTranslation('ats');
 
   return (

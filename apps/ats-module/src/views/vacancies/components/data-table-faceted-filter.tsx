@@ -29,7 +29,7 @@ export default function DataTableFacetedFilter({
   onSearchChange,
   isLoading,
   hideSearch = false,
-}: DataTableFacetedFilterProps) {
+}: Readonly<DataTableFacetedFilterProps>) {
   const { t } = useTranslation('ats');
   const selectedSet = new Set(selectedValues);
 

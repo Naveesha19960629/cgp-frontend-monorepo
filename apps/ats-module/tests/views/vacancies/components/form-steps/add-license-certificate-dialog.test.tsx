@@ -209,36 +209,36 @@ describe('AddLicenseCertDialog', () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
-  it('shows default placeholder when no type is selected', () => {
-    render(<AddLicenseCertDialog {...defaultProps} />);
-
-    const input = screen.getByPlaceholderText(
-      'licenseCertificates.addLicenseCertDialog.namePlaceholderDefault'
-    );
-    expect(input).toBeInTheDocument();
-  });
-
-  it('changes placeholder to license when License type is selected', async () => {
+  it.each([
+    {
+      description: 'shows default placeholder when no type is selected',
+      testId: undefined,
+      placeholder:
+        'licenseCertificates.addLicenseCertDialog.namePlaceholderDefault',
+    },
+    {
+      description:
+        'changes placeholder to license when License type is selected',
+      testId: 'select-license',
+      placeholder:
+        'licenseCertificates.addLicenseCertDialog.namePlaceholderLicense',
+    },
+    {
+      description:
+        'changes placeholder to certification when Certification type is selected',
+      testId: 'select-certification',
+      placeholder:
+        'licenseCertificates.addLicenseCertDialog.namePlaceholderCertification',
+    },
+  ])('$description', async ({ testId, placeholder }) => {
     const user = userEvent.setup();
     render(<AddLicenseCertDialog {...defaultProps} />);
 
-    await user.click(screen.getByTestId('select-license'));
+    if (testId) {
+      await user.click(screen.getByTestId(testId));
+    }
 
-    const input = screen.getByPlaceholderText(
-      'licenseCertificates.addLicenseCertDialog.namePlaceholderLicense'
-    );
-    expect(input).toBeInTheDocument();
-  });
-
-  it('changes placeholder to certification when Certification type is selected', async () => {
-    const user = userEvent.setup();
-    render(<AddLicenseCertDialog {...defaultProps} />);
-
-    await user.click(screen.getByTestId('select-certification'));
-
-    const input = screen.getByPlaceholderText(
-      'licenseCertificates.addLicenseCertDialog.namePlaceholderCertification'
-    );
+    const input = screen.getByPlaceholderText(placeholder);
     expect(input).toBeInTheDocument();
   });
 

@@ -23,7 +23,7 @@ export default function VacancyNoRescheduleConfirmDialog({
   onOpenChange,
   onConfirm,
   isConfirming,
-}: VacancyNoRescheduleConfirmDialogProps) {
+}: Readonly<VacancyNoRescheduleConfirmDialogProps>) {
   const { t } = useTranslation('ats');
 
   return (

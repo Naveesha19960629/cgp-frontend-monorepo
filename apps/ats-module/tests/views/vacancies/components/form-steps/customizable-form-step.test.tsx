@@ -430,7 +430,7 @@ describe('CustomizableFormStep', () => {
       await user.click(addButton);
 
       const formInputs = screen.getAllByPlaceholderText('Form Title');
-      expect(formInputs.length).toBe(2);
+      expect(formInputs).toHaveLength(2);
     });
 
     it('should remove a form when delete button is clicked, but disable deletion when only 1 form exists', async () => {
@@ -468,7 +468,7 @@ describe('CustomizableFormStep', () => {
 
       // Verify only 1 form remains and its delete button is disabled again
       const formInputs = screen.queryAllByPlaceholderText('Form Title');
-      expect(formInputs.length).toBe(1);
+      expect(formInputs).toHaveLength(1);
 
       const deleteButtonsFinal = screen.getAllByRole('button', {
         name: 'Delete form',
@@ -493,7 +493,7 @@ describe('CustomizableFormStep', () => {
       await user.click(duplicateButton);
 
       const formInputs = screen.getAllByPlaceholderText('Form Title');
-      expect(formInputs.length).toBe(2);
+      expect(formInputs).toHaveLength(2);
     });
 
     it('should name copies per the convention and never rename existing copies (incl. on delete)', async () => {
@@ -738,7 +738,7 @@ describe('CustomizableFormStep', () => {
       await user.click(screen.getByText('Multiple Choice'));
 
       const optionInputs = screen.getAllByPlaceholderText('Enter option');
-      expect(optionInputs.length).toBe(2);
+      expect(optionInputs).toHaveLength(2);
 
       // Only one option filled → navigation blocked with a required message.
       fireEvent.change(optionInputs[0], { target: { value: 'Option A' } });

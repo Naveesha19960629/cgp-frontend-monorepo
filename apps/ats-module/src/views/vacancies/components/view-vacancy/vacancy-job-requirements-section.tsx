@@ -7,9 +7,9 @@ import type { VacancyViewModel } from '@/views/vacancies/types';
 
 function VacancyJobRequirementsSection({
   jobRequirement,
-}: {
+}: Readonly<{
   jobRequirement: VacancyViewModel['jobRequirement'];
-}) {
+}>) {
   const { t } = useTranslation('ats');
 
   return (

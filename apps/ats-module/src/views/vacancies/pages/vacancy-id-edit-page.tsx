@@ -151,7 +151,7 @@ function EditVacancyTitleStep() {
   );
 }
 
-function EditVacancyContent({ id }: { id: string | undefined }) {
+function EditVacancyContent({ id }: Readonly<{ id: string | undefined }>) {
   const { t } = useTranslation('ats');
   const location = useLocation();
   const { keycloak, initialized } = useKeycloak();

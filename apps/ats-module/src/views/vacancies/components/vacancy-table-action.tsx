@@ -25,7 +25,7 @@ export default function VacancyTableAction({
   onEditJd,
   onSaveAsTemplate,
   onDelete,
-}: VacancyTableActionProps) {
+}: Readonly<VacancyTableActionProps>) {
   const { t } = useTranslation('ats');
   const navigate = useNavigate();
   const location = useLocation();

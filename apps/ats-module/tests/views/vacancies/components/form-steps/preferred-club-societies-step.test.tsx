@@ -214,7 +214,14 @@ describe('PreferredClubSocietiesStep', () => {
     vi.clearAllMocks();
   });
 
-  it('renders the step title', () => {
+  it.each([
+    ['renders the step title', 'Preferred Clubs and Societies'],
+    ['renders the informational banner', 'preferredPatents.bannerTitle'],
+    [
+      'renders the first club/society card by default',
+      'Clubs and societies 01',
+    ],
+  ])('%s', (_description, expectedText) => {
     render(
       <PreferredClubSocietiesStep
         onNext={mockOnNext}
@@ -222,33 +229,7 @@ describe('PreferredClubSocietiesStep', () => {
         onSubmit={vi.fn()}
       />
     );
-    expect(
-      screen.getByText('Preferred Clubs and Societies')
-    ).toBeInTheDocument();
-  });
-
-  it('renders the informational banner', () => {
-    render(
-      <PreferredClubSocietiesStep
-        onNext={mockOnNext}
-        onBack={mockOnBack}
-        onSubmit={vi.fn()}
-      />
-    );
-    expect(
-      screen.getByText('preferredPatents.bannerTitle')
-    ).toBeInTheDocument();
-  });
-
-  it('renders the first club/society card by default', () => {
-    render(
-      <PreferredClubSocietiesStep
-        onNext={mockOnNext}
-        onBack={mockOnBack}
-        onSubmit={vi.fn()}
-      />
-    );
-    expect(screen.getByText('Clubs and societies 01')).toBeInTheDocument();
+    expect(screen.getByText(expectedText)).toBeInTheDocument();
   });
 
   it('renders all form fields', () => {

@@ -385,9 +385,19 @@ describe('SecondaryEducationStep', () => {
   });
 
   describe('rendering', () => {
-    it('renders the section heading', () => {
+    test.each([
+      ['renders the section heading', 'secondaryEducation.title'],
+      [
+        'renders start date trigger with placeholder text when no date selected',
+        'secondaryEducation.placeholders.startDate',
+      ],
+      [
+        'renders end date trigger with placeholder text when no date selected',
+        'secondaryEducation.placeholders.endDate',
+      ],
+    ])('%s', (_description, expectedText) => {
       renderStep();
-      expect(screen.getByText('secondaryEducation.title')).toBeInTheDocument();
+      expect(screen.getByText(expectedText)).toBeInTheDocument();
     });
 
     it('renders vacancy status badge in edit mode when status exists', () => {
@@ -423,59 +433,30 @@ describe('SecondaryEducationStep', () => {
       ).toBeInTheDocument();
     });
 
-    it('renders start date trigger with placeholder text when no date selected', () => {
+    test.each([
+      [
+        'renders the school location field placeholder',
+        'secondaryEducation.placeholders.schoolLocation',
+      ],
+      [
+        'renders the grade input placeholder',
+        'secondaryEducation.placeholders.grade',
+      ],
+      [
+        'renders the awarding body field placeholder',
+        'secondaryEducation.placeholders.awardingBody',
+      ],
+      [
+        'renders the field of study placeholder',
+        'secondaryEducation.placeholders.fieldOfStudy',
+      ],
+      [
+        'renders the results textarea placeholder',
+        'secondaryEducation.placeholders.results',
+      ],
+    ])('%s', (_description, placeholder) => {
       renderStep();
-      expect(
-        screen.getByText('secondaryEducation.placeholders.startDate')
-      ).toBeInTheDocument();
-    });
-
-    it('renders end date trigger with placeholder text when no date selected', () => {
-      renderStep();
-      expect(
-        screen.getByText('secondaryEducation.placeholders.endDate')
-      ).toBeInTheDocument();
-    });
-
-    it('renders the school location field placeholder', () => {
-      renderStep();
-      expect(
-        screen.getByPlaceholderText(
-          'secondaryEducation.placeholders.schoolLocation'
-        )
-      ).toBeInTheDocument();
-    });
-
-    it('renders the grade input placeholder', () => {
-      renderStep();
-      expect(
-        screen.getByPlaceholderText('secondaryEducation.placeholders.grade')
-      ).toBeInTheDocument();
-    });
-
-    it('renders the awarding body field placeholder', () => {
-      renderStep();
-      expect(
-        screen.getByPlaceholderText(
-          'secondaryEducation.placeholders.awardingBody'
-        )
-      ).toBeInTheDocument();
-    });
-
-    it('renders the field of study placeholder', () => {
-      renderStep();
-      expect(
-        screen.getByPlaceholderText(
-          'secondaryEducation.placeholders.fieldOfStudy'
-        )
-      ).toBeInTheDocument();
-    });
-
-    it('renders the results textarea placeholder', () => {
-      renderStep();
-      expect(
-        screen.getByPlaceholderText('secondaryEducation.placeholders.results')
-      ).toBeInTheDocument();
+      expect(screen.getByPlaceholderText(placeholder)).toBeInTheDocument();
     });
 
     it('renders the accepts home schooling checkbox', () => {
@@ -807,78 +788,28 @@ describe('SecondaryEducationStep', () => {
   });
 
   describe('max selection inline error', () => {
-    it('shows error message when max selections is reached on the school name field', async () => {
-      const user = userEvent.setup();
-      renderStep();
+    test.each([
+      ['school name field', 'secondaryEducation.placeholders.school'],
+      ['examination field', 'secondaryEducation.placeholders.examination'],
+      [
+        'school location field',
+        'secondaryEducation.placeholders.schoolLocation',
+      ],
+      ['awarding body field', 'secondaryEducation.placeholders.awardingBody'],
+      ['field of study', 'secondaryEducation.placeholders.fieldOfStudy'],
+    ])(
+      'shows error message when max selections is reached on the %s',
+      async (_fieldName, placeholder) => {
+        const user = userEvent.setup();
+        renderStep();
 
-      await user.click(
-        screen.getByTestId('max-trigger-secondaryEducation.placeholders.school')
-      );
+        await user.click(screen.getByTestId(`max-trigger-${placeholder}`));
 
-      expect(
-        screen.getByText('secondaryEducation.errors.maxSelections')
-      ).toBeInTheDocument();
-    });
-
-    it('shows error message when max selections is reached on the examination field', async () => {
-      const user = userEvent.setup();
-      renderStep();
-
-      await user.click(
-        screen.getByTestId(
-          'max-trigger-secondaryEducation.placeholders.examination'
-        )
-      );
-
-      expect(
-        screen.getByText('secondaryEducation.errors.maxSelections')
-      ).toBeInTheDocument();
-    });
-
-    it('shows error message when max selections is reached on the school location field', async () => {
-      const user = userEvent.setup();
-      renderStep();
-
-      await user.click(
-        screen.getByTestId(
-          'max-trigger-secondaryEducation.placeholders.schoolLocation'
-        )
-      );
-
-      expect(
-        screen.getByText('secondaryEducation.errors.maxSelections')
-      ).toBeInTheDocument();
-    });
-
-    it('shows error message when max selections is reached on the awarding body field', async () => {
-      const user = userEvent.setup();
-      renderStep();
-
-      await user.click(
-        screen.getByTestId(
-          'max-trigger-secondaryEducation.placeholders.awardingBody'
-        )
-      );
-
-      expect(
-        screen.getByText('secondaryEducation.errors.maxSelections')
-      ).toBeInTheDocument();
-    });
-
-    it('shows error message when max selections is reached on the field of study', async () => {
-      const user = userEvent.setup();
-      renderStep();
-
-      await user.click(
-        screen.getByTestId(
-          'max-trigger-secondaryEducation.placeholders.fieldOfStudy'
-        )
-      );
-
-      expect(
-        screen.getByText('secondaryEducation.errors.maxSelections')
-      ).toBeInTheDocument();
-    });
+        expect(
+          screen.getByText('secondaryEducation.errors.maxSelections')
+        ).toBeInTheDocument();
+      }
+    );
   });
 
   describe('accepts home schooling checkbox', () => {
