@@ -47,6 +47,7 @@ export { default as TemplateDeleteDialog } from '@/views/vacancies/components/te
 export { default as VacancyTemplatePageHeader } from '@/views/vacancies/components/vacancy-template-page-header';
 export { default as TemplateCancelDialog } from '@/views/vacancies/components/template-cancel-dialog';
 export { default as SimpleConfirmDialog } from '@/views/vacancies/components/simple-confirm-dialog';
+export { default as SimpleDeleteConfirmDialog } from '@/views/vacancies/components/simple-delete-confirm-dialog';
 export { default as FieldToggle } from '@/views/vacancies/components/field-toggle';
 export { default as SectionCard } from '@/views/vacancies/components/section-card';
 export * from '@/views/vacancies/components/view-vacancy';

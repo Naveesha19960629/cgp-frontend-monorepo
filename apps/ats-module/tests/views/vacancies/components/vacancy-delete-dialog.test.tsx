@@ -153,7 +153,7 @@ describe('VacancyDeleteDialog', () => {
     expect(confirmButton).toBeDisabled();
   });
 
-  it('shows spinner and hides button text when isDeleting is true', () => {
+  it('shows spinner alongside button text when isDeleting is true', () => {
     render(
       <VacancyDeleteDialog
         open={true}
@@ -164,15 +164,30 @@ describe('VacancyDeleteDialog', () => {
     );
 
     expect(
-      screen.queryByText('vacancies.deleteDialog.confirm')
-    ).not.toBeInTheDocument();
+      screen.getByText('vacancies.deleteDialog.confirm')
+    ).toBeInTheDocument();
 
     const buttons = screen.getAllByRole('button');
     const confirmButton = buttons[buttons.length - 1];
     expect(confirmButton.querySelector('svg')).toBeInTheDocument();
   });
 
-  it('shows Confirm text and enables button when isDeleting is false', () => {
+  it('disables the Cancel button when isDeleting is true', () => {
+    render(
+      <VacancyDeleteDialog
+        open={true}
+        onOpenChange={onOpenChange}
+        onConfirm={onConfirm}
+        isDeleting={true}
+      />
+    );
+
+    expect(
+      screen.getByRole('button', { name: 'vacancies.deleteDialog.cancel' })
+    ).toBeDisabled();
+  });
+
+  it('shows Confirm text and enables both buttons when isDeleting is false', () => {
     render(
       <VacancyDeleteDialog
         open={true}
@@ -182,9 +197,11 @@ describe('VacancyDeleteDialog', () => {
       />
     );
 
-    const confirmBtn = screen.getByRole('button', {
-      name: 'vacancies.deleteDialog.confirm',
-    });
-    expect(confirmBtn).not.toBeDisabled();
+    expect(
+      screen.getByRole('button', { name: 'vacancies.deleteDialog.confirm' })
+    ).not.toBeDisabled();
+    expect(
+      screen.getByRole('button', { name: 'vacancies.deleteDialog.cancel' })
+    ).not.toBeDisabled();
   });
 });

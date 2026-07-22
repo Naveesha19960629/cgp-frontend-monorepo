@@ -172,7 +172,22 @@ describe('TemplateDeleteDialog', () => {
     expect(confirmButton.querySelector('svg')).toBeInTheDocument();
   });
 
-  it('shows Confirm text and enables button when isDeleting is false', () => {
+  it('disables the Cancel button when isDeleting is true', () => {
+    render(
+      <TemplateDeleteDialog
+        open={true}
+        onOpenChange={onOpenChange}
+        onConfirm={onConfirm}
+        isDeleting={true}
+      />
+    );
+
+    expect(
+      screen.getByRole('button', { name: 'templates.deleteDialog.cancel' })
+    ).toBeDisabled();
+  });
+
+  it('shows Confirm text and enables both buttons when isDeleting is false', () => {
     render(
       <TemplateDeleteDialog
         open={true}
@@ -182,9 +197,11 @@ describe('TemplateDeleteDialog', () => {
       />
     );
 
-    const confirmBtn = screen.getByRole('button', {
-      name: 'templates.deleteDialog.confirm',
-    });
-    expect(confirmBtn).not.toBeDisabled();
+    expect(
+      screen.getByRole('button', { name: 'templates.deleteDialog.confirm' })
+    ).not.toBeDisabled();
+    expect(
+      screen.getByRole('button', { name: 'templates.deleteDialog.cancel' })
+    ).not.toBeDisabled();
   });
 });

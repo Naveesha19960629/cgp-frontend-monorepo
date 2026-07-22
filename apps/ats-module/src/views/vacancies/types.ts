@@ -1046,6 +1046,17 @@ interface TemplateDeleteDialogProps {
   isDeleting?: boolean;
 }
 
+interface SimpleDeleteConfirmDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onConfirm: () => void;
+  isDeleting?: boolean;
+  titleKey: string;
+  descriptionKey: string;
+  cancelLabelKey: string;
+  confirmLabelKey: string;
+}
+
 interface VacancyEditCancelDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -2082,6 +2093,7 @@ export type {
   VacancyEditCancelDialogProps,
   TemplateCancelDialogProps,
   SimpleConfirmDialogProps,
+  SimpleDeleteConfirmDialogProps,
   VacancyRescheduleConfirmDialogProps,
   VacancyNoRescheduleConfirmDialogProps,
   VacancyToggleAction,
