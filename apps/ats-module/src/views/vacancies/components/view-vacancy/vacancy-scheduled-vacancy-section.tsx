@@ -41,7 +41,7 @@ function formatScheduleDateTime(value: string): string {
 function VacancyScheduledVacancySection({
   scheduledVacancy,
 }: Readonly<{
-  scheduledVacancy: VacancyViewModel['scheduledVacancy'];
+  scheduledVacancy?: VacancyViewModel['scheduledVacancy'];
 }>) {
   const { t } = useTranslation('ats');
 

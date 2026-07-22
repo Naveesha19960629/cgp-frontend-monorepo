@@ -10,7 +10,7 @@ import type { VacancyViewModel } from '@/views/vacancies/types';
 function VacancyTertiaryEducationSection({
   tertiaryEducation,
 }: Readonly<{
-  tertiaryEducation: VacancyViewModel['tertiaryEducation'];
+  tertiaryEducation?: VacancyViewModel['tertiaryEducation'];
 }>) {
   const { t } = useTranslation('ats');
 

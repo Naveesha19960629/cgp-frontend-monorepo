@@ -20,7 +20,7 @@ function formatDateRange(fromDate?: string, toDate?: string): string {
 function VacancyPatentsSection({
   preferredPatents,
 }: Readonly<{
-  preferredPatents: VacancyViewModel['preferredPatents'];
+  preferredPatents?: VacancyViewModel['preferredPatents'];
 }>) {
   const { t } = useTranslation('ats');
 

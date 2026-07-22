@@ -11,7 +11,7 @@ import { formatDateRange } from '@/views/vacancies/utils/format-date-range';
 function VacancySecondaryEducationSection({
   secondaryEducation,
 }: Readonly<{
-  secondaryEducation: VacancyViewModel['secondaryEducation'];
+  secondaryEducation?: VacancyViewModel['secondaryEducation'];
 }>) {
   const { t } = useTranslation('ats');
 
