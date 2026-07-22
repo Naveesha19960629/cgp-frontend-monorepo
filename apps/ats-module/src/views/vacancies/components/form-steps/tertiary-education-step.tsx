@@ -808,6 +808,7 @@ export default function TertiaryEducationStep({
                             ? t('tertiaryEducation.errors.maxSelections')
                             : undefined
                         }
+                        hideClearAllButton
                         triggerSearchOnFocus
                         keepSelectedInList
                         loadingIndicator={
