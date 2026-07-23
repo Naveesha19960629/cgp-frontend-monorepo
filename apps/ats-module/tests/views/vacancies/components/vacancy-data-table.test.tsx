@@ -107,4 +107,110 @@ describe('VacancyDataTable', () => {
 
     expect(onRowClick).not.toHaveBeenCalled();
   });
+
+  it('applies flexible min-width styles to the title column', () => {
+    const titleColumns: ColumnDef<TestRow>[] = [
+      { id: 'title', accessorFn: row => row.name, header: 'Title' },
+      { accessorKey: 'id', header: 'ID' },
+    ];
+
+    function TitleWrapper() {
+      const table = useReactTable({
+        data: rows,
+        columns: titleColumns,
+        getCoreRowModel: getCoreRowModel(),
+      });
+      return <VacancyDataTable table={table} />;
+    }
+
+    render(<TitleWrapper />);
+
+    const headerCell = screen.getByText('Title').closest('th');
+    expect(headerCell).toHaveStyle({ width: 'auto', position: 'sticky' });
+
+    const bodyCell = screen.getAllByText('First Row')[0].closest('td');
+    expect(bodyCell).toHaveStyle({ width: 'auto' });
+    expect(bodyCell?.style.position).toBe('');
+  });
+
+  it('applies sticky pinned styles and scroll shadows for pinned columns', () => {
+    const pinnedColumns: ColumnDef<TestRow>[] = [
+      { accessorKey: 'id', header: 'ID' },
+      { accessorKey: 'name', header: 'Name' },
+      { id: 'actions', header: 'Actions', cell: () => <span>actions-cell</span> },
+    ];
+
+    function PinnedWrapper() {
+      const table = useReactTable({
+        data: rows,
+        columns: pinnedColumns,
+        getCoreRowModel: getCoreRowModel(),
+        state: { columnPinning: { left: ['id'], right: ['actions'] } },
+        onColumnPinningChange: () => {},
+      });
+      return <VacancyDataTable table={table} />;
+    }
+
+    const { container } = render(<PinnedWrapper />);
+
+    const viewport = container.querySelector(
+      '[data-slot="scroll-area-viewport"]'
+    ) as HTMLElement;
+
+    Object.defineProperty(viewport, 'scrollWidth', {
+      value: 1000,
+      configurable: true,
+    });
+    Object.defineProperty(viewport, 'clientWidth', {
+      value: 300,
+      configurable: true,
+    });
+    Object.defineProperty(viewport, 'scrollLeft', {
+      value: 200,
+      configurable: true,
+    });
+
+    fireEvent.scroll(viewport);
+
+    const idHeaderCell = screen.getByText('ID').closest('th');
+    expect(idHeaderCell).toHaveStyle({ position: 'sticky' });
+    expect(idHeaderCell?.style.boxShadow).toBe(
+      '10px 0 6px -3px rgba(0,0,0,0.06)'
+    );
+
+    const actionsHeaderCell = screen.getByText('Actions').closest('th');
+    expect(actionsHeaderCell?.style.boxShadow).toBe(
+      '-10px 0 6px -3px rgba(0,0,0,0.06)'
+    );
+  });
+
+  it('renders empty placeholder cells for grouped column headers', () => {
+    const groupedColumns: ColumnDef<TestRow>[] = [
+      { accessorKey: 'id', header: 'ID' },
+      {
+        id: 'group',
+        header: 'Group',
+        columns: [{ accessorKey: 'name', header: 'Name' }],
+      },
+    ];
+
+    function GroupedWrapper() {
+      const table = useReactTable({
+        data: rows,
+        columns: groupedColumns,
+        getCoreRowModel: getCoreRowModel(),
+      });
+      return <VacancyDataTable table={table} />;
+    }
+
+    const { container } = render(<GroupedWrapper />);
+
+    const headerRows = container.querySelectorAll(
+      '[data-slot="table-header"] tr'
+    );
+    expect(headerRows.length).toBe(2);
+
+    const firstRowCells = Array.from(headerRows[0].querySelectorAll('th'));
+    expect(firstRowCells.some(cell => cell.textContent === '')).toBe(true);
+  });
 });

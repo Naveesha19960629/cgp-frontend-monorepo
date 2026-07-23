@@ -15,6 +15,7 @@ vi.stubGlobal('scrollTo', vi.fn());
 // ── Hoisted mock refs ────────────────────────────────────────────────────────
 
 const mockErrorToast = vi.hoisted(() => vi.fn());
+const mockSuccessToast = vi.hoisted(() => vi.fn());
 const mockUseVacancyForm = vi.hoisted(() => vi.fn());
 
 // ── Module mocks ─────────────────────────────────────────────────────────────
@@ -37,7 +38,12 @@ vi.mock('react-i18next', () => ({
         'customizableForm.errors.maxQuestionsExceeded':
           'Max questions exceeded',
         'customizableForm.errors.maxLengthExceeded': 'Max length exceeded',
-        'customizableForm.copyOfTitle': 'Copy of {{title}}',
+        'customizableForm.errors.maxOptionsExceeded': 'Max options exceeded',
+        // Intentionally no space before the placeholder: the component itself
+        // appends a single trailing space when the resolved prefix doesn't end
+        // with one (see `duplicateForm`'s `parseTitle` prefix handling) - this
+        // exercises that fallback branch while still producing "Copy of X".
+        'customizableForm.copyOfTitle': 'Copy of{{title}}',
         'customizableForm.errors.errorTitle': 'Error',
         'customizableForm.errors.requiredQuestion': 'Required question',
         'customizableForm.errors.requiredType': 'Required type',
@@ -72,6 +78,7 @@ vi.mock('react-i18next', () => ({
 
 vi.mock('@cgp/ui-kit/components/custom-toast', () => ({
   ErrorToast: mockErrorToast,
+  SuccessToast: mockSuccessToast,
 }));
 
 vi.mock('@/views/vacancies/context/vacancy-form-context', () => ({
@@ -239,22 +246,43 @@ vi.mock('radix-ui/react-select', () => {
 
 // ── Helper function ─────────────────────────────────────────────────────────
 
+// `setForm` is a real (small) reducer instead of a bare `vi.fn()` so the
+// component's own `setForm(prev => ...)` callbacks — which persist local
+// state into the shared vacancy-form context on toggle/navigation — actually
+// execute their bodies rather than just being recorded as no-op calls.
+let customizableFormState: Record<string, unknown> | undefined;
+
+const mockSetForm = vi.fn((updater: unknown) => {
+  const prev = { customizableForm: customizableFormState };
+  const next =
+    typeof updater === 'function'
+      ? (updater as (p: typeof prev) => { customizableForm?: unknown })(prev)
+      : (updater as { customizableForm?: unknown });
+  customizableFormState = next?.customizableForm as
+    | Record<string, unknown>
+    | undefined;
+});
+const mockRemoveCompletedStep = vi.fn();
+const mockOnCancel = vi.fn();
+
 const renderComponent = (
   props = {
     onNext: vi.fn(),
     onBack: vi.fn(),
     onSubmit: vi.fn(),
-  }
+  },
+  contextOverrides: Record<string, unknown> = {}
 ) => {
   mockUseVacancyForm.mockReturnValue({
     form: { customizableForm: undefined },
-    onCancel: vi.fn(),
-    setForm: vi.fn(),
+    onCancel: mockOnCancel,
+    setForm: mockSetForm,
     setStepGuard: vi.fn(),
     stepPersistRef: { current: null },
     stepDisableRef: { current: null },
     currentStepIndex: 0,
-    removeCompletedStep: vi.fn(),
+    removeCompletedStep: mockRemoveCompletedStep,
+    ...contextOverrides,
   });
 
   return render(<CustomizableFormStep {...props} />);
@@ -269,6 +297,7 @@ const getSectionToggle = () => screen.getAllByRole('switch')[0];
 describe('CustomizableFormStep', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    customizableFormState = undefined;
   });
 
   describe('Component Rendering', () => {
@@ -1045,6 +1074,436 @@ describe('CustomizableFormStep', () => {
         name: 'Delete question',
       });
       expect(deleteButtonsFinal[0]).toBeDisabled();
+    });
+  });
+
+  describe('Option Management', () => {
+    it('shows an error toast when adding an option would exceed the maximum of 5', async () => {
+      const user = userEvent.setup({ delay: null });
+      renderComponent();
+
+      await user.click(getSectionToggle());
+
+      const typeTrigger = screen.getByRole('combobox');
+      await user.click(typeTrigger);
+      await user.click(screen.getByText('Multiple Choice'));
+
+      const addOptionButton = screen.getByRole('button', { name: 'Add Option' });
+      for (let i = 0; i < 3; i += 1) {
+        await user.click(addOptionButton);
+      }
+      expect(screen.getAllByPlaceholderText('Enter option')).toHaveLength(5);
+
+      await user.click(addOptionButton);
+
+      expect(mockErrorToast).toHaveBeenCalledWith(
+        expect.objectContaining({ description: 'Max options exceeded' })
+      );
+      expect(screen.getAllByPlaceholderText('Enter option')).toHaveLength(5);
+    });
+
+    it('removes an option when there are more than the minimum required', async () => {
+      const user = userEvent.setup();
+      renderComponent();
+
+      await user.click(getSectionToggle());
+
+      const typeTrigger = screen.getByRole('combobox');
+      await user.click(typeTrigger);
+      await user.click(screen.getByText('Multiple Choice'));
+
+      await user.click(screen.getByRole('button', { name: 'Add Option' }));
+      expect(screen.getAllByPlaceholderText('Enter option')).toHaveLength(3);
+
+      const removeButtons = screen.getAllByRole('button', {
+        name: 'Remove option',
+      });
+      expect(removeButtons).toHaveLength(1);
+      await user.click(removeButtons[0]);
+
+      expect(screen.getAllByPlaceholderText('Enter option')).toHaveLength(2);
+    });
+  });
+
+  describe('Checkboxes question type', () => {
+    it('renders two option fields, requires both, and supports add/remove', async () => {
+      const user = userEvent.setup();
+      const mockOnNext = vi.fn();
+      renderComponent({
+        onNext: mockOnNext,
+        onBack: vi.fn(),
+        onSubmit: vi.fn(),
+      });
+
+      await user.click(getSectionToggle());
+      await user.type(screen.getByPlaceholderText('Section Title'), 'Skills');
+      await user.type(screen.getByPlaceholderText('Form Title'), 'Tech');
+      await user.type(screen.getByPlaceholderText('Question'), 'Pick many');
+
+      const typeTrigger = screen.getByRole('combobox');
+      await user.click(typeTrigger);
+      await user.click(screen.getByText('Checkboxes'));
+
+      const optionInputs = screen.getAllByPlaceholderText('Enter option');
+      expect(optionInputs).toHaveLength(2);
+
+      fireEvent.change(optionInputs[0], { target: { value: 'Option A' } });
+      await user.click(screen.getByRole('button', { name: 'Next' }));
+      expect(mockOnNext).not.toHaveBeenCalled();
+      expect(screen.getByText('Option is required')).toBeInTheDocument();
+
+      fireEvent.change(optionInputs[1], { target: { value: 'Option B' } });
+
+      // Add and then remove a third field, exercising add/remove for this type.
+      await user.click(screen.getByRole('button', { name: 'Add Option' }));
+      expect(screen.getAllByPlaceholderText('Enter option')).toHaveLength(3);
+      await user.click(screen.getByRole('button', { name: 'Remove option' }));
+      expect(screen.getAllByPlaceholderText('Enter option')).toHaveLength(2);
+
+      await user.click(screen.getByRole('button', { name: 'Next' }));
+      await waitFor(() => {
+        expect(mockOnNext).toHaveBeenCalled();
+      });
+    });
+
+    it('blocks navigation and toasts on duplicate checkbox option values', async () => {
+      const user = userEvent.setup();
+      const mockOnNext = vi.fn();
+      renderComponent({
+        onNext: mockOnNext,
+        onBack: vi.fn(),
+        onSubmit: vi.fn(),
+      });
+
+      await user.click(getSectionToggle());
+      await user.type(screen.getByPlaceholderText('Section Title'), 'Skills');
+      await user.type(screen.getByPlaceholderText('Form Title'), 'Tech');
+      await user.type(screen.getByPlaceholderText('Question'), 'Pick many');
+
+      const typeTrigger = screen.getByRole('combobox');
+      await user.click(typeTrigger);
+      await user.click(screen.getByText('Checkboxes'));
+
+      const optionInputs = screen.getAllByPlaceholderText('Enter option');
+      fireEvent.change(optionInputs[0], { target: { value: 'Red' } });
+      fireEvent.change(optionInputs[1], { target: { value: ' red ' } });
+
+      await user.click(screen.getByRole('button', { name: 'Next' }));
+
+      expect(mockOnNext).not.toHaveBeenCalled();
+      expect(mockErrorToast).toHaveBeenCalledWith(
+        expect.objectContaining({
+          description: 'Duplicate options not allowed',
+        })
+      );
+    });
+  });
+
+  describe('Dropdown question type', () => {
+    it('renders two option fields, requires both, and supports add/remove', async () => {
+      const user = userEvent.setup();
+      const mockOnNext = vi.fn();
+      renderComponent({
+        onNext: mockOnNext,
+        onBack: vi.fn(),
+        onSubmit: vi.fn(),
+      });
+
+      await user.click(getSectionToggle());
+      await user.type(screen.getByPlaceholderText('Section Title'), 'Skills');
+      await user.type(screen.getByPlaceholderText('Form Title'), 'Tech');
+      await user.type(screen.getByPlaceholderText('Question'), 'Pick one');
+
+      const typeTrigger = screen.getByRole('combobox');
+      await user.click(typeTrigger);
+      await user.click(screen.getByText('Dropdown'));
+
+      const optionInputs = screen.getAllByPlaceholderText('Enter option');
+      expect(optionInputs).toHaveLength(2);
+
+      fireEvent.change(optionInputs[0], { target: { value: 'Option A' } });
+      await user.click(screen.getByRole('button', { name: 'Next' }));
+      expect(mockOnNext).not.toHaveBeenCalled();
+      expect(screen.getByText('Option is required')).toBeInTheDocument();
+
+      fireEvent.change(optionInputs[1], { target: { value: 'Option B' } });
+
+      await user.click(screen.getByRole('button', { name: 'Add Option' }));
+      expect(screen.getAllByPlaceholderText('Enter option')).toHaveLength(3);
+      await user.click(screen.getByRole('button', { name: 'Remove option' }));
+      expect(screen.getAllByPlaceholderText('Enter option')).toHaveLength(2);
+
+      await user.click(screen.getByRole('button', { name: 'Next' }));
+      await waitFor(() => {
+        expect(mockOnNext).toHaveBeenCalled();
+      });
+    });
+  });
+
+  describe('Linear scale question type', () => {
+    it('renders from/to selects and label fields, and does not require options', async () => {
+      const user = userEvent.setup();
+      const mockOnNext = vi.fn();
+      const { container } = renderComponent({
+        onNext: mockOnNext,
+        onBack: vi.fn(),
+        onSubmit: vi.fn(),
+      });
+
+      await user.click(getSectionToggle());
+      await user.type(screen.getByPlaceholderText('Section Title'), 'Skills');
+      await user.type(screen.getByPlaceholderText('Form Title'), 'Tech');
+      await user.type(screen.getByPlaceholderText('Question'), 'Rate this');
+
+      const typeTrigger = screen.getByRole('combobox');
+      await user.click(typeTrigger);
+      await user.click(screen.getByText('Linear Scale'));
+
+      // [type, from, to]
+      const comboboxes = screen.getAllByRole('combobox');
+      expect(comboboxes).toHaveLength(3);
+
+      await user.click(comboboxes[1]);
+      await user.click(screen.getByRole('option', { name: '1' }));
+
+      await user.click(comboboxes[2]);
+      await user.click(screen.getByRole('option', { name: '5' }));
+
+      // Start/End label inputs are the 4th and 5th text inputs on the page
+      // (after Section Title, Form Title and the Question text field).
+      const textInputs = container.querySelectorAll<HTMLInputElement>(
+        'input[type="text"]'
+      );
+      expect(textInputs.length).toBeGreaterThanOrEqual(5);
+      const startLabelInput = textInputs[3];
+      const endLabelInput = textInputs[4];
+
+      fireEvent.change(startLabelInput, { target: { value: 'Low' } });
+      fireEvent.change(endLabelInput, { target: { value: 'High' } });
+      expect(startLabelInput.value).toBe('Low');
+      expect(endLabelInput.value).toBe('High');
+
+      // Linear scale questions never require options, so navigation succeeds.
+      await user.click(screen.getByRole('button', { name: 'Next' }));
+      await waitFor(() => {
+        expect(mockOnNext).toHaveBeenCalled();
+      });
+    });
+  });
+
+  describe('Maximum forms/questions on duplicate (boundary)', () => {
+    it('shows an error toast when duplicating would exceed the maximum number of forms', async () => {
+      const user = userEvent.setup({ delay: null });
+      renderComponent();
+
+      await user.click(getSectionToggle());
+
+      // Give the first form a title so its Duplicate button is enabled.
+      await user.type(screen.getByPlaceholderText('Form Title'), 'Base Form');
+
+      const addButton = screen.getByRole('button', { name: 'Add Form' });
+      for (let i = 0; i < 4; i += 1) {
+        await user.click(addButton);
+      }
+      expect(screen.getAllByPlaceholderText('Form Title')).toHaveLength(5);
+
+      const duplicateButtons = screen.getAllByRole('button', {
+        name: 'Duplicate form',
+      });
+      await user.click(duplicateButtons[0]);
+
+      expect(mockErrorToast).toHaveBeenCalledWith(
+        expect.objectContaining({ description: 'Max forms exceeded' })
+      );
+      expect(screen.getAllByPlaceholderText('Form Title')).toHaveLength(5);
+    });
+
+    it('shows an error toast when adding a question would exceed the maximum of 10', async () => {
+      const user = userEvent.setup({ delay: null });
+      renderComponent();
+
+      await user.click(getSectionToggle());
+
+      const createButton = screen.getByRole('button', {
+        name: 'Create Question',
+      });
+      for (let i = 0; i < 9; i += 1) {
+        await user.click(createButton);
+      }
+      expect(screen.getAllByPlaceholderText('Question')).toHaveLength(10);
+
+      await user.click(createButton);
+
+      expect(mockErrorToast).toHaveBeenCalledWith(
+        expect.objectContaining({ description: 'Max questions exceeded' })
+      );
+      expect(screen.getAllByPlaceholderText('Question')).toHaveLength(10);
+    });
+
+    it('shows an error toast when duplicating a question would exceed the maximum of 10', async () => {
+      const user = userEvent.setup({ delay: null });
+      renderComponent();
+
+      await user.click(getSectionToggle());
+
+      // Give the first question text so its Duplicate button is enabled.
+      await user.type(screen.getByPlaceholderText('Question'), 'Q1');
+
+      const createButton = screen.getByRole('button', {
+        name: 'Create Question',
+      });
+      for (let i = 0; i < 9; i += 1) {
+        await user.click(createButton);
+      }
+      expect(screen.getAllByPlaceholderText('Question')).toHaveLength(10);
+
+      const duplicateButtons = screen.getAllByRole('button', {
+        name: 'Duplicate question',
+      });
+      await user.click(duplicateButtons[0]);
+
+      expect(mockErrorToast).toHaveBeenCalledWith(
+        expect.objectContaining({ description: 'Max questions exceeded' })
+      );
+      expect(screen.getAllByPlaceholderText('Question')).toHaveLength(10);
+    });
+  });
+
+  describe('Collapsed form validation', () => {
+    it('re-expands a collapsed, invalid form when navigation is blocked', async () => {
+      const user = userEvent.setup();
+      const mockOnNext = vi.fn();
+      renderComponent({
+        onNext: mockOnNext,
+        onBack: vi.fn(),
+        onSubmit: vi.fn(),
+      });
+
+      await user.click(getSectionToggle());
+
+      await user.click(screen.getByRole('button', { name: 'Collapse form' }));
+      expect(
+        screen.queryByPlaceholderText('Form Title')
+      ).not.toBeInTheDocument();
+
+      await user.click(screen.getByRole('button', { name: 'Next' }));
+
+      expect(mockOnNext).not.toHaveBeenCalled();
+      await waitFor(() => {
+        expect(screen.getByPlaceholderText('Form Title')).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe('Disable confirmation dialog', () => {
+    it('disables the section directly when toggled off with no user input', async () => {
+      const user = userEvent.setup();
+      renderComponent();
+
+      const toggle = getSectionToggle();
+      await user.click(toggle);
+      expect(toggle).toHaveAttribute('aria-checked', 'true');
+
+      await user.click(toggle);
+
+      expect(toggle).toHaveAttribute('aria-checked', 'false');
+      expect(
+        screen.queryByRole('button', {
+          name: 'customizableForm.confirmDisableDialog.disable',
+        })
+      ).not.toBeInTheDocument();
+    });
+
+    it('shows a confirmation dialog when toggled off with user input, and Cancel keeps the data', async () => {
+      const user = userEvent.setup();
+      renderComponent();
+
+      const toggle = getSectionToggle();
+      await user.click(toggle);
+      await user.type(screen.getByPlaceholderText('Section Title'), 'Skills');
+
+      await user.click(toggle);
+
+      // Still enabled — the toggle is pending confirmation.
+      expect(toggle).toHaveAttribute('aria-checked', 'true');
+
+      const cancelButton = screen.getByRole('button', {
+        name: 'customizableForm.confirmDisableDialog.cancel',
+      });
+      await user.click(cancelButton);
+
+      expect(toggle).toHaveAttribute('aria-checked', 'true');
+      expect(
+        screen.getByPlaceholderText<HTMLInputElement>('Section Title')
+      ).toHaveValue('Skills');
+    });
+
+    it('resets the section and notifies on confirming the disable dialog', async () => {
+      const user = userEvent.setup();
+      renderComponent();
+
+      const toggle = getSectionToggle();
+      await user.click(toggle);
+      await user.type(screen.getByPlaceholderText('Section Title'), 'Skills');
+
+      await user.click(toggle);
+
+      const confirmButton = screen.getByRole('button', {
+        name: 'customizableForm.confirmDisableDialog.disable',
+      });
+      await user.click(confirmButton);
+
+      expect(toggle).toHaveAttribute('aria-checked', 'false');
+      expect(
+        screen.getByPlaceholderText<HTMLInputElement>('Section Title')
+      ).toHaveValue('');
+      expect(mockRemoveCompletedStep).toHaveBeenCalledWith(0);
+      expect(mockSuccessToast).toHaveBeenCalled();
+    });
+  });
+
+  describe('Edit mode status badge', () => {
+    it('renders the vacancy status badge in edit mode when a status is present', () => {
+      mockUseVacancyForm.mockReturnValue({
+        form: { customizableForm: undefined, status: 'live' },
+        onCancel: vi.fn(),
+        setForm: vi.fn(),
+        setStepGuard: vi.fn(),
+        stepPersistRef: { current: null },
+        stepDisableRef: { current: null },
+        currentStepIndex: 0,
+        removeCompletedStep: vi.fn(),
+      });
+
+      render(
+        <CustomizableFormStep
+          onNext={vi.fn()}
+          onBack={vi.fn()}
+          onSubmit={vi.fn()}
+          mode="edit"
+        />
+      );
+
+      expect(screen.getByTestId('vacancy-live')).toBeInTheDocument();
+    });
+
+    it('does not render a status badge in create mode', () => {
+      renderComponent();
+      expect(screen.queryByTestId('vacancy-live')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('External step-disable ref', () => {
+    it('resets the customizable form when stepDisableRef is invoked externally', () => {
+      const stepDisableRef: { current: (() => void) | null } = {
+        current: null,
+      };
+      renderComponent(undefined, { stepDisableRef });
+
+      expect(typeof stepDisableRef.current).toBe('function');
+      stepDisableRef.current?.();
+
+      expect(mockSetForm).toHaveBeenCalled();
     });
   });
 });
