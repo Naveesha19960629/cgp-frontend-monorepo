@@ -32,7 +32,14 @@ describe('TemplateCard', () => {
 
   beforeEach(() => vi.clearAllMocks());
 
-  it('renders the template name', () => {
+  it.each([
+    { field: 'template name', expected: 'Software Engineer' },
+    { field: 'reference number', expected: 'REF-100' },
+    {
+      field: 'formatted last-updated date',
+      expected: 'templates.card.lastUpdated:formatted-2026-02-15',
+    },
+  ] as const)('renders the $field', ({ expected }) => {
     render(
       <TemplateCard
         template={template}
@@ -42,35 +49,7 @@ describe('TemplateCard', () => {
       />
     );
 
-    expect(screen.getByText('Software Engineer')).toBeInTheDocument();
-  });
-
-  it('renders the reference number', () => {
-    render(
-      <TemplateCard
-        template={template}
-        onEdit={onEdit}
-        onDelete={onDelete}
-        onUse={onUse}
-      />
-    );
-
-    expect(screen.getByText('REF-100')).toBeInTheDocument();
-  });
-
-  it('renders the formatted last-updated date', () => {
-    render(
-      <TemplateCard
-        template={template}
-        onEdit={onEdit}
-        onDelete={onDelete}
-        onUse={onUse}
-      />
-    );
-
-    expect(
-      screen.getByText('templates.card.lastUpdated:formatted-2026-02-15')
-    ).toBeInTheDocument();
+    expect(screen.getByText(expected)).toBeInTheDocument();
   });
 
   it.each([
