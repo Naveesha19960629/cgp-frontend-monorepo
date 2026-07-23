@@ -1,5 +1,7 @@
 import { useState } from 'react';
 
+import { screen } from '@testing-library/react';
+
 import { ThemeProvider, useTheme } from '@/app/providers/theme-provider';
 
 type MockMediaQueryList = {

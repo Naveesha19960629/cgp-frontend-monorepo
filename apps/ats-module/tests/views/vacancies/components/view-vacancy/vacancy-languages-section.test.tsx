@@ -8,7 +8,9 @@ vi.mock('react-i18next', () => ({
 
 describe('VacancyLanguagesSection', () => {
   it('renders nothing when preferredLanguages is undefined', () => {
-    const { container } = render(<VacancyLanguagesSection />);
+    const { container } = render(
+      <VacancyLanguagesSection preferredLanguages={undefined} />
+    );
     expect(container).toBeEmptyDOMElement();
   });
 
@@ -66,9 +68,7 @@ describe('VacancyLanguagesSection', () => {
         }}
       />
     );
-    expect(
-      screen.getByText('preferredLanguages.title')
-    ).toBeInTheDocument();
+    expect(screen.getByText('preferredLanguages.title')).toBeInTheDocument();
     expect(screen.getByText('English')).toBeInTheDocument();
     expect(screen.getByText('French')).toBeInTheDocument();
   });

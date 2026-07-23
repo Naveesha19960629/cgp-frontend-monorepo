@@ -137,8 +137,8 @@ describe('toVacancyFormFromTemplateUsePayload', () => {
     );
 
     expect(visibleStepKeys).toContain('customizable-form');
-    expect(form.customizableForm.isEnabled).toBe(true);
-    expect(form.customizableForm.sectionTitle).toBe('Extra Questions');
+    expect(form.customizableForm!.isEnabled).toBe(true);
+    expect(form.customizableForm!.sectionTitle).toBe('Extra Questions');
   });
 
   it('does not add the customizable form step when the section is disabled', () => {
@@ -156,7 +156,7 @@ describe('toVacancyFormFromTemplateUsePayload', () => {
     );
 
     expect(visibleStepKeys).not.toContain('customizable-form');
-    expect(form.customizableForm.isEnabled).toBe(false);
+    expect(form.customizableForm!.isEnabled).toBe(false);
   });
 
   it('treats a present-but-disabled optional section as not included', () => {

@@ -18,7 +18,9 @@ const baseEntry = {
 
 describe('VacancySportsSection', () => {
   it('renders nothing when preferredSports is undefined', () => {
-    const { container } = render(<VacancySportsSection />);
+    const { container } = render(
+      <VacancySportsSection preferredSports={undefined} />
+    );
     expect(container).toBeEmptyDOMElement();
   });
 
@@ -233,7 +235,9 @@ describe('VacancySportsSection', () => {
         }}
       />
     );
-    expect(screen.getByText('preferredSports.fieldList.sport')).toBeInTheDocument();
+    expect(
+      screen.getByText('preferredSports.fieldList.sport')
+    ).toBeInTheDocument();
     expect(
       screen.getByText('preferredSports.fieldList.organizationLocation')
     ).toBeInTheDocument();

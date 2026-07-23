@@ -29,8 +29,8 @@ const mockUseVacancyForm = vi.hoisted(() =>
     },
     onCancel: vi.fn(),
     setStepGuard: vi.fn(),
-    stepPersistRef: { current: null },
-    stepDisableRef: { current: null },
+    stepPersistRef: { current: null as (() => void) | null },
+    stepDisableRef: { current: null as (() => void) | null },
     currentStepIndex: 0,
     removeCompletedStep: vi.fn(),
   }))
@@ -67,13 +67,29 @@ const mockUseMaritalStatusesQuery = vi.hoisted(() =>
 );
 
 const mockUsePlacesCityQuery = vi.hoisted(() =>
-  vi.fn(() => ({ data: [], isFetching: false }))
+  vi.fn(() => ({
+    data: [] as {
+      city: { id: string; label: string };
+      state: { id?: string; label: string };
+      country: { id?: string; label: string };
+    }[],
+    isFetching: false,
+  }))
 );
 const mockUsePlacesStateQuery = vi.hoisted(() =>
-  vi.fn(() => ({ data: [], isFetching: false }))
+  vi.fn(() => ({
+    data: [] as {
+      state: { id: string; label: string };
+      country: { id?: string; label: string };
+    }[],
+    isFetching: false,
+  }))
 );
 const mockUsePlacesCountryQuery = vi.hoisted(() =>
-  vi.fn(() => ({ data: [], isFetching: false }))
+  vi.fn(() => ({
+    data: [] as { country: { id: string; label: string } }[],
+    isFetching: false,
+  }))
 );
 const mockSuccessToast = vi.hoisted(() => vi.fn());
 const mockErrorToast = vi.hoisted(() => vi.fn());
@@ -358,8 +374,8 @@ function makeForm(
     onCancel: vi.fn(),
     setForm: vi.fn(),
     setStepGuard: vi.fn(),
-    stepPersistRef: { current: null },
-    stepDisableRef: { current: null },
+    stepPersistRef: { current: null as (() => void) | null },
+    stepDisableRef: { current: null as (() => void) | null },
     currentStepIndex: 0,
     removeCompletedStep: vi.fn(),
   };

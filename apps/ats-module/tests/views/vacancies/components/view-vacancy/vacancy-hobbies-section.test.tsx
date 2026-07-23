@@ -8,7 +8,9 @@ vi.mock('react-i18next', () => ({
 
 describe('VacancyHobbiesSection', () => {
   it('renders nothing when preferredHobbies is undefined', () => {
-    const { container } = render(<VacancyHobbiesSection />);
+    const { container } = render(
+      <VacancyHobbiesSection preferredHobbies={undefined} />
+    );
     expect(container).toBeEmptyDOMElement();
   });
 

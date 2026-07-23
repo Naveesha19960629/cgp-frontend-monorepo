@@ -18,7 +18,11 @@ const baseProfileRequirement: VacancyViewModel['profileRequirement'] = {
 describe('VacancyProfileRequirementsSection', () => {
   it('renders nothing when profileRequirement is undefined', () => {
     const { container } = render(
-      <VacancyProfileRequirementsSection profileRequirement={undefined} />
+      <VacancyProfileRequirementsSection
+        profileRequirement={
+          undefined as unknown as VacancyViewModel['profileRequirement']
+        }
+      />
     );
     expect(container).toBeEmptyDOMElement();
   });
@@ -55,9 +59,7 @@ describe('VacancyProfileRequirementsSection', () => {
         profileRequirement={baseProfileRequirement}
       />
     );
-    expect(
-      screen.getByText('profileRequirements.title')
-    ).toBeInTheDocument();
+    expect(screen.getByText('profileRequirements.title')).toBeInTheDocument();
   });
 
   it('renders the gender and marital status labels with a dash when values are empty', () => {
