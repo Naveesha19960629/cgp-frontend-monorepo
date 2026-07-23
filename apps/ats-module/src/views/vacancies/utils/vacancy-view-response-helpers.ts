@@ -143,7 +143,6 @@ function readSectionValue(
 
 // Content is usually nested under `entry.content`; older/alternate API shapes
 // place it directly under one of `fallbackKeys` instead. Checked in order,
-// falling back to an empty array when none match.
 function pickRawContent(
   entry: Record<string, unknown>,
   ...fallbackKeys: string[]
