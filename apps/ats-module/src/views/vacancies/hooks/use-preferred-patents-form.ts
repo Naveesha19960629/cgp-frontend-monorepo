@@ -4,7 +4,7 @@ import { useFieldArray, useForm } from 'react-hook-form';
 
 import { z } from 'zod';
 
-import type { preferredPatentsSchema as PreferredPatentsContext } from '@/views/vacancies/types';
+import type { PreferredPatentsSchema as PreferredPatentsContext } from '@/views/vacancies/types';
 
 const patentIndustrySchema = z.object({
   value: z.string(),

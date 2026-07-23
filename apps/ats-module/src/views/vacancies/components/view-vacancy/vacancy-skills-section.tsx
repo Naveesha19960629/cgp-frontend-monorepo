@@ -6,12 +6,12 @@ import type { VacancyViewModel } from '@/views/vacancies/types';
 
 function VacancySkillsSection({
   preferredSkills,
-}: {
-  preferredSkills?: VacancyViewModel['preferredSkills'];
-}) {
+}: Readonly<{
+  preferredSkills: VacancyViewModel['preferredSkills'];
+}>) {
   const { t } = useTranslation('ats');
 
-  if (!preferredSkills || !preferredSkills.isEnabled) {
+  if (!preferredSkills?.isEnabled) {
     return null;
   }
 

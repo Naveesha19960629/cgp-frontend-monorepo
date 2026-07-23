@@ -4,7 +4,7 @@ import { useFieldArray, useForm } from 'react-hook-form';
 
 import { z } from 'zod';
 
-import type { preferredHonoursAwardsSchema } from '@/views/vacancies/types';
+import type { PreferredHonoursAwardsSchema } from '@/views/vacancies/types';
 
 const honourOrganizationSchema = z.object({
   value: z.string(),
@@ -48,7 +48,7 @@ const DEFAULT_HONOUR_ENTRY = {
 };
 
 const usePreferredHonoursAwardsForm = (
-  initialValues?: preferredHonoursAwardsSchema
+  initialValues?: PreferredHonoursAwardsSchema
 ) => {
   const form = useForm<PreferredHonoursAwardsFormValues>({
     resolver: zodResolver(preferredHonoursAwardsFormSchema),

@@ -8,12 +8,12 @@ import type { VacancyViewModel } from '@/views/vacancies/types';
 
 function VacancyProfileRequirementsSection({
   profileRequirement,
-}: {
+}: Readonly<{
   profileRequirement: VacancyViewModel['profileRequirement'];
-}) {
+}>) {
   const { t } = useTranslation('ats');
 
-  if (!profileRequirement || !profileRequirement.isEnabled) {
+  if (!profileRequirement?.isEnabled) {
     return null;
   }
 
@@ -61,7 +61,7 @@ function VacancyProfileRequirementsSection({
 
                   return (
                     <div
-                      key={index}
+                      key={`${address.city}-${address.stateProvince}-${address.country}-${address.postalCode}-${index}`}
                       className="flex flex-col gap-3 rounded-lg border border-[#ebedf0] bg-[#f8fafc] p-4"
                     >
                       <h3 className="text-base font-semibold text-slate-900">

@@ -21,7 +21,7 @@ interface TemplateEmptyStateMessageProps {
 export default function TemplateEmptyStateMessage({
   title,
   description,
-}: TemplateEmptyStateMessageProps) {
+}: Readonly<TemplateEmptyStateMessageProps>) {
   return (
     <div className="relative flex h-full flex-col items-center justify-center overflow-hidden text-center">
       {/* Soft ambient glow behind the content (decorative, from Figma). */}

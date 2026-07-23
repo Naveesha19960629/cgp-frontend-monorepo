@@ -1,4 +1,10 @@
-import { type CSSProperties, useEffect, useRef, useState } from 'react';
+import {
+  type CSSProperties,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 import type { VacancyDataTableProps } from '@/views/vacancies/types';
 import { TABLE_PAGE_SIZE } from '@/views/vacancies/utils';
@@ -13,16 +19,88 @@ import {
   TableRow,
 } from '@cgp/ui-kit/components/ui/table';
 import { cn } from '@cgp/ui-kit/lib/utils';
-import { type Column, flexRender } from '@tanstack/react-table';
+import { type Column, type Table, flexRender } from '@tanstack/react-table';
+
+// Title column is flex: it expands to fill available space on wide viewports
+// while keeping its defined size as a minimum.
+function getTitleColumnStyles(size: number, isHeader: boolean): CSSProperties {
+  const base: CSSProperties = { minWidth: `${size}px`, width: 'auto' };
+  if (!isHeader) return base;
+
+  return {
+    ...base,
+    position: 'sticky',
+    top: 0,
+    zIndex: 3,
+    backgroundColor: '#F1F5F9',
+  };
+}
+
+function getPinnedBoxShadow(
+  isLastLeftPinned: boolean,
+  isFirstRightPinned: boolean,
+  canScrollLeft: boolean,
+  canScrollRight: boolean
+): string | undefined {
+  if (isLastLeftPinned && canScrollLeft) {
+    return '10px 0 6px -3px rgba(0,0,0,0.06)';
+  }
+  if (isFirstRightPinned && canScrollRight) {
+    return '-10px 0 6px -3px rgba(0,0,0,0.06)';
+  }
+  return undefined;
+}
+
+function getPinnedColumnStyles<TData>(
+  column: Column<TData, unknown>,
+  base: CSSProperties,
+  isHeader: boolean,
+  isPinned: 'left' | 'right',
+  table: Table<TData>,
+  canScrollLeft: boolean,
+  canScrollRight: boolean
+): CSSProperties {
+  const isLastLeftPinned =
+    isPinned === 'left' && table.getLeftLeafColumns().at(-1)?.id === column.id;
+  const isFirstRightPinned =
+    isPinned === 'right' && table.getRightLeafColumns()[0]?.id === column.id;
+
+  return {
+    ...base,
+    position: 'sticky',
+    // Pinned header cells must stick to both axes; body cells only horizontally.
+    top: isHeader ? 0 : undefined,
+    left: isPinned === 'left' ? `${column.getStart('left')}px` : undefined,
+    right: isPinned === 'right' ? `${column.getAfter('right')}px` : undefined,
+    // z-index 4: pinned header corners sit above non-pinned headers (3) and pinned body (1).
+    zIndex: isHeader ? 4 : 1,
+    backgroundColor: isHeader ? '#F1F5F9' : '#fff',
+    boxShadow: getPinnedBoxShadow(
+      isLastLeftPinned,
+      isFirstRightPinned,
+      canScrollLeft,
+      canScrollRight
+    ),
+  };
+}
 
 export default function VacancyDataTable<TData>({
   table,
   isLoading,
   onRowClick,
-}: VacancyDataTableProps<TData>) {
+}: Readonly<VacancyDataTableProps<TData>>) {
   const scrollRootRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
+
+  // Stable, item-derived keys for the fixed-size set of skeleton placeholder
+  // rows rendered while loading. Memoized (not per render) since the
+  // skeleton rows carry no data of their own to key off.
+  const skeletonRowKeys = useMemo(
+    () =>
+      Array.from({ length: TABLE_PAGE_SIZE }, (_, i) => `skeleton-row-${i}`),
+    []
+  );
 
   useEffect(() => {
     const root = scrollRootRef.current;
@@ -59,23 +137,8 @@ export default function VacancyDataTable<TData>({
     const isPinned = column.getIsPinned();
     const size = column.getSize();
 
-    // Title column is flex: it expands to fill available space on wide viewports
-    // while keeping 317 px as its minimum (matching its defined size).
     if (column.id === 'title') {
-      const base: CSSProperties = {
-        minWidth: `${size}px`,
-        width: 'auto',
-      };
-      if (isHeader) {
-        return {
-          ...base,
-          position: 'sticky',
-          top: 0,
-          zIndex: 3,
-          backgroundColor: '#F1F5F9',
-        };
-      }
-      return base;
+      return getTitleColumnStyles(size, isHeader);
     }
 
     // Always enforce explicit width so column.getStart() / column.getAfter()
@@ -100,29 +163,15 @@ export default function VacancyDataTable<TData>({
 
     if (!isPinned) return base;
 
-    const isLastLeftPinned =
-      isPinned === 'left' &&
-      table.getLeftLeafColumns().at(-1)?.id === column.id;
-    const isFirstRightPinned =
-      isPinned === 'right' && table.getRightLeafColumns()[0]?.id === column.id;
-
-    return {
-      ...base,
-      position: 'sticky',
-      // Pinned header cells must stick to both axes; body cells only horizontally.
-      top: isHeader ? 0 : undefined,
-      left: isPinned === 'left' ? `${column.getStart('left')}px` : undefined,
-      right: isPinned === 'right' ? `${column.getAfter('right')}px` : undefined,
-      // z-index 4: pinned header corners sit above non-pinned headers (3) and pinned body (1).
-      zIndex: isHeader ? 4 : 1,
-      backgroundColor: isHeader ? '#F1F5F9' : '#fff',
-      boxShadow:
-        isLastLeftPinned && canScrollLeft
-          ? '10px 0 6px -3px rgba(0,0,0,0.06)'
-          : isFirstRightPinned && canScrollRight
-            ? '-10px 0 6px -3px rgba(0,0,0,0.06)'
-            : undefined,
-    };
+    return getPinnedColumnStyles(
+      column,
+      base,
+      isHeader,
+      isPinned,
+      table,
+      canScrollLeft,
+      canScrollRight
+    );
   };
 
   return (
@@ -162,8 +211,8 @@ export default function VacancyDataTable<TData>({
             </TableHeader>
             <TableBody>
               {isLoading || !table.getRowModel().rows?.length
-                ? Array.from({ length: TABLE_PAGE_SIZE }).map((_, i) => (
-                    <TableRow key={i} className="h-18">
+                ? skeletonRowKeys.map((rowKey, i) => (
+                    <TableRow key={rowKey} className="h-18">
                       {table.getAllColumns().map(column => (
                         <TableCell
                           key={column.id}

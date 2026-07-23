@@ -25,7 +25,7 @@ export default function VacancyFilteringSection({
   onDisciplineChange,
   statusFilter,
   onStatusChange,
-}: VacancyFilteringSectionProps) {
+}: Readonly<VacancyFilteringSectionProps>) {
   const { t } = useTranslation('ats');
 
   // Main search — local input state keeps the field responsive while the

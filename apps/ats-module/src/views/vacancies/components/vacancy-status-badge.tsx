@@ -11,7 +11,7 @@ import { cn } from '@cgp/ui-kit/lib/utils';
 export default function VacancyStatusBadge({
   status,
   applicantCount,
-}: VacancyStatusBadgeProps) {
+}: Readonly<VacancyStatusBadgeProps>) {
   const { t } = useTranslation('ats');
   // API enum is ONHOLD (no underscore); on_hold is the config key
   const normalized = status.toLowerCase();

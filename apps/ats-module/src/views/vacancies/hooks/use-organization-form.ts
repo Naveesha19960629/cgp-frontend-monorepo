@@ -5,8 +5,7 @@ import { useTranslation } from 'react-i18next';
 
 import { z } from 'zod';
 
-const URL_PATTERN =
-  /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([/\w .-]*)*\/?$/;
+const URL_PATTERN = /^(https?:\/\/)?([\da-z-]+\.)+[a-z]{2,6}[/\w .-]*\/?$/;
 
 function isUrlProtocolValid(url: string): boolean {
   if (!url) return true;

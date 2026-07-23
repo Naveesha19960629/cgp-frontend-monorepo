@@ -173,6 +173,61 @@ const SECTION_APPLIERS: Record<
   },
 };
 
+// Job Requirements is a mandatory step: always shown and enabled, all fields
+// visible, regardless of the template section's isEnabled flag.
+function applyJobRequirementSection(
+  form: VacancyForm,
+  rawValue: unknown
+): void {
+  const jobSection = unwrapSection(rawValue);
+  SECTION_APPLIERS.jobRequirement(form, {
+    dataTakenFromCandidate: Boolean(jobSection?.dataTakenFromCandidate),
+  });
+}
+
+// Customizable Forms carry real copied data — reuse the edit-flow normaliser.
+// Only include the section when the template has it enabled. Returns whether
+// the section was included, so the caller can add its step key.
+function applyCustomizedFormSection(
+  form: VacancyForm,
+  rawValue: unknown
+): boolean {
+  const customizedForm = normalizeCustomizableFormSection(rawValue, {
+    isEnabled: false,
+    sectionTitle: '',
+    forms: [],
+  });
+  if (!customizedForm.isEnabled) return false;
+
+  form.customizableForm = customizedForm;
+  return true;
+}
+
+// Handles every remaining (optional) section key: applies it to `form` when
+// enabled, and records the step key / field-visibility map for the navigator.
+function applyOptionalSection(
+  sectionKey: string,
+  rawValue: unknown,
+  form: VacancyForm,
+  visibleStepKeys: Set<string>,
+  templateFieldVisibility: Record<string, Record<string, boolean>>
+): void {
+  const section = unwrapSection(rawValue);
+  if (!section) return;
+
+  // Optional sections appear in the navigator ONLY if the template enabled them
+  // (AC 7.1 / 7.7). A present-but-disabled section is treated as not included.
+  if (section.isEnabled !== true) return;
+
+  const stepKey = SECTION_KEY_TO_STEP_KEY[sectionKey];
+  if (stepKey) visibleStepKeys.add(stepKey);
+
+  SECTION_APPLIERS[sectionKey]?.(form, {
+    dataTakenFromCandidate: Boolean(section.dataTakenFromCandidate),
+  });
+  templateFieldVisibility[sectionKey] = readContentFlags(section);
+}
+
 function toVacancyFormFromTemplateUsePayload(
   requestBody: VacancyTemplateUseRequestBody,
   prev: VacancyForm
@@ -190,47 +245,28 @@ function toVacancyFormFromTemplateUsePayload(
   for (const [sectionKey, rawValue] of Object.entries(data)) {
     if (rawValue === null || rawValue === undefined) continue;
 
-    // Job Requirements is a mandatory step: always shown and enabled, all fields
-    // visible, regardless of the template section's isEnabled flag.
     if (sectionKey === 'jobRequirement') {
-      const jobSection = unwrapSection(rawValue);
-      SECTION_APPLIERS.jobRequirement(form, {
-        dataTakenFromCandidate: Boolean(jobSection?.dataTakenFromCandidate),
-      });
+      applyJobRequirementSection(form, rawValue);
       continue;
     }
 
     // Schedule is a mandatory step: always shown, no field-visibility map.
     if (sectionKey === 'schedule') continue;
 
-    // Customizable Forms carry real copied data — reuse the edit-flow normaliser.
-    // Only include the section when the template has it enabled.
     if (sectionKey === 'customizedForm') {
-      const customizedForm = normalizeCustomizableFormSection(rawValue, {
-        isEnabled: false,
-        sectionTitle: '',
-        forms: [],
-      });
-      if (!customizedForm.isEnabled) continue;
-      form.customizableForm = customizedForm;
-      visibleStepKeys.add('customizable-form');
+      if (applyCustomizedFormSection(form, rawValue)) {
+        visibleStepKeys.add('customizable-form');
+      }
       continue;
     }
 
-    const section = unwrapSection(rawValue);
-    if (!section) continue;
-
-    // Optional sections appear in the navigator ONLY if the template enabled them
-    // (AC 7.1 / 7.7). A present-but-disabled section is treated as not included.
-    if (section.isEnabled !== true) continue;
-
-    const stepKey = SECTION_KEY_TO_STEP_KEY[sectionKey];
-    if (stepKey) visibleStepKeys.add(stepKey);
-
-    SECTION_APPLIERS[sectionKey]?.(form, {
-      dataTakenFromCandidate: Boolean(section.dataTakenFromCandidate),
-    });
-    templateFieldVisibility[sectionKey] = readContentFlags(section);
+    applyOptionalSection(
+      sectionKey,
+      rawValue,
+      form,
+      visibleStepKeys,
+      templateFieldVisibility
+    );
   }
 
   return {

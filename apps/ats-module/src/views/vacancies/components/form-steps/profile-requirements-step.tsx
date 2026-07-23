@@ -197,13 +197,13 @@ function AddressCard({
   form,
   onRemove,
   canRemove,
-}: {
+}: Readonly<{
   index: number;
   displayNumber: number;
   form: UseFormReturn<ProfileRequirementsFormValues>;
   onRemove: () => void;
   canRemove: boolean;
-}) {
+}>) {
   const { t } = useTranslation('ats');
   const isFieldVisible = useTemplateFieldVisible('profileRequirement');
   const queryClient = useQueryClient();
@@ -604,7 +604,10 @@ function AddressCard({
   );
 }
 
-export default function ProfileRequirementsStep({ onNext, onBack }: StepProps) {
+export default function ProfileRequirementsStep({
+  onNext,
+  onBack,
+}: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
   const showDisableToast = useDisableSuccessToast();
   const isFieldVisible = useTemplateFieldVisible('profileRequirement');

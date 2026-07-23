@@ -22,8 +22,8 @@ import {
 import { industryService } from '@/views/vacancies/services';
 import type {
   PatentStatus,
+  PreferredPatentsSchema,
   StepProps,
-  preferredPatentsSchema,
 } from '@/views/vacancies/types';
 import { resolveUserCreatedIndustries } from '@/views/vacancies/utils';
 
@@ -70,12 +70,12 @@ function PatentCard({
   form,
   onRemove,
   dataTakenFromCandidate,
-}: {
+}: Readonly<{
   index: number;
-  form: UseFormReturn<preferredPatentsSchema>;
+  form: UseFormReturn<PreferredPatentsSchema>;
   onRemove: () => void;
   dataTakenFromCandidate: boolean;
-}) {
+}>) {
   const { t } = useTranslation('ats');
   const isFieldVisible = useTemplateFieldVisible('patents');
   const [hasMaxError, setHasMaxError] = useState(false);
@@ -512,7 +512,10 @@ function PatentCard({
   );
 }
 
-export default function PreferredPatentsStep({ onNext, onBack }: StepProps) {
+export default function PreferredPatentsStep({
+  onNext,
+  onBack,
+}: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
 
   const {
@@ -661,7 +664,7 @@ export default function PreferredPatentsStep({ onNext, onBack }: StepProps) {
     }
   };
 
-  const handleSubmit = async (data: preferredPatentsSchema) => {
+  const handleSubmit = async (data: PreferredPatentsSchema) => {
     if (data.isEnabled && !data.dataTakenFromCandidate) {
       const hasData = data.patents.some(
         p =>

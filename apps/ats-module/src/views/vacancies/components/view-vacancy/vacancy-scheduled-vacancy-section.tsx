@@ -12,11 +12,11 @@ function ScheduledRow({
   icon,
   label,
   value,
-}: {
+}: Readonly<{
   icon: ReactNode;
   label: string;
   value: string;
-}) {
+}>) {
   return (
     <div className="flex items-center gap-2 text-sm text-slate-600">
       <div className="flex items-center gap-1 text-slate-600">
@@ -40,9 +40,9 @@ function formatScheduleDateTime(value: string): string {
 
 function VacancyScheduledVacancySection({
   scheduledVacancy,
-}: {
+}: Readonly<{
   scheduledVacancy?: VacancyViewModel['scheduledVacancy'];
-}) {
+}>) {
   const { t } = useTranslation('ats');
 
   if (!scheduledVacancy) {

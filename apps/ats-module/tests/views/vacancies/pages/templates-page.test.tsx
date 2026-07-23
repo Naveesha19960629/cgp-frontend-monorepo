@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import TemplatesPage from '@/views/vacancies/pages/templates-page';
+import { TABLE_PAGE_SIZE } from '@/views/vacancies/utils';
 
 const navigate = vi.fn();
 const useVacancyTemplatesQueryMock = vi.fn();
@@ -60,7 +61,22 @@ vi.mock('@/views/vacancies', async importOriginal => {
     useVacancyTemplatesTableParams: () => useVacancyTemplatesTableParamsMock(),
     // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     useDeleteTemplateMutation: () => useDeleteTemplateMutationMock(),
-    TemplatesToolbar: () => <div data-testid="templates-toolbar" />,
+    TemplatesToolbar: ({
+      onSearchChange,
+      onSortOrderChange,
+    }: {
+      onSearchChange: (value: string) => void;
+      onSortOrderChange: (value: string) => void;
+    }) => (
+      <div data-testid="templates-toolbar">
+        <button type="button" onClick={() => onSearchChange('foo')}>
+          change-search
+        </button>
+        <button type="button" onClick={() => onSortOrderChange('OLDEST')}>
+          change-sort
+        </button>
+      </div>
+    ),
     TemplateEmptyState: () => <div data-testid="template-empty-state" />,
     TemplateSearchEmptyState: () => (
       <div data-testid="template-search-empty-state" />
@@ -72,9 +88,13 @@ vi.mock('@/views/vacancies', async importOriginal => {
     TemplateCard: ({
       template,
       onDelete,
+      onEdit,
+      onUse,
     }: {
       template: { vacancyTemplateId: string };
       onDelete: (id: string) => void;
+      onEdit: (id: string) => void;
+      onUse: (id: string) => void;
     }) => (
       <div data-testid="template-card">
         <button
@@ -82,6 +102,12 @@ vi.mock('@/views/vacancies', async importOriginal => {
           onClick={() => onDelete(template.vacancyTemplateId)}
         >
           delete
+        </button>
+        <button type="button" onClick={() => onEdit(template.vacancyTemplateId)}>
+          edit
+        </button>
+        <button type="button" onClick={() => onUse(template.vacancyTemplateId)}>
+          use
         </button>
       </div>
     ),
@@ -111,16 +137,18 @@ vi.mock('@/views/vacancies', async importOriginal => {
 
 describe('TemplatesPage', () => {
   const mutate = vi.fn();
+  const setParams = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
+    sessionStorage.clear();
     useVacancyTemplatesQueryMock.mockReturnValue({
       data: { data: { content: [mockTemplate], totalPages: 1 } },
       isLoading: false,
     });
     useVacancyTemplatesTableParamsMock.mockReturnValue([
       defaultParams,
-      vi.fn(),
+      setParams,
     ]);
     useDeleteTemplateMutationMock.mockReturnValue({
       mutate,
@@ -256,5 +284,120 @@ describe('TemplatesPage', () => {
     expect(
       screen.getByRole('button', { name: 'templates.deleteDialog.confirm' })
     ).toBeDisabled();
+  });
+
+  it('navigates to the edit route when a template edit action is triggered', async () => {
+    const user = userEvent.setup();
+    render(<TemplatesPage />);
+
+    await user.click(screen.getByRole('button', { name: 'edit' }));
+
+    expect(navigate).toHaveBeenCalledWith(
+      '/dashboard/ats/templates/template-1/edit'
+    );
+  });
+
+  it('navigates to the use-template route with the origin state when a template use action is triggered', async () => {
+    const user = userEvent.setup();
+    render(<TemplatesPage />);
+
+    await user.click(screen.getByRole('button', { name: 'use' }));
+
+    expect(navigate).toHaveBeenCalledWith(
+      '/dashboard/ats/vacancies/from-template/template-1',
+      { state: { from: '/dashboard/ats/templates' } }
+    );
+  });
+
+  it('resets to the previous page when deleting the last item on a page beyond the first', async () => {
+    const user = userEvent.setup();
+    useVacancyTemplatesTableParamsMock.mockReturnValue([
+      { ...defaultParams, page: 2 },
+      setParams,
+    ]);
+    mutate.mockImplementation(
+      (
+        _id: string,
+        options: { onSuccess: () => void; onError: () => void }
+      ) => {
+        options.onSuccess();
+      }
+    );
+
+    render(<TemplatesPage />);
+
+    await user.click(screen.getByRole('button', { name: 'delete' }));
+    await user.click(
+      screen.getByRole('button', { name: 'templates.deleteDialog.confirm' })
+    );
+
+    expect(setParams).toHaveBeenCalledWith({ page: 1 });
+  });
+
+  it('renders skeleton placeholders while templates are being fetched', () => {
+    useVacancyTemplatesQueryMock.mockReturnValue({
+      data: undefined,
+      isFetching: true,
+    });
+
+    render(<TemplatesPage />);
+
+    expect(screen.getAllByRole('article')).toHaveLength(8);
+    expect(screen.queryByTestId('template-card')).not.toBeInTheDocument();
+  });
+
+  it('shows the search empty state when a search is active and no templates match', () => {
+    useVacancyTemplatesQueryMock.mockReturnValue({
+      data: { data: { content: [], totalPages: 0 } },
+      isFetching: false,
+    });
+    useVacancyTemplatesTableParamsMock.mockReturnValue([
+      { ...defaultParams, search: 'foo' },
+      setParams,
+    ]);
+
+    render(<TemplatesPage />);
+
+    expect(
+      screen.getByTestId('template-search-empty-state')
+    ).toBeInTheDocument();
+    expect(screen.queryByTestId('template-empty-state')).not.toBeInTheDocument();
+  });
+
+  it('updates the sort order and resets to page one', async () => {
+    const user = userEvent.setup();
+    render(<TemplatesPage />);
+
+    await user.click(screen.getByRole('button', { name: 'change-sort' }));
+
+    expect(setParams).toHaveBeenCalledWith({ sortOrder: 'OLDEST', page: 1 });
+  });
+
+  it('resets filters and clears the reload marker when reopened after a page reload', () => {
+    sessionStorage.setItem('templates_page_loaded', '1');
+
+    render(<TemplatesPage />);
+
+    expect(setParams).toHaveBeenCalledWith({
+      page: 1,
+      size: TABLE_PAGE_SIZE,
+      search: '',
+      sortOrder: 'NEWEST',
+    });
+    expect(sessionStorage.getItem('templates_page_loaded')).toBeNull();
+  });
+
+  it('does not reset filters on a fresh (non-reload) session', () => {
+    render(<TemplatesPage />);
+
+    expect(setParams).not.toHaveBeenCalled();
+  });
+
+  it('marks the session on beforeunload so a subsequent reload can reset filters', () => {
+    render(<TemplatesPage />);
+
+    window.dispatchEvent(new Event('beforeunload'));
+
+    expect(sessionStorage.getItem('templates_page_loaded')).toBe('1');
   });
 });

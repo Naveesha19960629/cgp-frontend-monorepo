@@ -187,6 +187,8 @@ interface VacancyFilterOptionsApiResponse {
 
 // ─── Secondary Education ──────────────────────────────────────────────────────
 
+type EntitySourceType = 'MASTER' | 'PENDING' | 'USER_CREATED';
+
 interface LookupItem {
   id: string;
   label: string;
@@ -199,7 +201,7 @@ interface LocationLookupItem {
 }
 
 interface SecondaryEducationRef {
-  source: 'MASTER' | 'PENDING' | 'USER_CREATED';
+  source: EntitySourceType;
   id: string;
   name?: string;
 }
@@ -226,7 +228,7 @@ interface SecondaryEducation {
 // ─── Tertiary Education ───────────────────────────────────────────────────────
 
 interface TertiaryEducationRef {
-  source: 'MASTER' | 'PENDING' | 'USER_CREATED';
+  source: EntitySourceType;
   id: string;
   name?: string;
 }
@@ -273,7 +275,7 @@ interface CreatePendingApiResponse {
 type LicenseCertType = 'LICENSE' | 'CERTIFICATION' | 'CERTIFICATE';
 
 interface LicenseCertRef {
-  source: 'MASTER' | 'PENDING' | 'USER_CREATED';
+  source: EntitySourceType;
   id: string;
   name?: string;
   type?: LicenseCertType;
@@ -476,8 +478,8 @@ interface VacancyForm {
   preferredCauses?: PreferredCauses;
   preferredHobbies?: PreferredHobbies;
   preferredIndustries?: PreferredIndustries;
-  patents?: preferredPatentsSchema;
-  preferredHonoursAwards?: preferredHonoursAwardsSchema;
+  patents?: PreferredPatentsSchema;
+  preferredHonoursAwards?: PreferredHonoursAwardsSchema;
   licenseCertificates?: LicenseCertificates[];
   customizableForm?: CustomizableFormData;
   schedule?: ScheduleVacancy;
@@ -602,12 +604,12 @@ interface PatentStatusSchemaType {
 interface PatentEntrySchemaType {
   relatedIndustries: PatentIndustrySchemaType[];
   statuses: PatentStatusSchemaType[];
-  fromDate?: Date | undefined;
-  toDate?: Date | undefined;
+  fromDate?: Date;
+  toDate?: Date;
   isOpen: boolean;
 }
 
-interface preferredPatentsSchema {
+interface PreferredPatentsSchema {
   isEnabled: boolean;
   dataTakenFromCandidate: boolean;
   patents: PatentEntrySchemaType[];
@@ -627,14 +629,14 @@ interface HonourLocationSchemaType {
 interface HonourEntrySchemaType {
   title: string;
   issuedBy: string;
-  issuedDateFrom?: Date | null | undefined;
-  issuedDateTo?: Date | null | undefined;
+  issuedDateFrom?: Date | null;
+  issuedDateTo?: Date | null;
   associatedOrganizations: HonourOrganizationSchemaType[];
   organizationLocations: HonourLocationSchemaType[];
   isOpen: boolean;
 }
 
-interface preferredHonoursAwardsSchema {
+interface PreferredHonoursAwardsSchema {
   isEnabled: boolean;
   dataTakenFromCandidate: boolean;
   honoursAndAwards: HonourEntrySchemaType[];
@@ -2019,11 +2021,11 @@ export type {
   PatentIndustryOption,
   PatentStatusOption,
   StepDisableDialogProps,
-  preferredPatentsSchema,
+  PreferredPatentsSchema,
   PatentEntrySchemaType,
   PatentIndustrySchemaType,
   PatentStatusSchemaType,
-  preferredHonoursAwardsSchema,
+  PreferredHonoursAwardsSchema,
   HonourEntrySchemaType,
   HonourOrganizationSchemaType,
   HonourLocationSchemaType,

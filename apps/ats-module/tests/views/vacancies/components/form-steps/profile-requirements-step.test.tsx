@@ -76,6 +76,9 @@ const mockUsePlacesCountryQuery = vi.hoisted(() =>
   vi.fn(() => ({ data: [], isFetching: false }))
 );
 const mockSuccessToast = vi.hoisted(() => vi.fn());
+const mockErrorToast = vi.hoisted(() => vi.fn());
+const mockGetByState = vi.hoisted(() => vi.fn());
+const mockGetByCountry = vi.hoisted(() => vi.fn());
 
 // ── Module mocks ──────────────────────────────────────────────────────────────
 
@@ -85,8 +88,21 @@ vi.mock('react-i18next', () => ({
 
 vi.mock('@cgp/ui-kit/components/custom-toast', () => ({
   SuccessToast: mockSuccessToast,
-  ErrorToast: vi.fn(),
+  ErrorToast: mockErrorToast,
 }));
+
+vi.mock('@/views/vacancies/services', async importOriginal => {
+  const actual =
+    await importOriginal<typeof import('@/views/vacancies/services')>();
+  return {
+    ...actual,
+    placesService: {
+      ...actual.placesService,
+      getByState: mockGetByState,
+      getByCountry: mockGetByCountry,
+    },
+  };
+});
 
 vi.mock('@/components/message-box', () => ({
   default: () => <div data-testid="message-box" />,
@@ -259,10 +275,44 @@ vi.mock('@cgp/ui-kit/components/combobox', () => ({
   Combobox: ({
     placeholder,
     disabled,
+    value,
+    selectedLabel,
+    options = [],
+    onValueChange,
+    onSearchChange,
   }: {
     placeholder?: string;
     disabled?: boolean;
-  }) => <input placeholder={placeholder} disabled={disabled} />,
+    value?: string;
+    selectedLabel?: string;
+    options?: { value: string; label: string }[];
+    onValueChange?: (v: string) => void;
+    onSearchChange?: (v: string) => void;
+  }) => (
+    <div data-testid={`combobox-${placeholder}`}>
+      <span data-testid={`combobox-${placeholder}-current`}>
+        {selectedLabel ?? value ?? ''}
+      </span>
+      <input
+        aria-label={placeholder}
+        placeholder={placeholder}
+        disabled={disabled}
+        readOnly
+        value={value ?? ''}
+        onChange={e => onSearchChange?.(e.target.value)}
+      />
+      {options.map(o => (
+        <button
+          type="button"
+          key={o.value}
+          disabled={disabled}
+          onClick={() => onValueChange?.(o.value)}
+        >
+          {`opt:${placeholder}:${o.label}`}
+        </button>
+      ))}
+    </div>
+  ),
 }));
 
 vi.mock('@cgp/ui-kit/components/character-count', () => ({
@@ -282,6 +332,7 @@ function makeForm(
       stateProvince: { id: string; label: string };
       country: { id: string; label: string };
       postalCode: string;
+      isOpen?: boolean;
     }[];
   }> = {}
 ) {
@@ -299,6 +350,7 @@ function makeForm(
           stateProvince: { id: string; label: string };
           country: { id: string; label: string };
           postalCode: string;
+          isOpen?: boolean;
         }[],
         ...overrides,
       },
@@ -340,6 +392,9 @@ function renderStep(
     onSubmit,
     onCancel: formValue.onCancel,
     setForm: formValue.setForm,
+    removeCompletedStep: formValue.removeCompletedStep,
+    stepDisableRef: formValue.stepDisableRef,
+    stepPersistRef: formValue.stepPersistRef,
   };
 }
 
@@ -348,6 +403,11 @@ function renderStep(
 describe('ProfileRequirementsStep', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockUsePlacesCityQuery.mockReturnValue({ data: [], isFetching: false });
+    mockUsePlacesStateQuery.mockReturnValue({ data: [], isFetching: false });
+    mockUsePlacesCountryQuery.mockReturnValue({ data: [], isFetching: false });
+    mockGetByState.mockResolvedValue([]);
+    mockGetByCountry.mockResolvedValue([]);
   });
 
   describe('rendering', () => {
@@ -386,25 +446,19 @@ describe('ProfileRequirementsStep', () => {
       expect(screen.getByTestId('message-box')).toBeInTheDocument();
     });
 
-    it('renders the gender field label', () => {
+    it.each([
+      ['renders the gender field label', 'profileRequirements.gender'],
+      [
+        'renders the marital status field label',
+        'profileRequirements.maritalStatus',
+      ],
+      [
+        'renders the addresses section title',
+        'profileRequirements.addressesTitle',
+      ],
+    ])('%s', (_description, expectedText) => {
       renderStep();
-      expect(
-        screen.getByText('profileRequirements.gender')
-      ).toBeInTheDocument();
-    });
-
-    it('renders the marital status field label', () => {
-      renderStep();
-      expect(
-        screen.getByText('profileRequirements.maritalStatus')
-      ).toBeInTheDocument();
-    });
-
-    it('renders the addresses section title', () => {
-      renderStep();
-      expect(
-        screen.getByText('profileRequirements.addressesTitle')
-      ).toBeInTheDocument();
+      expect(screen.getByText(expectedText)).toBeInTheDocument();
     });
 
     it('renders Cancel and Next buttons', () => {
@@ -632,30 +686,380 @@ describe('ProfileRequirementsStep', () => {
       ).toBeInTheDocument();
     });
 
-    it('renders city field label', () => {
+    it.each([
+      ['renders city field label', 'profileRequirements.city'],
+      [
+        'renders state/province field label',
+        'profileRequirements.stateProvince',
+      ],
+      ['renders country field label', 'profileRequirements.country'],
+      ['renders postal code field label', 'profileRequirements.postalCode'],
+    ])('%s', (_description, expectedText) => {
       renderStep();
-      expect(screen.getByText('profileRequirements.city')).toBeInTheDocument();
+      expect(screen.getByText(expectedText)).toBeInTheDocument();
+    });
+  });
+
+  describe('gender and marital status selection', () => {
+    it('updates the gender value when an option is selected', async () => {
+      const user = userEvent.setup();
+      renderStep({ isEnabled: true });
+
+      const [genderSelect] = screen.getAllByRole('combobox');
+      await user.selectOptions(genderSelect, 'male');
+
+      expect(genderSelect).toHaveValue('male');
     });
 
-    it('renders state/province field label', () => {
-      renderStep();
+    it('updates the marital status value when an option is selected', async () => {
+      const user = userEvent.setup();
+      renderStep({ isEnabled: true });
+
+      const [, maritalStatusSelect] = screen.getAllByRole('combobox');
+      await user.selectOptions(maritalStatusSelect, 'single');
+
+      expect(maritalStatusSelect).toHaveValue('single');
+    });
+  });
+
+  describe('address place resolution', () => {
+    const CITY_ID = '11111111-1111-1111-1111-111111111111';
+    const RESOLVED_STATE_ID = '22222222-2222-2222-2222-222222222222';
+    const RESOLVED_COUNTRY_ID = '33333333-3333-3333-3333-333333333333';
+
+    it('resolves state and country ref ids when a city option is selected', async () => {
+      const user = userEvent.setup();
+      mockUsePlacesCityQuery.mockReturnValue({
+        data: [
+          {
+            city: { id: CITY_ID, label: 'Aachen' },
+            state: { label: 'North Rhine-Westphalia' },
+            country: { label: 'Germany' },
+          },
+        ],
+        isFetching: false,
+      });
+      mockGetByState.mockResolvedValue([
+        {
+          state: { id: RESOLVED_STATE_ID, label: 'North Rhine-Westphalia' },
+          country: { id: RESOLVED_COUNTRY_ID, label: 'Germany' },
+        },
+      ]);
+      mockGetByCountry.mockResolvedValue([
+        { country: { id: RESOLVED_COUNTRY_ID, label: 'Germany' } },
+      ]);
+
+      renderStep({ isEnabled: true });
+
+      await user.click(
+        screen.getByText(
+          'opt:profileRequirements.cityPlaceholder:Aachen, North Rhine-Westphalia, Germany'
+        )
+      );
+
+      await waitFor(() => {
+        expect(
+          screen.getByTestId(
+            'combobox-profileRequirements.stateProvincePlaceholder-current'
+          )
+        ).toHaveTextContent('North Rhine-Westphalia, Germany');
+      });
       expect(
-        screen.getByText('profileRequirements.stateProvince')
-      ).toBeInTheDocument();
+        screen.getByTestId(
+          'combobox-profileRequirements.countryPlaceholder-current'
+        )
+      ).toHaveTextContent(RESOLVED_COUNTRY_ID);
     });
 
-    it('renders country field label', () => {
-      renderStep();
-      expect(
-        screen.getByText('profileRequirements.country')
-      ).toBeInTheDocument();
+    it('resolves the country ref id when a state option is selected directly', async () => {
+      const user = userEvent.setup();
+      const STATE_ID = '44444444-4444-4444-4444-444444444444';
+      mockUsePlacesStateQuery.mockReturnValue({
+        data: [
+          {
+            state: { id: STATE_ID, label: 'Bavaria' },
+            country: { label: 'Germany' },
+          },
+        ],
+        isFetching: false,
+      });
+      mockGetByCountry.mockResolvedValue([
+        { country: { id: RESOLVED_COUNTRY_ID, label: 'Germany' } },
+      ]);
+
+      renderStep({ isEnabled: true });
+
+      await user.click(
+        screen.getByText(
+          'opt:profileRequirements.stateProvincePlaceholder:Bavaria, Germany'
+        )
+      );
+
+      await waitFor(() => {
+        expect(
+          screen.getByTestId(
+            'combobox-profileRequirements.countryPlaceholder-current'
+          )
+        ).toHaveTextContent(RESOLVED_COUNTRY_ID);
+      });
     });
 
-    it('renders postal code field label', () => {
-      renderStep();
+    it('sets the country value when a country option is selected directly', async () => {
+      const user = userEvent.setup();
+      const COUNTRY_ID = '55555555-5555-5555-5555-555555555555';
+      mockUsePlacesCountryQuery.mockReturnValue({
+        data: [{ country: { id: COUNTRY_ID, label: 'France' } }],
+        isFetching: false,
+      });
+
+      renderStep({ isEnabled: true });
+
+      await user.click(
+        screen.getByText('opt:profileRequirements.countryPlaceholder:France')
+      );
+
+      await waitFor(() => {
+        expect(
+          screen.getByTestId(
+            'combobox-profileRequirements.countryPlaceholder-current'
+          )
+        ).toHaveTextContent(COUNTRY_ID);
+      });
+    });
+  });
+
+  describe('duplicate address detection', () => {
+    const duplicateAddress = {
+      city: { id: 'city-dup', label: 'Aachen' },
+      stateProvince: { id: 'state-dup', label: 'North Rhine-Westphalia' },
+      country: { id: 'country-dup', label: 'Germany' },
+      postalCode: '52062',
+      isOpen: true,
+    };
+
+    it('clears the entry and shows an error toast when a duplicate address is blurred', async () => {
+      renderStep({
+        isEnabled: true,
+        addresses: [{ ...duplicateAddress }, { ...duplicateAddress }],
+      });
+
+      const postalCodeInputs = screen.getAllByPlaceholderText(
+        'profileRequirements.postalCodePlaceholder'
+      );
+      expect(postalCodeInputs).toHaveLength(2);
+
+      fireEvent.blur(postalCodeInputs[0]);
+
+      await waitFor(() => {
+        expect(mockErrorToast).toHaveBeenCalledWith(
+          expect.objectContaining({
+            title: 'Error',
+          })
+        );
+      });
+      await waitFor(() => {
+        expect(postalCodeInputs[0]).toHaveValue('');
+      });
+    });
+
+    it('blocks submission and shows an error toast when duplicate addresses are submitted', async () => {
+      const user = userEvent.setup();
+      const { onNext } = renderStep({
+        isEnabled: true,
+        addresses: [{ ...duplicateAddress }, { ...duplicateAddress }],
+      });
+
+      await user.click(screen.getByText('profileRequirements.nextButton'));
+
+      await waitFor(() => {
+        expect(mockErrorToast).toHaveBeenCalled();
+      });
+      expect(onNext).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('empty confirm dialog', () => {
+    it('shows the empty-data dialog and disables the step on confirm', async () => {
+      const user = userEvent.setup();
+      const { onNext } = renderStep({ isEnabled: true });
+
+      fireEvent.submit(screen.getByTestId('profileRequirements-section-form'));
+
+      await waitFor(() => {
+        expect(
+          screen.getByText('profileRequirements.emptyDisableDialog.title')
+        ).toBeInTheDocument();
+      });
+
+      await user.click(
+        screen.getByText('profileRequirements.emptyDisableDialog.disable')
+      );
+
+      expect(onNext).toHaveBeenCalledWith(
+        expect.objectContaining({
+          profileRequirements: expect.objectContaining({
+            isEnabled: false,
+            gender: { id: '', label: '' },
+            maritalStatus: { id: '', label: '' },
+            addresses: [],
+          }),
+        })
+      );
       expect(
-        screen.getByText('profileRequirements.postalCode')
-      ).toBeInTheDocument();
+        screen.queryByText('profileRequirements.emptyDisableDialog.title')
+      ).not.toBeInTheDocument();
+    });
+  });
+
+  describe('disable confirmation dialog', () => {
+    it('resets the step and notifies on confirm when data is present', async () => {
+      const user = userEvent.setup();
+      const { removeCompletedStep } = renderStep({
+        isEnabled: true,
+        gender: { id: 'male', label: 'Male' },
+      });
+
+      await user.click(screen.getByRole('switch'));
+
+      await waitFor(() => {
+        expect(screen.getByTestId('step-disable-dialog')).toBeInTheDocument();
+      });
+
+      await user.click(
+        screen.getByText('profileRequirements.disableDialog.confirmButton')
+      );
+
+      expect(removeCompletedStep).toHaveBeenCalledWith(0);
+      expect(mockSuccessToast).toHaveBeenCalled();
+      await waitFor(() => {
+        expect(
+          screen.queryByTestId('step-disable-dialog')
+        ).not.toBeInTheDocument();
+      });
+      expect(screen.getByRole('switch')).toHaveAttribute(
+        'aria-checked',
+        'false'
+      );
+    });
+  });
+
+  describe('stepDisableRef', () => {
+    it('resets profile requirements when invoked externally', () => {
+      const { stepDisableRef, setForm } = renderStep({ isEnabled: true });
+
+      stepDisableRef.current?.();
+
+      expect(setForm).toHaveBeenCalledTimes(1);
+      const updater = setForm.mock.calls[0]?.[0] as (prev: unknown) => {
+        profileRequirements: {
+          isEnabled: boolean;
+          dataTakenFromCandidate: boolean;
+          gender: { id: string; label: string };
+          maritalStatus: { id: string; label: string };
+          addresses: unknown[];
+        };
+      };
+
+      const result = updater({});
+      expect(result.profileRequirements).toMatchObject({
+        isEnabled: false,
+        dataTakenFromCandidate: false,
+        gender: { id: '', label: '' },
+        maritalStatus: { id: '', label: '' },
+        addresses: [],
+      });
+    });
+  });
+
+  describe('add/remove address cards', () => {
+    it('appends a new address card when Add is clicked', async () => {
+      const user = userEvent.setup();
+      renderStep({ isEnabled: true });
+
+      expect(
+        screen.getAllByText(/profileRequirements.addressTitle/)
+      ).toHaveLength(1);
+
+      await user.click(screen.getByRole('button', { name: '' }));
+
+      await waitFor(() => {
+        expect(
+          screen.getAllByText(/profileRequirements.addressTitle/)
+        ).toHaveLength(2);
+      });
+    });
+
+    it('shows an error toast instead of appending beyond the max entries', async () => {
+      const user = userEvent.setup();
+      const address = {
+        city: { id: '', label: '' },
+        stateProvince: { id: '', label: '' },
+        country: { id: '', label: '' },
+        postalCode: '',
+        isOpen: true,
+      };
+      renderStep({
+        isEnabled: true,
+        addresses: [address, address, address, address, address],
+      });
+
+      expect(
+        screen.getAllByText(/profileRequirements.addressTitle/)
+      ).toHaveLength(5);
+
+      await user.click(screen.getByRole('button', { name: '' }));
+
+      await waitFor(() => {
+        expect(mockErrorToast).toHaveBeenCalled();
+      });
+      expect(
+        screen.getAllByText(/profileRequirements.addressTitle/)
+      ).toHaveLength(5);
+    });
+
+    it('removes an address card when its remove button is clicked', async () => {
+      const user = userEvent.setup();
+      const address = {
+        city: { id: '', label: '' },
+        stateProvince: { id: '', label: '' },
+        country: { id: '', label: '' },
+        postalCode: '',
+        isOpen: true,
+      };
+      renderStep({
+        isEnabled: true,
+        addresses: [address, { ...address }],
+      });
+
+      expect(
+        screen.getAllByText(/profileRequirements.addressTitle/)
+      ).toHaveLength(2);
+
+      const removeButtons = screen.getAllByRole('button', {
+        name: 'profileRequirements.removeAddress',
+      });
+      await user.click(removeButtons[0]);
+
+      await waitFor(() => {
+        expect(
+          screen.getAllByText(/profileRequirements.addressTitle/)
+        ).toHaveLength(1);
+      });
+    });
+  });
+
+  describe('postal code sanitization', () => {
+    it('strips disallowed characters as the user types', async () => {
+      const user = userEvent.setup();
+      renderStep({ isEnabled: true });
+
+      const postalCodeInput = screen.getByPlaceholderText(
+        'profileRequirements.postalCodePlaceholder'
+      );
+      await user.type(postalCodeInput, 'AB#12');
+
+      expect(postalCodeInput).not.toHaveValue('AB#12');
+      expect((postalCodeInput as HTMLInputElement).value).not.toContain('#');
     });
   });
 });

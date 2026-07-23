@@ -8,8 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { StepDisableDialog } from '@/views/vacancies';
 import VacancyStatusBadge from '@/views/vacancies/components/vacancy-status-badge';
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
-import { useStepGuard } from '@/views/vacancies/hooks';
-import { useDisableSuccessToast } from '@/views/vacancies/hooks';
+import { useDisableSuccessToast, useStepGuard } from '@/views/vacancies/hooks';
 import type {
   CustomizableFormData,
   CustomizableFormFormCard,
@@ -167,6 +166,48 @@ const hasDuplicateOptionValues = (q: Question): boolean => {
     seen.add(value);
   }
   return false;
+};
+
+// ── Question-level pure helpers (extracted to keep the setForms callbacks
+// inside the main component from nesting more than 4 functions deep) ────────
+
+// Returns `form` with `updated` swapped in for the question sharing its id.
+const applyQuestionUpdate = (form: FormCard, updated: Question): FormCard => ({
+  ...form,
+  questions: form.questions.map(q => (q.id === updated.id ? updated : q)),
+});
+
+// Returns `form` with the given question removed.
+const applyQuestionRemoval = (
+  form: FormCard,
+  questionId: number
+): FormCard => ({
+  ...form,
+  questions: form.questions.filter(q => q.id !== questionId),
+});
+
+// Returns `form` with a duplicate of the given question inserted right after
+// the original (no-op — `form` is returned unchanged — when the source
+// question is missing or empty).
+const applyQuestionDuplication = (
+  form: FormCard,
+  questionId: number
+): FormCard => {
+  const source = form.questions.find(q => q.id === questionId);
+  if (!source || isQuestionEmpty(source)) return form;
+
+  const copy: Question = { ...source, id: form.nextQuestionId };
+  const idx = form.questions.findIndex(q => q.id === questionId);
+
+  return {
+    ...form,
+    questions: [
+      ...form.questions.slice(0, idx + 1),
+      copy,
+      ...form.questions.slice(idx + 1),
+    ],
+    nextQuestionId: form.nextQuestionId + 1,
+  };
 };
 
 // ── QuestionCard ─────────────────────────────────────────────────────────────
@@ -942,13 +983,14 @@ export default function CustomizableFormStep({
     const parseTitle = (title: string) => {
       if (title.startsWith(prefix)) {
         const remaining = title.slice(prefix.length);
-        const match = remaining.match(/^(.*?)(?:\s*\((\d+)\))?$/);
-        if (match) {
+        const suffixMatch = /^(.*?)\((\d+)\)$/.exec(remaining);
+        if (suffixMatch) {
           return {
-            baseTitle: prefix + match[1].trim(),
-            suffix: match[2] ? parseInt(match[2], 10) : null,
+            baseTitle: prefix + suffixMatch[1].trim(),
+            suffix: Number.parseInt(suffixMatch[2], 10),
           };
         }
+        return { baseTitle: prefix + remaining.trim(), suffix: null };
       }
       return { baseTitle: prefix + title.trim(), suffix: null };
     };
@@ -1022,25 +1064,13 @@ export default function CustomizableFormStep({
 
   const updateQuestion = (formId: number, updated: Question) => {
     setForms(prev =>
-      prev.map(f => {
-        if (f.id !== formId) return f;
-        return {
-          ...f,
-          questions: f.questions.map(q => (q.id === updated.id ? updated : q)),
-        };
-      })
+      prev.map(f => (f.id === formId ? applyQuestionUpdate(f, updated) : f))
     );
   };
 
   const removeQuestion = (formId: number, questionId: number) => {
     setForms(prev =>
-      prev.map(f => {
-        if (f.id !== formId) return f;
-        return {
-          ...f,
-          questions: f.questions.filter(q => q.id !== questionId),
-        };
-      })
+      prev.map(f => (f.id === formId ? applyQuestionRemoval(f, questionId) : f))
     );
   };
 
@@ -1055,22 +1085,9 @@ export default function CustomizableFormStep({
     }
 
     setForms(prev =>
-      prev.map(f => {
-        if (f.id !== formId) return f;
-        const source = f.questions.find(q => q.id === questionId);
-        if (!source || isQuestionEmpty(source)) return f;
-        const copy: Question = { ...source, id: f.nextQuestionId };
-        const idx = f.questions.findIndex(q => q.id === questionId);
-        return {
-          ...f,
-          questions: [
-            ...f.questions.slice(0, idx + 1),
-            copy,
-            ...f.questions.slice(idx + 1),
-          ],
-          nextQuestionId: f.nextQuestionId + 1,
-        };
-      })
+      prev.map(f =>
+        f.id === formId ? applyQuestionDuplication(f, questionId) : f
+      )
     );
   };
 

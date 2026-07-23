@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 
 import { Badge } from '@cgp/ui-kit/components/ui/badge';
 
-function Root({ children }: { children: ReactNode }) {
+function Root({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <section className="flex min-h-0 flex-1 flex-col overflow-hidden px-7 py-5">
       {children}
@@ -16,11 +16,11 @@ function Header({
   title,
   status,
   actions,
-}: {
+}: Readonly<{
   title: string;
   status?: ReactNode;
   actions?: ReactNode;
-}) {
+}>) {
   return (
     <header className="mb-5 flex flex-wrap items-center justify-between gap-3">
       <div className="flex min-w-0 items-center gap-3">
@@ -34,11 +34,14 @@ function Header({
   );
 }
 
-function Body({ children }: { children: ReactNode }) {
+function Body({ children }: Readonly<{ children: ReactNode }>) {
   return <div className="min-h-0 flex-1 overflow-y-auto pr-1">{children}</div>;
 }
 
-function Section({ title, children }: { title: string; children: ReactNode }) {
+function Section({
+  title,
+  children,
+}: Readonly<{ title: string; children: ReactNode }>) {
   return (
     <section className="mb-4 rounded-lg border border-[#e5e5e5] bg-[#f5f5f5] p-3">
       <h2 className="mb-3 text-[18px] leading-6 font-bold text-slate-900">
@@ -49,11 +52,14 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
-function Grid({ children }: { children: ReactNode }) {
+function Grid({ children }: Readonly<{ children: ReactNode }>) {
   return <div className="grid gap-x-8 gap-y-6 md:grid-cols-2">{children}</div>;
 }
 
-function Field({ label, children }: { label: string; children: ReactNode }) {
+function Field({
+  label,
+  children,
+}: Readonly<{ label: string; children: ReactNode }>) {
   return (
     <div className="flex min-w-0 flex-col gap-3">
       <p className="text-sm font-semibold text-slate-600">{label}</p>
@@ -62,7 +68,7 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
-function Tags({ values }: { values: string[] }) {
+function Tags({ values }: Readonly<{ values: string[] }>) {
   if (!values.length) {
     return <p className="text-sm text-slate-500">-</p>;
   }
@@ -78,7 +84,7 @@ function Tags({ values }: { values: string[] }) {
   );
 }
 
-function Description({ value }: { value: string }) {
+function Description({ value }: Readonly<{ value: string }>) {
   if (!value) {
     return <p className="text-sm text-slate-500">-</p>;
   }
@@ -94,11 +100,11 @@ function BackHeader({
   title,
   status,
   onBack,
-}: {
+}: Readonly<{
   title: string;
   status?: ReactNode;
   onBack: () => void;
-}) {
+}>) {
   return (
     <header className="mb-5 flex flex-wrap items-center justify-between gap-3">
       <div className="flex min-w-0 items-center gap-2">
@@ -123,11 +129,11 @@ function InfoRow({
   icon,
   label,
   value,
-}: {
+}: Readonly<{
   icon: ReactNode;
   label: string;
   value: string | string[];
-}) {
+}>) {
   const displayValue = Array.isArray(value) ? value.join(', ') : value;
 
   return (

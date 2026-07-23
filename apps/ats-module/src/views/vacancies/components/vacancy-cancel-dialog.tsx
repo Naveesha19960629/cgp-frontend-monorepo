@@ -26,7 +26,7 @@ export default function VacancyCancelDialog({
   onDiscard,
   onSaveAsDraft,
   isSavingDraft = false,
-}: VacancyCancelDialogProps) {
+}: Readonly<VacancyCancelDialogProps>) {
   const { t } = useTranslation('ats');
 
   return (

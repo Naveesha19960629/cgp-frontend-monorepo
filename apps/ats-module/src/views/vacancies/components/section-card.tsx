@@ -5,11 +5,11 @@ export default function SectionCard({
   title,
   headerExtra,
   children,
-}: {
+}: Readonly<{
   title: string;
   headerExtra?: ReactNode;
   children: ReactNode;
-}) {
+}>) {
   return (
     <section className="rounded-xl border border-[#d4d4d4] bg-white px-5 py-5 shadow-[0px_4px_20px_0px_rgba(0,0,0,0.07)]">
       <div className="flex items-start justify-between gap-4">

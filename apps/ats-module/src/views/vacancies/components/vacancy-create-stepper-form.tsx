@@ -29,11 +29,11 @@ function StepIndicator({
   index,
   currentStepIndex,
   completedSteps,
-}: {
+}: Readonly<{
   index: number;
   currentStepIndex: number;
   completedSteps: Set<number>;
-}) {
+}>) {
   const isActive = index === currentStepIndex;
   const isCompleted = completedSteps.has(index);
 
@@ -68,7 +68,7 @@ function StepIndicator({
 
 export default function VacancyCreateStepperForm({
   mode = 'create',
-}: VacancyCreateStepperFormProps) {
+}: Readonly<VacancyCreateStepperFormProps>) {
   const { t } = useTranslation('ats');
   const navigate = useNavigate();
   const location = useLocation();

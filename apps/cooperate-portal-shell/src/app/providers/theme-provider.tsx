@@ -17,7 +17,7 @@ type ThemeProviderState = {
 };
 
 const COLOR_SCHEME_QUERY = '(prefers-color-scheme: dark)';
-const THEME_VALUES: Theme[] = ['dark', 'light', 'system'];
+const THEME_VALUES: Set<Theme> = new Set(['dark', 'light', 'system']);
 
 const ThemeProviderContext = React.createContext<
   ThemeProviderState | undefined
@@ -28,7 +28,7 @@ function isTheme(value: string | null): value is Theme {
     return false;
   }
 
-  return THEME_VALUES.includes(value as Theme);
+  return THEME_VALUES.has(value as Theme);
 }
 
 function getSystemTheme(): ResolvedTheme {
@@ -83,7 +83,7 @@ function ThemeProvider({
   storageKey = 'theme',
   disableTransitionOnChange = true,
   ...props
-}: ThemeProviderProps) {
+}: Readonly<ThemeProviderProps>) {
   const [theme, setThemeState] = React.useState<Theme>(() => {
     const storedTheme = localStorage.getItem(storageKey);
     if (isTheme(storedTheme)) {
@@ -158,14 +158,16 @@ function ThemeProvider({
       }
 
       setThemeState(currentTheme => {
-        const nextTheme =
-          currentTheme === 'dark'
-            ? 'light'
-            : currentTheme === 'light'
-              ? 'dark'
-              : getSystemTheme() === 'dark'
-                ? 'light'
-                : 'dark';
+        let nextTheme: Theme;
+        if (currentTheme === 'dark') {
+          nextTheme = 'light';
+        } else if (currentTheme === 'light') {
+          nextTheme = 'dark';
+        } else if (getSystemTheme() === 'dark') {
+          nextTheme = 'light';
+        } else {
+          nextTheme = 'dark';
+        }
 
         localStorage.setItem(storageKey, nextTheme);
         return nextTheme;

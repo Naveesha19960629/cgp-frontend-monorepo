@@ -26,7 +26,7 @@ export default function StepDisableDialog({
   description,
   cancelLabel,
   confirmLabel,
-}: StepDisableDialogProps) {
+}: Readonly<StepDisableDialogProps>) {
   const { t } = useTranslation('ats');
 
   const defaultTitle = t('common.disableDialog.title');

@@ -292,13 +292,15 @@ export default function ScheduleVacancyStep({
       setForm(payloadForm);
 
       if (id) {
-        const existingStatus =
-          existingStatusOverride ??
-          (scheduleToOnhold
-            ? 'on_hold'
-            : isCreateAction
-              ? targetStatus
-              : form.status);
+        let fallbackStatus: string;
+        if (scheduleToOnhold) {
+          fallbackStatus = 'on_hold';
+        } else if (isCreateAction) {
+          fallbackStatus = targetStatus;
+        } else {
+          fallbackStatus = form.status;
+        }
+        const existingStatus = existingStatusOverride ?? fallbackStatus;
         await updateVacancy({
           id,
           form: payloadForm,

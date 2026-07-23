@@ -6,12 +6,12 @@ import type { VacancyViewModel } from '@/views/vacancies/types';
 
 function VacancyCausesSection({
   preferredCauses,
-}: {
-  preferredCauses?: VacancyViewModel['preferredCauses'];
-}) {
+}: Readonly<{
+  preferredCauses: VacancyViewModel['preferredCauses'];
+}>) {
   const { t } = useTranslation('ats');
 
-  if (!preferredCauses || !preferredCauses.isEnabled) {
+  if (!preferredCauses?.isEnabled) {
     return null;
   }
 

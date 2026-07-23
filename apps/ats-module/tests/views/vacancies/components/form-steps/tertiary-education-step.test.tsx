@@ -512,102 +512,58 @@ describe('TertiaryEducationStep', () => {
       ).toBeInTheDocument();
     });
 
-    it('renders the qualification name field placeholder', () => {
+    test.each([
+      [
+        'renders the qualification name field placeholder',
+        'tertiaryEducation.placeholders.qualificationName',
+      ],
+      [
+        'renders the grade field placeholder',
+        'tertiaryEducation.placeholders.grade',
+      ],
+      [
+        'renders the location field placeholder (row 2 left)',
+        'tertiaryEducation.placeholders.awardingBodyLocation',
+      ],
+      [
+        'renders the batch field placeholder (row 2 right)',
+        'tertiaryEducation.placeholders.batch',
+      ],
+      [
+        'renders the awarding body field placeholder (row 3 left)',
+        'tertiaryEducation.placeholders.awardingBody',
+      ],
+      [
+        'renders the level of qualification field placeholder (row 3 right)',
+        'tertiaryEducation.placeholders.levelOfQualification',
+      ],
+      [
+        'renders the specialization field placeholder (row 4 left)',
+        'tertiaryEducation.placeholders.specialization',
+      ],
+      [
+        'renders the mode of study field placeholder (row 4 right)',
+        'tertiaryEducation.placeholders.studyMode',
+      ],
+      [
+        'renders the study pattern field placeholder (row 5 left)',
+        'tertiaryEducation.placeholders.studyPattern',
+      ],
+      [
+        'renders the delivery schedule field placeholder (row 5 right)',
+        'tertiaryEducation.placeholders.deliverySchedule',
+      ],
+      [
+        'renders the department field placeholder (row 6 left)',
+        'tertiaryEducation.placeholders.department',
+      ],
+      [
+        'renders the faculty field placeholder (row 6 right)',
+        'tertiaryEducation.placeholders.faculty',
+      ],
+    ])('%s', (_description, placeholder) => {
       renderStep();
-      expect(
-        screen.getByPlaceholderText(
-          'tertiaryEducation.placeholders.qualificationName'
-        )
-      ).toBeInTheDocument();
-    });
-
-    it('renders the grade field placeholder', () => {
-      renderStep();
-      expect(
-        screen.getByPlaceholderText('tertiaryEducation.placeholders.grade')
-      ).toBeInTheDocument();
-    });
-
-    it('renders the location field placeholder (row 2 left)', () => {
-      renderStep();
-      expect(
-        screen.getByPlaceholderText(
-          'tertiaryEducation.placeholders.awardingBodyLocation'
-        )
-      ).toBeInTheDocument();
-    });
-
-    it('renders the batch field placeholder (row 2 right)', () => {
-      renderStep();
-      expect(
-        screen.getByPlaceholderText('tertiaryEducation.placeholders.batch')
-      ).toBeInTheDocument();
-    });
-
-    it('renders the awarding body field placeholder (row 3 left)', () => {
-      renderStep();
-      expect(
-        screen.getByPlaceholderText(
-          'tertiaryEducation.placeholders.awardingBody'
-        )
-      ).toBeInTheDocument();
-    });
-
-    it('renders the level of qualification field placeholder (row 3 right)', () => {
-      renderStep();
-      expect(
-        screen.getByPlaceholderText(
-          'tertiaryEducation.placeholders.levelOfQualification'
-        )
-      ).toBeInTheDocument();
-    });
-
-    it('renders the specialization field placeholder (row 4 left)', () => {
-      renderStep();
-      expect(
-        screen.getByPlaceholderText(
-          'tertiaryEducation.placeholders.specialization'
-        )
-      ).toBeInTheDocument();
-    });
-
-    it('renders the mode of study field placeholder (row 4 right)', () => {
-      renderStep();
-      expect(
-        screen.getByPlaceholderText('tertiaryEducation.placeholders.studyMode')
-      ).toBeInTheDocument();
-    });
-
-    it('renders the study pattern field placeholder (row 5 left)', () => {
-      renderStep();
-      expect(
-        screen.getByPlaceholderText(
-          'tertiaryEducation.placeholders.studyPattern'
-        )
-      ).toBeInTheDocument();
-    });
-
-    it('renders the delivery schedule field placeholder (row 5 right)', () => {
-      renderStep();
-      expect(
-        screen.getByPlaceholderText(
-          'tertiaryEducation.placeholders.deliverySchedule'
-        )
-      ).toBeInTheDocument();
-    });
-
-    it('renders the department field placeholder (row 6 left)', () => {
-      renderStep();
-      expect(
-        screen.getByPlaceholderText('tertiaryEducation.placeholders.department')
-      ).toBeInTheDocument();
-    });
-
-    it('renders the faculty field placeholder (row 6 right)', () => {
-      renderStep();
-      expect(
-        screen.getByPlaceholderText('tertiaryEducation.placeholders.faculty')
-      ).toBeInTheDocument();
+      expect(screen.getByPlaceholderText(placeholder)).toBeInTheDocument();
     });
 
     it('passes loading indicator to all search selectors', () => {
@@ -843,91 +799,32 @@ describe('TertiaryEducationStep', () => {
   });
 
   describe('max selection inline error', () => {
-    it('shows error message when max selections is reached on the qualification name field', async () => {
-      const user = userEvent.setup();
-      renderStep();
+    test.each([
+      [
+        'qualification name field',
+        'tertiaryEducation.placeholders.qualificationName',
+      ],
+      [
+        'level of qualification field',
+        'tertiaryEducation.placeholders.levelOfQualification',
+      ],
+      ['batch field', 'tertiaryEducation.placeholders.batch'],
+      ['specialization field', 'tertiaryEducation.placeholders.specialization'],
+      ['department field', 'tertiaryEducation.placeholders.department'],
+      ['faculty field', 'tertiaryEducation.placeholders.faculty'],
+    ])(
+      'shows error message when max selections is reached on the %s',
+      async (_fieldName, placeholder) => {
+        const user = userEvent.setup();
+        renderStep();
 
-      await user.click(
-        screen.getByTestId(
-          'max-trigger-tertiaryEducation.placeholders.qualificationName'
-        )
-      );
+        await user.click(screen.getByTestId(`max-trigger-${placeholder}`));
 
-      expect(
-        screen.getByText('tertiaryEducation.errors.maxSelections')
-      ).toBeInTheDocument();
-    });
-
-    it('shows error message when max selections is reached on the level of qualification field', async () => {
-      const user = userEvent.setup();
-      renderStep();
-
-      await user.click(
-        screen.getByTestId(
-          'max-trigger-tertiaryEducation.placeholders.levelOfQualification'
-        )
-      );
-
-      expect(
-        screen.getByText('tertiaryEducation.errors.maxSelections')
-      ).toBeInTheDocument();
-    });
-
-    it('shows error message when max selections is reached on the batch field', async () => {
-      const user = userEvent.setup();
-      renderStep();
-
-      await user.click(
-        screen.getByTestId('max-trigger-tertiaryEducation.placeholders.batch')
-      );
-
-      expect(
-        screen.getByText('tertiaryEducation.errors.maxSelections')
-      ).toBeInTheDocument();
-    });
-
-    it('shows error message when max selections is reached on the specialization field', async () => {
-      const user = userEvent.setup();
-      renderStep();
-
-      await user.click(
-        screen.getByTestId(
-          'max-trigger-tertiaryEducation.placeholders.specialization'
-        )
-      );
-
-      expect(
-        screen.getByText('tertiaryEducation.errors.maxSelections')
-      ).toBeInTheDocument();
-    });
-
-    it('shows error message when max selections is reached on the department field', async () => {
-      const user = userEvent.setup();
-      renderStep();
-
-      await user.click(
-        screen.getByTestId(
-          'max-trigger-tertiaryEducation.placeholders.department'
-        )
-      );
-
-      expect(
-        screen.getByText('tertiaryEducation.errors.maxSelections')
-      ).toBeInTheDocument();
-    });
-
-    it('shows error message when max selections is reached on the faculty field', async () => {
-      const user = userEvent.setup();
-      renderStep();
-
-      await user.click(
-        screen.getByTestId('max-trigger-tertiaryEducation.placeholders.faculty')
-      );
-
-      expect(
-        screen.getByText('tertiaryEducation.errors.maxSelections')
-      ).toBeInTheDocument();
-    });
+        expect(
+          screen.getByText('tertiaryEducation.errors.maxSelections')
+        ).toBeInTheDocument();
+      }
+    );
   });
 
   describe('creatable field items deferred to Next', () => {

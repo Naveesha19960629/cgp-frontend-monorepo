@@ -6,11 +6,11 @@ import type {
   JobRequirement,
   LicenseCertRef,
   PatentStatus,
+  PreferredHonoursAwardsSchema,
+  PreferredPatentsSchema,
   ScheduleVacancy,
   SkillCareerPathEntry,
   VacancyForm,
-  preferredHonoursAwardsSchema,
-  preferredPatentsSchema,
 } from '@/views/vacancies/types';
 import { parseLocalDate } from '@/views/vacancies/utils/date-timezone-safe';
 
@@ -77,6 +77,26 @@ function pickSection(
     return byFormKey;
   }
   return source[apiKey];
+}
+
+// Content is usually nested under `source.content`; older/alternate API
+// shapes place it directly under one of `fallbackKeys` instead. Checked in
+// order, falling back to an empty array when none match.
+function pickRawContent(
+  source: Record<string, unknown>,
+  ...fallbackKeys: string[]
+): unknown[] {
+  if (Array.isArray(source.content)) {
+    return source.content;
+  }
+
+  for (const key of fallbackKeys) {
+    if (Array.isArray(source[key])) {
+      return source[key] as unknown[];
+    }
+  }
+
+  return [];
 }
 
 function normalizeJobRequirementEntry(entry: unknown): JobRequirement {
@@ -424,23 +444,57 @@ function normalizeLicenseRefs(raw: unknown): LicenseCertRef[] {
     .filter((item): item is LicenseCertRef => item !== null);
 }
 
-function normalizeLicenseCertificatesSection(
-  rawSection: unknown,
+function mapLicenseGroup(
+  item: Record<string, unknown>,
   fallback: VacancyForm['licenseCertificates']
-): VacancyForm['licenseCertificates'] {
-  const mapLicenseGroup = (item: Record<string, unknown>) => {
-    const content = Array.isArray(item.content) ? item.content : [];
+) {
+  const content = Array.isArray(item.content) ? item.content : [];
 
-    return {
-      isEnabled:
-        typeof item.isEnabled === 'boolean'
-          ? item.isEnabled
-          : (fallback?.[0]?.isEnabled ?? false),
-      dataTakenFromCandidate:
-        typeof item.dataTakenFromCandidate === 'boolean'
-          ? item.dataTakenFromCandidate
-          : (fallback?.[0]?.dataTakenFromCandidate ?? false),
-      content: content.filter(isRecord).map(entry => ({
+  return {
+    isEnabled:
+      typeof item.isEnabled === 'boolean'
+        ? item.isEnabled
+        : (fallback?.[0]?.isEnabled ?? false),
+    dataTakenFromCandidate:
+      typeof item.dataTakenFromCandidate === 'boolean'
+        ? item.dataTakenFromCandidate
+        : (fallback?.[0]?.dataTakenFromCandidate ?? false),
+    content: content.filter(isRecord).map(entry => ({
+      nameOfLicenseCert: normalizeLicenseRefs(entry.nameOfLicenseCert),
+      issuingOrganization: normalizeLicenseRefs(entry.issuingOrganization),
+      organizationLocations: normalizeLicenseRefs(entry.organizationLocations),
+      internationallyAccepted:
+        typeof entry.internationallyAccepted === 'boolean'
+          ? entry.internationallyAccepted
+          : false,
+      issueDate: toSafeString(entry.issueDate),
+      expirationDate: toSafeString(entry.expirationDate),
+    })),
+  };
+}
+
+function mapLicenseContentOnly(
+  contentArray: unknown[],
+  fallback: VacancyForm['licenseCertificates'],
+  flags?: {
+    isEnabled?: unknown;
+    dataTakenFromCandidate?: unknown;
+  }
+) {
+  const isEnabled =
+    typeof flags?.isEnabled === 'boolean'
+      ? flags.isEnabled
+      : (fallback?.[0]?.isEnabled ?? true);
+  const dataTakenFromCandidate =
+    typeof flags?.dataTakenFromCandidate === 'boolean'
+      ? flags.dataTakenFromCandidate
+      : (fallback?.[0]?.dataTakenFromCandidate ?? false);
+
+  return [
+    {
+      isEnabled,
+      dataTakenFromCandidate,
+      content: contentArray.filter(isRecord).map(entry => ({
         nameOfLicenseCert: normalizeLicenseRefs(entry.nameOfLicenseCert),
         issuingOrganization: normalizeLicenseRefs(entry.issuingOrganization),
         organizationLocations: normalizeLicenseRefs(
@@ -453,46 +507,50 @@ function normalizeLicenseCertificatesSection(
         issueDate: toSafeString(entry.issueDate),
         expirationDate: toSafeString(entry.expirationDate),
       })),
-    };
-  };
+    },
+  ];
+}
 
-  const mapLicenseContentOnly = (
-    contentArray: unknown[],
-    flags?: {
-      isEnabled?: unknown;
-      dataTakenFromCandidate?: unknown;
-    }
-  ) => {
-    const isEnabled =
-      typeof flags?.isEnabled === 'boolean'
-        ? flags.isEnabled
-        : (fallback?.[0]?.isEnabled ?? true);
-    const dataTakenFromCandidate =
-      typeof flags?.dataTakenFromCandidate === 'boolean'
-        ? flags.dataTakenFromCandidate
-        : (fallback?.[0]?.dataTakenFromCandidate ?? false);
+// True when the first entry of a license/certificate array looks like flat
+// "content" rows (has one of the content-item fields) rather than a group
+// wrapper — or when the array is empty, since there's nothing to
+// disambiguate and it should be treated as flat content.
+function isLicenseContentShape(candidate: unknown[]): boolean {
+  return (
+    candidate.length === 0 ||
+    (isRecord(candidate[0]) &&
+      (candidate[0].nameOfLicenseCert !== undefined ||
+        candidate[0].issuingOrganization !== undefined ||
+        candidate[0].organizationLocations !== undefined))
+  );
+}
 
-    return [
-      {
-        isEnabled,
-        dataTakenFromCandidate,
-        content: contentArray.filter(isRecord).map(entry => ({
-          nameOfLicenseCert: normalizeLicenseRefs(entry.nameOfLicenseCert),
-          issuingOrganization: normalizeLicenseRefs(entry.issuingOrganization),
-          organizationLocations: normalizeLicenseRefs(
-            entry.organizationLocations
-          ),
-          internationallyAccepted:
-            typeof entry.internationallyAccepted === 'boolean'
-              ? entry.internationallyAccepted
-              : false,
-          issueDate: toSafeString(entry.issueDate),
-          expirationDate: toSafeString(entry.expirationDate),
-        })),
-      },
-    ];
-  };
+// Shared handling for the `licenseCertificates` / `licensesAndCertifications`
+// keyed-array shapes: either flat content rows (disambiguated via
+// isLicenseContentShape) or a nested section re-normalized recursively.
+function resolveLicenseCertificatesFromKeyedArray(
+  keyedArray: unknown[],
+  rawSection: Record<string, unknown>,
+  fallback: VacancyForm['licenseCertificates']
+): VacancyForm['licenseCertificates'] {
+  if (isLicenseContentShape(keyedArray)) {
+    // An empty array has no groups to disambiguate — treat it as flat
+    // content so the sibling isEnabled/dataTakenFromCandidate flags
+    // (e.g. when dataTakenFromCandidate is true and content is always
+    // sent empty) aren't discarded by the recursive call below.
+    return mapLicenseContentOnly(keyedArray, fallback, {
+      isEnabled: rawSection.isEnabled,
+      dataTakenFromCandidate: rawSection.dataTakenFromCandidate,
+    });
+  }
 
+  return normalizeLicenseCertificatesSection(keyedArray, fallback);
+}
+
+function normalizeLicenseCertificatesSection(
+  rawSection: unknown,
+  fallback: VacancyForm['licenseCertificates']
+): VacancyForm['licenseCertificates'] {
   if (Array.isArray(rawSection)) {
     if (
       rawSection.length > 0 &&
@@ -501,59 +559,27 @@ function normalizeLicenseCertificatesSection(
         rawSection[0].issuingOrganization !== undefined ||
         rawSection[0].organizationLocations !== undefined)
     ) {
-      return mapLicenseContentOnly(rawSection);
+      return mapLicenseContentOnly(rawSection, fallback);
     }
 
-    return rawSection.filter(isRecord).map(item => mapLicenseGroup(item));
+    return rawSection
+      .filter(isRecord)
+      .map(item => mapLicenseGroup(item, fallback));
   }
 
   if (isRecord(rawSection)) {
     if (Array.isArray(rawSection.licenseCertificates)) {
-      if (
-        rawSection.licenseCertificates.length === 0 ||
-        (isRecord(rawSection.licenseCertificates[0]) &&
-          (rawSection.licenseCertificates[0].nameOfLicenseCert !== undefined ||
-            rawSection.licenseCertificates[0].issuingOrganization !==
-              undefined ||
-            rawSection.licenseCertificates[0].organizationLocations !==
-              undefined))
-      ) {
-        // An empty array has no groups to disambiguate — treat it as flat
-        // content so the sibling isEnabled/dataTakenFromCandidate flags
-        // (e.g. when dataTakenFromCandidate is true and content is always
-        // sent empty) aren't discarded by the recursive call below.
-        return mapLicenseContentOnly(rawSection.licenseCertificates, {
-          isEnabled: rawSection.isEnabled,
-          dataTakenFromCandidate: rawSection.dataTakenFromCandidate,
-        });
-      }
-
-      return normalizeLicenseCertificatesSection(
+      return resolveLicenseCertificatesFromKeyedArray(
         rawSection.licenseCertificates,
+        rawSection,
         fallback
       );
     }
 
     if (Array.isArray(rawSection.licensesAndCertifications)) {
-      if (
-        rawSection.licensesAndCertifications.length === 0 ||
-        (isRecord(rawSection.licensesAndCertifications[0]) &&
-          (rawSection.licensesAndCertifications[0].nameOfLicenseCert !==
-            undefined ||
-            rawSection.licensesAndCertifications[0].issuingOrganization !==
-              undefined ||
-            rawSection.licensesAndCertifications[0].organizationLocations !==
-              undefined))
-      ) {
-        // Same empty-array disambiguation as above.
-        return mapLicenseContentOnly(rawSection.licensesAndCertifications, {
-          isEnabled: rawSection.isEnabled,
-          dataTakenFromCandidate: rawSection.dataTakenFromCandidate,
-        });
-      }
-
-      return normalizeLicenseCertificatesSection(
+      return resolveLicenseCertificatesFromKeyedArray(
         rawSection.licensesAndCertifications,
+        rawSection,
         fallback
       );
     }
@@ -563,13 +589,13 @@ function normalizeLicenseCertificatesSection(
       rawSection.issuingOrganization !== undefined ||
       rawSection.organizationLocations !== undefined
     ) {
-      return mapLicenseContentOnly([rawSection], {
+      return mapLicenseContentOnly([rawSection], fallback, {
         isEnabled: rawSection.isEnabled,
         dataTakenFromCandidate: rawSection.dataTakenFromCandidate,
       });
     }
 
-    return [mapLicenseGroup(rawSection)];
+    return [mapLicenseGroup(rawSection, fallback)];
   }
 
   return fallback;
@@ -975,11 +1001,7 @@ function normalizePreferredSkillsSection(
     return fallback;
   }
 
-  const contentRaw = Array.isArray(rawSection.content)
-    ? rawSection.content
-    : Array.isArray(rawSection.skills)
-      ? rawSection.skills
-      : [];
+  const contentRaw = pickRawContent(rawSection, 'skills');
 
   const skills = contentRaw
     .map(item => normalizeSkillEntry(item))
@@ -1038,8 +1060,8 @@ const PATENT_STATUS_LABEL_MAP: Record<PatentStatus, string> = {
 function normalizePatentsSection(
   rawSection: unknown,
   fallback: VacancyForm['patents']
-): preferredPatentsSchema {
-  const fallbackValue: preferredPatentsSchema = fallback ?? {
+): PreferredPatentsSchema {
+  const fallbackValue: PreferredPatentsSchema = fallback ?? {
     isEnabled: false,
     dataTakenFromCandidate: false,
     patents: [],
@@ -1097,8 +1119,8 @@ function normalizePatentsSection(
 function normalizePreferredHonoursAwardsSection(
   rawSection: unknown,
   fallback: VacancyForm['preferredHonoursAwards']
-): preferredHonoursAwardsSchema {
-  const fallbackValue: preferredHonoursAwardsSchema = fallback ?? {
+): PreferredHonoursAwardsSchema {
+  const fallbackValue: PreferredHonoursAwardsSchema = fallback ?? {
     isEnabled: false,
     dataTakenFromCandidate: false,
     honoursAndAwards: [],
@@ -1108,11 +1130,7 @@ function normalizePreferredHonoursAwardsSection(
     return fallbackValue;
   }
 
-  const entries = Array.isArray(rawSection.content)
-    ? rawSection.content
-    : Array.isArray(rawSection.honoursAndAwards)
-      ? rawSection.honoursAndAwards
-      : [];
+  const entries = pickRawContent(rawSection, 'honoursAndAwards');
 
   return {
     isEnabled:

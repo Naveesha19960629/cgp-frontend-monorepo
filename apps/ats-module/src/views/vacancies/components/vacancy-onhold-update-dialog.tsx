@@ -30,13 +30,16 @@ export default function VacancyOnholdUpdateDialog({
 }: Readonly<VacancyOnholdUpdateDialogProps>) {
   const { t } = useTranslation('ats');
 
-  const variant = isPublishDateChanged
-    ? hasApplicants
-      ? 'scheduleChanged'
-      : 'scheduleChangedNoApplicants'
-    : hasApplicants
-      ? 'scheduleUnchanged'
-      : 'scheduleUnchangedNoApplicants';
+  let variant: string;
+  if (isPublishDateChanged && hasApplicants) {
+    variant = 'scheduleChanged';
+  } else if (isPublishDateChanged) {
+    variant = 'scheduleChangedNoApplicants';
+  } else if (hasApplicants) {
+    variant = 'scheduleUnchanged';
+  } else {
+    variant = 'scheduleUnchangedNoApplicants';
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

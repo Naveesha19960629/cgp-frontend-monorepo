@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 
@@ -107,6 +108,37 @@ export default function TemplatesPage() {
     });
   };
 
+  let templatesContent: ReactNode;
+  if (isFetching) {
+    templatesContent = (
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {Array.from({ length: TEMPLATE_SKELETON_COUNT }, (_, index) => (
+          <TemplateCardSkeleton key={index} />
+        ))}
+      </div>
+    );
+  } else if (templates.length === 0) {
+    templatesContent = hasActiveSearch ? (
+      <TemplateSearchEmptyState />
+    ) : (
+      <TemplateEmptyState />
+    );
+  } else {
+    templatesContent = (
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {templates.map(template => (
+          <TemplateCard
+            key={template.vacancyTemplateId}
+            template={template}
+            onEdit={goToEdit}
+            onDelete={setDeleteTemplateId}
+            onUse={goToUseTemplate}
+          />
+        ))}
+      </div>
+    );
+  }
+
   return (
     <section className="flex h-full flex-col overflow-hidden px-7 py-5">
       <div className="flex items-center gap-4 pb-5.5">
@@ -124,33 +156,7 @@ export default function TemplatesPage() {
         />
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto">
-        {isFetching ? (
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {Array.from({ length: TEMPLATE_SKELETON_COUNT }, (_, index) => (
-              <TemplateCardSkeleton key={index} />
-            ))}
-          </div>
-        ) : templates.length === 0 ? (
-          hasActiveSearch ? (
-            <TemplateSearchEmptyState />
-          ) : (
-            <TemplateEmptyState />
-          )
-        ) : (
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {templates.map(template => (
-              <TemplateCard
-                key={template.vacancyTemplateId}
-                template={template}
-                onEdit={goToEdit}
-                onDelete={setDeleteTemplateId}
-                onUse={goToUseTemplate}
-              />
-            ))}
-          </div>
-        )}
-      </div>
+      <div className="min-h-0 flex-1 overflow-y-auto">{templatesContent}</div>
 
       {!isFetching && templates.length > 0 && (
         <VacancyTablePagination

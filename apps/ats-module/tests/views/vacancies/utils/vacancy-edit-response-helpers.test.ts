@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import type { VacancyForm } from '@/views/vacancies/types';
-import { toVacancyFormFromResponse } from '@/views/vacancies/utils/vacancy-edit-response-helpers';
+import {
+  normalizeCustomizableFormSection,
+  toVacancyFormFromResponse,
+} from '@/views/vacancies/utils/vacancy-edit-response-helpers';
 
 // ─── Shared fallback ──────────────────────────────────────────────────────────
 
@@ -1506,5 +1509,1659 @@ describe('toVacancyFormFromResponse — schedule section', () => {
     );
 
     expect(result.schedule).toBeUndefined();
+  });
+});
+
+// ─── Top-level scalar: applicantCount / customizableForm default fallback ────
+
+describe('toVacancyFormFromResponse — applicantCount and customizableForm defaults', () => {
+  it('uses applicantCount from the API when it is a number', () => {
+    const result = toVacancyFormFromResponse(
+      { title: 'T', applicantCount: 42 },
+      { ...FALLBACK_FORM, applicantCount: 0 }
+    );
+    expect(result.applicantCount).toBe(42);
+  });
+
+  it('falls back to previousForm.applicantCount when API value is not a number', () => {
+    const result = toVacancyFormFromResponse(
+      { title: 'T', applicantCount: 'not-a-number' },
+      { ...FALLBACK_FORM, applicantCount: 7 }
+    );
+    expect(result.applicantCount).toBe(7);
+  });
+
+  it('builds a default empty customizableForm when previousForm.customizableForm is undefined', () => {
+    const { customizableForm: _omit, ...formWithoutCustomizable } =
+      FALLBACK_FORM;
+    const result = toVacancyFormFromResponse(
+      { title: 'T' },
+      formWithoutCustomizable as VacancyForm
+    );
+    expect(result.customizableForm).toEqual({
+      isEnabled: false,
+      sectionTitle: '',
+      forms: [],
+    });
+  });
+});
+
+// ─── pickSection / readSectionValue — form-key and root-level branches ──────
+
+describe('toVacancyFormFromResponse — pickSection form-key branch', () => {
+  it('reads jobRequirements (plural form key) when jobRequirement is absent', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        jobRequirements: {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          discipline: [],
+          careerPath: [],
+          level: [],
+          role: [{ id: 'role-1', source: 'MASTER', label: 'Dev' }],
+          jobTitle: [],
+          employmentType: [],
+          workSchedule: [],
+          engagementModel: [],
+          description: '',
+        },
+      },
+      { ...FALLBACK_FORM }
+    );
+    expect(result.jobRequirements[0].role[0].label).toBe('Dev');
+  });
+
+  it('reads profileRequirements (plural form key) when profileRequirement is absent', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        profileRequirements: {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          gender: { id: 'g-1', label: 'Female' },
+          maritalStatus: { id: 'm-1', label: 'Married' },
+          addresses: [],
+        },
+      },
+      { ...FALLBACK_FORM }
+    );
+    expect(result.profileRequirements.gender.label).toBe('Female');
+  });
+});
+
+describe('toVacancyFormFromResponse — readSectionValue root-level fallback', () => {
+  it('falls back to a root-level key when the data envelope does not contain it', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        data: {},
+        secondaryEducation: [
+          {
+            isEnabled: true,
+            dataTakenFromCandidate: false,
+            content: [],
+          },
+        ],
+      },
+      { ...FALLBACK_FORM }
+    );
+    expect(result.secondaryEducation[0].isEnabled).toBe(true);
+  });
+});
+
+// ─── Job requirements — additional fallback branches ─────────────────────────
+
+describe('toVacancyFormFromResponse — job requirements additional branches', () => {
+  it('maps an array of jobRequirement entries directly', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        jobRequirement: [
+          {
+            isEnabled: true,
+            dataTakenFromCandidate: false,
+            roles: [{ id: 'role-1', source: 'MASTER', label: 'Dev A' }],
+            jobTitles: [],
+          },
+          {
+            isEnabled: false,
+            dataTakenFromCandidate: true,
+            roles: [{ id: 'role-2', source: 'MASTER', label: 'Dev B' }],
+            jobTitles: [],
+          },
+        ],
+      },
+      { ...FALLBACK_FORM }
+    );
+    expect(result.jobRequirements).toHaveLength(2);
+    expect(result.jobRequirements[0].role[0].label).toBe('Dev A');
+    expect(result.jobRequirements[1].role[0].label).toBe('Dev B');
+  });
+
+  it('falls back to internal defaults when entry is not a record', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        jobRequirement: [null],
+      },
+      { ...FALLBACK_FORM }
+    );
+    expect(result.jobRequirements[0]).toEqual({
+      isEnabled: true,
+      dataTakenFromCandidate: false,
+      discipline: [],
+      careerPath: [],
+      level: [],
+      role: [],
+      jobTitle: [],
+      employmentType: [],
+      workSchedule: [],
+      engagementModel: [],
+      description: '',
+    });
+  });
+
+  it('defaults isEnabled/dataTakenFromCandidate when entry omits them', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        jobRequirement: {
+          roles: [],
+          jobTitles: [],
+        },
+      },
+      { ...FALLBACK_FORM }
+    );
+    expect(result.jobRequirements[0].isEnabled).toBe(true);
+    expect(result.jobRequirements[0].dataTakenFromCandidate).toBe(false);
+  });
+});
+
+// ─── normalizeSelectOption / normalizeAddress additional branches ───────────
+
+describe('toVacancyFormFromResponse — normalizeSelectOption fallback chain', () => {
+  it('falls back to displayValue when label is absent', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        profileRequirement: {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          gender: { id: 'g-1', displayValue: 'Female (display)' },
+          maritalStatus: null,
+          addresses: [],
+        },
+      },
+      { ...FALLBACK_FORM }
+    );
+    expect(result.profileRequirements.gender.label).toBe('Female (display)');
+  });
+
+  it('falls back to name when label and displayValue are absent', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        profileRequirement: {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          gender: { id: 'g-1', name: 'Female (name)' },
+          maritalStatus: null,
+          addresses: [],
+        },
+      },
+      { ...FALLBACK_FORM }
+    );
+    expect(result.profileRequirements.gender.label).toBe('Female (name)');
+  });
+
+  it('falls back to id when label, displayValue, and name are all absent', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        profileRequirement: {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          gender: { id: 'g-1' },
+          maritalStatus: null,
+          addresses: [],
+        },
+      },
+      { ...FALLBACK_FORM }
+    );
+    expect(result.profileRequirements.gender.label).toBe('g-1');
+  });
+
+  it('defaults isEnabled/dataTakenFromCandidate for profileRequirement when omitted', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        profileRequirement: {
+          gender: null,
+          maritalStatus: null,
+          addresses: [],
+        },
+      },
+      { ...FALLBACK_FORM }
+    );
+    expect(result.profileRequirements.isEnabled).toBe(
+      FALLBACK_FORM.profileRequirements.isEnabled
+    );
+    expect(result.profileRequirements.dataTakenFromCandidate).toBe(
+      FALLBACK_FORM.profileRequirements.dataTakenFromCandidate
+    );
+  });
+});
+
+describe('toVacancyFormFromResponse — normalizeAddress additional branches', () => {
+  it('returns default empty address fields when the entry is not a record', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        profileRequirement: {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          gender: null,
+          maritalStatus: null,
+          addresses: ['not-a-record'],
+        },
+      },
+      { ...FALLBACK_FORM }
+    );
+    const addr = result.profileRequirements.addresses[0];
+    expect(addr.city).toEqual({ id: '', label: '' });
+    expect(addr.stateProvince).toEqual({ id: '', label: '' });
+    expect(addr.country).toEqual({ id: '', label: '' });
+    expect(addr.postalCode).toBe('');
+    expect(addr.isOpen).toBe(true);
+  });
+
+  it('reads state from the "state" key when stateProvince is absent', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        profileRequirement: {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          gender: null,
+          maritalStatus: null,
+          addresses: [
+            {
+              state: { id: 'state-2', label: 'Southern' },
+              postalCode: '10000',
+            },
+          ],
+        },
+      },
+      { ...FALLBACK_FORM }
+    );
+    expect(result.profileRequirements.addresses[0].stateProvince).toEqual({
+      id: 'state-2',
+      label: 'Southern',
+    });
+  });
+});
+
+// ─── Secondary/Tertiary education — object-shape (non-array) branch ─────────
+
+describe('toVacancyFormFromResponse — secondary/tertiary education object shape', () => {
+  it('hydrates secondaryEducation from an object with a nested secondaryEducation array', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        secondaryEducation: {
+          secondaryEducation: [
+            {
+              acceptsHomeSchooling: true,
+              schools: [],
+              schoolLocations: [],
+              examinations: [],
+              secondaryAwardingBody: [],
+              fieldsOfStudy: [],
+              grade: 'B',
+              startDate: '2019-01-01',
+              endDate: '2020-01-01',
+              result: 'PASS',
+            },
+          ],
+        },
+      },
+      { ...FALLBACK_FORM }
+    );
+    expect(result.secondaryEducation[0].content).toHaveLength(1);
+    expect(result.secondaryEducation[0].content[0].acceptsHomeSchooling).toBe(
+      true
+    );
+    expect(result.secondaryEducation[0].isEnabled).toBe(false);
+    expect(result.secondaryEducation[0].dataTakenFromCandidate).toBe(false);
+  });
+
+  it('hydrates secondaryEducation from an object with isEnabled/dataTakenFromCandidate and nested content', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        secondaryEducation: {
+          isEnabled: true,
+          dataTakenFromCandidate: true,
+          content: [],
+        },
+      },
+      { ...FALLBACK_FORM }
+    );
+    expect(result.secondaryEducation[0].isEnabled).toBe(true);
+    expect(result.secondaryEducation[0].dataTakenFromCandidate).toBe(true);
+    expect(result.secondaryEducation[0].content).toEqual([]);
+  });
+
+  it('hydrates tertiaryEducation from an object with a nested tertiaryEducation array', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        tertiaryEducation: {
+          tertiaryEducation: [
+            {
+              qualificationName: [],
+              tertiaryAwardingBody: [],
+              tertiaryAwardingBodyLocations: [],
+              levelOfQualification: [],
+              specialization: [],
+              studyMode: [],
+              studyPattern: [],
+              deliverySchedule: [],
+              batch: [],
+              department: [],
+              faculty: [],
+              grade: 'C',
+            },
+          ],
+        },
+      },
+      { ...FALLBACK_FORM }
+    );
+    expect(result.tertiaryEducation[0].content).toHaveLength(1);
+    expect(result.tertiaryEducation[0].content[0].grade).toBe('C');
+  });
+
+  it('hydrates tertiaryEducation from an object with isEnabled/dataTakenFromCandidate and nested content', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        tertiaryEducation: {
+          isEnabled: true,
+          dataTakenFromCandidate: true,
+          content: [],
+        },
+      },
+      { ...FALLBACK_FORM }
+    );
+    expect(result.tertiaryEducation[0].isEnabled).toBe(true);
+    expect(result.tertiaryEducation[0].dataTakenFromCandidate).toBe(true);
+  });
+});
+
+// ─── License/certificate helper edge cases ──────────────────────────────────
+
+describe('toVacancyFormFromResponse — license/certificate edge cases', () => {
+  it('drops non-record and id-less license refs', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        licenseCertificates: {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          content: [
+            {
+              nameOfLicenseCert: [
+                'not-a-record',
+                { source: 'MASTER', id: '', name: 'No id' },
+                { source: 'MASTER', id: 'lc-ok', name: 'Valid' },
+              ],
+              issuingOrganization: [],
+              organizationLocations: [],
+              internationallyAccepted: false,
+              issueDate: '',
+              expirationDate: '',
+            },
+          ],
+        },
+      },
+      { ...FALLBACK_FORM }
+    );
+    expect(
+      result.licenseCertificates?.[0].content[0].nameOfLicenseCert
+    ).toHaveLength(1);
+    expect(
+      result.licenseCertificates?.[0].content[0].nameOfLicenseCert[0].id
+    ).toBe('lc-ok');
+  });
+
+  it('leaves type undefined for an unrecognized license type value', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        licenseCertificates: {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          content: [
+            {
+              nameOfLicenseCert: [
+                { source: 'MASTER', id: 'lc-1', name: 'X', type: 'UNKNOWN' },
+              ],
+              issuingOrganization: [],
+              organizationLocations: [],
+              internationallyAccepted: false,
+              issueDate: '',
+              expirationDate: '',
+            },
+          ],
+        },
+      },
+      { ...FALLBACK_FORM }
+    );
+    expect(
+      result.licenseCertificates?.[0].content[0].nameOfLicenseCert[0].type
+    ).toBeUndefined();
+  });
+
+  it('returns [] when a license ref field is not an array', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        licenseCertificates: {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          content: [
+            {
+              nameOfLicenseCert: 'not-an-array',
+              issuingOrganization: [],
+              organizationLocations: [],
+              internationallyAccepted: false,
+              issueDate: '',
+              expirationDate: '',
+            },
+          ],
+        },
+      },
+      { ...FALLBACK_FORM }
+    );
+    expect(result.licenseCertificates?.[0].content[0].nameOfLicenseCert).toEqual(
+      []
+    );
+  });
+
+  it('hydrates a group-shaped licenseCertificates array with default flags and internationallyAccepted', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        licenseCertificates: [
+          {
+            content: [
+              {
+                nameOfLicenseCert: [
+                  { source: 'MASTER', id: 'lc-grp-1', name: 'Group Cert' },
+                ],
+                issuingOrganization: [],
+                organizationLocations: [],
+                issueDate: '2024-01-01',
+                expirationDate: '2026-01-01',
+              },
+            ],
+          },
+        ],
+      },
+      {
+        ...FALLBACK_FORM,
+        licenseCertificates: [
+          { isEnabled: true, dataTakenFromCandidate: true, content: [] },
+        ],
+      }
+    );
+    expect(result.licenseCertificates?.[0].isEnabled).toBe(true);
+    expect(result.licenseCertificates?.[0].dataTakenFromCandidate).toBe(true);
+    expect(
+      result.licenseCertificates?.[0].content[0].internationallyAccepted
+    ).toBe(false);
+  });
+
+  it('hydrates a bare content-row array directly under licenseCertificates', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        licenseCertificates: [
+          {
+            nameOfLicenseCert: [
+              { source: 'MASTER', id: 'lc-bare-1', name: 'Bare Cert' },
+            ],
+            issuingOrganization: [],
+            organizationLocations: [],
+            internationallyAccepted: true,
+            issueDate: '2024-01-01',
+            expirationDate: '2026-01-01',
+          },
+        ],
+      },
+      { ...FALLBACK_FORM }
+    );
+    expect(
+      result.licenseCertificates?.[0].content[0].nameOfLicenseCert[0].id
+    ).toBe('lc-bare-1');
+  });
+
+  it('recurses through a nested group-shaped keyed array', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        licenseCertificates: {
+          licenseCertificates: [
+            {
+              isEnabled: true,
+              dataTakenFromCandidate: false,
+              content: [
+                {
+                  nameOfLicenseCert: [
+                    { source: 'MASTER', id: 'lc-rec-1', name: 'Recursed' },
+                  ],
+                  issuingOrganization: [],
+                  organizationLocations: [],
+                  internationallyAccepted: false,
+                  issueDate: '',
+                  expirationDate: '',
+                },
+              ],
+            },
+          ],
+        },
+      },
+      { ...FALLBACK_FORM }
+    );
+    expect(
+      result.licenseCertificates?.[0].content[0].nameOfLicenseCert[0].id
+    ).toBe('lc-rec-1');
+  });
+
+  it('treats a keyed array as content-shape when it only has issuingOrganization (no nameOfLicenseCert)', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        licenseCertificates: {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          licenseCertificates: [
+            {
+              issuingOrganization: [
+                { source: 'MASTER', id: 'org-1', name: 'Org' },
+              ],
+            },
+          ],
+        },
+      },
+      { ...FALLBACK_FORM }
+    );
+    expect(
+      result.licenseCertificates?.[0].content[0].issuingOrganization[0].id
+    ).toBe('org-1');
+  });
+
+  it('hydrates a single content-row object placed directly under licenseCertificates', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        licenseCertificates: {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          nameOfLicenseCert: [
+            { source: 'MASTER', id: 'lc-single-1', name: 'Single' },
+          ],
+          issuingOrganization: [],
+          organizationLocations: [],
+        },
+      },
+      { ...FALLBACK_FORM }
+    );
+    expect(
+      result.licenseCertificates?.[0].content[0].nameOfLicenseCert[0].id
+    ).toBe('lc-single-1');
+  });
+});
+
+// ─── Industry helper edge cases ─────────────────────────────────────────────
+
+describe('toVacancyFormFromResponse — industry entry edge cases', () => {
+  it('falls back to name, then id, for industry label', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        industry: {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          content: [
+            { source: 'MASTER', id: 'ind-name', name: 'Named Industry' },
+            { source: 'MASTER', id: 'ind-only-id' },
+          ],
+        },
+      },
+      { ...FALLBACK_FORM }
+    );
+    expect(result.preferredIndustries?.industries[0].label).toBe(
+      'Named Industry'
+    );
+    expect(result.preferredIndustries?.industries[1].label).toBe(
+      'ind-only-id'
+    );
+  });
+
+  it('drops non-record and id-less/label-less industry entries', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        industry: {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          content: ['not-a-record', { source: 'MASTER', id: '', name: '' }],
+        },
+      },
+      { ...FALLBACK_FORM }
+    );
+    expect(result.preferredIndustries?.industries).toEqual([]);
+  });
+
+  it('hydrates preferredIndustries from a bare array section', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        industry: [{ source: 'MASTER', id: 'ind-bare', label: 'Bare Industry' }],
+      },
+      { ...FALLBACK_FORM }
+    );
+    expect(result.preferredIndustries?.industries).toEqual([
+      { id: 'ind-bare', label: 'Bare Industry', source: 'MASTER' },
+    ]);
+    // fallback.isEnabled is `false` (not nullish), so `?? true` keeps it.
+    expect(result.preferredIndustries?.isEnabled).toBe(
+      FALLBACK_FORM.preferredIndustries.isEnabled
+    );
+  });
+
+  it('defaults isEnabled/dataTakenFromCandidate for preferredIndustries object shape when omitted', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        industry: {
+          content: [],
+        },
+      },
+      { ...FALLBACK_FORM }
+    );
+    expect(result.preferredIndustries?.isEnabled).toBe(
+      FALLBACK_FORM.preferredIndustries.isEnabled
+    );
+    expect(result.preferredIndustries?.dataTakenFromCandidate).toBe(
+      FALLBACK_FORM.preferredIndustries.dataTakenFromCandidate
+    );
+  });
+});
+
+// ─── Projects/Publications/Clubs/Sports/Volunteering — fallback branches ────
+
+describe('toVacancyFormFromResponse — projects/publications/clubs/sports/volunteering fallback branches', () => {
+  it('defaults isEnabled/dataTakenFromCandidate and uses [] when the nested list key is missing', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        projects: {},
+        publications: {},
+        clubsAndSocieties: {},
+        sports: {},
+        volunteering: {},
+      },
+      {
+        ...FALLBACK_FORM,
+        projectsRequirements: {
+          isEnabled: true,
+          dataTakenFromCandidate: true,
+          projects: [],
+        },
+        preferredPublications: {
+          isEnabled: true,
+          dataTakenFromCandidate: true,
+          publications: [],
+        },
+        preferredClubSocieties: {
+          isEnabled: true,
+          dataTakenFromCandidate: true,
+          clubSocieties: [],
+        },
+        preferredSports: {
+          isEnabled: true,
+          dataTakenFromCandidate: true,
+          sports: [],
+        },
+        preferredVolunteering: {
+          isEnabled: true,
+          dataTakenFromCandidate: true,
+          volunteering: [],
+        },
+      }
+    );
+
+    expect(result.projectsRequirements.isEnabled).toBe(true);
+    expect(result.projectsRequirements.dataTakenFromCandidate).toBe(true);
+    expect(result.projectsRequirements.projects).toEqual([]);
+
+    expect(result.preferredPublications.isEnabled).toBe(true);
+    expect(result.preferredPublications.publications).toEqual([]);
+
+    expect(result.preferredClubSocieties.isEnabled).toBe(true);
+    expect(result.preferredClubSocieties.clubSocieties).toEqual([]);
+
+    expect(result.preferredSports.isEnabled).toBe(true);
+    expect(result.preferredSports.sports).toEqual([]);
+
+    expect(result.preferredVolunteering.isEnabled).toBe(true);
+    expect(result.preferredVolunteering.volunteering).toEqual([]);
+  });
+
+  it('generates ids and falls back organization/organizationName keys when entries omit their primary fields', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        projects: {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          projects: [
+            {
+              organizations: [
+                { source: 'MASTER', id: 'org-p', label: 'Org P' },
+              ],
+            },
+          ],
+        },
+        publications: {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          publications: [{ acceptedPublisher: 'Fallback Publisher' }],
+        },
+        clubsAndSocieties: {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          clubsAndSocieties: [
+            {
+              position: 'Fallback Position',
+              representedOrganization: [
+                { source: 'MASTER', id: 'org-c', label: 'Org C' },
+              ],
+            },
+          ],
+        },
+        sports: {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          sports: [
+            {
+              position: 'Fallback Position',
+              sport: [{ source: 'MASTER', id: 'sport-1', label: 'Chess' }],
+              organization: [
+                { source: 'MASTER', id: 'org-s', label: 'Org S' },
+              ],
+            },
+          ],
+        },
+        volunteering: {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          volunteering: [
+            {
+              position: 'Fallback Position',
+              organizationName: [
+                { source: 'MASTER', id: 'org-v', label: 'Org V' },
+              ],
+            },
+          ],
+        },
+      },
+      { ...FALLBACK_FORM }
+    );
+
+    expect(result.projectsRequirements.projects[0].id).toBe('project-1');
+    expect(result.projectsRequirements.projects[0].organizations[0].label).toBe(
+      'Org P'
+    );
+
+    expect(result.preferredPublications.publications[0].id).toBe(
+      'publication-1'
+    );
+    expect(result.preferredPublications.publications[0].acceptedPublisher).toBe(
+      'Fallback Publisher'
+    );
+
+    expect(result.preferredClubSocieties.clubSocieties[0].id).toBe('club-1');
+    expect(result.preferredClubSocieties.clubSocieties[0].position).toBe(
+      'Fallback Position'
+    );
+    expect(
+      result.preferredClubSocieties.clubSocieties[0].representedOrganization[0]
+        .label
+    ).toBe('Org C');
+
+    expect(result.preferredSports.sports[0].id).toBe('sport-1');
+    expect(result.preferredSports.sports[0].position).toBe(
+      'Fallback Position'
+    );
+    expect(result.preferredSports.sports[0].representedOrganization[0].label).toBe(
+      'Org S'
+    );
+
+    expect(result.preferredVolunteering.volunteering[0].id).toBe(
+      'volunteering-1'
+    );
+    expect(result.preferredVolunteering.volunteering[0].position).toBe(
+      'Fallback Position'
+    );
+    expect(
+      result.preferredVolunteering.volunteering[0].organizationName[0].label
+    ).toBe('Org V');
+  });
+});
+
+// ─── normalizeOptionWithSource / normalizeOptionLabel helper edge cases ─────
+
+describe('toVacancyFormFromResponse — option-with-source and option-label helper edge cases', () => {
+  it('drops non-record and empty organization entries, and falls back through label chain', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        projects: {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          projects: [
+            {
+              organization: [
+                'not-a-record',
+                { source: 'MASTER', value: '', label: '' },
+                { source: 'MASTER', id: 'org-x', displayValue: 'Org X' },
+              ],
+              organizationLocations: [
+                'not-a-record',
+                { id: '', value: '', label: '' },
+                { id: 'loc-x', name: 'Loc X' },
+              ],
+            },
+          ],
+        },
+      },
+      { ...FALLBACK_FORM }
+    );
+
+    const project = result.projectsRequirements.projects[0];
+    expect(project.organizations).toHaveLength(1);
+    expect(project.organizations[0]).toEqual(
+      expect.objectContaining({ value: 'org-x', label: 'Org X' })
+    );
+    expect(project.organizationLocations).toHaveLength(1);
+    expect(project.organizationLocations[0]).toEqual(
+      expect.objectContaining({ value: 'loc-x', label: 'Loc X' })
+    );
+  });
+
+  it('returns [] for organization/organizationLocations arrays that are not arrays', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        projects: {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          projects: [
+            {
+              organization: 'not-an-array',
+              organizationLocations: 'not-an-array',
+            },
+          ],
+        },
+      },
+      { ...FALLBACK_FORM }
+    );
+    expect(result.projectsRequirements.projects[0].organizations).toEqual([]);
+    expect(
+      result.projectsRequirements.projects[0].organizationLocations
+    ).toEqual([]);
+  });
+});
+
+// ─── Preferred skills — normalizeSkillEntry edge cases ──────────────────────
+
+describe('toVacancyFormFromResponse — preferred skills entry edge cases', () => {
+  it('drops non-record skill entries', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        skills: {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          content: ['not-a-record'],
+        },
+      },
+      { ...FALLBACK_FORM }
+    );
+    expect(result.preferredSkills.skills).toEqual([]);
+  });
+
+  it('falls back through displayValue/name/id for skill label', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        skills: {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          content: [
+            { id: 'sk-2', displayValue: 'Display Skill' },
+            { id: 'sk-3', name: 'Named Skill' },
+          ],
+        },
+      },
+      { ...FALLBACK_FORM }
+    );
+    expect(result.preferredSkills.skills[0].skillName).toBe('Display Skill');
+    expect(result.preferredSkills.skills[1].skillName).toBe('Named Skill');
+  });
+
+  it('drops a skill entry with no id and no derivable label', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        skills: {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          content: [{ id: '' }],
+        },
+      },
+      { ...FALLBACK_FORM }
+    );
+    expect(result.preferredSkills.skills).toEqual([]);
+  });
+
+  it('defaults isEnabled/dataTakenFromCandidate for preferredSkills when omitted', () => {
+    const result = toVacancyFormFromResponse(
+      { skills: { content: [] } },
+      {
+        ...FALLBACK_FORM,
+        preferredSkills: {
+          isEnabled: true,
+          dataTakenFromCandidate: true,
+          skills: [],
+        },
+      }
+    );
+    expect(result.preferredSkills.isEnabled).toBe(true);
+    expect(result.preferredSkills.dataTakenFromCandidate).toBe(true);
+  });
+});
+
+// ─── Patents — additional fallback branches ─────────────────────────────────
+
+describe('toVacancyFormFromResponse — patents additional branches', () => {
+  it('defaults the whole patents value when both rawSection and fallback are absent', () => {
+    const { patents: _omit, ...formWithoutPatents } = FALLBACK_FORM;
+    const result = toVacancyFormFromResponse(
+      { title: 'T' },
+      formWithoutPatents as VacancyForm
+    );
+    expect(result.patents).toEqual({
+      isEnabled: false,
+      dataTakenFromCandidate: false,
+      patents: [],
+    });
+  });
+
+  it('defaults isEnabled/dataTakenFromCandidate for a patent entry when omitted from the section', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        patents: {
+          patents: [{ statuses: [], relatedIndustry: [] }],
+        },
+      },
+      {
+        ...FALLBACK_FORM,
+        patents: { isEnabled: true, dataTakenFromCandidate: true, patents: [] },
+      }
+    );
+    expect(result.patents?.isEnabled).toBe(true);
+    expect(result.patents?.dataTakenFromCandidate).toBe(true);
+  });
+
+  it('treats a non-array relatedIndustry as empty', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        patents: {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          patents: [{ statuses: [], relatedIndustry: 'not-an-array' }],
+        },
+      },
+      { ...FALLBACK_FORM }
+    );
+    expect(result.patents?.patents[0].relatedIndustries).toEqual([]);
+  });
+
+  it('falls back to industry id when label and displayValue are absent', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        patents: {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          patents: [
+            {
+              statuses: [],
+              relatedIndustry: [{ id: 'ind-only-id', source: 'MASTER' }],
+            },
+          ],
+        },
+      },
+      { ...FALLBACK_FORM }
+    );
+    expect(result.patents?.patents[0].relatedIndustries[0].label).toBe(
+      'ind-only-id'
+    );
+  });
+});
+
+// ─── Preferred Honours & Awards section ─────────────────────────────────────
+
+describe('toVacancyFormFromResponse — preferred honours & awards section', () => {
+  it('hydrates honoursAndAwards content with dates and associated fields', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        preferredHonoursAwards: {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          honoursAndAwards: [
+            {
+              title: 'Employee of the Year',
+              issuedBy: 'ACME Corp',
+              issuedFromDate: '2023-01-01',
+              issuedToDate: '2023-06-01',
+              associatedOrganizations: [
+                { source: 'MASTER', id: 'org-1', label: 'ACME' },
+              ],
+              organizationLocations: [{ id: 'loc-1', label: 'Colombo' }],
+            },
+          ],
+        },
+      },
+      { ...FALLBACK_FORM }
+    );
+
+    const entry = result.preferredHonoursAwards.honoursAndAwards[0];
+    expect(entry.title).toBe('Employee of the Year');
+    expect(entry.issuedBy).toBe('ACME Corp');
+    expect(entry.issuedDateFrom).toBeInstanceOf(Date);
+    expect(entry.issuedDateTo).toBeInstanceOf(Date);
+    expect(entry.associatedOrganizations[0]).toEqual(
+      expect.objectContaining({ value: 'org-1', label: 'ACME' })
+    );
+    expect(entry.organizationLocations[0]).toEqual(
+      expect.objectContaining({ value: 'loc-1', label: 'Colombo' })
+    );
+    expect(entry.isOpen).toBe(true);
+    expect(result.preferredHonoursAwards.isEnabled).toBe(true);
+  });
+
+  it('reads dates from issuedDateFrom/issuedDateTo aliases', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        preferredHonoursAwards: {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          honoursAndAwards: [
+            {
+              title: 'Award',
+              issuedBy: 'Org',
+              issuedDateFrom: '2022-01-01',
+              issuedDateTo: '2022-06-01',
+              associatedOrganizations: [],
+              organizationLocations: [],
+            },
+          ],
+        },
+      },
+      { ...FALLBACK_FORM }
+    );
+    const entry = result.preferredHonoursAwards.honoursAndAwards[0];
+    expect(entry.issuedDateFrom).toBeInstanceOf(Date);
+    expect(entry.issuedDateTo).toBeInstanceOf(Date);
+  });
+
+  it('leaves dates undefined when no date fields are present', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        preferredHonoursAwards: {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          honoursAndAwards: [
+            {
+              title: 'Award',
+              issuedBy: 'Org',
+              associatedOrganizations: [],
+              organizationLocations: [],
+            },
+          ],
+        },
+      },
+      { ...FALLBACK_FORM }
+    );
+    const entry = result.preferredHonoursAwards.honoursAndAwards[0];
+    expect(entry.issuedDateFrom).toBeUndefined();
+    expect(entry.issuedDateTo).toBeUndefined();
+  });
+
+  it('reads honoursAndAwards content via the honoursAndAwards fallback key', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        preferredHonoursAwards: {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          honoursAndAwards: [
+            {
+              title: 'Alt Shape Award',
+              issuedBy: 'Org',
+              associatedOrganizations: [],
+              organizationLocations: [],
+            },
+          ],
+        },
+      },
+      { ...FALLBACK_FORM }
+    );
+    expect(result.preferredHonoursAwards.honoursAndAwards[0].title).toBe(
+      'Alt Shape Award'
+    );
+  });
+
+  it('returns the default value when the section is not a record and no fallback is provided', () => {
+    const { preferredHonoursAwards: _omit, ...formWithoutHonours } =
+      FALLBACK_FORM;
+    const result = toVacancyFormFromResponse(
+      { title: 'T' },
+      formWithoutHonours as VacancyForm
+    );
+    expect(result.preferredHonoursAwards).toEqual({
+      isEnabled: false,
+      dataTakenFromCandidate: false,
+      honoursAndAwards: [],
+    });
+  });
+
+  it('defaults isEnabled/dataTakenFromCandidate when omitted from the section', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        preferredHonoursAwards: { honoursAndAwards: [] },
+      },
+      {
+        ...FALLBACK_FORM,
+        preferredHonoursAwards: {
+          isEnabled: true,
+          dataTakenFromCandidate: true,
+          honoursAndAwards: [],
+        },
+      }
+    );
+    expect(result.preferredHonoursAwards.isEnabled).toBe(true);
+    expect(result.preferredHonoursAwards.dataTakenFromCandidate).toBe(true);
+  });
+});
+
+// ─── Preferred Languages / Causes / Hobbies sections ────────────────────────
+
+describe('toVacancyFormFromResponse — preferred languages section', () => {
+  it('hydrates languages from the content key', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        preferredLanguages: {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          content: [{ source: 'MASTER', id: 'lang-1', label: 'English' }],
+        },
+      },
+      { ...FALLBACK_FORM }
+    );
+    expect(result.preferredLanguages.languages).toEqual([
+      { id: 'lang-1', label: 'English', source: 'MASTER' },
+    ]);
+    expect(result.preferredLanguages.isEnabled).toBe(true);
+  });
+
+  it('hydrates languages from the languages key when content is absent', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        preferredLanguages: {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          languages: [{ source: 'MASTER', id: 'lang-2', label: 'Sinhala' }],
+        },
+      },
+      { ...FALLBACK_FORM }
+    );
+    expect(result.preferredLanguages.languages).toEqual([
+      { id: 'lang-2', label: 'Sinhala', source: 'MASTER' },
+    ]);
+  });
+
+  it('returns fallback when the section is not a record', () => {
+    const fallbackLanguages = {
+      isEnabled: true,
+      dataTakenFromCandidate: true,
+      languages: [{ id: 'x', label: 'X', source: 'MASTER' }],
+    };
+    const result = toVacancyFormFromResponse(
+      { preferredLanguages: 'not-a-record' },
+      { ...FALLBACK_FORM, preferredLanguages: fallbackLanguages }
+    );
+    expect(result.preferredLanguages).toEqual(fallbackLanguages);
+  });
+
+  it('defaults isEnabled/dataTakenFromCandidate when omitted', () => {
+    const result = toVacancyFormFromResponse(
+      { preferredLanguages: { content: [] } },
+      {
+        ...FALLBACK_FORM,
+        preferredLanguages: {
+          isEnabled: true,
+          dataTakenFromCandidate: true,
+          languages: [],
+        },
+      }
+    );
+    expect(result.preferredLanguages.isEnabled).toBe(true);
+    expect(result.preferredLanguages.dataTakenFromCandidate).toBe(true);
+  });
+});
+
+describe('toVacancyFormFromResponse — preferred causes section', () => {
+  it('hydrates causes from the content key', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        preferredCauses: {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          content: [{ source: 'MASTER', id: 'cause-1', label: 'Education' }],
+        },
+      },
+      { ...FALLBACK_FORM }
+    );
+    expect(result.preferredCauses.causes).toEqual([
+      { id: 'cause-1', label: 'Education', source: 'MASTER' },
+    ]);
+  });
+
+  it('hydrates causes from the causes key when content is absent', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        preferredCauses: {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          causes: [{ source: 'MASTER', id: 'cause-2', label: 'Health' }],
+        },
+      },
+      { ...FALLBACK_FORM }
+    );
+    expect(result.preferredCauses.causes).toEqual([
+      { id: 'cause-2', label: 'Health', source: 'MASTER' },
+    ]);
+  });
+
+  it('returns fallback when the section is not a record', () => {
+    const result = toVacancyFormFromResponse(
+      { preferredCauses: 42 },
+      { ...FALLBACK_FORM }
+    );
+    expect(result.preferredCauses).toEqual(FALLBACK_FORM.preferredCauses);
+  });
+
+  it('defaults isEnabled/dataTakenFromCandidate when omitted', () => {
+    const result = toVacancyFormFromResponse(
+      { preferredCauses: { content: [] } },
+      {
+        ...FALLBACK_FORM,
+        preferredCauses: {
+          isEnabled: true,
+          dataTakenFromCandidate: true,
+          causes: [],
+        },
+      }
+    );
+    expect(result.preferredCauses.isEnabled).toBe(true);
+    expect(result.preferredCauses.dataTakenFromCandidate).toBe(true);
+  });
+});
+
+describe('toVacancyFormFromResponse — preferred hobbies section', () => {
+  it('hydrates hobbies from the content key', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        preferredHobbies: {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          content: [{ source: 'MASTER', id: 'hobby-1', label: 'Reading' }],
+        },
+      },
+      { ...FALLBACK_FORM }
+    );
+    expect(result.preferredHobbies.hobbies).toEqual([
+      { id: 'hobby-1', label: 'Reading', source: 'MASTER' },
+    ]);
+  });
+
+  it('hydrates hobbies from the hobbyList key when content is absent', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        preferredHobbies: {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          hobbyList: [{ source: 'MASTER', id: 'hobby-2', label: 'Chess' }],
+        },
+      },
+      { ...FALLBACK_FORM }
+    );
+    expect(result.preferredHobbies.hobbies).toEqual([
+      { id: 'hobby-2', label: 'Chess', source: 'MASTER' },
+    ]);
+  });
+
+  it('hydrates hobbies from the hobbies key when content and hobbyList are absent', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        preferredHobbies: {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          hobbies: [{ source: 'MASTER', id: 'hobby-3', label: 'Painting' }],
+        },
+      },
+      { ...FALLBACK_FORM }
+    );
+    expect(result.preferredHobbies.hobbies).toEqual([
+      { id: 'hobby-3', label: 'Painting', source: 'MASTER' },
+    ]);
+  });
+
+  it('returns fallback when the section is not a record', () => {
+    const result = toVacancyFormFromResponse(
+      { preferredHobbies: null },
+      { ...FALLBACK_FORM }
+    );
+    expect(result.preferredHobbies).toEqual(FALLBACK_FORM.preferredHobbies);
+  });
+
+  it('defaults isEnabled/dataTakenFromCandidate when omitted', () => {
+    const result = toVacancyFormFromResponse(
+      { preferredHobbies: { content: [] } },
+      {
+        ...FALLBACK_FORM,
+        preferredHobbies: {
+          isEnabled: true,
+          dataTakenFromCandidate: true,
+          hobbies: [],
+        },
+      }
+    );
+    expect(result.preferredHobbies.isEnabled).toBe(true);
+    expect(result.preferredHobbies.dataTakenFromCandidate).toBe(true);
+  });
+});
+
+// ─── normalizeCustomizableFormSection (also exported directly) ─────────────
+
+describe('normalizeCustomizableFormSection', () => {
+  const FALLBACK_CUSTOMIZABLE = {
+    isEnabled: false,
+    sectionTitle: '',
+    forms: [],
+  };
+
+  it('returns fallback when raw is not a record and not an array', () => {
+    expect(
+      normalizeCustomizableFormSection('not-a-record', FALLBACK_CUSTOMIZABLE)
+    ).toBe(FALLBACK_CUSTOMIZABLE);
+  });
+
+  it('returns fallback when isEnabled/sectionTitle/forms are all empty/false', () => {
+    const result = normalizeCustomizableFormSection(
+      { isEnabled: false, sectionTitle: '', forms: [] },
+      FALLBACK_CUSTOMIZABLE
+    );
+    expect(result).toBe(FALLBACK_CUSTOMIZABLE);
+  });
+
+  it('unwraps the first element when raw is an array', () => {
+    const result = normalizeCustomizableFormSection(
+      [
+        {
+          isEnabled: true,
+          sectionTitle: 'Custom Questions',
+          forms: [],
+        },
+      ],
+      FALLBACK_CUSTOMIZABLE
+    );
+    expect(result.isEnabled).toBe(true);
+    expect(result.sectionTitle).toBe('Custom Questions');
+  });
+
+  it('hydrates full forms/questions/options with sequential ids', () => {
+    const result = normalizeCustomizableFormSection(
+      {
+        isEnabled: true,
+        sectionTitle: 'Screening',
+        forms: [
+          {
+            title: 'Form A',
+            questions: [
+              {
+                questionText: 'Pick one',
+                questionType: 'multiple_choice',
+                required: true,
+                options: [{ value: 'Option A' }, { label: 'Option B' }, 'Option C'],
+              },
+              {
+                text: 'Rate this',
+                type: 'linear_scale',
+                linearScale: {
+                  startValue: 1,
+                  endValue: 5,
+                  startLabel: 'Low',
+                  endLabel: 'High',
+                },
+              },
+            ],
+          },
+          {
+            title: 'Form B',
+            questions: [],
+          },
+        ],
+      },
+      FALLBACK_CUSTOMIZABLE
+    );
+
+    expect(result.isEnabled).toBe(true);
+    expect(result.sectionTitle).toBe('Screening');
+    expect(result.forms).toHaveLength(2);
+    expect(result.forms[0].id).toBe(1);
+    expect(result.forms[1].id).toBe(2);
+
+    const [q1, q2] = result.forms[0].questions;
+    expect(q1.id).toBe(1);
+    expect(q1.text).toBe('Pick one');
+    expect(q1.type).toBe('MULTIPLE_CHOICE');
+    expect(q1.required).toBe(true);
+    expect(q1.options).toEqual([
+      { id: 1, value: 'Option A' },
+      { id: 2, value: 'Option B' },
+      { id: 3, value: 'Option C' },
+    ]);
+    expect(q1.from).toBe(0);
+    expect(q1.to).toBe(2);
+
+    expect(q2.id).toBe(2);
+    expect(q2.text).toBe('Rate this');
+    expect(q2.type).toBe('LINEAR_SCALE');
+    expect(q2.required).toBe(false);
+    expect(q2.options).toEqual([{ id: 1, value: '' }]);
+    expect(q2.from).toBe(1);
+    expect(q2.to).toBe(5);
+    expect(q2.startLabel).toBe('Low');
+    expect(q2.endLabel).toBe('High');
+  });
+
+  it('filters out options with empty values and falls back to a single blank option', () => {
+    const result = normalizeCustomizableFormSection(
+      {
+        isEnabled: true,
+        sectionTitle: 'S',
+        forms: [
+          {
+            title: 'Form A',
+            questions: [
+              {
+                questionText: 'Q',
+                questionType: 'DROPDOWN',
+                options: [{ value: '' }, null, 42],
+              },
+            ],
+          },
+        ],
+      },
+      FALLBACK_CUSTOMIZABLE
+    );
+    expect(result.forms[0].questions[0].options).toEqual([
+      { id: 1, value: '' },
+    ]);
+  });
+
+  it('returns an empty question type when the API type is unrecognized', () => {
+    const result = normalizeCustomizableFormSection(
+      {
+        isEnabled: true,
+        sectionTitle: 'S',
+        forms: [
+          {
+            title: 'Form A',
+            questions: [{ questionText: 'Q', questionType: 'NOT_A_TYPE' }],
+          },
+        ],
+      },
+      FALLBACK_CUSTOMIZABLE
+    );
+    expect(result.forms[0].questions[0].type).toBe('');
+  });
+
+  it('defaults `to` to 2 when linearScale.endValue resolves to 0', () => {
+    const result = normalizeCustomizableFormSection(
+      {
+        isEnabled: true,
+        sectionTitle: 'S',
+        forms: [
+          {
+            title: 'Form A',
+            questions: [{ questionText: 'Q', questionType: 'SHORT_ANSWER' }],
+          },
+        ],
+      },
+      FALLBACK_CUSTOMIZABLE
+    );
+    expect(result.forms[0].questions[0].to).toBe(2);
+  });
+
+  it('ignores non-record forms and non-record questions', () => {
+    const result = normalizeCustomizableFormSection(
+      {
+        isEnabled: true,
+        sectionTitle: 'S',
+        forms: ['not-a-record', { title: 'Valid', questions: ['nope'] }],
+      },
+      FALLBACK_CUSTOMIZABLE
+    );
+    expect(result.forms).toHaveLength(1);
+    expect(result.forms[0].title).toBe('Valid');
+    expect(result.forms[0].questions).toEqual([]);
+  });
+
+  it('treats non-array forms/questions/options as empty', () => {
+    const result = normalizeCustomizableFormSection(
+      {
+        isEnabled: true,
+        sectionTitle: 'S',
+        forms: 'not-an-array',
+      },
+      FALLBACK_CUSTOMIZABLE
+    );
+    expect(result.forms).toEqual([]);
+  });
+});
+
+describe('toVacancyFormFromResponse — remaining edge branches', () => {
+  it('returns [] from pickRawContent when neither content nor any fallback key is an array', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        skills: {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+        },
+      },
+      { ...FALLBACK_FORM }
+    );
+    expect(result.preferredSkills.skills).toEqual([]);
+  });
+
+  it('accepts CERTIFICATE as a valid license/certificate type', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        licenseCertificates: {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          content: [
+            {
+              nameOfLicenseCert: [
+                {
+                  source: 'MASTER',
+                  id: 'lc-cert',
+                  name: 'Cert',
+                  type: 'CERTIFICATE',
+                },
+              ],
+              issuingOrganization: [],
+              organizationLocations: [],
+              internationallyAccepted: false,
+              issueDate: '',
+              expirationDate: '',
+            },
+          ],
+        },
+      },
+      { ...FALLBACK_FORM }
+    );
+    expect(
+      result.licenseCertificates?.[0].content[0].nameOfLicenseCert[0].type
+    ).toBe('CERTIFICATE');
+  });
+
+  it('falls back to id for a license ref name when name/label/displayValue are all absent', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        licenseCertificates: {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          content: [
+            {
+              nameOfLicenseCert: [{ source: 'MASTER', id: 'lc-name-fallback' }],
+              issuingOrganization: [],
+              organizationLocations: [],
+              internationallyAccepted: false,
+              issueDate: '',
+              expirationDate: '',
+            },
+          ],
+        },
+      },
+      { ...FALLBACK_FORM }
+    );
+    expect(
+      result.licenseCertificates?.[0].content[0].nameOfLicenseCert[0].name
+    ).toBe('lc-name-fallback');
+  });
+
+  it('reads club/society entries from the clubSocieties key when clubsAndSocieties is absent', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        clubsAndSocieties: {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          clubSocieties: [{ clubSocietyRequirementId: 'club-alt-1' }],
+        },
+      },
+      { ...FALLBACK_FORM }
+    );
+    expect(result.preferredClubSocieties.clubSocieties[0].id).toBe(
+      'club-alt-1'
+    );
+  });
+});
+
+describe('toVacancyFormFromResponse — customizableForm section resolution', () => {
+  it('reads the customizableForm section via the customizedForm key', () => {
+    const result = toVacancyFormFromResponse(
+      {
+        customizedForm: {
+          isEnabled: true,
+          sectionTitle: 'Custom',
+          forms: [],
+        },
+      },
+      { ...FALLBACK_FORM }
+    );
+    expect(result.customizableForm.sectionTitle).toBe('Custom');
   });
 });

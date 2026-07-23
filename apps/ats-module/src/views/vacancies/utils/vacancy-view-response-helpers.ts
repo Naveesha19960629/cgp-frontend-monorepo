@@ -141,6 +141,26 @@ function readSectionValue(
   return undefined;
 }
 
+// Content is usually nested under `entry.content`; older/alternate API shapes
+// place it directly under one of `fallbackKeys` instead. Checked in order,
+// falling back to an empty array when none match.
+function pickRawContent(
+  entry: Record<string, unknown>,
+  ...fallbackKeys: string[]
+): unknown[] {
+  if (Array.isArray(entry.content)) {
+    return entry.content;
+  }
+
+  for (const key of fallbackKeys) {
+    if (Array.isArray(entry[key])) {
+      return entry[key] as unknown[];
+    }
+  }
+
+  return [];
+}
+
 function normalizeSecondaryEducation(raw: unknown) {
   const entry: unknown = Array.isArray(raw) ? raw[0] : raw;
   if (!isRecord(entry)) {
@@ -153,11 +173,7 @@ function normalizeSecondaryEducation(raw: unknown) {
     typeof entry.dataTakenFromCandidate === 'boolean'
       ? entry.dataTakenFromCandidate
       : false;
-  const rawContent = Array.isArray(entry.content)
-    ? entry.content
-    : Array.isArray(entry.secondaryEducation)
-      ? entry.secondaryEducation
-      : [];
+  const rawContent = pickRawContent(entry, 'secondaryEducation');
 
   const content = rawContent.filter(isRecord).map(item => ({
     acceptsHomeSchooling: Boolean(item.acceptsHomeSchooling),
@@ -191,11 +207,7 @@ function normalizeTertiaryEducation(raw: unknown) {
     typeof entry.dataTakenFromCandidate === 'boolean'
       ? entry.dataTakenFromCandidate
       : false;
-  const rawContent = Array.isArray(entry.content)
-    ? entry.content
-    : Array.isArray(entry.tertiaryEducation)
-      ? entry.tertiaryEducation
-      : [];
+  const rawContent = pickRawContent(entry, 'tertiaryEducation');
 
   const content = rawContent.filter(isRecord).map(item => ({
     qualificationName: toTagList(item.qualificationName),
@@ -233,13 +245,11 @@ function normalizeLicenseCertificates(raw: unknown) {
     typeof entry.dataTakenFromCandidate === 'boolean'
       ? entry.dataTakenFromCandidate
       : false;
-  const rawContent = Array.isArray(entry.content)
-    ? entry.content
-    : Array.isArray(entry.licenseCertificates)
-      ? entry.licenseCertificates
-      : Array.isArray(entry.licensesAndCertifications)
-        ? entry.licensesAndCertifications
-        : [];
+  const rawContent = pickRawContent(
+    entry,
+    'licenseCertificates',
+    'licensesAndCertifications'
+  );
 
   const content = rawContent.filter(isRecord).map(item => ({
     nameOfLicenseCert: toTagList(item.nameOfLicenseCert),
@@ -270,11 +280,7 @@ function normalizePublications(raw: unknown) {
     typeof entry.dataTakenFromCandidate === 'boolean'
       ? entry.dataTakenFromCandidate
       : false;
-  const rawContent = Array.isArray(entry.content)
-    ? entry.content
-    : Array.isArray(entry.publications)
-      ? entry.publications
-      : [];
+  const rawContent = pickRawContent(entry, 'publications');
 
   const content = rawContent.filter(isRecord).map(item => ({
     acceptedPublisherName: toSafeString(
@@ -297,11 +303,7 @@ function normalizeClubsAndSocieties(raw: unknown) {
     typeof entry.dataTakenFromCandidate === 'boolean'
       ? entry.dataTakenFromCandidate
       : false;
-  const rawContent = Array.isArray(entry.content)
-    ? entry.content
-    : Array.isArray(entry.clubsAndSocieties)
-      ? entry.clubsAndSocieties
-      : [];
+  const rawContent = pickRawContent(entry, 'clubsAndSocieties');
 
   const content = rawContent.filter(isRecord).map(item => ({
     clubSociety: toTagList(item.clubSociety),
@@ -325,11 +327,7 @@ function normalizeSports(raw: unknown) {
     typeof entry.dataTakenFromCandidate === 'boolean'
       ? entry.dataTakenFromCandidate
       : false;
-  const rawContent = Array.isArray(entry.content)
-    ? entry.content
-    : Array.isArray(entry.sports)
-      ? entry.sports
-      : [];
+  const rawContent = pickRawContent(entry, 'sports');
 
   const content = rawContent.filter(isRecord).map(item => ({
     nameOfSport: toTagList(item.nameOfSport || item.sport),
@@ -356,11 +354,7 @@ function normalizeVolunteering(raw: unknown) {
     typeof entry.dataTakenFromCandidate === 'boolean'
       ? entry.dataTakenFromCandidate
       : false;
-  const rawContent = Array.isArray(entry.content)
-    ? entry.content
-    : Array.isArray(entry.volunteering)
-      ? entry.volunteering
-      : [];
+  const rawContent = pickRawContent(entry, 'volunteering');
 
   const content = rawContent.filter(isRecord).map(item => ({
     organization: toTagList(item.organization || item.organizationName),
@@ -384,11 +378,7 @@ function normalizeProjects(raw: unknown) {
     typeof entry.dataTakenFromCandidate === 'boolean'
       ? entry.dataTakenFromCandidate
       : false;
-  const rawContent = Array.isArray(entry.content)
-    ? entry.content
-    : Array.isArray(entry.projects)
-      ? entry.projects
-      : [];
+  const rawContent = pickRawContent(entry, 'projects');
 
   const content = rawContent.filter(isRecord).map(item => ({
     startDate: toSafeString(item.startDate),
@@ -411,11 +401,7 @@ function normalizeHonoursAwards(raw: unknown) {
     typeof entry.dataTakenFromCandidate === 'boolean'
       ? entry.dataTakenFromCandidate
       : false;
-  const rawContent = Array.isArray(entry.content)
-    ? entry.content
-    : Array.isArray(entry.honoursAndAwards)
-      ? entry.honoursAndAwards
-      : [];
+  const rawContent = pickRawContent(entry, 'honoursAndAwards');
 
   const content = rawContent.filter(isRecord).map(item => ({
     title: toSafeString(item.title),
@@ -446,11 +432,7 @@ function normalizeSkills(raw: unknown) {
     typeof entry.dataTakenFromCandidate === 'boolean'
       ? entry.dataTakenFromCandidate
       : false;
-  const rawContent = Array.isArray(entry.content)
-    ? entry.content
-    : Array.isArray(entry.skills)
-      ? entry.skills
-      : [];
+  const rawContent = pickRawContent(entry, 'skills');
   return { isEnabled, dataTakenFromCandidate, content: toTagList(rawContent) };
 }
 
@@ -471,11 +453,7 @@ function normalizeLanguages(raw: unknown) {
     typeof entry.dataTakenFromCandidate === 'boolean'
       ? entry.dataTakenFromCandidate
       : false;
-  const rawContent = Array.isArray(entry.content)
-    ? entry.content
-    : Array.isArray(entry.languages)
-      ? entry.languages
-      : [];
+  const rawContent = pickRawContent(entry, 'languages');
   return { isEnabled, dataTakenFromCandidate, content: toTagList(rawContent) };
 }
 
@@ -496,11 +474,7 @@ function normalizeCauses(raw: unknown) {
     typeof entry.dataTakenFromCandidate === 'boolean'
       ? entry.dataTakenFromCandidate
       : false;
-  const rawContent = Array.isArray(entry.content)
-    ? entry.content
-    : Array.isArray(entry.causes)
-      ? entry.causes
-      : [];
+  const rawContent = pickRawContent(entry, 'causes');
   return { isEnabled, dataTakenFromCandidate, content: toTagList(rawContent) };
 }
 
@@ -521,13 +495,7 @@ function normalizeHobbies(raw: unknown) {
     typeof entry.dataTakenFromCandidate === 'boolean'
       ? entry.dataTakenFromCandidate
       : false;
-  const rawContent = Array.isArray(entry.content)
-    ? entry.content
-    : Array.isArray(entry.hobbies)
-      ? entry.hobbies
-      : Array.isArray(entry.hobbyList)
-        ? entry.hobbyList
-        : [];
+  const rawContent = pickRawContent(entry, 'hobbies', 'hobbyList');
   return { isEnabled, dataTakenFromCandidate, content: toTagList(rawContent) };
 }
 
@@ -541,11 +509,7 @@ function normalizePatents(raw: unknown) {
     typeof entry.dataTakenFromCandidate === 'boolean'
       ? entry.dataTakenFromCandidate
       : false;
-  const rawContent = Array.isArray(entry.content)
-    ? entry.content
-    : Array.isArray(entry.patents)
-      ? entry.patents
-      : [];
+  const rawContent = pickRawContent(entry, 'patents');
 
   const content = rawContent.filter(isRecord).map(item => {
     const rawStatuses = Array.isArray(item.statuses) ? item.statuses : [];
@@ -590,11 +554,7 @@ function normalizeIndustries(raw: unknown) {
     typeof entry.dataTakenFromCandidate === 'boolean'
       ? entry.dataTakenFromCandidate
       : false;
-  const rawContent = Array.isArray(entry.content)
-    ? entry.content
-    : Array.isArray(entry.industries)
-      ? entry.industries
-      : [];
+  const rawContent = pickRawContent(entry, 'industries');
   return { isEnabled, dataTakenFromCandidate, content: toTagList(rawContent) };
 }
 

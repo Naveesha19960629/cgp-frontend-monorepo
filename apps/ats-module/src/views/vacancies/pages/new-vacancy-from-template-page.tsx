@@ -16,7 +16,9 @@ import { Skeleton } from '@cgp/ui-kit/components/ui/skeleton';
 import { useKeycloak } from '@react-keycloak/web';
 
 /** Hydrates the wizard form once from the mapped template payload. */
-function FromTemplateContent({ mapped }: { mapped: TemplateUseMapResult }) {
+function FromTemplateContent({
+  mapped,
+}: Readonly<{ mapped: TemplateUseMapResult }>) {
   const { isInitialStep, setForm, setCurrentStepIndex } = useVacancyForm();
   const hydratedRef = useRef(false);
 
@@ -61,7 +63,7 @@ function TemplateLoadingState() {
   );
 }
 
-function TemplateErrorState({ message }: { message: string }) {
+function TemplateErrorState({ message }: Readonly<{ message: string }>) {
   const { t } = useTranslation('ats');
   return (
     <div className="flex min-h-full items-center justify-center px-7 py-5">

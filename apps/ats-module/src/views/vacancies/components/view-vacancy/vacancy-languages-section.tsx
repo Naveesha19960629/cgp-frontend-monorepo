@@ -6,12 +6,12 @@ import type { VacancyViewModel } from '@/views/vacancies/types';
 
 function VacancyLanguagesSection({
   preferredLanguages,
-}: {
-  preferredLanguages?: VacancyViewModel['preferredLanguages'];
-}) {
+}: Readonly<{
+  preferredLanguages: VacancyViewModel['preferredLanguages'];
+}>) {
   const { t } = useTranslation('ats');
 
-  if (!preferredLanguages || !preferredLanguages.isEnabled) {
+  if (!preferredLanguages?.isEnabled) {
     return null;
   }
 

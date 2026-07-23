@@ -34,7 +34,7 @@ export default function TemplatesToolbar({
   sortOrder,
   onSortOrderChange,
   onCreate,
-}: TemplatesToolbarProps) {
+}: Readonly<TemplatesToolbarProps>) {
   const { t } = useTranslation('ats');
 
   // Local input state keeps the field responsive while the API call is
