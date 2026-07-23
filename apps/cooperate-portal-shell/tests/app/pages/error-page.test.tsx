@@ -1,3 +1,5 @@
+import { screen } from '@testing-library/react';
+
 import ErrorPage from '@/app/pages/error-page';
 
 const mockNavigate = vi.fn();
@@ -93,9 +95,9 @@ describe('ErrorPage', () => {
       configurable: true,
       value: 2,
     });
-    const backSpy = vi.spyOn(window.history, 'back').mockImplementation(
-      () => {}
-    );
+    const backSpy = vi
+      .spyOn(window.history, 'back')
+      .mockImplementation(() => {});
 
     render(<ErrorPage />);
     fireEvent.click(screen.getByText('errorPage.goBackAndFixButton'));

@@ -17,7 +17,9 @@ const baseEntry = {
 
 describe('VacancyClubsSocietiesSection', () => {
   it('renders nothing when preferredClubSocieties is undefined', () => {
-    const { container } = render(<VacancyClubsSocietiesSection />);
+    const { container } = render(
+      <VacancyClubsSocietiesSection preferredClubSocieties={undefined} />
+    );
     expect(container).toBeEmptyDOMElement();
   });
 
@@ -189,9 +191,7 @@ describe('VacancyClubsSocietiesSection', () => {
         preferredClubSocieties={{
           isEnabled: true,
           dataTakenFromCandidate: false,
-          content: [
-            { ...baseEntry, organization: ['ACME Corp', 'Globex'] },
-          ],
+          content: [{ ...baseEntry, organization: ['ACME Corp', 'Globex'] }],
         }}
       />
     );

@@ -26,7 +26,6 @@ import type {
   PatentEntrySchemaType,
   ProjectFormEntry,
   SecondaryEducationEntry,
-  Sort,
   SportFormEntry,
   TertiaryEducationEntry,
   VacancyForm,
@@ -116,7 +115,7 @@ vi.mock('@/views/vacancies/services', () => ({
 
 // ─── Test helpers ──────────────────────────────────────────────────────────────
 
-function makeSort(): Sort {
+function makeSort(): { empty: boolean; sorted: boolean; unsorted: boolean } {
   return { empty: true, sorted: false, unsorted: true };
 }
 
@@ -245,7 +244,9 @@ function buildDeps(
   };
 }
 
-function emptyJobRequirement(overrides?: Partial<JobRequirement>): JobRequirement {
+function emptyJobRequirement(
+  overrides?: Partial<JobRequirement>
+): JobRequirement {
   return {
     isEnabled: true,
     dataTakenFromCandidate: false,
@@ -270,15 +271,15 @@ beforeEach(() => {
   (
     careerPathService.getAllCareerPaths as ReturnType<typeof vi.fn>
   ).mockResolvedValue(makeApiResponse([]));
-  (
-    causeService.getAllCauses as ReturnType<typeof vi.fn>
-  ).mockResolvedValue(makeApiResponse([]));
-  (
-    hobbyService.getAllHobbies as ReturnType<typeof vi.fn>
-  ).mockResolvedValue(makeApiResponse([]));
-  (
-    industryService.getIndustries as ReturnType<typeof vi.fn>
-  ).mockResolvedValue(makeApiResponse([]));
+  (causeService.getAllCauses as ReturnType<typeof vi.fn>).mockResolvedValue(
+    makeApiResponse([])
+  );
+  (hobbyService.getAllHobbies as ReturnType<typeof vi.fn>).mockResolvedValue(
+    makeApiResponse([])
+  );
+  (industryService.getIndustries as ReturnType<typeof vi.fn>).mockResolvedValue(
+    makeApiResponse([])
+  );
   (
     languageService.getAllLanguages as ReturnType<typeof vi.fn>
   ).mockResolvedValue(makeApiResponse([]));
@@ -302,18 +303,16 @@ beforeEach(() => {
   (
     secondaryEducationService.getFieldsOfStudy as ReturnType<typeof vi.fn>
   ).mockResolvedValue(makeApiResponse([]));
-  (
-    skillService.getAllSkills as ReturnType<typeof vi.fn>
-  ).mockResolvedValue(makeApiResponse([]));
-  (
-    societyService.getSocieties as ReturnType<typeof vi.fn>
-  ).mockResolvedValue(makeApiResponse([]));
+  (skillService.getAllSkills as ReturnType<typeof vi.fn>).mockResolvedValue(
+    makeApiResponse([])
+  );
+  (societyService.getSocieties as ReturnType<typeof vi.fn>).mockResolvedValue(
+    makeApiResponse([])
+  );
   (
     sportLevelService.getAllSportLevels as ReturnType<typeof vi.fn>
   ).mockResolvedValue([]);
-  (
-    sportService.getSports as ReturnType<typeof vi.fn>
-  ).mockResolvedValue([]);
+  (sportService.getSports as ReturnType<typeof vi.fn>).mockResolvedValue([]);
   (
     tertiaryEducationService.getQualifications as ReturnType<typeof vi.fn>
   ).mockResolvedValue(makeApiResponse([]));
@@ -482,7 +481,9 @@ describe('resolveDraftUserCreatedEntries', () => {
             careerPath: [
               { source: 'USER_CREATED', id: 'temp-cp', label: 'Career Only' },
             ],
-            role: [{ source: 'USER_CREATED', id: 'temp-r', label: 'Role Only' }],
+            role: [
+              { source: 'USER_CREATED', id: 'temp-r', label: 'Role Only' },
+            ],
           }),
         ],
       });
@@ -490,7 +491,9 @@ describe('resolveDraftUserCreatedEntries', () => {
         addCareerPath: vi
           .fn()
           .mockResolvedValue(pendingApiResponse('cp-2', 'Career Only')),
-        addRole: vi.fn().mockResolvedValue(pendingApiResponse('r-2', 'Role Only')),
+        addRole: vi
+          .fn()
+          .mockResolvedValue(pendingApiResponse('r-2', 'Role Only')),
       });
 
       await resolveDraftUserCreatedEntries(form, deps);
@@ -511,7 +514,11 @@ describe('resolveDraftUserCreatedEntries', () => {
         jobRequirements: [
           emptyJobRequirement({
             role: [
-              { source: 'USER_CREATED', id: 'temp-r', label: 'Standalone Role' },
+              {
+                source: 'USER_CREATED',
+                id: 'temp-r',
+                label: 'Standalone Role',
+              },
             ],
           }),
         ],
@@ -906,9 +913,9 @@ describe('resolveDraftUserCreatedEntries', () => {
         >
       ).mockResolvedValue(makeApiResponse([]));
 
-      await expect(
-        resolveDraftUserCreatedEntries(form, deps)
-      ).rejects.toEqual(mst403Error());
+      await expect(resolveDraftUserCreatedEntries(form, deps)).rejects.toEqual(
+        mst403Error()
+      );
     });
 
     it('resolves USER_CREATED issuing organizations and maps them back onto the license entry', async () => {
@@ -1017,12 +1024,16 @@ describe('resolveDraftUserCreatedEntries', () => {
       const deps = buildDeps({
         addSchool: vi
           .fn()
-          .mockResolvedValue(pendingApiResponse('school-pending-1', 'New School')),
+          .mockResolvedValue(
+            pendingApiResponse('school-pending-1', 'New School')
+          ),
       });
 
       const result = await resolveDraftUserCreatedEntries(form, deps);
 
-      expect(deps.addSchool).toHaveBeenCalledWith({ displayValue: 'New School' });
+      expect(deps.addSchool).toHaveBeenCalledWith({
+        displayValue: 'New School',
+      });
       expect(result.secondaryEducation[0].content[0].schools[0]).toEqual({
         source: 'PENDING',
         id: 'school-pending-1',
@@ -1062,7 +1073,11 @@ describe('resolveDraftUserCreatedEntries', () => {
         secondaryEducationService.getSchools as ReturnType<typeof vi.fn>
       ).mockResolvedValue(
         makeApiResponse([
-          { id: 'existing-school', label: 'Duplicate School', source: 'MASTER' },
+          {
+            id: 'existing-school',
+            label: 'Duplicate School',
+            source: 'MASTER',
+          },
         ])
       );
 
@@ -1142,7 +1157,11 @@ describe('resolveDraftUserCreatedEntries', () => {
             content: [
               buildSecondaryEntry({
                 examinations: [
-                  { source: 'MASTER', id: 'exam-existing', name: 'Existing Exam' },
+                  {
+                    source: 'MASTER',
+                    id: 'exam-existing',
+                    name: 'Existing Exam',
+                  },
                 ],
               }),
             ],
@@ -1293,7 +1312,11 @@ describe('resolveDraftUserCreatedEntries', () => {
             content: [
               buildSecondaryEntry({
                 examinations: [
-                  { source: 'USER_CREATED', id: 'temp-exam', name: 'Broken Exam' },
+                  {
+                    source: 'USER_CREATED',
+                    id: 'temp-exam',
+                    name: 'Broken Exam',
+                  },
                 ],
               }),
             ],
@@ -1437,7 +1460,11 @@ describe('resolveDraftUserCreatedEntries', () => {
 
       expect(
         result.tertiaryEducation[0].content[0].tertiaryAwardingBody[0]
-      ).toEqual({ source: 'MASTER', id: 'existing-body', name: 'Duplicate Body' });
+      ).toEqual({
+        source: 'MASTER',
+        id: 'existing-body',
+        name: 'Duplicate Body',
+      });
     });
 
     it('leaves a non-placeholder tertiaryAwardingBody ref untouched', async () => {
@@ -1484,13 +1511,21 @@ describe('resolveDraftUserCreatedEntries', () => {
                   { source: 'USER_CREATED', id: 'temp-spec', name: 'New Spec' },
                 ],
                 batch: [
-                  { source: 'USER_CREATED', id: 'temp-batch', name: 'New Batch' },
+                  {
+                    source: 'USER_CREATED',
+                    id: 'temp-batch',
+                    name: 'New Batch',
+                  },
                 ],
                 department: [
                   { source: 'USER_CREATED', id: 'temp-dept', name: 'New Dept' },
                 ],
                 faculty: [
-                  { source: 'USER_CREATED', id: 'temp-fac', name: 'New Faculty' },
+                  {
+                    source: 'USER_CREATED',
+                    id: 'temp-fac',
+                    name: 'New Faculty',
+                  },
                 ],
               }),
             ],
@@ -1507,7 +1542,9 @@ describe('resolveDraftUserCreatedEntries', () => {
         addSpecialization: vi
           .fn()
           .mockResolvedValue(pendingApiResponse('spec-1', 'New Spec')),
-        addBatch: vi.fn().mockResolvedValue(pendingApiResponse('batch-1', 'New Batch')),
+        addBatch: vi
+          .fn()
+          .mockResolvedValue(pendingApiResponse('batch-1', 'New Batch')),
         addDepartment: vi
           .fn()
           .mockResolvedValue(pendingApiResponse('dept-1', 'New Dept')),
@@ -1590,7 +1627,9 @@ describe('resolveDraftUserCreatedEntries', () => {
               dataTakenFromCandidate: false,
               content: [
                 buildTertiaryEntry({
-                  [field]: [{ source: 'USER_CREATED', id: 'temp', name: label }],
+                  [field]: [
+                    { source: 'USER_CREATED', id: 'temp', name: label },
+                  ],
                 }),
               ],
             },
@@ -1610,9 +1649,10 @@ describe('resolveDraftUserCreatedEntries', () => {
         expect(
           tertiaryEducationService[serviceFn] as ReturnType<typeof vi.fn>
         ).toHaveBeenCalledWith(label);
-        expect(
-          result.tertiaryEducation[0].content[0][field][0]
-        ).toMatchObject({ source: 'MASTER', id: 'existing-id' });
+        expect(result.tertiaryEducation[0].content[0][field][0]).toMatchObject({
+          source: 'MASTER',
+          id: 'existing-id',
+        });
       }
     );
 
@@ -1654,7 +1694,9 @@ describe('resolveDraftUserCreatedEntries', () => {
         },
       });
       const deps = buildDeps({
-        createCause: vi.fn().mockResolvedValue(pendingItem('cause-1', 'New Cause')),
+        createCause: vi
+          .fn()
+          .mockResolvedValue(pendingItem('cause-1', 'New Cause')),
       });
 
       const result = await resolveDraftUserCreatedEntries(form, deps);
@@ -1676,7 +1718,9 @@ describe('resolveDraftUserCreatedEntries', () => {
         },
       });
       const deps = buildDeps({
-        createHobby: vi.fn().mockResolvedValue(pendingItem('hobby-1', 'New Hobby')),
+        createHobby: vi
+          .fn()
+          .mockResolvedValue(pendingItem('hobby-1', 'New Hobby')),
       });
 
       const result = await resolveDraftUserCreatedEntries(form, deps);
@@ -1876,7 +1920,9 @@ describe('resolveDraftUserCreatedEntries', () => {
 
       const result = await resolveDraftUserCreatedEntries(form, deps);
 
-      expect(result.preferredSkills?.skills[0].careerPathId).toBe('cp-existing');
+      expect(result.preferredSkills?.skills[0].careerPathId).toBe(
+        'cp-existing'
+      );
     });
 
     it('leaves careerPathId undefined when the MST-403 career path fallback search has no match', async () => {
@@ -1995,9 +2041,9 @@ describe('resolveDraftUserCreatedEntries', () => {
         makeApiResponse([])
       );
 
-      await expect(
-        resolveDraftUserCreatedEntries(form, deps)
-      ).rejects.toEqual(mst403Error());
+      await expect(resolveDraftUserCreatedEntries(form, deps)).rejects.toEqual(
+        mst403Error()
+      );
     });
 
     it('rethrows a non-MST-403 error from createSkillCareerPath', async () => {
@@ -2094,7 +2140,9 @@ describe('resolveDraftUserCreatedEntries', () => {
         createSkillCareerPath: vi
           .fn()
           .mockImplementation((params: { skillName: string }) =>
-            Promise.resolve(pendingItem(`skill-${params.skillName}`, params.skillName))
+            Promise.resolve(
+              pendingItem(`skill-${params.skillName}`, params.skillName)
+            )
           ),
       });
 
@@ -2109,7 +2157,9 @@ describe('resolveDraftUserCreatedEntries', () => {
   // ─── Preferred Sports ────────────────────────────────────────────────────────
 
   describe('preferred sports', () => {
-    function buildSportEntry(overrides?: Partial<SportFormEntry>): SportFormEntry {
+    function buildSportEntry(
+      overrides?: Partial<SportFormEntry>
+    ): SportFormEntry {
       return {
         id: 'sport-entry-1',
         isOpen: false,
@@ -2154,7 +2204,9 @@ describe('resolveDraftUserCreatedEntries', () => {
           dataTakenFromCandidate: false,
           sports: [
             buildSportEntry({
-              sport: [{ value: 'temp-s', label: 'Rugby', source: 'USER_CREATED' }],
+              sport: [
+                { value: 'temp-s', label: 'Rugby', source: 'USER_CREATED' },
+              ],
               levelRepresented: [
                 { value: 'temp-l', label: 'National', source: 'USER_CREATED' },
               ],
@@ -2207,7 +2259,11 @@ describe('resolveDraftUserCreatedEntries', () => {
           sports: [
             buildSportEntry({
               sport: [
-                { value: 'temp-s', label: 'Duplicate Sport', source: 'USER_CREATED' },
+                {
+                  value: 'temp-s',
+                  label: 'Duplicate Sport',
+                  source: 'USER_CREATED',
+                },
               ],
             }),
           ],
@@ -2237,7 +2293,11 @@ describe('resolveDraftUserCreatedEntries', () => {
           sports: [
             buildSportEntry({
               sport: [
-                { value: 'temp-s', label: 'Missing Sport', source: 'USER_CREATED' },
+                {
+                  value: 'temp-s',
+                  label: 'Missing Sport',
+                  source: 'USER_CREATED',
+                },
               ],
             }),
           ],
@@ -2246,11 +2306,13 @@ describe('resolveDraftUserCreatedEntries', () => {
       const deps = buildDeps({
         createSport: vi.fn().mockRejectedValue(mst403Error()),
       });
-      (sportService.getSports as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+      (sportService.getSports as ReturnType<typeof vi.fn>).mockResolvedValue(
+        []
+      );
 
-      await expect(
-        resolveDraftUserCreatedEntries(form, deps)
-      ).rejects.toEqual(mst403Error());
+      await expect(resolveDraftUserCreatedEntries(form, deps)).rejects.toEqual(
+        mst403Error()
+      );
     });
 
     it('rethrows a non-MST-403 error immediately', async () => {
@@ -2261,7 +2323,11 @@ describe('resolveDraftUserCreatedEntries', () => {
           sports: [
             buildSportEntry({
               sport: [
-                { value: 'temp-s', label: 'Broken Sport', source: 'USER_CREATED' },
+                {
+                  value: 'temp-s',
+                  label: 'Broken Sport',
+                  source: 'USER_CREATED',
+                },
               ],
             }),
           ],
@@ -2306,9 +2372,7 @@ describe('resolveDraftUserCreatedEntries', () => {
       const result = await resolveDraftUserCreatedEntries(form, deps);
 
       expect(sportLevelService.getAllSportLevels).toHaveBeenCalled();
-      expect(
-        result.preferredSports?.sports[0].levelRepresented[0]
-      ).toEqual({
+      expect(result.preferredSports?.sports[0].levelRepresented[0]).toEqual({
         value: 'level-existing',
         label: 'Duplicate Level',
         source: 'MASTER',
@@ -2349,7 +2413,11 @@ describe('resolveDraftUserCreatedEntries', () => {
       );
       expect(
         result.preferredSports?.sports[0].representedOrganization[0]
-      ).toEqual({ value: 'org-existing', label: 'Duplicate Club', source: 'MASTER' });
+      ).toEqual({
+        value: 'org-existing',
+        label: 'Duplicate Club',
+        source: 'MASTER',
+      });
     });
 
     it('resolves a shared USER_CREATED sport label only once across multiple entries', async () => {
@@ -2360,24 +2428,34 @@ describe('resolveDraftUserCreatedEntries', () => {
           sports: [
             buildSportEntry({
               id: 'sport-a',
-              sport: [{ value: 't1', label: 'Cricket', source: 'USER_CREATED' }],
+              sport: [
+                { value: 't1', label: 'Cricket', source: 'USER_CREATED' },
+              ],
             }),
             buildSportEntry({
               id: 'sport-b',
-              sport: [{ value: 't2', label: 'Cricket', source: 'USER_CREATED' }],
+              sport: [
+                { value: 't2', label: 'Cricket', source: 'USER_CREATED' },
+              ],
             }),
           ],
         },
       });
       const deps = buildDeps({
-        createSport: vi.fn().mockResolvedValue(pendingItem('cricket-1', 'Cricket')),
+        createSport: vi
+          .fn()
+          .mockResolvedValue(pendingItem('cricket-1', 'Cricket')),
       });
 
       const result = await resolveDraftUserCreatedEntries(form, deps);
 
       expect(deps.createSport).toHaveBeenCalledTimes(1);
-      expect(result.preferredSports?.sports[0].sport[0].value).toBe('cricket-1');
-      expect(result.preferredSports?.sports[1].sport[0].value).toBe('cricket-1');
+      expect(result.preferredSports?.sports[0].sport[0].value).toBe(
+        'cricket-1'
+      );
+      expect(result.preferredSports?.sports[1].sport[0].value).toBe(
+        'cricket-1'
+      );
     });
   });
 
@@ -2417,8 +2495,12 @@ describe('resolveDraftUserCreatedEntries', () => {
         },
       });
       const deps = buildDeps({
-        createCause: vi.fn().mockResolvedValue(pendingItem('cause-v1', 'New Cause')),
-        createOrganization: vi.fn().mockResolvedValue(pendingItem('org-v1', 'New Org')),
+        createCause: vi
+          .fn()
+          .mockResolvedValue(pendingItem('cause-v1', 'New Cause')),
+        createOrganization: vi
+          .fn()
+          .mockResolvedValue(pendingItem('org-v1', 'New Org')),
       });
 
       const result = await resolveDraftUserCreatedEntries(form, deps);
@@ -2527,7 +2609,11 @@ describe('resolveDraftUserCreatedEntries', () => {
           clubSocieties: [
             buildClubSocietyEntry({
               clubSociety: [
-                { value: 'temp-cs', label: 'New Society', source: 'USER_CREATED' },
+                {
+                  value: 'temp-cs',
+                  label: 'New Society',
+                  source: 'USER_CREATED',
+                },
               ],
               representedOrganization: [
                 { value: 'temp-o', label: 'New Org', source: 'USER_CREATED' },
@@ -2584,15 +2670,23 @@ describe('resolveDraftUserCreatedEntries', () => {
       const deps = buildDeps({
         createSociety: vi.fn().mockRejectedValue(mst403Error()),
       });
-      (societyService.getSocieties as ReturnType<typeof vi.fn>).mockResolvedValue(
+      (
+        societyService.getSocieties as ReturnType<typeof vi.fn>
+      ).mockResolvedValue(
         makeApiResponse([
-          { id: 'society-existing', label: 'Duplicate Society', source: 'MASTER' },
+          {
+            id: 'society-existing',
+            label: 'Duplicate Society',
+            source: 'MASTER',
+          },
         ])
       );
 
       const result = await resolveDraftUserCreatedEntries(form, deps);
 
-      expect(societyService.getSocieties).toHaveBeenCalledWith('Duplicate Society');
+      expect(societyService.getSocieties).toHaveBeenCalledWith(
+        'Duplicate Society'
+      );
       expect(
         result.preferredClubSocieties?.clubSocieties[0].clubSociety[0]
       ).toEqual({
@@ -2606,7 +2700,9 @@ describe('resolveDraftUserCreatedEntries', () => {
   // ─── Projects Requirements ───────────────────────────────────────────────────
 
   describe('projects requirements', () => {
-    function buildProjectEntry(overrides?: Partial<ProjectFormEntry>): ProjectFormEntry {
+    function buildProjectEntry(
+      overrides?: Partial<ProjectFormEntry>
+    ): ProjectFormEntry {
       return {
         id: 'project-1',
         isOpen: false,
@@ -2625,7 +2721,11 @@ describe('resolveDraftUserCreatedEntries', () => {
           projects: [
             buildProjectEntry({
               relatedIndustry: [
-                { value: 'temp-i', label: 'New Industry', source: 'USER_CREATED' },
+                {
+                  value: 'temp-i',
+                  label: 'New Industry',
+                  source: 'USER_CREATED',
+                },
               ],
               organizations: [
                 { value: 'temp-o', label: 'New Org', source: 'USER_CREATED' },
@@ -2680,11 +2780,13 @@ describe('resolveDraftUserCreatedEntries', () => {
       const result = await resolveDraftUserCreatedEntries(form, deps);
 
       expect(deps.createOrganization).not.toHaveBeenCalled();
-      expect(result.projectsRequirements?.projects[0].organizations[0]).toEqual({
-        value: 'org-1',
-        label: 'Existing Org',
-        source: 'MASTER',
-      });
+      expect(result.projectsRequirements?.projects[0].organizations[0]).toEqual(
+        {
+          value: 'org-1',
+          label: 'Existing Org',
+          source: 'MASTER',
+        }
+      );
     });
 
     it('falls back to searchIndustries on MST-403 for the relatedIndustry field', async () => {
@@ -2708,9 +2810,15 @@ describe('resolveDraftUserCreatedEntries', () => {
       const deps = buildDeps({
         createIndustry: vi.fn().mockRejectedValue(mst403Error()),
       });
-      (industryService.getIndustries as ReturnType<typeof vi.fn>).mockResolvedValue(
+      (
+        industryService.getIndustries as ReturnType<typeof vi.fn>
+      ).mockResolvedValue(
         makeApiResponse([
-          { id: 'industry-existing', label: 'Duplicate Industry', source: 'MASTER' },
+          {
+            id: 'industry-existing',
+            label: 'Duplicate Industry',
+            source: 'MASTER',
+          },
         ])
       );
 

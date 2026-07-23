@@ -1,3 +1,5 @@
+import { screen } from '@testing-library/react';
+
 import { VacancyCustomizableFormSection } from '@/views/vacancies/components/view-vacancy/vacancy-customizable-form-section';
 import type {
   VacancyViewCustomizableFormCard,
@@ -29,7 +31,9 @@ const buildForm = (
 
 describe('VacancyCustomizableFormSection', () => {
   it('renders nothing when customizableForm is undefined', () => {
-    const { container } = render(<VacancyCustomizableFormSection />);
+    const { container } = render(
+      <VacancyCustomizableFormSection customizableForm={undefined} />
+    );
     expect(container).toBeEmptyDOMElement();
   });
 
@@ -212,7 +216,9 @@ describe('VacancyCustomizableFormSection', () => {
       );
       expect(screen.getByText('Option A')).toBeInTheDocument();
       expect(screen.getByText('Option B')).toBeInTheDocument();
-      expect(screen.getByText('customizableForm.view.options')).toBeInTheDocument();
+      expect(
+        screen.getByText('customizableForm.view.options')
+      ).toBeInTheDocument();
     }
   );
 
@@ -304,7 +310,9 @@ describe('VacancyCustomizableFormSection', () => {
         }}
       />
     );
-    expect(screen.queryByText('customizableForm.view.scale')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('customizableForm.view.scale')
+    ).not.toBeInTheDocument();
   });
 
   it('shows required label when question is required', () => {
@@ -313,11 +321,15 @@ describe('VacancyCustomizableFormSection', () => {
         customizableForm={{
           isEnabled: true,
           sectionTitle: 'My Form',
-          forms: [buildForm({ questions: [{ ...baseQuestion, required: true }] })],
+          forms: [
+            buildForm({ questions: [{ ...baseQuestion, required: true }] }),
+          ],
         }}
       />
     );
-    expect(screen.getByText('customizableForm.view.required')).toBeInTheDocument();
+    expect(
+      screen.getByText('customizableForm.view.required')
+    ).toBeInTheDocument();
   });
 
   it('shows optional label when question is not required', () => {
@@ -332,6 +344,8 @@ describe('VacancyCustomizableFormSection', () => {
         }}
       />
     );
-    expect(screen.getByText('customizableForm.view.optional')).toBeInTheDocument();
+    expect(
+      screen.getByText('customizableForm.view.optional')
+    ).toBeInTheDocument();
   });
 });

@@ -575,9 +575,7 @@ describe('toCreateVacancyPayload — job requirement', () => {
             discipline: [
               { source: 'MASTER', id: 'disc-1', label: 'Discipline' },
             ],
-            careerPath: [
-              { source: 'MASTER', id: 'cp-1', label: 'CareerPath' },
-            ],
+            careerPath: [{ source: 'MASTER', id: 'cp-1', label: 'CareerPath' }],
             level: [{ source: 'MASTER', id: 'lvl-1', label: 'Level' }],
             role: [{ source: 'MASTER', id: 'role-1', label: 'Role' }],
             jobTitle: [{ source: 'MASTER', id: 'jt-1', label: 'JobTitle' }],
@@ -889,9 +887,7 @@ describe('toCreateVacancyPayload — club societies', () => {
             {
               id: 'c1',
               isOpen: false,
-              clubSociety: [
-                { value: 'cs-1', label: 'Club', source: 'MASTER' },
-              ],
+              clubSociety: [{ value: 'cs-1', label: 'Club', source: 'MASTER' }],
               clubSocietySearch: '',
               startDate: '2020-01-01',
               endDate: '2021-01-01',
@@ -952,7 +948,9 @@ describe('toCreateVacancyPayload — sports', () => {
             {
               id: 's1',
               isOpen: false,
-              sport: [{ value: 'sport-1', label: 'Football', source: 'MASTER' }],
+              sport: [
+                { value: 'sport-1', label: 'Football', source: 'MASTER' },
+              ],
               sportSearch: '',
               levelRepresented: [
                 { value: 'lvl-1', label: 'National', source: 'MASTER' },
@@ -1388,11 +1386,11 @@ describe('toCreateVacancyPayload — licenses additional branches', () => {
               {
                 nameOfLicenseCert: [],
                 issuingOrganization: [
-                  { source: '', id: 'org-1' },
+                  { source: '' as never, id: 'org-1' },
                   { source: 'MASTER', id: '' },
                 ],
                 organizationLocations: [
-                  { source: '', id: 'loc-1' },
+                  { source: '' as never, id: 'loc-1' },
                   { source: 'MASTER', id: '' },
                 ],
                 internationallyAccepted: false,
@@ -1466,11 +1464,14 @@ describe('toUpdateVacancyPayload', () => {
     ['live', 'LIVE'],
     ['expired', 'EXPIRED'],
     ['on_hold', 'ONHOLD'],
-  ])('maps existing status "%s" to API status "%s"', (formStatus, apiStatus) => {
-    const payload = toUpdateVacancyPayload(buildBaseForm(), formStatus);
+  ])(
+    'maps existing status "%s" to API status "%s"',
+    (formStatus, apiStatus) => {
+      const payload = toUpdateVacancyPayload(buildBaseForm(), formStatus);
 
-    expect(payload.status).toBe(apiStatus);
-  });
+      expect(payload.status).toBe(apiStatus);
+    }
+  );
 
   it('is case-insensitive and trims whitespace', () => {
     const payload = toUpdateVacancyPayload(buildBaseForm(), '  Live  ');

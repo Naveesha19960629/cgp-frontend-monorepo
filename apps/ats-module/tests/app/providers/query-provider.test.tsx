@@ -1,5 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 
+import { screen } from '@testing-library/react';
+
 import { QueryProvider } from '@/app/providers/query-provider';
 
 function QueryClientConsumer() {

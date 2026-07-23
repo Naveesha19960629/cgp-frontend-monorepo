@@ -17,7 +17,9 @@ const baseEntry = {
 
 describe('VacancyHonoursAwardsSection', () => {
   it('renders nothing when preferredHonoursAwards is undefined', () => {
-    const { container } = render(<VacancyHonoursAwardsSection />);
+    const { container } = render(
+      <VacancyHonoursAwardsSection preferredHonoursAwards={undefined} />
+    );
     expect(container).toBeEmptyDOMElement();
   });
 
@@ -217,7 +219,9 @@ describe('VacancyHonoursAwardsSection', () => {
       />
     );
     expect(
-      screen.getByText('preferredHonoursAwards.fieldList.associatedOrganization')
+      screen.getByText(
+        'preferredHonoursAwards.fieldList.associatedOrganization'
+      )
     ).toBeInTheDocument();
     expect(
       screen.getByText('preferredHonoursAwards.organizationLocation')

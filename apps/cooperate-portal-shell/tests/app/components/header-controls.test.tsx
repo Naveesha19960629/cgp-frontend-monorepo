@@ -1,3 +1,4 @@
+import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import HeaderControls from '@/app/components/header-controls';
@@ -83,8 +84,7 @@ describe('HeaderControls', () => {
   });
 
   it("renders the user's picture and name on the avatar image once loaded", async () => {
-    globalThis.Image =
-      CompleteMockImage as unknown as typeof globalThis.Image;
+    globalThis.Image = CompleteMockImage as unknown as typeof globalThis.Image;
     useUserMock.mockReturnValue({ user: baseUser, isLoading: false });
 
     render(<HeaderControls />);

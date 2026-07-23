@@ -1965,9 +1965,9 @@ describe('toVacancyFormFromResponse — license/certificate edge cases', () => {
       },
       { ...FALLBACK_FORM }
     );
-    expect(result.licenseCertificates?.[0].content[0].nameOfLicenseCert).toEqual(
-      []
-    );
+    expect(
+      result.licenseCertificates?.[0].content[0].nameOfLicenseCert
+    ).toEqual([]);
   });
 
   it('hydrates a group-shaped licenseCertificates array with default flags and internationallyAccepted', () => {
@@ -2120,9 +2120,7 @@ describe('toVacancyFormFromResponse — industry entry edge cases', () => {
     expect(result.preferredIndustries?.industries[0].label).toBe(
       'Named Industry'
     );
-    expect(result.preferredIndustries?.industries[1].label).toBe(
-      'ind-only-id'
-    );
+    expect(result.preferredIndustries?.industries[1].label).toBe('ind-only-id');
   });
 
   it('drops non-record and id-less/label-less industry entries', () => {
@@ -2142,7 +2140,9 @@ describe('toVacancyFormFromResponse — industry entry edge cases', () => {
   it('hydrates preferredIndustries from a bare array section', () => {
     const result = toVacancyFormFromResponse(
       {
-        industry: [{ source: 'MASTER', id: 'ind-bare', label: 'Bare Industry' }],
+        industry: [
+          { source: 'MASTER', id: 'ind-bare', label: 'Bare Industry' },
+        ],
       },
       { ...FALLBACK_FORM }
     );
@@ -2151,7 +2151,7 @@ describe('toVacancyFormFromResponse — industry entry edge cases', () => {
     ]);
     // fallback.isEnabled is `false` (not nullish), so `?? true` keeps it.
     expect(result.preferredIndustries?.isEnabled).toBe(
-      FALLBACK_FORM.preferredIndustries.isEnabled
+      FALLBACK_FORM.preferredIndustries!.isEnabled
     );
   });
 
@@ -2165,10 +2165,10 @@ describe('toVacancyFormFromResponse — industry entry edge cases', () => {
       { ...FALLBACK_FORM }
     );
     expect(result.preferredIndustries?.isEnabled).toBe(
-      FALLBACK_FORM.preferredIndustries.isEnabled
+      FALLBACK_FORM.preferredIndustries!.isEnabled
     );
     expect(result.preferredIndustries?.dataTakenFromCandidate).toBe(
-      FALLBACK_FORM.preferredIndustries.dataTakenFromCandidate
+      FALLBACK_FORM.preferredIndustries!.dataTakenFromCandidate
     );
   });
 });
@@ -2215,21 +2215,21 @@ describe('toVacancyFormFromResponse — projects/publications/clubs/sports/volun
       }
     );
 
-    expect(result.projectsRequirements.isEnabled).toBe(true);
-    expect(result.projectsRequirements.dataTakenFromCandidate).toBe(true);
-    expect(result.projectsRequirements.projects).toEqual([]);
+    expect(result.projectsRequirements!.isEnabled).toBe(true);
+    expect(result.projectsRequirements!.dataTakenFromCandidate).toBe(true);
+    expect(result.projectsRequirements!.projects).toEqual([]);
 
-    expect(result.preferredPublications.isEnabled).toBe(true);
-    expect(result.preferredPublications.publications).toEqual([]);
+    expect(result.preferredPublications!.isEnabled).toBe(true);
+    expect(result.preferredPublications!.publications).toEqual([]);
 
-    expect(result.preferredClubSocieties.isEnabled).toBe(true);
-    expect(result.preferredClubSocieties.clubSocieties).toEqual([]);
+    expect(result.preferredClubSocieties!.isEnabled).toBe(true);
+    expect(result.preferredClubSocieties!.clubSocieties).toEqual([]);
 
-    expect(result.preferredSports.isEnabled).toBe(true);
-    expect(result.preferredSports.sports).toEqual([]);
+    expect(result.preferredSports!.isEnabled).toBe(true);
+    expect(result.preferredSports!.sports).toEqual([]);
 
-    expect(result.preferredVolunteering.isEnabled).toBe(true);
-    expect(result.preferredVolunteering.volunteering).toEqual([]);
+    expect(result.preferredVolunteering!.isEnabled).toBe(true);
+    expect(result.preferredVolunteering!.volunteering).toEqual([]);
   });
 
   it('generates ids and falls back organization/organizationName keys when entries omit their primary fields', () => {
@@ -2270,9 +2270,7 @@ describe('toVacancyFormFromResponse — projects/publications/clubs/sports/volun
             {
               position: 'Fallback Position',
               sport: [{ source: 'MASTER', id: 'sport-1', label: 'Chess' }],
-              organization: [
-                { source: 'MASTER', id: 'org-s', label: 'Org S' },
-              ],
+              organization: [{ source: 'MASTER', id: 'org-s', label: 'Org S' }],
             },
           ],
         },
@@ -2292,43 +2290,43 @@ describe('toVacancyFormFromResponse — projects/publications/clubs/sports/volun
       { ...FALLBACK_FORM }
     );
 
-    expect(result.projectsRequirements.projects[0].id).toBe('project-1');
-    expect(result.projectsRequirements.projects[0].organizations[0].label).toBe(
-      'Org P'
-    );
+    expect(result.projectsRequirements!.projects[0].id).toBe('project-1');
+    expect(
+      result.projectsRequirements!.projects[0].organizations[0].label
+    ).toBe('Org P');
 
-    expect(result.preferredPublications.publications[0].id).toBe(
+    expect(result.preferredPublications!.publications[0].id).toBe(
       'publication-1'
     );
-    expect(result.preferredPublications.publications[0].acceptedPublisher).toBe(
-      'Fallback Publisher'
-    );
+    expect(
+      result.preferredPublications!.publications[0].acceptedPublisher
+    ).toBe('Fallback Publisher');
 
-    expect(result.preferredClubSocieties.clubSocieties[0].id).toBe('club-1');
-    expect(result.preferredClubSocieties.clubSocieties[0].position).toBe(
+    expect(result.preferredClubSocieties!.clubSocieties[0].id).toBe('club-1');
+    expect(result.preferredClubSocieties!.clubSocieties[0].position).toBe(
       'Fallback Position'
     );
     expect(
-      result.preferredClubSocieties.clubSocieties[0].representedOrganization[0]
+      result.preferredClubSocieties!.clubSocieties[0].representedOrganization[0]
         .label
     ).toBe('Org C');
 
-    expect(result.preferredSports.sports[0].id).toBe('sport-1');
-    expect(result.preferredSports.sports[0].position).toBe(
-      'Fallback Position'
-    );
-    expect(result.preferredSports.sports[0].representedOrganization[0].label).toBe(
-      'Org S'
-    );
-
-    expect(result.preferredVolunteering.volunteering[0].id).toBe(
-      'volunteering-1'
-    );
-    expect(result.preferredVolunteering.volunteering[0].position).toBe(
+    expect(result.preferredSports!.sports[0].id).toBe('sport-1');
+    expect(result.preferredSports!.sports[0].position).toBe(
       'Fallback Position'
     );
     expect(
-      result.preferredVolunteering.volunteering[0].organizationName[0].label
+      result.preferredSports!.sports[0].representedOrganization[0].label
+    ).toBe('Org S');
+
+    expect(result.preferredVolunteering!.volunteering[0].id).toBe(
+      'volunteering-1'
+    );
+    expect(result.preferredVolunteering!.volunteering[0].position).toBe(
+      'Fallback Position'
+    );
+    expect(
+      result.preferredVolunteering!.volunteering[0].organizationName[0].label
     ).toBe('Org V');
   });
 });
@@ -2361,7 +2359,7 @@ describe('toVacancyFormFromResponse — option-with-source and option-label help
       { ...FALLBACK_FORM }
     );
 
-    const project = result.projectsRequirements.projects[0];
+    const project = result.projectsRequirements!.projects[0];
     expect(project.organizations).toHaveLength(1);
     expect(project.organizations[0]).toEqual(
       expect.objectContaining({ value: 'org-x', label: 'Org X' })
@@ -2388,9 +2386,9 @@ describe('toVacancyFormFromResponse — option-with-source and option-label help
       },
       { ...FALLBACK_FORM }
     );
-    expect(result.projectsRequirements.projects[0].organizations).toEqual([]);
+    expect(result.projectsRequirements!.projects[0].organizations).toEqual([]);
     expect(
-      result.projectsRequirements.projects[0].organizationLocations
+      result.projectsRequirements!.projects[0].organizationLocations
     ).toEqual([]);
   });
 });
@@ -2409,7 +2407,7 @@ describe('toVacancyFormFromResponse — preferred skills entry edge cases', () =
       },
       { ...FALLBACK_FORM }
     );
-    expect(result.preferredSkills.skills).toEqual([]);
+    expect(result.preferredSkills!.skills).toEqual([]);
   });
 
   it('falls back through displayValue/name/id for skill label', () => {
@@ -2426,8 +2424,8 @@ describe('toVacancyFormFromResponse — preferred skills entry edge cases', () =
       },
       { ...FALLBACK_FORM }
     );
-    expect(result.preferredSkills.skills[0].skillName).toBe('Display Skill');
-    expect(result.preferredSkills.skills[1].skillName).toBe('Named Skill');
+    expect(result.preferredSkills!.skills[0].skillName).toBe('Display Skill');
+    expect(result.preferredSkills!.skills[1].skillName).toBe('Named Skill');
   });
 
   it('drops a skill entry with no id and no derivable label', () => {
@@ -2441,7 +2439,7 @@ describe('toVacancyFormFromResponse — preferred skills entry edge cases', () =
       },
       { ...FALLBACK_FORM }
     );
-    expect(result.preferredSkills.skills).toEqual([]);
+    expect(result.preferredSkills!.skills).toEqual([]);
   });
 
   it('defaults isEnabled/dataTakenFromCandidate for preferredSkills when omitted', () => {
@@ -2456,8 +2454,8 @@ describe('toVacancyFormFromResponse — preferred skills entry edge cases', () =
         },
       }
     );
-    expect(result.preferredSkills.isEnabled).toBe(true);
-    expect(result.preferredSkills.dataTakenFromCandidate).toBe(true);
+    expect(result.preferredSkills!.isEnabled).toBe(true);
+    expect(result.preferredSkills!.dataTakenFromCandidate).toBe(true);
   });
 });
 
@@ -2555,7 +2553,7 @@ describe('toVacancyFormFromResponse — preferred honours & awards section', () 
       { ...FALLBACK_FORM }
     );
 
-    const entry = result.preferredHonoursAwards.honoursAndAwards[0];
+    const entry = result.preferredHonoursAwards!.honoursAndAwards[0];
     expect(entry.title).toBe('Employee of the Year');
     expect(entry.issuedBy).toBe('ACME Corp');
     expect(entry.issuedDateFrom).toBeInstanceOf(Date);
@@ -2567,7 +2565,7 @@ describe('toVacancyFormFromResponse — preferred honours & awards section', () 
       expect.objectContaining({ value: 'loc-1', label: 'Colombo' })
     );
     expect(entry.isOpen).toBe(true);
-    expect(result.preferredHonoursAwards.isEnabled).toBe(true);
+    expect(result.preferredHonoursAwards!.isEnabled).toBe(true);
   });
 
   it('reads dates from issuedDateFrom/issuedDateTo aliases', () => {
@@ -2590,7 +2588,7 @@ describe('toVacancyFormFromResponse — preferred honours & awards section', () 
       },
       { ...FALLBACK_FORM }
     );
-    const entry = result.preferredHonoursAwards.honoursAndAwards[0];
+    const entry = result.preferredHonoursAwards!.honoursAndAwards[0];
     expect(entry.issuedDateFrom).toBeInstanceOf(Date);
     expect(entry.issuedDateTo).toBeInstanceOf(Date);
   });
@@ -2613,7 +2611,7 @@ describe('toVacancyFormFromResponse — preferred honours & awards section', () 
       },
       { ...FALLBACK_FORM }
     );
-    const entry = result.preferredHonoursAwards.honoursAndAwards[0];
+    const entry = result.preferredHonoursAwards!.honoursAndAwards[0];
     expect(entry.issuedDateFrom).toBeUndefined();
     expect(entry.issuedDateTo).toBeUndefined();
   });
@@ -2636,7 +2634,7 @@ describe('toVacancyFormFromResponse — preferred honours & awards section', () 
       },
       { ...FALLBACK_FORM }
     );
-    expect(result.preferredHonoursAwards.honoursAndAwards[0].title).toBe(
+    expect(result.preferredHonoursAwards!.honoursAndAwards[0].title).toBe(
       'Alt Shape Award'
     );
   });
@@ -2669,8 +2667,8 @@ describe('toVacancyFormFromResponse — preferred honours & awards section', () 
         },
       }
     );
-    expect(result.preferredHonoursAwards.isEnabled).toBe(true);
-    expect(result.preferredHonoursAwards.dataTakenFromCandidate).toBe(true);
+    expect(result.preferredHonoursAwards!.isEnabled).toBe(true);
+    expect(result.preferredHonoursAwards!.dataTakenFromCandidate).toBe(true);
   });
 });
 
@@ -2688,10 +2686,10 @@ describe('toVacancyFormFromResponse — preferred languages section', () => {
       },
       { ...FALLBACK_FORM }
     );
-    expect(result.preferredLanguages.languages).toEqual([
+    expect(result.preferredLanguages!.languages).toEqual([
       { id: 'lang-1', label: 'English', source: 'MASTER' },
     ]);
-    expect(result.preferredLanguages.isEnabled).toBe(true);
+    expect(result.preferredLanguages!.isEnabled).toBe(true);
   });
 
   it('hydrates languages from the languages key when content is absent', () => {
@@ -2705,7 +2703,7 @@ describe('toVacancyFormFromResponse — preferred languages section', () => {
       },
       { ...FALLBACK_FORM }
     );
-    expect(result.preferredLanguages.languages).toEqual([
+    expect(result.preferredLanguages!.languages).toEqual([
       { id: 'lang-2', label: 'Sinhala', source: 'MASTER' },
     ]);
   });
@@ -2735,8 +2733,8 @@ describe('toVacancyFormFromResponse — preferred languages section', () => {
         },
       }
     );
-    expect(result.preferredLanguages.isEnabled).toBe(true);
-    expect(result.preferredLanguages.dataTakenFromCandidate).toBe(true);
+    expect(result.preferredLanguages!.isEnabled).toBe(true);
+    expect(result.preferredLanguages!.dataTakenFromCandidate).toBe(true);
   });
 });
 
@@ -2752,7 +2750,7 @@ describe('toVacancyFormFromResponse — preferred causes section', () => {
       },
       { ...FALLBACK_FORM }
     );
-    expect(result.preferredCauses.causes).toEqual([
+    expect(result.preferredCauses!.causes).toEqual([
       { id: 'cause-1', label: 'Education', source: 'MASTER' },
     ]);
   });
@@ -2768,7 +2766,7 @@ describe('toVacancyFormFromResponse — preferred causes section', () => {
       },
       { ...FALLBACK_FORM }
     );
-    expect(result.preferredCauses.causes).toEqual([
+    expect(result.preferredCauses!.causes).toEqual([
       { id: 'cause-2', label: 'Health', source: 'MASTER' },
     ]);
   });
@@ -2793,8 +2791,8 @@ describe('toVacancyFormFromResponse — preferred causes section', () => {
         },
       }
     );
-    expect(result.preferredCauses.isEnabled).toBe(true);
-    expect(result.preferredCauses.dataTakenFromCandidate).toBe(true);
+    expect(result.preferredCauses!.isEnabled).toBe(true);
+    expect(result.preferredCauses!.dataTakenFromCandidate).toBe(true);
   });
 });
 
@@ -2810,7 +2808,7 @@ describe('toVacancyFormFromResponse — preferred hobbies section', () => {
       },
       { ...FALLBACK_FORM }
     );
-    expect(result.preferredHobbies.hobbies).toEqual([
+    expect(result.preferredHobbies!.hobbies).toEqual([
       { id: 'hobby-1', label: 'Reading', source: 'MASTER' },
     ]);
   });
@@ -2826,7 +2824,7 @@ describe('toVacancyFormFromResponse — preferred hobbies section', () => {
       },
       { ...FALLBACK_FORM }
     );
-    expect(result.preferredHobbies.hobbies).toEqual([
+    expect(result.preferredHobbies!.hobbies).toEqual([
       { id: 'hobby-2', label: 'Chess', source: 'MASTER' },
     ]);
   });
@@ -2842,7 +2840,7 @@ describe('toVacancyFormFromResponse — preferred hobbies section', () => {
       },
       { ...FALLBACK_FORM }
     );
-    expect(result.preferredHobbies.hobbies).toEqual([
+    expect(result.preferredHobbies!.hobbies).toEqual([
       { id: 'hobby-3', label: 'Painting', source: 'MASTER' },
     ]);
   });
@@ -2867,8 +2865,8 @@ describe('toVacancyFormFromResponse — preferred hobbies section', () => {
         },
       }
     );
-    expect(result.preferredHobbies.isEnabled).toBe(true);
-    expect(result.preferredHobbies.dataTakenFromCandidate).toBe(true);
+    expect(result.preferredHobbies!.isEnabled).toBe(true);
+    expect(result.preferredHobbies!.dataTakenFromCandidate).toBe(true);
   });
 });
 
@@ -2923,7 +2921,11 @@ describe('normalizeCustomizableFormSection', () => {
                 questionText: 'Pick one',
                 questionType: 'multiple_choice',
                 required: true,
-                options: [{ value: 'Option A' }, { label: 'Option B' }, 'Option C'],
+                options: [
+                  { value: 'Option A' },
+                  { label: 'Option B' },
+                  'Option C',
+                ],
               },
               {
                 text: 'Rate this',
@@ -3073,7 +3075,7 @@ describe('toVacancyFormFromResponse — remaining edge branches', () => {
       },
       { ...FALLBACK_FORM }
     );
-    expect(result.preferredSkills.skills).toEqual([]);
+    expect(result.preferredSkills!.skills).toEqual([]);
   });
 
   it('accepts CERTIFICATE as a valid license/certificate type', () => {
@@ -3144,7 +3146,7 @@ describe('toVacancyFormFromResponse — remaining edge branches', () => {
       },
       { ...FALLBACK_FORM }
     );
-    expect(result.preferredClubSocieties.clubSocieties[0].id).toBe(
+    expect(result.preferredClubSocieties!.clubSocieties[0].id).toBe(
       'club-alt-1'
     );
   });
@@ -3162,6 +3164,6 @@ describe('toVacancyFormFromResponse — customizableForm section resolution', ()
       },
       { ...FALLBACK_FORM }
     );
-    expect(result.customizableForm.sectionTitle).toBe('Custom');
+    expect(result.customizableForm!.sectionTitle).toBe('Custom');
   });
 });

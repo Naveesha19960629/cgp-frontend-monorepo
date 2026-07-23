@@ -9,7 +9,10 @@ const mockNavigate = vi.fn();
 
 let idParam: string | undefined = 'vacancy-1';
 let locationState: unknown = null;
-let keycloakState: { keycloak: { authenticated: boolean }; initialized: boolean } = {
+let keycloakState: {
+  keycloak: { authenticated: boolean };
+  initialized: boolean;
+} = {
   keycloak: { authenticated: true },
   initialized: true,
 };
@@ -22,7 +25,9 @@ type QueryState = {
 
 let queryState: QueryState = { isLoading: false, error: null, data: undefined };
 
-const getEnabledStepKeysMock = vi.fn(() => [] as string[]);
+const getEnabledStepKeysMock = vi.fn(
+  (_form: Record<string, unknown>) => [] as string[]
+);
 const toVacancyFormFromResponseMock = vi.fn(
   (record: Record<string, unknown>, prev: Record<string, unknown>) => ({
     ...prev,
@@ -50,10 +55,7 @@ const vacancyFormValue: {
 } = {
   form: { title: '', status: 'draft', applicantCount: undefined },
   setForm: mockSetForm,
-  visibleSteps: [
-    { key: 'job-requirements' },
-    { key: 'profile-requirements' },
-  ],
+  visibleSteps: [{ key: 'job-requirements' }, { key: 'profile-requirements' }],
   isInitialStep: true,
   setIsInitialStep: mockSetIsInitialStep,
   setCurrentStepIndex: mockSetCurrentStepIndex,
@@ -161,7 +163,11 @@ describe('VacancyIdEditPage', () => {
         ...record,
       })
     );
-    vacancyFormValue.form = { title: '', status: 'draft', applicantCount: undefined };
+    vacancyFormValue.form = {
+      title: '',
+      status: 'draft',
+      applicantCount: undefined,
+    };
     vacancyFormValue.visibleSteps = [
       { key: 'job-requirements' },
       { key: 'profile-requirements' },
@@ -170,11 +176,10 @@ describe('VacancyIdEditPage', () => {
     // Mirrors the real setState updater form so the component's internal
     // `resolvedForm` (captured via the setForm callback) actually gets set,
     // which in turn gates the initCompletedStepsFromForm call.
-    mockSetForm.mockImplementation(
-      (updater: unknown) =>
-        typeof updater === 'function'
-          ? (updater as (prev: unknown) => unknown)(vacancyFormValue.form)
-          : updater
+    mockSetForm.mockImplementation((updater: unknown) =>
+      typeof updater === 'function'
+        ? (updater as (prev: unknown) => unknown)(vacancyFormValue.form)
+        : updater
     );
   });
 
@@ -183,7 +188,10 @@ describe('VacancyIdEditPage', () => {
       render(<VacancyIdEditPage />);
 
       expect(vacancyFormProviderSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ vacancyId: 'vacancy-1', visibleStepKeys: undefined })
+        expect.objectContaining({
+          vacancyId: 'vacancy-1',
+          visibleStepKeys: undefined,
+        })
       );
       expect(getEnabledStepKeysMock).not.toHaveBeenCalled();
     });
@@ -272,7 +280,11 @@ describe('VacancyIdEditPage', () => {
     });
 
     it('shows the failure message when the query errors', () => {
-      queryState = { isLoading: false, error: new Error('boom'), data: undefined };
+      queryState = {
+        isLoading: false,
+        error: new Error('boom'),
+        data: undefined,
+      };
       render(<VacancyIdEditPage />);
 
       expect(screen.getByText('common.error.title')).toBeInTheDocument();
@@ -466,9 +478,7 @@ describe('VacancyIdEditPage', () => {
         ).toBeInTheDocument()
       );
 
-      await user.click(
-        screen.getByText('vacancies.createVacancy.nextButton')
-      );
+      await user.click(screen.getByText('vacancies.createVacancy.nextButton'));
 
       expect(
         screen.getByText('vacancies.createVacancy.titleRequired')
@@ -487,9 +497,7 @@ describe('VacancyIdEditPage', () => {
         ).toBeInTheDocument()
       );
 
-      await user.click(
-        screen.getByText('vacancies.createVacancy.nextButton')
-      );
+      await user.click(screen.getByText('vacancies.createVacancy.nextButton'));
 
       expect(mockSetCurrentStepIndex).toHaveBeenCalledWith(0);
       expect(mockOnNext).toHaveBeenCalled();
