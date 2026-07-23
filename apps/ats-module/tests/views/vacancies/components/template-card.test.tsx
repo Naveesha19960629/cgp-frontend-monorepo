@@ -73,63 +73,30 @@ describe('TemplateCard', () => {
     ).toBeInTheDocument();
   });
 
-  it('calls onEdit with the template id when the edit button is clicked', async () => {
-    const user = userEvent.setup();
-    render(
-      <TemplateCard
-        template={template}
-        onEdit={onEdit}
-        onDelete={onDelete}
-        onUse={onUse}
-      />
-    );
+  it.each([
+    { action: 'onEdit', buttonName: 'templates.card.edit' },
+    { action: 'onDelete', buttonName: 'templates.card.delete' },
+    { action: 'onUse', buttonName: /templates\.card\.useTemplate/ },
+  ] as const)(
+    'calls $action with the template id when its button is clicked',
+    async ({ action, buttonName }) => {
+      const callbacks = { onEdit, onDelete, onUse };
+      const user = userEvent.setup();
+      render(
+        <TemplateCard
+          template={template}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          onUse={onUse}
+        />
+      );
 
-    await user.click(
-      screen.getByRole('button', { name: 'templates.card.edit' })
-    );
+      await user.click(screen.getByRole('button', { name: buttonName }));
 
-    expect(onEdit).toHaveBeenCalledWith('tpl-1');
-    expect(onDelete).not.toHaveBeenCalled();
-    expect(onUse).not.toHaveBeenCalled();
-  });
-
-  it('calls onDelete with the template id when the delete button is clicked', async () => {
-    const user = userEvent.setup();
-    render(
-      <TemplateCard
-        template={template}
-        onEdit={onEdit}
-        onDelete={onDelete}
-        onUse={onUse}
-      />
-    );
-
-    await user.click(
-      screen.getByRole('button', { name: 'templates.card.delete' })
-    );
-
-    expect(onDelete).toHaveBeenCalledWith('tpl-1');
-    expect(onEdit).not.toHaveBeenCalled();
-    expect(onUse).not.toHaveBeenCalled();
-  });
-
-  it('calls onUse with the template id when the use-template button is clicked', async () => {
-    const user = userEvent.setup();
-    render(
-      <TemplateCard
-        template={template}
-        onEdit={onEdit}
-        onDelete={onDelete}
-        onUse={onUse}
-      />
-    );
-
-    await user.click(
-      screen.getByRole('button', { name: /templates\.card\.useTemplate/ })
-    );
-
-    expect(onUse).toHaveBeenCalledWith('tpl-1');
-    expect(onEdit).not.toHaveBeenCalled();
-    expect(onDelete).not.toHaveBeenCalled();
-  });
+      expect(callbacks[action]).toHaveBeenCalledWith('tpl-1');
+      for (const [name, fn] of Object.entries(callbacks)) {
+        if (name !== action) expect(fn).not.toHaveBeenCalled();
+      }
+    }
+  );
 });
