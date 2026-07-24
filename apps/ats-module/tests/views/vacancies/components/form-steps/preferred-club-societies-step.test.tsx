@@ -42,7 +42,7 @@ const onCancel = vi.hoisted(() => vi.fn());
 // Mutable predicate so individual tests can drive the template field-visibility
 // gating (DQCGP-2198). Defaults to all-visible, matching the normal create flow.
 const clubFieldVisible = vi.hoisted(() => ({
-  current: (_fieldCode: string) => true,
+  current: (_fieldCode: string): boolean => true,
 }));
 vi.mock('@/views/vacancies/context/vacancy-form-context', () => ({
   useTemplateFieldVisible: () => (fieldCode: string) =>

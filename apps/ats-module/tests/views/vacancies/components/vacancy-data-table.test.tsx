@@ -137,7 +137,11 @@ describe('VacancyDataTable', () => {
     const pinnedColumns: ColumnDef<TestRow>[] = [
       { accessorKey: 'id', header: 'ID' },
       { accessorKey: 'name', header: 'Name' },
-      { id: 'actions', header: 'Actions', cell: () => <span>actions-cell</span> },
+      {
+        id: 'actions',
+        header: 'Actions',
+        cell: () => <span>actions-cell</span>,
+      },
     ];
 
     function PinnedWrapper() {

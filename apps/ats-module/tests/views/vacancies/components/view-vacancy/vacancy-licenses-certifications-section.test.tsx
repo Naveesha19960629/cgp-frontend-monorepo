@@ -18,9 +18,7 @@ const baseEntry = {
 describe('VacancyLicensesCertificationsSection', () => {
   it('renders nothing when licenseCertificates is undefined', () => {
     const { container } = render(
-      <VacancyLicensesCertificationsSection
-        licenseCertificates={undefined}
-      />
+      <VacancyLicensesCertificationsSection licenseCertificates={undefined} />
     );
     expect(container).toBeEmptyDOMElement();
   });
@@ -79,9 +77,7 @@ describe('VacancyLicensesCertificationsSection', () => {
         }}
       />
     );
-    expect(
-      screen.getByText('licenseCertificates.title')
-    ).toBeInTheDocument();
+    expect(screen.getByText('licenseCertificates.title')).toBeInTheDocument();
   });
 
   it('formats issueDate and expirationDate as a date range', () => {
@@ -190,9 +186,7 @@ describe('VacancyLicensesCertificationsSection', () => {
         licenseCertificates={{
           isEnabled: true,
           dataTakenFromCandidate: false,
-          content: [
-            { ...baseEntry, issuingOrganization: ['Amazon', 'PMI'] },
-          ],
+          content: [{ ...baseEntry, issuingOrganization: ['Amazon', 'PMI'] }],
         }}
       />
     );

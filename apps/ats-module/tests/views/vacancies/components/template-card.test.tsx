@@ -73,8 +73,11 @@ describe('TemplateCard', () => {
       await user.click(screen.getByRole('button', { name: buttonName }));
 
       expect(callbacks[action]).toHaveBeenCalledWith('tpl-1');
-      for (const [name, fn] of Object.entries(callbacks)) {
-        if (name !== action) expect(fn).not.toHaveBeenCalled();
+      const otherCallbacks = Object.entries(callbacks).filter(
+        ([name]) => name !== action
+      );
+      for (const [, fn] of otherCallbacks) {
+        expect(fn).not.toHaveBeenCalled();
       }
     }
   );

@@ -1536,7 +1536,7 @@ describe('toVacancyFormFromResponse — applicantCount and customizableForm defa
       FALLBACK_FORM;
     const result = toVacancyFormFromResponse(
       { title: 'T' },
-      formWithoutCustomizable as VacancyForm
+      formWithoutCustomizable
     );
     expect(result.customizableForm).toEqual({
       isEnabled: false,
@@ -2466,7 +2466,7 @@ describe('toVacancyFormFromResponse — patents additional branches', () => {
     const { patents: _omit, ...formWithoutPatents } = FALLBACK_FORM;
     const result = toVacancyFormFromResponse(
       { title: 'T' },
-      formWithoutPatents as VacancyForm
+      formWithoutPatents
     );
     expect(result.patents).toEqual({
       isEnabled: false,
@@ -2644,7 +2644,7 @@ describe('toVacancyFormFromResponse — preferred honours & awards section', () 
       FALLBACK_FORM;
     const result = toVacancyFormFromResponse(
       { title: 'T' },
-      formWithoutHonours as VacancyForm
+      formWithoutHonours
     );
     expect(result.preferredHonoursAwards).toEqual({
       isEnabled: false,

@@ -9,7 +9,10 @@ import type { VacancyTemplateFormValues } from '@/views/vacancies/hooks/use-vaca
 import { TEMPLATE_NAME_MAX_LENGTH } from '@/views/vacancies/utils/vacancy-template-config';
 
 vi.mock('react-i18next', () => ({
-  useTranslation: () => ({ t: (key: string, opts?: { max?: number }) => (opts ? `${key}:${opts.max}` : key) }),
+  useTranslation: () => ({
+    t: (key: string, opts?: { max?: number }) =>
+      opts ? `${key}:${opts.max}` : key,
+  }),
 }));
 
 /** Renders the real `useVacancyTemplateForm` hook, exactly like the pages do. */
@@ -123,9 +126,7 @@ describe('TemplateFormBody', () => {
     let currentForm: UseFormReturn<VacancyTemplateFormValues> | undefined;
     render(<Harness onFormReady={form => (currentForm = form)} />);
 
-    const fieldLabel = screen.getByText(
-      'createTemplate.fields.profile.gender'
-    );
+    const fieldLabel = screen.getByText('createTemplate.fields.profile.gender');
     const row = fieldLabel.closest('div')!;
     const toggle = within(row).getByRole('switch');
 
@@ -160,9 +161,7 @@ describe('TemplateFormBody', () => {
     const user = userEvent.setup();
     render(<Harness />);
 
-    const fieldLabel = screen.getByText(
-      'createTemplate.fields.profile.gender'
-    );
+    const fieldLabel = screen.getByText('createTemplate.fields.profile.gender');
     const row = fieldLabel.closest('div')!;
     const fieldToggle = within(row).getByRole('switch');
 

@@ -1,9 +1,6 @@
 import type { ReactNode } from 'react';
 
-import {
-  UserProvider,
-  useUser,
-} from '@/app/contexts/user-context';
+import { UserProvider, useUser } from '@/app/contexts/user-context';
 
 const useKeycloakMock = vi.fn();
 const setTokenGetterMock = vi.fn();
@@ -13,8 +10,9 @@ vi.mock('@react-keycloak/web', () => ({
 }));
 
 vi.mock('@cgp/data-access', () => ({
-  setTokenGetter: (getter: () => Promise<string | null>) =>
-    setTokenGetterMock(getter),
+  setTokenGetter: (getter: () => Promise<string | null>) => {
+    setTokenGetterMock(getter);
+  },
 }));
 
 function wrapper({ children }: Readonly<{ children: ReactNode }>) {

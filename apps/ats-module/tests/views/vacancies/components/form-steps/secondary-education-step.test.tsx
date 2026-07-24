@@ -385,7 +385,7 @@ describe('SecondaryEducationStep', () => {
   });
 
   describe('rendering', () => {
-    test.each([
+    it.each([
       ['renders the section heading', 'secondaryEducation.title'],
       [
         'renders start date trigger with placeholder text when no date selected',
@@ -433,7 +433,7 @@ describe('SecondaryEducationStep', () => {
       ).toBeInTheDocument();
     });
 
-    test.each([
+    it.each([
       [
         'renders the school location field placeholder',
         'secondaryEducation.placeholders.schoolLocation',
@@ -788,7 +788,7 @@ describe('SecondaryEducationStep', () => {
   });
 
   describe('max selection inline error', () => {
-    test.each([
+    it.each([
       ['school name field', 'secondaryEducation.placeholders.school'],
       ['examination field', 'secondaryEducation.placeholders.examination'],
       [

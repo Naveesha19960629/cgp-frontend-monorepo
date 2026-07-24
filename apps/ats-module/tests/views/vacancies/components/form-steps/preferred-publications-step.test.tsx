@@ -327,7 +327,7 @@ describe('PreferredPublicationsStep', () => {
       expect(screen.getByText('Publication 01')).toBeInTheDocument();
     });
 
-    test.each([
+    it.each([
       {
         description: 'renders Accepted Publisher input with character count',
         label: 'Accepted Publisher',
