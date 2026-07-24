@@ -39,8 +39,14 @@ vi.mock('react-i18next', () => ({
 // ── Mock wizard form context ──────────────────────────────────────────────────
 
 const onCancel = vi.hoisted(() => vi.fn());
+// Mutable predicate so individual tests can drive the template field-visibility
+// gating (DQCGP-2198). Defaults to all-visible, matching the normal create flow.
+const clubFieldVisible = vi.hoisted(() => ({
+  current: (_fieldCode: string) => true,
+}));
 vi.mock('@/views/vacancies/context/vacancy-form-context', () => ({
-  useTemplateFieldVisible: () => () => true,
+  useTemplateFieldVisible: () => (fieldCode: string) =>
+    clubFieldVisible.current(fieldCode),
   useVacancyForm: () => ({
     form: {},
     onCancel,
@@ -212,6 +218,7 @@ describe('PreferredClubSocietiesStep', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    clubFieldVisible.current = () => true;
   });
 
   it.each([
@@ -377,6 +384,56 @@ describe('PreferredClubSocietiesStep', () => {
         /If selected, no manual input is required, and data will be taken from the candidate profile/i
       )
     ).toBeInTheDocument();
+  });
+
+  // ── Template field-visibility gating (DQCGP-2198) ─────────────────────────
+  // When launched from a template, each Clubs & Societies field must render only
+  // when the template enabled it. Field codes come from TEMPLATE_SECTIONS
+  // ('clubsAndSocieties'): clubSociety, organization, organizationLocations,
+  // positionRoleHeld, startDate, endDate.
+  it('hides fields the template did not enable', () => {
+    // Template enables only Club/Society and Organization Location.
+    const enabled = new Set(['clubSociety', 'organizationLocations']);
+    clubFieldVisible.current = fieldCode => enabled.has(fieldCode);
+
+    render(
+      <PreferredClubSocietiesStep
+        onNext={mockOnNext}
+        onBack={mockOnBack}
+        onSubmit={vi.fn()}
+      />
+    );
+
+    // Enabled fields render.
+    expect(screen.getByText('Club / Society')).toBeInTheDocument();
+    expect(screen.getByText('Organization Location')).toBeInTheDocument();
+
+    // Disabled fields are gated out.
+    expect(screen.queryByText('Start Date')).not.toBeInTheDocument();
+    expect(screen.queryByText('End Date')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('Represented Organization')
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Position / Role Held')).not.toBeInTheDocument();
+  });
+
+  it('renders every field when the template enables them all', () => {
+    clubFieldVisible.current = () => true;
+
+    render(
+      <PreferredClubSocietiesStep
+        onNext={mockOnNext}
+        onBack={mockOnBack}
+        onSubmit={vi.fn()}
+      />
+    );
+
+    expect(screen.getByText('Club / Society')).toBeInTheDocument();
+    expect(screen.getByText('Start Date')).toBeInTheDocument();
+    expect(screen.getByText('End Date')).toBeInTheDocument();
+    expect(screen.getByText('Represented Organization')).toBeInTheDocument();
+    expect(screen.getByText('Organization Location')).toBeInTheDocument();
+    expect(screen.getByText('Position / Role Held')).toBeInTheDocument();
   });
 
   it('keeps the add entry button disabled (multiple entries not yet released)', async () => {
