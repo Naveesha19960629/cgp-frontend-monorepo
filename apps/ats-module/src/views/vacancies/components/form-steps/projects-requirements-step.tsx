@@ -25,7 +25,10 @@ import type { StepProps } from '@/views/vacancies/types';
 import { formatDate } from '@/views/vacancies/utils';
 import {
   formatLocalDate,
+  getDateYearsAgo,
+  getDateYearsFromNow,
   parseLocalDate,
+  startOfToday,
 } from '@/views/vacancies/utils/date-timezone-safe';
 
 import { CharacterCount } from '@cgp/ui-kit/components/character-count';
@@ -48,12 +51,22 @@ import {
 import { Switch } from '@cgp/ui-kit/components/ui/switch';
 import { applyTypography } from '@cgp/ui-kit/lib/typography';
 import { cn } from '@cgp/ui-kit/lib/utils';
+import { isAfter, isBefore, startOfDay } from 'date-fns';
 
 import DisableDialog from './disable-dialog';
 
 const MAX_SELECTIONS = 10;
-const HUNDRED_YEARS_AGO = new Date(new Date().getFullYear() - 100, 0, 1);
-const HUNDRED_YEARS_FROM_NOW = new Date(new Date().getFullYear() + 100, 11, 31);
+const DATE_BOUNDARY_YEARS = 100;
+// Exact-date boundaries (day/month/year), not year-only — matches the
+// Preferred Sports date pickers. If today is 2026-07-07:
+// MIN = 1926-07-07, TODAY = 2026-07-07, MAX = 2126-07-07.
+const TODAY = startOfToday();
+const HUNDRED_YEARS_AGO = getDateYearsAgo(DATE_BOUNDARY_YEARS);
+const HUNDRED_YEARS_FROM_NOW = getDateYearsFromNow(DATE_BOUNDARY_YEARS);
+
+/** True when `date` falls before the 100-year-ago cutoff (exclusive). */
+const isBeforeMinDate = (date: Date) =>
+  isBefore(startOfDay(date), HUNDRED_YEARS_AGO);
 
 interface ProjectEntry {
   id: string;
@@ -233,10 +246,12 @@ function ProjectCard({
                           }
                         }}
                         disabled={date =>
-                          date > new Date() || date < HUNDRED_YEARS_AGO
+                          isAfter(startOfDay(date), TODAY) ||
+                          isBeforeMinDate(date)
                         }
                         captionLayout="dropdown"
                         startMonth={HUNDRED_YEARS_AGO}
+                        endMonth={TODAY}
                       />
                     </PopoverContent>
                   </Popover>
@@ -303,11 +318,13 @@ function ProjectCard({
                           setOpenDatePopover(null);
                         }}
                         disabled={date => {
+                          const day = startOfDay(date);
                           const startDate = parseLocalDate(project.startDate);
                           return (
-                            date < HUNDRED_YEARS_AGO ||
-                            date > HUNDRED_YEARS_FROM_NOW ||
-                            (startDate != null && date < startDate)
+                            isBeforeMinDate(date) ||
+                            isAfter(day, HUNDRED_YEARS_FROM_NOW) ||
+                            (startDate != null &&
+                              isBefore(day, startOfDay(startDate)))
                           );
                         }}
                         captionLayout="dropdown"
@@ -554,8 +571,6 @@ export default function ProjectsRequirementsStep({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [confirmDisableOpen, setConfirmDisableOpen] = useState(false);
   const [emptyDisableOpen, setEmptyDisableOpen] = useState(false);
-  const [confirmTakeFromCandidateOpen, setConfirmTakeFromCandidateOpen] =
-    useState(false);
   const [industrySearchQuery, setIndustrySearchQuery] = useState('');
   const [locationSearchQuery, setLocationSearchQuery] = useState('');
   const [organizationSearchQuery, setOrganizationSearchQuery] = useState('');
@@ -722,46 +737,21 @@ export default function ProjectsRequirementsStep({
     ]);
   };
 
-  const applyTakeFromCandidate = () => {
-    setDataTakenFromCandidate(true);
-    setProjects([
-      {
-        id: '1',
-        isOpen: true,
-        startDate: undefined,
-        endDate: undefined,
-        relatedIndustry: [],
-        organizationLocations: [],
-        organizations: [],
-      },
-    ]);
-  };
-
-  // Checking "data taken from candidate" clears all added data. Confirm first
-  // when there is data to lose; apply directly otherwise. Unchecking is safe.
   const handleTakeFromCandidateChange = (checked: boolean) => {
-    if (!checked) {
-      setDataTakenFromCandidate(false);
-      return;
+    setDataTakenFromCandidate(checked);
+    if (checked) {
+      setProjects([
+        {
+          id: '1',
+          isOpen: true,
+          startDate: undefined,
+          endDate: undefined,
+          relatedIndustry: [],
+          organizationLocations: [],
+          organizations: [],
+        },
+      ]);
     }
-    const hasProjectData = projects.some(
-      p =>
-        p.relatedIndustry.length > 0 ||
-        p.organizations.length > 0 ||
-        p.organizationLocations.length > 0 ||
-        p.startDate != null ||
-        p.endDate != null
-    );
-    if (hasProjectData) {
-      setConfirmTakeFromCandidateOpen(true);
-      return;
-    }
-    applyTakeFromCandidate();
-  };
-
-  const handleConfirmTakeFromCandidate = () => {
-    applyTakeFromCandidate();
-    setConfirmTakeFromCandidateOpen(false);
   };
 
   const handleDisable = () => {
@@ -1093,20 +1083,6 @@ export default function ProjectsRequirementsStep({
         disableLabel={t('projectsRequirements.confirmDisableDialog.disable')}
         onCancel={() => setConfirmDisableOpen(false)}
         onDisable={handleDisable}
-      />
-
-      {/* ── Take-from-candidate Confirmation Dialog ───────────────────────── */}
-      <DisableDialog
-        open={confirmTakeFromCandidateOpen}
-        onOpenChange={open => {
-          if (!open) setConfirmTakeFromCandidateOpen(false);
-        }}
-        title={t('projectsRequirements.confirmDisableDialog.title')}
-        message={t('projectsRequirements.confirmDisableDialog.message')}
-        cancelLabel={t('projectsRequirements.confirmDisableDialog.cancel')}
-        disableLabel={t('projectsRequirements.confirmDisableDialog.disable')}
-        onCancel={() => setConfirmTakeFromCandidateOpen(false)}
-        onDisable={handleConfirmTakeFromCandidate}
       />
 
       <StepDisableDialog

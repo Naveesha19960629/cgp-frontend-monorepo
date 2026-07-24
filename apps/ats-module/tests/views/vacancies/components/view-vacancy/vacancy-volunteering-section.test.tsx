@@ -77,9 +77,7 @@ describe('VacancyVolunteeringSection', () => {
         }}
       />
     );
-    expect(
-      screen.getByText('preferredVolunteering.title')
-    ).toBeInTheDocument();
+    expect(screen.getByText('preferredVolunteering.title')).toBeInTheDocument();
   });
 
   it('renders the positionRole value in the info row', () => {
@@ -162,9 +160,7 @@ describe('VacancyVolunteeringSection', () => {
         preferredVolunteering={{
           isEnabled: true,
           dataTakenFromCandidate: false,
-          content: [
-            { ...baseEntry, organization: ['Red Cross', 'UNICEF'] },
-          ],
+          content: [{ ...baseEntry, organization: ['Red Cross', 'UNICEF'] }],
         }}
       />
     );
@@ -194,9 +190,7 @@ describe('VacancyVolunteeringSection', () => {
         preferredVolunteering={{
           isEnabled: true,
           dataTakenFromCandidate: false,
-          content: [
-            { ...baseEntry, cause: ['Education', 'Environment'] },
-          ],
+          content: [{ ...baseEntry, cause: ['Education', 'Environment'] }],
         }}
       />
     );

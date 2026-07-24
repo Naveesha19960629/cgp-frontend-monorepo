@@ -103,7 +103,10 @@ vi.mock('@/views/vacancies', async importOriginal => {
         >
           delete
         </button>
-        <button type="button" onClick={() => onEdit(template.vacancyTemplateId)}>
+        <button
+          type="button"
+          onClick={() => onEdit(template.vacancyTemplateId)}
+        >
           edit
         </button>
         <button type="button" onClick={() => onUse(template.vacancyTemplateId)}>
@@ -361,7 +364,9 @@ describe('TemplatesPage', () => {
     expect(
       screen.getByTestId('template-search-empty-state')
     ).toBeInTheDocument();
-    expect(screen.queryByTestId('template-empty-state')).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId('template-empty-state')
+    ).not.toBeInTheDocument();
   });
 
   it('updates the sort order and resets to page one', async () => {

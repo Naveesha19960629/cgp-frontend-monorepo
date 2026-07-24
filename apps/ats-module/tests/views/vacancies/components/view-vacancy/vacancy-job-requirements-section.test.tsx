@@ -129,9 +129,7 @@ describe('VacancyJobRequirementsSection', () => {
     // each render a '-' when empty, plus 3 info-row dashes and 1 description dash.
     const dashes = screen.getAllByText('-');
     expect(dashes.length).toBe(9);
-    expect(
-      container.querySelector('.bg-\\[\\#f8fafc\\]')
-    ).toBeInTheDocument();
+    expect(container.querySelector('.bg-\\[\\#f8fafc\\]')).toBeInTheDocument();
   });
 
   it('does not crash when multiple values are provided for every field', () => {
