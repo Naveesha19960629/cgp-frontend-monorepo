@@ -62,25 +62,30 @@ const createVacancyColumns = ({
   {
     id: 'select',
     header: ({ table }) => (
-      <Checkbox
-        checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && 'indeterminate')
-        }
-        onCheckedChange={value => table.toggleAllPageRowsSelected(!!value)}
-        className="bg-white"
-        aria-label={t('vacancies.table.selectAll')}
-      />
+      <div className="flex h-full items-center pl-4">
+        <Checkbox
+          checked={
+            table.getIsAllPageRowsSelected() ||
+            (table.getIsSomePageRowsSelected() && 'indeterminate')
+          }
+          onCheckedChange={value => table.toggleAllPageRowsSelected(!!value)}
+          className="size-5 bg-white"
+          aria-label={t('vacancies.table.selectAll')}
+        />
+      </div>
     ),
     cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={value => row.toggleSelected(!!value)}
-        aria-label={t('vacancies.table.selectRow')}
-      />
+      <div className="flex h-full items-center pl-4">
+        <Checkbox
+          checked={row.getIsSelected()}
+          onCheckedChange={value => row.toggleSelected(!!value)}
+          aria-label={t('vacancies.table.selectRow')}
+          className="size-5 bg-white"
+        />
+      </div>
     ),
     enableSorting: false,
-    size: 30,
+    size: 44,
   },
   {
     id: 'vacancyId',
@@ -91,7 +96,7 @@ const createVacancyColumns = ({
     cell: ({ row }) => {
       const id = row.original.vacancyId;
       const shortId = id.slice(0, 4).toUpperCase();
-      return <span className="text-sm text-slate-600">#{shortId}</span>;
+      return <span className="ml-1 text-sm text-slate-600">#{shortId}</span>;
     },
     size: 80,
   },
@@ -109,7 +114,8 @@ const createVacancyColumns = ({
     cell: ({ row }) => (
       <button
         type="button"
-        className="cursor-pointer text-left text-sm font-medium text-slate-900 hover:underline"
+        title={row.original.title}
+        className="block max-w-70 cursor-pointer truncate text-left text-sm font-medium text-slate-900 hover:underline"
         onClick={() => onView(row.original.vacancyId)}
       >
         {row.original.title}
@@ -358,21 +364,23 @@ const createVacancyColumns = ({
     id: 'actions',
     header: '',
     cell: ({ row }) => (
-      <VacancyTableAction
-        vacancy={{
-          id: row.original.vacancyId,
-          status: row.original.status,
-          applicantCount: row.original.applicantCount,
-          availableActions: row.original.availableActions,
-        }}
-        onEdit={() => onEdit(row.original.vacancyId)}
-        onDelete={() => onDelete(row.original.vacancyId)}
-        onMakeACopy={() => onMakeACopy(row.original.vacancyId)}
-        onSaveAsTemplate={() => onSaveAsTemplate(row.original.vacancyId)}
-        onCopyLink={() => onCopyLink(row.original.vacancyLink)}
-      />
+      <div className="flex h-full items-center justify-end pr-4">
+        <VacancyTableAction
+          vacancy={{
+            id: row.original.vacancyId,
+            status: row.original.status,
+            applicantCount: row.original.applicantCount,
+            availableActions: row.original.availableActions,
+          }}
+          onEdit={() => onEdit(row.original.vacancyId)}
+          onDelete={() => onDelete(row.original.vacancyId)}
+          onMakeACopy={() => onMakeACopy(row.original.vacancyId)}
+          onSaveAsTemplate={() => onSaveAsTemplate(row.original.vacancyId)}
+          onCopyLink={() => onCopyLink(row.original.vacancyLink)}
+        />
+      </div>
     ),
-    size: 50,
+    size: 64,
   },
 ];
 

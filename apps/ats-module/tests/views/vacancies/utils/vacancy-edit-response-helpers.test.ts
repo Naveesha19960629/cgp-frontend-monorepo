@@ -1457,7 +1457,7 @@ describe('toVacancyFormFromResponse — schedule section', () => {
     expect(result.schedule).toEqual(fallbackSchedule);
   });
 
-  it('falls back to previousForm.schedule when schedulePublishAt is missing', () => {
+  it('preserves a partial schedule when schedulePublishAt is missing', () => {
     const fallbackSchedule = {
       schedulePublishAt: '2024-01-01',
       expirationAt: '2024-06-30',
@@ -1468,10 +1468,13 @@ describe('toVacancyFormFromResponse — schedule section', () => {
       { ...FALLBACK_FORM, schedule: fallbackSchedule }
     );
 
-    expect(result.schedule).toEqual(fallbackSchedule);
+    expect(result.schedule).toEqual({
+      schedulePublishAt: '',
+      expirationAt: '2024-12-31',
+    });
   });
 
-  it('falls back to previousForm.schedule when expirationAt is missing', () => {
+  it('preserves a partial schedule when expirationAt is missing', () => {
     const fallbackSchedule = {
       schedulePublishAt: '2024-01-01',
       expirationAt: '2024-06-30',
@@ -1482,7 +1485,10 @@ describe('toVacancyFormFromResponse — schedule section', () => {
       { ...FALLBACK_FORM, schedule: fallbackSchedule }
     );
 
-    expect(result.schedule).toEqual(fallbackSchedule);
+    expect(result.schedule).toEqual({
+      schedulePublishAt: '2024-06-01',
+      expirationAt: '',
+    });
   });
 
   it('reads schedule from scheduleRequirement key', () => {
