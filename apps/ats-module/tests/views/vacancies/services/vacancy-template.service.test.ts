@@ -85,7 +85,12 @@ describe('vacancyTemplateService', () => {
     };
     mockGet.mockResolvedValue(mockResponse);
 
-    const params = { page: 0, size: 10, search: 'foo', sortOrder: 'NEWEST' as const };
+    const params = {
+      page: 0,
+      size: 10,
+      search: 'foo',
+      sortOrder: 'NEWEST' as const,
+    };
     const result = await vacancyTemplateService.searchTemplates(params);
 
     expect(mockGet).toHaveBeenCalledWith('/vacancy-templates', { params });
@@ -95,9 +100,9 @@ describe('vacancyTemplateService', () => {
   it('throws when searchTemplates request fails', async () => {
     mockGet.mockRejectedValue(new Error('Network error'));
 
-    await expect(
-      vacancyTemplateService.searchTemplates({})
-    ).rejects.toThrow('Network error');
+    await expect(vacancyTemplateService.searchTemplates({})).rejects.toThrow(
+      'Network error'
+    );
   });
 
   it('sends a GET request to /vacancy-templates/:id', async () => {
@@ -158,9 +163,9 @@ describe('vacancyTemplateService', () => {
   it('throws when getNextTemplateName request fails', async () => {
     mockGet.mockRejectedValue(new Error('Network error'));
 
-    await expect(
-      vacancyTemplateService.getNextTemplateName()
-    ).rejects.toThrow('Network error');
+    await expect(vacancyTemplateService.getNextTemplateName()).rejects.toThrow(
+      'Network error'
+    );
   });
 
   it('sends a POST request to /vacancy-templates with the create payload', async () => {

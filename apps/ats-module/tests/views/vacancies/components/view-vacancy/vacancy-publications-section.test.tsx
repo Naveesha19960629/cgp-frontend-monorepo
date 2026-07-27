@@ -74,9 +74,7 @@ describe('VacancyPublicationsSection', () => {
         }}
       />
     );
-    expect(
-      screen.getByText('preferredPublications.title')
-    ).toBeInTheDocument();
+    expect(screen.getByText('preferredPublications.title')).toBeInTheDocument();
   });
 
   it('renders the publisher field label and value', () => {

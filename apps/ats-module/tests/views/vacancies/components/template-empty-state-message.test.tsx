@@ -17,9 +17,7 @@ describe('TemplateEmptyStateMessage', () => {
         description="Try creating a new template"
       />
     );
-    expect(
-      screen.getByText('Try creating a new template')
-    ).toBeInTheDocument();
+    expect(screen.getByText('Try creating a new template')).toBeInTheDocument();
   });
 
   it('renders the decorative glow and avatar images', () => {

@@ -1088,7 +1088,9 @@ describe('CustomizableFormStep', () => {
       await user.click(typeTrigger);
       await user.click(screen.getByText('Multiple Choice'));
 
-      const addOptionButton = screen.getByRole('button', { name: 'Add Option' });
+      const addOptionButton = screen.getByRole('button', {
+        name: 'Add Option',
+      });
       for (let i = 0; i < 3; i += 1) {
         await user.click(addOptionButton);
       }
@@ -1271,9 +1273,8 @@ describe('CustomizableFormStep', () => {
 
       // Start/End label inputs are the 4th and 5th text inputs on the page
       // (after Section Title, Form Title and the Question text field).
-      const textInputs = container.querySelectorAll<HTMLInputElement>(
-        'input[type="text"]'
-      );
+      const textInputs =
+        container.querySelectorAll<HTMLInputElement>('input[type="text"]');
       expect(textInputs.length).toBeGreaterThanOrEqual(5);
       const startLabelInput = textInputs[3];
       const endLabelInput = textInputs[4];

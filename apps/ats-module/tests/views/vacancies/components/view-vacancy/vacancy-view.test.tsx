@@ -41,9 +41,7 @@ describe('VacancyView.Header', () => {
 describe('VacancyView.BackHeader', () => {
   it('renders the title and calls onBack when the back button is clicked', () => {
     const onBack = vi.fn();
-    render(
-      <VacancyView.BackHeader title="Back Title" onBack={onBack} />
-    );
+    render(<VacancyView.BackHeader title="Back Title" onBack={onBack} />);
     expect(screen.getByText('Back Title')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Go back' }));
     expect(onBack).toHaveBeenCalledTimes(1);

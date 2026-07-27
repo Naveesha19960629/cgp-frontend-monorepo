@@ -13,9 +13,13 @@ import {
   getEnabledStepKeys,
   useVacancyForm,
 } from '@/views/vacancies/context/vacancy-form-context';
-import { useVacancyByIdQuery } from '@/views/vacancies/hooks';
+import {
+  useVacancyByIdQuery,
+  useVacancyTemplateByIdQuery,
+} from '@/views/vacancies/hooks';
 import type { VacancyForm } from '@/views/vacancies/types';
 import { toVacancyFormFromResponse } from '@/views/vacancies/utils/vacancy-edit-response-helpers';
+import { toVacancyFormFromTemplateUsePayload } from '@/views/vacancies/utils/vacancy-template-use-helpers';
 
 import { CharacterCount } from '@cgp/ui-kit/components/character-count';
 import { SuccessToast } from '@cgp/ui-kit/components/custom-toast';
@@ -28,6 +32,28 @@ import { useKeycloak } from '@react-keycloak/web';
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
+}
+
+/** Navigator + empty body skeleton shown while the edit page loads. */
+function EditNavigatorSkeleton() {
+  return (
+    <div className="flex min-h-full flex-col overflow-hidden">
+      <div className="flex min-h-0 flex-1">
+        <div className="flex min-h-0 w-76.75 shrink-0 flex-col border-r border-slate-200 bg-white px-4 py-7">
+          <Skeleton className="mb-9 h-8 w-48" />
+          <div className="space-y-4">
+            {['step-1', 'step-2', 'step-3', 'step-4', 'step-5'].map(stepId => (
+              <div key={stepId} className="space-y-2">
+                <Skeleton className="h-5 w-full" />
+                <Skeleton className="h-1 w-0.5 bg-slate-200" />
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-white" />
+      </div>
+    </div>
+  );
 }
 
 function EditVacancyTitleStep() {
@@ -255,26 +281,7 @@ function EditVacancyContent({ id }: Readonly<{ id: string | undefined }>) {
     isLoading ||
     (!isHydrated && !error && vacancyResponse?.success !== false)
   ) {
-    return (
-      <div className="flex min-h-full flex-col overflow-hidden">
-        <div className="flex min-h-0 flex-1">
-          <div className="flex min-h-0 w-76.75 shrink-0 flex-col border-r border-slate-200 bg-white px-4 py-7">
-            <Skeleton className="mb-9 h-8 w-48" />
-            <div className="space-y-4">
-              {['step-1', 'step-2', 'step-3', 'step-4', 'step-5'].map(
-                stepId => (
-                  <div key={stepId} className="space-y-2">
-                    <Skeleton className="h-5 w-full" />
-                    <Skeleton className="h-1 w-0.5 bg-slate-200" />
-                  </div>
-                )
-              )}
-            </div>
-          </div>
-          <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-white" />
-        </div>
-      </div>
-    );
+    return <EditNavigatorSkeleton />;
   }
 
   if (error) {
@@ -324,15 +331,42 @@ export default function VacancyIdEditPage() {
   const { keycloak, initialized } = useKeycloak();
 
   // Same query key as EditVacancyContent → served from cache (no extra request).
-  const { data: vacancyResponse } = useVacancyByIdQuery(id || '', {
-    enabled: initialized && !!keycloak?.authenticated && !!id,
-  });
+  const { data: vacancyResponse, isLoading: isVacancyLoading } =
+    useVacancyByIdQuery(id || '', {
+      enabled: initialized && !!keycloak?.authenticated && !!id,
+    });
 
-  // Vacancies created from a template carry `vacancyTemplateId`. For those, the
-  // edit navigator must mirror the Use Template create flow: only the mandatory
-  // steps plus the sections the template included (reconstructed from the saved
-  // vacancy's enabled sections). Normal vacancies get `undefined` → all steps.
-  const visibleStepKeys = useMemo<string[] | undefined>(() => {
+  // Vacancies created from a template carry `vacancyTemplateId`.
+  const vacancyTemplateId = useMemo<string | undefined>(() => {
+    const record = vacancyResponse?.success ? vacancyResponse.data : undefined;
+    return isRecord(record) && typeof record.vacancyTemplateId === 'string'
+      ? record.vacancyTemplateId
+      : undefined;
+  }, [vacancyResponse]);
+
+  // For template-created vacancies, re-fetch the source template so the edit
+  // navigator mirrors the Use Template create flow at BOTH levels: which steps
+  // show AND which fields within them. The GET /vacancies/{id} payload only
+  // carries per-section `isEnabled` (not per-field flags), so field visibility
+  // can only be reconstructed from the template itself. Same query key as the
+  // create-from-template page → shared cache.
+  const { data: templateResponse, isLoading: isTemplateLoading } =
+    useVacancyTemplateByIdQuery(vacancyTemplateId ?? '', {
+      enabled: initialized && !!keycloak?.authenticated && !!vacancyTemplateId,
+    });
+
+  const templateMapped = useMemo(() => {
+    const requestBody = templateResponse?.success
+      ? templateResponse.data?.requestBody
+      : undefined;
+    return requestBody
+      ? toVacancyFormFromTemplateUsePayload(requestBody, DEFAULT_FORM)
+      : undefined;
+  }, [templateResponse]);
+
+  // Fallback step list: reconstructed from the saved vacancy's enabled sections.
+  // Used until the template resolves (or if the template fetch fails).
+  const inferredVisibleStepKeys = useMemo<string[] | undefined>(() => {
     const record = vacancyResponse?.success ? vacancyResponse.data : undefined;
     if (!isRecord(record) || !record.vacancyTemplateId) {
       return undefined;
@@ -340,8 +374,24 @@ export default function VacancyIdEditPage() {
     return getEnabledStepKeys(toVacancyFormFromResponse(record, DEFAULT_FORM));
   }, [vacancyResponse]);
 
+  // Hold the provider until both the vacancy and (for templated ones) its
+  // template are ready, so step + field restrictions are correct on first paint
+  // and the provider mounts exactly once.
+  if (isVacancyLoading || (vacancyTemplateId && isTemplateLoading)) {
+    return <EditNavigatorSkeleton />;
+  }
+
+  // Prefer the template's authoritative step list; fall back to inference.
+  const visibleStepKeys =
+    templateMapped?.visibleStepKeys ?? inferredVisibleStepKeys;
+
   return (
-    <VacancyFormProvider vacancyId={id} visibleStepKeys={visibleStepKeys}>
+    <VacancyFormProvider
+      vacancyId={id}
+      visibleStepKeys={visibleStepKeys}
+      templateFieldVisibility={templateMapped?.templateFieldVisibility}
+      templateId={vacancyTemplateId}
+    >
       <section className="flex min-h-0 flex-1 flex-col overflow-hidden">
         <EditVacancyContent id={id} />
       </section>

@@ -95,9 +95,8 @@ describe('VacancyRescheduleConfirmDialog', () => {
       })
     ).toBeInTheDocument();
     expect(
-      screen.getAllByText(
-        'scheduleVacancy.rescheduleConfirmDialog.description'
-      ).length
+      screen.getAllByText('scheduleVacancy.rescheduleConfirmDialog.description')
+        .length
     ).toBeGreaterThan(0);
     expect(
       screen.getByRole('button', {
