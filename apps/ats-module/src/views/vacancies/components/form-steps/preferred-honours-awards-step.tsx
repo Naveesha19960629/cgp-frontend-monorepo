@@ -65,6 +65,20 @@ const multiSelectInfoAvatar = new URL(
   import.meta.url
 ).href;
 
+/**
+ * Field codes that make up the Honours & Awards entry. In the Use Template flow
+ * the whole entry cards list (and its add button) is hidden when none of these
+ * are enabled by the template — see `hasAnyVisibleField`.
+ */
+const HONOURS_FIELD_CODES = [
+  'title',
+  'issuedBy',
+  'issuedFromDate',
+  'issuedToDate',
+  'associatedOrganizations',
+  'organizationLocations',
+] as const;
+
 function hasHonoursData(data: PreferredHonoursAwardsSchema): boolean {
   return data.honoursAndAwards.some(
     honour =>
@@ -661,6 +675,10 @@ export default function PreferredHonoursAwardsStep({
   mode = 'create',
 }: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
+  const isFieldVisible = useTemplateFieldVisible('honoursAndAwards');
+  const hasAnyVisibleField = HONOURS_FIELD_CODES.some(code =>
+    isFieldVisible(code)
+  );
 
   const {
     form: contextForm,
@@ -963,45 +981,49 @@ export default function PreferredHonoursAwardsStep({
             />
           </div>
 
-          {/* Honour cards */}
-          <div className="flex flex-col gap-4 px-6">
-            {fields.map((field, index) => (
-              <HonoursAndAwardsCard
-                key={field.id}
-                index={index}
-                form={form}
-                onRemove={() => remove(index)}
-                onOpenAddOrganizationDialog={(name, honorIdx) => {
-                  setPendingOrganizationName(name);
-                  setPendingHonorIndex(honorIdx);
-                  setShowAddOrganizationDialog(true);
-                }}
-              />
-            ))}
-          </div>
+          {hasAnyVisibleField && (
+            <>
+              {/* Honour cards */}
+              <div className="flex flex-col gap-4 px-6">
+                {fields.map((field, index) => (
+                  <HonoursAndAwardsCard
+                    key={field.id}
+                    index={index}
+                    form={form}
+                    onRemove={() => remove(index)}
+                    onOpenAddOrganizationDialog={(name, honorIdx) => {
+                      setPendingOrganizationName(name);
+                      setPendingHonorIndex(honorIdx);
+                      setShowAddOrganizationDialog(true);
+                    }}
+                  />
+                ))}
+              </div>
 
-          {/* Add honour button */}
-          <div className="flex justify-end px-6 py-4">
-            <Button
-              type="button"
-              variant="secondary"
-              disabled
-              className="size-11 rounded-lg bg-gray-200 px-3 text-sm"
-              onClick={() =>
-                append({
-                  title: '',
-                  issuedBy: '',
-                  issuedDateFrom: undefined,
-                  issuedDateTo: undefined,
-                  associatedOrganizations: [],
-                  organizationLocations: [],
-                  isOpen: true,
-                })
-              }
-            >
-              <Plus className="size-4 text-neutral-600!" />
-            </Button>
-          </div>
+              {/* Add honour button */}
+              <div className="flex justify-end px-6 py-4">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  disabled
+                  className="size-11 rounded-lg bg-gray-200 px-3 text-sm"
+                  onClick={() =>
+                    append({
+                      title: '',
+                      issuedBy: '',
+                      issuedDateFrom: undefined,
+                      issuedDateTo: undefined,
+                      associatedOrganizations: [],
+                      organizationLocations: [],
+                      isOpen: true,
+                    })
+                  }
+                >
+                  <Plus className="size-4 text-neutral-600!" />
+                </Button>
+              </div>
+            </>
+          )}
 
           {/* Footer: Cancel + Next */}
           <div className="sticky bottom-0 mt-auto flex items-center justify-end gap-4 bg-white px-6 py-7 shadow-[0px_-8px_6.8px_0px_rgba(0,0,0,0.04)]">

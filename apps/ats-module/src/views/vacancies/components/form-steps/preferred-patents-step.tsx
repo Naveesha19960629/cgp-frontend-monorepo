@@ -60,6 +60,15 @@ import { format } from 'date-fns';
 const HUNDRED_YEARS_AGO = new Date(new Date().getFullYear() - 100, 0, 1);
 const HUNDRED_YEARS_FROM_NOW = new Date(new Date().getFullYear() + 100, 11, 31);
 
+// Field codes for the Patents section; used to hide the entry content region
+// entirely when the template forces every field's visibility to false.
+const PATENT_FIELD_CODES = [
+  'relatedIndustry',
+  'statuses',
+  'fromDate',
+  'toDate',
+] as const;
+
 const multiSelectInfoAvatar = new URL(
   '../../../../assets/images/multi-select-info-avatar.svg',
   import.meta.url
@@ -530,6 +539,10 @@ export default function PreferredPatentsStep({
   const { form, fields, append, remove, replace } = usePreferredPatentsForm(
     contextForm.patents
   );
+  const isFieldVisible = useTemplateFieldVisible('patents');
+  const hasAnyVisibleField = PATENT_FIELD_CODES.some(code =>
+    isFieldVisible(code)
+  );
 
   const isEnabled = form.watch('isEnabled');
   const dataTakenFromCandidate = form.watch('dataTakenFromCandidate');
@@ -866,39 +879,43 @@ export default function PreferredPatentsStep({
             />
           </div>
 
-          {/* Patent cards */}
-          <div className="flex flex-col gap-4 px-6">
-            {fields.map((field, index) => (
-              <PatentCard
-                key={field.id}
-                index={index}
-                form={form}
-                onRemove={() => remove(index)}
-                dataTakenFromCandidate={dataTakenFromCandidate}
-              />
-            ))}
-          </div>
+          {hasAnyVisibleField && (
+            <>
+              {/* Patent cards */}
+              <div className="flex flex-col gap-4 px-6">
+                {fields.map((field, index) => (
+                  <PatentCard
+                    key={field.id}
+                    index={index}
+                    form={form}
+                    onRemove={() => remove(index)}
+                    dataTakenFromCandidate={dataTakenFromCandidate}
+                  />
+                ))}
+              </div>
 
-          {/* Add patent button */}
-          <div className="flex justify-end px-6 py-4">
-            <Button
-              type="button"
-              variant="secondary"
-              disabled
-              className="size-11 rounded-lg bg-gray-200 px-3 text-sm"
-              onClick={() =>
-                append({
-                  relatedIndustries: [],
-                  statuses: [],
-                  fromDate: undefined,
-                  toDate: undefined,
-                  isOpen: true,
-                })
-              }
-            >
-              <Plus className="size-4 text-neutral-600!" />
-            </Button>
-          </div>
+              {/* Add patent button */}
+              <div className="flex justify-end px-6 py-4">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  disabled
+                  className="size-11 rounded-lg bg-gray-200 px-3 text-sm"
+                  onClick={() =>
+                    append({
+                      relatedIndustries: [],
+                      statuses: [],
+                      fromDate: undefined,
+                      toDate: undefined,
+                      isOpen: true,
+                    })
+                  }
+                >
+                  <Plus className="size-4 text-neutral-600!" />
+                </Button>
+              </div>
+            </>
+          )}
 
           {/* Footer: Cancel + Next */}
           <div className="sticky bottom-0 mt-auto flex items-center justify-end gap-4 bg-white px-6 py-7 shadow-[0px_-8px_6.8px_0px_rgba(0,0,0,0.04)]">

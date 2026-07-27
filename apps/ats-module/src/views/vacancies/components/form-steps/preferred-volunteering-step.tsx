@@ -60,6 +60,18 @@ const MAX_CAUSE_LENGTH = 100;
 const MAX_POSITION_LENGTH = 100;
 const MAX_SELECTIONS = 10;
 
+// Template field-visibility codes for the Volunteering section. When a
+// template marks this section as "data taken from candidate", the backend
+// forces every flag false, so none of these entry fields render.
+const VOLUNTEERING_FIELD_CODES = [
+  'organization',
+  'organizationLocations',
+  'positionRole',
+  'cause',
+  'startDate',
+  'endDate',
+] as const;
+
 interface VolunteeringEntry {
   id: string;
   isOpen: boolean;
@@ -544,6 +556,10 @@ export default function PreferredVolunteeringStep({
   const { form: contextForm, onCancel } = useVacancyForm();
   const savedVolunteering = contextForm.preferredVolunteering;
   const vacancyStatus = contextForm.status;
+  const isFieldVisible = useTemplateFieldVisible('volunteering');
+  const hasAnyVisibleField = VOLUNTEERING_FIELD_CODES.some(code =>
+    isFieldVisible(code)
+  );
 
   const { mutateAsync: createCause } = useCreateCauseMutation();
   const { mutateAsync: createOrganization } = useCreateOrganizationMutation();
@@ -922,52 +938,56 @@ export default function PreferredVolunteeringStep({
           </Label>
         </div>
 
-        {/* ── Volunteering cards ────────────────────────────────────────── */}
-        <div className="flex flex-col gap-4 px-6">
-          {entries.map((entry, index) => (
-            <VolunteeringCard
-              key={entry.id}
-              index={index}
-              entry={entry}
-              onUpdate={updateEntry}
-              onOrganizationsSearch={setOrganizationsSearchQuery}
-              onLocationsSearch={setLocationsSearchQuery}
-              onCausesSearch={setCausesSearchQuery}
-              onRequestAddOrganization={(cardIndex, name) => {
-                setActiveCardIndex(cardIndex);
-                setPendingOrganizationName(name);
-                setShowAddOrganizationDialog(true);
-              }}
-              fieldsDisabled={fieldsDisabled}
-              organizations={organizations}
-              isOrganizationsLoading={isOrganizationsLoading}
-              causes={causes}
-              isCausesLoading={isCausesLoading}
-              locationOptions={locationOptions}
-              isLocationsLoading={isLocationsLoading}
-              orgSelectorKey={orgSelectorKey}
-            />
-          ))}
-        </div>
+        {hasAnyVisibleField && (
+          <>
+            {/* ── Volunteering cards ────────────────────────────────────────── */}
+            <div className="flex flex-col gap-4 px-6">
+              {entries.map((entry, index) => (
+                <VolunteeringCard
+                  key={entry.id}
+                  index={index}
+                  entry={entry}
+                  onUpdate={updateEntry}
+                  onOrganizationsSearch={setOrganizationsSearchQuery}
+                  onLocationsSearch={setLocationsSearchQuery}
+                  onCausesSearch={setCausesSearchQuery}
+                  onRequestAddOrganization={(cardIndex, name) => {
+                    setActiveCardIndex(cardIndex);
+                    setPendingOrganizationName(name);
+                    setShowAddOrganizationDialog(true);
+                  }}
+                  fieldsDisabled={fieldsDisabled}
+                  organizations={organizations}
+                  isOrganizationsLoading={isOrganizationsLoading}
+                  causes={causes}
+                  isCausesLoading={isCausesLoading}
+                  locationOptions={locationOptions}
+                  isLocationsLoading={isLocationsLoading}
+                  orgSelectorKey={orgSelectorKey}
+                />
+              ))}
+            </div>
 
-        {/* ── Add entry button ──────────────────────────────────────────── */}
-        <div
-          className={cn(
-            'flex justify-end px-6 py-4',
-            !isEnabled && 'pointer-events-none opacity-60'
-          )}
-        >
-          <Button
-            variant="secondary"
-            size="icon"
-            aria-label={t('preferredVolunteering.addEntry')}
-            className="size-11 rounded-lg bg-gray-200 px-3 text-sm"
-            disabled
-            onClick={addEntry}
-          >
-            <PlusIcon className="size-4 text-neutral-600!" />
-          </Button>
-        </div>
+            {/* ── Add entry button ──────────────────────────────────────────── */}
+            <div
+              className={cn(
+                'flex justify-end px-6 py-4',
+                !isEnabled && 'pointer-events-none opacity-60'
+              )}
+            >
+              <Button
+                variant="secondary"
+                size="icon"
+                aria-label={t('preferredVolunteering.addEntry')}
+                className="size-11 rounded-lg bg-gray-200 px-3 text-sm"
+                disabled
+                onClick={addEntry}
+              >
+                <PlusIcon className="size-4 text-neutral-600!" />
+              </Button>
+            </div>
+          </>
+        )}
 
         {/* ── Step footer ───────────────────────────────────────────────── */}
         <div className="sticky bottom-0 mt-auto flex items-center justify-end gap-4 bg-white px-6 py-7 shadow-[0px_-8px_6.8px_0px_rgba(0,0,0,0.04)]">

@@ -62,6 +62,19 @@ import DisableDialog from './disable-dialog';
 const MAX_SPORT_NAME_LENGTH = 100;
 const MAX_POSITION_LENGTH = 100;
 const MAX_SELECTIONS = 10;
+
+// Template field-visibility codes for the Sports section. When a template
+// marks this section as "data taken from candidate", the backend forces every
+// flag false, so none of these entry fields render.
+const SPORT_FIELD_CODES = [
+  'nameOfSport',
+  'representedOrganization',
+  'organizationLocations',
+  'levelRepresented',
+  'positionRoleHeld',
+  'startDate',
+  'endDate',
+] as const;
 const DATE_BOUNDARY_YEARS = 100;
 // Exact-date boundaries (day/month/year), not year-only — matches the
 // Preferred Publications date pickers. If today is 2026-07-07:
@@ -671,6 +684,10 @@ export default function PreferredSportsStep({
   const { form: contextForm, onCancel } = useVacancyForm();
   const savedSports = contextForm.preferredSports;
   const vacancyStatus = contextForm.status;
+  const isFieldVisible = useTemplateFieldVisible('sports');
+  const hasAnyVisibleField = SPORT_FIELD_CODES.some(code =>
+    isFieldVisible(code)
+  );
 
   const { mutateAsync: createSport } = useCreateSportMutation();
   const { mutateAsync: createSportLevel } = useCreateSportLevelMutation();
@@ -1106,55 +1123,59 @@ export default function PreferredSportsStep({
           </Label>
         </div>
 
-        {/* ── Sport cards ───────────────────────────────────────────────── */}
-        <div className="flex flex-col gap-4 px-6">
-          {entries.map((entry, index) => (
-            <SportCard
-              key={entry.id}
-              index={index}
-              entry={entry}
-              onUpdate={updateEntry}
-              onSportsSearch={setSportsSearchQuery}
-              onOrganizationsSearch={setOrganizationsSearchQuery}
-              onLocationsSearch={setLocationsSearchQuery}
-              onLevelRepresentedSearch={setLevelRepresentedSearchQuery}
-              onRequestAddOrganization={(cardIndex, name) => {
-                setActiveCardIndex(cardIndex);
-                setPendingOrganizationName(name);
-                setShowAddOrganizationDialog(true);
-              }}
-              fieldsDisabled={fieldsDisabled}
-              sports={sports}
-              isSportsLoading={isSportsLoading}
-              organizations={organizations}
-              isOrganizationsLoading={isOrganizationsLoading}
-              levelRepresentedOptions={levelRepresentedOptions}
-              isLevelsLoading={isLevelsLoading}
-              locationOptions={locationOptions}
-              isLocationsLoading={isLocationsLoading}
-              orgSelectorKey={orgSelectorKey}
-            />
-          ))}
-        </div>
+        {hasAnyVisibleField && (
+          <>
+            {/* ── Sport cards ───────────────────────────────────────────────── */}
+            <div className="flex flex-col gap-4 px-6">
+              {entries.map((entry, index) => (
+                <SportCard
+                  key={entry.id}
+                  index={index}
+                  entry={entry}
+                  onUpdate={updateEntry}
+                  onSportsSearch={setSportsSearchQuery}
+                  onOrganizationsSearch={setOrganizationsSearchQuery}
+                  onLocationsSearch={setLocationsSearchQuery}
+                  onLevelRepresentedSearch={setLevelRepresentedSearchQuery}
+                  onRequestAddOrganization={(cardIndex, name) => {
+                    setActiveCardIndex(cardIndex);
+                    setPendingOrganizationName(name);
+                    setShowAddOrganizationDialog(true);
+                  }}
+                  fieldsDisabled={fieldsDisabled}
+                  sports={sports}
+                  isSportsLoading={isSportsLoading}
+                  organizations={organizations}
+                  isOrganizationsLoading={isOrganizationsLoading}
+                  levelRepresentedOptions={levelRepresentedOptions}
+                  isLevelsLoading={isLevelsLoading}
+                  locationOptions={locationOptions}
+                  isLocationsLoading={isLocationsLoading}
+                  orgSelectorKey={orgSelectorKey}
+                />
+              ))}
+            </div>
 
-        {/* ── Add entry button ──────────────────────────────────────────── */}
-        <div
-          className={cn(
-            'flex justify-end px-6 py-4',
-            !isEnabled && 'pointer-events-none opacity-60'
-          )}
-        >
-          <Button
-            variant="secondary"
-            size="icon"
-            aria-label={t('preferredSports.addEntry')}
-            className="size-11 rounded-lg bg-gray-200 px-3 text-sm"
-            disabled
-            onClick={addEntry}
-          >
-            <PlusIcon className="size-4 text-neutral-600!" />
-          </Button>
-        </div>
+            {/* ── Add entry button ──────────────────────────────────────────── */}
+            <div
+              className={cn(
+                'flex justify-end px-6 py-4',
+                !isEnabled && 'pointer-events-none opacity-60'
+              )}
+            >
+              <Button
+                variant="secondary"
+                size="icon"
+                aria-label={t('preferredSports.addEntry')}
+                className="size-11 rounded-lg bg-gray-200 px-3 text-sm"
+                disabled
+                onClick={addEntry}
+              >
+                <PlusIcon className="size-4 text-neutral-600!" />
+              </Button>
+            </div>
+          </>
+        )}
 
         {/* ── Step footer ───────────────────────────────────────────────── */}
         <div className="sticky bottom-0 mt-auto flex items-center justify-end gap-4 bg-white px-6 py-7 shadow-[0px_-8px_6.8px_0px_rgba(0,0,0,0.04)]">

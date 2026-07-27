@@ -55,6 +55,16 @@ const MAX_SELECTIONS = 10;
 const HUNDRED_YEARS_AGO = new Date(new Date().getFullYear() - 100, 0, 1);
 const HUNDRED_YEARS_FROM_NOW = new Date(new Date().getFullYear() + 100, 11, 31);
 
+// Field codes for the Projects section; used to hide the entry content region
+// entirely when the template forces every field's visibility to false.
+const PROJECT_FIELD_CODES = [
+  'relatedIndustry',
+  'organization',
+  'organizationLocations',
+  'startDate',
+  'endDate',
+] as const;
+
 interface ProjectEntry {
   id: string;
   isOpen: boolean;
@@ -544,6 +554,10 @@ export default function ProjectsRequirementsStep({
 }: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
   const { form: contextForm, onCancel } = useVacancyForm();
+  const isFieldVisible = useTemplateFieldVisible('projects');
+  const hasAnyVisibleField = PROJECT_FIELD_CODES.some(code =>
+    isFieldVisible(code)
+  );
   const savedProjects = contextForm.projectsRequirements;
   const vacancyStatus = contextForm.status;
 
@@ -978,46 +992,50 @@ export default function ProjectsRequirementsStep({
           </Label>
         </div>
 
-        {/* ── Project cards ─────────────────────────────────────────────── */}
-        <div className="flex flex-col gap-4 px-6">
-          {projects.map((project, index) => (
-            <ProjectCard
-              key={project.id}
-              index={index}
-              project={project}
-              onUpdate={updateProject}
-              onIndustriesSearch={setIndustrySearchQuery}
-              onLocationsSearch={setLocationSearchQuery}
-              onOrganizationsSearch={setOrganizationSearchQuery}
-              onRequestAddOrganization={(cardIndex, name) => {
-                setActiveCardIndex(cardIndex);
-                setPendingOrganizationName(name);
-                setShowAddOrganizationDialog(true);
-              }}
-              orgSelectorKey={orgSelectorKey}
-              fieldsDisabled={fieldsDisabled}
-              industries={industries}
-              isIndustriesLoading={isIndustriesLoading}
-              locationOptions={locationOptions}
-              isLocationsLoading={isLocationsLoading}
-              organizationOptions={organizationOptions}
-              isOrganizationsLoading={isOrganizationsLoading}
-            />
-          ))}
-        </div>
+        {hasAnyVisibleField && (
+          <>
+            {/* ── Project cards ─────────────────────────────────────────────── */}
+            <div className="flex flex-col gap-4 px-6">
+              {projects.map((project, index) => (
+                <ProjectCard
+                  key={project.id}
+                  index={index}
+                  project={project}
+                  onUpdate={updateProject}
+                  onIndustriesSearch={setIndustrySearchQuery}
+                  onLocationsSearch={setLocationSearchQuery}
+                  onOrganizationsSearch={setOrganizationSearchQuery}
+                  onRequestAddOrganization={(cardIndex, name) => {
+                    setActiveCardIndex(cardIndex);
+                    setPendingOrganizationName(name);
+                    setShowAddOrganizationDialog(true);
+                  }}
+                  orgSelectorKey={orgSelectorKey}
+                  fieldsDisabled={fieldsDisabled}
+                  industries={industries}
+                  isIndustriesLoading={isIndustriesLoading}
+                  locationOptions={locationOptions}
+                  isLocationsLoading={isLocationsLoading}
+                  organizationOptions={organizationOptions}
+                  isOrganizationsLoading={isOrganizationsLoading}
+                />
+              ))}
+            </div>
 
-        {/* ── Add project button ────────────────────────────────────────── */}
-        <div className="flex justify-end px-6 py-4">
-          <Button
-            type="button"
-            variant="secondary"
-            disabled
-            className="size-11 rounded-lg bg-gray-200 px-3 text-sm"
-            onClick={addProject}
-          >
-            <PlusIcon className="size-4 text-neutral-600!" />
-          </Button>
-        </div>
+            {/* ── Add project button ────────────────────────────────────────── */}
+            <div className="flex justify-end px-6 py-4">
+              <Button
+                type="button"
+                variant="secondary"
+                disabled
+                className="size-11 rounded-lg bg-gray-200 px-3 text-sm"
+                onClick={addProject}
+              >
+                <PlusIcon className="size-4 text-neutral-600!" />
+              </Button>
+            </div>
+          </>
+        )}
 
         {/* ── Step footer ───────────────────────────────────────────────── */}
         <div className="sticky bottom-0 mt-auto flex items-center justify-end gap-4 bg-white px-6 py-7 shadow-[0px_-8px_6.8px_0px_rgba(0,0,0,0.04)]">

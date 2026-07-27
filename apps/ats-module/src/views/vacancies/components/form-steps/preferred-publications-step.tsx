@@ -60,6 +60,14 @@ const HUNDRED_YEARS_FROM_NOW = getDateYearsFromNow(DATE_BOUNDARY_YEARS);
 const isBeforeMinDate = (date: Date) =>
   isBefore(startOfDay(date), HUNDRED_YEARS_AGO);
 
+// Field codes for the Publications section; used to hide the entry content
+// region entirely when the template forces every field's visibility to false.
+const PUBLICATION_FIELD_CODES = [
+  'acceptedPublisherName',
+  'publishedDateFrom',
+  'publishedDateTo',
+] as const;
+
 interface PublicationEntry {
   id: string;
   isOpen: boolean;
@@ -351,6 +359,10 @@ export default function PreferredPublicationsStep({
 }: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
   const { form: contextForm, onCancel } = useVacancyForm();
+  const isFieldVisible = useTemplateFieldVisible('publications');
+  const hasAnyVisibleField = PUBLICATION_FIELD_CODES.some(code =>
+    isFieldVisible(code)
+  );
   const savedPublications = contextForm.preferredPublications;
   const vacancyStatus = contextForm.status;
 
@@ -609,38 +621,42 @@ export default function PreferredPublicationsStep({
           </Label>
         </div>
 
-        {/* ── Publication cards ─────────────────────────────────────────── */}
-        <div className="flex flex-col gap-4 px-6">
-          {publications.map((publication, index) => (
-            <PublicationCard
-              key={publication.id}
-              index={index}
-              publication={publication}
-              onUpdate={updatePublication}
-              fieldsDisabled={fieldsDisabled}
-            />
-          ))}
-        </div>
+        {hasAnyVisibleField && (
+          <>
+            {/* ── Publication cards ─────────────────────────────────────────── */}
+            <div className="flex flex-col gap-4 px-6">
+              {publications.map((publication, index) => (
+                <PublicationCard
+                  key={publication.id}
+                  index={index}
+                  publication={publication}
+                  onUpdate={updatePublication}
+                  fieldsDisabled={fieldsDisabled}
+                />
+              ))}
+            </div>
 
-        {/* ── Add entry button ──────────────────────────────────────────── */}
-        <div
-          className={cn(
-            'flex justify-end px-6 py-4',
-            !isEnabled && 'pointer-events-none opacity-60'
-          )}
-        >
-          <Button
-            type="button"
-            variant="secondary"
-            size="icon"
-            disabled
-            aria-label={t('preferredPublications.addEntry')}
-            className="size-11 rounded-lg bg-gray-200 px-3 text-sm"
-            onClick={addPublication}
-          >
-            <PlusIcon className="size-4 text-neutral-600!" />
-          </Button>
-        </div>
+            {/* ── Add entry button ──────────────────────────────────────────── */}
+            <div
+              className={cn(
+                'flex justify-end px-6 py-4',
+                !isEnabled && 'pointer-events-none opacity-60'
+              )}
+            >
+              <Button
+                type="button"
+                variant="secondary"
+                size="icon"
+                disabled
+                aria-label={t('preferredPublications.addEntry')}
+                className="size-11 rounded-lg bg-gray-200 px-3 text-sm"
+                onClick={addPublication}
+              >
+                <PlusIcon className="size-4 text-neutral-600!" />
+              </Button>
+            </div>
+          </>
+        )}
 
         {/* ── Step footer ───────────────────────────────────────────────── */}
         <div className="sticky bottom-0 mt-auto flex items-center justify-end gap-4 bg-white px-6 py-7 shadow-[0px_-8px_6.8px_0px_rgba(0,0,0,0.04)]">

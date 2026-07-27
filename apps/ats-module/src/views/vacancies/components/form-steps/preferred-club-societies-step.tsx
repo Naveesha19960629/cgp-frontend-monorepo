@@ -56,6 +56,18 @@ import DisableDialog from './disable-dialog';
 const MAX_POSITION_LENGTH = 250;
 const MAX_CLUB_SOCIETY_LENGTH = 250;
 const MAX_SELECTIONS = 10;
+
+// Template field-visibility codes for the Clubs & Societies section. When a
+// template marks this section as "data taken from candidate", the backend
+// forces every flag false, so none of these entry fields render.
+const CLUB_SOCIETY_FIELD_CODES = [
+  'clubSociety',
+  'organization',
+  'organizationLocations',
+  'positionRoleHeld',
+  'startDate',
+  'endDate',
+] as const;
 const HUNDRED_YEARS_AGO = new Date(new Date().getFullYear() - 100, 0, 1);
 const HUNDRED_YEARS_FROM_NOW = new Date(new Date().getFullYear() + 100, 11, 31);
 
@@ -590,6 +602,10 @@ export default function PreferredClubSocietiesStep({
   const { form: contextForm, onCancel } = useVacancyForm();
   const savedClubSocieties = contextForm.preferredClubSocieties;
   const vacancyStatus = contextForm.status;
+  const isFieldVisible = useTemplateFieldVisible('clubsAndSocieties');
+  const hasAnyVisibleField = CLUB_SOCIETY_FIELD_CODES.some(code =>
+    isFieldVisible(code)
+  );
 
   const { mutateAsync: createSociety } = useCreateSocietyMutation();
   const { mutateAsync: createOrganization } = useCreateOrganizationMutation();
@@ -1024,52 +1040,56 @@ export default function PreferredClubSocietiesStep({
           </Label>
         </div>
 
-        {/* ── Club Society cards ────────────────────────────────────────── */}
-        <div className="flex flex-col gap-4 px-6">
-          {entries.map((entry, index) => (
-            <ClubSocietyCard
-              key={entry.id}
-              index={index}
-              entry={entry}
-              onUpdate={updateEntry}
-              onSocietiesSearch={setSocietiesSearchQuery}
-              onOrganizationsSearch={setOrganizationsSearchQuery}
-              onLocationsSearch={setLocationsSearchQuery}
-              onRequestAddOrganization={(cardIndex, name) => {
-                setActiveCardIndex(cardIndex);
-                setPendingOrganizationName(name);
-                setShowAddOrganizationDialog(true);
-              }}
-              fieldsDisabled={fieldsDisabled}
-              societies={societies}
-              isSocietiesLoading={isSocietiesLoading}
-              organizations={organizations}
-              isOrganizationsLoading={isOrganizationsLoading}
-              locationOptions={locationOptions}
-              isLocationsLoading={isLocationsLoading}
-              orgSelectorKey={orgSelectorKey}
-            />
-          ))}
-        </div>
+        {hasAnyVisibleField && (
+          <>
+            {/* ── Club Society cards ────────────────────────────────────────── */}
+            <div className="flex flex-col gap-4 px-6">
+              {entries.map((entry, index) => (
+                <ClubSocietyCard
+                  key={entry.id}
+                  index={index}
+                  entry={entry}
+                  onUpdate={updateEntry}
+                  onSocietiesSearch={setSocietiesSearchQuery}
+                  onOrganizationsSearch={setOrganizationsSearchQuery}
+                  onLocationsSearch={setLocationsSearchQuery}
+                  onRequestAddOrganization={(cardIndex, name) => {
+                    setActiveCardIndex(cardIndex);
+                    setPendingOrganizationName(name);
+                    setShowAddOrganizationDialog(true);
+                  }}
+                  fieldsDisabled={fieldsDisabled}
+                  societies={societies}
+                  isSocietiesLoading={isSocietiesLoading}
+                  organizations={organizations}
+                  isOrganizationsLoading={isOrganizationsLoading}
+                  locationOptions={locationOptions}
+                  isLocationsLoading={isLocationsLoading}
+                  orgSelectorKey={orgSelectorKey}
+                />
+              ))}
+            </div>
 
-        {/* ── Add entry button ──────────────────────────────────────────── */}
-        <div
-          className={cn(
-            'flex justify-end px-6 py-4',
-            !isEnabled && 'pointer-events-none opacity-60'
-          )}
-        >
-          <Button
-            variant="secondary"
-            size="icon"
-            aria-label={t('preferredClubSocieties.addEntry')}
-            className="size-11 rounded-lg bg-gray-200 px-3 text-sm"
-            disabled
-            onClick={addEntry}
-          >
-            <PlusIcon className="size-4 text-neutral-600!" />
-          </Button>
-        </div>
+            {/* ── Add entry button ──────────────────────────────────────────── */}
+            <div
+              className={cn(
+                'flex justify-end px-6 py-4',
+                !isEnabled && 'pointer-events-none opacity-60'
+              )}
+            >
+              <Button
+                variant="secondary"
+                size="icon"
+                aria-label={t('preferredClubSocieties.addEntry')}
+                className="size-11 rounded-lg bg-gray-200 px-3 text-sm"
+                disabled
+                onClick={addEntry}
+              >
+                <PlusIcon className="size-4 text-neutral-600!" />
+              </Button>
+            </div>
+          </>
+        )}
 
         {/* ── Step footer ───────────────────────────────────────────────── */}
         <div className="sticky bottom-0 mt-auto flex items-center justify-end gap-4 bg-white px-6 py-7 shadow-[0px_-8px_6.8px_0px_rgba(0,0,0,0.04)]">
