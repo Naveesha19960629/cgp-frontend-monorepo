@@ -1374,7 +1374,11 @@ function normalizeSchedule(raw: unknown): ScheduleVacancy | undefined {
   if (!isRecord(raw)) return undefined;
   const publishAt = toSafeString(raw.schedulePublishAt);
   const expirationAt = toSafeString(raw.expirationAt);
-  if (!publishAt || !expirationAt) return undefined;
+  // A vacancy can be saved as a draft with only one of the two fields filled
+  // in (e.g. the recruiter set a publish date but never reached expiration),
+  // so only drop the section when neither value is present — otherwise the
+  // saved field would be wiped out on reload.
+  if (!publishAt && !expirationAt) return undefined;
   return { schedulePublishAt: publishAt, expirationAt };
 }
 

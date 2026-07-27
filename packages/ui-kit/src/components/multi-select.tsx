@@ -116,6 +116,12 @@ interface MultipleSelectorProps {
   onErrorStateChange?: (hasError: boolean) => void;
   /** Show a vuesax/linear arrow-down icon on the right of the input. */
   showArrow?: boolean;
+  /**
+   * Allow pressing Enter to select/deselect the highlighted option.
+   * Disabled by default: recruiters pressing Enter to move between fields
+   * were accidentally toggling the highlighted dropdown option.
+   */
+  enableEnterToSelect?: boolean;
 }
 
 export interface MultipleSelectorRef {
@@ -257,6 +263,7 @@ const MultipleSelector = React.forwardRef<
       onErrorStateChange,
       showArrow = false,
       alwaysShowCreatable,
+      enableEnterToSelect = false,
     }: MultipleSelectorProps,
     ref: React.Ref<MultipleSelectorRef>
   ) => {
@@ -317,8 +324,13 @@ const MultipleSelector = React.forwardRef<
             input.blur();
           }
         }
+        // Prevent cmdk from selecting/deselecting the highlighted option on
+        // Enter (DQCGP-3297) unless the consumer explicitly opts in.
+        if (e.key === 'Enter' && !enableEnterToSelect) {
+          e.preventDefault();
+        }
       },
-      []
+      [enableEnterToSelect]
     );
 
     useEffect(() => {
@@ -435,6 +447,7 @@ const MultipleSelector = React.forwardRef<
           }}
           onSelect={(value: string) => {
             if (disabled) return;
+            if (!value.trim()) return;
             if (selected.length >= maxSelected) {
               onMaxSelected?.(selected.length);
               setShowMaxError(true);
@@ -486,8 +499,18 @@ const MultipleSelector = React.forwardRef<
         return Item;
       }
 
-      // For async search creatable. avoid showing creatable item before loading at first.
-      if (onSearch && debouncedSearchTerm.trim().length > 0 && !isLoading) {
+      // For async search creatable. Gate on both the live and debounced value:
+      // debouncedSearchTerm alone avoids flashing the item before the first
+      // load, but it lags inputValue by up to `delay` ms, so right after the
+      // user picks an existing option (which clears inputValue immediately)
+      // the item would keep rendering — showing `Add ""` — until the debounce
+      // catches up (DQCGP-3329).
+      if (
+        onSearch &&
+        inputValue.trim().length > 0 &&
+        debouncedSearchTerm.trim().length > 0 &&
+        !isLoading
+      ) {
         return Item;
       }
 
@@ -516,7 +539,10 @@ const MultipleSelector = React.forwardRef<
     }, [options, userCreatedOptions, selected]);
 
     const selectables = React.useMemo<GroupOption>(() => {
-      if (keepSelectedInList) {
+      // Only keep selected options visible while browsing the closed/idle list.
+      // Once the user is actively searching, selected items should drop out so
+      // the dropdown only shows genuinely new matches (DQCGP-3323).
+      if (keepSelectedInList && !inputValue.trim()) {
         // Keep selected options authoritative for the same value so label/source
         // stay consistent after user-created flows (e.g. skill + career path).
         const selectedByValue = new Map(selected.map(s => [s.value, s]));
@@ -540,7 +566,7 @@ const MultipleSelector = React.forwardRef<
         };
       }
       return removePickedOption(allOptionsWithCreated, selected);
-    }, [keepSelectedInList, allOptionsWithCreated, selected]);
+    }, [keepSelectedInList, allOptionsWithCreated, selected, inputValue]);
 
     const hasSelectableOptions = React.useMemo(() => {
       if (onSearch || onSearchSync) {
