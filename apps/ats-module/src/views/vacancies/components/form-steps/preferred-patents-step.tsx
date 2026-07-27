@@ -147,7 +147,7 @@ function PatentCard({
 
         {/* Collapsible body */}
         <CollapsibleContent>
-          <div className="grid grid-cols-2 gap-5 px-5 pb-5">
+          <div className="grid grid-cols-1 gap-5 px-5 pb-5 xl:grid-cols-2">
             {/* Related Industry */}
             {isFieldVisible('relatedIndustry') && (
               <FormField

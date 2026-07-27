@@ -186,7 +186,7 @@ function VolunteeringCard({
             )}
           >
             {/* Row 1: Organisation Name | Organization Location */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
               {isFieldVisible('organization') && (
                 <div className="flex flex-col gap-1">
                   <div className="flex h-5 items-center">
@@ -300,7 +300,7 @@ function VolunteeringCard({
             </div>
 
             {/* Row 2: Cause (half width) */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
               {isFieldVisible('cause') && (
                 <div className="flex flex-col gap-1">
                   <div className="flex items-center justify-between">
@@ -362,7 +362,7 @@ function VolunteeringCard({
             </div>
 
             {/* Row 3: Position / Role | Start Date | End Date */}
-            <div className="grid grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 gap-4 xl:grid-cols-4">
               {isFieldVisible('positionRole') && (
                 <div className="flex flex-col gap-1">
                   <div className="flex items-center justify-between">

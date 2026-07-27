@@ -329,7 +329,7 @@ function QuestionCard({
   return (
     <div className="mt-4 rounded-xl border border-neutral-300 bg-neutral-100 p-6">
       {/* Question + Type row */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         {/* Question text */}
         <div className="flex flex-col gap-1.5">
           <div className="flex items-center justify-between">
@@ -415,7 +415,7 @@ function QuestionCard({
       {/* Multiple Choice options */}
       {question.type === 'MULTIPLE_CHOICE' && (
         <div className="mt-4 rounded-xl border border-neutral-300 bg-white p-5">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
             {question.options.map((opt, optIdx) => (
               <div key={opt.id} className="flex flex-col gap-1.5">
                 <div className="flex items-end gap-2">
@@ -488,7 +488,7 @@ function QuestionCard({
       {/* Checkboxes options */}
       {question.type === 'CHECKBOXES' && (
         <div className="mt-4 rounded-xl border border-neutral-300 bg-white p-5">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
             {question.options.map((opt, optIdx) => (
               <div key={opt.id} className="flex flex-col gap-1.5">
                 <div className="flex items-end gap-2">
@@ -561,7 +561,7 @@ function QuestionCard({
       {/* Drop Down options */}
       {question.type === 'DROPDOWN' && (
         <div className="mt-4 rounded-xl border border-neutral-300 bg-white p-5">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
             {question.options.map((opt, optIdx) => (
               <div key={opt.id} className="flex flex-col gap-1.5">
                 <div className="flex items-end gap-2">
@@ -686,7 +686,7 @@ function QuestionCard({
           </div>
 
           {/* Start Label / End Label */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center justify-between">
                 <label

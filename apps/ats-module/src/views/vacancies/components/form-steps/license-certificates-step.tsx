@@ -840,7 +840,7 @@ export default function LicenseCertificatesStep({
                       </div>
                     )}
 
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
                       {/* Issue Date */}
                       {isFieldVisible('issueDate') && (
                         <FormField

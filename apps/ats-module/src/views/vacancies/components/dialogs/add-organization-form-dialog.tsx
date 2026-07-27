@@ -172,7 +172,7 @@ export default function AddOrganizationFormDialog({
                   void onSubmit(e);
                 }}
               >
-                <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2">
+                <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-2">
                   <FormField
                     control={form.control as unknown as Control<FieldValues>}
                     name="name"

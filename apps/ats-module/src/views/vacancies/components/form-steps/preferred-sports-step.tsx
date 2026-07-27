@@ -227,7 +227,7 @@ function SportCard({
             )}
           >
             {/* Row 1: Name of the Sport | Organization Location */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
               {isFieldVisible('nameOfSport') && (
                 <div className="flex flex-col gap-1">
                   <div className="flex items-center justify-between">
@@ -360,7 +360,7 @@ function SportCard({
             </div>
 
             {/* Row 2: Level Represented | Represented Organization */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
               {isFieldVisible('levelRepresented') && (
                 <div className="flex flex-col gap-1">
                   <div className="flex h-5 items-center">
