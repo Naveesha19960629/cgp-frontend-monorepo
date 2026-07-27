@@ -173,7 +173,7 @@ function ProjectCard({
             )}
           >
             {/* Row 1: Start Date | End Date | Related Industry */}
-            <div className="grid grid-cols-[1fr_1fr_2fr] gap-4">
+            <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1fr_1fr_2fr]">
               {isFieldVisible('startDate') && (
                 <div className="flex flex-col gap-1">
                   <div className="flex h-5 items-center">
@@ -414,8 +414,8 @@ function ProjectCard({
               )}
             </div>
 
-            {/* Row 2: Organization Location | Organization Name */}
-            <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+            {/* Row 2: Organization Location (full width) | Organization Name (full width) */}
+            <div className="grid grid-cols-1 gap-4">
               {isFieldVisible('organizationLocations') && (
                 <div className="flex flex-col gap-1">
                   <div className="flex h-5 items-center">

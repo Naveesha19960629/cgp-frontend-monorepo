@@ -136,7 +136,7 @@ function PublicationCard({
             )}
           >
             {/* Row 1: Accepted Publisher | Published Date From | Published Date To */}
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
               {isFieldVisible('acceptedPublisherName') && (
                 <div className="flex min-w-0 flex-col gap-1">
                   <div className="flex items-center justify-between gap-2">

@@ -185,7 +185,7 @@ function ClubSocietyCard({
             )}
           >
             {/* Row 1: Club / Society | Start Date | End Date */}
-            <div className="grid grid-cols-[2fr_1fr_1fr] gap-4">
+            <div className="grid grid-cols-1 gap-4 xl:grid-cols-[2fr_1fr_1fr]">
               {isFieldVisible('clubSociety') && (
                 <div className="flex flex-col gap-1">
                   <div className="flex items-center justify-between">
@@ -426,8 +426,8 @@ function ClubSocietyCard({
               )}
             </div>
 
-            {/* Row 2: Represented Organization | Organization Location */}
-            <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+            {/* Row 2: Represented Organization (full width) | Organization Location (full width) */}
+            <div className="grid grid-cols-1 gap-4">
               {isFieldVisible('organization') && (
                 <div className="flex flex-col gap-1">
                   <div className="flex h-5 items-center">
@@ -558,8 +558,8 @@ function ClubSocietyCard({
               )}
             </div>
 
-            {/* Row 3: Position / Role Held */}
-            <div className="grid grid-cols-1 gap-4 xl:grid-cols-4">
+            {/* Row 3: Position / Role Held (full width) */}
+            <div className="grid grid-cols-1 gap-4">
               {isFieldVisible('positionRoleHeld') && (
                 <div className="col-span-1 flex flex-col gap-1">
                   <div className="flex items-center justify-between">
