@@ -152,24 +152,15 @@ describe('VacancyTablePagination', () => {
     expect(screen.getByRole('button', { name: '20' })).toBeInTheDocument();
   });
 
-  it('renders "1 2 3 ... 8 9 10" on the first page of a 10-page set (DQCGP-3310)', () => {
+  it.each([
+    [0, 'the first page of a 10-page set (DQCGP-3310)'],
+    [9, 'the last page of a 10-page set'],
+    [1, 'page 2 (still adjacent to the start boundary)'],
+    [8, 'the second-to-last page'],
+  ])('renders "1 2 3 ... 8 9 10" on %s', (currentPage: number) => {
     render(
       <VacancyTablePagination
-        currentPage={0}
-        totalPages={10}
-        onPageChange={onPageChange}
-      />
-    );
-    const labels = screen
-      .getAllByText(/^(\d+|\.\.\.)$/)
-      .map(el => el.textContent);
-    expect(labels).toEqual(['1', '2', '3', '...', '8', '9', '10']);
-  });
-
-  it('renders "1 2 3 ... 8 9 10" on the last page of a 10-page set', () => {
-    render(
-      <VacancyTablePagination
-        currentPage={9}
+        currentPage={currentPage}
         totalPages={10}
         onPageChange={onPageChange}
       />
@@ -208,20 +199,6 @@ describe('VacancyTablePagination', () => {
     expect(labels).toEqual(['1', '...', '2', '3', '4', '...', '10']);
   });
 
-  it('stays on the fixed 3+3 edge pattern for page 2 (still adjacent to the start boundary)', () => {
-    render(
-      <VacancyTablePagination
-        currentPage={1}
-        totalPages={10}
-        onPageChange={onPageChange}
-      />
-    );
-    const labels = screen
-      .getAllByText(/^(\d+|\.\.\.)$/)
-      .map(el => el.textContent);
-    expect(labels).toEqual(['1', '2', '3', '...', '8', '9', '10']);
-  });
-
   it('absorbs the trailing gap near the end instead of showing a pointless ellipsis (page 8 of 10)', () => {
     render(
       <VacancyTablePagination
@@ -234,20 +211,6 @@ describe('VacancyTablePagination', () => {
       .getAllByText(/^(\d+|\.\.\.)$/)
       .map(el => el.textContent);
     expect(labels).toEqual(['1', '...', '7', '8', '9', '10']);
-  });
-
-  it('stays on the fixed 3+3 edge pattern for the second-to-last page', () => {
-    render(
-      <VacancyTablePagination
-        currentPage={8}
-        totalPages={10}
-        onPageChange={onPageChange}
-      />
-    );
-    const labels = screen
-      .getAllByText(/^(\d+|\.\.\.)$/)
-      .map(el => el.textContent);
-    expect(labels).toEqual(['1', '2', '3', '...', '8', '9', '10']);
   });
 
   it('absorbs a trailing single-page gap instead of showing a pointless ellipsis (page 13 of 15)', () => {
