@@ -50,6 +50,7 @@ import {
 } from '@/views/vacancies/hooks';
 import type { StepProps } from '@/views/vacancies/types';
 import { toTertiaryEducationPayload } from '@/views/vacancies/utils';
+import { computeRowStartCodes } from '@/views/vacancies/utils/field-grid-layout';
 
 import { CharacterCount } from '@cgp/ui-kit/components/character-count';
 import { ErrorToast } from '@cgp/ui-kit/components/custom-toast';
@@ -89,6 +90,26 @@ const TERTIARY_EDUCATION_FIELD_CODES = [
   'faculty',
 ] as const;
 
+/**
+ * Grid layout spec (render order + column span) used by
+ * `computeRowStartCodes` to decide which fields must wrap to a fresh row
+ * via `xl:col-start-1`.
+ */
+const TERTIARY_GRID_FIELDS = [
+  { code: 'qualificationName', span: 2 },
+  { code: 'grade', span: 1 },
+  { code: 'tertiaryAwardingBodyLocations', span: 2 },
+  { code: 'batch', span: 2 },
+  { code: 'tertiaryAwardingBody', span: 2 },
+  { code: 'levelOfQualification', span: 2 },
+  { code: 'specialization', span: 2 },
+  { code: 'studyMode', span: 2 },
+  { code: 'studyPattern', span: 2 },
+  { code: 'deliverySchedule', span: 2 },
+  { code: 'department', span: 2 },
+  { code: 'faculty', span: 2 },
+] as const;
+
 export default function TertiaryEducationStep({
   onNext,
   onBack,
@@ -117,6 +138,10 @@ export default function TertiaryEducationStep({
   const fieldsDisabled = !isEnabled || dataTakenFromCandidate;
   const hasAnyVisibleField = TERTIARY_EDUCATION_FIELD_CODES.some(code =>
     isFieldVisible(code)
+  );
+  const rowStartCodes = computeRowStartCodes(
+    TERTIARY_GRID_FIELDS,
+    isFieldVisible
   );
 
   const clearEntryData = () => {
@@ -687,10 +712,14 @@ export default function TertiaryEducationStep({
                 fieldsDisabled && 'pointer-events-none opacity-60'
               )}
             >
-              {/* Row 1: Required Qualification(s) | Grade */}
               <div className="grid grid-cols-1 gap-4 xl:grid-cols-4">
                 {isFieldVisible('qualificationName') && (
-                  <div className="flex min-w-0 flex-col gap-1 xl:col-span-2">
+                  <div
+                    className={cn(
+                      'flex min-w-0 flex-col gap-1 xl:col-span-2',
+                      rowStartCodes.has('qualificationName') && 'xl:col-start-1'
+                    )}
+                  >
                     <div className="flex min-w-0 items-center justify-between gap-2">
                       <Label
                         data-testid="tertiaryEducation-qualificationName-label"
@@ -769,7 +798,7 @@ export default function TertiaryEducationStep({
                 )}
 
                 {isFieldVisible('grade') && (
-                  <div className="flex min-w-0 flex-col gap-1">
+                  <div className="flex min-w-0 flex-col gap-1 xl:col-span-1">
                     <div className="flex min-w-0 items-center justify-between gap-2">
                       <Label
                         data-testid="tertiaryEducation-grade-label"
@@ -804,12 +833,15 @@ export default function TertiaryEducationStep({
                     />
                   </div>
                 )}
-              </div>
 
-              {/* Row 2: Location | Batch */}
-              <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
                 {isFieldVisible('tertiaryAwardingBodyLocations') && (
-                  <div className="flex flex-col gap-1">
+                  <div
+                    className={cn(
+                      'flex flex-col gap-1 xl:col-span-2',
+                      rowStartCodes.has('tertiaryAwardingBodyLocations') &&
+                        'xl:col-start-1'
+                    )}
+                  >
                     <div className="flex h-5 items-center">
                       <Label data-testid="tertiaryEducation-tertiaryAwardingBodyLocations-label">
                         {t('tertiaryEducation.tertiaryAwardingBodyLocations')}
@@ -870,7 +902,12 @@ export default function TertiaryEducationStep({
                 )}
 
                 {isFieldVisible('batch') && (
-                  <div className="flex flex-col gap-1">
+                  <div
+                    className={cn(
+                      'flex flex-col gap-1 xl:col-span-2',
+                      rowStartCodes.has('batch') && 'xl:col-start-1'
+                    )}
+                  >
                     <div className="flex items-center justify-between">
                       <Label data-testid="tertiaryEducation-batch-label">
                         {t('tertiaryEducation.batch')}
@@ -944,12 +981,15 @@ export default function TertiaryEducationStep({
                     />
                   </div>
                 )}
-              </div>
 
-              {/* Row 3: Awarding Body | Level of Qualification */}
-              <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
                 {isFieldVisible('tertiaryAwardingBody') && (
-                  <div className="flex flex-col gap-1">
+                  <div
+                    className={cn(
+                      'flex flex-col gap-1 xl:col-span-2',
+                      rowStartCodes.has('tertiaryAwardingBody') &&
+                        'xl:col-start-1'
+                    )}
+                  >
                     <div className="flex h-5 items-center">
                       <Label data-testid="tertiaryEducation-tertiaryAwardingBody-label">
                         {t('tertiaryEducation.tertiaryAwardingBody')}
@@ -1033,7 +1073,13 @@ export default function TertiaryEducationStep({
                 )}
 
                 {isFieldVisible('levelOfQualification') && (
-                  <div className="flex flex-col gap-1">
+                  <div
+                    className={cn(
+                      'flex flex-col gap-1 xl:col-span-2',
+                      rowStartCodes.has('levelOfQualification') &&
+                        'xl:col-start-1'
+                    )}
+                  >
                     <div className="flex items-center justify-between">
                       <Label data-testid="tertiaryEducation-levelOfQualification-label">
                         {t('tertiaryEducation.levelOfQualification')}
@@ -1107,12 +1153,14 @@ export default function TertiaryEducationStep({
                     />
                   </div>
                 )}
-              </div>
 
-              {/* Row 4: Specialization | Mode of Study */}
-              <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
                 {isFieldVisible('specialization') && (
-                  <div className="flex flex-col gap-1">
+                  <div
+                    className={cn(
+                      'flex flex-col gap-1 xl:col-span-2',
+                      rowStartCodes.has('specialization') && 'xl:col-start-1'
+                    )}
+                  >
                     <div className="flex items-center justify-between">
                       <Label data-testid="tertiaryEducation-specialization-label">
                         {t('tertiaryEducation.specialization')}
@@ -1188,7 +1236,12 @@ export default function TertiaryEducationStep({
                 )}
 
                 {isFieldVisible('studyMode') && (
-                  <div className="flex flex-col gap-1">
+                  <div
+                    className={cn(
+                      'flex flex-col gap-1 xl:col-span-2',
+                      rowStartCodes.has('studyMode') && 'xl:col-start-1'
+                    )}
+                  >
                     <div className="flex h-5 items-center">
                       <Label data-testid="tertiaryEducation-studyMode-label">
                         {t('tertiaryEducation.studyMode')}
@@ -1246,12 +1299,14 @@ export default function TertiaryEducationStep({
                     />
                   </div>
                 )}
-              </div>
 
-              {/* Row 5: Study Pattern | Delivery Schedule */}
-              <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
                 {isFieldVisible('studyPattern') && (
-                  <div className="flex flex-col gap-1">
+                  <div
+                    className={cn(
+                      'flex flex-col gap-1 xl:col-span-2',
+                      rowStartCodes.has('studyPattern') && 'xl:col-start-1'
+                    )}
+                  >
                     <Label data-testid="tertiaryEducation-studyPattern-label">
                       {t('tertiaryEducation.studyPattern')}
                     </Label>
@@ -1309,7 +1364,12 @@ export default function TertiaryEducationStep({
                 )}
 
                 {isFieldVisible('deliverySchedule') && (
-                  <div className="flex flex-col gap-1">
+                  <div
+                    className={cn(
+                      'flex flex-col gap-1 xl:col-span-2',
+                      rowStartCodes.has('deliverySchedule') && 'xl:col-start-1'
+                    )}
+                  >
                     <Label data-testid="tertiaryEducation-deliverySchedule-label">
                       {t('tertiaryEducation.deliverySchedule')}
                     </Label>
@@ -1365,12 +1425,14 @@ export default function TertiaryEducationStep({
                     />
                   </div>
                 )}
-              </div>
 
-              {/* Row 6: Department | Faculty */}
-              <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
                 {isFieldVisible('department') && (
-                  <div className="flex flex-col gap-1">
+                  <div
+                    className={cn(
+                      'flex flex-col gap-1 xl:col-span-2',
+                      rowStartCodes.has('department') && 'xl:col-start-1'
+                    )}
+                  >
                     <div className="flex items-center justify-between">
                       <Label data-testid="tertiaryEducation-department-label">
                         {t('tertiaryEducation.department')}
@@ -1446,7 +1508,12 @@ export default function TertiaryEducationStep({
                 )}
 
                 {isFieldVisible('faculty') && (
-                  <div className="flex flex-col gap-1">
+                  <div
+                    className={cn(
+                      'flex flex-col gap-1 xl:col-span-2',
+                      rowStartCodes.has('faculty') && 'xl:col-start-1'
+                    )}
+                  >
                     <div className="flex items-center justify-between">
                       <Label data-testid="tertiaryEducation-faculty-label">
                         {t('tertiaryEducation.faculty')}

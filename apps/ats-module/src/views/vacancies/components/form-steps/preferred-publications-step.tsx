@@ -136,9 +136,9 @@ function PublicationCard({
             )}
           >
             {/* Row 1: Accepted Publisher | Published Date From | Published Date To */}
-            <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+            <div className="quad-pub-sports:grid-cols-4 grid grid-cols-1 gap-4">
               {isFieldVisible('acceptedPublisherName') && (
-                <div className="flex min-w-0 flex-col gap-1">
+                <div className="quad-pub-sports:col-span-1 flex min-w-0 flex-col gap-1">
                   <div className="flex items-center justify-between gap-2">
                     <Label
                       data-testid="preferredPublications-acceptedPublisher-label"
@@ -169,7 +169,7 @@ function PublicationCard({
               )}
 
               {isFieldVisible('publishedDateFrom') && (
-                <div className="flex min-w-0 flex-col gap-1">
+                <div className="quad-pub-sports:col-span-1 flex min-w-0 flex-col gap-1">
                   <div className="flex min-h-5 items-center">
                     <Label data-testid="preferredPublications-publishedDateFrom-label">
                       {t('preferredPublications.labels.publishedDateFrom')}
@@ -258,7 +258,7 @@ function PublicationCard({
               )}
 
               {isFieldVisible('publishedDateTo') && (
-                <div className="flex min-w-0 flex-col gap-1">
+                <div className="quad-pub-sports:col-span-1 flex min-w-0 flex-col gap-1">
                   <div className="flex min-h-5 items-center">
                     <Label data-testid="preferredPublications-publishedDateTo-label">
                       {t('preferredPublications.labels.publishedDateTo')}

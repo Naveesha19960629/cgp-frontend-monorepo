@@ -29,6 +29,7 @@ import {
   formatLocalDate,
   parseLocalDate,
 } from '@/views/vacancies/utils/date-timezone-safe';
+import { computeRowStartCodes } from '@/views/vacancies/utils/field-grid-layout';
 
 import { CharacterCount } from '@cgp/ui-kit/components/character-count';
 import { SuccessToast } from '@cgp/ui-kit/components/custom-toast';
@@ -67,6 +68,17 @@ const CLUB_SOCIETY_FIELD_CODES = [
   'positionRoleHeld',
   'startDate',
   'endDate',
+] as const;
+
+// Grid layout order + column spans, used to compute which half fields must
+// wrap to a fresh row (`xl:col-start-1`) based on the visible field packing.
+const CLUB_GRID_FIELDS = [
+  { code: 'clubSociety', span: 2 },
+  { code: 'startDate', span: 1 },
+  { code: 'endDate', span: 1 },
+  { code: 'organization', span: 2 },
+  { code: 'organizationLocations', span: 2 },
+  { code: 'positionRoleHeld', span: 1 },
 ] as const;
 const HUNDRED_YEARS_AGO = new Date(new Date().getFullYear() - 100, 0, 1);
 const HUNDRED_YEARS_FROM_NOW = new Date(new Date().getFullYear() + 100, 11, 31);
@@ -133,6 +145,7 @@ function ClubSocietyCard({
 }>) {
   const { t } = useTranslation('ats');
   const isFieldVisible = useTemplateFieldVisible('clubsAndSocieties');
+  const rowStartCodes = computeRowStartCodes(CLUB_GRID_FIELDS, isFieldVisible);
   const [locationsError, setLocationsError] = useState(false);
   const [societiesError, setSocietiesError] = useState(false);
   const [organizationsError, setOrganizationsError] = useState(false);
@@ -184,10 +197,15 @@ function ClubSocietyCard({
               fieldsDisabled && 'pointer-events-none opacity-60'
             )}
           >
-            {/* Row 1: Club / Society | Start Date | End Date */}
-            <div className="grid grid-cols-1 gap-4 xl:grid-cols-[2fr_1fr_1fr]">
+            {/* Fields: dense 4-column grid so visible fields repack with no gaps */}
+            <div className="grid grid-cols-1 gap-4 xl:grid-cols-4">
               {isFieldVisible('clubSociety') && (
-                <div className="flex flex-col gap-1">
+                <div
+                  className={cn(
+                    'flex flex-col gap-1 xl:col-span-2',
+                    rowStartCodes.has('clubSociety') && 'xl:col-start-1'
+                  )}
+                >
                   <div className="flex items-center justify-between">
                     <Label
                       data-testid="preferredClubSocieties-clubSociety-label"
@@ -277,7 +295,7 @@ function ClubSocietyCard({
               )}
 
               {isFieldVisible('startDate') && (
-                <div className="flex flex-col gap-1">
+                <div className="flex flex-col gap-1 xl:col-span-1">
                   <div className="flex h-5 items-center">
                     <Label data-testid="preferredClubSocieties-startDate-label">
                       {t('preferredClubSocieties.labels.startDate')}
@@ -352,7 +370,7 @@ function ClubSocietyCard({
               )}
 
               {isFieldVisible('endDate') && (
-                <div className="flex flex-col gap-1">
+                <div className="flex flex-col gap-1 xl:col-span-1">
                   <div className="flex h-5 items-center">
                     <Label data-testid="preferredClubSocieties-endDate-label">
                       {t('preferredClubSocieties.labels.endDate')}
@@ -424,12 +442,14 @@ function ClubSocietyCard({
                   </Popover>
                 </div>
               )}
-            </div>
 
-            {/* Row 2: Represented Organization (full width) | Organization Location (full width) */}
-            <div className="grid grid-cols-1 gap-4">
               {isFieldVisible('organization') && (
-                <div className="flex flex-col gap-1">
+                <div
+                  className={cn(
+                    'flex flex-col gap-1 xl:col-span-2',
+                    rowStartCodes.has('organization') && 'xl:col-start-1'
+                  )}
+                >
                   <div className="flex h-5 items-center">
                     <Label
                       data-testid="preferredClubSocieties-representedOrganization-label"
@@ -509,7 +529,13 @@ function ClubSocietyCard({
               )}
 
               {isFieldVisible('organizationLocations') && (
-                <div className="flex flex-col gap-1">
+                <div
+                  className={cn(
+                    'flex flex-col gap-1 xl:col-span-2',
+                    rowStartCodes.has('organizationLocations') &&
+                      'xl:col-start-1'
+                  )}
+                >
                   <div className="flex h-5 items-center">
                     <Label
                       data-testid="preferredClubSocieties-organizationLocation-label"
@@ -556,12 +582,9 @@ function ClubSocietyCard({
                   />
                 </div>
               )}
-            </div>
 
-            {/* Row 3: Position / Role Held (full width) */}
-            <div className="grid grid-cols-1 gap-4">
               {isFieldVisible('positionRoleHeld') && (
-                <div className="col-span-1 flex flex-col gap-1">
+                <div className="flex flex-col gap-1 xl:col-span-1">
                   <div className="flex items-center justify-between">
                     <Label data-testid="preferredClubSocieties-position-label">
                       {t('preferredClubSocieties.labels.position')}

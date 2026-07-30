@@ -539,10 +539,10 @@ export default function LicenseCertificatesStep({
                     fieldsDisabled && 'pointer-events-none opacity-60'
                   )}
                 >
-                  {/* Row 1: Name of License/Cert | Issuing Organization */}
-                  <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+                  {/* All fields in one dense grid so visible fields repack with no gaps */}
+                  <div className="grid grid-cols-1 gap-4 xl:grid-cols-4">
                     {isFieldVisible('nameOfLicenseCert') && (
-                      <div className="flex min-w-0 flex-col gap-1">
+                      <div className="flex min-w-0 flex-col gap-1 xl:col-span-2">
                         <div className="flex min-w-0 items-center justify-between gap-2">
                           <Label
                             data-testid="licenseCertificates-nameOfLicenseCert-label"
@@ -652,7 +652,7 @@ export default function LicenseCertificatesStep({
                     )}
 
                     {isFieldVisible('issuingOrganization') && (
-                      <div className="flex min-w-0 flex-col gap-1">
+                      <div className="flex min-w-0 flex-col gap-1 xl:col-span-2">
                         <div className="flex h-5 items-center">
                           <Label
                             data-testid="licenseCertificates-issuingOrganization-label"
@@ -752,12 +752,9 @@ export default function LicenseCertificatesStep({
                         />
                       </div>
                     )}
-                  </div>
 
-                  {/* Row 2: Organization Location | Issue Date | Expiration Date */}
-                  <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
                     {isFieldVisible('organizationLocations') && (
-                      <div className="flex min-w-0 flex-col gap-1">
+                      <div className="flex min-w-0 flex-col gap-1 xl:col-span-2">
                         <div className="flex h-5 items-center">
                           <Label
                             data-testid="licenseCertificates-organizationLocations-label"
@@ -840,242 +837,240 @@ export default function LicenseCertificatesStep({
                       </div>
                     )}
 
-                    <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-                      {/* Issue Date */}
-                      {isFieldVisible('issueDate') && (
-                        <FormField
-                          control={control}
-                          name="entry.issueDate"
-                          render={({ field }) => (
-                            <FormItem className="flex w-full flex-col gap-1 space-y-0">
-                              <div className="flex h-5 items-center">
-                                <FormLabel data-testid="licenseCertificates-issueDate-label">
-                                  {t('licenseCertificates.issueDate')}
-                                </FormLabel>
-                              </div>
-                              <Popover
-                                modal
-                                open={openDatePopover === 'issueDate'}
-                                onOpenChange={open =>
-                                  setOpenDatePopover(
-                                    !fieldsDisabled && open ? 'issueDate' : null
-                                  )
-                                }
-                              >
-                                <PopoverTrigger asChild>
-                                  <FormControl>
-                                    <Button
-                                      type="button"
-                                      variant="outline"
-                                      disabled={fieldsDisabled}
-                                      className={cn(
-                                        'border-input flex h-11 w-full min-w-0 items-center justify-between rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
-                                        !field.value && 'text-slate-500',
-                                        field.value && 'text-zinc-800',
-                                        'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
-                                        'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
-                                        'dark:bg-input/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
-                                        applyTypography('body-medium'),
-                                        'shadow-none!'
-                                      )}
-                                    >
-                                      {field.value ? (
-                                        <span className="truncate pr-2">
-                                          {formatDate(field.value)}
-                                        </span>
-                                      ) : (
-                                        <span className="truncate pr-2">
-                                          {t(
-                                            'licenseCertificates.placeholders.issueDate'
-                                          )}
-                                        </span>
-                                      )}
-                                      <CalendarIcon
-                                        variant="Linear"
-                                        size={20}
-                                        className="shrink-0 text-zinc-800"
-                                      />
-                                    </Button>
-                                  </FormControl>
-                                </PopoverTrigger>
-                                <PopoverContent
-                                  className="w-auto p-0"
-                                  align="start"
-                                >
-                                  <Calendar
-                                    mode="single"
-                                    selected={
-                                      field.value
-                                        ? new Date(field.value)
-                                        : undefined
-                                    }
-                                    defaultMonth={
-                                      field.value
-                                        ? new Date(field.value)
-                                        : new Date()
-                                    }
-                                    onSelect={date => {
-                                      field.onChange(
-                                        date ? formatLocalDate(date) : undefined
-                                      );
-                                      setOpenDatePopover(null);
-                                      const expDate = getValues(
-                                        'entry.expirationDate'
-                                      );
-                                      if (
-                                        expDate &&
-                                        date &&
-                                        compareDates(expDate, date) < 0
-                                      ) {
-                                        setValue(
-                                          'entry.expirationDate',
-                                          undefined
-                                        );
-                                      }
-                                    }}
-                                    disabled={date =>
-                                      date < HUNDRED_YEARS_AGO || date > TODAY
-                                    }
-                                    captionLayout="dropdown"
-                                    startMonth={HUNDRED_YEARS_AGO}
-                                    endMonth={TODAY}
-                                  />
-                                </PopoverContent>
-                              </Popover>
-                            </FormItem>
-                          )}
-                        />
-                      )}
-
-                      {/* Expiration Date */}
-                      {isFieldVisible('expirationDate') && (
-                        <FormField
-                          control={control}
-                          name="entry.expirationDate"
-                          render={({ field }) => (
-                            <FormItem className="flex w-full flex-col gap-1 space-y-0">
-                              <div className="flex h-5 items-center">
-                                <FormLabel data-testid="licenseCertificates-expirationDate-label">
-                                  {t('licenseCertificates.expirationDate')}
-                                </FormLabel>
-                              </div>
-                              <Popover
-                                modal
-                                open={openDatePopover === 'expirationDate'}
-                                onOpenChange={open =>
-                                  setOpenDatePopover(
-                                    !fieldsDisabled && open
-                                      ? 'expirationDate'
-                                      : null
-                                  )
-                                }
-                              >
-                                <PopoverTrigger asChild>
-                                  <FormControl>
-                                    <Button
-                                      type="button"
-                                      variant="outline"
-                                      disabled={fieldsDisabled}
-                                      className={cn(
-                                        'border-input flex h-11 w-full min-w-0 items-center justify-between rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
-                                        !field.value && 'text-slate-500',
-                                        field.value && 'text-zinc-800',
-                                        'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
-                                        'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
-                                        'dark:bg-input/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
-                                        applyTypography('body-medium'),
-                                        'shadow-none!'
-                                      )}
-                                    >
-                                      {field.value ? (
-                                        <span className="truncate pr-2">
-                                          {formatDate(field.value)}
-                                        </span>
-                                      ) : (
-                                        <span className="truncate pr-2">
-                                          {t(
-                                            'licenseCertificates.placeholders.expirationDate'
-                                          )}
-                                        </span>
-                                      )}
-                                      <CalendarIcon
-                                        variant="Linear"
-                                        size={20}
-                                        className="shrink-0 text-zinc-800"
-                                      />
-                                    </Button>
-                                  </FormControl>
-                                </PopoverTrigger>
-                                <PopoverContent
-                                  className="w-auto p-0"
-                                  align="start"
-                                >
-                                  <Calendar
-                                    mode="single"
-                                    selected={
-                                      field.value
-                                        ? new Date(field.value)
-                                        : undefined
-                                    }
-                                    defaultMonth={
-                                      field.value
-                                        ? new Date(field.value)
-                                        : issueDateValue
-                                          ? new Date(issueDateValue)
-                                          : new Date()
-                                    }
-                                    onSelect={date => {
-                                      field.onChange(
-                                        date ? formatLocalDate(date) : undefined
-                                      );
-                                      setOpenDatePopover(null);
-                                    }}
-                                    disabled={date =>
-                                      date < HUNDRED_YEARS_AGO ||
-                                      date > HUNDRED_YEARS_FROM_NOW ||
-                                      (issueDateValue
-                                        ? compareDates(date, issueDateValue) < 0
-                                        : false)
-                                    }
-                                    captionLayout="dropdown"
-                                    startMonth={HUNDRED_YEARS_AGO}
-                                    endMonth={HUNDRED_YEARS_FROM_NOW}
-                                  />
-                                </PopoverContent>
-                              </Popover>
-                            </FormItem>
-                          )}
-                        />
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Row 3: Internationally accepted (full width) */}
-                  {isFieldVisible('internationallyAccepted') && (
-                    <div className="flex items-start gap-2">
-                      <Controller
+                    {/* Issue Date */}
+                    {isFieldVisible('issueDate') && (
+                      <FormField
                         control={control}
-                        name="entry.internationallyAccepted"
+                        name="entry.issueDate"
                         render={({ field }) => (
-                          <Checkbox
-                            id="internationallyAccepted"
-                            checked={field.value}
-                            onCheckedChange={val =>
-                              field.onChange(val === true)
-                            }
-                            className="mt-0.5"
-                          />
+                          <FormItem className="flex w-full flex-col gap-1 space-y-0 xl:col-span-1">
+                            <div className="flex h-5 items-center">
+                              <FormLabel data-testid="licenseCertificates-issueDate-label">
+                                {t('licenseCertificates.issueDate')}
+                              </FormLabel>
+                            </div>
+                            <Popover
+                              modal
+                              open={openDatePopover === 'issueDate'}
+                              onOpenChange={open =>
+                                setOpenDatePopover(
+                                  !fieldsDisabled && open ? 'issueDate' : null
+                                )
+                              }
+                            >
+                              <PopoverTrigger asChild>
+                                <FormControl>
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    disabled={fieldsDisabled}
+                                    className={cn(
+                                      'border-input flex h-11 w-full min-w-0 items-center justify-between rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
+                                      !field.value && 'text-slate-500',
+                                      field.value && 'text-zinc-800',
+                                      'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
+                                      'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
+                                      'dark:bg-input/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
+                                      applyTypography('body-medium'),
+                                      'shadow-none!'
+                                    )}
+                                  >
+                                    {field.value ? (
+                                      <span className="truncate pr-2">
+                                        {formatDate(field.value)}
+                                      </span>
+                                    ) : (
+                                      <span className="truncate pr-2">
+                                        {t(
+                                          'licenseCertificates.placeholders.issueDate'
+                                        )}
+                                      </span>
+                                    )}
+                                    <CalendarIcon
+                                      variant="Linear"
+                                      size={20}
+                                      className="shrink-0 text-zinc-800"
+                                    />
+                                  </Button>
+                                </FormControl>
+                              </PopoverTrigger>
+                              <PopoverContent
+                                className="w-auto p-0"
+                                align="start"
+                              >
+                                <Calendar
+                                  mode="single"
+                                  selected={
+                                    field.value
+                                      ? new Date(field.value)
+                                      : undefined
+                                  }
+                                  defaultMonth={
+                                    field.value
+                                      ? new Date(field.value)
+                                      : new Date()
+                                  }
+                                  onSelect={date => {
+                                    field.onChange(
+                                      date ? formatLocalDate(date) : undefined
+                                    );
+                                    setOpenDatePopover(null);
+                                    const expDate = getValues(
+                                      'entry.expirationDate'
+                                    );
+                                    if (
+                                      expDate &&
+                                      date &&
+                                      compareDates(expDate, date) < 0
+                                    ) {
+                                      setValue(
+                                        'entry.expirationDate',
+                                        undefined
+                                      );
+                                    }
+                                  }}
+                                  disabled={date =>
+                                    date < HUNDRED_YEARS_AGO || date > TODAY
+                                  }
+                                  captionLayout="dropdown"
+                                  startMonth={HUNDRED_YEARS_AGO}
+                                  endMonth={TODAY}
+                                />
+                              </PopoverContent>
+                            </Popover>
+                          </FormItem>
                         )}
                       />
-                      <Label
-                        htmlFor="internationallyAccepted"
-                        data-testid="licenseCertificates-internationallyAccepted-label"
-                        className="cursor-pointer leading-snug wrap-break-word"
-                      >
-                        {t('licenseCertificates.internationallyAccepted')}
-                      </Label>
-                    </div>
-                  )}
+                    )}
+
+                    {/* Expiration Date */}
+                    {isFieldVisible('expirationDate') && (
+                      <FormField
+                        control={control}
+                        name="entry.expirationDate"
+                        render={({ field }) => (
+                          <FormItem className="flex w-full flex-col gap-1 space-y-0 xl:col-span-1">
+                            <div className="flex h-5 items-center">
+                              <FormLabel data-testid="licenseCertificates-expirationDate-label">
+                                {t('licenseCertificates.expirationDate')}
+                              </FormLabel>
+                            </div>
+                            <Popover
+                              modal
+                              open={openDatePopover === 'expirationDate'}
+                              onOpenChange={open =>
+                                setOpenDatePopover(
+                                  !fieldsDisabled && open
+                                    ? 'expirationDate'
+                                    : null
+                                )
+                              }
+                            >
+                              <PopoverTrigger asChild>
+                                <FormControl>
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    disabled={fieldsDisabled}
+                                    className={cn(
+                                      'border-input flex h-11 w-full min-w-0 items-center justify-between rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
+                                      !field.value && 'text-slate-500',
+                                      field.value && 'text-zinc-800',
+                                      'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
+                                      'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
+                                      'dark:bg-input/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
+                                      applyTypography('body-medium'),
+                                      'shadow-none!'
+                                    )}
+                                  >
+                                    {field.value ? (
+                                      <span className="truncate pr-2">
+                                        {formatDate(field.value)}
+                                      </span>
+                                    ) : (
+                                      <span className="truncate pr-2">
+                                        {t(
+                                          'licenseCertificates.placeholders.expirationDate'
+                                        )}
+                                      </span>
+                                    )}
+                                    <CalendarIcon
+                                      variant="Linear"
+                                      size={20}
+                                      className="shrink-0 text-zinc-800"
+                                    />
+                                  </Button>
+                                </FormControl>
+                              </PopoverTrigger>
+                              <PopoverContent
+                                className="w-auto p-0"
+                                align="start"
+                              >
+                                <Calendar
+                                  mode="single"
+                                  selected={
+                                    field.value
+                                      ? new Date(field.value)
+                                      : undefined
+                                  }
+                                  defaultMonth={
+                                    field.value
+                                      ? new Date(field.value)
+                                      : issueDateValue
+                                        ? new Date(issueDateValue)
+                                        : new Date()
+                                  }
+                                  onSelect={date => {
+                                    field.onChange(
+                                      date ? formatLocalDate(date) : undefined
+                                    );
+                                    setOpenDatePopover(null);
+                                  }}
+                                  disabled={date =>
+                                    date < HUNDRED_YEARS_AGO ||
+                                    date > HUNDRED_YEARS_FROM_NOW ||
+                                    (issueDateValue
+                                      ? compareDates(date, issueDateValue) < 0
+                                      : false)
+                                  }
+                                  captionLayout="dropdown"
+                                  startMonth={HUNDRED_YEARS_AGO}
+                                  endMonth={HUNDRED_YEARS_FROM_NOW}
+                                />
+                              </PopoverContent>
+                            </Popover>
+                          </FormItem>
+                        )}
+                      />
+                    )}
+
+                    {/* Internationally accepted — full width */}
+                    {isFieldVisible('internationallyAccepted') && (
+                      <div className="flex items-start gap-2 xl:col-span-4">
+                        <Controller
+                          control={control}
+                          name="entry.internationallyAccepted"
+                          render={({ field }) => (
+                            <Checkbox
+                              id="internationallyAccepted"
+                              checked={field.value}
+                              onCheckedChange={val =>
+                                field.onChange(val === true)
+                              }
+                              className="mt-0.5"
+                            />
+                          )}
+                        />
+                        <Label
+                          htmlFor="internationallyAccepted"
+                          data-testid="licenseCertificates-internationallyAccepted-label"
+                          className="cursor-pointer leading-snug wrap-break-word"
+                        >
+                          {t('licenseCertificates.internationallyAccepted')}
+                        </Label>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 

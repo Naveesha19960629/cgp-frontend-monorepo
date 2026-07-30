@@ -34,6 +34,7 @@ import {
   parseLocalDate,
   startOfToday,
 } from '@/views/vacancies/utils/date-timezone-safe';
+import { computeRowStartCodes } from '@/views/vacancies/utils/field-grid-layout';
 
 import { CharacterCount } from '@cgp/ui-kit/components/character-count';
 import { SuccessToast } from '@cgp/ui-kit/components/custom-toast';
@@ -74,6 +75,18 @@ const SPORT_FIELD_CODES = [
   'positionRoleHeld',
   'startDate',
   'endDate',
+] as const;
+
+// Field grid layout spec (source order + column span) used to compute which
+// fields must start a fresh row (`quad-pub-sports:col-start-1`) as visibility changes.
+const SPORT_GRID_FIELDS = [
+  { code: 'nameOfSport', span: 2 },
+  { code: 'organizationLocations', span: 2 },
+  { code: 'levelRepresented', span: 2 },
+  { code: 'representedOrganization', span: 2 },
+  { code: 'positionRoleHeld', span: 1 },
+  { code: 'startDate', span: 1 },
+  { code: 'endDate', span: 1 },
 ] as const;
 const DATE_BOUNDARY_YEARS = 100;
 // Exact-date boundaries (day/month/year), not year-only — matches the
@@ -174,6 +187,7 @@ function SportCard({
 }>) {
   const { t } = useTranslation('ats');
   const isFieldVisible = useTemplateFieldVisible('sports');
+  const rowStartCodes = computeRowStartCodes(SPORT_GRID_FIELDS, isFieldVisible);
   const [openDatePopover, setOpenDatePopover] = useState<
     'startDate' | 'endDate' | null
   >(null);
@@ -226,10 +240,15 @@ function SportCard({
               fieldsDisabled && 'pointer-events-none opacity-60'
             )}
           >
-            {/* Row 1: Name of the Sport | Organization Location */}
-            <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+            <div className="quad-pub-sports:grid-cols-4 grid grid-cols-1 gap-4">
               {isFieldVisible('nameOfSport') && (
-                <div className="flex flex-col gap-1">
+                <div
+                  className={cn(
+                    'quad-pub-sports:col-span-2 flex flex-col gap-1',
+                    rowStartCodes.has('nameOfSport') &&
+                      'quad-pub-sports:col-start-1'
+                  )}
+                >
                   <div className="flex items-center justify-between">
                     <Label
                       data-testid="preferredSports-sport-label"
@@ -312,7 +331,13 @@ function SportCard({
               )}
 
               {isFieldVisible('organizationLocations') && (
-                <div className="flex flex-col gap-1">
+                <div
+                  className={cn(
+                    'quad-pub-sports:col-span-2 flex flex-col gap-1',
+                    rowStartCodes.has('organizationLocations') &&
+                      'quad-pub-sports:col-start-1'
+                  )}
+                >
                   <div className="flex h-5 items-center">
                     <Label
                       data-testid="preferredSports-organizationLocation-label"
@@ -357,12 +382,14 @@ function SportCard({
                   />
                 </div>
               )}
-            </div>
-
-            {/* Row 2: Level Represented | Represented Organization */}
-            <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
               {isFieldVisible('levelRepresented') && (
-                <div className="flex flex-col gap-1">
+                <div
+                  className={cn(
+                    'quad-pub-sports:col-span-2 flex flex-col gap-1',
+                    rowStartCodes.has('levelRepresented') &&
+                      'quad-pub-sports:col-start-1'
+                  )}
+                >
                   <div className="flex h-5 items-center">
                     <Label
                       data-testid="preferredSports-levelRepresented-label"
@@ -415,7 +442,13 @@ function SportCard({
               )}
 
               {isFieldVisible('representedOrganization') && (
-                <div className="flex flex-col gap-1">
+                <div
+                  className={cn(
+                    'quad-pub-sports:col-span-2 flex flex-col gap-1',
+                    rowStartCodes.has('representedOrganization') &&
+                      'quad-pub-sports:col-start-1'
+                  )}
+                >
                   <div className="flex h-5 items-center">
                     <Label
                       data-testid="preferredSports-representedOrganization-label"
@@ -482,12 +515,8 @@ function SportCard({
                   />
                 </div>
               )}
-            </div>
-
-            {/* Row 3: Position / Role Held | Start Date | End Date */}
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
               {isFieldVisible('positionRoleHeld') && (
-                <div className="flex min-w-0 flex-col gap-1">
+                <div className="quad-pub-sports:col-span-1 flex min-w-0 flex-col gap-1">
                   <div className="flex items-center justify-between gap-2">
                     <Label data-testid="preferredSports-position-label">
                       {t('preferredSports.labels.position')}
@@ -511,7 +540,7 @@ function SportCard({
               )}
 
               {isFieldVisible('startDate') && (
-                <div className="flex min-w-0 flex-col gap-1">
+                <div className="quad-pub-sports:col-span-1 flex min-w-0 flex-col gap-1">
                   <div className="flex min-h-5 items-center">
                     <Label data-testid="preferredSports-startDate-label">
                       {t('preferredSports.labels.startDate')}
@@ -590,7 +619,7 @@ function SportCard({
               )}
 
               {isFieldVisible('endDate') && (
-                <div className="flex min-w-0 flex-col gap-1">
+                <div className="quad-pub-sports:col-span-1 flex min-w-0 flex-col gap-1">
                   <div className="flex min-h-5 items-center">
                     <Label data-testid="preferredSports-endDate-label">
                       {t('preferredSports.labels.endDate')}

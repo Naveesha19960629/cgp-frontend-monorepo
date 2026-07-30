@@ -43,6 +43,7 @@ import {
   formatLocalDate,
   parseLocalDate,
 } from '@/views/vacancies/utils/date-timezone-safe';
+import { computeRowStartCodes } from '@/views/vacancies/utils/field-grid-layout';
 
 import { CharacterCount } from '@cgp/ui-kit/components/character-count';
 import { ErrorToast } from '@cgp/ui-kit/components/custom-toast';
@@ -110,6 +111,23 @@ const SECONDARY_EDUCATION_FIELD_CODES = [
   'result',
 ] as const;
 
+/**
+ * Fields in the exact order they render inside the entry-card grid, with their
+ * `xl` column spans. Drives the JS row-placement rule via `computeRowStartCodes`.
+ */
+const SECONDARY_GRID_FIELDS = [
+  { code: 'acceptsHomeSchooling', span: 4 },
+  { code: 'schools', span: 2 },
+  { code: 'schoolLocations', span: 2 },
+  { code: 'grade', span: 1 },
+  { code: 'startDate', span: 1 },
+  { code: 'endDate', span: 1 },
+  { code: 'examinations', span: 2 },
+  { code: 'secondaryAwardingBody', span: 2 },
+  { code: 'fieldsOfStudy', span: 2 },
+  { code: 'result', span: 2 },
+] as const;
+
 export default function SecondaryEducationStep({
   onNext,
   onBack,
@@ -142,6 +160,10 @@ export default function SecondaryEducationStep({
   const fieldsDisabled = !isEnabled || dataTakenFromCandidate;
   const hasAnyVisibleField = SECONDARY_EDUCATION_FIELD_CODES.some(code =>
     isFieldVisible(code)
+  );
+  const rowStartCodes = computeRowStartCodes(
+    SECONDARY_GRID_FIELDS,
+    isFieldVisible
   );
   const endDateDefaultMonth =
     parseLocalDate(endDateValue ?? startDateValue) ?? new Date();
@@ -648,36 +670,40 @@ export default function SecondaryEducationStep({
                   fieldsDisabled && 'pointer-events-none opacity-60'
                 )}
               >
-                {/* Accepts Home Schooling */}
-                {isFieldVisible('acceptsHomeSchooling') && (
-                  <div className="flex items-center gap-2">
-                    <Controller
-                      control={control}
-                      name="entries.0.acceptsHomeSchooling"
-                      render={({ field }) => (
-                        <Checkbox
-                          id="acceptsHomeSchooling"
-                          checked={field.value}
-                          onCheckedChange={newValue =>
-                            field.onChange(newValue === true)
-                          }
-                        />
-                      )}
-                    />
-                    <Label
-                      htmlFor="acceptsHomeSchooling"
-                      data-testid="secondaryEducation-acceptsHomeSchooling-label"
-                      className="cursor-pointer"
-                    >
-                      {t('secondaryEducation.acceptsHomeSchooling')}
-                    </Label>
-                  </div>
-                )}
+                <div className="grid grid-cols-1 gap-4 xl:grid-cols-4">
+                  {/* Accepts Home Schooling */}
+                  {isFieldVisible('acceptsHomeSchooling') && (
+                    <div className="flex items-center gap-2 xl:col-span-4">
+                      <Controller
+                        control={control}
+                        name="entries.0.acceptsHomeSchooling"
+                        render={({ field }) => (
+                          <Checkbox
+                            id="acceptsHomeSchooling"
+                            checked={field.value}
+                            onCheckedChange={newValue =>
+                              field.onChange(newValue === true)
+                            }
+                          />
+                        )}
+                      />
+                      <Label
+                        htmlFor="acceptsHomeSchooling"
+                        data-testid="secondaryEducation-acceptsHomeSchooling-label"
+                        className="cursor-pointer"
+                      >
+                        {t('secondaryEducation.acceptsHomeSchooling')}
+                      </Label>
+                    </div>
+                  )}
 
-                {/* Row 1: School Name | School Location */}
-                <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
                   {isFieldVisible('schools') && (
-                    <div className="flex min-w-0 flex-col gap-1">
+                    <div
+                      className={cn(
+                        'flex min-w-0 flex-col gap-1 xl:col-span-2',
+                        rowStartCodes.has('schools') && 'xl:col-start-1'
+                      )}
+                    >
                       <Label
                         data-testid="secondaryEducation-schoolName-label"
                         className="truncate"
@@ -765,7 +791,12 @@ export default function SecondaryEducationStep({
                   )}
 
                   {isFieldVisible('schoolLocations') && (
-                    <div className="flex min-w-0 flex-col gap-1">
+                    <div
+                      className={cn(
+                        'flex min-w-0 flex-col gap-1 xl:col-span-2',
+                        rowStartCodes.has('schoolLocations') && 'xl:col-start-1'
+                      )}
+                    >
                       <Label
                         data-testid="secondaryEducation-schoolLocation-label"
                         className="truncate"
@@ -825,12 +856,9 @@ export default function SecondaryEducationStep({
                       />
                     </div>
                   )}
-                </div>
 
-                {/* Row 2: Grade | Start Date | End Date */}
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
                   {isFieldVisible('grade') && (
-                    <div className="flex min-w-0 flex-col gap-1">
+                    <div className="flex min-w-0 flex-col gap-1 xl:col-span-1">
                       <div className="flex min-w-0 items-center justify-between gap-2">
                         <Label
                           data-testid="secondaryEducation-grade-label"
@@ -871,7 +899,7 @@ export default function SecondaryEducationStep({
                       control={control}
                       name="entries.0.startDate"
                       render={({ field }) => (
-                        <FormItem className="flex w-full flex-col gap-1 space-y-0">
+                        <FormItem className="flex w-full flex-col gap-1 space-y-0 xl:col-span-1">
                           <div className="flex h-5 items-center">
                             <FormLabel data-testid="secondaryEducation-startDate-label">
                               {t('secondaryEducation.startDate')}
@@ -975,7 +1003,7 @@ export default function SecondaryEducationStep({
                       control={control}
                       name="entries.0.endDate"
                       render={({ field }) => (
-                        <FormItem className="flex w-full flex-col gap-1 space-y-0">
+                        <FormItem className="flex w-full flex-col gap-1 space-y-0 xl:col-span-1">
                           <div className="flex h-5 items-center">
                             <FormLabel data-testid="secondaryEducation-endDate-label">
                               {t('secondaryEducation.endDate')}
@@ -1060,12 +1088,14 @@ export default function SecondaryEducationStep({
                       )}
                     />
                   )}
-                </div>
 
-                {/* Row 3: Examination | Awarding Body */}
-                <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
                   {isFieldVisible('examinations') && (
-                    <div className="flex min-w-0 flex-col gap-1">
+                    <div
+                      className={cn(
+                        'flex min-w-0 flex-col gap-1 xl:col-span-2',
+                        rowStartCodes.has('examinations') && 'xl:col-start-1'
+                      )}
+                    >
                       <div className="flex min-w-0 items-center justify-between gap-2">
                         <Label
                           data-testid="secondaryEducation-examination-label"
@@ -1144,7 +1174,13 @@ export default function SecondaryEducationStep({
                   )}
 
                   {isFieldVisible('secondaryAwardingBody') && (
-                    <div className="flex min-w-0 flex-col gap-1">
+                    <div
+                      className={cn(
+                        'flex min-w-0 flex-col gap-1 xl:col-span-2',
+                        rowStartCodes.has('secondaryAwardingBody') &&
+                          'xl:col-start-1'
+                      )}
+                    >
                       <div className="flex min-w-0 items-center justify-between gap-2">
                         <Label
                           data-testid="secondaryEducation-awardingBody-label"
@@ -1221,12 +1257,14 @@ export default function SecondaryEducationStep({
                       />
                     </div>
                   )}
-                </div>
 
-                {/* Row 4: Field of Study | Results */}
-                <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
                   {isFieldVisible('fieldsOfStudy') && (
-                    <div className="flex min-w-0 flex-col gap-1">
+                    <div
+                      className={cn(
+                        'flex min-w-0 flex-col gap-1 xl:col-span-2',
+                        rowStartCodes.has('fieldsOfStudy') && 'xl:col-start-1'
+                      )}
+                    >
                       <div className="flex min-w-0 items-center justify-between gap-2">
                         <Label
                           data-testid="secondaryEducation-fieldOfStudy-label"
@@ -1305,7 +1343,12 @@ export default function SecondaryEducationStep({
                   )}
 
                   {isFieldVisible('result') && (
-                    <div className="flex min-w-0 flex-col gap-1">
+                    <div
+                      className={cn(
+                        'flex min-w-0 flex-col gap-1 xl:col-span-2',
+                        rowStartCodes.has('result') && 'xl:col-start-1'
+                      )}
+                    >
                       <div className="flex min-w-0 items-center justify-between gap-2">
                         <Label
                           data-testid="secondaryEducation-results-label"

@@ -27,6 +27,7 @@ import {
   formatLocalDate,
   parseLocalDate,
 } from '@/views/vacancies/utils/date-timezone-safe';
+import { computeRowStartCodes } from '@/views/vacancies/utils/field-grid-layout';
 
 import { CharacterCount } from '@cgp/ui-kit/components/character-count';
 import { SuccessToast } from '@cgp/ui-kit/components/custom-toast';
@@ -63,6 +64,16 @@ const PROJECT_FIELD_CODES = [
   'organizationLocations',
   'startDate',
   'endDate',
+] as const;
+
+// Grid layout order + column spans, used to compute which half fields must
+// wrap to a fresh row (`xl:col-start-1`) based on the visible field packing.
+const PROJECT_GRID_FIELDS = [
+  { code: 'startDate', span: 1 },
+  { code: 'endDate', span: 1 },
+  { code: 'relatedIndustry', span: 2 },
+  { code: 'organizationLocations', span: 2 },
+  { code: 'organization', span: 2 },
 ] as const;
 
 interface ProjectEntry {
@@ -110,6 +121,10 @@ function ProjectCard({
 }>) {
   const { t } = useTranslation('ats');
   const isFieldVisible = useTemplateFieldVisible('projects');
+  const rowStartCodes = computeRowStartCodes(
+    PROJECT_GRID_FIELDS,
+    isFieldVisible
+  );
   const [hasMaxError, setHasMaxError] = useState(false);
   const [locationsError, setLocationsError] = useState(false);
   const [organizationsError, setOrganizationsError] = useState(false);
@@ -172,10 +187,10 @@ function ProjectCard({
               fieldsDisabled && 'pointer-events-none opacity-60'
             )}
           >
-            {/* Row 1: Start Date | End Date | Related Industry */}
-            <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1fr_1fr_2fr]">
+            {/* Fields (dense grid so hidden fields repack with no gaps) */}
+            <div className="grid grid-cols-1 gap-4 xl:grid-cols-4">
               {isFieldVisible('startDate') && (
-                <div className="flex flex-col gap-1">
+                <div className="flex flex-col gap-1 xl:col-span-1">
                   <div className="flex h-5 items-center">
                     <Label
                       data-testid={`projectsRequirements-startDate-${index}-label`}
@@ -254,7 +269,7 @@ function ProjectCard({
               )}
 
               {isFieldVisible('endDate') && (
-                <div className="flex flex-col gap-1">
+                <div className="flex flex-col gap-1 xl:col-span-1">
                   <div className="flex h-5 items-center">
                     <Label
                       data-testid={`projectsRequirements-endDate-${index}-label`}
@@ -330,7 +345,12 @@ function ProjectCard({
               )}
 
               {isFieldVisible('relatedIndustry') && (
-                <div className="flex flex-col gap-1">
+                <div
+                  className={cn(
+                    'flex flex-col gap-1 xl:col-span-2',
+                    rowStartCodes.has('relatedIndustry') && 'xl:col-start-1'
+                  )}
+                >
                   <div className="flex items-center justify-between">
                     <Label
                       data-testid={`projectsRequirements-relatedIndustry-${index}-label`}
@@ -412,12 +432,15 @@ function ProjectCard({
                   />
                 </div>
               )}
-            </div>
 
-            {/* Row 2: Organization Location (full width) | Organization Name (full width) */}
-            <div className="grid grid-cols-1 gap-4">
               {isFieldVisible('organizationLocations') && (
-                <div className="flex flex-col gap-1">
+                <div
+                  className={cn(
+                    'flex flex-col gap-1 xl:col-span-2',
+                    rowStartCodes.has('organizationLocations') &&
+                      'xl:col-start-1'
+                  )}
+                >
                   <div className="flex h-5 items-center">
                     <Label
                       data-testid={`projectsRequirements-organizationLocation-${index}-label`}
@@ -475,7 +498,12 @@ function ProjectCard({
               )}
 
               {isFieldVisible('organization') && (
-                <div className="flex flex-col gap-1">
+                <div
+                  className={cn(
+                    'flex flex-col gap-1 xl:col-span-2',
+                    rowStartCodes.has('organization') && 'xl:col-start-1'
+                  )}
+                >
                   <div className="flex h-5 items-center">
                     <Label
                       data-testid={`projectsRequirements-organizationName-${index}-label`}

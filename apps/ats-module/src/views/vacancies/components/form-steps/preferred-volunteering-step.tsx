@@ -29,6 +29,7 @@ import {
   formatLocalDate,
   parseLocalDate,
 } from '@/views/vacancies/utils/date-timezone-safe';
+import { computeRowStartCodes } from '@/views/vacancies/utils/field-grid-layout';
 
 import { CharacterCount } from '@cgp/ui-kit/components/character-count';
 import { SuccessToast } from '@cgp/ui-kit/components/custom-toast';
@@ -70,6 +71,17 @@ const VOLUNTEERING_FIELD_CODES = [
   'cause',
   'startDate',
   'endDate',
+] as const;
+
+// Field grid layout spec (source order + column span) used to compute which
+// fields must start a fresh row (`quad-volunteering:col-start-1`) as visibility changes.
+const VOLUNTEERING_GRID_FIELDS = [
+  { code: 'organization', span: 2 },
+  { code: 'organizationLocations', span: 2 },
+  { code: 'cause', span: 2 },
+  { code: 'positionRole', span: 1 },
+  { code: 'startDate', span: 1 },
+  { code: 'endDate', span: 1 },
 ] as const;
 
 interface VolunteeringEntry {
@@ -140,6 +152,10 @@ function VolunteeringCard({
   const { t } = useTranslation('ats');
   const isFieldVisible = useTemplateFieldVisible('volunteering');
   const [locationsError, setLocationsError] = useState(false);
+  const rowStartCodes = computeRowStartCodes(
+    VOLUNTEERING_GRID_FIELDS,
+    isFieldVisible
+  );
 
   return (
     <Collapsible
@@ -185,10 +201,15 @@ function VolunteeringCard({
               fieldsDisabled && 'pointer-events-none opacity-60'
             )}
           >
-            {/* Row 1: Organisation Name | Organization Location */}
-            <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+            <div className="quad-volunteering:grid-cols-4 grid grid-cols-1 gap-4">
               {isFieldVisible('organization') && (
-                <div className="flex flex-col gap-1">
+                <div
+                  className={cn(
+                    'quad-volunteering:col-span-2 flex flex-col gap-1',
+                    rowStartCodes.has('organization') &&
+                      'quad-volunteering:col-start-1'
+                  )}
+                >
                   <div className="flex h-5 items-center">
                     <Label data-testid="preferredVolunteering-organizationName-label">
                       {t('preferredVolunteering.labels.organizationName')}
@@ -250,7 +271,13 @@ function VolunteeringCard({
               )}
 
               {isFieldVisible('organizationLocations') && (
-                <div className="flex flex-col gap-1">
+                <div
+                  className={cn(
+                    'quad-volunteering:col-span-2 flex flex-col gap-1',
+                    rowStartCodes.has('organizationLocations') &&
+                      'quad-volunteering:col-start-1'
+                  )}
+                >
                   <div className="flex h-5 items-center">
                     <Label
                       data-testid="preferredVolunteering-organizationLocation-label"
@@ -297,12 +324,14 @@ function VolunteeringCard({
                   />
                 </div>
               )}
-            </div>
-
-            {/* Row 2: Cause (half width) */}
-            <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
               {isFieldVisible('cause') && (
-                <div className="flex flex-col gap-1">
+                <div
+                  className={cn(
+                    'quad-volunteering:col-span-2 flex flex-col gap-1',
+                    rowStartCodes.has('cause') &&
+                      'quad-volunteering:col-start-1'
+                  )}
+                >
                   <div className="flex items-center justify-between">
                     <Label data-testid="preferredVolunteering-cause-label">
                       {t('preferredVolunteering.labels.cause')}
@@ -359,12 +388,8 @@ function VolunteeringCard({
                   />
                 </div>
               )}
-            </div>
-
-            {/* Row 3: Position / Role | Start Date | End Date */}
-            <div className="grid grid-cols-1 gap-4 xl:grid-cols-4">
               {isFieldVisible('positionRole') && (
-                <div className="flex flex-col gap-1">
+                <div className="quad-volunteering:col-span-1 flex flex-col gap-1">
                   <div className="flex items-center justify-between">
                     <Label data-testid="preferredVolunteering-position-label">
                       {t('preferredVolunteering.labels.position')}
@@ -390,7 +415,7 @@ function VolunteeringCard({
               )}
 
               {isFieldVisible('startDate') && (
-                <div className="flex flex-col gap-1">
+                <div className="quad-volunteering:col-span-1 flex flex-col gap-1">
                   <div className="flex h-5 items-center">
                     <Label data-testid="preferredVolunteering-startDate-label">
                       {t('preferredVolunteering.labels.startDate')}
@@ -466,7 +491,7 @@ function VolunteeringCard({
               )}
 
               {isFieldVisible('endDate') && (
-                <div className="flex flex-col gap-1">
+                <div className="quad-volunteering:col-span-1 flex flex-col gap-1">
                   <div className="flex h-5 items-center">
                     <Label data-testid="preferredVolunteering-endDate-label">
                       {t('preferredVolunteering.labels.endDate')}
