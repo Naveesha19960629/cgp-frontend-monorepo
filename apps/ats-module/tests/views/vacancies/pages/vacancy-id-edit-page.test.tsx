@@ -83,6 +83,9 @@ vi.mock('@/views/vacancies/hooks', async importOriginal => {
   return {
     ...actual,
     useVacancyByIdQuery: () => queryState,
+    // These specs predate template-driven visibility and never exercise a
+    // resolved template; a disabled/empty result keeps that path inert.
+    useVacancyTemplateByIdQuery: () => ({ data: undefined, isLoading: false }),
   };
 });
 

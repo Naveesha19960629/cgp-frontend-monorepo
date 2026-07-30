@@ -210,6 +210,16 @@ describe('createVacancyColumns', () => {
     expect(onView).toHaveBeenCalledWith(sampleRow.vacancyId);
   });
 
+  it('truncates a long title with an ellipsis and shows the full text via a title attribute (DQCGP-3308)', () => {
+    const longTitle =
+      'Software Engineer Intern - Cloud Infrastructure and Platform Reliability Team';
+    render(<TableWrapper data={[{ ...sampleRow, title: longTitle }]} />);
+
+    const titleButton = screen.getByText(longTitle);
+    expect(titleButton).toHaveClass('truncate');
+    expect(titleButton).toHaveAttribute('title', longTitle);
+  });
+
   it('renders the status badge and active toggle in the status cell', () => {
     render(<TableWrapper data={[sampleRow]} />);
     expect(screen.getByTestId('status-badge')).toBeInTheDocument();

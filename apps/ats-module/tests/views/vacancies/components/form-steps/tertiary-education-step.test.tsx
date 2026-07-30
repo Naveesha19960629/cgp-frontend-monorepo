@@ -512,7 +512,7 @@ describe('TertiaryEducationStep', () => {
       ).toBeInTheDocument();
     });
 
-    test.each([
+    it.each([
       [
         'renders the qualification name field placeholder',
         'tertiaryEducation.placeholders.qualificationName',
@@ -799,7 +799,7 @@ describe('TertiaryEducationStep', () => {
   });
 
   describe('max selection inline error', () => {
-    test.each([
+    it.each([
       [
         'qualification name field',
         'tertiaryEducation.placeholders.qualificationName',

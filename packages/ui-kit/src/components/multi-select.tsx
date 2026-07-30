@@ -116,6 +116,12 @@ interface MultipleSelectorProps {
   onErrorStateChange?: (hasError: boolean) => void;
   /** Show a vuesax/linear arrow-down icon on the right of the input. */
   showArrow?: boolean;
+  /**
+   * Allow pressing Enter to select/deselect the highlighted option.
+   * Disabled by default: recruiters pressing Enter to move between fields
+   * were accidentally toggling the highlighted dropdown option.
+   */
+  enableEnterToSelect?: boolean;
 }
 
 export interface MultipleSelectorRef {
@@ -257,6 +263,7 @@ const MultipleSelector = React.forwardRef<
       onErrorStateChange,
       showArrow = false,
       alwaysShowCreatable,
+      enableEnterToSelect = false,
     }: MultipleSelectorProps,
     ref: React.Ref<MultipleSelectorRef>
   ) => {
@@ -317,8 +324,13 @@ const MultipleSelector = React.forwardRef<
             input.blur();
           }
         }
+        // Prevent cmdk from selecting/deselecting the highlighted option on
+        // Enter (DQCGP-3297) unless the consumer explicitly opts in.
+        if (e.key === 'Enter' && !enableEnterToSelect) {
+          e.preventDefault();
+        }
       },
-      []
+      [enableEnterToSelect]
     );
 
     useEffect(() => {
@@ -435,6 +447,7 @@ const MultipleSelector = React.forwardRef<
           }}
           onSelect={(value: string) => {
             if (disabled) return;
+            if (!value.trim()) return;
             if (selected.length >= maxSelected) {
               onMaxSelected?.(selected.length);
               setShowMaxError(true);
@@ -460,7 +473,14 @@ const MultipleSelector = React.forwardRef<
             }
             setInputValue('');
             const newOption = { value, label: value };
-            setUserCreatedOptions(prev => [...prev, newOption]);
+            // Dedupe by value: re-creating the same custom entry after
+            // deselecting it would otherwise leave the stale entry in place
+            // alongside the new one, so it renders twice in the dropdown
+            // once both are "selected" again.
+            setUserCreatedOptions(prev => [
+              ...prev.filter(o => o.value !== value),
+              newOption,
+            ]);
             const newOptions = [...selected, newOption];
             setSelected(newOptions);
             onChange?.(newOptions);
@@ -486,8 +506,18 @@ const MultipleSelector = React.forwardRef<
         return Item;
       }
 
-      // For async search creatable. avoid showing creatable item before loading at first.
-      if (onSearch && debouncedSearchTerm.trim().length > 0 && !isLoading) {
+      // For async search creatable. Gate on both the live and debounced value:
+      // debouncedSearchTerm alone avoids flashing the item before the first
+      // load, but it lags inputValue by up to `delay` ms, so right after the
+      // user picks an existing option (which clears inputValue immediately)
+      // the item would keep rendering — showing `Add ""` — until the debounce
+      // catches up (DQCGP-3329).
+      if (
+        onSearch &&
+        inputValue.trim().length > 0 &&
+        debouncedSearchTerm.trim().length > 0 &&
+        !isLoading
+      ) {
         return Item;
       }
 
@@ -520,10 +550,27 @@ const MultipleSelector = React.forwardRef<
         // Keep selected options authoritative for the same value so label/source
         // stay consistent after user-created flows (e.g. skill + career path).
         const selectedByValue = new Map(selected.map(s => [s.value, s]));
+        const searchTerm = inputValue.trim().toLowerCase();
+        // In server-managed mode (onSearch/onSearchSync) cmdk's own filtering
+        // is disabled (shouldFilter=false below) since the server already
+        // filters `options`. But `allOptionsWithCreated` also unconditionally
+        // merges in every selected user-created option regardless of the
+        // current query (see its own comment) — without re-checking the
+        // label here, a selected custom value would keep showing no matter
+        // what you search for next. In local mode cmdk's own filter already
+        // hides non-matching items from the DOM, so leave it untouched here.
+        const isServerManaged = Boolean(onSearch || onSearchSync);
         const normalizedOptions = Object.fromEntries(
           Object.entries(allOptionsWithCreated).map(([groupKey, items]) => [
             groupKey,
-            items.map(item => selectedByValue.get(item.value) ?? item),
+            items
+              .map(item => selectedByValue.get(item.value) ?? item)
+              .filter(
+                item =>
+                  !isServerManaged ||
+                  !searchTerm ||
+                  item.label.toLowerCase().includes(searchTerm)
+              ),
           ])
         );
 
@@ -532,7 +579,20 @@ const MultipleSelector = React.forwardRef<
             .flat()
             .map(o => o.value)
         );
-        const missing = selected.filter(s => !allValues.has(s.value));
+        // While idle, surface every selected option so the list stays
+        // browsable. While actively searching, only add back a selected
+        // option that the server search didn't already return if it matches
+        // the query — a non-matching one would just clutter results for a
+        // different query (DQCGP-3323), but hiding a match unconditionally
+        // means re-searching for a value you already added (especially a
+        // user-created one, which the server can never return) shows an
+        // empty "No data found" list even though it's sitting right there as
+        // a chip (DQCGP-3329).
+        const missing = selected.filter(
+          s =>
+            !allValues.has(s.value) &&
+            (!searchTerm || s.label.toLowerCase().includes(searchTerm))
+        );
         if (missing.length === 0) return normalizedOptions;
         return {
           ...normalizedOptions,
@@ -540,7 +600,14 @@ const MultipleSelector = React.forwardRef<
         };
       }
       return removePickedOption(allOptionsWithCreated, selected);
-    }, [keepSelectedInList, allOptionsWithCreated, selected]);
+    }, [
+      keepSelectedInList,
+      allOptionsWithCreated,
+      selected,
+      inputValue,
+      onSearch,
+      onSearchSync,
+    ]);
 
     const hasSelectableOptions = React.useMemo(() => {
       if (onSearch || onSearchSync) {
