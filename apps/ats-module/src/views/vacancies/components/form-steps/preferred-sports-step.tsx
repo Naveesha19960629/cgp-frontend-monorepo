@@ -34,7 +34,10 @@ import {
   parseLocalDate,
   startOfToday,
 } from '@/views/vacancies/utils/date-timezone-safe';
-import { computeRowStartCodes } from '@/views/vacancies/utils/field-grid-layout';
+import {
+  computeRowStartCodes,
+  rowStartClass,
+} from '@/views/vacancies/utils/field-grid-layout';
 
 import { CharacterCount } from '@cgp/ui-kit/components/character-count';
 import { SuccessToast } from '@cgp/ui-kit/components/custom-toast';
@@ -245,8 +248,11 @@ function SportCard({
                 <div
                   className={cn(
                     'quad-pub-sports:col-span-2 flex flex-col gap-1',
-                    rowStartCodes.has('nameOfSport') &&
+                    rowStartClass(
+                      rowStartCodes,
+                      'nameOfSport',
                       'quad-pub-sports:col-start-1'
+                    )
                   )}
                 >
                   <div className="flex items-center justify-between">
@@ -334,8 +340,11 @@ function SportCard({
                 <div
                   className={cn(
                     'quad-pub-sports:col-span-2 flex flex-col gap-1',
-                    rowStartCodes.has('organizationLocations') &&
+                    rowStartClass(
+                      rowStartCodes,
+                      'organizationLocations',
                       'quad-pub-sports:col-start-1'
+                    )
                   )}
                 >
                   <div className="flex h-5 items-center">
@@ -386,8 +395,11 @@ function SportCard({
                 <div
                   className={cn(
                     'quad-pub-sports:col-span-2 flex flex-col gap-1',
-                    rowStartCodes.has('levelRepresented') &&
+                    rowStartClass(
+                      rowStartCodes,
+                      'levelRepresented',
                       'quad-pub-sports:col-start-1'
+                    )
                   )}
                 >
                   <div className="flex h-5 items-center">
@@ -445,8 +457,11 @@ function SportCard({
                 <div
                   className={cn(
                     'quad-pub-sports:col-span-2 flex flex-col gap-1',
-                    rowStartCodes.has('representedOrganization') &&
+                    rowStartClass(
+                      rowStartCodes,
+                      'representedOrganization',
                       'quad-pub-sports:col-start-1'
+                    )
                   )}
                 >
                   <div className="flex h-5 items-center">

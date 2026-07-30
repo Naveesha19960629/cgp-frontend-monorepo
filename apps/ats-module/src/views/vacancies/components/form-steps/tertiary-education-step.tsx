@@ -50,7 +50,10 @@ import {
 } from '@/views/vacancies/hooks';
 import type { StepProps } from '@/views/vacancies/types';
 import { toTertiaryEducationPayload } from '@/views/vacancies/utils';
-import { computeRowStartCodes } from '@/views/vacancies/utils/field-grid-layout';
+import {
+  computeRowStartCodes,
+  rowStartClass,
+} from '@/views/vacancies/utils/field-grid-layout';
 
 import { CharacterCount } from '@cgp/ui-kit/components/character-count';
 import { ErrorToast } from '@cgp/ui-kit/components/custom-toast';
@@ -717,7 +720,7 @@ export default function TertiaryEducationStep({
                   <div
                     className={cn(
                       'flex min-w-0 flex-col gap-1 xl:col-span-2',
-                      rowStartCodes.has('qualificationName') && 'xl:col-start-1'
+                      rowStartClass(rowStartCodes, 'qualificationName')
                     )}
                   >
                     <div className="flex min-w-0 items-center justify-between gap-2">
@@ -838,8 +841,10 @@ export default function TertiaryEducationStep({
                   <div
                     className={cn(
                       'flex flex-col gap-1 xl:col-span-2',
-                      rowStartCodes.has('tertiaryAwardingBodyLocations') &&
-                        'xl:col-start-1'
+                      rowStartClass(
+                        rowStartCodes,
+                        'tertiaryAwardingBodyLocations'
+                      )
                     )}
                   >
                     <div className="flex h-5 items-center">
@@ -905,7 +910,7 @@ export default function TertiaryEducationStep({
                   <div
                     className={cn(
                       'flex flex-col gap-1 xl:col-span-2',
-                      rowStartCodes.has('batch') && 'xl:col-start-1'
+                      rowStartClass(rowStartCodes, 'batch')
                     )}
                   >
                     <div className="flex items-center justify-between">
@@ -986,8 +991,7 @@ export default function TertiaryEducationStep({
                   <div
                     className={cn(
                       'flex flex-col gap-1 xl:col-span-2',
-                      rowStartCodes.has('tertiaryAwardingBody') &&
-                        'xl:col-start-1'
+                      rowStartClass(rowStartCodes, 'tertiaryAwardingBody')
                     )}
                   >
                     <div className="flex h-5 items-center">
@@ -1076,8 +1080,7 @@ export default function TertiaryEducationStep({
                   <div
                     className={cn(
                       'flex flex-col gap-1 xl:col-span-2',
-                      rowStartCodes.has('levelOfQualification') &&
-                        'xl:col-start-1'
+                      rowStartClass(rowStartCodes, 'levelOfQualification')
                     )}
                   >
                     <div className="flex items-center justify-between">
@@ -1158,7 +1161,7 @@ export default function TertiaryEducationStep({
                   <div
                     className={cn(
                       'flex flex-col gap-1 xl:col-span-2',
-                      rowStartCodes.has('specialization') && 'xl:col-start-1'
+                      rowStartClass(rowStartCodes, 'specialization')
                     )}
                   >
                     <div className="flex items-center justify-between">
@@ -1239,7 +1242,7 @@ export default function TertiaryEducationStep({
                   <div
                     className={cn(
                       'flex flex-col gap-1 xl:col-span-2',
-                      rowStartCodes.has('studyMode') && 'xl:col-start-1'
+                      rowStartClass(rowStartCodes, 'studyMode')
                     )}
                   >
                     <div className="flex h-5 items-center">
@@ -1304,7 +1307,7 @@ export default function TertiaryEducationStep({
                   <div
                     className={cn(
                       'flex flex-col gap-1 xl:col-span-2',
-                      rowStartCodes.has('studyPattern') && 'xl:col-start-1'
+                      rowStartClass(rowStartCodes, 'studyPattern')
                     )}
                   >
                     <Label data-testid="tertiaryEducation-studyPattern-label">
@@ -1367,7 +1370,7 @@ export default function TertiaryEducationStep({
                   <div
                     className={cn(
                       'flex flex-col gap-1 xl:col-span-2',
-                      rowStartCodes.has('deliverySchedule') && 'xl:col-start-1'
+                      rowStartClass(rowStartCodes, 'deliverySchedule')
                     )}
                   >
                     <Label data-testid="tertiaryEducation-deliverySchedule-label">
@@ -1430,7 +1433,7 @@ export default function TertiaryEducationStep({
                   <div
                     className={cn(
                       'flex flex-col gap-1 xl:col-span-2',
-                      rowStartCodes.has('department') && 'xl:col-start-1'
+                      rowStartClass(rowStartCodes, 'department')
                     )}
                   >
                     <div className="flex items-center justify-between">
@@ -1511,7 +1514,7 @@ export default function TertiaryEducationStep({
                   <div
                     className={cn(
                       'flex flex-col gap-1 xl:col-span-2',
-                      rowStartCodes.has('faculty') && 'xl:col-start-1'
+                      rowStartClass(rowStartCodes, 'faculty')
                     )}
                   >
                     <div className="flex items-center justify-between">

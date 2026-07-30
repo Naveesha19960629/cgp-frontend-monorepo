@@ -53,3 +53,17 @@ export function computeRowStartCodes(
 
   return forced;
 }
+
+/**
+ * Convenience wrapper for use inside `cn(...)`: returns `className` when `code`
+ * is in the forced-row-start set, otherwise `false` (which `cn` ignores). Keeps
+ * the per-field `has(code) && 'col-start'` conditionals out of the render
+ * function so large form steps stay under their cognitive-complexity budget.
+ */
+export function rowStartClass(
+  rowStartCodes: ReadonlySet<string>,
+  code: string,
+  className = 'xl:col-start-1'
+): string | false {
+  return rowStartCodes.has(code) && className;
+}
