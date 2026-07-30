@@ -25,10 +25,9 @@ import type { StepProps } from '@/views/vacancies/types';
 import { formatDate } from '@/views/vacancies/utils';
 import {
   formatLocalDate,
-  getDateYearsAgo,
-  getDateYearsFromNow,
+  getHundredYearDateBoundaries,
+  isBeforeMinDate,
   parseLocalDate,
-  startOfToday,
 } from '@/views/vacancies/utils/date-timezone-safe';
 
 import { CharacterCount } from '@cgp/ui-kit/components/character-count';
@@ -56,17 +55,11 @@ import { isAfter, isBefore, startOfDay } from 'date-fns';
 import DisableDialog from './disable-dialog';
 
 const MAX_SELECTIONS = 10;
-const DATE_BOUNDARY_YEARS = 100;
-// Exact-date boundaries (day/month/year), not year-only — matches the
-// Preferred Sports date pickers. If today is 2026-07-07:
-// MIN = 1926-07-07, TODAY = 2026-07-07, MAX = 2126-07-07.
-const TODAY = startOfToday();
-const HUNDRED_YEARS_AGO = getDateYearsAgo(DATE_BOUNDARY_YEARS);
-const HUNDRED_YEARS_FROM_NOW = getDateYearsFromNow(DATE_BOUNDARY_YEARS);
-
-/** True when `date` falls before the 100-year-ago cutoff (exclusive). */
-const isBeforeMinDate = (date: Date) =>
-  isBefore(startOfDay(date), HUNDRED_YEARS_AGO);
+const {
+  today: TODAY,
+  minDate: HUNDRED_YEARS_AGO,
+  maxDate: HUNDRED_YEARS_FROM_NOW,
+} = getHundredYearDateBoundaries();
 
 interface ProjectEntry {
   id: string;
@@ -247,7 +240,7 @@ function ProjectCard({
                         }}
                         disabled={date =>
                           isAfter(startOfDay(date), TODAY) ||
-                          isBeforeMinDate(date)
+                          isBeforeMinDate(date, HUNDRED_YEARS_AGO)
                         }
                         captionLayout="dropdown"
                         startMonth={HUNDRED_YEARS_AGO}
@@ -321,7 +314,7 @@ function ProjectCard({
                           const day = startOfDay(date);
                           const startDate = parseLocalDate(project.startDate);
                           return (
-                            isBeforeMinDate(date) ||
+                            isBeforeMinDate(date, HUNDRED_YEARS_AGO) ||
                             isAfter(day, HUNDRED_YEARS_FROM_NOW) ||
                             (startDate != null &&
                               isBefore(day, startOfDay(startDate)))

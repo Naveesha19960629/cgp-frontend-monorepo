@@ -1,4 +1,4 @@
-import { addYears, startOfDay, subYears } from 'date-fns';
+import { addYears, isBefore, startOfDay, subYears } from 'date-fns';
 
 /**
  * Start of the current day (00:00:00.000) in the local timezone.
@@ -75,6 +75,33 @@ export function formatLocalDate(date?: Date | string): string {
   const day = String(d.getDate()).padStart(2, '0');
 
   return `${year}-${month}-${day}`;
+}
+
+/** Number of years spanned before/after today by {@link getHundredYearDateBoundaries}. */
+export const DATE_BOUNDARY_YEARS = 100;
+
+/**
+ * Exact-date boundaries (day/month/year), not year-only, spanning 100 years
+ * before and after today (local time). Used to bound "historical date"
+ * pickers (e.g. qualification, membership, publication dates) across the
+ * vacancy form steps. If today is 2026-07-07: minDate = 1926-07-07,
+ * today = 2026-07-07, maxDate = 2126-07-07.
+ */
+export function getHundredYearDateBoundaries(): {
+  today: Date;
+  minDate: Date;
+  maxDate: Date;
+} {
+  return {
+    today: startOfToday(),
+    minDate: getDateYearsAgo(DATE_BOUNDARY_YEARS),
+    maxDate: getDateYearsFromNow(DATE_BOUNDARY_YEARS),
+  };
+}
+
+/** True when `date` falls before `minDate` (exclusive), normalized to start of day. */
+export function isBeforeMinDate(date: Date, minDate: Date): boolean {
+  return isBefore(startOfDay(date), minDate);
 }
 
 /**

@@ -25,10 +25,9 @@ import type { StepProps } from '@/views/vacancies/types';
 import { formatDate, sanitizePlainText } from '@/views/vacancies/utils';
 import {
   formatLocalDate,
-  getDateYearsAgo,
-  getDateYearsFromNow,
+  getHundredYearDateBoundaries,
+  isBeforeMinDate,
   parseLocalDate,
-  startOfToday,
 } from '@/views/vacancies/utils/date-timezone-safe';
 
 import { CharacterCount } from '@cgp/ui-kit/components/character-count';
@@ -59,17 +58,11 @@ import DisableDialog from './disable-dialog';
 const MAX_POSITION_LENGTH = 250;
 const MAX_CLUB_SOCIETY_LENGTH = 250;
 const MAX_SELECTIONS = 10;
-const DATE_BOUNDARY_YEARS = 100;
-// Exact-date boundaries (day/month/year), not year-only — matches the
-// Preferred Sports date pickers. If today is 2026-07-07:
-// MIN = 1926-07-07, TODAY = 2026-07-07, MAX = 2126-07-07.
-const TODAY = startOfToday();
-const HUNDRED_YEARS_AGO = getDateYearsAgo(DATE_BOUNDARY_YEARS);
-const HUNDRED_YEARS_FROM_NOW = getDateYearsFromNow(DATE_BOUNDARY_YEARS);
-
-/** True when `date` falls before the 100-year-ago cutoff (exclusive). */
-const isBeforeMinDate = (date: Date) =>
-  isBefore(startOfDay(date), HUNDRED_YEARS_AGO);
+const {
+  today: TODAY,
+  minDate: HUNDRED_YEARS_AGO,
+  maxDate: HUNDRED_YEARS_FROM_NOW,
+} = getHundredYearDateBoundaries();
 
 interface ClubSocietyEntry {
   id: string;
@@ -186,236 +179,20 @@ function ClubSocietyCard({
           >
             {/* Row 1: Club / Society | Start Date | End Date */}
             <div className="grid grid-cols-[2fr_1fr_1fr] gap-4">
-              <div className="flex flex-col gap-1">
-                <div className="flex items-center justify-between">
-                  <Label
-                    data-testid="preferredClubSocieties-clubSociety-label"
-                    className={societiesError ? 'text-destructive' : undefined}
-                  >
-                    {t('preferredClubSocieties.labels.clubSociety')}
-                  </Label>
-                  <CharacterCount
-                    currentLength={entry.clubSocietySearch.length}
-                    maxLength={MAX_CLUB_SOCIETY_LENGTH}
-                  />
-                </div>
-                <MultipleSelector
-                  value={entry.clubSociety}
-                  onChange={options => {
-                    onUpdate(index, {
-                      clubSociety: options
-                        .filter(
-                          opt =>
-                            typeof opt.value === 'string' &&
-                            opt.value.length > 0
-                        )
-                        .map(opt => {
-                          const source =
-                            (opt.source as string) ?? 'USER_CREATED';
-                          const isCreatable =
-                            source === 'USER_CREATED' ||
-                            opt.value === opt.label;
-
-                          return {
-                            value: isCreatable
-                              ? opt.value.slice(0, MAX_CLUB_SOCIETY_LENGTH)
-                              : opt.value,
-                            label: isCreatable
-                              ? opt.label.slice(0, MAX_CLUB_SOCIETY_LENGTH)
-                              : opt.label,
-                            source,
-                          };
-                        }),
-                    });
-                  }}
-                  options={societies.map(s => ({
-                    value: s.id,
-                    label: s.name || s.label || '',
-                    source: s.source,
-                  }))}
-                  onSearchSync={value => {
-                    const limitedSearch = value.slice(
-                      0,
-                      MAX_CLUB_SOCIETY_LENGTH
-                    );
-
-                    onUpdate(index, { clubSocietySearch: limitedSearch });
-                    onSocietiesSearch(limitedSearch);
-                    return societies.map(s => ({
-                      value: s.id,
-                      label: s.name || s.label || '',
-                      source: s.source,
-                    }));
-                  }}
-                  keepSelectedInList
-                  inputProps={{
-                    maxLength: MAX_CLUB_SOCIETY_LENGTH,
-                  }}
-                  creatable
-                  triggerSearchOnFocus
-                  hideClearAllButton
-                  maxSelected={MAX_SELECTIONS}
-                  errorMessage={t(
-                    'preferredClubSocieties.errors.maxSelections'
-                  )}
-                  onErrorStateChange={setSocietiesError}
-                  disabled={fieldsDisabled}
-                  loading={isSocietiesLoading}
-                  placeholder={t(
-                    'preferredClubSocieties.placeholders.clubSociety'
-                  )}
-                  emptyIndicator={
-                    <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                      {t('preferredClubSocieties.empty.societies')}
-                    </p>
-                  }
-                />
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <div className="flex h-5 items-center">
-                  <Label data-testid="preferredClubSocieties-startDate-label">
-                    {t('preferredClubSocieties.labels.startDate')}
-                  </Label>
-                </div>
-                <Popover
-                  modal
-                  open={openDatePopover === 'startDate'}
-                  onOpenChange={open =>
-                    setOpenDatePopover(
-                      !fieldsDisabled && open ? 'startDate' : null
-                    )
-                  }
-                >
-                  <PopoverTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      disabled={fieldsDisabled}
-                      className={cn(
-                        'border-input flex h-11 w-full items-center justify-between rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
-                        !entry.startDate && 'text-slate-500',
-                        entry.startDate && 'text-zinc-800',
-                        'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
-                        'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
-                        'dark:bg-input/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
-                        applyTypography('body-medium'),
-                        'shadow-none!'
-                      )}
+              {isFieldVisible('clubSociety') && (
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center justify-between">
+                    <Label
+                      data-testid="preferredClubSocieties-clubSociety-label"
+                      className={
+                        societiesError ? 'text-destructive' : undefined
+                      }
                     >
-                      {entry.startDate
-                        ? formatDate(entry.startDate)
-                        : t('preferredClubSocieties.placeholders.startDate')}
-                      <CalendarIcon
-                        variant="Linear"
-                        size={20}
-                        className="text-zinc-800"
-                      />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={parseLocalDate(entry.startDate) ?? undefined}
-                      defaultMonth={
-                        parseLocalDate(entry.startDate) ||
-                        parseLocalDate(entry.endDate) ||
-                        new Date()
-                      }
-                      onSelect={date => {
-                        onUpdate(index, {
-                          startDate: date ? formatLocalDate(date) : undefined,
-                        });
-                        setOpenDatePopover(null);
-
-                        if (entry.endDate && date) {
-                          const endDate = parseLocalDate(entry.endDate);
-                          if (endDate != null && endDate < date) {
-                            onUpdate(index, { endDate: undefined });
-                          }
-                        }
-                      }}
-                      disabled={date =>
-                        isAfter(startOfDay(date), TODAY) ||
-                        isBeforeMinDate(date)
-                      }
-                      captionLayout="dropdown"
-                      startMonth={HUNDRED_YEARS_AGO}
-                      endMonth={TODAY}
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-
-              <div className="flex flex-col gap-1">
-                <div className="flex h-5 items-center">
-                  <Label data-testid="preferredClubSocieties-endDate-label">
-                    {t('preferredClubSocieties.labels.endDate')}
-                  </Label>
-                </div>
-                <Popover
-                  modal
-                  open={openDatePopover === 'endDate'}
-                  onOpenChange={open =>
-                    setOpenDatePopover(
-                      !fieldsDisabled && open ? 'endDate' : null
-                    )
-                  }
-                >
-                  <PopoverTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      disabled={fieldsDisabled}
-                      className={cn(
-                        'border-input flex h-11 w-full items-center justify-between rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
-                        !entry.endDate && 'text-slate-500',
-                        entry.endDate && 'text-zinc-800',
-                        'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
-                        'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
-                        'dark:bg-input/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
-                        applyTypography('body-medium'),
-                        'shadow-none!'
-                      )}
-                    >
-                      {entry.endDate
-                        ? formatDate(entry.endDate)
-                        : t('preferredClubSocieties.placeholders.endDate')}
-                      <CalendarIcon
-                        variant="Linear"
-                        size={20}
-                        className="text-zinc-800"
-                      />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={parseLocalDate(entry.endDate) ?? undefined}
-                      defaultMonth={
-                        parseLocalDate(entry.endDate) ||
-                        parseLocalDate(entry.startDate) ||
-                        new Date()
-                      }
-                      onSelect={date => {
-                        onUpdate(index, {
-                          endDate: date ? formatLocalDate(date) : undefined,
-                        });
-                        setOpenDatePopover(null);
-                      }}
-                      disabled={date => {
-                        const day = startOfDay(date);
-                        const startDate = parseLocalDate(entry.startDate);
-                        return (
-                          isBeforeMinDate(date) ||
-                          isAfter(day, HUNDRED_YEARS_FROM_NOW) ||
-                          (startDate != null &&
-                            isBefore(day, startOfDay(startDate)))
-                        );
-                      }}
-                      captionLayout="dropdown"
-                      startMonth={HUNDRED_YEARS_AGO}
-                      endMonth={HUNDRED_YEARS_FROM_NOW}
+                      {t('preferredClubSocieties.labels.clubSociety')}
+                    </Label>
+                    <CharacterCount
+                      currentLength={entry.clubSocietySearch.length}
+                      maxLength={MAX_CLUB_SOCIETY_LENGTH}
                     />
                   </div>
                   <MultipleSelector
@@ -557,10 +334,12 @@ function ClubSocietyCard({
                           }
                         }}
                         disabled={date =>
-                          date > new Date() || date < HUNDRED_YEARS_AGO
+                          isAfter(startOfDay(date), TODAY) ||
+                          isBeforeMinDate(date, HUNDRED_YEARS_AGO)
                         }
                         captionLayout="dropdown"
                         startMonth={HUNDRED_YEARS_AGO}
+                        endMonth={TODAY}
                       />
                     </PopoverContent>
                   </Popover>
@@ -625,11 +404,13 @@ function ClubSocietyCard({
                           setOpenDatePopover(null);
                         }}
                         disabled={date => {
+                          const day = startOfDay(date);
                           const startDate = parseLocalDate(entry.startDate);
                           return (
-                            date < HUNDRED_YEARS_AGO ||
-                            date > HUNDRED_YEARS_FROM_NOW ||
-                            (startDate != null && date < startDate)
+                            isBeforeMinDate(date, HUNDRED_YEARS_AGO) ||
+                            isAfter(day, HUNDRED_YEARS_FROM_NOW) ||
+                            (startDate != null &&
+                              isBefore(day, startOfDay(startDate)))
                           );
                         }}
                         captionLayout="dropdown"

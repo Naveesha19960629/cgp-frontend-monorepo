@@ -27,9 +27,8 @@ import type {
 } from '@/views/vacancies/types';
 import { resolveUserCreatedIndustries } from '@/views/vacancies/utils';
 import {
-  getDateYearsAgo,
-  getDateYearsFromNow,
-  startOfToday,
+  getHundredYearDateBoundaries,
+  isBeforeMinDate,
 } from '@/views/vacancies/utils/date-timezone-safe';
 
 import { CharacterCount } from '@cgp/ui-kit/components/character-count';
@@ -62,17 +61,11 @@ import { applyTypography } from '@cgp/ui-kit/lib/typography';
 import { cn } from '@cgp/ui-kit/lib/utils';
 import { format, isAfter, isBefore, startOfDay } from 'date-fns';
 
-const DATE_BOUNDARY_YEARS = 100;
-// Exact-date boundaries (day/month/year), not year-only — matches the
-// Preferred Sports date pickers. If today is 2026-07-07:
-// MIN = 1926-07-07, TODAY = 2026-07-07, MAX = 2126-07-07.
-const TODAY = startOfToday();
-const HUNDRED_YEARS_AGO = getDateYearsAgo(DATE_BOUNDARY_YEARS);
-const HUNDRED_YEARS_FROM_NOW = getDateYearsFromNow(DATE_BOUNDARY_YEARS);
-
-/** True when `date` falls before the 100-year-ago cutoff (exclusive). */
-const isBeforeMinDate = (date: Date) =>
-  isBefore(startOfDay(date), HUNDRED_YEARS_AGO);
+const {
+  today: TODAY,
+  minDate: HUNDRED_YEARS_AGO,
+  maxDate: HUNDRED_YEARS_FROM_NOW,
+} = getHundredYearDateBoundaries();
 
 const multiSelectInfoAvatar = new URL(
   '../../../../assets/images/multi-select-info-avatar.svg',
@@ -413,7 +406,7 @@ function PatentCard({
                               );
                               return (
                                 isAfter(day, TODAY) ||
-                                isBeforeMinDate(date) ||
+                                isBeforeMinDate(date, HUNDRED_YEARS_AGO) ||
                                 (toDate != null &&
                                   isAfter(day, startOfDay(toDate)))
                               );
@@ -505,7 +498,7 @@ function PatentCard({
                                 `patents.${index}.fromDate`
                               );
                               return (
-                                isBeforeMinDate(date) ||
+                                isBeforeMinDate(date, HUNDRED_YEARS_AGO) ||
                                 isAfter(day, HUNDRED_YEARS_FROM_NOW) ||
                                 (fromDate != null &&
                                   isBefore(day, startOfDay(fromDate)))
