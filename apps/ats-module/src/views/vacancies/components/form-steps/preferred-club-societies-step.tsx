@@ -29,6 +29,7 @@ import {
   isBeforeMinDate,
   parseLocalDate,
 } from '@/views/vacancies/utils/date-timezone-safe';
+import { computeRowStartCodes } from '@/views/vacancies/utils/field-grid-layout';
 
 import { CharacterCount } from '@cgp/ui-kit/components/character-count';
 import { SuccessToast } from '@cgp/ui-kit/components/custom-toast';
@@ -58,6 +59,29 @@ import DisableDialog from './disable-dialog';
 const MAX_POSITION_LENGTH = 250;
 const MAX_CLUB_SOCIETY_LENGTH = 250;
 const MAX_SELECTIONS = 10;
+
+// Template field-visibility codes for the Clubs & Societies section. When a
+// template marks this section as "data taken from candidate", the backend
+// forces every flag false, so none of these entry fields render.
+const CLUB_SOCIETY_FIELD_CODES = [
+  'clubSociety',
+  'organization',
+  'organizationLocations',
+  'positionRoleHeld',
+  'startDate',
+  'endDate',
+] as const;
+
+// Grid layout order + column spans, used to compute which half fields must
+// wrap to a fresh row (`xl:col-start-1`) based on the visible field packing.
+const CLUB_GRID_FIELDS = [
+  { code: 'clubSociety', span: 2 },
+  { code: 'startDate', span: 1 },
+  { code: 'endDate', span: 1 },
+  { code: 'organization', span: 2 },
+  { code: 'organizationLocations', span: 2 },
+  { code: 'positionRoleHeld', span: 1 },
+] as const;
 const {
   today: TODAY,
   minDate: HUNDRED_YEARS_AGO,
@@ -126,6 +150,7 @@ function ClubSocietyCard({
 }>) {
   const { t } = useTranslation('ats');
   const isFieldVisible = useTemplateFieldVisible('clubsAndSocieties');
+  const rowStartCodes = computeRowStartCodes(CLUB_GRID_FIELDS, isFieldVisible);
   const [locationsError, setLocationsError] = useState(false);
   const [societiesError, setSocietiesError] = useState(false);
   const [organizationsError, setOrganizationsError] = useState(false);
@@ -177,10 +202,15 @@ function ClubSocietyCard({
               fieldsDisabled && 'pointer-events-none opacity-60'
             )}
           >
-            {/* Row 1: Club / Society | Start Date | End Date */}
-            <div className="grid grid-cols-[2fr_1fr_1fr] gap-4">
+            {/* Fields: dense 4-column grid so visible fields repack with no gaps */}
+            <div className="grid grid-cols-1 gap-4 xl:grid-cols-4">
               {isFieldVisible('clubSociety') && (
-                <div className="flex flex-col gap-1">
+                <div
+                  className={cn(
+                    'flex flex-col gap-1 xl:col-span-2',
+                    rowStartCodes.has('clubSociety') && 'xl:col-start-1'
+                  )}
+                >
                   <div className="flex items-center justify-between">
                     <Label
                       data-testid="preferredClubSocieties-clubSociety-label"
@@ -270,7 +300,7 @@ function ClubSocietyCard({
               )}
 
               {isFieldVisible('startDate') && (
-                <div className="flex flex-col gap-1">
+                <div className="flex flex-col gap-1 xl:col-span-1">
                   <div className="flex h-5 items-center">
                     <Label data-testid="preferredClubSocieties-startDate-label">
                       {t('preferredClubSocieties.labels.startDate')}
@@ -347,7 +377,7 @@ function ClubSocietyCard({
               )}
 
               {isFieldVisible('endDate') && (
-                <div className="flex flex-col gap-1">
+                <div className="flex flex-col gap-1 xl:col-span-1">
                   <div className="flex h-5 items-center">
                     <Label data-testid="preferredClubSocieties-endDate-label">
                       {t('preferredClubSocieties.labels.endDate')}
@@ -421,12 +451,14 @@ function ClubSocietyCard({
                   </Popover>
                 </div>
               )}
-            </div>
 
-            {/* Row 2: Represented Organization | Organization Location */}
-            <div className="grid grid-cols-2 gap-4">
               {isFieldVisible('organization') && (
-                <div className="flex flex-col gap-1">
+                <div
+                  className={cn(
+                    'flex flex-col gap-1 xl:col-span-2',
+                    rowStartCodes.has('organization') && 'xl:col-start-1'
+                  )}
+                >
                   <div className="flex h-5 items-center">
                     <Label
                       data-testid="preferredClubSocieties-representedOrganization-label"
@@ -506,7 +538,13 @@ function ClubSocietyCard({
               )}
 
               {isFieldVisible('organizationLocations') && (
-                <div className="flex flex-col gap-1">
+                <div
+                  className={cn(
+                    'flex flex-col gap-1 xl:col-span-2',
+                    rowStartCodes.has('organizationLocations') &&
+                      'xl:col-start-1'
+                  )}
+                >
                   <div className="flex h-5 items-center">
                     <Label
                       data-testid="preferredClubSocieties-organizationLocation-label"
@@ -553,12 +591,9 @@ function ClubSocietyCard({
                   />
                 </div>
               )}
-            </div>
 
-            {/* Row 3: Position / Role Held */}
-            <div className="grid grid-cols-4 gap-4">
               {isFieldVisible('positionRoleHeld') && (
-                <div className="col-span-1 flex flex-col gap-1">
+                <div className="flex flex-col gap-1 xl:col-span-1">
                   <div className="flex items-center justify-between">
                     <Label data-testid="preferredClubSocieties-position-label">
                       {t('preferredClubSocieties.labels.position')}
@@ -599,6 +634,10 @@ export default function PreferredClubSocietiesStep({
   const { form: contextForm, onCancel } = useVacancyForm();
   const savedClubSocieties = contextForm.preferredClubSocieties;
   const vacancyStatus = contextForm.status;
+  const isFieldVisible = useTemplateFieldVisible('clubsAndSocieties');
+  const hasAnyVisibleField = CLUB_SOCIETY_FIELD_CODES.some(code =>
+    isFieldVisible(code)
+  );
 
   const { mutateAsync: createSociety } = useCreateSocietyMutation();
   const { mutateAsync: createOrganization } = useCreateOrganizationMutation();
@@ -1004,52 +1043,56 @@ export default function PreferredClubSocietiesStep({
           </Label>
         </div>
 
-        {/* ── Club Society cards ────────────────────────────────────────── */}
-        <div className="flex flex-col gap-4 px-6">
-          {entries.map((entry, index) => (
-            <ClubSocietyCard
-              key={entry.id}
-              index={index}
-              entry={entry}
-              onUpdate={updateEntry}
-              onSocietiesSearch={setSocietiesSearchQuery}
-              onOrganizationsSearch={setOrganizationsSearchQuery}
-              onLocationsSearch={setLocationsSearchQuery}
-              onRequestAddOrganization={(cardIndex, name) => {
-                setActiveCardIndex(cardIndex);
-                setPendingOrganizationName(name);
-                setShowAddOrganizationDialog(true);
-              }}
-              fieldsDisabled={fieldsDisabled}
-              societies={societies}
-              isSocietiesLoading={isSocietiesLoading}
-              organizations={organizations}
-              isOrganizationsLoading={isOrganizationsLoading}
-              locationOptions={locationOptions}
-              isLocationsLoading={isLocationsLoading}
-              orgSelectorKey={orgSelectorKey}
-            />
-          ))}
-        </div>
+        {hasAnyVisibleField && (
+          <>
+            {/* ── Club Society cards ────────────────────────────────────────── */}
+            <div className="flex flex-col gap-4 px-6">
+              {entries.map((entry, index) => (
+                <ClubSocietyCard
+                  key={entry.id}
+                  index={index}
+                  entry={entry}
+                  onUpdate={updateEntry}
+                  onSocietiesSearch={setSocietiesSearchQuery}
+                  onOrganizationsSearch={setOrganizationsSearchQuery}
+                  onLocationsSearch={setLocationsSearchQuery}
+                  onRequestAddOrganization={(cardIndex, name) => {
+                    setActiveCardIndex(cardIndex);
+                    setPendingOrganizationName(name);
+                    setShowAddOrganizationDialog(true);
+                  }}
+                  fieldsDisabled={fieldsDisabled}
+                  societies={societies}
+                  isSocietiesLoading={isSocietiesLoading}
+                  organizations={organizations}
+                  isOrganizationsLoading={isOrganizationsLoading}
+                  locationOptions={locationOptions}
+                  isLocationsLoading={isLocationsLoading}
+                  orgSelectorKey={orgSelectorKey}
+                />
+              ))}
+            </div>
 
-        {/* ── Add entry button ──────────────────────────────────────────── */}
-        <div
-          className={cn(
-            'flex justify-end px-6 py-4',
-            !isEnabled && 'pointer-events-none opacity-60'
-          )}
-        >
-          <Button
-            variant="secondary"
-            size="icon"
-            aria-label={t('preferredClubSocieties.addEntry')}
-            className="size-11 rounded-lg bg-gray-200 px-3 text-sm"
-            disabled
-            onClick={addEntry}
-          >
-            <PlusIcon className="size-4 text-neutral-600!" />
-          </Button>
-        </div>
+            {/* ── Add entry button ──────────────────────────────────────────── */}
+            <div
+              className={cn(
+                'flex justify-end px-6 py-4',
+                !isEnabled && 'pointer-events-none opacity-60'
+              )}
+            >
+              <Button
+                variant="secondary"
+                size="icon"
+                aria-label={t('preferredClubSocieties.addEntry')}
+                className="size-11 rounded-lg bg-gray-200 px-3 text-sm"
+                disabled
+                onClick={addEntry}
+              >
+                <PlusIcon className="size-4 text-neutral-600!" />
+              </Button>
+            </div>
+          </>
+        )}
 
         {/* ── Step footer ───────────────────────────────────────────────── */}
         <div className="sticky bottom-0 mt-auto flex items-center justify-end gap-4 bg-white px-6 py-7 shadow-[0px_-8px_6.8px_0px_rgba(0,0,0,0.04)]">

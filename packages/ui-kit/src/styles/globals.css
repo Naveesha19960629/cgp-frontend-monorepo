@@ -138,8 +138,10 @@
   --breakpoint-tri-jobreq: 95.0625rem; /* 1521px — Job Requirements top row 3-col resumes above 1520px */
   --breakpoint-duo-skills: 83.75rem; /* 1340px — Preferred Skills drops to a single column below 1340px to avoid misaligned fields */
   --breakpoint-tri-skills: 105.3125rem; /* 1685px — Preferred Skills 3-col resumes at/above 1685px (wider than tri-jobreq to fit the long skill label without wrapping) */
-  --breakpoint-quad-honours: 110.375rem; /* 1766px — Honours 4-col resumes above 1765px */
+  --breakpoint-quad-honours: 106.25rem; /* 1700px — Honours full 4-col (quarter dates, half org selects) at/above 1700px; xl–1700px is a 4-col mid tier (half Title/IssuedBy, quarter dates, full-width org selects); single column below xl */
   --breakpoint-quad-profile: 114.125rem; /* 1826px — Profile 4-col resumes above 1825px */
+  --breakpoint-quad-pub-sports: 92.5rem; /* 1480px — Publications & Sports 4-col resumes at/above 1480px, single column below */
+  --breakpoint-quad-volunteering: 86.25rem; /* 1380px — Volunteering 4-col resumes at/above 1380px, single column below */
 }
 
 @layer base {

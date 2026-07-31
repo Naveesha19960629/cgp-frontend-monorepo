@@ -207,7 +207,7 @@ export function AddSchoolDialog({
 
         <div className="w-full flex-1 overflow-hidden rounded-2xl bg-white">
           <ScrollAreaWithShadow className="h-full max-w-full p-3 sm:p-5">
-            <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2">
+            <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-2">
               {/* School Name */}
               <div className="flex flex-col gap-1">
                 <Label

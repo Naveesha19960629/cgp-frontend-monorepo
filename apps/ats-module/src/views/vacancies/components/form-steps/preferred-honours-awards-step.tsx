@@ -28,6 +28,7 @@ import type {
 } from '@/views/vacancies/types';
 import { resolveUserCreatedOrganizations } from '@/views/vacancies/utils';
 import { DATE_DISPLAY_FORMAT } from '@/views/vacancies/utils/constants';
+import { computeRowStartCodes } from '@/views/vacancies/utils/field-grid-layout';
 
 import { CharacterCount } from '@cgp/ui-kit/components/character-count';
 import { ErrorToast, SuccessToast } from '@cgp/ui-kit/components/custom-toast';
@@ -65,6 +66,49 @@ const multiSelectInfoAvatar = new URL(
   import.meta.url
 ).href;
 
+/**
+ * Field codes that make up the Honours & Awards entry. In the Use Template flow
+ * the whole entry cards list (and its add button) is hidden when none of these
+ * are enabled by the template — see `hasAnyVisibleField`.
+ */
+const HONOURS_FIELD_CODES = [
+  'title',
+  'issuedBy',
+  'issuedFromDate',
+  'issuedToDate',
+  'associatedOrganizations',
+  'organizationLocations',
+] as const;
+
+/**
+ * Field codes in render order with their column spans at the WIDE tier
+ * (`quad-honours`, ≥1700px), used by `computeRowStartCodes` to decide which
+ * half-width fields must wrap to a fresh row (`quad-honours:col-start-1`).
+ */
+const HONOURS_GRID_FIELDS = [
+  { code: 'title', span: 1 },
+  { code: 'issuedBy', span: 1 },
+  { code: 'issuedFromDate', span: 1 },
+  { code: 'issuedToDate', span: 1 },
+  { code: 'associatedOrganizations', span: 2 },
+  { code: 'organizationLocations', span: 2 },
+] as const;
+
+/**
+ * Same fields with their MID-tier spans (`xl`–1700px): Title/Issued By are
+ * half-width there, so the free-flow/straddle placement differs from the wide
+ * tier. Drives `xl:col-start-1` — e.g. it lets Associated Organization pack
+ * onto the same row as the two quarter-width date fields.
+ */
+const HONOURS_GRID_FIELDS_MID = [
+  { code: 'title', span: 2 },
+  { code: 'issuedBy', span: 2 },
+  { code: 'issuedFromDate', span: 1 },
+  { code: 'issuedToDate', span: 1 },
+  { code: 'associatedOrganizations', span: 2 },
+  { code: 'organizationLocations', span: 2 },
+] as const;
+
 function hasHonoursData(data: PreferredHonoursAwardsSchema): boolean {
   return data.honoursAndAwards.some(
     honour =>
@@ -92,6 +136,19 @@ function HonoursAndAwardsCard({
 }: Readonly<HonoursAndAwardsCardProps>) {
   const { t } = useTranslation('ats');
   const isFieldVisible = useTemplateFieldVisible('honoursAndAwards');
+  // Straddle-guard row starts, computed per tier because Title/Issued By have
+  // different spans at each: wide (`quad-honours`) → `quad-honours:col-start-1`,
+  // mid (`xl`) → `xl:col-start-1`. Free-flow otherwise, so a half field packs
+  // beside preceding quarters (e.g. Associated Org next to the dates) unless it
+  // would straddle the row midline.
+  const rowStartCodes = computeRowStartCodes(
+    HONOURS_GRID_FIELDS,
+    isFieldVisible
+  );
+  const rowStartCodesMid = computeRowStartCodes(
+    HONOURS_GRID_FIELDS_MID,
+    isFieldVisible
+  );
   const today = useMemo(() => {
     const d = new Date();
     d.setHours(23, 59, 59, 999);
@@ -184,284 +241,422 @@ function HonoursAndAwardsCard({
 
         {/* Collapsible body */}
         <CollapsibleContent>
-          <div className="space-y-5 px-5 pb-5">
-            <div className="quad-honours:grid-cols-4 grid grid-cols-1 gap-4 xl:grid-cols-2">
-              {isFieldVisible('title') && (
-                <FormField
-                  control={form.control}
-                  name={`honoursAndAwards.${index}.title`}
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col gap-1.5 space-y-0">
-                      <FormLabel
-                        data-testid="preferredHonoursAwards-titleOfHonourOrAward-label"
-                        className="flex justify-between"
-                      >
-                        <span>
-                          {t('preferredHonoursAwards.titleOfHonourOrAward')}
-                        </span>
-                        <CharacterCount
-                          maxLength={250}
-                          currentLength={field.value.length}
-                        />
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder={t(
-                            'preferredHonoursAwards.titleOfHonourOrAwardPlaceholder'
-                          )}
-                          maxLength={250}
-                          disabled={isFieldDisabled}
-                          className="h-11 shadow-none"
-                          {...field}
-                          onChange={e => {
-                            field.onChange(
-                              removeEmoji(e.target.value.trimStart())
-                            );
-                          }}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
+          <div className="grid grid-cols-1 gap-4 px-5 pb-5 xl:grid-cols-4">
+            {isFieldVisible('title') && (
+              <FormField
+                control={form.control}
+                name={`honoursAndAwards.${index}.title`}
+                render={({ field }) => (
+                  <FormItem className="quad-honours:col-span-1 flex flex-col gap-1.5 space-y-0 xl:col-span-2">
+                    <FormLabel
+                      data-testid="preferredHonoursAwards-titleOfHonourOrAward-label"
+                      className="flex justify-between"
+                    >
+                      <span>
+                        {t('preferredHonoursAwards.titleOfHonourOrAward')}
+                      </span>
+                      <CharacterCount
+                        maxLength={250}
+                        currentLength={field.value.length}
+                      />
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder={t(
+                          'preferredHonoursAwards.titleOfHonourOrAwardPlaceholder'
+                        )}
+                        maxLength={250}
+                        disabled={isFieldDisabled}
+                        className="h-11 shadow-none"
+                        {...field}
+                        onChange={e => {
+                          field.onChange(
+                            removeEmoji(e.target.value.trimStart())
+                          );
+                        }}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
-              {isFieldVisible('issuedBy') && (
-                <FormField
-                  control={form.control}
-                  name={`honoursAndAwards.${index}.issuedBy`}
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col gap-1.5 space-y-0">
-                      <FormLabel
-                        data-testid="preferredHonoursAwards-issuedBy-label"
-                        className="flex justify-between"
-                      >
-                        <span>{t('preferredHonoursAwards.issuedBy')}</span>
-                        <CharacterCount
-                          maxLength={100}
-                          currentLength={field.value.length}
-                        />
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder={t(
-                            'preferredHonoursAwards.issuedByPlaceholder'
-                          )}
-                          maxLength={100}
-                          disabled={isFieldDisabled}
-                          className="h-11 shadow-none"
-                          {...field}
-                          onChange={e => {
-                            field.onChange(
-                              removeEmoji(e.target.value.trimStart())
-                            );
-                          }}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
+            {isFieldVisible('issuedBy') && (
+              <FormField
+                control={form.control}
+                name={`honoursAndAwards.${index}.issuedBy`}
+                render={({ field }) => (
+                  <FormItem className="quad-honours:col-span-1 flex flex-col gap-1.5 space-y-0 xl:col-span-2">
+                    <FormLabel
+                      data-testid="preferredHonoursAwards-issuedBy-label"
+                      className="flex justify-between"
+                    >
+                      <span>{t('preferredHonoursAwards.issuedBy')}</span>
+                      <CharacterCount
+                        maxLength={100}
+                        currentLength={field.value.length}
+                      />
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder={t(
+                          'preferredHonoursAwards.issuedByPlaceholder'
+                        )}
+                        maxLength={100}
+                        disabled={isFieldDisabled}
+                        className="h-11 shadow-none"
+                        {...field}
+                        onChange={e => {
+                          field.onChange(
+                            removeEmoji(e.target.value.trimStart())
+                          );
+                        }}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
-              {isFieldVisible('issuedFromDate') && (
-                <FormField
-                  control={form.control}
-                  name={`honoursAndAwards.${index}.issuedDateFrom`}
-                  render={({ field }) => (
-                    <FormItem className="flex w-full flex-col gap-1 space-y-0">
-                      <FormLabel
-                        data-testid="preferredHonoursAwards-issuedDateFrom-label"
-                        className="text-sm font-semibold text-slate-900"
-                      >
-                        {t('preferredHonoursAwards.issuedDateFrom')}
-                      </FormLabel>
-                      <Popover
-                        modal
-                        open={openDatePopover === 'issuedDateFrom'}
-                        onOpenChange={open =>
-                          setOpenDatePopover(
-                            !isFieldDisabled && open ? 'issuedDateFrom' : null
-                          )
-                        }
-                      >
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              disabled={isFieldDisabled}
-                              className={cn(
-                                'border-input flex h-11 w-full items-center justify-between rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
-                                !field.value && 'text-slate-500',
-                                field.value && 'text-zinc-800',
-                                'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
-                                'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
-                                'dark:bg-input/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
-                                applyTypography('body-medium'),
-                                'shadow-none!',
-                                'min-w-0'
-                              )}
-                            >
-                              <span className="mr-2 truncate">
-                                {field.value
-                                  ? format(field.value, DATE_DISPLAY_FORMAT)
-                                  : t(
-                                      'preferredHonoursAwards.issuedDateFromPlaceholder'
-                                    )}
-                              </span>
-                              <CalenderIcon
-                                variant="Linear"
-                                size={20}
-                                className="shrink-0 text-zinc-800"
-                              />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value ?? undefined}
-                            defaultMonth={field.value ?? new Date()}
-                            onSelect={date => {
-                              field.onChange(date);
-                              setOpenDatePopover(null);
-                              const issuedDateTo = form.getValues(
-                                `honoursAndAwards.${index}.issuedDateTo`
+            {isFieldVisible('issuedFromDate') && (
+              <FormField
+                control={form.control}
+                name={`honoursAndAwards.${index}.issuedDateFrom`}
+                render={({ field }) => (
+                  <FormItem className="flex w-full flex-col gap-1 space-y-0 xl:col-span-1">
+                    <FormLabel
+                      data-testid="preferredHonoursAwards-issuedDateFrom-label"
+                      className="text-sm font-semibold text-slate-900"
+                    >
+                      {t('preferredHonoursAwards.issuedDateFrom')}
+                    </FormLabel>
+                    <Popover
+                      modal
+                      open={openDatePopover === 'issuedDateFrom'}
+                      onOpenChange={open =>
+                        setOpenDatePopover(
+                          !isFieldDisabled && open ? 'issuedDateFrom' : null
+                        )
+                      }
+                    >
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            disabled={isFieldDisabled}
+                            className={cn(
+                              'border-input flex h-11 w-full items-center justify-between rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
+                              !field.value && 'text-slate-500',
+                              field.value && 'text-zinc-800',
+                              'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
+                              'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
+                              'dark:bg-input/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
+                              applyTypography('body-medium'),
+                              'shadow-none!',
+                              'min-w-0'
+                            )}
+                          >
+                            <span className="mr-2 truncate">
+                              {field.value
+                                ? format(field.value, DATE_DISPLAY_FORMAT)
+                                : t(
+                                    'preferredHonoursAwards.issuedDateFromPlaceholder'
+                                  )}
+                            </span>
+                            <CalenderIcon
+                              variant="Linear"
+                              size={20}
+                              className="shrink-0 text-zinc-800"
+                            />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value ?? undefined}
+                          defaultMonth={field.value ?? new Date()}
+                          onSelect={date => {
+                            field.onChange(date);
+                            setOpenDatePopover(null);
+                            const issuedDateTo = form.getValues(
+                              `honoursAndAwards.${index}.issuedDateTo`
+                            );
+                            if (issuedDateTo && date && issuedDateTo < date) {
+                              form.setValue(
+                                `honoursAndAwards.${index}.issuedDateTo`,
+                                null
                               );
-                              if (issuedDateTo && date && issuedDateTo < date) {
-                                form.setValue(
-                                  `honoursAndAwards.${index}.issuedDateTo`,
-                                  null
-                                );
-                              }
-                            }}
-                            disabled={date =>
-                              date > today || date < hundredYearsAgo
                             }
-                            captionLayout="dropdown"
-                            startMonth={hundredYearsAgo}
-                            endMonth={today}
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
+                          }}
+                          disabled={date =>
+                            date > today || date < hundredYearsAgo
+                          }
+                          captionLayout="dropdown"
+                          startMonth={hundredYearsAgo}
+                          endMonth={today}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
-              {isFieldVisible('issuedToDate') && (
-                <FormField
-                  control={form.control}
-                  name={`honoursAndAwards.${index}.issuedDateTo`}
-                  render={({ field }) => (
-                    <FormItem className="flex w-full flex-col gap-1 space-y-0">
-                      <FormLabel
-                        data-testid="preferredHonoursAwards-issuedDateTo-label"
-                        className="text-sm font-semibold text-slate-900"
-                      >
-                        {t('preferredHonoursAwards.issuedDateTo')}
-                      </FormLabel>
-                      <Popover
-                        modal
-                        open={openDatePopover === 'issuedDateTo'}
-                        onOpenChange={open =>
-                          setOpenDatePopover(
-                            !isFieldDisabled && open ? 'issuedDateTo' : null
-                          )
+            {isFieldVisible('issuedToDate') && (
+              <FormField
+                control={form.control}
+                name={`honoursAndAwards.${index}.issuedDateTo`}
+                render={({ field }) => (
+                  <FormItem className="flex w-full flex-col gap-1 space-y-0 xl:col-span-1">
+                    <FormLabel
+                      data-testid="preferredHonoursAwards-issuedDateTo-label"
+                      className="text-sm font-semibold text-slate-900"
+                    >
+                      {t('preferredHonoursAwards.issuedDateTo')}
+                    </FormLabel>
+                    <Popover
+                      modal
+                      open={openDatePopover === 'issuedDateTo'}
+                      onOpenChange={open =>
+                        setOpenDatePopover(
+                          !isFieldDisabled && open ? 'issuedDateTo' : null
+                        )
+                      }
+                    >
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            disabled={isFieldDisabled}
+                            className={cn(
+                              'border-input flex h-11 w-full items-center justify-between rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
+                              !field.value && 'text-slate-500',
+                              field.value && 'text-zinc-800',
+                              'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
+                              'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
+                              'dark:bg-input/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
+                              applyTypography('body-medium'),
+                              'shadow-none!',
+                              'min-w-0'
+                            )}
+                          >
+                            <span className="mr-2 truncate">
+                              {field.value
+                                ? format(field.value, DATE_DISPLAY_FORMAT)
+                                : t(
+                                    'preferredHonoursAwards.issuedDateToPlaceholder'
+                                  )}
+                            </span>
+                            <CalenderIcon
+                              variant="Linear"
+                              size={20}
+                              className="shrink-0 text-zinc-800"
+                            />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value ?? undefined}
+                          defaultMonth={field.value ?? new Date()}
+                          onSelect={date => {
+                            field.onChange(date);
+                            setOpenDatePopover(null);
+                          }}
+                          disabled={date => {
+                            const issuedDateFrom = form.getValues(
+                              `honoursAndAwards.${index}.issuedDateFrom`
+                            );
+                            return (
+                              date < hundredYearsAgo ||
+                              date > hundredYearsFromNow ||
+                              (issuedDateFrom != null && date < issuedDateFrom)
+                            );
+                          }}
+                          captionLayout="dropdown"
+                          startMonth={hundredYearsAgo}
+                          endMonth={hundredYearsFromNow}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
+            {isFieldVisible('associatedOrganizations') && (
+              <FormField
+                control={form.control}
+                name={`honoursAndAwards.${index}.associatedOrganizations`}
+                render={({ field }) => (
+                  <FormItem
+                    className={cn(
+                      'flex flex-col gap-1.5 space-y-0 xl:col-span-2',
+                      rowStartCodesMid.has('associatedOrganizations') &&
+                        'xl:col-start-1',
+                      rowStartCodes.has('associatedOrganizations')
+                        ? 'quad-honours:col-start-1'
+                        : rowStartCodesMid.has('associatedOrganizations') &&
+                            'quad-honours:col-start-auto'
+                    )}
+                  >
+                    <FormLabel
+                      data-testid="preferredHonoursAwards-associatedOrganization-label"
+                      className={cn(
+                        'text-sm font-semibold text-slate-900',
+                        hasOrganizationMaxError && 'text-destructive'
+                      )}
+                    >
+                      {t('preferredHonoursAwards.associatedOrganization')}
+                    </FormLabel>
+                    <FormControl>
+                      <MultipleSelector
+                        alwaysShowCreatable
+                        value={
+                          field.value?.map(organization => ({
+                            value: organization.value,
+                            label: organization.label,
+                            source: organization.source,
+                          })) ?? []
                         }
-                      >
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              disabled={isFieldDisabled}
-                              className={cn(
-                                'border-input flex h-11 w-full items-center justify-between rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
-                                !field.value && 'text-slate-500',
-                                field.value && 'text-zinc-800',
-                                'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
-                                'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
-                                'dark:bg-input/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
-                                applyTypography('body-medium'),
-                                'shadow-none!',
-                                'min-w-0'
-                              )}
-                            >
-                              <span className="mr-2 truncate">
-                                {field.value
-                                  ? format(field.value, DATE_DISPLAY_FORMAT)
-                                  : t(
-                                      'preferredHonoursAwards.issuedDateToPlaceholder'
-                                    )}
-                              </span>
-                              <CalenderIcon
-                                variant="Linear"
-                                size={20}
-                                className="shrink-0 text-zinc-800"
-                              />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value ?? undefined}
-                            defaultMonth={field.value ?? new Date()}
-                            onSelect={date => {
-                              field.onChange(date);
-                              setOpenDatePopover(null);
-                            }}
-                            disabled={date => {
-                              const issuedDateFrom = form.getValues(
-                                `honoursAndAwards.${index}.issuedDateFrom`
-                              );
-                              return (
-                                date < hundredYearsAgo ||
-                                date > hundredYearsFromNow ||
-                                (issuedDateFrom != null &&
-                                  date < issuedDateFrom)
-                              );
-                            }}
-                            captionLayout="dropdown"
-                            startMonth={hundredYearsAgo}
-                            endMonth={hundredYearsFromNow}
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
-            </div>
+                        errorMessage={t(
+                          'preferredHonoursAwards.validation.maxExceeded',
+                          {
+                            max: 10,
+                          }
+                        )}
+                        onErrorStateChange={setHasOrganizationMaxError}
+                        onChange={options => {
+                          const validOrganizations = options
+                            .map(option => {
+                              const isNew = option.value === option.label;
+                              if (isNew) {
+                                onOpenAddOrganizationDialog(
+                                  option.label,
+                                  index
+                                );
+                                return null;
+                              }
+                              return {
+                                value: option.value,
+                                label: option.label,
+                                source:
+                                  (option.source as string) ?? 'USER_CREATED',
+                              };
+                            })
+                            .filter(
+                              (org): org is NonNullable<typeof org> =>
+                                org !== null
+                            );
 
-            <div className="grid grid-cols-1 gap-x-5 gap-y-4 xl:grid-cols-2">
-              {isFieldVisible('associatedOrganizations') && (
-                <FormField
-                  control={form.control}
-                  name={`honoursAndAwards.${index}.associatedOrganizations`}
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col gap-1.5 space-y-0">
+                          // Always commit the cleaned list. When a new org is
+                          // detected it is excluded here and instead added (with
+                          // its location) once the dialog completes, so the raw
+                          // typed value never lingers as a partial entry.
+                          field.onChange(validOrganizations);
+                        }}
+                        options={organizationsData.map(organization => ({
+                          value: organization.id,
+                          label: organization.name ?? organization.label ?? '',
+                          source: organization.source ?? 'MASTER',
+                        }))}
+                        onSearchSync={value => {
+                          setOrganizationSearch(value);
+                          return organizationsData.map(organization => ({
+                            value: organization.id,
+                            label:
+                              organization.name ?? organization.label ?? '',
+                            source: organization.source ?? 'MASTER',
+                          }));
+                        }}
+                        keepSelectedInList
+                        creatable
+                        triggerSearchOnFocus
+                        hideClearAllButton
+                        maxSelected={10}
+                        disabled={isFieldDisabled}
+                        loading={isOrganizationsLoading}
+                        placeholder={t(
+                          'preferredHonoursAwards.associatedOrganizationPlaceholder'
+                        )}
+                        loadingIndicator={
+                          <p className="px-3 pb-3 text-left">
+                            {t('common.loading')}
+                          </p>
+                        }
+                        emptyIndicator={
+                          <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
+                            <div className="flex flex-col items-start">
+                              <img
+                                src={multiSelectInfoAvatar}
+                                alt={t('common.noData')}
+                              />
+                              <div className="mt-3 w-61 text-left">
+                                <p className="font-bold text-slate-900">
+                                  {t('common.noDataTitle')}
+                                </p>
+                                <p className="text-sm font-semibold text-slate-700">
+                                  {t('common.noDataDescription')}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        }
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
+            {isFieldVisible('organizationLocations') && (
+              <FormField
+                control={form.control}
+                name={`honoursAndAwards.${index}.organizationLocations`}
+                render={({ field }) => {
+                  const locationOptions: Option[] = locationsData.map(
+                    location => ({
+                      value: location.id,
+                      label: location.label,
+                    })
+                  );
+
+                  return (
+                    <FormItem
+                      className={cn(
+                        'flex flex-col gap-1.5 space-y-0 xl:col-span-2',
+                        rowStartCodesMid.has('organizationLocations') &&
+                          'xl:col-start-1',
+                        rowStartCodes.has('organizationLocations')
+                          ? 'quad-honours:col-start-1'
+                          : rowStartCodesMid.has('organizationLocations') &&
+                              'quad-honours:col-start-auto'
+                      )}
+                    >
                       <FormLabel
-                        data-testid="preferredHonoursAwards-associatedOrganization-label"
+                        data-testid="preferredHonoursAwards-organizationLocation-label"
                         className={cn(
                           'text-sm font-semibold text-slate-900',
-                          hasOrganizationMaxError && 'text-destructive'
+                          hasLocationMaxError && 'text-destructive'
                         )}
                       >
-                        {t('preferredHonoursAwards.associatedOrganization')}
+                        {t('preferredHonoursAwards.organizationLocation')}
                       </FormLabel>
                       <FormControl>
                         <MultipleSelector
-                          alwaysShowCreatable
                           value={
-                            field.value?.map(organization => ({
-                              value: organization.value,
-                              label: organization.label,
-                              source: organization.source,
+                            field.value?.map(location => ({
+                              value: location.value,
+                              label: location.label,
                             })) ?? []
                           }
                           errorMessage={t(
@@ -470,60 +665,28 @@ function HonoursAndAwardsCard({
                               max: 10,
                             }
                           )}
-                          onErrorStateChange={setHasOrganizationMaxError}
+                          onErrorStateChange={setHasLocationMaxError}
                           onChange={options => {
-                            const validOrganizations = options
-                              .map(option => {
-                                const isNew = option.value === option.label;
-                                if (isNew) {
-                                  onOpenAddOrganizationDialog(
-                                    option.label,
-                                    index
-                                  );
-                                  return null;
-                                }
-                                return {
-                                  value: option.value,
-                                  label: option.label,
-                                  source:
-                                    (option.source as string) ?? 'USER_CREATED',
-                                };
-                              })
-                              .filter(
-                                (org): org is NonNullable<typeof org> =>
-                                  org !== null
-                              );
-
-                            // Always commit the cleaned list. When a new org is
-                            // detected it is excluded here and instead added (with
-                            // its location) once the dialog completes, so the raw
-                            // typed value never lingers as a partial entry.
-                            field.onChange(validOrganizations);
+                            field.onChange(
+                              options.map(option => ({
+                                value: option.value,
+                                label: option.label,
+                              }))
+                            );
                           }}
-                          options={organizationsData.map(organization => ({
-                            value: organization.id,
-                            label:
-                              organization.name ?? organization.label ?? '',
-                            source: organization.source ?? 'MASTER',
-                          }))}
+                          options={locationOptions}
                           onSearchSync={value => {
-                            setOrganizationSearch(value);
-                            return organizationsData.map(organization => ({
-                              value: organization.id,
-                              label:
-                                organization.name ?? organization.label ?? '',
-                              source: organization.source ?? 'MASTER',
-                            }));
+                            setLocationSearch(value);
+                            return locationOptions;
                           }}
+                          showArrow
                           keepSelectedInList
-                          creatable
-                          triggerSearchOnFocus
                           hideClearAllButton
                           maxSelected={10}
                           disabled={isFieldDisabled}
-                          loading={isOrganizationsLoading}
+                          loading={isLocationsLoading}
                           placeholder={t(
-                            'preferredHonoursAwards.associatedOrganizationPlaceholder'
+                            'preferredHonoursAwards.organizationLocationPlaceholder'
                           )}
                           loadingIndicator={
                             <p className="px-3 pb-3 text-left">
@@ -552,102 +715,10 @@ function HonoursAndAwardsCard({
                       </FormControl>
                       <FormMessage />
                     </FormItem>
-                  )}
-                />
-              )}
-
-              {isFieldVisible('organizationLocations') && (
-                <FormField
-                  control={form.control}
-                  name={`honoursAndAwards.${index}.organizationLocations`}
-                  render={({ field }) => {
-                    const locationOptions: Option[] = locationsData.map(
-                      location => ({
-                        value: location.id,
-                        label: location.label,
-                      })
-                    );
-
-                    return (
-                      <FormItem className="flex flex-col gap-1.5 space-y-0">
-                        <FormLabel
-                          data-testid="preferredHonoursAwards-organizationLocation-label"
-                          className={cn(
-                            'text-sm font-semibold text-slate-900',
-                            hasLocationMaxError && 'text-destructive'
-                          )}
-                        >
-                          {t('preferredHonoursAwards.organizationLocation')}
-                        </FormLabel>
-                        <FormControl>
-                          <MultipleSelector
-                            value={
-                              field.value?.map(location => ({
-                                value: location.value,
-                                label: location.label,
-                              })) ?? []
-                            }
-                            errorMessage={t(
-                              'preferredHonoursAwards.validation.maxExceeded',
-                              {
-                                max: 10,
-                              }
-                            )}
-                            onErrorStateChange={setHasLocationMaxError}
-                            onChange={options => {
-                              field.onChange(
-                                options.map(option => ({
-                                  value: option.value,
-                                  label: option.label,
-                                }))
-                              );
-                            }}
-                            options={locationOptions}
-                            onSearchSync={value => {
-                              setLocationSearch(value);
-                              return locationOptions;
-                            }}
-                            showArrow
-                            keepSelectedInList
-                            hideClearAllButton
-                            maxSelected={10}
-                            disabled={isFieldDisabled}
-                            loading={isLocationsLoading}
-                            placeholder={t(
-                              'preferredHonoursAwards.organizationLocationPlaceholder'
-                            )}
-                            loadingIndicator={
-                              <p className="px-3 pb-3 text-left">
-                                {t('common.loading')}
-                              </p>
-                            }
-                            emptyIndicator={
-                              <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
-                                <div className="flex flex-col items-start">
-                                  <img
-                                    src={multiSelectInfoAvatar}
-                                    alt={t('common.noData')}
-                                  />
-                                  <div className="mt-3 w-61 text-left">
-                                    <p className="font-bold text-slate-900">
-                                      {t('common.noDataTitle')}
-                                    </p>
-                                    <p className="text-sm font-semibold text-slate-700">
-                                      {t('common.noDataDescription')}
-                                    </p>
-                                  </div>
-                                </div>
-                              </div>
-                            }
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    );
-                  }}
-                />
-              )}
-            </div>
+                  );
+                }}
+              />
+            )}
           </div>
         </CollapsibleContent>
       </div>
@@ -661,6 +732,10 @@ export default function PreferredHonoursAwardsStep({
   mode = 'create',
 }: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
+  const isFieldVisible = useTemplateFieldVisible('honoursAndAwards');
+  const hasAnyVisibleField = HONOURS_FIELD_CODES.some(code =>
+    isFieldVisible(code)
+  );
 
   const {
     form: contextForm,
@@ -963,45 +1038,49 @@ export default function PreferredHonoursAwardsStep({
             />
           </div>
 
-          {/* Honour cards */}
-          <div className="flex flex-col gap-4 px-6">
-            {fields.map((field, index) => (
-              <HonoursAndAwardsCard
-                key={field.id}
-                index={index}
-                form={form}
-                onRemove={() => remove(index)}
-                onOpenAddOrganizationDialog={(name, honorIdx) => {
-                  setPendingOrganizationName(name);
-                  setPendingHonorIndex(honorIdx);
-                  setShowAddOrganizationDialog(true);
-                }}
-              />
-            ))}
-          </div>
+          {hasAnyVisibleField && (
+            <>
+              {/* Honour cards */}
+              <div className="flex flex-col gap-4 px-6">
+                {fields.map((field, index) => (
+                  <HonoursAndAwardsCard
+                    key={field.id}
+                    index={index}
+                    form={form}
+                    onRemove={() => remove(index)}
+                    onOpenAddOrganizationDialog={(name, honorIdx) => {
+                      setPendingOrganizationName(name);
+                      setPendingHonorIndex(honorIdx);
+                      setShowAddOrganizationDialog(true);
+                    }}
+                  />
+                ))}
+              </div>
 
-          {/* Add honour button */}
-          <div className="flex justify-end px-6 py-4">
-            <Button
-              type="button"
-              variant="secondary"
-              disabled
-              className="size-11 rounded-lg bg-gray-200 px-3 text-sm"
-              onClick={() =>
-                append({
-                  title: '',
-                  issuedBy: '',
-                  issuedDateFrom: undefined,
-                  issuedDateTo: undefined,
-                  associatedOrganizations: [],
-                  organizationLocations: [],
-                  isOpen: true,
-                })
-              }
-            >
-              <Plus className="size-4 text-neutral-600!" />
-            </Button>
-          </div>
+              {/* Add honour button */}
+              <div className="flex justify-end px-6 py-4">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  disabled
+                  className="size-11 rounded-lg bg-gray-200 px-3 text-sm"
+                  onClick={() =>
+                    append({
+                      title: '',
+                      issuedBy: '',
+                      issuedDateFrom: undefined,
+                      issuedDateTo: undefined,
+                      associatedOrganizations: [],
+                      organizationLocations: [],
+                      isOpen: true,
+                    })
+                  }
+                >
+                  <Plus className="size-4 text-neutral-600!" />
+                </Button>
+              </div>
+            </>
+          )}
 
           {/* Footer: Cancel + Next */}
           <div className="sticky bottom-0 mt-auto flex items-center justify-end gap-4 bg-white px-6 py-7 shadow-[0px_-8px_6.8px_0px_rgba(0,0,0,0.04)]">

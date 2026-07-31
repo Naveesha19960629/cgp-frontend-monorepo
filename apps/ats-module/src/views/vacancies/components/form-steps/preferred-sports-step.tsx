@@ -31,6 +31,10 @@ import {
   isBeforeMinDate,
   parseLocalDate,
 } from '@/views/vacancies/utils/date-timezone-safe';
+import {
+  computeRowStartCodes,
+  rowStartClass,
+} from '@/views/vacancies/utils/field-grid-layout';
 
 import { CharacterCount } from '@cgp/ui-kit/components/character-count';
 import { SuccessToast } from '@cgp/ui-kit/components/custom-toast';
@@ -60,6 +64,31 @@ import DisableDialog from './disable-dialog';
 const MAX_SPORT_NAME_LENGTH = 100;
 const MAX_POSITION_LENGTH = 100;
 const MAX_SELECTIONS = 10;
+
+// Template field-visibility codes for the Sports section. When a template
+// marks this section as "data taken from candidate", the backend forces every
+// flag false, so none of these entry fields render.
+const SPORT_FIELD_CODES = [
+  'nameOfSport',
+  'representedOrganization',
+  'organizationLocations',
+  'levelRepresented',
+  'positionRoleHeld',
+  'startDate',
+  'endDate',
+] as const;
+
+// Field grid layout spec (source order + column span) used to compute which
+// fields must start a fresh row (`quad-pub-sports:col-start-1`) as visibility changes.
+const SPORT_GRID_FIELDS = [
+  { code: 'nameOfSport', span: 2 },
+  { code: 'organizationLocations', span: 2 },
+  { code: 'levelRepresented', span: 2 },
+  { code: 'representedOrganization', span: 2 },
+  { code: 'positionRoleHeld', span: 1 },
+  { code: 'startDate', span: 1 },
+  { code: 'endDate', span: 1 },
+] as const;
 const {
   today: TODAY,
   minDate: HUNDRED_YEARS_AGO,
@@ -153,6 +182,7 @@ function SportCard({
 }>) {
   const { t } = useTranslation('ats');
   const isFieldVisible = useTemplateFieldVisible('sports');
+  const rowStartCodes = computeRowStartCodes(SPORT_GRID_FIELDS, isFieldVisible);
   const [openDatePopover, setOpenDatePopover] = useState<
     'startDate' | 'endDate' | null
   >(null);
@@ -205,10 +235,18 @@ function SportCard({
               fieldsDisabled && 'pointer-events-none opacity-60'
             )}
           >
-            {/* Row 1: Name of the Sport | Organization Location */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="quad-pub-sports:grid-cols-4 grid grid-cols-1 gap-4">
               {isFieldVisible('nameOfSport') && (
-                <div className="flex flex-col gap-1">
+                <div
+                  className={cn(
+                    'quad-pub-sports:col-span-2 flex flex-col gap-1',
+                    rowStartClass(
+                      rowStartCodes,
+                      'nameOfSport',
+                      'quad-pub-sports:col-start-1'
+                    )
+                  )}
+                >
                   <div className="flex items-center justify-between">
                     <Label
                       data-testid="preferredSports-sport-label"
@@ -291,7 +329,16 @@ function SportCard({
               )}
 
               {isFieldVisible('organizationLocations') && (
-                <div className="flex flex-col gap-1">
+                <div
+                  className={cn(
+                    'quad-pub-sports:col-span-2 flex flex-col gap-1',
+                    rowStartClass(
+                      rowStartCodes,
+                      'organizationLocations',
+                      'quad-pub-sports:col-start-1'
+                    )
+                  )}
+                >
                   <div className="flex h-5 items-center">
                     <Label
                       data-testid="preferredSports-organizationLocation-label"
@@ -336,12 +383,17 @@ function SportCard({
                   />
                 </div>
               )}
-            </div>
-
-            {/* Row 2: Level Represented | Represented Organization */}
-            <div className="grid grid-cols-2 gap-4">
               {isFieldVisible('levelRepresented') && (
-                <div className="flex flex-col gap-1">
+                <div
+                  className={cn(
+                    'quad-pub-sports:col-span-2 flex flex-col gap-1',
+                    rowStartClass(
+                      rowStartCodes,
+                      'levelRepresented',
+                      'quad-pub-sports:col-start-1'
+                    )
+                  )}
+                >
                   <div className="flex h-5 items-center">
                     <Label
                       data-testid="preferredSports-levelRepresented-label"
@@ -394,7 +446,16 @@ function SportCard({
               )}
 
               {isFieldVisible('representedOrganization') && (
-                <div className="flex flex-col gap-1">
+                <div
+                  className={cn(
+                    'quad-pub-sports:col-span-2 flex flex-col gap-1',
+                    rowStartClass(
+                      rowStartCodes,
+                      'representedOrganization',
+                      'quad-pub-sports:col-start-1'
+                    )
+                  )}
+                >
                   <div className="flex h-5 items-center">
                     <Label
                       data-testid="preferredSports-representedOrganization-label"
@@ -461,12 +522,8 @@ function SportCard({
                   />
                 </div>
               )}
-            </div>
-
-            {/* Row 3: Position / Role Held | Start Date | End Date */}
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
               {isFieldVisible('positionRoleHeld') && (
-                <div className="flex min-w-0 flex-col gap-1">
+                <div className="quad-pub-sports:col-span-1 flex min-w-0 flex-col gap-1">
                   <div className="flex items-center justify-between gap-2">
                     <Label data-testid="preferredSports-position-label">
                       {t('preferredSports.labels.position')}
@@ -490,7 +547,7 @@ function SportCard({
               )}
 
               {isFieldVisible('startDate') && (
-                <div className="flex min-w-0 flex-col gap-1">
+                <div className="quad-pub-sports:col-span-1 flex min-w-0 flex-col gap-1">
                   <div className="flex min-h-5 items-center">
                     <Label data-testid="preferredSports-startDate-label">
                       {t('preferredSports.labels.startDate')}
@@ -569,7 +626,7 @@ function SportCard({
               )}
 
               {isFieldVisible('endDate') && (
-                <div className="flex min-w-0 flex-col gap-1">
+                <div className="quad-pub-sports:col-span-1 flex min-w-0 flex-col gap-1">
                   <div className="flex min-h-5 items-center">
                     <Label data-testid="preferredSports-endDate-label">
                       {t('preferredSports.labels.endDate')}
@@ -663,6 +720,10 @@ export default function PreferredSportsStep({
   const { form: contextForm, onCancel } = useVacancyForm();
   const savedSports = contextForm.preferredSports;
   const vacancyStatus = contextForm.status;
+  const isFieldVisible = useTemplateFieldVisible('sports');
+  const hasAnyVisibleField = SPORT_FIELD_CODES.some(code =>
+    isFieldVisible(code)
+  );
 
   const { mutateAsync: createSport } = useCreateSportMutation();
   const { mutateAsync: createSportLevel } = useCreateSportLevelMutation();
@@ -1069,55 +1130,59 @@ export default function PreferredSportsStep({
           </Label>
         </div>
 
-        {/* ── Sport cards ───────────────────────────────────────────────── */}
-        <div className="flex flex-col gap-4 px-6">
-          {entries.map((entry, index) => (
-            <SportCard
-              key={entry.id}
-              index={index}
-              entry={entry}
-              onUpdate={updateEntry}
-              onSportsSearch={setSportsSearchQuery}
-              onOrganizationsSearch={setOrganizationsSearchQuery}
-              onLocationsSearch={setLocationsSearchQuery}
-              onLevelRepresentedSearch={setLevelRepresentedSearchQuery}
-              onRequestAddOrganization={(cardIndex, name) => {
-                setActiveCardIndex(cardIndex);
-                setPendingOrganizationName(name);
-                setShowAddOrganizationDialog(true);
-              }}
-              fieldsDisabled={fieldsDisabled}
-              sports={sports}
-              isSportsLoading={isSportsLoading}
-              organizations={organizations}
-              isOrganizationsLoading={isOrganizationsLoading}
-              levelRepresentedOptions={levelRepresentedOptions}
-              isLevelsLoading={isLevelsLoading}
-              locationOptions={locationOptions}
-              isLocationsLoading={isLocationsLoading}
-              orgSelectorKey={orgSelectorKey}
-            />
-          ))}
-        </div>
+        {hasAnyVisibleField && (
+          <>
+            {/* ── Sport cards ───────────────────────────────────────────────── */}
+            <div className="flex flex-col gap-4 px-6">
+              {entries.map((entry, index) => (
+                <SportCard
+                  key={entry.id}
+                  index={index}
+                  entry={entry}
+                  onUpdate={updateEntry}
+                  onSportsSearch={setSportsSearchQuery}
+                  onOrganizationsSearch={setOrganizationsSearchQuery}
+                  onLocationsSearch={setLocationsSearchQuery}
+                  onLevelRepresentedSearch={setLevelRepresentedSearchQuery}
+                  onRequestAddOrganization={(cardIndex, name) => {
+                    setActiveCardIndex(cardIndex);
+                    setPendingOrganizationName(name);
+                    setShowAddOrganizationDialog(true);
+                  }}
+                  fieldsDisabled={fieldsDisabled}
+                  sports={sports}
+                  isSportsLoading={isSportsLoading}
+                  organizations={organizations}
+                  isOrganizationsLoading={isOrganizationsLoading}
+                  levelRepresentedOptions={levelRepresentedOptions}
+                  isLevelsLoading={isLevelsLoading}
+                  locationOptions={locationOptions}
+                  isLocationsLoading={isLocationsLoading}
+                  orgSelectorKey={orgSelectorKey}
+                />
+              ))}
+            </div>
 
-        {/* ── Add entry button ──────────────────────────────────────────── */}
-        <div
-          className={cn(
-            'flex justify-end px-6 py-4',
-            !isEnabled && 'pointer-events-none opacity-60'
-          )}
-        >
-          <Button
-            variant="secondary"
-            size="icon"
-            aria-label={t('preferredSports.addEntry')}
-            className="size-11 rounded-lg bg-gray-200 px-3 text-sm"
-            disabled
-            onClick={addEntry}
-          >
-            <PlusIcon className="size-4 text-neutral-600!" />
-          </Button>
-        </div>
+            {/* ── Add entry button ──────────────────────────────────────────── */}
+            <div
+              className={cn(
+                'flex justify-end px-6 py-4',
+                !isEnabled && 'pointer-events-none opacity-60'
+              )}
+            >
+              <Button
+                variant="secondary"
+                size="icon"
+                aria-label={t('preferredSports.addEntry')}
+                className="size-11 rounded-lg bg-gray-200 px-3 text-sm"
+                disabled
+                onClick={addEntry}
+              >
+                <PlusIcon className="size-4 text-neutral-600!" />
+              </Button>
+            </div>
+          </>
+        )}
 
         {/* ── Step footer ───────────────────────────────────────────────── */}
         <div className="sticky bottom-0 mt-auto flex items-center justify-end gap-4 bg-white px-6 py-7 shadow-[0px_-8px_6.8px_0px_rgba(0,0,0,0.04)]">

@@ -65,6 +65,7 @@ vi.mock('@cgp/ui-kit/components/combobox', () => ({
     onValueChange,
     onAddNew,
     onSearchChange,
+    onInputValueChange,
   }: {
     placeholder?: string;
     disabled?: boolean;
@@ -73,6 +74,7 @@ vi.mock('@cgp/ui-kit/components/combobox', () => ({
     onValueChange?: (v: string) => void;
     onAddNew?: (v: string) => void;
     onSearchChange?: (v: string) => void;
+    onInputValueChange?: (v: string) => void;
   }) => {
     const [search, setSearch] = useState('');
     return (
@@ -85,6 +87,7 @@ vi.mock('@cgp/ui-kit/components/combobox', () => ({
           onChange={e => {
             setSearch(e.target.value);
             onSearchChange?.(e.target.value);
+            onInputValueChange?.(e.target.value);
           }}
         />
         {options.map(o => (
@@ -105,7 +108,13 @@ vi.mock('@cgp/ui-kit/components/combobox', () => ({
 }));
 
 vi.mock('@cgp/ui-kit/components/character-count', () => ({
-  CharacterCount: () => null,
+  CharacterCount: ({
+    currentLength,
+    maxLength,
+  }: {
+    currentLength: number;
+    maxLength: number;
+  }) => <span data-testid="char-count">{`${currentLength}/${maxLength}`}</span>,
 }));
 
 // Level Select mock — rendered as a native <select>.
@@ -385,6 +394,45 @@ describe('PreferredSkillsStep', () => {
       renderStep();
       expect(screen.getByText('common.cancel')).toBeInTheDocument();
       expect(screen.getByText('common.next')).toBeInTheDocument();
+    });
+  });
+
+  describe('live character counter', () => {
+    // Regression: DQCGP-3452 — the counter used to read the committed entry
+    // value, so it stayed at 0 while typing (it only moved on select).
+    it('updates the skill counter on every keystroke', async () => {
+      const user = userEvent.setup();
+      renderStep();
+      const row = getRows()[0];
+      const [skillCounter] = within(row).getAllByTestId('char-count');
+      expect(skillCounter).toHaveTextContent('0/100');
+
+      await user.type(
+        within(row).getByPlaceholderText(SKILL_PLACEHOLDER),
+        'Rust'
+      );
+
+      expect(within(row).getAllByTestId('char-count')[0]).toHaveTextContent(
+        '4/100'
+      );
+    });
+
+    it('updates the career-path counter on every keystroke', async () => {
+      const user = userEvent.setup();
+      renderStep();
+      const row = getRows()[0];
+      expect(within(row).getAllByTestId('char-count')[1]).toHaveTextContent(
+        '0/100'
+      );
+
+      await user.type(
+        within(row).getByPlaceholderText(CAREER_PATH_PLACEHOLDER),
+        'Backend'
+      );
+
+      expect(within(row).getAllByTestId('char-count')[1]).toHaveTextContent(
+        '7/100'
+      );
     });
   });
 

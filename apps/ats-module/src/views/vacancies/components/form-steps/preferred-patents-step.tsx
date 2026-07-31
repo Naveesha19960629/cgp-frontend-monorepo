@@ -67,6 +67,15 @@ const {
   maxDate: HUNDRED_YEARS_FROM_NOW,
 } = getHundredYearDateBoundaries();
 
+// Field codes for the Patents section; used to hide the entry content region
+// entirely when the template forces every field's visibility to false.
+const PATENT_FIELD_CODES = [
+  'relatedIndustry',
+  'statuses',
+  'fromDate',
+  'toDate',
+] as const;
+
 const multiSelectInfoAvatar = new URL(
   '../../../../assets/images/multi-select-info-avatar.svg',
   import.meta.url
@@ -145,7 +154,7 @@ function PatentCard({
 
         {/* Collapsible body */}
         <CollapsibleContent>
-          <div className="grid grid-cols-2 gap-5 px-5 pb-5">
+          <div className="grid grid-cols-1 gap-5 px-5 pb-5 xl:grid-cols-4">
             {/* Related Industry */}
             {isFieldVisible('relatedIndustry') && (
               <FormField
@@ -153,7 +162,7 @@ function PatentCard({
                 name={`patents.${index}.relatedIndustries`}
                 render={({ field }) => {
                   return (
-                    <FormItem className="flex flex-col gap-1.5 space-y-0">
+                    <FormItem className="flex flex-col gap-1.5 space-y-0 xl:col-span-2">
                       <FormLabel
                         data-testid="preferredPatents-relatedIndustry-label"
                         className="flex justify-between"
@@ -260,7 +269,7 @@ function PatentCard({
                 control={form.control}
                 name={`patents.${index}.statuses`}
                 render={({ field }) => (
-                  <FormItem className="flex flex-col gap-1.5 space-y-0">
+                  <FormItem className="flex flex-col gap-1.5 space-y-0 xl:col-span-2">
                     <FormLabel
                       data-testid="preferredPatents-status-label"
                       className="text-sm font-semibold text-slate-900"
@@ -320,202 +329,198 @@ function PatentCard({
               />
             )}
 
-            <div className="flex w-full gap-4">
-              {/* From date */}
-              {isFieldVisible('fromDate') && (
-                <FormField
-                  control={form.control}
-                  name={`patents.${index}.fromDate`}
-                  render={({ field }) => (
-                    <FormItem className="flex w-full flex-col gap-1 space-y-0">
-                      <FormLabel
-                        data-testid="preferredPatents-from-label"
-                        className="text-sm font-semibold text-slate-900"
-                      >
-                        {t('preferredPatents.from')}
-                      </FormLabel>
-                      <Popover
-                        modal
-                        open={openDatePopover === 'fromDate'}
-                        onOpenChange={open =>
-                          setOpenDatePopover(
-                            isEnabled && !dataTakenFromCandidate && open
-                              ? 'fromDate'
-                              : null
-                          )
-                        }
-                      >
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              disabled={!isEnabled || dataTakenFromCandidate}
-                              className={cn(
-                                'border-input flex h-11 w-full items-center justify-between rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
-                                !field.value && 'text-slate-500',
-                                field.value && 'text-zinc-800',
-                                'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
-                                'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
-                                'dark:bg-input/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
-                                applyTypography('body-medium'),
-                                'shadow-none!'
-                              )}
-                            >
-                              {field.value ? (
-                                format(field.value, 'do MMM yyyy')
-                              ) : (
-                                <span>
-                                  {t('preferredPatents.fromPlaceholder')}
-                                </span>
-                              )}
-                              <CalenderIcon
-                                variant="Linear"
-                                size={20}
-                                className="text-zinc-800"
-                              />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            defaultMonth={
-                              field.value ??
-                              form.getValues(`patents.${index}.toDate`) ??
-                              new Date()
+            {/* From date */}
+            {isFieldVisible('fromDate') && (
+              <FormField
+                control={form.control}
+                name={`patents.${index}.fromDate`}
+                render={({ field }) => (
+                  <FormItem className="flex flex-col gap-1 space-y-0 xl:col-span-1">
+                    <FormLabel
+                      data-testid="preferredPatents-from-label"
+                      className="text-sm font-semibold text-slate-900"
+                    >
+                      {t('preferredPatents.from')}
+                    </FormLabel>
+                    <Popover
+                      modal
+                      open={openDatePopover === 'fromDate'}
+                      onOpenChange={open =>
+                        setOpenDatePopover(
+                          isEnabled && !dataTakenFromCandidate && open
+                            ? 'fromDate'
+                            : null
+                        )
+                      }
+                    >
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            disabled={!isEnabled || dataTakenFromCandidate}
+                            className={cn(
+                              'border-input flex h-11 w-full items-center justify-between rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
+                              !field.value && 'text-slate-500',
+                              field.value && 'text-zinc-800',
+                              'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
+                              'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
+                              'dark:bg-input/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
+                              applyTypography('body-medium'),
+                              'shadow-none!'
+                            )}
+                          >
+                            {field.value ? (
+                              format(field.value, 'do MMM yyyy')
+                            ) : (
+                              <span>
+                                {t('preferredPatents.fromPlaceholder')}
+                              </span>
+                            )}
+                            <CalenderIcon
+                              variant="Linear"
+                              size={20}
+                              className="text-zinc-800"
+                            />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          defaultMonth={
+                            field.value ??
+                            form.getValues(`patents.${index}.toDate`) ??
+                            new Date()
+                          }
+                          onSelect={date => {
+                            field.onChange(date);
+                            setOpenDatePopover(null);
+                            const toDate = form.getValues(
+                              `patents.${index}.toDate`
+                            );
+                            if (toDate && date && toDate < date) {
+                              form.setValue(
+                                `patents.${index}.toDate`,
+                                undefined
+                              );
                             }
-                            onSelect={date => {
-                              field.onChange(date);
-                              setOpenDatePopover(null);
-                              const toDate = form.getValues(
-                                `patents.${index}.toDate`
-                              );
-                              if (toDate && date && toDate < date) {
-                                form.setValue(
-                                  `patents.${index}.toDate`,
-                                  undefined
-                                );
-                              }
-                            }}
-                            disabled={date => {
-                              const day = startOfDay(date);
-                              const toDate = form.getValues(
-                                `patents.${index}.toDate`
-                              );
-                              return (
-                                isAfter(day, TODAY) ||
-                                isBeforeMinDate(date, HUNDRED_YEARS_AGO) ||
-                                (toDate != null &&
-                                  isAfter(day, startOfDay(toDate)))
-                              );
-                            }}
-                            captionLayout="dropdown"
-                            startMonth={HUNDRED_YEARS_AGO}
-                            endMonth={TODAY}
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
+                          }}
+                          disabled={date => {
+                            const day = startOfDay(date);
+                            const toDate = form.getValues(
+                              `patents.${index}.toDate`
+                            );
+                            return (
+                              isAfter(day, TODAY) ||
+                              isBeforeMinDate(date, HUNDRED_YEARS_AGO) ||
+                              (toDate != null &&
+                                isAfter(day, startOfDay(toDate)))
+                            );
+                          }}
+                          captionLayout="dropdown"
+                          startMonth={HUNDRED_YEARS_AGO}
+                          endMonth={TODAY}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
-              {/* To date */}
-              {isFieldVisible('toDate') && (
-                <FormField
-                  control={form.control}
-                  name={`patents.${index}.toDate`}
-                  render={({ field }) => (
-                    <FormItem className="flex w-full flex-col gap-1 space-y-0">
-                      <FormLabel
-                        data-testid="preferredPatents-to-label"
-                        className="text-sm font-semibold text-slate-900"
-                      >
-                        {t('preferredPatents.to')}
-                      </FormLabel>
-                      <Popover
-                        modal
-                        open={openDatePopover === 'toDate'}
-                        onOpenChange={open =>
-                          setOpenDatePopover(
-                            isEnabled && !dataTakenFromCandidate && open
-                              ? 'toDate'
-                              : null
-                          )
-                        }
-                      >
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              disabled={!isEnabled || dataTakenFromCandidate}
-                              className={cn(
-                                'border-input flex h-11 w-full items-center justify-between rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
-                                !field.value && 'text-slate-500',
-                                field.value && 'text-zinc-800',
-                                'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
-                                'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
-                                'dark:bg-input/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
-                                applyTypography('body-medium'),
-                                'shadow-none!'
-                              )}
-                            >
-                              {field.value ? (
-                                format(field.value, 'do MMM yyyy')
-                              ) : (
-                                <span>
-                                  {t('preferredPatents.toPlaceholder')}
-                                </span>
-                              )}
-                              <CalenderIcon
-                                variant="Linear"
-                                size={20}
-                                className="text-zinc-800"
-                              />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            defaultMonth={
-                              field.value ??
-                              form.getValues(`patents.${index}.fromDate`) ??
-                              new Date()
-                            }
-                            onSelect={date => {
-                              field.onChange(date);
-                              setOpenDatePopover(null);
-                            }}
-                            disabled={date => {
-                              const day = startOfDay(date);
-                              const fromDate = form.getValues(
-                                `patents.${index}.fromDate`
-                              );
-                              return (
-                                isBeforeMinDate(date, HUNDRED_YEARS_AGO) ||
-                                isAfter(day, HUNDRED_YEARS_FROM_NOW) ||
-                                (fromDate != null &&
-                                  isBefore(day, startOfDay(fromDate)))
-                              );
-                            }}
-                            captionLayout="dropdown"
-                            startMonth={HUNDRED_YEARS_AGO}
-                            endMonth={HUNDRED_YEARS_FROM_NOW}
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
-            </div>
+            {/* To date */}
+            {isFieldVisible('toDate') && (
+              <FormField
+                control={form.control}
+                name={`patents.${index}.toDate`}
+                render={({ field }) => (
+                  <FormItem className="flex flex-col gap-1 space-y-0 xl:col-span-1">
+                    <FormLabel
+                      data-testid="preferredPatents-to-label"
+                      className="text-sm font-semibold text-slate-900"
+                    >
+                      {t('preferredPatents.to')}
+                    </FormLabel>
+                    <Popover
+                      modal
+                      open={openDatePopover === 'toDate'}
+                      onOpenChange={open =>
+                        setOpenDatePopover(
+                          isEnabled && !dataTakenFromCandidate && open
+                            ? 'toDate'
+                            : null
+                        )
+                      }
+                    >
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            disabled={!isEnabled || dataTakenFromCandidate}
+                            className={cn(
+                              'border-input flex h-11 w-full items-center justify-between rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
+                              !field.value && 'text-slate-500',
+                              field.value && 'text-zinc-800',
+                              'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
+                              'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
+                              'dark:bg-input/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
+                              applyTypography('body-medium'),
+                              'shadow-none!'
+                            )}
+                          >
+                            {field.value ? (
+                              format(field.value, 'do MMM yyyy')
+                            ) : (
+                              <span>{t('preferredPatents.toPlaceholder')}</span>
+                            )}
+                            <CalenderIcon
+                              variant="Linear"
+                              size={20}
+                              className="text-zinc-800"
+                            />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          defaultMonth={
+                            field.value ??
+                            form.getValues(`patents.${index}.fromDate`) ??
+                            new Date()
+                          }
+                          onSelect={date => {
+                            field.onChange(date);
+                            setOpenDatePopover(null);
+                          }}
+                          disabled={date => {
+                            const day = startOfDay(date);
+                            const fromDate = form.getValues(
+                              `patents.${index}.fromDate`
+                            );
+                            return (
+                              isBeforeMinDate(date, HUNDRED_YEARS_AGO) ||
+                              isAfter(day, HUNDRED_YEARS_FROM_NOW) ||
+                              (fromDate != null &&
+                                isBefore(day, startOfDay(fromDate)))
+                            );
+                          }}
+                          captionLayout="dropdown"
+                          startMonth={HUNDRED_YEARS_AGO}
+                          endMonth={HUNDRED_YEARS_FROM_NOW}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
           </div>
         </CollapsibleContent>
       </div>
@@ -540,6 +545,10 @@ export default function PreferredPatentsStep({
   } = useVacancyForm();
   const { form, fields, append, remove, replace } = usePreferredPatentsForm(
     contextForm.patents
+  );
+  const isFieldVisible = useTemplateFieldVisible('patents');
+  const hasAnyVisibleField = PATENT_FIELD_CODES.some(code =>
+    isFieldVisible(code)
   );
 
   const isEnabled = form.watch('isEnabled');
@@ -857,39 +866,43 @@ export default function PreferredPatentsStep({
             />
           </div>
 
-          {/* Patent cards */}
-          <div className="flex flex-col gap-4 px-6">
-            {fields.map((field, index) => (
-              <PatentCard
-                key={field.id}
-                index={index}
-                form={form}
-                onRemove={() => remove(index)}
-                dataTakenFromCandidate={dataTakenFromCandidate}
-              />
-            ))}
-          </div>
+          {hasAnyVisibleField && (
+            <>
+              {/* Patent cards */}
+              <div className="flex flex-col gap-4 px-6">
+                {fields.map((field, index) => (
+                  <PatentCard
+                    key={field.id}
+                    index={index}
+                    form={form}
+                    onRemove={() => remove(index)}
+                    dataTakenFromCandidate={dataTakenFromCandidate}
+                  />
+                ))}
+              </div>
 
-          {/* Add patent button */}
-          <div className="flex justify-end px-6 py-4">
-            <Button
-              type="button"
-              variant="secondary"
-              disabled
-              className="size-11 rounded-lg bg-gray-200 px-3 text-sm"
-              onClick={() =>
-                append({
-                  relatedIndustries: [],
-                  statuses: [],
-                  fromDate: undefined,
-                  toDate: undefined,
-                  isOpen: true,
-                })
-              }
-            >
-              <Plus className="size-4 text-neutral-600!" />
-            </Button>
-          </div>
+              {/* Add patent button */}
+              <div className="flex justify-end px-6 py-4">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  disabled
+                  className="size-11 rounded-lg bg-gray-200 px-3 text-sm"
+                  onClick={() =>
+                    append({
+                      relatedIndustries: [],
+                      statuses: [],
+                      fromDate: undefined,
+                      toDate: undefined,
+                      isOpen: true,
+                    })
+                  }
+                >
+                  <Plus className="size-4 text-neutral-600!" />
+                </Button>
+              </div>
+            </>
+          )}
 
           {/* Footer: Cancel + Next */}
           <div className="sticky bottom-0 mt-auto flex items-center justify-end gap-4 bg-white px-6 py-7 shadow-[0px_-8px_6.8px_0px_rgba(0,0,0,0.04)]">

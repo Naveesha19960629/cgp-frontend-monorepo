@@ -29,6 +29,7 @@ import {
   isBeforeMinDate,
   parseLocalDate,
 } from '@/views/vacancies/utils/date-timezone-safe';
+import { computeRowStartCodes } from '@/views/vacancies/utils/field-grid-layout';
 
 import { CharacterCount } from '@cgp/ui-kit/components/character-count';
 import { SuccessToast } from '@cgp/ui-kit/components/custom-toast';
@@ -60,6 +61,26 @@ const {
   minDate: HUNDRED_YEARS_AGO,
   maxDate: HUNDRED_YEARS_FROM_NOW,
 } = getHundredYearDateBoundaries();
+
+// Field codes for the Projects section; used to hide the entry content region
+// entirely when the template forces every field's visibility to false.
+const PROJECT_FIELD_CODES = [
+  'relatedIndustry',
+  'organization',
+  'organizationLocations',
+  'startDate',
+  'endDate',
+] as const;
+
+// Grid layout order + column spans, used to compute which half fields must
+// wrap to a fresh row (`xl:col-start-1`) based on the visible field packing.
+const PROJECT_GRID_FIELDS = [
+  { code: 'startDate', span: 1 },
+  { code: 'endDate', span: 1 },
+  { code: 'relatedIndustry', span: 2 },
+  { code: 'organizationLocations', span: 2 },
+  { code: 'organization', span: 2 },
+] as const;
 
 interface ProjectEntry {
   id: string;
@@ -106,6 +127,10 @@ function ProjectCard({
 }>) {
   const { t } = useTranslation('ats');
   const isFieldVisible = useTemplateFieldVisible('projects');
+  const rowStartCodes = computeRowStartCodes(
+    PROJECT_GRID_FIELDS,
+    isFieldVisible
+  );
   const [hasMaxError, setHasMaxError] = useState(false);
   const [locationsError, setLocationsError] = useState(false);
   const [organizationsError, setOrganizationsError] = useState(false);
@@ -168,10 +193,10 @@ function ProjectCard({
               fieldsDisabled && 'pointer-events-none opacity-60'
             )}
           >
-            {/* Row 1: Start Date | End Date | Related Industry */}
-            <div className="grid grid-cols-[1fr_1fr_2fr] gap-4">
+            {/* Fields (dense grid so hidden fields repack with no gaps) */}
+            <div className="grid grid-cols-1 gap-4 xl:grid-cols-4">
               {isFieldVisible('startDate') && (
-                <div className="flex flex-col gap-1">
+                <div className="flex flex-col gap-1 xl:col-span-1">
                   <div className="flex h-5 items-center">
                     <Label
                       data-testid={`projectsRequirements-startDate-${index}-label`}
@@ -252,7 +277,7 @@ function ProjectCard({
               )}
 
               {isFieldVisible('endDate') && (
-                <div className="flex flex-col gap-1">
+                <div className="flex flex-col gap-1 xl:col-span-1">
                   <div className="flex h-5 items-center">
                     <Label
                       data-testid={`projectsRequirements-endDate-${index}-label`}
@@ -330,7 +355,12 @@ function ProjectCard({
               )}
 
               {isFieldVisible('relatedIndustry') && (
-                <div className="flex flex-col gap-1">
+                <div
+                  className={cn(
+                    'flex flex-col gap-1 xl:col-span-2',
+                    rowStartCodes.has('relatedIndustry') && 'xl:col-start-1'
+                  )}
+                >
                   <div className="flex items-center justify-between">
                     <Label
                       data-testid={`projectsRequirements-relatedIndustry-${index}-label`}
@@ -412,12 +442,15 @@ function ProjectCard({
                   />
                 </div>
               )}
-            </div>
 
-            {/* Row 2: Organization Location | Organization Name */}
-            <div className="grid grid-cols-2 gap-4">
               {isFieldVisible('organizationLocations') && (
-                <div className="flex flex-col gap-1">
+                <div
+                  className={cn(
+                    'flex flex-col gap-1 xl:col-span-2',
+                    rowStartCodes.has('organizationLocations') &&
+                      'xl:col-start-1'
+                  )}
+                >
                   <div className="flex h-5 items-center">
                     <Label
                       data-testid={`projectsRequirements-organizationLocation-${index}-label`}
@@ -475,7 +508,12 @@ function ProjectCard({
               )}
 
               {isFieldVisible('organization') && (
-                <div className="flex flex-col gap-1">
+                <div
+                  className={cn(
+                    'flex flex-col gap-1 xl:col-span-2',
+                    rowStartCodes.has('organization') && 'xl:col-start-1'
+                  )}
+                >
                   <div className="flex h-5 items-center">
                     <Label
                       data-testid={`projectsRequirements-organizationName-${index}-label`}
@@ -554,6 +592,10 @@ export default function ProjectsRequirementsStep({
 }: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
   const { form: contextForm, onCancel } = useVacancyForm();
+  const isFieldVisible = useTemplateFieldVisible('projects');
+  const hasAnyVisibleField = PROJECT_FIELD_CODES.some(code =>
+    isFieldVisible(code)
+  );
   const savedProjects = contextForm.projectsRequirements;
   const vacancyStatus = contextForm.status;
 
@@ -961,46 +1003,50 @@ export default function ProjectsRequirementsStep({
           </Label>
         </div>
 
-        {/* ── Project cards ─────────────────────────────────────────────── */}
-        <div className="flex flex-col gap-4 px-6">
-          {projects.map((project, index) => (
-            <ProjectCard
-              key={project.id}
-              index={index}
-              project={project}
-              onUpdate={updateProject}
-              onIndustriesSearch={setIndustrySearchQuery}
-              onLocationsSearch={setLocationSearchQuery}
-              onOrganizationsSearch={setOrganizationSearchQuery}
-              onRequestAddOrganization={(cardIndex, name) => {
-                setActiveCardIndex(cardIndex);
-                setPendingOrganizationName(name);
-                setShowAddOrganizationDialog(true);
-              }}
-              orgSelectorKey={orgSelectorKey}
-              fieldsDisabled={fieldsDisabled}
-              industries={industries}
-              isIndustriesLoading={isIndustriesLoading}
-              locationOptions={locationOptions}
-              isLocationsLoading={isLocationsLoading}
-              organizationOptions={organizationOptions}
-              isOrganizationsLoading={isOrganizationsLoading}
-            />
-          ))}
-        </div>
+        {hasAnyVisibleField && (
+          <>
+            {/* ── Project cards ─────────────────────────────────────────────── */}
+            <div className="flex flex-col gap-4 px-6">
+              {projects.map((project, index) => (
+                <ProjectCard
+                  key={project.id}
+                  index={index}
+                  project={project}
+                  onUpdate={updateProject}
+                  onIndustriesSearch={setIndustrySearchQuery}
+                  onLocationsSearch={setLocationSearchQuery}
+                  onOrganizationsSearch={setOrganizationSearchQuery}
+                  onRequestAddOrganization={(cardIndex, name) => {
+                    setActiveCardIndex(cardIndex);
+                    setPendingOrganizationName(name);
+                    setShowAddOrganizationDialog(true);
+                  }}
+                  orgSelectorKey={orgSelectorKey}
+                  fieldsDisabled={fieldsDisabled}
+                  industries={industries}
+                  isIndustriesLoading={isIndustriesLoading}
+                  locationOptions={locationOptions}
+                  isLocationsLoading={isLocationsLoading}
+                  organizationOptions={organizationOptions}
+                  isOrganizationsLoading={isOrganizationsLoading}
+                />
+              ))}
+            </div>
 
-        {/* ── Add project button ────────────────────────────────────────── */}
-        <div className="flex justify-end px-6 py-4">
-          <Button
-            type="button"
-            variant="secondary"
-            disabled
-            className="size-11 rounded-lg bg-gray-200 px-3 text-sm"
-            onClick={addProject}
-          >
-            <PlusIcon className="size-4 text-neutral-600!" />
-          </Button>
-        </div>
+            {/* ── Add project button ────────────────────────────────────────── */}
+            <div className="flex justify-end px-6 py-4">
+              <Button
+                type="button"
+                variant="secondary"
+                disabled
+                className="size-11 rounded-lg bg-gray-200 px-3 text-sm"
+                onClick={addProject}
+              >
+                <PlusIcon className="size-4 text-neutral-600!" />
+              </Button>
+            </div>
+          </>
+        )}
 
         {/* ── Step footer ───────────────────────────────────────────────── */}
         <div className="sticky bottom-0 mt-auto flex items-center justify-end gap-4 bg-white px-6 py-7 shadow-[0px_-8px_6.8px_0px_rgba(0,0,0,0.04)]">

@@ -29,6 +29,7 @@ import {
   isBeforeMinDate,
   parseLocalDate,
 } from '@/views/vacancies/utils/date-timezone-safe';
+import { computeRowStartCodes } from '@/views/vacancies/utils/field-grid-layout';
 
 import { CharacterCount } from '@cgp/ui-kit/components/character-count';
 import { SuccessToast } from '@cgp/ui-kit/components/custom-toast';
@@ -64,6 +65,29 @@ const {
 const MAX_CAUSE_LENGTH = 100;
 const MAX_POSITION_LENGTH = 100;
 const MAX_SELECTIONS = 10;
+
+// Template field-visibility codes for the Volunteering section. When a
+// template marks this section as "data taken from candidate", the backend
+// forces every flag false, so none of these entry fields render.
+const VOLUNTEERING_FIELD_CODES = [
+  'organization',
+  'organizationLocations',
+  'positionRole',
+  'cause',
+  'startDate',
+  'endDate',
+] as const;
+
+// Field grid layout spec (source order + column span) used to compute which
+// fields must start a fresh row (`quad-volunteering:col-start-1`) as visibility changes.
+const VOLUNTEERING_GRID_FIELDS = [
+  { code: 'organization', span: 2 },
+  { code: 'organizationLocations', span: 2 },
+  { code: 'cause', span: 2 },
+  { code: 'positionRole', span: 1 },
+  { code: 'startDate', span: 1 },
+  { code: 'endDate', span: 1 },
+] as const;
 
 interface VolunteeringEntry {
   id: string;
@@ -135,6 +159,10 @@ function VolunteeringCard({
   const [locationsError, setLocationsError] = useState(false);
   const [organizationsError, setOrganizationsError] = useState(false);
   const [causesError, setCausesError] = useState(false);
+  const rowStartCodes = computeRowStartCodes(
+    VOLUNTEERING_GRID_FIELDS,
+    isFieldVisible
+  );
 
   return (
     <Collapsible
@@ -180,10 +208,15 @@ function VolunteeringCard({
               fieldsDisabled && 'pointer-events-none opacity-60'
             )}
           >
-            {/* Row 1: Organisation Name | Organization Location */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="quad-volunteering:grid-cols-4 grid grid-cols-1 gap-4">
               {isFieldVisible('organization') && (
-                <div className="flex flex-col gap-1">
+                <div
+                  className={cn(
+                    'quad-volunteering:col-span-2 flex flex-col gap-1',
+                    rowStartCodes.has('organization') &&
+                      'quad-volunteering:col-start-1'
+                  )}
+                >
                   <div className="flex h-5 items-center">
                     <Label
                       data-testid="preferredVolunteering-organizationName-label"
@@ -254,7 +287,13 @@ function VolunteeringCard({
               )}
 
               {isFieldVisible('organizationLocations') && (
-                <div className="flex flex-col gap-1">
+                <div
+                  className={cn(
+                    'quad-volunteering:col-span-2 flex flex-col gap-1',
+                    rowStartCodes.has('organizationLocations') &&
+                      'quad-volunteering:col-start-1'
+                  )}
+                >
                   <div className="flex h-5 items-center">
                     <Label
                       data-testid="preferredVolunteering-organizationLocation-label"
@@ -301,12 +340,14 @@ function VolunteeringCard({
                   />
                 </div>
               )}
-            </div>
-
-            {/* Row 2: Cause (half width) */}
-            <div className="grid grid-cols-2 gap-4">
               {isFieldVisible('cause') && (
-                <div className="flex flex-col gap-1">
+                <div
+                  className={cn(
+                    'quad-volunteering:col-span-2 flex flex-col gap-1',
+                    rowStartCodes.has('cause') &&
+                      'quad-volunteering:col-start-1'
+                  )}
+                >
                   <div className="flex items-center justify-between">
                     <Label
                       data-testid="preferredVolunteering-cause-label"
@@ -370,12 +411,8 @@ function VolunteeringCard({
                   />
                 </div>
               )}
-            </div>
-
-            {/* Row 3: Position / Role | Start Date | End Date */}
-            <div className="grid grid-cols-4 gap-4">
               {isFieldVisible('positionRole') && (
-                <div className="flex flex-col gap-1">
+                <div className="quad-volunteering:col-span-1 flex flex-col gap-1">
                   <div className="flex items-center justify-between">
                     <Label data-testid="preferredVolunteering-position-label">
                       {t('preferredVolunteering.labels.position')}
@@ -401,7 +438,7 @@ function VolunteeringCard({
               )}
 
               {isFieldVisible('startDate') && (
-                <div className="flex flex-col gap-1">
+                <div className="quad-volunteering:col-span-1 flex flex-col gap-1">
                   <div className="flex h-5 items-center">
                     <Label data-testid="preferredVolunteering-startDate-label">
                       {t('preferredVolunteering.labels.startDate')}
@@ -479,7 +516,7 @@ function VolunteeringCard({
               )}
 
               {isFieldVisible('endDate') && (
-                <div className="flex flex-col gap-1">
+                <div className="quad-volunteering:col-span-1 flex flex-col gap-1">
                   <div className="flex h-5 items-center">
                     <Label data-testid="preferredVolunteering-endDate-label">
                       {t('preferredVolunteering.labels.endDate')}
@@ -571,6 +608,10 @@ export default function PreferredVolunteeringStep({
   const { form: contextForm, onCancel } = useVacancyForm();
   const savedVolunteering = contextForm.preferredVolunteering;
   const vacancyStatus = contextForm.status;
+  const isFieldVisible = useTemplateFieldVisible('volunteering');
+  const hasAnyVisibleField = VOLUNTEERING_FIELD_CODES.some(code =>
+    isFieldVisible(code)
+  );
 
   const { mutateAsync: createCause } = useCreateCauseMutation();
   const { mutateAsync: createOrganization } = useCreateOrganizationMutation();
@@ -920,52 +961,56 @@ export default function PreferredVolunteeringStep({
           </Label>
         </div>
 
-        {/* ── Volunteering cards ────────────────────────────────────────── */}
-        <div className="flex flex-col gap-4 px-6">
-          {entries.map((entry, index) => (
-            <VolunteeringCard
-              key={entry.id}
-              index={index}
-              entry={entry}
-              onUpdate={updateEntry}
-              onOrganizationsSearch={setOrganizationsSearchQuery}
-              onLocationsSearch={setLocationsSearchQuery}
-              onCausesSearch={setCausesSearchQuery}
-              onRequestAddOrganization={(cardIndex, name) => {
-                setActiveCardIndex(cardIndex);
-                setPendingOrganizationName(name);
-                setShowAddOrganizationDialog(true);
-              }}
-              fieldsDisabled={fieldsDisabled}
-              organizations={organizations}
-              isOrganizationsLoading={isOrganizationsLoading}
-              causes={causes}
-              isCausesLoading={isCausesLoading}
-              locationOptions={locationOptions}
-              isLocationsLoading={isLocationsLoading}
-              orgSelectorKey={orgSelectorKey}
-            />
-          ))}
-        </div>
+        {hasAnyVisibleField && (
+          <>
+            {/* ── Volunteering cards ────────────────────────────────────────── */}
+            <div className="flex flex-col gap-4 px-6">
+              {entries.map((entry, index) => (
+                <VolunteeringCard
+                  key={entry.id}
+                  index={index}
+                  entry={entry}
+                  onUpdate={updateEntry}
+                  onOrganizationsSearch={setOrganizationsSearchQuery}
+                  onLocationsSearch={setLocationsSearchQuery}
+                  onCausesSearch={setCausesSearchQuery}
+                  onRequestAddOrganization={(cardIndex, name) => {
+                    setActiveCardIndex(cardIndex);
+                    setPendingOrganizationName(name);
+                    setShowAddOrganizationDialog(true);
+                  }}
+                  fieldsDisabled={fieldsDisabled}
+                  organizations={organizations}
+                  isOrganizationsLoading={isOrganizationsLoading}
+                  causes={causes}
+                  isCausesLoading={isCausesLoading}
+                  locationOptions={locationOptions}
+                  isLocationsLoading={isLocationsLoading}
+                  orgSelectorKey={orgSelectorKey}
+                />
+              ))}
+            </div>
 
-        {/* ── Add entry button ──────────────────────────────────────────── */}
-        <div
-          className={cn(
-            'flex justify-end px-6 py-4',
-            !isEnabled && 'pointer-events-none opacity-60'
-          )}
-        >
-          <Button
-            variant="secondary"
-            size="icon"
-            aria-label={t('preferredVolunteering.addEntry')}
-            className="size-11 rounded-lg bg-gray-200 px-3 text-sm"
-            disabled
-            onClick={addEntry}
-          >
-            <PlusIcon className="size-4 text-neutral-600!" />
-          </Button>
-        </div>
+            {/* ── Add entry button ──────────────────────────────────────────── */}
+            <div
+              className={cn(
+                'flex justify-end px-6 py-4',
+                !isEnabled && 'pointer-events-none opacity-60'
+              )}
+            >
+              <Button
+                variant="secondary"
+                size="icon"
+                aria-label={t('preferredVolunteering.addEntry')}
+                className="size-11 rounded-lg bg-gray-200 px-3 text-sm"
+                disabled
+                onClick={addEntry}
+              >
+                <PlusIcon className="size-4 text-neutral-600!" />
+              </Button>
+            </div>
+          </>
+        )}
 
         {/* ── Step footer ───────────────────────────────────────────────── */}
         <div className="sticky bottom-0 mt-auto flex items-center justify-end gap-4 bg-white px-6 py-7 shadow-[0px_-8px_6.8px_0px_rgba(0,0,0,0.04)]">
