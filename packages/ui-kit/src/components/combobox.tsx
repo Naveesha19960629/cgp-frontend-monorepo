@@ -48,6 +48,12 @@ interface ComboboxProps {
   loading?: boolean;
   onSearchChange?: (value: string) => void;
   onImmediateSearchChange?: (value: string) => void;
+  /**
+   * Fires with the text currently shown in the input whenever it changes —
+   * while typing (the live search text) and when a value is selected/cleared.
+   * Lets external adornments such as a live character counter track the field.
+   */
+  onInputValueChange?: (value: string) => void;
   maxLength?: number;
   isError?: boolean;
   beforeOpen?: () => boolean;
@@ -77,6 +83,7 @@ export function Combobox({
   loading = false,
   onSearchChange,
   onImmediateSearchChange,
+  onInputValueChange,
   maxLength,
   isError = false,
   beforeOpen,
@@ -225,6 +232,13 @@ export function Combobox({
     return selectedLabel ?? selectedOption.label;
   };
   const inputDisplayValue = getInputDisplayValue();
+
+  // Report the live input text so external adornments (e.g. a character
+  // counter) reflect what's currently in the field, not just the last
+  // committed selection.
+  React.useEffect(() => {
+    onInputValueChange?.(inputDisplayValue);
+  }, [inputDisplayValue, onInputValueChange]);
 
   return (
     <Popover open={open} onOpenChange={handleOpenChange} modal={modal}>
