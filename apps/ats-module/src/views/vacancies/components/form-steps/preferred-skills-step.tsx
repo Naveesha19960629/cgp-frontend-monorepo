@@ -129,6 +129,14 @@ function PreferredSkillRow({
 
   const [skillSearch, setSkillSearch] = useState('');
   const [careerPathApiSearch, setCareerPathApiSearch] = useState('');
+  // Live character counts, tracked from the combobox input text so the counter
+  // updates on every keystroke — not only when a value is committed on select.
+  const [skillInputLength, setSkillInputLength] = useState(
+    entry.skillName.length
+  );
+  const [careerPathInputLength, setCareerPathInputLength] = useState(
+    entry.careerPathName.length
+  );
   // Career paths the user typed in this session (not yet persisted to the API).
   const [userEnteredCareerPaths, setUserEnteredCareerPaths] = useState<
     CareerPathItem[]
@@ -324,7 +332,7 @@ function PreferredSkillRow({
             </span>
             <CharacterCount
               maxLength={MAX_SKILL_CHARS}
-              currentLength={entry.skillName.length}
+              currentLength={skillInputLength}
             />
           </div>
           <Combobox
@@ -335,6 +343,7 @@ function PreferredSkillRow({
             onValueChange={handleSkillSelect}
             onAddNew={handleSkillAddNew}
             onSearchChange={setSkillSearch}
+            onInputValueChange={val => setSkillInputLength(val.length)}
             loading={isSkillsLoading}
             disabled={disabled}
             maxLength={MAX_SKILL_CHARS}
@@ -352,7 +361,7 @@ function PreferredSkillRow({
             </span>
             <CharacterCount
               maxLength={MAX_CAREER_PATH_CHARS}
-              currentLength={entry.careerPathName.length}
+              currentLength={careerPathInputLength}
             />
           </div>
           <Combobox
@@ -362,6 +371,7 @@ function PreferredSkillRow({
             onValueChange={handleCareerPathSelect}
             onAddNew={handleCareerPathAddNew}
             onSearchChange={setCareerPathApiSearch}
+            onInputValueChange={val => setCareerPathInputLength(val.length)}
             loading={isCareerPathsLoading}
             disabled={disabled}
             maxLength={MAX_CAREER_PATH_CHARS}
