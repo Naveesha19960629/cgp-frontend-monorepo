@@ -332,9 +332,9 @@ describe('ThemeProvider / useTheme', () => {
 
     unmount();
 
-    fireEvent.keyDown(window, { key: 'd' });
-    // No assertion needed beyond "does not throw" — the listener should be
-    // removed, so nothing observes this event after unmount.
+    // The listener should be removed, so dispatching this event after
+    // unmount should not throw.
+    expect(() => fireEvent.keyDown(window, { key: 'd' })).not.toThrow();
   });
 
   it('syncs theme state from a storage event on the same key', () => {
@@ -420,16 +420,18 @@ describe('ThemeProvider / useTheme', () => {
 
     unmount();
 
-    fireEvent(
-      window,
-      new StorageEvent('storage', {
-        key: 'theme',
-        newValue: 'dark',
-        storageArea: localStorage,
-      })
-    );
-    // The provider is unmounted, so this should not throw and there is no
-    // remaining consumer to assert against.
+    // The provider is unmounted, so the listener should be gone and there is
+    // no remaining consumer to assert against — just verify it doesn't throw.
+    expect(() =>
+      fireEvent(
+        window,
+        new StorageEvent('storage', {
+          key: 'theme',
+          newValue: 'dark',
+          storageArea: localStorage,
+        })
+      )
+    ).not.toThrow();
   });
 
   it('does not create a transition-blocking style element when disableTransitionOnChange is false', () => {

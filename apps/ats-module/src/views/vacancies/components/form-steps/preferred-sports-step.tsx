@@ -2,8 +2,6 @@ import { ChevronUpIcon, Loader2, PlusIcon } from 'lucide-react';
 
 import { ArrowLeft2, Calendar as CalendarIcon } from 'iconsax-reactjs';
 
-import * as SwitchPrimitive from '@radix-ui/react-switch';
-
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -29,10 +27,9 @@ import type { StepProps } from '@/views/vacancies/types';
 import { formatDate, sanitizePlainText } from '@/views/vacancies/utils';
 import {
   formatLocalDate,
-  getDateYearsAgo,
-  getDateYearsFromNow,
+  getHundredYearDateBoundaries,
+  isBeforeMinDate,
   parseLocalDate,
-  startOfToday,
 } from '@/views/vacancies/utils/date-timezone-safe';
 import {
   computeRowStartCodes,
@@ -57,6 +54,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@cgp/ui-kit/components/ui/popover';
+import { Switch } from '@cgp/ui-kit/components/ui/switch';
 import { applyTypography } from '@cgp/ui-kit/lib/typography';
 import { cn } from '@cgp/ui-kit/lib/utils';
 import { isAfter, isBefore, startOfDay } from 'date-fns';
@@ -91,17 +89,11 @@ const SPORT_GRID_FIELDS = [
   { code: 'startDate', span: 1 },
   { code: 'endDate', span: 1 },
 ] as const;
-const DATE_BOUNDARY_YEARS = 100;
-// Exact-date boundaries (day/month/year), not year-only — matches the
-// Preferred Publications date pickers. If today is 2026-07-07:
-// MIN = 1926-07-07, TODAY = 2026-07-07, MAX = 2126-07-07.
-const TODAY = startOfToday();
-const HUNDRED_YEARS_AGO = getDateYearsAgo(DATE_BOUNDARY_YEARS);
-const HUNDRED_YEARS_FROM_NOW = getDateYearsFromNow(DATE_BOUNDARY_YEARS);
-
-/** True when `date` falls before the 100-year-ago cutoff (exclusive). */
-const isBeforeMinDate = (date: Date) =>
-  isBefore(startOfDay(date), HUNDRED_YEARS_AGO);
+const {
+  today: TODAY,
+  minDate: HUNDRED_YEARS_AGO,
+  maxDate: HUNDRED_YEARS_FROM_NOW,
+} = getHundredYearDateBoundaries();
 
 interface SportEntry {
   id: string;
@@ -622,7 +614,7 @@ function SportCard({
                         }}
                         disabled={date =>
                           isAfter(startOfDay(date), TODAY) ||
-                          isBeforeMinDate(date)
+                          isBeforeMinDate(date, HUNDRED_YEARS_AGO)
                         }
                         captionLayout="dropdown"
                         startMonth={HUNDRED_YEARS_AGO}
@@ -696,7 +688,7 @@ function SportCard({
                           const day = startOfDay(date);
                           const startDate = parseLocalDate(entry.startDate);
                           return (
-                            isBeforeMinDate(date) ||
+                            isBeforeMinDate(date, HUNDRED_YEARS_AGO) ||
                             isAfter(day, HUNDRED_YEARS_FROM_NOW) ||
                             (startDate != null &&
                               isBefore(day, startOfDay(startDate)))
@@ -744,8 +736,6 @@ export default function PreferredSportsStep({
   );
   const [confirmDisableOpen, setConfirmDisableOpen] = useState(false);
   const [emptyDisableOpen, setEmptyDisableOpen] = useState(false);
-  const [confirmTakeFromCandidateOpen, setConfirmTakeFromCandidateOpen] =
-    useState(false);
   const [sportsSearchQuery, setSportsSearchQuery] = useState('');
   const [organizationsSearchQuery, setOrganizationsSearchQuery] = useState('');
   const [locationsSearchQuery, setLocationsSearchQuery] = useState('');
@@ -1039,28 +1029,11 @@ export default function PreferredSportsStep({
     setEntries(prev => [...prev, createEmptyEntry(String(Date.now()))]);
   };
 
-  const applyTakeFromCandidate = () => {
-    setDataTakenFromCandidate(true);
-    setEntries([createEmptyEntry('1')]);
-  };
-
-  // Checking "data taken from candidate" clears all added data. Confirm first
-  // when there is data to lose; apply directly otherwise. Unchecking is safe.
   const handleTakeFromCandidateChange = (checked: boolean) => {
-    if (!checked) {
-      setDataTakenFromCandidate(false);
-      return;
+    setDataTakenFromCandidate(checked);
+    if (checked) {
+      setEntries([createEmptyEntry('1')]);
     }
-    if (hasSportsData) {
-      setConfirmTakeFromCandidateOpen(true);
-      return;
-    }
-    applyTakeFromCandidate();
-  };
-
-  const handleConfirmTakeFromCandidate = () => {
-    applyTakeFromCandidate();
-    setConfirmTakeFromCandidateOpen(false);
   };
 
   const handleDisable = () => {
@@ -1127,22 +1100,12 @@ export default function PreferredSportsStep({
               <VacancyStatusBadge status={vacancyStatus} />
             ) : null}
           </div>
-          <SwitchPrimitive.Root
+          <Switch
             checked={isEnabled}
             onCheckedChange={handleToggle}
+            size="lg"
             data-testid="toggle-on-off-switch"
-            className={cn(
-              'focus-visible:ring-ring/50 inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent shadow-xs transition-colors outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50',
-              isEnabled ? 'bg-brand-primary-500' : 'bg-slate-300'
-            )}
-          >
-            <SwitchPrimitive.Thumb
-              className={cn(
-                'pointer-events-none block h-5 w-5 rounded-full bg-white shadow-lg ring-0 transition-transform',
-                isEnabled ? 'translate-x-5' : 'translate-x-0'
-              )}
-            />
-          </SwitchPrimitive.Root>
+          />
         </div>
 
         {/* ── Checkbox: data from candidate profile ─────────────────────── */}
@@ -1296,20 +1259,6 @@ export default function PreferredSportsStep({
         disableLabel={t('preferredSports.confirmDisableDialog.disable')}
         onCancel={() => setConfirmDisableOpen(false)}
         onDisable={handleDisable}
-      />
-
-      {/* ── Take-from-candidate Confirmation Dialog ───────────────────────── */}
-      <DisableDialog
-        open={confirmTakeFromCandidateOpen}
-        onOpenChange={open => {
-          if (!open) setConfirmTakeFromCandidateOpen(false);
-        }}
-        title={t('preferredSports.confirmDisableDialog.title')}
-        message={t('preferredSports.confirmDisableDialog.message')}
-        cancelLabel={t('preferredSports.confirmDisableDialog.cancel')}
-        disableLabel={t('preferredSports.confirmDisableDialog.disable')}
-        onCancel={() => setConfirmTakeFromCandidateOpen(false)}
-        onDisable={handleConfirmTakeFromCandidate}
       />
 
       <StepDisableDialog

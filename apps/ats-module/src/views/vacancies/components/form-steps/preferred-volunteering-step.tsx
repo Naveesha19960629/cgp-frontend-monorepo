@@ -2,8 +2,6 @@ import { ChevronUpIcon, Loader2, PlusIcon } from 'lucide-react';
 
 import { ArrowLeft2, Calendar as CalendarIcon } from 'iconsax-reactjs';
 
-import * as SwitchPrimitive from '@radix-ui/react-switch';
-
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -27,6 +25,8 @@ import type { StepProps } from '@/views/vacancies/types';
 import { formatDate, sanitizePlainText } from '@/views/vacancies/utils';
 import {
   formatLocalDate,
+  getHundredYearDateBoundaries,
+  isBeforeMinDate,
   parseLocalDate,
 } from '@/views/vacancies/utils/date-timezone-safe';
 import { computeRowStartCodes } from '@/views/vacancies/utils/field-grid-layout';
@@ -49,13 +49,18 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@cgp/ui-kit/components/ui/popover';
+import { Switch } from '@cgp/ui-kit/components/ui/switch';
 import { applyTypography } from '@cgp/ui-kit/lib/typography';
 import { cn } from '@cgp/ui-kit/lib/utils';
+import { isAfter, isBefore, startOfDay } from 'date-fns';
 
 import DisableDialog from './disable-dialog';
 
-const HUNDRED_YEARS_AGO = new Date(new Date().getFullYear() - 100, 0, 1);
-const HUNDRED_YEARS_FROM_NOW = new Date(new Date().getFullYear() + 100, 11, 31);
+const {
+  today: TODAY,
+  minDate: HUNDRED_YEARS_AGO,
+  maxDate: HUNDRED_YEARS_FROM_NOW,
+} = getHundredYearDateBoundaries();
 
 const MAX_CAUSE_LENGTH = 100;
 const MAX_POSITION_LENGTH = 100;
@@ -152,6 +157,8 @@ function VolunteeringCard({
   const { t } = useTranslation('ats');
   const isFieldVisible = useTemplateFieldVisible('volunteering');
   const [locationsError, setLocationsError] = useState(false);
+  const [organizationsError, setOrganizationsError] = useState(false);
+  const [causesError, setCausesError] = useState(false);
   const rowStartCodes = computeRowStartCodes(
     VOLUNTEERING_GRID_FIELDS,
     isFieldVisible
@@ -211,7 +218,12 @@ function VolunteeringCard({
                   )}
                 >
                   <div className="flex h-5 items-center">
-                    <Label data-testid="preferredVolunteering-organizationName-label">
+                    <Label
+                      data-testid="preferredVolunteering-organizationName-label"
+                      className={
+                        organizationsError ? 'text-destructive' : undefined
+                      }
+                    >
                       {t('preferredVolunteering.labels.organizationName')}
                     </Label>
                   </div>
@@ -256,6 +268,10 @@ function VolunteeringCard({
                     triggerSearchOnFocus
                     hideClearAllButton
                     maxSelected={MAX_SELECTIONS}
+                    errorMessage={t(
+                      'preferredVolunteering.errors.maxSelections'
+                    )}
+                    onErrorStateChange={setOrganizationsError}
                     disabled={fieldsDisabled}
                     loading={isOrganizationsLoading}
                     placeholder={t(
@@ -333,7 +349,10 @@ function VolunteeringCard({
                   )}
                 >
                   <div className="flex items-center justify-between">
-                    <Label data-testid="preferredVolunteering-cause-label">
+                    <Label
+                      data-testid="preferredVolunteering-cause-label"
+                      className={causesError ? 'text-destructive' : undefined}
+                    >
                       {t('preferredVolunteering.labels.cause')}
                     </Label>
                     <CharacterCount
@@ -377,6 +396,10 @@ function VolunteeringCard({
                     triggerSearchOnFocus
                     hideClearAllButton
                     maxSelected={MAX_SELECTIONS}
+                    errorMessage={t(
+                      'preferredVolunteering.errors.maxSelections'
+                    )}
+                    onErrorStateChange={setCausesError}
                     disabled={fieldsDisabled}
                     loading={isCausesLoading}
                     placeholder={t('preferredVolunteering.placeholders.cause')}
@@ -480,10 +503,12 @@ function VolunteeringCard({
                           }
                         }}
                         disabled={date =>
-                          date > new Date() || date < HUNDRED_YEARS_AGO
+                          isAfter(startOfDay(date), TODAY) ||
+                          isBeforeMinDate(date, HUNDRED_YEARS_AGO)
                         }
                         captionLayout="dropdown"
                         startMonth={HUNDRED_YEARS_AGO}
+                        endMonth={TODAY}
                       />
                     </PopoverContent>
                   </Popover>
@@ -549,11 +574,13 @@ function VolunteeringCard({
                           onUpdate(index, { openDatePopover: null });
                         }}
                         disabled={date => {
+                          const day = startOfDay(date);
                           const startDate = parseLocalDate(entry.startDate);
                           return (
-                            date < HUNDRED_YEARS_AGO ||
-                            date > HUNDRED_YEARS_FROM_NOW ||
-                            (startDate != null && date < startDate)
+                            isBeforeMinDate(date, HUNDRED_YEARS_AGO) ||
+                            isAfter(day, HUNDRED_YEARS_FROM_NOW) ||
+                            (startDate != null &&
+                              isBefore(day, startOfDay(startDate)))
                           );
                         }}
                         captionLayout="dropdown"
@@ -598,8 +625,6 @@ export default function PreferredVolunteeringStep({
   );
   const [confirmDisableOpen, setConfirmDisableOpen] = useState(false);
   const [emptyDisableOpen, setEmptyDisableOpen] = useState(false);
-  const [confirmTakeFromCandidateOpen, setConfirmTakeFromCandidateOpen] =
-    useState(false);
   const [organizationsSearchQuery, setOrganizationsSearchQuery] = useState('');
   const [locationsSearchQuery, setLocationsSearchQuery] = useState('');
   const [causesSearchQuery, setCausesSearchQuery] = useState('');
@@ -835,28 +860,11 @@ export default function PreferredVolunteeringStep({
     setEntries(prev => [...prev, createEmptyEntry(String(Date.now()))]);
   };
 
-  const applyTakeFromCandidate = () => {
-    setDataTakenFromCandidate(true);
-    setEntries([createEmptyEntry('1')]);
-  };
-
-  // Checking "data taken from candidate" clears all added data. Confirm first
-  // when there is data to lose; apply directly otherwise. Unchecking is safe.
   const handleTakeFromCandidateChange = (checked: boolean) => {
-    if (!checked) {
-      setDataTakenFromCandidate(false);
-      return;
+    setDataTakenFromCandidate(checked);
+    if (checked) {
+      setEntries([createEmptyEntry('1')]);
     }
-    if (hasVolunteeringData) {
-      setConfirmTakeFromCandidateOpen(true);
-      return;
-    }
-    applyTakeFromCandidate();
-  };
-
-  const handleConfirmTakeFromCandidate = () => {
-    applyTakeFromCandidate();
-    setConfirmTakeFromCandidateOpen(false);
   };
 
   const handleDisable = () => {
@@ -923,22 +931,12 @@ export default function PreferredVolunteeringStep({
               <VacancyStatusBadge status={vacancyStatus} />
             ) : null}
           </div>
-          <SwitchPrimitive.Root
+          <Switch
             checked={isEnabled}
             onCheckedChange={handleToggle}
+            size="lg"
             data-testid="toggle-on-off-switch"
-            className={cn(
-              'focus-visible:ring-ring/50 inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent shadow-xs transition-colors outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50',
-              isEnabled ? 'bg-brand-primary-500' : 'bg-slate-300'
-            )}
-          >
-            <SwitchPrimitive.Thumb
-              className={cn(
-                'pointer-events-none block h-5 w-5 rounded-full bg-white shadow-lg ring-0 transition-transform',
-                isEnabled ? 'translate-x-5' : 'translate-x-0'
-              )}
-            />
-          </SwitchPrimitive.Root>
+          />
         </div>
 
         {/* ── Checkbox: data from candidate profile ─────────────────────── */}
@@ -1088,20 +1086,6 @@ export default function PreferredVolunteeringStep({
         disableLabel={t('preferredVolunteering.confirmDisableDialog.disable')}
         onCancel={() => setConfirmDisableOpen(false)}
         onDisable={handleDisable}
-      />
-
-      {/* ── Take-from-candidate Confirmation Dialog ───────────────────────── */}
-      <DisableDialog
-        open={confirmTakeFromCandidateOpen}
-        onOpenChange={open => {
-          if (!open) setConfirmTakeFromCandidateOpen(false);
-        }}
-        title={t('preferredVolunteering.confirmDisableDialog.title')}
-        message={t('preferredVolunteering.confirmDisableDialog.message')}
-        cancelLabel={t('preferredVolunteering.confirmDisableDialog.cancel')}
-        disableLabel={t('preferredVolunteering.confirmDisableDialog.disable')}
-        onCancel={() => setConfirmTakeFromCandidateOpen(false)}
-        onDisable={handleConfirmTakeFromCandidate}
       />
 
       <StepDisableDialog

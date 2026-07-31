@@ -10,7 +10,7 @@ vi.mock('@react-keycloak/web', () => ({
 }));
 
 vi.mock('@cgp/data-access', () => ({
-  setTokenGetter: (getter: () => Promise<string | null>) => {
+  setTokenGetter: (getter: () => Promise<string | null>): void => {
     setTokenGetterMock(getter);
   },
 }));
