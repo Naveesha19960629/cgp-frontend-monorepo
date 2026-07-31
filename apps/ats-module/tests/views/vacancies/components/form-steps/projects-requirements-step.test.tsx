@@ -264,11 +264,18 @@ vi.mock('@/views/vacancies/utils', () => ({
   formatDate: (date: string) => date,
 }));
 
-vi.mock('@/views/vacancies/utils/date-timezone-safe', () => ({
-  formatLocalDate: (date: Date) => date.toISOString().split('T')[0],
-  parseLocalDate: (dateString?: string) =>
-    dateString ? new Date(dateString) : null,
-}));
+vi.mock('@/views/vacancies/utils/date-timezone-safe', async importOriginal => {
+  const actual =
+    await importOriginal<
+      typeof import('@/views/vacancies/utils/date-timezone-safe')
+    >();
+  return {
+    ...actual,
+    formatLocalDate: (date: Date) => date.toISOString().split('T')[0],
+    parseLocalDate: (dateString?: string) =>
+      dateString ? new Date(dateString) : null,
+  };
+});
 
 // ── Tests ───────────────────────────────────────────────────────────────────
 

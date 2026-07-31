@@ -26,6 +26,10 @@ import type {
   StepProps,
 } from '@/views/vacancies/types';
 import { resolveUserCreatedIndustries } from '@/views/vacancies/utils';
+import {
+  getHundredYearDateBoundaries,
+  isBeforeMinDate,
+} from '@/views/vacancies/utils/date-timezone-safe';
 
 import { CharacterCount } from '@cgp/ui-kit/components/character-count';
 import { ErrorToast, SuccessToast } from '@cgp/ui-kit/components/custom-toast';
@@ -55,10 +59,13 @@ import {
 import { Switch } from '@cgp/ui-kit/components/ui/switch';
 import { applyTypography } from '@cgp/ui-kit/lib/typography';
 import { cn } from '@cgp/ui-kit/lib/utils';
-import { format } from 'date-fns';
+import { format, isAfter, isBefore, startOfDay } from 'date-fns';
 
-const HUNDRED_YEARS_AGO = new Date(new Date().getFullYear() - 100, 0, 1);
-const HUNDRED_YEARS_FROM_NOW = new Date(new Date().getFullYear() + 100, 11, 31);
+const {
+  today: TODAY,
+  minDate: HUNDRED_YEARS_AGO,
+  maxDate: HUNDRED_YEARS_FROM_NOW,
+} = getHundredYearDateBoundaries();
 
 const multiSelectInfoAvatar = new URL(
   '../../../../assets/images/multi-select-info-avatar.svg',
@@ -393,18 +400,20 @@ function PatentCard({
                               }
                             }}
                             disabled={date => {
+                              const day = startOfDay(date);
                               const toDate = form.getValues(
                                 `patents.${index}.toDate`
                               );
                               return (
-                                date > new Date() ||
-                                date < HUNDRED_YEARS_AGO ||
-                                (toDate != null && date > toDate)
+                                isAfter(day, TODAY) ||
+                                isBeforeMinDate(date, HUNDRED_YEARS_AGO) ||
+                                (toDate != null &&
+                                  isAfter(day, startOfDay(toDate)))
                               );
                             }}
                             captionLayout="dropdown"
                             startMonth={HUNDRED_YEARS_AGO}
-                            endMonth={new Date()}
+                            endMonth={TODAY}
                           />
                         </PopoverContent>
                       </Popover>
@@ -484,13 +493,15 @@ function PatentCard({
                               setOpenDatePopover(null);
                             }}
                             disabled={date => {
+                              const day = startOfDay(date);
                               const fromDate = form.getValues(
                                 `patents.${index}.fromDate`
                               );
                               return (
-                                date < HUNDRED_YEARS_AGO ||
-                                date > HUNDRED_YEARS_FROM_NOW ||
-                                (fromDate != null && date < fromDate)
+                                isBeforeMinDate(date, HUNDRED_YEARS_AGO) ||
+                                isAfter(day, HUNDRED_YEARS_FROM_NOW) ||
+                                (fromDate != null &&
+                                  isBefore(day, startOfDay(fromDate)))
                               );
                             }}
                             captionLayout="dropdown"
@@ -578,8 +589,6 @@ export default function PreferredPatentsStep({
   }, [setForm, stepDisableRef]);
 
   const [showDisableConfirm, setShowDisableConfirm] = useState(false);
-  const [showTakeFromCandidateConfirm, setShowTakeFromCandidateConfirm] =
-    useState(false);
   const [pendingEmptyAction, setPendingEmptyAction] = useState<
     'next' | 'back' | null
   >(null);
@@ -601,11 +610,6 @@ export default function PreferredPatentsStep({
         toDate: undefined,
       })),
     });
-  };
-
-  const handleConfirmTakeFromCandidate = () => {
-    applyTakeFromCandidate();
-    setShowTakeFromCandidateConfirm(false);
   };
 
   const handleConfirmDisable = () => {
@@ -839,19 +843,6 @@ export default function PreferredPatentsStep({
                         field.onChange(false);
                         return;
                       }
-                      // Confirm before wiping any added patent data.
-                      const patents = form.getValues('patents');
-                      const hasData = patents.some(
-                        p =>
-                          p.relatedIndustries.length > 0 ||
-                          p.statuses.length > 0 ||
-                          p.fromDate != null ||
-                          p.toDate != null
-                      );
-                      if (hasData) {
-                        setShowTakeFromCandidateConfirm(true);
-                        return;
-                      }
                       applyTakeFromCandidate();
                     }}
                   />
@@ -929,12 +920,6 @@ export default function PreferredPatentsStep({
         open={showDisableConfirm}
         onOpenChange={setShowDisableConfirm}
         onConfirm={handleConfirmDisable}
-      />
-
-      <StepDisableDialog
-        open={showTakeFromCandidateConfirm}
-        onOpenChange={open => !open && setShowTakeFromCandidateConfirm(false)}
-        onConfirm={handleConfirmTakeFromCandidate}
       />
 
       <StepDisableDialog

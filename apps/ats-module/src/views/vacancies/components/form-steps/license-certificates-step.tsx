@@ -33,6 +33,7 @@ import {
 import {
   compareDates,
   formatLocalDate,
+  getHundredYearDateBoundaries,
 } from '@/views/vacancies/utils/date-timezone-safe';
 
 import { CharacterCount } from '@cgp/ui-kit/components/character-count';
@@ -59,21 +60,11 @@ import { applyTypography } from '@cgp/ui-kit/lib/typography';
 import { cn } from '@cgp/ui-kit/lib/utils';
 
 const MAX_SELECTIONS = 10;
-const TODAY = new Date(
-  new Date().getFullYear(),
-  new Date().getMonth(),
-  new Date().getDate()
-);
-const HUNDRED_YEARS_AGO = new Date(
-  TODAY.getFullYear() - 100,
-  TODAY.getMonth(),
-  TODAY.getDate()
-);
-const HUNDRED_YEARS_FROM_NOW = new Date(
-  TODAY.getFullYear() + 100,
-  TODAY.getMonth(),
-  TODAY.getDate()
-);
+const {
+  today: TODAY,
+  minDate: HUNDRED_YEARS_AGO,
+  maxDate: HUNDRED_YEARS_FROM_NOW,
+} = getHundredYearDateBoundaries();
 
 const multiSelectInfoAvatar = new URL(
   '../../../../assets/images/multi-select-info-avatar.svg',

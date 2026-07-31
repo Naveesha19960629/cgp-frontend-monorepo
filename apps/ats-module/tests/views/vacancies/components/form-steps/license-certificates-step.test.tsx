@@ -142,6 +142,11 @@ vi.mock('@/views/vacancies/utils', () => ({
 vi.mock('@/views/vacancies/utils/date-timezone-safe', () => ({
   compareDates: () => 0,
   formatLocalDate: () => '2025-01-01',
+  getHundredYearDateBoundaries: () => ({
+    today: new Date(2025, 0, 1),
+    minDate: new Date(1925, 0, 1),
+    maxDate: new Date(2125, 0, 1),
+  }),
 }));
 
 vi.mock('@cgp/ui-kit/components/custom-toast', () => ({

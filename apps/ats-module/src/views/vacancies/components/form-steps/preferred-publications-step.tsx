@@ -2,8 +2,6 @@ import { ChevronUpIcon, PlusIcon } from 'lucide-react';
 
 import { ArrowLeft2, Calendar as CalendarIcon } from 'iconsax-reactjs';
 
-import * as SwitchPrimitive from '@radix-ui/react-switch';
-
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -19,10 +17,9 @@ import type { StepProps } from '@/views/vacancies/types';
 import { formatDate, sanitizePlainText } from '@/views/vacancies/utils';
 import {
   formatLocalDate,
-  getDateYearsAgo,
-  getDateYearsFromNow,
+  getHundredYearDateBoundaries,
+  isBeforeMinDate,
   parseLocalDate,
-  startOfToday,
 } from '@/views/vacancies/utils/date-timezone-safe';
 
 import { CharacterCount } from '@cgp/ui-kit/components/character-count';
@@ -42,6 +39,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@cgp/ui-kit/components/ui/popover';
+import { Switch } from '@cgp/ui-kit/components/ui/switch';
 import { applyTypography } from '@cgp/ui-kit/lib/typography';
 import { cn } from '@cgp/ui-kit/lib/utils';
 import { isAfter, isBefore, startOfDay } from 'date-fns';
@@ -49,16 +47,11 @@ import { isAfter, isBefore, startOfDay } from 'date-fns';
 import DisableDialog from './disable-dialog';
 
 const MAX_PUBLISHER_LENGTH = 250;
-const DATE_BOUNDARY_YEARS = 100;
-// Exact-date boundaries (day/month/year), not year-only. If today is
-// 2026-07-02: MIN_DATE = 1926-07-02, TODAY = 2026-07-02, MAX_DATE = 2126-07-02.
-const TODAY = startOfToday();
-const HUNDRED_YEARS_AGO = getDateYearsAgo(DATE_BOUNDARY_YEARS);
-const HUNDRED_YEARS_FROM_NOW = getDateYearsFromNow(DATE_BOUNDARY_YEARS);
-
-/** True when `date` falls before the 100-year-ago cutoff (exclusive). */
-const isBeforeMinDate = (date: Date) =>
-  isBefore(startOfDay(date), HUNDRED_YEARS_AGO);
+const {
+  today: TODAY,
+  minDate: HUNDRED_YEARS_AGO,
+  maxDate: HUNDRED_YEARS_FROM_NOW,
+} = getHundredYearDateBoundaries();
 
 interface PublicationEntry {
   id: string;
@@ -238,7 +231,7 @@ function PublicationCard({
                         }}
                         disabled={date =>
                           isAfter(startOfDay(date), TODAY) ||
-                          isBeforeMinDate(date)
+                          isBeforeMinDate(date, HUNDRED_YEARS_AGO)
                         }
                         captionLayout="dropdown"
                         startMonth={HUNDRED_YEARS_AGO}
@@ -322,7 +315,7 @@ function PublicationCard({
                             publication.publishedDateFrom
                           );
                           return (
-                            isBeforeMinDate(date) ||
+                            isBeforeMinDate(date, HUNDRED_YEARS_AGO) ||
                             isAfter(day, HUNDRED_YEARS_FROM_NOW) ||
                             (fromDate != null &&
                               isBefore(day, startOfDay(fromDate)))
@@ -555,22 +548,12 @@ export default function PreferredPublicationsStep({
               <VacancyStatusBadge status={vacancyStatus} />
             ) : null}
           </div>
-          <SwitchPrimitive.Root
+          <Switch
             checked={isEnabled}
             onCheckedChange={handleToggle}
+            size="lg"
             data-testid="toggle-on-off-switch"
-            className={cn(
-              'focus-visible:ring-ring/50 inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent shadow-xs transition-colors outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50',
-              isEnabled ? 'bg-brand-primary-500' : 'bg-slate-300'
-            )}
-          >
-            <SwitchPrimitive.Thumb
-              className={cn(
-                'pointer-events-none block h-5 w-5 rounded-full bg-white shadow-lg ring-0 transition-transform',
-                isEnabled ? 'translate-x-5' : 'translate-x-0'
-              )}
-            />
-          </SwitchPrimitive.Root>
+          />
         </div>
 
         {/* ── Checkbox: data from candidate profile ─────────────────────── */}
