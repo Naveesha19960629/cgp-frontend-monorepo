@@ -152,7 +152,7 @@ function VacancySecondaryEducationSection({
   }
 
   return (
-    <VacancyView.Section title={t('secondaryEducation.sectionTitle')}>
+    <VacancyView.Section title={t('secondaryEducation.title')}>
       {content}
     </VacancyView.Section>
   );
