@@ -79,9 +79,7 @@ describe('VacancySecondaryEducationSection', () => {
         }}
       />
     );
-    expect(
-      screen.getByText('secondaryEducation.sectionTitle')
-    ).toBeInTheDocument();
+    expect(screen.getByText('secondaryEducation.title')).toBeInTheDocument();
   });
 
   it('displays grade as an info row when present', () => {
