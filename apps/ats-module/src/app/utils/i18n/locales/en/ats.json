@@ -224,6 +224,63 @@
       }
     }
   },
+  "versionHistory": {
+    "heading": "Version History",
+    "download": "Download",
+    "invalidId": "This vacancy could not be found.",
+    "systemLabel": "System",
+    "notifications": {
+      "success": {
+        "title": "Successfully Downloaded",
+        "message": "Version history PDF downloaded successfully."
+      },
+      "error": {
+        "title": "Try Again",
+        "message": "Some changes could not be loaded. Please try again."
+      }
+    },
+    "meta": {
+      "created": "Created {{date}}",
+      "lastUpdated": "Last Updated {{date}}",
+      "versionsCount_one": "{{count}} Version",
+      "versionsCount_other": "{{count}} Versions"
+    },
+    "sidebar": {
+      "versionLabel": "Version {{number}}"
+    },
+    "activityLog": {
+      "heading": "Activity Log",
+      "noChanges": "No tracked changes recorded for this version.",
+      "emptyState": {
+        "title": "No Activity Available",
+        "description": "There are no activity logs recorded for this version yet. Any updates, edits, or actions related to this version will appear here once activities are performed."
+      }
+    },
+    "sectionNameLabel": "Section Name - ",
+    "changeTypes": {
+      "statusUpdated": "Vacancy status transitioned from",
+      "titleChanged": "Vacancy Title Changed",
+      "scheduleDateChanged": "Scheduled Publish Date and Time Changed",
+      "expirationDateChanged": "Expiration Date and Time Changed",
+      "verbs": {
+        "added": "Added",
+        "removed": "Removed",
+        "updated": "Updated",
+        "created": "Created"
+      },
+      "details": {
+        "addedItems_one": "New {{count}} {{field}}",
+        "addedItems_other": "New {{count}} {{field}}",
+        "removedItems_one": "{{count}} {{field}}",
+        "removedItems_other": "{{count}} {{field}}",
+        "updatedItems_one": "New {{count}} {{field}}",
+        "updatedItems_other": "New {{count}} {{field}}",
+        "field": "{{field}}"
+      },
+      "previousValue": "Previous {{field}}",
+      "updatedValue": "Updated {{field}}"
+    }
+  },
   "error": {
     "apiDefaultMessage": "An unexpected error occurred. Please try again."
   },

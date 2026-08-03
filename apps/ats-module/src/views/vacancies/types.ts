@@ -1922,6 +1922,126 @@ interface VacancySaveAsTemplateDialogProps {
   isTemplateNameLoading?: boolean;
 }
 
+// ── Vacancy Version History (Download as PDF) ──────────────────────────────
+
+type VacancyVersionHistoryChangeType =
+  | 'STATUS_CHANGED'
+  | 'FIELD_VALUE_ADDED'
+  | 'FIELD_VALUE_REMOVED'
+  | 'FIELD_VALUE_UPDATED'
+  | 'VACANCY_CREATED';
+
+interface VacancyVersionHistoryChange {
+  changeType: VacancyVersionHistoryChangeType;
+  sectionName: string;
+  fieldName: string;
+  oldValue: unknown[] | null;
+  newValue: unknown[] | null;
+}
+
+interface VacancyVersionHistoryVersion {
+  versionNumber: number;
+  updatedAt: string;
+  updatedBy: string;
+  profilePicture: string | null;
+  changes: {
+    user: VacancyVersionHistoryChange[];
+    system: VacancyVersionHistoryChange[];
+  };
+}
+
+interface VacancyVersionHistoryData {
+  vacancyTitle: string;
+  status: string;
+  createdAt: string;
+  createdBy: string;
+  lastUpdatedAt: string;
+  totalVersions: number;
+  versions: VacancyVersionHistoryVersion[];
+}
+
+/** A single item in the "added/removed/updated N items" box grid — shared by
+ * the PDF generator and the on-screen Activity Log (see
+ * utils/version-history-helpers.ts). */
+interface VersionHistoryGridItem {
+  title: string;
+  subtitle?: string;
+}
+
+/** A change entry paired with who made it, ready to render — built by
+ * resolveVersionEntries() in utils/version-history-helpers.ts, which both
+ * the on-screen Activity Log and the PDF generator call so attribution can
+ * never drift between the two renderers. */
+interface VersionHistoryEntry {
+  change: VacancyVersionHistoryChange;
+  /** Display identifier for whoever performed this change — an email/username
+   * for user changes, or the literal marker "SYSTEM" for system changes.
+   * Resolved to a translated label at render time, not pre-translated. */
+  attribution: string;
+  /** True only for entries from `changes.system` (automatic, side-effect
+   * changes). Checked explicitly rather than by comparing `attribution`
+   * against "SYSTEM", so a user whose email merely looks system-ish can
+   * never be mislabeled — and so a version whose `updatedBy` is "SYSTEM"
+   * still renders its user changes as user changes. */
+  isSystem: boolean;
+  updatedAt: string;
+  profilePicture: string | null;
+}
+
+interface VersionHistorySidebarProps {
+  versions: VacancyVersionHistoryVersion[];
+  selectedVersionNumber: number;
+  onSelectVersion: (versionNumber: number) => void;
+  /** Fallback actor for versions recorded with `updatedBy: "SYSTEM"` — see
+   * resolveVersionActor() in utils/version-history-helpers.ts. */
+  createdBy: string;
+}
+
+interface VersionHistoryActivityLogProps {
+  version: VacancyVersionHistoryVersion | undefined;
+  createdBy: string;
+}
+
+interface VersionHistoryChangeEntryProps {
+  entry: VersionHistoryEntry;
+}
+
+interface VersionHistoryStatusPillProps {
+  status: string;
+  className?: string;
+}
+
+interface VersionHistoryValueBoxGridProps {
+  items: VersionHistoryGridItem[];
+  variant: 'added' | 'removed' | 'updated';
+}
+
+/** Plain multi-select values (Causes, Skills, Industries…) render as chips
+ * rather than the bordered box grid used for object-shaped values. */
+interface VersionHistoryChipListProps {
+  items: string[];
+}
+
+/** The "{Section Name - X} │ {Added} {New 2 Schools}" header line above a
+ * change's values. `verb` takes the variant's accent colour; `detail` stays
+ * slate — see VersionHistoryChangeSummary. */
+interface VersionHistoryChangeSummaryProps {
+  sectionName: string;
+  verb: string;
+  detail?: string;
+  variant: 'added' | 'removed' | 'updated';
+}
+
+/** A field-value update with both a before and an after: rendered as two
+ * side-by-side boxes joined by an arrow (Figma node 4229:229804) rather than
+ * the compact single-line InlineDiffRow reserved for short vacancy-level
+ * fields (status, title, schedule/expiration dates). */
+interface VersionHistoryScalarDiffProps {
+  field: string;
+  before: string;
+  after: string;
+}
+
 export type {
   CreateVacancyPayload,
   TemplateSectionKind,
@@ -2057,6 +2177,20 @@ export type {
   LanguageItem,
   LanguageEntry,
   SingleRecordApiResponse,
+  VacancyVersionHistoryChangeType,
+  VacancyVersionHistoryChange,
+  VacancyVersionHistoryVersion,
+  VacancyVersionHistoryData,
+  VersionHistoryGridItem,
+  VersionHistoryEntry,
+  VersionHistorySidebarProps,
+  VersionHistoryActivityLogProps,
+  VersionHistoryChangeEntryProps,
+  VersionHistoryStatusPillProps,
+  VersionHistoryValueBoxGridProps,
+  VersionHistoryChipListProps,
+  VersionHistoryChangeSummaryProps,
+  VersionHistoryScalarDiffProps,
   PreferredLanguages,
   CauseItem,
   CauseEntry,

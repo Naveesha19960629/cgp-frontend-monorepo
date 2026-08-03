@@ -12,6 +12,7 @@ import {
   VacanciesPage,
   VacancyIdEditJdPage,
   VacancyIdEditPage,
+  VacancyIdVersionHistoryPage,
   VacancyIdViewPage,
 } from '@/views/vacancies';
 
@@ -42,6 +43,10 @@ function AtsRoutes() {
         <Route path="vacancies/:id/edit" element={<VacancyIdEditPage />} />
         <Route path="vacancies/:id/view" element={<VacancyIdViewPage />} />
         <Route path="vacancies/:id/edit-jd" element={<VacancyIdEditJdPage />} />
+        <Route
+          path="vacancies/:id/version-history"
+          element={<VacancyIdVersionHistoryPage />}
+        />
         <Route path="find-candidate" element={<div>Find Candidate</div>} />
         <Route path="templates" element={<TemplatesPage />} />
         <Route path="templates/new" element={<NewVacancyTemplatePage />} />
@@ -76,6 +81,10 @@ function createStandaloneRouter() {
         { path: 'vacancies/:id/edit', element: <VacancyIdEditPage /> },
         { path: 'vacancies/:id/view', element: <VacancyIdViewPage /> },
         { path: 'vacancies/:id/edit-jd', element: <VacancyIdEditJdPage /> },
+        {
+          path: 'vacancies/:id/version-history',
+          element: <VacancyIdVersionHistoryPage />,
+        },
         { path: 'find-candidate', element: <div>Find Candidate</div> },
         { path: 'templates', element: <TemplatesPage /> },
         { path: 'templates/new', element: <NewVacancyTemplatePage /> },

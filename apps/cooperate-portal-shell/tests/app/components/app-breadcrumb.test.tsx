@@ -54,6 +54,20 @@ describe('AppBreadcrumb', () => {
     expect(screen.getByText('Create Vacancy')).toBeInTheDocument();
   });
 
+  it('renders two items for /dashboard/ats/vacancies/:id/version-history', () => {
+    // Regression test: this route had no breadcrumbRoutes entry at all, so
+    // AppBreadcrumb silently rendered nothing on the Version History page —
+    // reported live via a screenshot missing the "Vacancies > Version
+    // History" trail Figma shows above the page's own header (node
+    // 4229:229517).
+    renderWithRouter('/dashboard/ats/vacancies/abc-123/version-history');
+
+    expect(screen.getByText('Vacancies')).toBeInTheDocument();
+    expect(screen.getByText('Version History')).toBeInTheDocument();
+    expect(screen.getByText('Vacancies').closest('a')).not.toBeNull();
+    expect(screen.getByText('Version History').closest('a')).toBeNull();
+  });
+
   it('renders parent breadcrumb as a link and current item without a link', () => {
     renderWithRouter('/dashboard/ats/vacancies/new');
 

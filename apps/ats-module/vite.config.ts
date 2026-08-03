@@ -1,4 +1,5 @@
 import { defineConfig, loadEnv } from 'vite';
+import { nodePolyfills } from 'vite-plugin-node-polyfills';
 
 import react from '@vitejs/plugin-react';
 
@@ -23,6 +24,18 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       tailwindcss(),
+      // pdfkit (client-side PDF generation for the vacancy version-history
+      // Download action) assumes a Node-like environment throughout its
+      // binary PDF-writing internals (a real `Buffer` global, plus
+      // `stream`/`zlib`/`util`/`events` for its dependency tree). This
+      // polyfills just enough of that surface for it to run in the browser.
+      // `fs` is deliberately NOT polyfilled — there's no meaningful browser
+      // equivalent for real file reads, so fonts are embedded as buffers
+      // instead of loaded by path (see utils/version-history-pdf.ts).
+      nodePolyfills({
+        include: ['buffer', 'stream', 'zlib', 'util', 'assert', 'events'],
+        globals: { Buffer: true, global: true, process: true },
+      }),
       federation({
         name: 'ats-module',
         filename: 'remoteEntry.js',
