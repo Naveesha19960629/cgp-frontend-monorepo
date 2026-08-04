@@ -77,6 +77,7 @@ export default function VacancyOnholdUpdateDialog({
           <Button
             type="button"
             variant="secondary"
+            disabled={isConfirming}
             onClick={() => onOpenChange(false)}
             className={cn(
               'h-12 flex-1 rounded-lg bg-neutral-200 text-neutral-600 hover:bg-neutral-200',

@@ -205,7 +205,7 @@ describe('VacancyOnholdUpdateDialog', () => {
     expect(onOpenChange).not.toHaveBeenCalled();
   });
 
-  it('does not disable the No button when isConfirming is true (no disabled prop wired)', () => {
+  it('disables the No button when isConfirming is true', () => {
     render(
       <VacancyOnholdUpdateDialog
         open={true}
@@ -214,6 +214,24 @@ describe('VacancyOnholdUpdateDialog', () => {
         isPublishDateChanged={false}
         hasApplicants={false}
         isConfirming={true}
+      />
+    );
+
+    expect(
+      screen.getByRole('button', {
+        name: 'vacancyOnholdUpdateDialog.noButton',
+      })
+    ).toBeDisabled();
+  });
+
+  it('does not disable the No button when isConfirming defaults to false', () => {
+    render(
+      <VacancyOnholdUpdateDialog
+        open={true}
+        onOpenChange={onOpenChange}
+        onConfirm={onConfirm}
+        isPublishDateChanged={false}
+        hasApplicants={false}
       />
     );
 

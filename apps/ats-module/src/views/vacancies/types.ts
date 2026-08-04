@@ -1121,6 +1121,27 @@ interface VacancyOnholdUpdateDialogProps {
   isConfirming?: boolean;
 }
 
+// ─── Applicant Notification (Onhold vacancy with applicants) ────────────────
+
+/** Result of diffing the original vs. edited VacancyForm's applicant-facing sections. */
+interface ApplicationFormChanges {
+  /** A "Customizable Form" question was added, removed, or edited. */
+  hasNewFields: boolean;
+  /** Any "preferred value" section (skills, languages, education, etc.) changed. */
+  hasUpdatedPreferredValues: boolean;
+  /** VacancyForm keys whose content differs from the original snapshot. */
+  changedSections: string[];
+  /** `section.path` identifiers for the specific fields that differ within changedSections. */
+  changedFields: string[];
+}
+
+interface NotifyApplicantsPayload {
+  vacancyId: string;
+  changedSections: string[];
+  changedFields: string[];
+  publishDateTime: string;
+}
+
 interface VacancyTableColumn {
   vacancyId: string;
   title: string;
@@ -2236,6 +2257,8 @@ export type {
   VacancyToggleActiveData,
   VacancyToggleStatusDialogProps,
   VacancyOnholdUpdateDialogProps,
+  ApplicationFormChanges,
+  NotifyApplicantsPayload,
   VacancyDetailJobRequirementData,
   VacancyDetailPatentEntry,
   VacancyDetailData,

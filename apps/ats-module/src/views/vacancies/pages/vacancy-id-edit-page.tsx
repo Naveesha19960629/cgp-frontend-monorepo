@@ -190,6 +190,7 @@ function EditVacancyContent({ id }: Readonly<{ id: string | undefined }>) {
     setForm,
     setCurrentStepIndex,
     initCompletedStepsFromForm,
+    originalFormRef,
   } = useVacancyForm();
   const isHydratedRef = useRef(false);
   const [isHydrated, setIsHydrated] = useState(false);
@@ -226,6 +227,7 @@ function EditVacancyContent({ id }: Readonly<{ id: string | undefined }>) {
     });
     if (resolvedForm) {
       initCompletedStepsFromForm(resolvedForm);
+      originalFormRef.current = resolvedForm;
     }
 
     const requestedStepIndex = initialStep
@@ -255,6 +257,7 @@ function EditVacancyContent({ id }: Readonly<{ id: string | undefined }>) {
     initCompletedStepsFromForm,
     initialStep,
     isLoading,
+    originalFormRef,
     setCurrentStepIndex,
     setForm,
     setIsInitialStep,

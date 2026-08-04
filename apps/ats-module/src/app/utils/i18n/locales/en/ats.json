@@ -554,7 +554,7 @@
           "unpublished": "Unpublished",
           "live": "Live",
           "expired": "Expired",
-          "onHold": "On Hold"
+          "onHold": "Onhold"
         }
       },
       "statusOptions": {
@@ -1420,12 +1420,12 @@
   },
   "vacancyOnholdUpdateDialog": {
     "scheduleChanged": {
-      "title": "Are you sure?",
-      "description": "Are you sure you want to update and reschedule this vacancy? It will go live on the new publish date, and past applicants will be notified of the fields, which are newly added or have updated preferred values."
+      "title": "Update Scheduled Publish Date",
+      "description": "The Scheduled Publish Date & Time has been updated.\n\n• This vacancy will go live on the updated Scheduled Publish Date & Time.\n\n• Past applicants will be notified to review and update their applications if new fields or new preferred values have been added.\n\nDo you want to continue?"
     },
     "scheduleUnchanged": {
-      "title": "Are you sure?",
-      "description": "Are you sure you want to update this vacancy without rescheduling? It will remain Onhold until the publish date is updated. Past applicants will not be notified of the fields, which are newly added or have updated preferred values."
+      "title": "Vacancy Will Remain Onhold",
+      "description": "The Scheduled Publish Date & Time has not been changed.\n\n• This vacancy will remain Onhold.\n\n• Even if new fields or preferred values were added, applicants will NOT be notified until the vacancy goes Live.\n\nDo you want to continue?"
     },
     "scheduleChangedNoApplicants": {
       "title": "Are you sure?",

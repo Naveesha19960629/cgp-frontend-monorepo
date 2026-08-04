@@ -365,6 +365,14 @@ interface VacancyFormContextValue {
   stepDraftSaveRef: React.MutableRefObject<
     (() => Promise<Partial<VacancyForm> | null>) | null
   >;
+  /**
+   * Snapshot of `form` as it was hydrated from the API, before any recruiter
+   * edits. Set once by the edit page right after hydration. Used to diff the
+   * applicant-facing sections when deciding whether to notify past applicants
+   * of an Onhold vacancy reschedule — a ref (not state) since it's only read
+   * at submit time and must never itself trigger a re-render.
+   */
+  originalFormRef: React.MutableRefObject<VacancyForm | null>;
   isJobRequirementsFormValid: boolean;
   setIsJobRequirementsFormValid: React.Dispatch<React.SetStateAction<boolean>>;
 }
@@ -438,6 +446,7 @@ function VacancyFormProvider({
   const stepDraftSaveRef = useRef<
     (() => Promise<Partial<VacancyForm> | null>) | null
   >(null);
+  const originalFormRef = useRef<VacancyForm | null>(null);
   const cancelLockRef = useRef(false);
 
   // In the normal flow `visibleSteps === VACANCY_STEPS`. In the Use Template flow
@@ -642,6 +651,7 @@ function VacancyFormProvider({
         stepPersistRef,
         stepDisableRef,
         stepDraftSaveRef,
+        originalFormRef,
         isJobRequirementsFormValid,
         setIsJobRequirementsFormValid,
       }}
