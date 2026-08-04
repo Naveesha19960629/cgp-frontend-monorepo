@@ -372,7 +372,7 @@ interface VacancyFormContextValue {
    * of an Onhold vacancy reschedule — a ref (not state) since it's only read
    * at submit time and must never itself trigger a re-render.
    */
-  originalFormRef: React.MutableRefObject<VacancyForm | null>;
+  originalFormRef: React.RefObject<VacancyForm | null>;
   isJobRequirementsFormValid: boolean;
   setIsJobRequirementsFormValid: React.Dispatch<React.SetStateAction<boolean>>;
 }
