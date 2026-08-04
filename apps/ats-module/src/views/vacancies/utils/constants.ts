@@ -157,13 +157,16 @@ const PDF_SYSTEM_LABEL = 'System';
 const TIME_DISPLAY_FORMAT = 'h:mm a';
 // Version-history change values arrive as opaque strings with no type hint,
 // so date-shaped ones are detected by shape (not by field name) before being
-// formatted for display — matching Figma's "12th Oct 2026, 05:00 AM".
-// Written as flat top-level alternation (date-only / date+HH:MM /
-// date+HH:MM:SS / date+HH:MM:SS.fraction) rather than nested optional groups
-// — same 4 shapes matched, but without the compounding nesting that pushed
-// the nested-group version's complexity score over the linter's threshold.
-const ISO_DATE_LIKE_PATTERN =
-  /^\d{4}-\d{2}-\d{2}$|^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}$|^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}$|^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}\.\d+$/;
+// formatted for display — matching Figma's "12th Oct 2026, 05:00 AM". This
+// is only ever used as a cheap pre-filter before the real parse/validation
+// (formatChangeValue in format-date-range.ts calls parseLocalDate() next and
+// falls back to the raw value if THAT fails) — so it only needs to reject
+// obviously non-date strings ("AAA", "President"), not fully validate the
+// time portion's exact structure. Matching the date prefix plus a loosely
+// shaped optional time suffix keeps this well under the complexity limit
+// that the previous attempt (nested optional groups, then an even worse
+// fully-unrolled alternation) both blew past.
+const ISO_DATE_LIKE_PATTERN = /^\d{4}-\d{2}-\d{2}([T ][\d:.]+)?$/;
 const CHANGE_VALUE_DATE_TIME_FORMAT = `${DATE_DISPLAY_FORMAT}, ${TIME_DISPLAY_FORMAT}`;
 const PDF_DATE_TIME_DISPLAY_FORMAT = `${DATE_DISPLAY_FORMAT} • ${TIME_DISPLAY_FORMAT}`;
 const PDF_STATUS_DISPLAY_LABELS: Record<VacancyStatus, string> = {

@@ -172,7 +172,7 @@ const truncateToWidth = (
   // Drop any trailing dot/space the cut landed on, so "…gmail." + "..." does
   // not read as four periods. A single-character test (not a `+$`-quantified
   // character class) avoids any regex backtracking risk on the loop below.
-  while (clipped.length > 0 && /[.\s]/.test(clipped[clipped.length - 1])) {
+  while (clipped.length > 0 && /[.\s]/.test(clipped.at(-1) ?? '')) {
     clipped = clipped.slice(0, -1);
   }
   return `${clipped}...`;
