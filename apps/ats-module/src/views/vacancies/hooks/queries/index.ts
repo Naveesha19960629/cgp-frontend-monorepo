@@ -108,3 +108,7 @@ export {
   useVacancyJobDescriptionQuery,
   VACANCY_JOB_DESCRIPTION_QUERY_KEY,
 } from '@/views/vacancies/hooks/queries/use-vacancy-job-description-query';
+export {
+  useVacancyVersionHistoryQuery,
+  VACANCY_VERSION_HISTORY_QUERY_KEY,
+} from '@/views/vacancies/hooks/queries/use-vacancy-version-history-query';

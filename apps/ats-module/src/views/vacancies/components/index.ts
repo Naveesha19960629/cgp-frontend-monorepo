@@ -52,3 +52,11 @@ export { default as FieldToggle } from '@/views/vacancies/components/field-toggl
 export { default as SectionCard } from '@/views/vacancies/components/section-card';
 export * from '@/views/vacancies/components/view-vacancy';
 export * from '@/views/vacancies/components/dialogs';
+export { default as VersionHistorySidebar } from '@/views/vacancies/components/version-history-sidebar';
+export { default as VersionHistoryActivityLog } from '@/views/vacancies/components/version-history-activity-log';
+export { default as VersionHistoryChangeEntry } from '@/views/vacancies/components/version-history-change-entry';
+export { default as VersionHistoryStatusPill } from '@/views/vacancies/components/version-history-status-pill';
+export { default as VersionHistoryValueBoxGrid } from '@/views/vacancies/components/version-history-value-box-grid';
+export { default as VersionHistoryChipList } from '@/views/vacancies/components/version-history-chip-list';
+export { default as VersionHistoryChangeSummary } from '@/views/vacancies/components/version-history-change-summary';
+export { default as VersionHistoryScalarDiff } from '@/views/vacancies/components/version-history-scalar-diff';

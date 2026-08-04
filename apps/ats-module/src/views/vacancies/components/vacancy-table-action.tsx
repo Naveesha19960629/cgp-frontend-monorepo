@@ -87,6 +87,16 @@ export default function VacancyTableAction({
     }
   };
 
+  const handleVersionHistory = () => {
+    if (onVersionHistory) {
+      onVersionHistory();
+    } else {
+      void navigate(`/dashboard/ats/vacancies/${vacancy.id}/version-history`, {
+        state: { from: location.pathname },
+      });
+    }
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -144,7 +154,7 @@ export default function VacancyTableAction({
         {showVersionHistory && (
           <DropdownMenuItem
             className="gap-2 px-3 py-3 text-sm font-medium text-slate-500"
-            onClick={onVersionHistory}
+            onSelect={handleVersionHistory}
           >
             <History className="size-4 shrink-0" />
             {t('vacancies.table.actions.versionHistory')}
