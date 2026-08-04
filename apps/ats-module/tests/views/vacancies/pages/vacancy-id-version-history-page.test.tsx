@@ -226,6 +226,37 @@ describe('VacancyIdVersionHistoryPage', () => {
     expect(mockErrorToast).not.toHaveBeenCalled();
   });
 
+  it('shows the shared Spinner on the Download button while the PDF is being generated', async () => {
+    // Regression test: the Download button previously showed the same
+    // static Download icon whether or not a download was in progress — no
+    // loading feedback at all. It now swaps in the app's shared `Spinner`
+    // (matching the "use a common loader" request) for the isDownloading
+    // window between click and the blob resolving/rejecting.
+    let resolveDownload: (blob: Blob) => void = () => {};
+    mockBuildVersionHistoryPdfBlob.mockReturnValue(
+      new Promise<Blob>(resolve => {
+        resolveDownload = resolve;
+      })
+    );
+    const user = userEvent.setup();
+    render(<VacancyIdVersionHistoryPage />);
+    const downloadButton = screen.getByRole('button', {
+      name: 'versionHistory.download',
+    });
+
+    await user.click(downloadButton);
+
+    expect(screen.getByRole('status')).toBeInTheDocument();
+    expect(downloadButton).toBeDisabled();
+
+    resolveDownload(new Blob(['pdf'], { type: 'application/pdf' }));
+
+    await waitFor(() => {
+      expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    });
+    expect(downloadButton).not.toBeDisabled();
+  });
+
   it('shows an error state when the version-history fetch is unsuccessful', () => {
     mockUseVacancyVersionHistoryQuery.mockReturnValue({
       data: { success: false, message: 'failed', data: null },

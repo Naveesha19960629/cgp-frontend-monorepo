@@ -39,11 +39,12 @@ export default function VersionHistoryActivityLog({
         {t('versionHistory.activityLog.heading')}
       </p>
       <div className="flex flex-col gap-7">
-        {entries.map((entry, index) => (
+        {entries.map(entry => (
+          // No stable id exists, but the change's own section/field/type —
+          // combined with the timestamp shared by every change in the same
+          // version — distinguishes entries in practice.
           <VersionHistoryChangeEntry
-            // Entries are a point-in-time snapshot with no stable id, and
-            // never reorder within a single render.
-            key={index}
+            key={`${entry.updatedAt}-${entry.change.sectionName}-${entry.change.fieldName}-${entry.change.changeType}`}
             entry={entry}
           />
         ))}

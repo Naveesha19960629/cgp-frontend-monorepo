@@ -11,11 +11,12 @@ export default function VersionHistoryChipList({
 }: Readonly<VersionHistoryChipListProps>) {
   return (
     <div className="flex flex-wrap gap-2">
-      {items.map((item, index) => (
+      {items.map(item => (
+        // The value itself is the key: a multi-select field's chosen
+        // options are themselves unique within one change (no stable id
+        // exists, but the plain string values are).
         <span
-          // Values are a point-in-time snapshot with no stable id, and never
-          // reorder within a single render.
-          key={index}
+          key={item}
           className="rounded-md bg-[#f1f5f9] px-3 py-2 text-sm font-medium text-[#475569]"
         >
           {item}

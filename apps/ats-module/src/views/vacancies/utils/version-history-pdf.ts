@@ -170,8 +170,12 @@ const truncateToWidth = (
     clipped = clipped.slice(0, -1);
   }
   // Drop any trailing dot/space the cut landed on, so "…gmail." + "..." does
-  // not read as four periods.
-  return `${clipped.replace(/[.\s]+$/, '')}...`;
+  // not read as four periods. A single-character test (not a `+$`-quantified
+  // character class) avoids any regex backtracking risk on the loop below.
+  while (clipped.length > 0 && /[.\s]/.test(clipped[clipped.length - 1])) {
+    clipped = clipped.slice(0, -1);
+  }
+  return `${clipped}...`;
 };
 
 const formatPdfDate = (isoDate: string) =>
@@ -474,12 +478,13 @@ const renderInlineDiff = (
     : Math.max(labelHeight, DIFF_VALUE_FONT_SIZE * 1.35);
 
   const fitsOneLine = labelWidth + labelGap + valuesWidth <= ctx.width;
+  const labelHeightOrZero = label ? labelHeight : 0;
   // flex-wrap's `gap-3` applies the SAME gap value on both axes, so the row
   // falling onto its own line uses INLINE_GAP as the vertical gap too, not a
   // separately-tuned constant.
   const height =
     fitsOneLine || !label
-      ? Math.max(label ? labelHeight : 0, valuesHeight)
+      ? Math.max(labelHeightOrZero, valuesHeight)
       : labelHeight + INLINE_GAP + valuesHeight;
   const stacked = Boolean(label) && !fitsOneLine;
 
@@ -734,8 +739,14 @@ const renderPlainValue = (
   const { doc } = ctx;
   doc.font(PDF_FONT_SEMIBOLD).fontSize(DIFF_VALUE_FONT_SIZE);
   const height = doc.heightOfString(text, { width: ctx.width });
-  if (ctx.dry) return height;
-  doc.fillColor(color).text(text, ctx.x, y, { width: ctx.width });
+  // The measured height is returned either way (dry or drawn) — that's the
+  // whole point of the measure-then-draw contract this file uses throughout
+  // (see the ContentCtx doc comment above): a dry pass and the real draw
+  // pass must never be able to disagree about how much space something
+  // takes, so both must return the identical value.
+  if (!ctx.dry) {
+    doc.fillColor(color).text(text, ctx.x, y, { width: ctx.width });
+  }
   return height;
 };
 
@@ -757,14 +768,133 @@ const summaryDetailFor = (
     : PDF_LABELS.manyItems(count, field);
 };
 
-/** Draws (or measures, when `ctx.dry`) one change's card content. */
+/** The initial version's entries: the field that was set at creation —
+ * `renderChange`'s VACANCY_CREATED case, split out to keep that function's
+ * own cognitive complexity low (see the comment on `renderChange` below). */
+const renderVacancyCreatedChange = (
+  ctx: ContentCtx,
+  change: VacancyVersionHistoryChange,
+  y: number
+): number => {
+  const value = getSingleScalar(change.newValue) ?? '—';
+  let height = renderSummaryLine(
+    ctx,
+    y,
+    change.sectionName,
+    PDF_LABELS.verbs.created,
+    change.fieldName,
+    PDF_COLORS.added
+  );
+  height += SUMMARY_TO_SCALAR_GAP;
+  if (change.fieldName.toLowerCase() === 'status') {
+    if (!ctx.dry) {
+      renderStatusPill(
+        ctx,
+        ctx.x,
+        y + height,
+        statusDisplayLabel(value),
+        statusPillColors(value)
+      );
+    }
+    return height + PILL_HEIGHT;
+  }
+  return height + renderPlainValue(ctx, y + height, value, PDF_COLORS.heading);
+};
+
+/** A FIELD_VALUE_ADDED/REMOVED/UPDATED change — `renderChange`'s default
+ * case, split out to keep that function's own cognitive complexity low (see
+ * the comment on `renderChange` below). */
+const renderFieldValueChange = (
+  ctx: ContentCtx,
+  change: VacancyVersionHistoryChange,
+  y: number
+): number => {
+  const isRemoved = change.changeType === 'FIELD_VALUE_REMOVED';
+  const accent = isRemoved ? PDF_COLORS.removed : PDF_COLORS.added;
+  const borderColor = isRemoved
+    ? PDF_COLORS.removed
+    : PDF_COLORS.gridAccentBorder;
+  // A removal describes what went away, so its values live on oldValue;
+  // additions and updates describe the resulting state on newValue.
+  const value = isRemoved ? change.oldValue : change.newValue;
+
+  if (shouldRenderAsGrid(value)) {
+    let height = renderSummaryLine(
+      ctx,
+      y,
+      change.sectionName,
+      summaryVerbFor(change),
+      summaryDetailFor(change, value.length),
+      accent
+    );
+    height += SUMMARY_TO_MULTI_GAP;
+    height += isObjectArray(value)
+      ? renderBoxGrid(ctx, y + height, toGridItems(value), borderColor, accent)
+      : renderChips(ctx, y + height, toChipItems(value));
+    return height;
+  }
+
+  const rawBefore = getSingleScalar(change.oldValue);
+  const rawAfter = getSingleScalar(change.newValue);
+  const before = rawBefore === null ? null : formatChangeValue(rawBefore);
+  const after = rawAfter === null ? null : formatChangeValue(rawAfter);
+
+  // Vacancy-level scalar edits (title, schedule/expiration dates) get their
+  // own sentence in Figma instead of the generic section header.
+  const labelKey = resolveScalarChangeLabelKey(change);
+  if (labelKey && before !== null && after !== null) {
+    return renderInlineDiff(
+      ctx,
+      y,
+      PDF_LABELS[labelKey],
+      // Figma strikes the superseded schedule date but leaves the old
+      // vacancy title un-struck (node 4229:229271).
+      { kind: 'text', text: before, strike: labelKey !== 'titleChanged' },
+      { kind: 'text', text: after }
+    );
+  }
+
+  let height = renderSummaryLine(
+    ctx,
+    y,
+    change.sectionName,
+    summaryVerbFor(change),
+    change.fieldName,
+    accent
+  );
+  height += SUMMARY_TO_SCALAR_GAP;
+
+  if (before !== null && after !== null) {
+    return (
+      height +
+      renderScalarDiffBoxes(ctx, y + height, change.fieldName, before, after)
+    );
+  }
+
+  const rawSingle = getSingleScalar(value);
+  return (
+    height +
+    renderPlainValue(
+      ctx,
+      y + height,
+      rawSingle === null ? '—' : formatChangeValue(rawSingle),
+      accent
+    )
+  );
+};
+
+/** Draws (or measures, when `ctx.dry`) one change's card content. Dispatches
+ * by changeType to a dedicated renderer per case (see above) rather than
+ * inlining each branch here — the same behavior, just kept out of one
+ * function whose cognitive complexity would otherwise compound every nested
+ * if/ternary inside a switch case. */
 const renderChange = (
   ctx: ContentCtx,
   change: VacancyVersionHistoryChange,
   y: number
 ): number => {
   switch (change.changeType) {
-    case 'STATUS_CHANGED': {
+    case 'STATUS_CHANGED':
       return renderInlineDiff(
         ctx,
         y,
@@ -772,123 +902,10 @@ const renderChange = (
         { kind: 'status', status: getSingleScalar(change.oldValue) ?? '' },
         { kind: 'status', status: getSingleScalar(change.newValue) ?? '' }
       );
-    }
-    case 'VACANCY_CREATED': {
-      const value = getSingleScalar(change.newValue) ?? '—';
-      let height = renderSummaryLine(
-        ctx,
-        y,
-        change.sectionName,
-        PDF_LABELS.verbs.created,
-        change.fieldName,
-        PDF_COLORS.added
-      );
-      height += SUMMARY_TO_SCALAR_GAP;
-      if (change.fieldName.toLowerCase() === 'status') {
-        if (!ctx.dry) {
-          renderStatusPill(
-            ctx,
-            ctx.x,
-            y + height,
-            statusDisplayLabel(value),
-            statusPillColors(value)
-          );
-        }
-        return height + PILL_HEIGHT;
-      }
-      return (
-        height + renderPlainValue(ctx, y + height, value, PDF_COLORS.heading)
-      );
-    }
-    case 'FIELD_VALUE_ADDED':
-    case 'FIELD_VALUE_REMOVED':
-    case 'FIELD_VALUE_UPDATED':
-    default: {
-      const isRemoved = change.changeType === 'FIELD_VALUE_REMOVED';
-      const accent = isRemoved ? PDF_COLORS.removed : PDF_COLORS.added;
-      const borderColor = isRemoved
-        ? PDF_COLORS.removed
-        : PDF_COLORS.gridAccentBorder;
-      // A removal describes what went away, so its values live on oldValue;
-      // additions and updates describe the resulting state on newValue.
-      const value = isRemoved ? change.oldValue : change.newValue;
-
-      if (shouldRenderAsGrid(value)) {
-        let height = renderSummaryLine(
-          ctx,
-          y,
-          change.sectionName,
-          summaryVerbFor(change),
-          summaryDetailFor(change, value.length),
-          accent
-        );
-        height += SUMMARY_TO_MULTI_GAP;
-        height += isObjectArray(value)
-          ? renderBoxGrid(
-              ctx,
-              y + height,
-              toGridItems(value),
-              borderColor,
-              accent
-            )
-          : renderChips(ctx, y + height, toChipItems(value));
-        return height;
-      }
-
-      const rawBefore = getSingleScalar(change.oldValue);
-      const rawAfter = getSingleScalar(change.newValue);
-      const before = rawBefore === null ? null : formatChangeValue(rawBefore);
-      const after = rawAfter === null ? null : formatChangeValue(rawAfter);
-
-      // Vacancy-level scalar edits (title, schedule/expiration dates) get
-      // their own sentence in Figma instead of the generic section header.
-      const labelKey = resolveScalarChangeLabelKey(change);
-      if (labelKey && before !== null && after !== null) {
-        return renderInlineDiff(
-          ctx,
-          y,
-          PDF_LABELS[labelKey],
-          // Figma strikes the superseded schedule date but leaves the old
-          // vacancy title un-struck (node 4229:229271).
-          { kind: 'text', text: before, strike: labelKey !== 'titleChanged' },
-          { kind: 'text', text: after }
-        );
-      }
-
-      let height = renderSummaryLine(
-        ctx,
-        y,
-        change.sectionName,
-        summaryVerbFor(change),
-        change.fieldName,
-        accent
-      );
-      height += SUMMARY_TO_SCALAR_GAP;
-
-      if (before !== null && after !== null) {
-        return (
-          height +
-          renderScalarDiffBoxes(
-            ctx,
-            y + height,
-            change.fieldName,
-            before,
-            after
-          )
-        );
-      }
-
-      const rawSingle = getSingleScalar(value);
-      return (
-        height +
-        renderPlainValue(
-          ctx,
-          y + height,
-          rawSingle === null ? '—' : formatChangeValue(rawSingle),
-          accent
-        )
-      );
-    }
+    case 'VACANCY_CREATED':
+      return renderVacancyCreatedChange(ctx, change, y);
+    default:
+      return renderFieldValueChange(ctx, change, y);
   }
 };
 
