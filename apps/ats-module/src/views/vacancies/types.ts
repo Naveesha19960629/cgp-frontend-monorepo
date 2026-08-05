@@ -1079,6 +1079,7 @@ interface SimpleConfirmDialogProps {
   descriptionKey: string;
   cancelLabelKey: string;
   confirmLabelKey: string;
+  isConfirming?: boolean;
 }
 
 interface VacancyRescheduleConfirmDialogProps {
@@ -1133,6 +1134,18 @@ interface ApplicationFormChanges {
   changedSections: string[];
   /** `section.path` identifiers for the specific fields that differ within changedSections. */
   changedFields: string[];
+}
+
+type ApplicationFieldChangeType =
+  | 'Added'
+  | 'Updated'
+  | 'PreferredValuesUpdated';
+
+/** Human-facing description of a single changed application field, derived from ApplicationFormChanges. */
+interface ApplicationFieldChange {
+  formName: string;
+  fieldName: string;
+  changeType: ApplicationFieldChangeType;
 }
 
 interface NotifyApplicantsPayload {
@@ -2258,6 +2271,8 @@ export type {
   VacancyToggleStatusDialogProps,
   VacancyOnholdUpdateDialogProps,
   ApplicationFormChanges,
+  ApplicationFieldChangeType,
+  ApplicationFieldChange,
   NotifyApplicantsPayload,
   VacancyDetailJobRequirementData,
   VacancyDetailPatentEntry,

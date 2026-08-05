@@ -115,4 +115,13 @@ export {
   SYSTEM_ACTOR,
 } from '@/views/vacancies/utils/version-history-helpers';
 export { detectApplicationFormChanges } from '@/views/vacancies/utils/detect-application-form-changes';
+export {
+  hasScheduleChanged,
+  hasPublishDateChanged,
+} from '@/views/vacancies/utils/vacancy-schedule-comparison';
+export type { ScheduleFormValues } from '@/views/vacancies/utils/vacancy-schedule-comparison';
+export {
+  getApplicationFieldChanges,
+  shouldNotifyApplicants,
+} from '@/views/vacancies/utils/get-application-field-changes';
 export type { CreateVacancyPayload } from '@/views/vacancies/types';
