@@ -10,7 +10,7 @@ function extractIndices(path: string): number[] {
 
 function leafFieldName(path: string): string {
   const segments = path.split('.').filter(Boolean);
-  const last = segments[segments.length - 1] ?? path;
+  const last = segments.at(-1) ?? path;
   return last.replace(/\[\d+\]/g, '');
 }
 
