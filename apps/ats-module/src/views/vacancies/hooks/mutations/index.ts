@@ -36,3 +36,4 @@ export { useDeleteTemplateMutation } from '@/views/vacancies/hooks/mutations/use
 export { useDuplicateVacancyMutation } from '@/views/vacancies/hooks/mutations/use-duplicate-vacancy-mutation';
 export { useToggleVacancyStatusMutation } from '@/views/vacancies/hooks/mutations/use-toggle-vacancy-status-mutation';
 export { useUpdateVacancyJobDescriptionMutation } from '@/views/vacancies/hooks/mutations/use-update-vacancy-job-description-mutation';
+export { useNotifyApplicantsMutation } from '@/views/vacancies/hooks/mutations/use-notify-applicants-mutation';

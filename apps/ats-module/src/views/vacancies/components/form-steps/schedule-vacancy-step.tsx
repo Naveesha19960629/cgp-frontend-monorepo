@@ -19,11 +19,16 @@ import {
   parseBackendDatetime,
   toScheduleVacancyPayload,
   useCreateVacancyMutation,
+  useNotifyApplicantsMutation,
   useScheduleVacancyForm,
   useUpdateVacancyMutation,
 } from '@/views/vacancies/hooks';
 import type { StepProps } from '@/views/vacancies/types';
-import { formatDisplayDateTime, to24HourTime } from '@/views/vacancies/utils';
+import {
+  detectApplicationFormChanges,
+  formatDisplayDateTime,
+  to24HourTime,
+} from '@/views/vacancies/utils';
 
 import { ErrorToast, SuccessToast } from '@cgp/ui-kit/components/custom-toast';
 import { Button } from '@cgp/ui-kit/components/ui/button';
@@ -52,6 +57,7 @@ export default function ScheduleVacancyStep({
     stepPersistRef,
     resolveFormUserCreatedEntries,
     templateId,
+    originalFormRef,
   } = useVacancyForm();
 
   const {
@@ -177,6 +183,7 @@ export default function ScheduleVacancyStep({
   const { mutateAsync: createVacancy, isPending } = useCreateVacancyMutation();
   const { mutateAsync: updateVacancy, isPending: isUpdating } =
     useUpdateVacancyMutation();
+  const { mutateAsync: notifyApplicants } = useNotifyApplicantsMutation();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const isCreateAction =
@@ -274,7 +281,7 @@ export default function ScheduleVacancyStep({
   const executeUpdate = async (
     values: ScheduleVacancyFormValues,
     existingStatusOverride?: string
-  ) => {
+  ): Promise<boolean> => {
     // LIVE if publish time is now or in the past, UNPUBLISHED if future
     const publishAt = new Date(
       `${values.schedulePublishDate}T${to24HourTime(values.schedulePublishTime)}`
@@ -327,11 +334,13 @@ export default function ScheduleVacancyStep({
       });
       onSubmit();
       void navigate('/dashboard/ats/vacancies');
+      return true;
     } catch {
       ErrorToast({
         title: t('scheduleVacancy.notifications.apiErrorTitle'),
         description: t('scheduleVacancy.notifications.apiErrorMessage'),
       });
+      return false;
     } finally {
       setIsSubmitting(false);
     }
@@ -394,7 +403,34 @@ export default function ScheduleVacancyStep({
   const handleOnholdConfirm = async () => {
     if (!pendingValues) return;
     setShowOnholdDialog(false);
-    await executeUpdate(pendingValues);
+
+    // Only an Onhold vacancy with applicants whose publish date is actually
+    // changing needs to notify past applicants — capture the diff against the
+    // pre-edit snapshot before the update mutates local form state.
+    const shouldCheckApplicationChanges =
+      isOnholdWithApplicants && isPublishDateChanged;
+    const applicationChanges = shouldCheckApplicationChanges
+      ? detectApplicationFormChanges(originalFormRef.current ?? form, form)
+      : null;
+
+    const updateSucceeded = await executeUpdate(pendingValues);
+
+    if (updateSucceeded && applicationChanges?.changedSections.length && id) {
+      try {
+        await notifyApplicants({
+          vacancyId: id,
+          changedSections: applicationChanges.changedSections,
+          changedFields: applicationChanges.changedFields,
+          publishDateTime:
+            toScheduleVacancyPayload(pendingValues).schedulePublishAt,
+        });
+      } catch {
+        // Non-blocking: the vacancy update already succeeded and was
+        // reported to the recruiter — a failed notify call must not
+        // resurface as an error on an already-completed save.
+      }
+    }
+
     setPendingValues(null);
   };
 

@@ -11,6 +11,7 @@ import ScheduleVacancyStep from '@/views/vacancies/components/form-steps/schedul
 import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import {
   useCreateVacancyMutation,
+  useNotifyApplicantsMutation,
   useUpdateVacancyMutation,
 } from '@/views/vacancies/hooks';
 
@@ -38,6 +39,7 @@ vi.mock('@/views/vacancies/hooks', async importOriginal => {
     ...actual,
     useCreateVacancyMutation: vi.fn(),
     useUpdateVacancyMutation: vi.fn(),
+    useNotifyApplicantsMutation: vi.fn(),
   };
 });
 
@@ -191,7 +193,11 @@ describe('ScheduleVacancyStep', () => {
   const mockSetForm = vi.fn();
   const mockCreateVacancy = vi.fn();
   const mockUpdateVacancy = vi.fn();
+  const mockNotifyApplicants = vi.fn();
   const mockStepPersistRef: { current: (() => void) | null } = {
+    current: null,
+  };
+  const mockOriginalFormRef: { current: Record<string, unknown> | null } = {
     current: null,
   };
   const mockResolveFormUserCreatedEntries = vi.fn((form: unknown) =>
@@ -217,6 +223,7 @@ describe('ScheduleVacancyStep', () => {
       onCancel: mockOnCancel,
       stepPersistRef: mockStepPersistRef,
       resolveFormUserCreatedEntries: mockResolveFormUserCreatedEntries,
+      originalFormRef: mockOriginalFormRef,
       ...overrides,
     } as unknown as ReturnType<typeof useVacancyForm>);
   };
@@ -224,6 +231,7 @@ describe('ScheduleVacancyStep', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockStepPersistRef.current = null;
+    mockOriginalFormRef.current = null;
     mockVacancyForm();
 
     vi.mocked(useParams).mockReturnValue({});
@@ -240,6 +248,11 @@ describe('ScheduleVacancyStep', () => {
       mutateAsync: mockUpdateVacancy,
       isPending: false,
     } as unknown as ReturnType<typeof useUpdateVacancyMutation>);
+
+    vi.mocked(useNotifyApplicantsMutation).mockReturnValue({
+      mutateAsync: mockNotifyApplicants,
+      isPending: false,
+    } as unknown as ReturnType<typeof useNotifyApplicantsMutation>);
   });
 
   const renderComponent = (overrideProps = {}) =>
@@ -1087,6 +1100,205 @@ describe('ScheduleVacancyStep', () => {
       expect(
         screen.getByTestId('onhold-update-dialog').dataset['hasApplicants']
       ).toBe('true');
+    });
+  });
+
+  describe('applicant notification trigger', () => {
+    const SAVED_PUBLISH_AT = '2099-12-20T10:00:00 AM';
+    const SAVED_EXPIRATION_AT = '2099-12-30T11:59:59 PM';
+
+    const preferredSkillsA = {
+      isEnabled: true,
+      dataTakenFromCandidate: false,
+      skills: [
+        {
+          skillId: 'skill-1',
+          skillName: 'React',
+          careerPathName: 'Engineering',
+          displayValue: 'React',
+        },
+      ],
+    };
+
+    const preferredSkillsB = {
+      isEnabled: true,
+      dataTakenFromCandidate: false,
+      skills: [
+        {
+          skillId: 'skill-1',
+          skillName: 'React',
+          careerPathName: 'Engineering',
+          displayValue: 'React',
+        },
+        {
+          skillId: 'skill-2',
+          skillName: 'TypeScript',
+          careerPathName: 'Engineering',
+          displayValue: 'TypeScript',
+        },
+      ],
+    };
+
+    const baseForm = {
+      status: 'on_hold',
+      applicantCount: 5,
+      schedule: {
+        schedulePublishAt: SAVED_PUBLISH_AT,
+        expirationAt: SAVED_EXPIRATION_AT,
+      },
+    };
+
+    const confirmOnholdUpdate = async () => {
+      await waitFor(() => {
+        expect(getCreateButton()).not.toBeDisabled();
+      });
+      await userEvent.click(getCreateButton());
+      await waitFor(() => {
+        expect(screen.getByTestId('onhold-update-dialog')).toBeInTheDocument();
+      });
+      await userEvent.click(screen.getByRole('button', { name: 'dialog-yes' }));
+    };
+
+    beforeEach(() => {
+      vi.mocked(useParams).mockReturnValue({ id: 'vacancy-onhold-1' });
+      mockUpdateVacancy.mockResolvedValue(undefined);
+      mockNotifyApplicants.mockResolvedValue(undefined);
+    });
+
+    it('triggers notifyApplicants when publish date changed, applicants exist, and application form changed', async () => {
+      mockOriginalFormRef.current = {
+        ...baseForm,
+        preferredSkills: preferredSkillsA,
+      };
+      mockVacancyForm({
+        form: { ...baseForm, preferredSkills: preferredSkillsB },
+      });
+
+      renderComponent({ mode: 'edit' as const });
+
+      fillPublish('2099-11-01', '09:00:00 AM');
+      await confirmOnholdUpdate();
+
+      await waitFor(() => {
+        expect(mockUpdateVacancy).toHaveBeenCalled();
+        expect(mockNotifyApplicants).toHaveBeenCalledWith(
+          expect.objectContaining({
+            vacancyId: 'vacancy-onhold-1',
+            changedSections: expect.arrayContaining(['preferredSkills']),
+          })
+        );
+      });
+    });
+
+    it('does not trigger notifyApplicants when the publish date is unchanged', async () => {
+      mockOriginalFormRef.current = {
+        ...baseForm,
+        preferredSkills: preferredSkillsA,
+      };
+      mockVacancyForm({
+        form: { ...baseForm, preferredSkills: preferredSkillsB },
+      });
+
+      renderComponent({ mode: 'edit' as const });
+
+      await confirmOnholdUpdate();
+
+      await waitFor(() => {
+        expect(mockUpdateVacancy).toHaveBeenCalled();
+      });
+      expect(mockNotifyApplicants).not.toHaveBeenCalled();
+    });
+
+    it('does not trigger notifyApplicants when the publish date changed but no application form fields changed', async () => {
+      mockOriginalFormRef.current = {
+        ...baseForm,
+        preferredSkills: preferredSkillsA,
+      };
+      mockVacancyForm({
+        form: { ...baseForm, preferredSkills: preferredSkillsA },
+      });
+
+      renderComponent({ mode: 'edit' as const });
+
+      fillPublish('2099-11-01', '09:00:00 AM');
+      await confirmOnholdUpdate();
+
+      await waitFor(() => {
+        expect(mockUpdateVacancy).toHaveBeenCalled();
+      });
+      expect(mockNotifyApplicants).not.toHaveBeenCalled();
+    });
+
+    it('does not trigger notifyApplicants when the vacancy has no applicants, even if fields changed', async () => {
+      mockOriginalFormRef.current = {
+        ...baseForm,
+        applicantCount: 0,
+        preferredSkills: preferredSkillsA,
+      };
+      mockVacancyForm({
+        form: {
+          ...baseForm,
+          applicantCount: 0,
+          preferredSkills: preferredSkillsB,
+        },
+      });
+
+      renderComponent({ mode: 'edit' as const });
+
+      fillPublish('2099-11-01', '09:00:00 AM');
+      await confirmOnholdUpdate();
+
+      await waitFor(() => {
+        expect(mockUpdateVacancy).toHaveBeenCalled();
+      });
+      expect(mockNotifyApplicants).not.toHaveBeenCalled();
+    });
+
+    it('still shows the update success toast when notifyApplicants rejects', async () => {
+      mockOriginalFormRef.current = {
+        ...baseForm,
+        preferredSkills: preferredSkillsA,
+      };
+      mockVacancyForm({
+        form: { ...baseForm, preferredSkills: preferredSkillsB },
+      });
+      mockNotifyApplicants.mockRejectedValueOnce(new Error('notify failed'));
+
+      renderComponent({ mode: 'edit' as const });
+
+      fillPublish('2099-11-01', '09:00:00 AM');
+      await confirmOnholdUpdate();
+
+      await waitFor(() => {
+        expect(mockNotifyApplicants).toHaveBeenCalled();
+        expect(SuccessToast).toHaveBeenCalledWith(
+          expect.objectContaining({
+            title: 'scheduleVacancy.notifications.updateSuccessTitle',
+          })
+        );
+      });
+      expect(ErrorToast).not.toHaveBeenCalled();
+    });
+
+    it('does not call notifyApplicants when the update itself fails', async () => {
+      mockOriginalFormRef.current = {
+        ...baseForm,
+        preferredSkills: preferredSkillsA,
+      };
+      mockVacancyForm({
+        form: { ...baseForm, preferredSkills: preferredSkillsB },
+      });
+      mockUpdateVacancy.mockRejectedValueOnce(new Error('update failed'));
+
+      renderComponent({ mode: 'edit' as const });
+
+      fillPublish('2099-11-01', '09:00:00 AM');
+      await confirmOnholdUpdate();
+
+      await waitFor(() => {
+        expect(ErrorToast).toHaveBeenCalled();
+      });
+      expect(mockNotifyApplicants).not.toHaveBeenCalled();
     });
   });
 

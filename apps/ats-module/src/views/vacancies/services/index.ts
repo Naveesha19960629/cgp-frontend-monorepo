@@ -32,3 +32,4 @@ export { workScheduleService } from '@/views/vacancies/services/work-schedule.se
 export { engagementModelService } from '@/views/vacancies/services/engagement-model.service';
 export { jobLevelService } from '@/views/vacancies/services/job-level.service';
 export { candidateProfileService } from '@/views/vacancies/services/candidate-profile.service';
+export { notificationService } from '@/views/vacancies/services/notification.service';

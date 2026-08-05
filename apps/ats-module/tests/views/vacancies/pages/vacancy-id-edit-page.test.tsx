@@ -52,6 +52,7 @@ const vacancyFormValue: {
   setCurrentStepIndex: typeof mockSetCurrentStepIndex;
   initCompletedStepsFromForm: typeof mockInitCompletedStepsFromForm;
   onNext: typeof mockOnNext;
+  originalFormRef: { current: unknown };
 } = {
   form: { title: '', status: 'draft', applicantCount: undefined },
   setForm: mockSetForm,
@@ -61,6 +62,7 @@ const vacancyFormValue: {
   setCurrentStepIndex: mockSetCurrentStepIndex,
   initCompletedStepsFromForm: mockInitCompletedStepsFromForm,
   onNext: mockOnNext,
+  originalFormRef: { current: null },
 };
 
 vi.mock('react-i18next', () => ({
@@ -176,6 +178,7 @@ describe('VacancyIdEditPage', () => {
       { key: 'profile-requirements' },
     ];
     vacancyFormValue.isInitialStep = true;
+    vacancyFormValue.originalFormRef.current = null;
     // Mirrors the real setState updater form so the component's internal
     // `resolvedForm` (captured via the setForm callback) actually gets set,
     // which in turn gates the initCompletedStepsFromForm call.
@@ -340,6 +343,7 @@ describe('VacancyIdEditPage', () => {
         data: { success: true, data: { title: 'Engineer' } },
       };
       vacancyFormValue.isInitialStep = true;
+      vacancyFormValue.originalFormRef.current = null;
 
       render(<VacancyIdEditPage />);
 
@@ -409,6 +413,7 @@ describe('VacancyIdEditPage', () => {
         data: { success: true, data: { title: 'Engineer' } },
       };
       vacancyFormValue.isInitialStep = true;
+      vacancyFormValue.originalFormRef.current = null;
     });
 
     it('shows the status badge when the status is set and not "new"', async () => {

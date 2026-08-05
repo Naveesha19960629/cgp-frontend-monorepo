@@ -114,4 +114,5 @@ export {
   resolveVersionEntries,
   SYSTEM_ACTOR,
 } from '@/views/vacancies/utils/version-history-helpers';
+export { detectApplicationFormChanges } from '@/views/vacancies/utils/detect-application-form-changes';
 export type { CreateVacancyPayload } from '@/views/vacancies/types';
