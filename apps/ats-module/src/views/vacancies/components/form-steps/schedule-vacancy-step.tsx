@@ -328,40 +328,35 @@ export default function ScheduleVacancyStep({
     const expirationAt = new Date(
       `${values.expirationDate}T${to24HourTime(values.expirationTime)}`
     );
+    const now = new Date();
 
-    if (form.status === 'expired') {
-      if (isScheduleChanged) {
-        const now = new Date();
-        if (publishAt < now || expirationAt < now) {
-          ErrorToast({
-            title: t('scheduleVacancy.notifications.validationErrorTitle'),
-            description: t('scheduleVacancy.notifications.pastDateTimeMessage'),
-          });
-          return;
-        }
-      }
-      setPendingValues(values);
-      setConfirmDialog(isPublishDateChanged ? 'reschedule' : 'noReschedule');
+    // A changed schedule can never resolve to a past date/time, regardless
+    // of the vacancy's current status.
+    if (isScheduleChanged && (publishAt < now || expirationAt < now)) {
+      ErrorToast({
+        title: t('scheduleVacancy.notifications.validationErrorTitle'),
+        description: t('scheduleVacancy.notifications.pastDateTimeMessage'),
+      });
       return;
     }
 
-    if (isScheduleChanged) {
-      const now = new Date();
+    // Expired and Live vacancies share the same Reschedule/No-reschedule
+    // confirmation split, driven only by whether the publish date/time changed.
+    const confirmDialogKind = isPublishDateChanged
+      ? 'reschedule'
+      : 'noReschedule';
 
-      if (publishAt < now || expirationAt < now) {
-        ErrorToast({
-          title: t('scheduleVacancy.notifications.validationErrorTitle'),
-          description: t('scheduleVacancy.notifications.pastDateTimeMessage'),
-        });
-        return;
-      }
+    if (form.status === 'expired') {
+      setPendingValues(values);
+      setConfirmDialog(confirmDialogKind);
+      return;
     }
 
     // For a Live vacancy, the confirmation copy — and whether it moves to
     // On Hold — depends only on whether the publish date/time changed.
     if (!isCreateAction && isLiveVacancy) {
       setPendingValues(values);
-      setConfirmDialog(isPublishDateChanged ? 'reschedule' : 'noReschedule');
+      setConfirmDialog(confirmDialogKind);
       return;
     }
 
