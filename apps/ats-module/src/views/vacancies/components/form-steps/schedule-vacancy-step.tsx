@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import { VacancyOnholdUpdateDialog } from '@/views/vacancies/components';
+import SimpleConfirmDialog from '@/views/vacancies/components/simple-confirm-dialog';
 import VacancyNoRescheduleConfirmDialog from '@/views/vacancies/components/vacancy-no-reschedule-confirm-dialog';
 import VacancyRescheduleConfirmDialog from '@/views/vacancies/components/vacancy-reschedule-confirm-dialog';
 import VacancyStatusBadge from '@/views/vacancies/components/vacancy-status-badge';
@@ -16,17 +17,21 @@ import { useVacancyForm } from '@/views/vacancies/context/vacancy-form-context';
 import {
   type ScheduleVacancyFormValues,
   from24Hour,
-  parseBackendDatetime,
   toScheduleVacancyPayload,
   useCreateVacancyMutation,
   useNotifyApplicantsMutation,
   useScheduleVacancyForm,
   useUpdateVacancyMutation,
 } from '@/views/vacancies/hooks';
-import type { StepProps } from '@/views/vacancies/types';
+import type {
+  ApplicationFormChanges,
+  StepProps,
+} from '@/views/vacancies/types';
 import {
   detectApplicationFormChanges,
   formatDisplayDateTime,
+  hasPublishDateChanged,
+  hasScheduleChanged,
   to24HourTime,
 } from '@/views/vacancies/utils';
 
@@ -82,64 +87,25 @@ export default function ScheduleVacancyStep({
     expirationTime
   );
 
-  const isScheduleChanged = useMemo(() => {
-    if (!form.schedule?.schedulePublishAt || !form.schedule?.expirationAt) {
-      return true;
-    }
-    if (!publishDate || !publishTime || !expirationDate || !expirationTime) {
-      return true;
-    }
+  const isScheduleChanged = useMemo(
+    () =>
+      hasScheduleChanged(form.schedule, {
+        schedulePublishDate: publishDate,
+        schedulePublishTime: publishTime,
+        expirationDate,
+        expirationTime,
+      }),
+    [publishDate, publishTime, expirationDate, expirationTime, form.schedule]
+  );
 
-    // Compare as timestamps, not raw strings — the stored value may be
-    // 24-hour ISO from the API while the form always watches 12-hour AM/PM,
-    // so a direct string comparison flags "changed" even with no edits.
-    const savedPublish = parseBackendDatetime(form.schedule.schedulePublishAt);
-    const savedExpiration = parseBackendDatetime(form.schedule.expirationAt);
-
-    const savedPublishTs = new Date(
-      `${savedPublish.date}T${to24HourTime(savedPublish.time)}`
-    );
-    const savedExpirationTs = new Date(
-      `${savedExpiration.date}T${to24HourTime(savedExpiration.time)}`
-    );
-    const currentPublishTs = new Date(
-      `${publishDate}T${to24HourTime(publishTime)}`
-    );
-    const currentExpirationTs = new Date(
-      `${expirationDate}T${to24HourTime(expirationTime)}`
-    );
-
-    if (
-      Number.isNaN(savedPublishTs.getTime()) ||
-      Number.isNaN(savedExpirationTs.getTime()) ||
-      Number.isNaN(currentPublishTs.getTime()) ||
-      Number.isNaN(currentExpirationTs.getTime())
-    ) {
-      return true;
-    }
-
-    return (
-      currentPublishTs.getTime() !== savedPublishTs.getTime() ||
-      currentExpirationTs.getTime() !== savedExpirationTs.getTime()
-    );
-  }, [publishDate, publishTime, expirationDate, expirationTime, form.schedule]);
-
-  const isPublishDateChanged = useMemo(() => {
-    if (!form.schedule?.schedulePublishAt) return true;
-    if (!publishDate || !publishTime) return false;
-
-    // Compare as timestamps to avoid format mismatches between the stored
-    // value (may be 24-hour ISO from the API) and the form's 12-hour AM/PM.
-    const saved = parseBackendDatetime(form.schedule.schedulePublishAt);
-    const savedTs = new Date(`${saved.date}T${to24HourTime(saved.time)}`);
-    const currentTs = new Date(`${publishDate}T${to24HourTime(publishTime)}`);
-
-    if (Number.isNaN(savedTs.getTime()) || Number.isNaN(currentTs.getTime())) {
-      return true;
-    }
-
-    return currentTs.getTime() !== savedTs.getTime();
-  }, [publishDate, publishTime, form.schedule]);
+  const isPublishDateChanged = useMemo(
+    () =>
+      hasPublishDateChanged(form.schedule, {
+        schedulePublishDate: publishDate,
+        schedulePublishTime: publishTime,
+      }),
+    [publishDate, publishTime, form.schedule]
+  );
 
   const hasPastScheduleDateTime = useMemo(() => {
     if (form.status === 'expired') return false;
@@ -192,6 +158,12 @@ export default function ScheduleVacancyStep({
   const isOnholdVacancy = form.status === 'on_hold';
   const isOnholdWithApplicants =
     isOnholdVacancy && (form.applicantCount ?? 0) > 0;
+
+  // The schedule-to-onhold toggle flow already collected its own
+  // confirmation (VacancyToggleStatusDialog) before navigating here, so a
+  // Live vacancy reached that way must skip this step's confirmation dialogs.
+  const isLiveVacancy = form.status === 'live' && !scheduleToOnhold;
+  const isLiveWithApplicants = isLiveVacancy && (form.applicantCount ?? 0) > 0;
 
   const [confirmDialog, setConfirmDialog] = useState<
     'reschedule' | 'noReschedule' | null
@@ -280,7 +252,8 @@ export default function ScheduleVacancyStep({
 
   const executeUpdate = async (
     values: ScheduleVacancyFormValues,
-    existingStatusOverride?: string
+    existingStatusOverride?: string,
+    successNotification?: { titleKey: string; messageKey: string }
   ): Promise<boolean> => {
     // LIVE if publish time is now or in the past, UNPUBLISHED if future
     const publishAt = new Date(
@@ -322,14 +295,16 @@ export default function ScheduleVacancyStep({
       }
       SuccessToast({
         title: t(
-          isCreateAction
-            ? 'scheduleVacancy.notifications.successTitle'
-            : 'scheduleVacancy.notifications.updateSuccessTitle'
+          successNotification?.titleKey ??
+            (isCreateAction
+              ? 'scheduleVacancy.notifications.successTitle'
+              : 'scheduleVacancy.notifications.updateSuccessTitle')
         ),
         description: t(
-          isCreateAction
-            ? 'scheduleVacancy.notifications.successMessage'
-            : 'scheduleVacancy.notifications.updateSuccessMessage'
+          successNotification?.messageKey ??
+            (isCreateAction
+              ? 'scheduleVacancy.notifications.successMessage'
+              : 'scheduleVacancy.notifications.updateSuccessMessage')
         ),
       });
       onSubmit();
@@ -353,33 +328,36 @@ export default function ScheduleVacancyStep({
     const expirationAt = new Date(
       `${values.expirationDate}T${to24HourTime(values.expirationTime)}`
     );
+    const now = new Date();
 
-    if (form.status === 'expired') {
-      if (isScheduleChanged) {
-        const now = new Date();
-        if (publishAt < now || expirationAt < now) {
-          ErrorToast({
-            title: t('scheduleVacancy.notifications.validationErrorTitle'),
-            description: t('scheduleVacancy.notifications.pastDateTimeMessage'),
-          });
-          return;
-        }
-      }
-      setPendingValues(values);
-      setConfirmDialog(isPublishDateChanged ? 'reschedule' : 'noReschedule');
+    // A changed schedule can never resolve to a past date/time, regardless
+    // of the vacancy's current status.
+    if (isScheduleChanged && (publishAt < now || expirationAt < now)) {
+      ErrorToast({
+        title: t('scheduleVacancy.notifications.validationErrorTitle'),
+        description: t('scheduleVacancy.notifications.pastDateTimeMessage'),
+      });
       return;
     }
 
-    if (isScheduleChanged) {
-      const now = new Date();
+    // Expired and Live vacancies share the same Reschedule/No-reschedule
+    // confirmation split, driven only by whether the publish date/time changed.
+    const confirmDialogKind = isPublishDateChanged
+      ? 'reschedule'
+      : 'noReschedule';
 
-      if (publishAt < now || expirationAt < now) {
-        ErrorToast({
-          title: t('scheduleVacancy.notifications.validationErrorTitle'),
-          description: t('scheduleVacancy.notifications.pastDateTimeMessage'),
-        });
-        return;
-      }
+    if (form.status === 'expired') {
+      setPendingValues(values);
+      setConfirmDialog(confirmDialogKind);
+      return;
+    }
+
+    // For a Live vacancy, the confirmation copy — and whether it moves to
+    // On Hold — depends only on whether the publish date/time changed.
+    if (!isCreateAction && isLiveVacancy) {
+      setPendingValues(values);
+      setConfirmDialog(confirmDialogKind);
+      return;
     }
 
     // For all onhold vacancies, show confirmation dialog first
@@ -400,6 +378,32 @@ export default function ScheduleVacancyStep({
     setPendingValues(null);
   };
 
+  /**
+   * Shared by the Onhold and Live confirm flows: notifies past applicants of
+   * the changes only once the update has already succeeded, and only when
+   * the application form (customizable questions or preferred values)
+   * actually changed — a failed notify call must never resurface as an
+   * error on an already-completed save.
+   */
+  const notifyApplicantsOfChanges = async (
+    changes: ApplicationFormChanges | null,
+    publishDateTime: string
+  ) => {
+    if (!changes?.changedSections.length || !id) return;
+    try {
+      await notifyApplicants({
+        vacancyId: id,
+        changedSections: changes.changedSections,
+        changedFields: changes.changedFields,
+        publishDateTime,
+      });
+    } catch {
+      // Non-blocking: the vacancy update already succeeded and was
+      // reported to the recruiter — a failed notify call must not
+      // resurface as an error on an already-completed save.
+    }
+  };
+
   const handleOnholdConfirm = async () => {
     if (!pendingValues) return;
     setShowOnholdDialog(false);
@@ -415,20 +419,51 @@ export default function ScheduleVacancyStep({
 
     const updateSucceeded = await executeUpdate(pendingValues);
 
-    if (updateSucceeded && applicationChanges?.changedSections.length && id) {
-      try {
-        await notifyApplicants({
-          vacancyId: id,
-          changedSections: applicationChanges.changedSections,
-          changedFields: applicationChanges.changedFields,
-          publishDateTime:
-            toScheduleVacancyPayload(pendingValues).schedulePublishAt,
-        });
-      } catch {
-        // Non-blocking: the vacancy update already succeeded and was
-        // reported to the recruiter — a failed notify call must not
-        // resurface as an error on an already-completed save.
-      }
+    if (updateSucceeded) {
+      await notifyApplicantsOfChanges(
+        applicationChanges,
+        toScheduleVacancyPayload(pendingValues).schedulePublishAt
+      );
+    }
+
+    setPendingValues(null);
+  };
+
+  const handleLiveConfirm = async () => {
+    if (!pendingValues) return;
+    const isReschedule = confirmDialog === 'reschedule';
+    setConfirmDialog(null);
+
+    // A Live vacancy with applicants always needs the change diff, whether
+    // it's rescheduling to On Hold or staying Live — unlike the Onhold flow,
+    // both Live scenarios can trigger an applicant notification.
+    const applicationChanges = isLiveWithApplicants
+      ? detectApplicationFormChanges(originalFormRef.current ?? form, form)
+      : null;
+
+    const updateSucceeded = await executeUpdate(
+      pendingValues,
+      isReschedule ? 'on_hold' : undefined,
+      isReschedule
+        ? {
+            titleKey:
+              'scheduleVacancy.notifications.liveRescheduleSuccessTitle',
+            messageKey:
+              'scheduleVacancy.notifications.liveRescheduleSuccessMessage',
+          }
+        : {
+            titleKey:
+              'scheduleVacancy.notifications.liveNoRescheduleSuccessTitle',
+            messageKey:
+              'scheduleVacancy.notifications.liveNoRescheduleSuccessMessage',
+          }
+    );
+
+    if (updateSucceeded) {
+      await notifyApplicantsOfChanges(
+        applicationChanges,
+        toScheduleVacancyPayload(pendingValues).schedulePublishAt
+      );
     }
 
     setPendingValues(null);
@@ -630,7 +665,7 @@ export default function ScheduleVacancyStep({
       </div>
 
       <VacancyRescheduleConfirmDialog
-        open={confirmDialog === 'reschedule'}
+        open={form.status === 'expired' && confirmDialog === 'reschedule'}
         onOpenChange={open => {
           if (!open) setConfirmDialog(null);
         }}
@@ -641,7 +676,7 @@ export default function ScheduleVacancyStep({
       />
 
       <VacancyNoRescheduleConfirmDialog
-        open={confirmDialog === 'noReschedule'}
+        open={form.status === 'expired' && confirmDialog === 'noReschedule'}
         onOpenChange={open => {
           if (!open) setConfirmDialog(null);
         }}
@@ -649,6 +684,37 @@ export default function ScheduleVacancyStep({
           handleConfirmUpdate().catch(() => {});
         }}
         isConfirming={isSubmitting || isPending || isUpdating}
+      />
+
+      {/* ── Live vacancy update confirmation dialogs ────────────────── */}
+      <SimpleConfirmDialog
+        open={isLiveVacancy && confirmDialog === 'reschedule'}
+        onOpenChange={open => {
+          if (!open) setConfirmDialog(null);
+        }}
+        onConfirm={() => {
+          handleLiveConfirm().catch(() => {});
+        }}
+        isConfirming={isSubmitting || isPending || isUpdating}
+        titleKey="scheduleVacancy.liveRescheduleConfirmDialog.title"
+        descriptionKey="scheduleVacancy.liveRescheduleConfirmDialog.description"
+        cancelLabelKey="scheduleVacancy.liveRescheduleConfirmDialog.noButton"
+        confirmLabelKey="scheduleVacancy.liveRescheduleConfirmDialog.yesButton"
+      />
+
+      <SimpleConfirmDialog
+        open={isLiveVacancy && confirmDialog === 'noReschedule'}
+        onOpenChange={open => {
+          if (!open) setConfirmDialog(null);
+        }}
+        onConfirm={() => {
+          handleLiveConfirm().catch(() => {});
+        }}
+        isConfirming={isSubmitting || isPending || isUpdating}
+        titleKey="scheduleVacancy.liveUpdateConfirmDialog.title"
+        descriptionKey="scheduleVacancy.liveUpdateConfirmDialog.description"
+        cancelLabelKey="scheduleVacancy.liveUpdateConfirmDialog.noButton"
+        confirmLabelKey="scheduleVacancy.liveUpdateConfirmDialog.yesButton"
       />
 
       {/* ── Onhold update confirmation dialog ───────────────────────── */}

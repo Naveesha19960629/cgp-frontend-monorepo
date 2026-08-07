@@ -1,3 +1,5 @@
+import { Loader2 } from 'lucide-react';
+
 import { useTranslation } from 'react-i18next';
 
 import type { SimpleConfirmDialogProps } from '@/views/vacancies/types';
@@ -22,7 +24,9 @@ const cancelAvatar = new URL(
  * Shared "Are you sure?" confirmation shell — avatar, title, description, and
  * a cancel/confirm button pair. Used wherever the only variation is the copy
  * (translation keys) shown, e.g. cancelling the Create/Edit Vacancy Template
- * form or the vacancy edit flow.
+ * form or the vacancy edit flow. While isConfirming is true, ESC/outside
+ * click/close are ignored and both buttons are disabled so a confirm can't
+ * be submitted twice or interrupted mid-save.
  */
 export default function SimpleConfirmDialog({
   open,
@@ -32,11 +36,18 @@ export default function SimpleConfirmDialog({
   descriptionKey,
   cancelLabelKey,
   confirmLabelKey,
+  isConfirming = false,
 }: Readonly<SimpleConfirmDialogProps>) {
   const { t } = useTranslation('ats');
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog
+      open={open}
+      onOpenChange={next => {
+        if (isConfirming) return;
+        onOpenChange(next);
+      }}
+    >
       <DialogTitle className="sr-only">{t(titleKey)}</DialogTitle>
       <DialogDescription className="sr-only">
         {t(descriptionKey)}
@@ -69,6 +80,7 @@ export default function SimpleConfirmDialog({
           <Button
             type="button"
             variant="secondary"
+            disabled={isConfirming}
             onClick={() => onOpenChange(false)}
             className={cn(
               'h-12 flex-1 rounded-lg bg-neutral-200 text-neutral-600 hover:bg-neutral-200',
@@ -79,12 +91,14 @@ export default function SimpleConfirmDialog({
           </Button>
           <Button
             type="button"
+            disabled={isConfirming}
             onClick={onConfirm}
             className={cn(
               'h-12 flex-1 rounded-lg bg-[#be123c] text-white hover:bg-[#be123c]',
               applyTypography('h5')
             )}
           >
+            {isConfirming && <Loader2 className="size-4 animate-spin" />}
             {t(confirmLabelKey)}
           </Button>
         </div>

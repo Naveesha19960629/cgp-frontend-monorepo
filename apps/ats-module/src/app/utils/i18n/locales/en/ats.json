@@ -1403,7 +1403,11 @@
       "apiErrorTitle": "Try Again",
       "apiErrorMessage": "Some changes could not be saved. Please try again.",
       "networkErrorTitle": "Try Again",
-      "networkErrorMessage": "Some changes could not be saved. Please retry."
+      "networkErrorMessage": "Some changes could not be saved. Please retry.",
+      "liveRescheduleSuccessTitle": "Successfully Updated",
+      "liveRescheduleSuccessMessage": "The vacancy has been moved to On Hold and will automatically go Live on the scheduled publish date.",
+      "liveNoRescheduleSuccessTitle": "Successfully Updated",
+      "liveNoRescheduleSuccessMessage": "The vacancy remains Live."
     },
     "rescheduleConfirmDialog": {
       "title": "Are you sure?",
@@ -1414,6 +1418,18 @@
     "noRescheduleConfirmDialog": {
       "title": "Are you sure?",
       "description": "Are you sure you want to update this vacancy without rescheduling? The updated version will go live only after the vacancy is rescheduled.",
+      "yesButton": "Yes",
+      "noButton": "No"
+    },
+    "liveRescheduleConfirmDialog": {
+      "title": "Reschedule Vacancy",
+      "description": "You have changed the scheduled publish date and time.\n\nUpdating this vacancy will move it to On Hold until the scheduled publish date and time.\n\nThe vacancy will automatically become Live again when the scheduled publish date and time is reached.\n\nDo you want to continue?",
+      "yesButton": "Yes",
+      "noButton": "No"
+    },
+    "liveUpdateConfirmDialog": {
+      "title": "Update Live Vacancy",
+      "description": "You are updating this vacancy without changing the scheduled publish date and time.\n\nThe vacancy will remain Live after updating.\n\nDo you want to continue?",
       "yesButton": "Yes",
       "noButton": "No"
     }

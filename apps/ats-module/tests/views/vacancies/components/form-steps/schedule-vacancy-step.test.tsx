@@ -147,6 +147,38 @@ vi.mock(
   })
 );
 
+vi.mock('@/views/vacancies/components/simple-confirm-dialog', () => ({
+  default: ({
+    open,
+    onConfirm,
+    onOpenChange,
+    titleKey,
+    isConfirming,
+  }: {
+    open: boolean;
+    onConfirm: () => void;
+    onOpenChange: (open: boolean) => void;
+    titleKey: string;
+    isConfirming?: boolean;
+  }) => {
+    if (!open) return null;
+    return (
+      <div
+        data-testid="simple-confirm-dialog"
+        data-title-key={titleKey}
+        data-confirming={String(!!isConfirming)}
+      >
+        <button type="button" onClick={onConfirm}>
+          simple-confirm-yes
+        </button>
+        <button type="button" onClick={() => onOpenChange(false)}>
+          simple-confirm-no
+        </button>
+      </div>
+    );
+  },
+}));
+
 vi.mock('@/views/vacancies/components/vacancy-onhold-update-dialog', () => ({
   default: ({
     open,
@@ -1848,6 +1880,238 @@ describe('ScheduleVacancyStep', () => {
         );
       });
       expect(SuccessToast).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('live vacancy confirmation dialogs', () => {
+    const liveSchedule = {
+      schedulePublishAt: '2099-12-20T10:00:00 AM',
+      expirationAt: '2099-12-30T11:59:59 PM',
+    };
+
+    beforeEach(() => {
+      vi.mocked(useParams).mockReturnValue({ id: 'vacancy-live-1' });
+      mockUpdateVacancy.mockResolvedValue(undefined);
+      mockNotifyApplicants.mockResolvedValue(undefined);
+    });
+
+    it('shows the no-reschedule confirmation dialog when Update is clicked without schedule changes', async () => {
+      mockVacancyForm({ form: { schedule: liveSchedule, status: 'live' } });
+      renderComponent({ mode: 'edit' as const });
+
+      await waitFor(() => expect(getCreateButton()).not.toBeDisabled());
+      await userEvent.click(getCreateButton());
+
+      await waitFor(() => {
+        expect(screen.getByTestId('simple-confirm-dialog')).toHaveAttribute(
+          'data-title-key',
+          'scheduleVacancy.liveUpdateConfirmDialog.title'
+        );
+      });
+      expect(mockUpdateVacancy).not.toHaveBeenCalled();
+    });
+
+    it('shows the reschedule confirmation dialog when the publish date is changed', async () => {
+      mockVacancyForm({ form: { schedule: liveSchedule, status: 'live' } });
+      renderComponent({ mode: 'edit' as const });
+
+      fillPublish('2099-11-01', '09:00:00 AM');
+
+      await waitFor(() => expect(getCreateButton()).not.toBeDisabled());
+      await userEvent.click(getCreateButton());
+
+      await waitFor(() => {
+        expect(screen.getByTestId('simple-confirm-dialog')).toHaveAttribute(
+          'data-title-key',
+          'scheduleVacancy.liveRescheduleConfirmDialog.title'
+        );
+      });
+    });
+
+    it('updates with existingStatus on_hold and shows the reschedule success toast when reschedule is confirmed', async () => {
+      mockVacancyForm({ form: { schedule: liveSchedule, status: 'live' } });
+      renderComponent({ mode: 'edit' as const });
+
+      fillPublish('2099-11-01', '09:00:00 AM');
+      await waitFor(() => expect(getCreateButton()).not.toBeDisabled());
+      await userEvent.click(getCreateButton());
+      await waitFor(() =>
+        expect(screen.getByTestId('simple-confirm-dialog')).toBeInTheDocument()
+      );
+
+      await userEvent.click(
+        screen.getByRole('button', { name: 'simple-confirm-yes' })
+      );
+
+      await waitFor(() => {
+        expect(mockUpdateVacancy).toHaveBeenCalledWith(
+          expect.objectContaining({
+            id: 'vacancy-live-1',
+            existingStatus: 'on_hold',
+          })
+        );
+        expect(SuccessToast).toHaveBeenCalledWith(
+          expect.objectContaining({
+            title: 'scheduleVacancy.notifications.liveRescheduleSuccessTitle',
+            description:
+              'scheduleVacancy.notifications.liveRescheduleSuccessMessage',
+          })
+        );
+      });
+    });
+
+    it('updates keeping live status and shows the stays-live success toast when no-reschedule is confirmed', async () => {
+      mockVacancyForm({ form: { schedule: liveSchedule, status: 'live' } });
+      renderComponent({ mode: 'edit' as const });
+
+      await waitFor(() => expect(getCreateButton()).not.toBeDisabled());
+      await userEvent.click(getCreateButton());
+      await waitFor(() =>
+        expect(screen.getByTestId('simple-confirm-dialog')).toBeInTheDocument()
+      );
+
+      await userEvent.click(
+        screen.getByRole('button', { name: 'simple-confirm-yes' })
+      );
+
+      await waitFor(() => {
+        expect(mockUpdateVacancy).toHaveBeenCalledWith(
+          expect.objectContaining({
+            id: 'vacancy-live-1',
+            existingStatus: 'live',
+          })
+        );
+        expect(SuccessToast).toHaveBeenCalledWith(
+          expect.objectContaining({
+            title: 'scheduleVacancy.notifications.liveNoRescheduleSuccessTitle',
+            description:
+              'scheduleVacancy.notifications.liveNoRescheduleSuccessMessage',
+          })
+        );
+      });
+    });
+
+    it('closes the dialog and does not call updateVacancy when No is clicked', async () => {
+      mockVacancyForm({ form: { schedule: liveSchedule, status: 'live' } });
+      renderComponent({ mode: 'edit' as const });
+
+      await waitFor(() => expect(getCreateButton()).not.toBeDisabled());
+      await userEvent.click(getCreateButton());
+      await waitFor(() =>
+        expect(screen.getByTestId('simple-confirm-dialog')).toBeInTheDocument()
+      );
+
+      await userEvent.click(
+        screen.getByRole('button', { name: 'simple-confirm-no' })
+      );
+
+      await waitFor(() => {
+        expect(
+          screen.queryByTestId('simple-confirm-dialog')
+        ).not.toBeInTheDocument();
+      });
+      expect(mockUpdateVacancy).not.toHaveBeenCalled();
+    });
+
+    it('does not show a confirmation dialog when arriving via the schedule-to-onhold toggle flow', async () => {
+      vi.mocked(useLocation).mockReturnValue({
+        state: { scheduleToOnhold: true },
+      } as unknown as ReturnType<typeof useLocation>);
+      mockVacancyForm({ form: { schedule: liveSchedule, status: 'live' } });
+      renderComponent({ mode: 'edit' as const });
+
+      await waitFor(() => expect(getCreateButton()).not.toBeDisabled());
+      await userEvent.click(getCreateButton());
+
+      await waitFor(() => {
+        expect(mockUpdateVacancy).toHaveBeenCalledWith(
+          expect.objectContaining({ existingStatus: 'on_hold' })
+        );
+      });
+      expect(
+        screen.queryByTestId('simple-confirm-dialog')
+      ).not.toBeInTheDocument();
+    });
+
+    it('triggers notifyApplicants when the vacancy has applicants and the application form changed', async () => {
+      const preferredSkillsA = {
+        isEnabled: true,
+        dataTakenFromCandidate: false,
+        skills: [
+          {
+            skillId: 'skill-1',
+            skillName: 'React',
+            careerPathName: 'Engineering',
+            displayValue: 'React',
+          },
+        ],
+      };
+      const preferredSkillsB = {
+        isEnabled: true,
+        dataTakenFromCandidate: false,
+        skills: [
+          ...preferredSkillsA.skills,
+          {
+            skillId: 'skill-2',
+            skillName: 'TypeScript',
+            careerPathName: 'Engineering',
+            displayValue: 'TypeScript',
+          },
+        ],
+      };
+
+      mockOriginalFormRef.current = {
+        schedule: liveSchedule,
+        status: 'live',
+        applicantCount: 3,
+        preferredSkills: preferredSkillsA,
+      };
+      mockVacancyForm({
+        form: {
+          schedule: liveSchedule,
+          status: 'live',
+          applicantCount: 3,
+          preferredSkills: preferredSkillsB,
+        },
+      });
+
+      renderComponent({ mode: 'edit' as const });
+      await waitFor(() => expect(getCreateButton()).not.toBeDisabled());
+      await userEvent.click(getCreateButton());
+      await waitFor(() =>
+        expect(screen.getByTestId('simple-confirm-dialog')).toBeInTheDocument()
+      );
+      await userEvent.click(
+        screen.getByRole('button', { name: 'simple-confirm-yes' })
+      );
+
+      await waitFor(() => {
+        expect(mockNotifyApplicants).toHaveBeenCalledWith(
+          expect.objectContaining({
+            vacancyId: 'vacancy-live-1',
+            changedSections: expect.arrayContaining(['preferredSkills']),
+          })
+        );
+      });
+    });
+
+    it('does not trigger notifyApplicants when there are no applicants, even though the update succeeds', async () => {
+      mockVacancyForm({
+        form: { schedule: liveSchedule, status: 'live', applicantCount: 0 },
+      });
+
+      renderComponent({ mode: 'edit' as const });
+      await waitFor(() => expect(getCreateButton()).not.toBeDisabled());
+      await userEvent.click(getCreateButton());
+      await waitFor(() =>
+        expect(screen.getByTestId('simple-confirm-dialog')).toBeInTheDocument()
+      );
+      await userEvent.click(
+        screen.getByRole('button', { name: 'simple-confirm-yes' })
+      );
+
+      await waitFor(() => expect(mockUpdateVacancy).toHaveBeenCalled());
+      expect(mockNotifyApplicants).not.toHaveBeenCalled();
     });
   });
 });
