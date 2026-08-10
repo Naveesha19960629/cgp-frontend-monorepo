@@ -864,6 +864,7 @@ export default function TertiaryEducationStep({
                               clearMax('awardingBodyLocations');
                             field.onChange(options);
                           }}
+                          showArrow
                           maxSelected={MAX_SELECTIONS}
                           onMaxSelected={() => setMax('awardingBodyLocations')}
                           errorMessage={

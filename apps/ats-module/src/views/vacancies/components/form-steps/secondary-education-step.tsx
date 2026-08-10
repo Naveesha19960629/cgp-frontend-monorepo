@@ -806,6 +806,7 @@ export default function SecondaryEducationStep({
                                 clearMax('schoolLocations');
                               field.onChange(options);
                             }}
+                            showArrow
                             maxSelected={MAX_SELECTIONS}
                             onMaxSelected={() => setMax('schoolLocations')}
                             errorMessage={

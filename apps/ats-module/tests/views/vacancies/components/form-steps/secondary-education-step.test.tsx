@@ -168,6 +168,7 @@ vi.mock('@cgp/ui-kit/components/multi-select', () => ({
     onChange,
     loadingIndicator,
     emptyIndicator,
+    showArrow,
   }: {
     placeholder: string;
     onMaxSelected?: () => void;
@@ -176,9 +177,11 @@ vi.mock('@cgp/ui-kit/components/multi-select', () => ({
     loadingIndicator?: ReactNode;
     emptyIndicator?: ReactNode;
     keepSelectedInList?: boolean;
+    showArrow?: boolean;
   }) => (
     <>
       <input placeholder={placeholder} readOnly />
+      {showArrow && <span data-testid={`arrow-${placeholder}`} />}
       {onChange && (
         <button
           type="button"
@@ -474,6 +477,22 @@ describe('SecondaryEducationStep', () => {
     it('passes empty indicator to all search selectors', () => {
       renderStep();
       expect(screen.getAllByText('common.noDataTitle')).toHaveLength(5);
+    });
+
+    it('shows the dropdown arrow indicator on the school location field', () => {
+      renderStep();
+      expect(
+        screen.getByTestId(
+          'arrow-secondaryEducation.placeholders.schoolLocation'
+        )
+      ).toBeInTheDocument();
+    });
+
+    it('does not show the dropdown arrow indicator on the school name field', () => {
+      renderStep();
+      expect(
+        screen.queryByTestId('arrow-secondaryEducation.placeholders.school')
+      ).not.toBeInTheDocument();
     });
   });
 
