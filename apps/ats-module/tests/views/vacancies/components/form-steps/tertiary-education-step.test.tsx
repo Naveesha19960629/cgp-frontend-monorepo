@@ -243,6 +243,7 @@ vi.mock('@cgp/ui-kit/components/multi-select', () => ({
         onChange,
         loadingIndicator,
         emptyIndicator,
+        showArrow,
       }: {
         placeholder: string;
         onMaxSelected?: () => void;
@@ -251,6 +252,7 @@ vi.mock('@cgp/ui-kit/components/multi-select', () => ({
         loadingIndicator?: ReactNode;
         emptyIndicator?: ReactNode;
         keepSelectedInList?: boolean;
+        showArrow?: boolean;
       },
       ref
     ) => {
@@ -261,6 +263,7 @@ vi.mock('@cgp/ui-kit/components/multi-select', () => ({
       return (
         <>
           <input placeholder={placeholder} readOnly ref={inputRef} />
+          {showArrow && <span data-testid={`arrow-${placeholder}`} />}
           {onChange && (
             <button
               type="button"
@@ -604,6 +607,24 @@ describe('TertiaryEducationStep', () => {
           'empty-tertiaryEducation.placeholders.deliverySchedule'
         )
       ).toHaveTextContent('common.noDataTitle');
+    });
+
+    it('shows the dropdown arrow indicator on the institute location field', () => {
+      renderStep();
+      expect(
+        screen.getByTestId(
+          'arrow-tertiaryEducation.placeholders.awardingBodyLocation'
+        )
+      ).toBeInTheDocument();
+    });
+
+    it('does not show the dropdown arrow indicator on the qualification name field', () => {
+      renderStep();
+      expect(
+        screen.queryByTestId(
+          'arrow-tertiaryEducation.placeholders.qualificationName'
+        )
+      ).not.toBeInTheDocument();
     });
   });
 
