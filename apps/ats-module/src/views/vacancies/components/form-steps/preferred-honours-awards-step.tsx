@@ -250,7 +250,10 @@ function HonoursAndAwardsCard({
                   <FormItem className="quad-honours:col-span-1 flex flex-col gap-1.5 space-y-0 xl:col-span-2">
                     <FormLabel
                       data-testid="preferredHonoursAwards-titleOfHonourOrAward-label"
-                      className="flex justify-between"
+                      className={cn(
+                        'flex justify-between',
+                        isFieldDisabled && 'opacity-50'
+                      )}
                     >
                       <span>
                         {t('preferredHonoursAwards.titleOfHonourOrAward')}
@@ -290,7 +293,10 @@ function HonoursAndAwardsCard({
                   <FormItem className="quad-honours:col-span-1 flex flex-col gap-1.5 space-y-0 xl:col-span-2">
                     <FormLabel
                       data-testid="preferredHonoursAwards-issuedBy-label"
-                      className="flex justify-between"
+                      className={cn(
+                        'flex justify-between',
+                        isFieldDisabled && 'opacity-50'
+                      )}
                     >
                       <span>{t('preferredHonoursAwards.issuedBy')}</span>
                       <CharacterCount
@@ -328,7 +334,10 @@ function HonoursAndAwardsCard({
                   <FormItem className="flex w-full flex-col gap-1 space-y-0 xl:col-span-1">
                     <FormLabel
                       data-testid="preferredHonoursAwards-issuedDateFrom-label"
-                      className="text-sm font-semibold text-slate-900"
+                      className={cn(
+                        'text-sm font-semibold text-slate-900',
+                        isFieldDisabled && 'opacity-50'
+                      )}
                     >
                       {t('preferredHonoursAwards.issuedDateFrom')}
                     </FormLabel>
@@ -415,7 +424,10 @@ function HonoursAndAwardsCard({
                   <FormItem className="flex w-full flex-col gap-1 space-y-0 xl:col-span-1">
                     <FormLabel
                       data-testid="preferredHonoursAwards-issuedDateTo-label"
-                      className="text-sm font-semibold text-slate-900"
+                      className={cn(
+                        'text-sm font-semibold text-slate-900',
+                        isFieldDisabled && 'opacity-50'
+                      )}
                     >
                       {t('preferredHonoursAwards.issuedDateTo')}
                     </FormLabel>
@@ -512,7 +524,8 @@ function HonoursAndAwardsCard({
                       data-testid="preferredHonoursAwards-associatedOrganization-label"
                       className={cn(
                         'text-sm font-semibold text-slate-900',
-                        hasOrganizationMaxError && 'text-destructive'
+                        hasOrganizationMaxError && 'text-destructive',
+                        isFieldDisabled && 'opacity-50'
                       )}
                     >
                       {t('preferredHonoursAwards.associatedOrganization')}
@@ -646,7 +659,8 @@ function HonoursAndAwardsCard({
                         data-testid="preferredHonoursAwards-organizationLocation-label"
                         className={cn(
                           'text-sm font-semibold text-slate-900',
-                          hasLocationMaxError && 'text-destructive'
+                          hasLocationMaxError && 'text-destructive',
+                          isFieldDisabled && 'opacity-50'
                         )}
                       >
                         {t('preferredHonoursAwards.organizationLocation')}
@@ -1029,7 +1043,12 @@ export default function PreferredHonoursAwardsStep({
                   />
                   <label
                     htmlFor="data-from-candidate"
-                    className="cursor-pointer text-sm font-medium text-slate-900"
+                    className={cn(
+                      'text-sm font-medium text-slate-900',
+                      isEnabled
+                        ? 'cursor-pointer'
+                        : 'cursor-not-allowed opacity-50'
+                    )}
                   >
                     {t('preferredHonoursAwards.dataTakenFromCandidate')}
                   </label>

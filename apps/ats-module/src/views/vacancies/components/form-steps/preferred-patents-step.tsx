@@ -105,6 +105,7 @@ function PatentCard({
   const industriesData = industriesResponse?.data?.items?.content ?? [];
 
   const isEnabled = form.watch('isEnabled');
+  const isFieldDisabled = !isEnabled || dataTakenFromCandidate;
 
   const STATUS_OPTIONS: Option[] = [
     { value: 'PATENT_PENDING', label: t('preferredPatents.statusPending') },
@@ -165,7 +166,10 @@ function PatentCard({
                     <FormItem className="flex flex-col gap-1.5 space-y-0 xl:col-span-2">
                       <FormLabel
                         data-testid="preferredPatents-relatedIndustry-label"
-                        className="flex justify-between"
+                        className={cn(
+                          'flex justify-between',
+                          isFieldDisabled && 'opacity-50'
+                        )}
                       >
                         <p
                           className={
@@ -225,7 +229,7 @@ function PatentCard({
                           triggerSearchOnFocus
                           hideClearAllButton
                           maxSelected={10}
-                          disabled={!isEnabled || dataTakenFromCandidate}
+                          disabled={isFieldDisabled}
                           inputProps={{ maxLength: 100 }}
                           loading={isIndustriesLoading}
                           placeholder={t(
@@ -272,7 +276,10 @@ function PatentCard({
                   <FormItem className="flex flex-col gap-1.5 space-y-0 xl:col-span-2">
                     <FormLabel
                       data-testid="preferredPatents-status-label"
-                      className="text-sm font-semibold text-slate-900"
+                      className={cn(
+                        'text-sm font-semibold text-slate-900',
+                        isFieldDisabled && 'opacity-50'
+                      )}
                     >
                       {t('preferredPatents.status')}
                     </FormLabel>
@@ -338,7 +345,10 @@ function PatentCard({
                   <FormItem className="flex flex-col gap-1 space-y-0 xl:col-span-1">
                     <FormLabel
                       data-testid="preferredPatents-from-label"
-                      className="text-sm font-semibold text-slate-900"
+                      className={cn(
+                        'text-sm font-semibold text-slate-900',
+                        isFieldDisabled && 'opacity-50'
+                      )}
                     >
                       {t('preferredPatents.from')}
                     </FormLabel>
@@ -358,7 +368,7 @@ function PatentCard({
                           <Button
                             type="button"
                             variant="outline"
-                            disabled={!isEnabled || dataTakenFromCandidate}
+                            disabled={isFieldDisabled}
                             className={cn(
                               'border-input flex h-11 w-full items-center justify-between rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
                               !field.value && 'text-slate-500',
@@ -440,7 +450,10 @@ function PatentCard({
                   <FormItem className="flex flex-col gap-1 space-y-0 xl:col-span-1">
                     <FormLabel
                       data-testid="preferredPatents-to-label"
-                      className="text-sm font-semibold text-slate-900"
+                      className={cn(
+                        'text-sm font-semibold text-slate-900',
+                        isFieldDisabled && 'opacity-50'
+                      )}
                     >
                       {t('preferredPatents.to')}
                     </FormLabel>
@@ -460,7 +473,7 @@ function PatentCard({
                           <Button
                             type="button"
                             variant="outline"
-                            disabled={!isEnabled || dataTakenFromCandidate}
+                            disabled={isFieldDisabled}
                             className={cn(
                               'border-input flex h-11 w-full items-center justify-between rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
                               !field.value && 'text-slate-500',
@@ -857,7 +870,12 @@ export default function PreferredPatentsStep({
                   />
                   <label
                     htmlFor="data-from-candidate"
-                    className="cursor-pointer text-sm font-medium text-slate-900"
+                    className={cn(
+                      'text-sm font-medium text-slate-900',
+                      isEnabled
+                        ? 'cursor-pointer'
+                        : 'cursor-not-allowed opacity-50'
+                    )}
                   >
                     {t('preferredPatents.dataTakenFromCandidate')}
                   </label>
