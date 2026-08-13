@@ -457,7 +457,10 @@ function AddressCard({
               <FormItem className="flex min-w-0 flex-col gap-1.5 space-y-0">
                 <FormLabel
                   data-testid={`profileRequirements-city-${index}-label`}
-                  className="text-sm font-semibold text-slate-900"
+                  className={cn(
+                    'text-sm font-semibold text-slate-900',
+                    isDisabled && 'opacity-50'
+                  )}
                 >
                   {t('profileRequirements.city')}
                 </FormLabel>
@@ -498,7 +501,10 @@ function AddressCard({
               <FormItem className="flex min-w-0 flex-col gap-1.5 space-y-0">
                 <FormLabel
                   data-testid={`profileRequirements-stateProvince-${index}-label`}
-                  className="text-sm font-semibold text-slate-900"
+                  className={cn(
+                    'text-sm font-semibold text-slate-900',
+                    isDisabled && 'opacity-50'
+                  )}
                 >
                   {t('profileRequirements.stateProvince')}
                 </FormLabel>
@@ -537,7 +543,10 @@ function AddressCard({
               <FormItem className="flex min-w-0 flex-col gap-1.5 space-y-0">
                 <FormLabel
                   data-testid={`profileRequirements-country-${index}-label`}
-                  className="text-sm font-semibold text-slate-900"
+                  className={cn(
+                    'text-sm font-semibold text-slate-900',
+                    isDisabled && 'opacity-50'
+                  )}
                 >
                   {t('profileRequirements.country')}
                 </FormLabel>
@@ -569,7 +578,10 @@ function AddressCard({
               <FormItem className="flex min-w-0 flex-col gap-1.5 space-y-0">
                 <FormLabel
                   data-testid={`profileRequirements-postalCode-${index}-label`}
-                  className="flex justify-between text-sm font-semibold text-slate-900"
+                  className={cn(
+                    'flex justify-between text-sm font-semibold text-slate-900',
+                    isDisabled && 'opacity-50'
+                  )}
                 >
                   <span>{t('profileRequirements.postalCode')}</span>
                   <CharacterCount
@@ -942,7 +954,12 @@ export default function ProfileRequirementsStep({
                   <label
                     htmlFor="data-from-candidate"
                     data-testid="profileRequirements-dataTakenFromCandidate-label"
-                    className="cursor-pointer text-sm font-medium text-slate-900"
+                    className={cn(
+                      'text-sm font-medium text-slate-900',
+                      isEnabled
+                        ? 'cursor-pointer'
+                        : 'cursor-not-allowed opacity-50'
+                    )}
                   >
                     {t('profileRequirements.dataTakenFromCandidate')}
                   </label>
@@ -962,7 +979,10 @@ export default function ProfileRequirementsStep({
                   <FormItem className="flex min-w-0 flex-col gap-1 space-y-0">
                     <FormLabel
                       data-testid="profileRequirements-gender-label"
-                      className="text-sm font-semibold text-slate-900"
+                      className={cn(
+                        'text-sm font-semibold text-slate-900',
+                        isFieldsDisabled && 'opacity-50'
+                      )}
                     >
                       {t('profileRequirements.gender')}
                     </FormLabel>
@@ -1011,7 +1031,10 @@ export default function ProfileRequirementsStep({
                   <FormItem className="flex min-w-0 flex-col gap-1 space-y-0">
                     <FormLabel
                       data-testid="profileRequirements-maritalStatus-label"
-                      className="text-sm font-semibold text-slate-900"
+                      className={cn(
+                        'text-sm font-semibold text-slate-900',
+                        isFieldsDisabled && 'opacity-50'
+                      )}
                     >
                       {t('profileRequirements.maritalStatus')}
                     </FormLabel>
