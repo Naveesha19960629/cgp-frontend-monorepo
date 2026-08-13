@@ -424,8 +424,8 @@ function SportCard({
                       onLevelRepresentedSearch(value);
                       return levelRepresentedOptions;
                     }}
+                    showArrow
                     keepSelectedInList
-                    creatable
                     triggerSearchOnFocus
                     hideClearAllButton
                     maxSelected={MAX_SELECTIONS}

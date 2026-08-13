@@ -401,6 +401,7 @@ function VolunteeringCard({
                     )}
                     onErrorStateChange={setCausesError}
                     disabled={fieldsDisabled}
+                    inputProps={{ maxLength: MAX_CAUSE_LENGTH }}
                     loading={isCausesLoading}
                     placeholder={t('preferredVolunteering.placeholders.cause')}
                     emptyIndicator={
