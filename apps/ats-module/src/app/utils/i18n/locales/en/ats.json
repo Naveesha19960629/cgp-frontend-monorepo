@@ -742,7 +742,7 @@
     "notifications": {
       "disable": {
         "title": "Successfully Disabled",
-        "message": "Patents have been successfully disabled."
+        "message": "Preferred patents have been successfully disabled."
       }
     }
   },
