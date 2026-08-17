@@ -1963,7 +1963,8 @@ type VacancyVersionHistoryChangeType =
   | 'FIELD_VALUE_ADDED'
   | 'FIELD_VALUE_REMOVED'
   | 'FIELD_VALUE_UPDATED'
-  | 'VACANCY_CREATED';
+  | 'VACANCY_CREATED'
+  | 'SECTION_ENABLED';
 
 interface VacancyVersionHistoryChange {
   changeType: VacancyVersionHistoryChangeType;
@@ -2002,6 +2003,24 @@ interface VersionHistoryGridItem {
   subtitle?: string;
 }
 
+/** All of a version's VACANCY_CREATED sub-fields (Title/Status/Schedule
+ * Date/Expiration Date) combined into the single card Figma shows (nodes
+ * 4229:230488 "Scheduled for publishing" / 4229:230451 "Saved as {status}")
+ * instead of one card per field. The API itself sends these as 4 SEPARATE
+ * flat VACANCY_CREATED entries (confirmed from a real response) — there is
+ * no combined entry shape to read this from directly, so it's assembled at
+ * display time by buildVacancyCreationSummary() in
+ * utils/version-history-helpers.ts, only when both `title` and `status` are
+ * present (the two pieces both Figma examples require); otherwise a
+ * version's VACANCY_CREATED entries fall back to rendering one per field, as
+ * they always have. */
+interface VacancyCreationSummary {
+  title: string;
+  status: string;
+  scheduleDate: string | null;
+  expirationDate: string | null;
+}
+
 /** A change entry paired with who made it, ready to render — built by
  * resolveVersionEntries() in utils/version-history-helpers.ts, which both
  * the on-screen Activity Log and the PDF generator call so attribution can
@@ -2020,6 +2039,11 @@ interface VersionHistoryEntry {
   isSystem: boolean;
   updatedAt: string;
   profilePicture: string | null;
+  /** Present only when `change.changeType === 'VACANCY_CREATED'` AND this
+   * version's creation entries were groupable (see VacancyCreationSummary
+   * above) — renderers check this, not `change.changeType` alone, to choose
+   * between the combined card and the plain per-field fallback. */
+  vacancyCreationSummary?: VacancyCreationSummary;
 }
 
 interface VersionHistorySidebarProps {
@@ -2074,6 +2098,22 @@ interface VersionHistoryScalarDiffProps {
   field: string;
   before: string;
   after: string;
+}
+
+/** The on/off switch drawn for a SECTION_ENABLED change (Figma node
+ * 4229:229289) — mirrors renderToggleSwitch in utils/version-history-pdf.ts. */
+interface VersionHistoryToggleSwitchProps {
+  isOn: boolean;
+}
+
+/** The checkbox drawn for a "Data Taken From Candidate" change (Figma node
+ * 6536:91081) — mirrors renderCheckboxIndicator in
+ * utils/version-history-pdf.ts. A distinct indicator from
+ * VersionHistoryToggleSwitch: this field arrives as a plain
+ * FIELD_VALUE_UPDATED (not its own changeType) and Figma draws it as a
+ * checkbox, not a toggle switch. */
+interface VersionHistoryCheckboxIndicatorProps {
+  isChecked: boolean;
 }
 
 export type {
@@ -2216,6 +2256,7 @@ export type {
   VacancyVersionHistoryVersion,
   VacancyVersionHistoryData,
   VersionHistoryGridItem,
+  VacancyCreationSummary,
   VersionHistoryEntry,
   VersionHistorySidebarProps,
   VersionHistoryActivityLogProps,
@@ -2225,6 +2266,8 @@ export type {
   VersionHistoryChipListProps,
   VersionHistoryChangeSummaryProps,
   VersionHistoryScalarDiffProps,
+  VersionHistoryToggleSwitchProps,
+  VersionHistoryCheckboxIndicatorProps,
   PreferredLanguages,
   CauseItem,
   CauseEntry,

@@ -278,7 +278,20 @@
         "field": "{{field}}"
       },
       "previousValue": "Previous {{field}}",
-      "updatedValue": "Updated {{field}}"
+      "updatedValue": "Updated {{field}}",
+      "sectionEnabled": "Section Enabled",
+      "sectionDisabled": "Section Disabled",
+      "sectionEnabledDescription": "Section was turned on — now visible to applicants",
+      "sectionDisabledDescription": "Section was turned off — no longer visible to applicants",
+      "vacancyCreated": "Vacancy Created",
+      "scheduledForPublishing": "Scheduled for publishing",
+      "savedAs": "Saved as",
+      "createdBy": "Created By",
+      "willGoLiveOn": "Will go Live on {{date}}",
+      "dataTakenFromCandidateEnabled": "\"No manual input required\" Enabled",
+      "dataTakenFromCandidateDisabled": "\"No manual input required\" Disabled",
+      "dataTakenFromCandidateEnabledDescription": "Data will now be auto-populated from the candidate profile",
+      "dataTakenFromCandidateDisabledDescription": "Data will no longer be auto-populated from the candidate profile"
     }
   },
   "error": {
@@ -554,7 +567,7 @@
           "unpublished": "Unpublished",
           "live": "Live",
           "expired": "Expired",
-          "onHold": "Onhold"
+          "onHold": "On Hold"
         }
       },
       "statusOptions": {

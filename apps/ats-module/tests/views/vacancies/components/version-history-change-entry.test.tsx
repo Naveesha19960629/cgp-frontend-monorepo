@@ -271,4 +271,236 @@ describe('VersionHistoryChangeEntry', () => {
       container.querySelector('.border-\\[\\#059669\\]')
     ).toBeInTheDocument();
   });
+
+  it('renders a FIELD_VALUE_UPDATED with newValue: null as a removal, not a meaningless "Updated ... to" line', () => {
+    // Real response shape: a version 6 "Position/Role Held" entry cleared
+    // its value via FIELD_VALUE_UPDATED with newValue: null (oldValue still
+    // holding "Role A"), instead of FIELD_VALUE_REMOVED.
+    const { container } = render(
+      <VersionHistoryChangeEntry
+        entry={userEntry({
+          changeType: 'FIELD_VALUE_UPDATED',
+          sectionName: 'Sports',
+          fieldName: 'Position/Role Held',
+          oldValue: ['Role A'],
+          newValue: null,
+        })}
+      />
+    );
+
+    expect(screen.getByText('Role A')).toBeInTheDocument();
+    expect(screen.getByText('Role A')).toHaveClass('text-[#be123c]');
+    expect(
+      screen.getByText('versionHistory.changeTypes.verbs.removed')
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText('versionHistory.changeTypes.verbs.updated')
+    ).not.toBeInTheDocument();
+    expect(
+      container.querySelector('.text-\\[\\#047857\\]')
+    ).not.toBeInTheDocument();
+  });
+
+  it('renders SECTION_ENABLED as a toggle switch checked "on", using the real API value shape', () => {
+    // Real API response shape: {"changeType":"SECTION_ENABLED","sectionName":
+    // "Language","fieldName":"Section Status","oldValue":["false"],
+    // "newValue":["true"]} — fieldName is always "Section Status" and carries
+    // no display value; only sectionName + newValue's boolean flag do.
+    const { container } = render(
+      <VersionHistoryChangeEntry
+        entry={userEntry({
+          changeType: 'SECTION_ENABLED',
+          sectionName: 'Language',
+          fieldName: 'Section Status',
+          oldValue: ['false'],
+          newValue: ['true'],
+        })}
+      />
+    );
+
+    // Both `sectionEnabled` and `sectionEnabledDescription` render (the mock
+    // t() returns the raw key), and one key is a text-prefix of the other —
+    // asserting on the header <p>'s own textContent (identified by its
+    // distinctive `wrap-break-word` class, since the attribution name <p>
+    // above it also happens to be `font-bold`) avoids getByText's substring
+    // ambiguity between the two.
+    expect(container.querySelector('p.wrap-break-word')).toHaveTextContent(
+      'versionHistory.changeTypes.sectionEnabled - Language'
+    );
+    expect(
+      screen.getByText('versionHistory.changeTypes.sectionEnabledDescription')
+    ).toBeInTheDocument();
+    expect(
+      container.querySelector('button[aria-checked="true"]')
+    ).toBeInTheDocument();
+  });
+
+  it('renders SECTION_ENABLED as a toggle switch checked "off" when newValue is "false"', () => {
+    const { container } = render(
+      <VersionHistoryChangeEntry
+        entry={userEntry({
+          changeType: 'SECTION_ENABLED',
+          sectionName: 'Language',
+          fieldName: 'Section Status',
+          oldValue: ['true'],
+          newValue: ['false'],
+        })}
+      />
+    );
+
+    expect(container.querySelector('p.wrap-break-word')).toHaveTextContent(
+      'versionHistory.changeTypes.sectionDisabled - Language'
+    );
+    expect(
+      screen.getByText('versionHistory.changeTypes.sectionDisabledDescription')
+    ).toBeInTheDocument();
+    expect(
+      container.querySelector('button[aria-checked="false"]')
+    ).toBeInTheDocument();
+  });
+
+  it('renders the grouped Vacancy Created card with "Scheduled for publishing" when a schedule date is present (Figma node 4229:230488)', () => {
+    const entry: VersionHistoryEntry = {
+      ...userEntry({
+        changeType: 'VACANCY_CREATED',
+        sectionName: 'Vacancy',
+        fieldName: 'Title',
+        oldValue: null,
+        newValue: ['Senior Java Developer'],
+      }),
+      attribution: 'Sabrina Dorsey',
+      vacancyCreationSummary: {
+        title: 'Senior Java Developer',
+        status: 'UNPUBLISHED',
+        scheduleDate: '2026-10-13T05:00:00',
+        expirationDate: null,
+      },
+    };
+    render(<VersionHistoryChangeEntry entry={entry} />);
+
+    expect(
+      screen.getByText('versionHistory.changeTypes.vacancyCreated')
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('- versionHistory.changeTypes.scheduledForPublishing')
+    ).toBeInTheDocument();
+    expect(screen.getByText('Senior Java Developer')).toBeInTheDocument();
+    expect(
+      screen.getByText('versionHistory.changeTypes.createdBy')
+    ).toBeInTheDocument();
+    // "Sabrina Dorsey" appears twice: the entry's own attribution row, and
+    // the card's own "Created By" line — both are expected (Figma shows both).
+    expect(screen.getAllByText('Sabrina Dorsey')).toHaveLength(2);
+    expect(
+      screen.getByText(
+        /versionHistory\.changeTypes\.willGoLiveOn:13th Oct 2026/
+      )
+    ).toBeInTheDocument();
+    // Not the fallback per-field rendering.
+    expect(
+      screen.queryByText('versionHistory.changeTypes.verbs.created')
+    ).not.toBeInTheDocument();
+  });
+
+  it('renders the grouped Vacancy Created card with "Saved as {status}" when there is no schedule date (Figma node 4229:230451)', () => {
+    const entry: VersionHistoryEntry = {
+      ...userEntry({
+        changeType: 'VACANCY_CREATED',
+        sectionName: 'Vacancy',
+        fieldName: 'Title',
+        oldValue: null,
+        newValue: ['Senior Java Developer'],
+      }),
+      attribution: 'Sabrina Dorsey',
+      vacancyCreationSummary: {
+        title: 'Senior Java Developer',
+        status: 'DRAFT',
+        scheduleDate: null,
+        expirationDate: null,
+      },
+    };
+    render(<VersionHistoryChangeEntry entry={entry} />);
+
+    expect(
+      screen.getByText('- versionHistory.changeTypes.savedAs')
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText('vacancies.table.filter.statusOptions.draft')
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(/versionHistory\.changeTypes\.willGoLiveOn/)
+    ).not.toBeInTheDocument();
+  });
+
+  it('falls back to the plain per-field CreatedChange when no vacancyCreationSummary is present', () => {
+    render(
+      <VersionHistoryChangeEntry
+        entry={userEntry({
+          changeType: 'VACANCY_CREATED',
+          sectionName: 'Vacancy',
+          fieldName: 'Title',
+          oldValue: null,
+          newValue: ['Vice President'],
+        })}
+      />
+    );
+
+    expect(
+      screen.getByText('versionHistory.changeTypes.verbs.created')
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText('versionHistory.changeTypes.vacancyCreated')
+    ).not.toBeInTheDocument();
+  });
+
+  it('renders "Data Taken From Candidate" as a checked checkbox, using the real API value shape', () => {
+    // Real API response shape: {"changeType":"FIELD_VALUE_UPDATED",
+    // "sectionName":"Sports","fieldName":"Data Taken From Candidate",
+    // "oldValue":["false"],"newValue":["true"]} — a plain FIELD_VALUE_UPDATED,
+    // not its own changeType the way SECTION_ENABLED is.
+    const { container } = render(
+      <VersionHistoryChangeEntry
+        entry={userEntry({
+          changeType: 'FIELD_VALUE_UPDATED',
+          sectionName: 'Sports',
+          fieldName: 'Data Taken From Candidate',
+          oldValue: ['false'],
+          newValue: ['true'],
+        })}
+      />
+    );
+
+    expect(container.querySelector('p.wrap-break-word')).toHaveTextContent(
+      'versionHistory.changeTypes.dataTakenFromCandidateEnabled - Sports'
+    );
+    expect(
+      screen.getByText(
+        'versionHistory.changeTypes.dataTakenFromCandidateEnabledDescription'
+      )
+    ).toBeInTheDocument();
+    expect(container.querySelector('.bg-\\[\\#075056\\]')).toBeInTheDocument();
+    expect(container.querySelector('.lucide-check')).toBeInTheDocument();
+  });
+
+  it('renders "Data Taken From Candidate" as an unchecked checkbox when newValue is "false"', () => {
+    const { container } = render(
+      <VersionHistoryChangeEntry
+        entry={userEntry({
+          changeType: 'FIELD_VALUE_UPDATED',
+          sectionName: 'Sports',
+          fieldName: 'Data Taken From Candidate',
+          oldValue: ['true'],
+          newValue: ['false'],
+        })}
+      />
+    );
+
+    expect(container.querySelector('p.wrap-break-word')).toHaveTextContent(
+      'versionHistory.changeTypes.dataTakenFromCandidateDisabled - Sports'
+    );
+    expect(
+      container.querySelector('.bg-\\[\\#075056\\]')
+    ).not.toBeInTheDocument();
+    expect(container.querySelector('.lucide-check')).not.toBeInTheDocument();
+  });
 });

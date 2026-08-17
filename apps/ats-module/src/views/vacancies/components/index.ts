@@ -60,3 +60,5 @@ export { default as VersionHistoryValueBoxGrid } from '@/views/vacancies/compone
 export { default as VersionHistoryChipList } from '@/views/vacancies/components/version-history-chip-list';
 export { default as VersionHistoryChangeSummary } from '@/views/vacancies/components/version-history-change-summary';
 export { default as VersionHistoryScalarDiff } from '@/views/vacancies/components/version-history-scalar-diff';
+export { default as VersionHistoryToggleSwitch } from '@/views/vacancies/components/version-history-toggle-switch';
+export { default as VersionHistoryCheckboxIndicator } from '@/views/vacancies/components/version-history-checkbox-indicator';

@@ -51,18 +51,34 @@ const VACANCY_STATUS_FALLBACK_CONFIG: StatusConfig = {
 
 // pdfkit fills/strokes need raw hex, not Tailwind class strings, so these
 // mirror VACANCY_STATUS_CONFIG's hex values one-for-one — keep both in sync
-// when a status color changes.
+// when a status color changes. VACANCY_STATUS_CONFIG's `expired` bg/border
+// are translucent rgba() — real CSS values a browser blends fine, but
+// pdfkit's `_normalizeColor` only understands `#hex`/named-color strings; an
+// rgba() string silently fails to parse, so `fillColor`/`strokeColor` become
+// no-ops and the pill keeps whatever color was already set by a previous
+// draw call (the reported "Expired status colour is wrong" bug). `bgOpacity`/
+// `borderOpacity` reproduce the same translucency correctly via pdfkit's own
+// opacity API instead — the opaque hex here is that rgba()'s color channel
+// only ('#332603' = rgb(51,38,3), '#382300' = rgb(56,35,0)).
 const PDF_STATUS_PILL_COLORS: Record<
   VacancyStatus,
-  { bg: string; border: string; text: string }
+  {
+    bg: string;
+    border: string;
+    text: string;
+    bgOpacity?: number;
+    borderOpacity?: number;
+  }
 > = {
   draft: { bg: '#f1f5f9', border: '#cbd5e1', text: '#475569' },
   unpublished: { bg: '#fff3e0', border: '#fecc7e', text: '#ca9239' },
   live: { bg: '#ecfdf5', border: '#a7f3d0', text: '#059669' },
   expired: {
-    bg: 'rgba(51,38,3,0.09)',
-    border: 'rgba(56,35,0,0.13)',
+    bg: '#332603',
+    border: '#382300',
     text: '#492503',
+    bgOpacity: 0.09,
+    borderOpacity: 0.13,
   },
   on_hold: { bg: '#dbeafe', border: '#bfdbfe', text: '#3b82f6' },
 };
@@ -117,6 +133,21 @@ const PDF_COLORS = {
   // (node 4229:229804) — neutral/300, distinct from `border`'s lighter
   // neutral/200 hairline used for plain card outlines.
   scalarDiffPreviousBorder: '#d4d4d4',
+  // SECTION_ENABLED's toggle switch (node 4229:229289 for "on"; "off" reuses
+  // the same gray/200 the "Required Toggle Changed" example's off-state
+  // toggle uses, node 4229:229985 — not the same hex as `border` even though
+  // they coincide, since the two are drawn for unrelated reasons).
+  toggleOnBg: '#10b981',
+  toggleOffBg: '#e5e5e5',
+  // "Data Taken From Candidate" checkbox (node 6536:91081 for "checked").
+  // Same literal hex as `selectedText` (both are this app's dark-teal brand
+  // accent, #075056) — a distinct token since the two style unrelated UI
+  // elements (sidebar selected-row text vs. this checkbox's fill), not the
+  // ui-kit Checkbox's own `brand-primary-500` (#0f5351), a visibly
+  // different, more general-purpose shade. No Figma reference exists for
+  // the unchecked state; `checkboxUncheckedBorder` is an inferred default.
+  checkboxCheckedBg: '#075056',
+  checkboxUncheckedBorder: '#cbd5e1',
 };
 
 // Every PDF layout metric below is the on-screen page's own Tailwind px

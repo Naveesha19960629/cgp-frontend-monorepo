@@ -100,6 +100,8 @@ export {
 export { buildVersionHistoryPdfBlob } from '@/views/vacancies/utils/version-history-pdf';
 export {
   normalizeStatusKey,
+  parseBooleanFlag,
+  isDataTakenFromCandidateChange,
   getSingleScalar,
   isObjectArray,
   shouldRenderAsGrid,
@@ -112,6 +114,7 @@ export {
   isSystemActor,
   resolveVersionActor,
   resolveVersionEntries,
+  buildVacancyCreationSummary,
   SYSTEM_ACTOR,
 } from '@/views/vacancies/utils/version-history-helpers';
 export { detectApplicationFormChanges } from '@/views/vacancies/utils/detect-application-form-changes';
