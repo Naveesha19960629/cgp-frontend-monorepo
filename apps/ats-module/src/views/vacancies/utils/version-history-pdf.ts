@@ -1531,9 +1531,7 @@ const measureSidebarRowMetrics = (
  */
 const renderSidebarRowsOnCurrentPage = (
   doc: PDFKit.PDFDocument,
-  x: number,
-  y: number,
-  width: number,
+  { x, y, width }: { x: number; y: number; width: number },
   versions: VacancyVersionHistoryVersion[],
   selectedVersionNumber: number | undefined,
   createdBy: string,
@@ -2123,9 +2121,7 @@ const buildVersionHistoryDocument = (
       i === activityLogRange.start ? columnTopY : doc.page.margins.top;
     const drawnCount = renderSidebarRowsOnCurrentPage(
       doc,
-      0,
-      pageTop,
-      sidebarWidth,
+      { x: 0, y: pageTop, width: sidebarWidth },
       remainingVersions,
       selectedVersion?.versionNumber,
       data.createdBy,
@@ -2137,9 +2133,7 @@ const buildVersionHistoryDocument = (
     doc.addPage();
     const drawnCount = renderSidebarRowsOnCurrentPage(
       doc,
-      0,
-      doc.page.margins.top,
-      sidebarWidth,
+      { x: 0, y: doc.page.margins.top, width: sidebarWidth },
       remainingVersions,
       selectedVersion?.versionNumber,
       data.createdBy,

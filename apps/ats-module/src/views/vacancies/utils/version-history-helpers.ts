@@ -102,15 +102,13 @@ const pluralizeFieldName = (fieldName: string, count: number): string => {
 // though it's the exact same field conceptually — both section names are
 // accepted so the update gets the same one-line sentence the initial value
 // already does, not the generic section-header treatment.
-const VACANCY_SCALAR_SECTION_NAMES = ['vacancy', 'schedule'];
+const VACANCY_SCALAR_SECTION_NAMES = new Set(['vacancy', 'schedule']);
 const resolveScalarChangeLabelKey = (change: {
   sectionName: string;
   fieldName: string;
 }): 'titleChanged' | 'scheduleDateChanged' | 'expirationDateChanged' | null => {
   if (
-    !VACANCY_SCALAR_SECTION_NAMES.includes(
-      change.sectionName.trim().toLowerCase()
-    )
+    !VACANCY_SCALAR_SECTION_NAMES.has(change.sectionName.trim().toLowerCase())
   ) {
     return null;
   }
