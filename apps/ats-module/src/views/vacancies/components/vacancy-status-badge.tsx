@@ -4,6 +4,7 @@ import type { VacancyStatusBadgeProps } from '@/views/vacancies';
 import {
   VACANCY_STATUS_CONFIG,
   VACANCY_STATUS_FALLBACK_CONFIG,
+  normalizeStatusKey,
 } from '@/views/vacancies/utils';
 
 import { cn } from '@cgp/ui-kit/lib/utils';
@@ -11,20 +12,23 @@ import { cn } from '@cgp/ui-kit/lib/utils';
 export default function VacancyStatusBadge({
   status,
   applicantCount,
+  countFormat = 'applicants',
 }: Readonly<VacancyStatusBadgeProps>) {
   const { t } = useTranslation('ats');
-  // API enum is ONHOLD (no underscore); on_hold is the config key
-  const normalized = status.toLowerCase();
-  const key = normalized === 'onhold' ? 'on_hold' : normalized;
+  const key = normalizeStatusKey(status);
   if (key === 'new') return null;
   const config =
     VACANCY_STATUS_CONFIG[key as keyof typeof VACANCY_STATUS_CONFIG] ??
     VACANCY_STATUS_FALLBACK_CONFIG;
   const statusLabel = config.labelKey ? t(config.labelKey) : status;
   const hidesApplicantCount = key === 'draft' || key === 'unpublished';
+  const countSuffix =
+    countFormat === 'applied'
+      ? ` (${applicantCount} ${t('vacancies.view.applied')})`
+      : ` - ${applicantCount} ${t('vacancies.stepBadge.applicants')}`;
   const label =
     !hidesApplicantCount && applicantCount !== undefined
-      ? `${statusLabel} - ${applicantCount} ${t('vacancies.stepBadge.applicants')}`
+      ? `${statusLabel}${countSuffix}`
       : statusLabel;
 
   return (
