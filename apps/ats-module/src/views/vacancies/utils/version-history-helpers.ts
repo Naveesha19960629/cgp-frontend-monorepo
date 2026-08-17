@@ -11,8 +11,10 @@ import type {
 // logic lives here once instead of being duplicated (and drifting) in JSX
 // and pdfkit draw calls separately.
 
+// The API enum is ONHOLD (no underscore) but a status can also reach the UI
+// already humanised ("On Hold"), so collapse both to the on_hold config key.
 const normalizeStatusKey = (status: string): string => {
-  const normalized = status.toLowerCase();
+  const normalized = status.trim().toLowerCase().replace(/\s+/g, '_');
   return normalized === 'onhold' ? 'on_hold' : normalized;
 };
 

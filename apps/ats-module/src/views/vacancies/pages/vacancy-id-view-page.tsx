@@ -34,30 +34,6 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
 
-function formatViewStatusLabel({
-  status,
-  applicantCount,
-  t,
-}: {
-  status: string;
-  applicantCount: number;
-  t: (key: string, options?: Record<string, unknown>) => string;
-}): string {
-  const normalized = status.trim().toLowerCase();
-  const normalizedWithUnderscore = normalized.replace(/\s+/g, '_');
-
-  if (
-    normalizedWithUnderscore === 'live' ||
-    normalizedWithUnderscore === 'expired' ||
-    normalizedWithUnderscore === 'onhold' ||
-    normalizedWithUnderscore === 'on_hold'
-  ) {
-    return `${status} (${applicantCount} ${t('vacancies.view.applied')})`;
-  }
-
-  return status;
-}
-
 export default function VacancyIdViewPage() {
   const { t } = useTranslation('ats');
   const navigate = useNavigate();
@@ -121,17 +97,21 @@ export default function VacancyIdViewPage() {
   const viewModel = toVacancyViewModel(vacancyCandidate);
 
   const title = viewModel.title || t('vacancies.view.untitledVacancy');
-  const statusLabel = formatViewStatusLabel({
-    status: viewModel.status || t('vacancies.table.filter.statusOptions.draft'),
-    applicantCount: viewModel.applicantCount,
-    t,
-  });
 
+  // VacancyStatusBadge owns both the label and the colour tokens, so it needs
+  // the raw status ("LIVE"/"ONHOLD"/…) — a pre-formatted string misses
+  // VACANCY_STATUS_CONFIG and falls back to the neutral grey pill.
   return (
     <VacancyView.Root>
       <VacancyView.BackHeader
         title={title}
-        status={<VacancyStatusBadge status={statusLabel} />}
+        status={
+          <VacancyStatusBadge
+            status={viewModel.status || 'draft'}
+            applicantCount={viewModel.applicantCount}
+            countFormat="applied"
+          />
+        }
         onBack={() => void navigate('/dashboard/ats/vacancies')}
       />
 

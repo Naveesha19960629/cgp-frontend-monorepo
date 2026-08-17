@@ -29,4 +29,50 @@ describe('VacancyStatusBadge', () => {
       screen.getByText('vacancies.table.filter.statusOptions.live')
     ).toBeInTheDocument();
   });
+
+  it.each(['ONHOLD', 'On Hold'])(
+    'matches the on_hold config for the "%s" status spelling',
+    status => {
+      render(<VacancyStatusBadge status={status} />);
+      const badge = screen.getByTestId('vacancy-on_hold');
+      expect(badge).toHaveTextContent(
+        'vacancies.table.filter.statusOptions.onHold'
+      );
+      expect(badge).toHaveClass('bg-[#dbeafe]');
+    }
+  );
+
+  it('appends the applicant count as "- N Applicants" by default', () => {
+    render(<VacancyStatusBadge status="LIVE" applicantCount={3} />);
+    expect(screen.getByTestId('vacancy-live')).toHaveTextContent(
+      'vacancies.table.filter.statusOptions.live - 3 vacancies.stepBadge.applicants'
+    );
+  });
+
+  it('appends the applicant count as "(N Applied)" for countFormat="applied"', () => {
+    render(
+      <VacancyStatusBadge
+        status="ONHOLD"
+        applicantCount={3}
+        countFormat="applied"
+      />
+    );
+    expect(screen.getByTestId('vacancy-on_hold')).toHaveTextContent(
+      'vacancies.table.filter.statusOptions.onHold (3 vacancies.view.applied)'
+    );
+  });
+
+  it('omits the applicant count for draft regardless of countFormat', () => {
+    render(
+      <VacancyStatusBadge
+        status="DRAFT"
+        applicantCount={3}
+        countFormat="applied"
+      />
+    );
+    expect(screen.getByTestId('vacancy-draft')).toHaveTextContent(
+      'vacancies.table.filter.statusOptions.draft'
+    );
+    expect(screen.getByTestId('vacancy-draft')).not.toHaveTextContent('3');
+  });
 });
