@@ -38,10 +38,13 @@ import {
 import { formatChangeValue } from '@/views/vacancies/utils/format-date-range';
 import {
   getSingleScalar,
+  isDataTakenFromCandidateChange,
   isObjectArray,
   isSystemActor,
   normalizeStatusKey,
+  parseBooleanFlag,
   pluralizeFieldName,
+  resolveChangeVariant,
   resolveScalarChangeLabelKey,
   resolveVersionActor,
   resolveVersionEntries,
@@ -80,7 +83,37 @@ const PDF_LABELS = {
   manyItems: (count: number, field: string) => `New ${count} ${field}`,
   removedItemsDetail: (count: number, field: string) => `${count} ${field}`,
   activityLog: 'Activity Log',
-  noChanges: 'No tracked changes recorded for this version.',
+  // Mirrors the on-screen empty state's copy exactly (versionHistory
+  // .activityLog.emptyState.* in ats.json / Figma node 4229:229029) — kept
+  // as a literal string rather than sourced from the i18n bundle since this
+  // file's own static chrome text is plain English by design (see the
+  // top-of-file comment); only the copy needs to match, not the mechanism.
+  noActivityTitle: 'No Activity Available',
+  noActivityDescription:
+    'There are no activity logs recorded for this version yet. Any updates, edits, or actions related to this version will appear here once activities are performed.',
+  // SECTION_ENABLED (Figma node 4229:229289) — mirrors the on-screen
+  // versionHistory.changeTypes.section{Enabled,Disabled}* i18n keys exactly.
+  sectionEnabled: 'Section Enabled',
+  sectionDisabled: 'Section Disabled',
+  sectionEnabledDescription:
+    'Section was turned on — now visible to applicants',
+  sectionDisabledDescription:
+    'Section was turned off — no longer visible to applicants',
+  // VACANCY_CREATED grouped card (Figma nodes 4229:230488/230451) — mirrors
+  // the on-screen versionHistory.changeTypes.* keys exactly.
+  vacancyCreated: 'Vacancy Created',
+  scheduledForPublishing: 'Scheduled for publishing',
+  savedAs: 'Saved as',
+  createdBy: 'Created By',
+  willGoLiveOn: (date: string) => `Will go Live on ${date}`,
+  // "Data Taken From Candidate" (Figma node 6536:91081) — mirrors the
+  // on-screen versionHistory.changeTypes.dataTakenFromCandidate* keys.
+  dataTakenFromCandidateEnabled: '"No manual input required" Enabled',
+  dataTakenFromCandidateDisabled: '"No manual input required" Disabled',
+  dataTakenFromCandidateEnabledDescription:
+    'Data will now be auto-populated from the candidate profile',
+  dataTakenFromCandidateDisabledDescription:
+    'Data will no longer be auto-populated from the candidate profile',
   breadcrumb: 'Version History',
 } as const;
 
@@ -245,6 +278,48 @@ const META_SEGMENT_GAP_Y = 8 * PX_TO_PT; // meta row: gap-y-2 (wrapped rows)
 const HEADER_PADDING = 28 * PX_TO_PT; // header: px-7 py-7
 const ACTIVITY_HEADING_FONT_SIZE = 24 * PX_TO_PT; // Activity Log: text-2xl
 
+// Empty state (TemplateEmptyStateMessage, reused on-screen for "No Activity
+// Available"): title text-4xl/10, description text-lg/6, gap-2 between them.
+const EMPTY_STATE_TITLE_FONT_SIZE = 36 * PX_TO_PT;
+const EMPTY_STATE_DESCRIPTION_FONT_SIZE = 18 * PX_TO_PT;
+const EMPTY_STATE_TITLE_GAP = 8 * PX_TO_PT;
+
+// SECTION_ENABLED (node 4229:229289): label text-base, description text-sm,
+// gap-1 between them. Toggle track/knob dimensions mirror the web's ui-kit
+// Switch `size="lg"` (48×24px track, 20px knob) rather than Figma's slightly
+// taller 28px-tall instance of the same reusable Toggle component, so the
+// PDF matches what the page actually renders (see
+// version-history-toggle-switch.tsx) instead of Figma's own component pixel-
+// for-pixel. The knob inset (both on/off) mirrors the ui-kit Switch's own
+// 2px track padding.
+const SECTION_TOGGLE_LABEL_FONT_SIZE = 16 * PX_TO_PT;
+const SECTION_TOGGLE_DESCRIPTION_FONT_SIZE = 14 * PX_TO_PT;
+const SECTION_TOGGLE_GAP = 4 * PX_TO_PT;
+const TOGGLE_WIDTH = 48 * PX_TO_PT;
+const TOGGLE_HEIGHT = 24 * PX_TO_PT;
+const TOGGLE_KNOB_DIAMETER = 20 * PX_TO_PT;
+const TOGGLE_KNOB_INSET = 2 * PX_TO_PT;
+
+// "Data Taken From Candidate" checkbox (node 6536:91081): reuses
+// SECTION_TOGGLE_LABEL_FONT_SIZE/SECTION_TOGGLE_DESCRIPTION_FONT_SIZE/
+// SECTION_TOGGLE_GAP above (the identical header/description text pattern,
+// just with a checkbox instead of a toggle switch on the right) — only the
+// checkbox's own size needs new constants.
+const CHECKBOX_SIZE = 28 * PX_TO_PT;
+const CHECKBOX_RADIUS = 6 * PX_TO_PT;
+const CHECKMARK_SIZE = 16 * PX_TO_PT; // lucide Check icon (web): size-4
+
+// VACANCY_CREATED grouped card (nodes 4229:230488/230451): the header text
+// reuses SUMMARY_FONT_SIZE (same 14px-bold role as every other header line's
+// "Section Name -" prefix) and the box reuses BOX_PADDING/BOX_TITLE_FONT_SIZE
+// /PDF_CARD_RADIUS (the same bordered-box pattern every other value box
+// uses) — only the "Created By [avatar] {name} • Will go Live on {date}"
+// meta row below the title needs its own sizing.
+const VACANCY_CREATION_META_FONT_SIZE = 14 * PX_TO_PT; // text-sm
+const VACANCY_CREATION_AVATAR_DIAMETER = 20 * PX_TO_PT; // size-5
+const VACANCY_CREATION_META_GAP = 8 * PX_TO_PT; // gap-2
+const VACANCY_CREATION_TITLE_GAP = 4 * PX_TO_PT; // gap-1 (title -> meta row)
+
 /**
  * Everything below draws at an explicit (x, y) and returns the height it
  * consumed, rather than relying on pdfkit's flowing `doc.y`. `dry: true`
@@ -296,17 +371,30 @@ const renderStatusPill = (
   x: number,
   y: number,
   label: string,
-  colors: { bg: string; border: string; text: string }
+  colors: {
+    bg: string;
+    border: string;
+    text: string;
+    bgOpacity?: number;
+    borderOpacity?: number;
+  }
 ): number => {
   const { doc } = ctx;
   doc.font(PDF_FONT_SEMIBOLD).fontSize(PILL_FONT_SIZE);
   const width = doc.widthOfString(label) + PILL_PADDING_X * 2;
   if (ctx.dry) return width;
 
+  // Explicitly set on every draw (not just when a status defines one) so a
+  // translucent "expired" pill drawn earlier can never leak its opacity into
+  // the next, fully-opaque status pill.
+  doc
+    .fillOpacity(colors.bgOpacity ?? 1)
+    .strokeOpacity(colors.borderOpacity ?? 1);
   doc
     .roundedRect(x, y, width, PILL_HEIGHT, PILL_RADIUS)
     .lineWidth(1)
     .fillAndStroke(colors.bg, colors.border);
+  doc.fillOpacity(1).strokeOpacity(1);
   const textHeight = doc.currentLineHeight(true);
   doc
     .fillColor(colors.text)
@@ -314,6 +402,218 @@ const renderStatusPill = (
       lineBreak: false,
     });
   return width;
+};
+
+// Mirrors the web's ui-kit Switch (`size="lg"`) rather than Figma's own
+// slightly-taller 28px instance of the same Toggle component — see the
+// SECTION_TOGGLE_* constants' comment.
+const renderToggleSwitch = (
+  doc: PDFKit.PDFDocument,
+  x: number,
+  y: number,
+  isOn: boolean
+) => {
+  doc
+    .roundedRect(x, y, TOGGLE_WIDTH, TOGGLE_HEIGHT, TOGGLE_HEIGHT / 2)
+    .fillColor(isOn ? PDF_COLORS.toggleOnBg : PDF_COLORS.toggleOffBg)
+    .fill();
+  const knobX = isOn
+    ? x + TOGGLE_WIDTH - TOGGLE_KNOB_INSET - TOGGLE_KNOB_DIAMETER
+    : x + TOGGLE_KNOB_INSET;
+  const knobY = y + (TOGGLE_HEIGHT - TOGGLE_KNOB_DIAMETER) / 2;
+  doc
+    .circle(
+      knobX + TOGGLE_KNOB_DIAMETER / 2,
+      knobY + TOGGLE_KNOB_DIAMETER / 2,
+      TOGGLE_KNOB_DIAMETER / 2
+    )
+    .fillColor('#ffffff')
+    .fill();
+};
+
+/**
+ * SECTION_ENABLED (Figma node 4229:229289): "Section Enabled - {sectionName}"
+ * (verb-first, no "Section Name -" prefix or divider rule — a different
+ * header shape from every other change type), a description line, and the
+ * toggle switch itself right-aligned against the card's own width. `newValue`
+ * carries the flag as the literal string "true"/"false" (confirmed from a
+ * real API response); `fieldName` is always "Section Status" and carries no
+ * display value of its own.
+ */
+const renderSectionToggleChange = (
+  ctx: ContentCtx,
+  change: VacancyVersionHistoryChange,
+  y: number
+): number => {
+  const { doc } = ctx;
+  const isEnabled = parseBooleanFlag(getSingleScalar(change.newValue));
+  const label = isEnabled
+    ? PDF_LABELS.sectionEnabled
+    : PDF_LABELS.sectionDisabled;
+  const description = isEnabled
+    ? PDF_LABELS.sectionEnabledDescription
+    : PDF_LABELS.sectionDisabledDescription;
+  const labelColor = isEnabled ? PDF_COLORS.added : PDF_COLORS.muted;
+  const sectionSuffix = ` - ${change.sectionName}`;
+  const textWidth = ctx.width - TOGGLE_WIDTH - INLINE_GAP;
+
+  doc.font(PDF_FONT_BOLD).fontSize(SECTION_TOGGLE_LABEL_FONT_SIZE);
+  const labelWidth = doc.widthOfString(label);
+  const labelLineHeight = doc.currentLineHeight(true);
+
+  doc.font(PDF_FONT_MEDIUM).fontSize(SECTION_TOGGLE_DESCRIPTION_FONT_SIZE);
+  const descriptionHeight = doc.heightOfString(description, {
+    width: textWidth,
+  });
+
+  const textBlockHeight =
+    labelLineHeight + SECTION_TOGGLE_GAP + descriptionHeight;
+  const blockHeight = Math.max(textBlockHeight, TOGGLE_HEIGHT);
+
+  if (!ctx.dry) {
+    doc
+      .font(PDF_FONT_BOLD)
+      .fontSize(SECTION_TOGGLE_LABEL_FONT_SIZE)
+      .fillColor(labelColor)
+      .text(label, ctx.x, y, { lineBreak: false });
+    doc
+      .font(PDF_FONT_BOLD)
+      .fillColor(PDF_COLORS.body)
+      .text(sectionSuffix, ctx.x + labelWidth, y, { lineBreak: false });
+
+    doc
+      .font(PDF_FONT_MEDIUM)
+      .fontSize(SECTION_TOGGLE_DESCRIPTION_FONT_SIZE)
+      .fillColor(PDF_COLORS.muted)
+      .text(description, ctx.x, y + labelLineHeight + SECTION_TOGGLE_GAP, {
+        width: textWidth,
+      });
+
+    renderToggleSwitch(
+      doc,
+      ctx.x + ctx.width - TOGGLE_WIDTH,
+      y + (blockHeight - TOGGLE_HEIGHT) / 2,
+      isEnabled
+    );
+  }
+
+  return blockHeight;
+};
+
+// A simple checkmark polyline (top-left + size, matching this file's
+// renderPersonIcon/renderMonitorIcon convention) — mirrors lucide's Check
+// icon (used on-screen) closely enough at this size: a short leg down-left
+// then a longer leg up-right.
+const renderCheckmark = (
+  doc: PDFKit.PDFDocument,
+  x: number,
+  y: number,
+  size: number,
+  color: string
+) => {
+  doc
+    .moveTo(x + size * 0.18, y + size * 0.52)
+    .lineTo(x + size * 0.42, y + size * 0.75)
+    .lineTo(x + size * 0.82, y + size * 0.25)
+    .lineWidth(size * 0.14)
+    .lineCap('round')
+    .lineJoin('round')
+    .strokeColor(color)
+    .stroke();
+};
+
+// "Data Taken From Candidate" checkbox (node 6536:91081 for "checked"; no
+// Figma reference exists for "unchecked" — an empty bordered box is the
+// standard unchecked-checkbox convention, used here as a clearly-inferred
+// default).
+const renderCheckboxIndicator = (
+  doc: PDFKit.PDFDocument,
+  x: number,
+  y: number,
+  isChecked: boolean
+) => {
+  doc
+    .roundedRect(x, y, CHECKBOX_SIZE, CHECKBOX_SIZE, CHECKBOX_RADIUS)
+    .lineWidth(1)
+    .fillAndStroke(
+      isChecked ? PDF_COLORS.checkboxCheckedBg : '#ffffff',
+      isChecked
+        ? PDF_COLORS.checkboxCheckedBg
+        : PDF_COLORS.checkboxUncheckedBorder
+    );
+  if (isChecked) {
+    const inset = (CHECKBOX_SIZE - CHECKMARK_SIZE) / 2;
+    renderCheckmark(doc, x + inset, y + inset, CHECKMARK_SIZE, '#ffffff');
+  }
+};
+
+/**
+ * "Data Taken From Candidate" (Figma node 6536:91081): "'No manual input
+ * required' Enabled/Disabled - {sectionName}" header, description, and a
+ * checkbox indicator right-aligned — the same shape as
+ * renderSectionToggleChange above but with a checkbox instead of a toggle
+ * switch, and detected by fieldName rather than changeType since this
+ * arrives as a plain FIELD_VALUE_UPDATED (confirmed from a real API
+ * response), not its own dedicated changeType.
+ */
+const renderDataTakenFromCandidateChange = (
+  ctx: ContentCtx,
+  change: VacancyVersionHistoryChange,
+  y: number
+): number => {
+  const { doc } = ctx;
+  const isEnabled = parseBooleanFlag(getSingleScalar(change.newValue));
+  const label = isEnabled
+    ? PDF_LABELS.dataTakenFromCandidateEnabled
+    : PDF_LABELS.dataTakenFromCandidateDisabled;
+  const description = isEnabled
+    ? PDF_LABELS.dataTakenFromCandidateEnabledDescription
+    : PDF_LABELS.dataTakenFromCandidateDisabledDescription;
+  const labelColor = isEnabled ? PDF_COLORS.added : PDF_COLORS.muted;
+  const sectionSuffix = ` - ${change.sectionName}`;
+  const textWidth = ctx.width - CHECKBOX_SIZE - INLINE_GAP;
+
+  doc.font(PDF_FONT_BOLD).fontSize(SECTION_TOGGLE_LABEL_FONT_SIZE);
+  const labelWidth = doc.widthOfString(label);
+  const labelLineHeight = doc.currentLineHeight(true);
+
+  doc.font(PDF_FONT_MEDIUM).fontSize(SECTION_TOGGLE_DESCRIPTION_FONT_SIZE);
+  const descriptionHeight = doc.heightOfString(description, {
+    width: textWidth,
+  });
+
+  const textBlockHeight =
+    labelLineHeight + SECTION_TOGGLE_GAP + descriptionHeight;
+  const blockHeight = Math.max(textBlockHeight, CHECKBOX_SIZE);
+
+  if (!ctx.dry) {
+    doc
+      .font(PDF_FONT_BOLD)
+      .fontSize(SECTION_TOGGLE_LABEL_FONT_SIZE)
+      .fillColor(labelColor)
+      .text(label, ctx.x, y, { lineBreak: false });
+    doc
+      .font(PDF_FONT_BOLD)
+      .fillColor(PDF_COLORS.body)
+      .text(sectionSuffix, ctx.x + labelWidth, y, { lineBreak: false });
+
+    doc
+      .font(PDF_FONT_MEDIUM)
+      .fontSize(SECTION_TOGGLE_DESCRIPTION_FONT_SIZE)
+      .fillColor(PDF_COLORS.muted)
+      .text(description, ctx.x, y + labelLineHeight + SECTION_TOGGLE_GAP, {
+        width: textWidth,
+      });
+
+    renderCheckboxIndicator(
+      doc,
+      ctx.x + ctx.width - CHECKBOX_SIZE,
+      y + (blockHeight - CHECKBOX_SIZE) / 2,
+      isEnabled
+    );
+  }
+
+  return blockHeight;
 };
 
 /**
@@ -750,20 +1050,21 @@ const renderPlainValue = (
   return height;
 };
 
-const summaryVerbFor = (change: VacancyVersionHistoryChange): string => {
-  if (change.changeType === 'FIELD_VALUE_ADDED') return PDF_LABELS.verbs.added;
-  if (change.changeType === 'FIELD_VALUE_REMOVED') {
-    return PDF_LABELS.verbs.removed;
-  }
+type ChangeVariant = 'added' | 'removed' | 'updated';
+
+const summaryVerbFor = (variant: ChangeVariant): string => {
+  if (variant === 'added') return PDF_LABELS.verbs.added;
+  if (variant === 'removed') return PDF_LABELS.verbs.removed;
   return PDF_LABELS.verbs.updated;
 };
 
 const summaryDetailFor = (
-  change: VacancyVersionHistoryChange,
-  count: number
+  fieldName: string,
+  count: number,
+  variant: ChangeVariant
 ): string => {
-  const field = pluralizeFieldName(change.fieldName, count);
-  return change.changeType === 'FIELD_VALUE_REMOVED'
+  const field = pluralizeFieldName(fieldName, count);
+  return variant === 'removed'
     ? PDF_LABELS.removedItemsDetail(count, field)
     : PDF_LABELS.manyItems(count, field);
 };
@@ -798,7 +1099,184 @@ const renderVacancyCreatedChange = (
     }
     return height + PILL_HEIGHT;
   }
-  return height + renderPlainValue(ctx, y + height, value, PDF_COLORS.heading);
+  return (
+    height +
+    renderPlainValue(
+      ctx,
+      y + height,
+      formatChangeValue(value),
+      PDF_COLORS.heading
+    )
+  );
+};
+
+/**
+ * All of a version's VACANCY_CREATED sub-fields combined into one card
+ * (Figma nodes 4229:230488 "Scheduled for publishing" / 4229:230451 "Saved
+ * as {status}") instead of one card per field — mirrors the web's
+ * VacancyCreationSummaryCard. Takes the whole entry (not just its
+ * representative `change`), since the "Created By" row reuses the entry's
+ * own resolved attribution/avatar, not a field inside the summary. Only
+ * called when `entry.vacancyCreationSummary` is set (see
+ * buildVacancyCreationSummary() in version-history-helpers.ts) —
+ * `renderChange` falls back to the plain per-field `renderVacancyCreatedChange`
+ * above otherwise.
+ */
+const renderVacancyCreationSummaryCard = (
+  ctx: ContentCtx,
+  entry: VersionHistoryEntry,
+  y: number
+): number => {
+  const { doc } = ctx;
+  const summary = entry.vacancyCreationSummary;
+  if (!summary) return 0;
+  const isScheduled = summary.scheduleDate !== null;
+
+  // Header: "Vacancy Created - Scheduled for publishing" or "Vacancy
+  // Created - Saved as {StatusPill}" — no "Section Name -" prefix or
+  // divider rule, a different shape from every other change type's header.
+  doc.font(PDF_FONT_BOLD).fontSize(SUMMARY_FONT_SIZE);
+  const vacancyCreatedWidth = doc.widthOfString(PDF_LABELS.vacancyCreated);
+  const suffixText = isScheduled
+    ? ` - ${PDF_LABELS.scheduledForPublishing}`
+    : ` - ${PDF_LABELS.savedAs}`;
+  const suffixWidth = doc.widthOfString(suffixText);
+  const headerLineHeight = doc.currentLineHeight(true);
+
+  const statusLabel = statusDisplayLabel(summary.status);
+  const headerHeight = isScheduled
+    ? headerLineHeight
+    : Math.max(headerLineHeight, PILL_HEIGHT);
+
+  if (!ctx.dry) {
+    doc
+      .font(PDF_FONT_BOLD)
+      .fontSize(SUMMARY_FONT_SIZE)
+      .fillColor(PDF_COLORS.added)
+      .text(PDF_LABELS.vacancyCreated, ctx.x, y, { lineBreak: false });
+    doc
+      .fillColor(PDF_COLORS.body)
+      .text(suffixText, ctx.x + vacancyCreatedWidth, y, { lineBreak: false });
+    if (!isScheduled) {
+      renderStatusPill(
+        ctx,
+        ctx.x + vacancyCreatedWidth + suffixWidth + INLINE_GAP,
+        y + (headerHeight - PILL_HEIGHT) / 2,
+        statusLabel,
+        statusPillColors(summary.status)
+      );
+    }
+  }
+
+  // The box below: same bordered-card pattern as every other value box
+  // (BOX_PADDING/BOX_TITLE_FONT_SIZE/PDF_CARD_RADIUS), not a new one.
+  const boxY = y + headerHeight + SUMMARY_TO_SCALAR_GAP;
+  const boxWidth = ctx.width;
+
+  doc.font(PDF_FONT_BOLD).fontSize(BOX_TITLE_FONT_SIZE);
+  const titleHeight = doc.heightOfString(summary.title, {
+    width: boxWidth - BOX_PADDING * 2,
+  });
+
+  doc.font(PDF_FONT_MEDIUM).fontSize(VACANCY_CREATION_META_FONT_SIZE);
+  const metaLineHeight = doc.currentLineHeight(true);
+  const metaRowHeight = Math.max(
+    VACANCY_CREATION_AVATAR_DIAMETER,
+    metaLineHeight
+  );
+
+  const boxHeight =
+    BOX_PADDING * 2 + titleHeight + VACANCY_CREATION_TITLE_GAP + metaRowHeight;
+
+  if (!ctx.dry) {
+    doc
+      .roundedRect(ctx.x, boxY, boxWidth, boxHeight, PDF_CARD_RADIUS)
+      .lineWidth(1)
+      .fillAndStroke('#ffffff', PDF_COLORS.gridAccentBorder);
+    doc
+      .font(PDF_FONT_BOLD)
+      .fontSize(BOX_TITLE_FONT_SIZE)
+      .fillColor(PDF_COLORS.added)
+      .text(summary.title, ctx.x + BOX_PADDING, boxY + BOX_PADDING, {
+        width: boxWidth - BOX_PADDING * 2,
+      });
+
+    const metaY = boxY + BOX_PADDING + titleHeight + VACANCY_CREATION_TITLE_GAP;
+    const metaTextY = metaY + (metaRowHeight - metaLineHeight) / 2;
+    const displayName = entry.isSystem ? PDF_SYSTEM_LABEL : entry.attribution;
+    let cursorX = ctx.x + BOX_PADDING;
+
+    renderPersonIcon(
+      doc,
+      cursorX,
+      metaY + (metaRowHeight - VACANCY_CREATION_META_FONT_SIZE) / 2,
+      VACANCY_CREATION_META_FONT_SIZE,
+      PDF_COLORS.muted
+    );
+    cursorX += VACANCY_CREATION_META_FONT_SIZE + VACANCY_CREATION_META_GAP;
+
+    doc
+      .font(PDF_FONT_MEDIUM)
+      .fontSize(VACANCY_CREATION_META_FONT_SIZE)
+      .fillColor(PDF_COLORS.muted)
+      .text(PDF_LABELS.createdBy, cursorX, metaTextY, { lineBreak: false });
+    cursorX +=
+      doc.widthOfString(PDF_LABELS.createdBy) + VACANCY_CREATION_META_GAP;
+
+    doc
+      .circle(
+        cursorX + DOT_DIAMETER / 2,
+        metaY + metaRowHeight / 2,
+        DOT_DIAMETER / 2
+      )
+      .fillColor(PDF_COLORS.muted)
+      .fill();
+    cursorX += DOT_DIAMETER + VACANCY_CREATION_META_GAP;
+
+    renderAvatar(
+      doc,
+      cursorX,
+      metaY + (metaRowHeight - VACANCY_CREATION_AVATAR_DIAMETER) / 2,
+      VACANCY_CREATION_AVATAR_DIAMETER,
+      displayName,
+      entry.isSystem
+    );
+    cursorX += VACANCY_CREATION_AVATAR_DIAMETER + VACANCY_CREATION_META_GAP;
+
+    doc
+      .font(PDF_FONT_MEDIUM)
+      .fontSize(VACANCY_CREATION_META_FONT_SIZE)
+      .fillColor(PDF_COLORS.heading)
+      .text(displayName, cursorX, metaTextY, { lineBreak: false });
+
+    if (isScheduled) {
+      cursorX += doc.widthOfString(displayName) + VACANCY_CREATION_META_GAP;
+      doc
+        .circle(
+          cursorX + DOT_DIAMETER / 2,
+          metaY + metaRowHeight / 2,
+          DOT_DIAMETER / 2
+        )
+        .fillColor(PDF_COLORS.muted)
+        .fill();
+      cursorX += DOT_DIAMETER + VACANCY_CREATION_META_GAP;
+
+      doc
+        .font(PDF_FONT_MEDIUM)
+        .fontSize(VACANCY_CREATION_META_FONT_SIZE)
+        .fillColor(PDF_COLORS.muted)
+        .text(
+          PDF_LABELS.willGoLiveOn(
+            formatChangeValue(summary.scheduleDate ?? '')
+          ),
+          cursorX,
+          metaTextY,
+          { lineBreak: false }
+        );
+    }
+  }
+
+  return headerHeight + SUMMARY_TO_SCALAR_GAP + boxHeight;
 };
 
 /** A FIELD_VALUE_ADDED/REMOVED/UPDATED change — `renderChange`'s default
@@ -809,13 +1287,16 @@ const renderFieldValueChange = (
   change: VacancyVersionHistoryChange,
   y: number
 ): number => {
-  const isRemoved = change.changeType === 'FIELD_VALUE_REMOVED';
+  const variant = resolveChangeVariant(change);
+  const isRemoved = variant === 'removed';
   const accent = isRemoved ? PDF_COLORS.removed : PDF_COLORS.added;
   const borderColor = isRemoved
     ? PDF_COLORS.removed
     : PDF_COLORS.gridAccentBorder;
   // A removal describes what went away, so its values live on oldValue;
-  // additions and updates describe the resulting state on newValue.
+  // additions and updates describe the resulting state on newValue. This
+  // also covers the "UPDATED with newValue: null" effective-removal case
+  // resolveChangeVariant() detects — its value lives on oldValue too.
   const value = isRemoved ? change.oldValue : change.newValue;
 
   if (shouldRenderAsGrid(value)) {
@@ -823,8 +1304,8 @@ const renderFieldValueChange = (
       ctx,
       y,
       change.sectionName,
-      summaryVerbFor(change),
-      summaryDetailFor(change, value.length),
+      summaryVerbFor(variant),
+      summaryDetailFor(change.fieldName, value.length, variant),
       accent
     );
     height += SUMMARY_TO_MULTI_GAP;
@@ -858,7 +1339,7 @@ const renderFieldValueChange = (
     ctx,
     y,
     change.sectionName,
-    summaryVerbFor(change),
+    summaryVerbFor(variant),
     change.fieldName,
     accent
   );
@@ -890,9 +1371,16 @@ const renderFieldValueChange = (
  * if/ternary inside a switch case. */
 const renderChange = (
   ctx: ContentCtx,
-  change: VacancyVersionHistoryChange,
+  entry: VersionHistoryEntry,
   y: number
 ): number => {
+  const { change } = entry;
+  // Detected by fieldName, not changeType (it's a plain FIELD_VALUE_UPDATED
+  // — see isDataTakenFromCandidateChange's own comment), so it has to be
+  // checked before the changeType switch rather than as one of its cases.
+  if (isDataTakenFromCandidateChange(change)) {
+    return renderDataTakenFromCandidateChange(ctx, change, y);
+  }
   switch (change.changeType) {
     case 'STATUS_CHANGED':
       return renderInlineDiff(
@@ -903,7 +1391,11 @@ const renderChange = (
         { kind: 'status', status: getSingleScalar(change.newValue) ?? '' }
       );
     case 'VACANCY_CREATED':
-      return renderVacancyCreatedChange(ctx, change, y);
+      return entry.vacancyCreationSummary
+        ? renderVacancyCreationSummaryCard(ctx, entry, y)
+        : renderVacancyCreatedChange(ctx, change, y);
+    case 'SECTION_ENABLED':
+      return renderSectionToggleChange(ctx, change, y);
     default:
       return renderFieldValueChange(ctx, change, y);
   }
@@ -989,28 +1481,19 @@ const renderAvatar = (
     });
 };
 
-/**
- * The left version list (Figma node 4229:229403): each row sets the version
- * number large with the uppercase date right-aligned beside it, and the
- * updater's avatar + name beneath. The downloaded/selected version's row
- * takes the teal highlight and tints its number.
- */
-const renderPdfSidebar = (
-  doc: PDFKit.PDFDocument,
-  x: number,
-  y: number,
-  width: number,
-  versions: VacancyVersionHistoryVersion[],
-  selectedVersionNumber: number | undefined,
-  createdBy: string
-): number => {
-  let rowY = y;
-  const innerWidth = width - PDF_SIDEBAR_ROW_PADDING_X * 2;
+type SidebarRowMetrics = {
+  rowHeight: number;
+  versionHeight: number;
+  metaHeight: number;
+  actorRowHeight: number;
+};
 
-  // Every row is the same fixed height (derived from font metrics alone, not
-  // from any row's own text) — computed once, up front, rather than inside
-  // the loop below, since it's also needed here to work out how many rows
-  // actually fit before drawing anything.
+// Every row is the same fixed height (derived from font metrics alone, not
+// from any row's own text) — measured once and reused for every page's worth
+// of rows, rather than re-measured per page.
+const measureSidebarRowMetrics = (
+  doc: PDFKit.PDFDocument
+): SidebarRowMetrics => {
   doc.font(PDF_FONT_BOLD).fontSize(PDF_SIDEBAR_VERSION_FONT_SIZE);
   const versionHeight = doc.currentLineHeight(true);
   // The date and actor-name text are font-medium on the page, not
@@ -1023,54 +1506,45 @@ const renderPdfSidebar = (
     versionHeight +
     SIDEBAR_ROW_TEXT_GAP +
     actorRowHeight;
+  return { rowHeight, versionHeight, metaHeight, actorRowHeight };
+};
 
-  // Once a row would cross the page's printable bottom, every further
-  // .text()/.rect() call in this loop would pass pdfkit a y position beyond
-  // page.maxY() — which pdfkit "fixes" by silently inserting a brand-new
-  // page PER CALL (the same trap the footer loop below works around by
-  // zeroing the bottom margin), scattering sidebar fragments across several
-  // near-blank pages and leaving the Activity Log content to render on
-  // whatever page pdfkit's pointer landed on by the time that code runs —
-  // reported live: a vacancy with 6 versions pushed its Activity Log entry
-  // onto page 5 of 5 instead of page 1. Capping how many rows are drawn (the
-  // sidebar is page-1-only by design, see the two-column layout comment
-  // above) keeps that from ever happening.
+/**
+ * The left version list (Figma node 4229:229403): each row sets the version
+ * number large with the uppercase date right-aligned beside it, and the
+ * updater's avatar + name beneath. The downloaded/selected version's row
+ * takes the teal highlight and tints its number.
+ *
+ * Draws as many rows as fit on the CURRENT page starting at `y` — never
+ * more, so a row's absolute y can never cross page.maxY() and trigger
+ * pdfkit's own implicit-addPage-per-call behavior (which would otherwise
+ * scatter sidebar fragments across several near-blank pages — the same trap
+ * the footer loop works around by zeroing the bottom margin). It does NOT
+ * add pages itself or drop any version: the on-screen sidebar lists every
+ * version (a plain scrollable list, no cap), and a downloaded PDF showing
+ * fewer versions than the page is a real data mismatch, not an acceptable
+ * simplification — the caller is responsible for drawing whatever this
+ * function doesn't fit onto a further page (see the loop in
+ * buildVersionHistoryDocument that keeps calling this across pages, adding
+ * new ones only if the version list outlasts the Activity Log's own).
+ * Returns how many versions (from the front of the list) it drew.
+ */
+const renderSidebarRowsOnCurrentPage = (
+  doc: PDFKit.PDFDocument,
+  { x, y, width }: { x: number; y: number; width: number },
+  versions: VacancyVersionHistoryVersion[],
+  selectedVersionNumber: number | undefined,
+  createdBy: string,
+  metrics: SidebarRowMetrics
+): number => {
+  const { rowHeight, versionHeight, metaHeight, actorRowHeight } = metrics;
+  const innerWidth = width - PDF_SIDEBAR_ROW_PADDING_X * 2;
   const maxRowBottom = doc.page.height - doc.page.margins.bottom;
-  doc.font(PDF_FONT_MEDIUM).fontSize(PDF_SIDEBAR_META_FONT_SIZE);
-  const noteLineHeight = doc.currentLineHeight(true);
-  const noteReservedHeight = PDF_SIDEBAR_ROW_PADDING_Y + noteLineHeight;
-  const naiveMaxRowCount = Math.max(
-    0,
-    Math.floor((maxRowBottom - y) / rowHeight)
-  );
-  // Whenever the list won't fully fit, reserve room for the "+N more" note
-  // BEFORE deciding how many rows to draw — otherwise the leftover space
-  // after the last row that does fit can easily be too small for the note
-  // itself, silently dropping the very thing meant to flag the drop.
-  const needsTruncationNote = naiveMaxRowCount < versions.length;
-  const maxRowCount = needsTruncationNote
-    ? Math.max(
-        0,
-        Math.floor((maxRowBottom - y - noteReservedHeight) / rowHeight)
-      )
-    : naiveMaxRowCount;
+  const maxRowCount = Math.max(0, Math.floor((maxRowBottom - y) / rowHeight));
+  const pageVersions = versions.slice(0, maxRowCount);
 
-  // A version list too long to fit can still cut off the very version this
-  // PDF was downloaded FOR — e.g. selecting an old version once enough newer
-  // ones exist to fill the page. If the naive "first N by recency" cut would
-  // drop it, swap the last slot for it instead: the display is no longer
-  // perfectly contiguous by version number, but the selected row — the
-  // whole reason this sidebar highlights anything — is never silently
-  // omitted.
-  const selectedIndex = versions.findIndex(
-    v => v.versionNumber === selectedVersionNumber
-  );
-  const visibleVersions =
-    selectedIndex === -1 || selectedIndex < maxRowCount || maxRowCount === 0
-      ? versions.slice(0, maxRowCount)
-      : [...versions.slice(0, maxRowCount - 1), versions[selectedIndex]];
-
-  visibleVersions.forEach(version => {
+  let rowY = y;
+  pageVersions.forEach(version => {
     const isSelected = version.versionNumber === selectedVersionNumber;
     const actor = resolveVersionActor(version, createdBy);
     const isSystem = isSystemActor(actor);
@@ -1140,27 +1614,7 @@ const renderPdfSidebar = (
     rowY += rowHeight;
   });
 
-  // Truncated, rather than silently dropped: a version list long enough to
-  // overflow page 1 still says so, instead of just stopping with no sign
-  // anything is missing (a PDF sidebar can't scroll like the page's does).
-  // Space for this was reserved above BEFORE any rows were drawn, so it's
-  // safe to assume it fits — the bounds check is just a defensive fallback.
-  const omittedCount = versions.length - visibleVersions.length;
-  if (omittedCount > 0) {
-    const noteText = `+${omittedCount} more version${omittedCount === 1 ? '' : 's'}`;
-    doc.font(PDF_FONT_MEDIUM).fontSize(PDF_SIDEBAR_META_FONT_SIZE);
-    const noteY = rowY + PDF_SIDEBAR_ROW_PADDING_Y;
-    if (noteY + noteLineHeight <= maxRowBottom) {
-      doc
-        .fillColor(PDF_COLORS.muted)
-        .text(noteText, x + PDF_SIDEBAR_ROW_PADDING_X, noteY, {
-          lineBreak: false,
-        });
-      rowY = noteY + noteLineHeight + PDF_SIDEBAR_ROW_PADDING_Y;
-    }
-  }
-
-  return rowY;
+  return pageVersions.length;
 };
 
 // Header icons matching the Figma "Version History" screen's vuesax icon set
@@ -1304,8 +1758,7 @@ const renderEntry = (
     width: width - PDF_CARD_PADDING * 2,
     dry: true,
   };
-  const cardHeight =
-    renderChange(cardCtx, entry.change, 0) + PDF_CARD_PADDING * 2;
+  const cardHeight = renderChange(cardCtx, entry, 0) + PDF_CARD_PADDING * 2;
 
   renderAvatar(
     doc,
@@ -1356,11 +1809,7 @@ const renderEntry = (
     .lineWidth(1)
     .fillAndStroke(PDF_COLORS.cardBackground, PDF_COLORS.border);
 
-  renderChange(
-    { ...cardCtx, dry: false },
-    entry.change,
-    cardY + PDF_CARD_PADDING
-  );
+  renderChange({ ...cardCtx, dry: false }, entry, cardY + PDF_CARD_PADDING);
 
   return attributionHeight + ATTRIBUTION_CARD_GAP + cardHeight;
 };
@@ -1569,23 +2018,13 @@ const buildVersionHistoryDocument = (
   const sidebarWidth = rowWidth * PDF_SIDEBAR_WIDTH_RATIO;
 
   const columnTopY = doc.y;
-  renderPdfSidebar(
-    doc,
-    0,
-    columnTopY,
-    sidebarWidth,
-    versions,
-    selectedVersion?.versionNumber,
-    data.createdBy
-  );
 
   // The rule marks the sidebar's edge (drawn per page in the footer pass
-  // below so continuation pages don't lose it — the sidebar itself is only
-  // listed on page 1). The content panel has no separate "column gap" on the
-  // page — it's a plain adjacent flex sibling with its own p-7 inset on ALL
-  // sides (left AND top, not just left), which PDF_CONTENT_PANEL_PADDING
-  // mirrors here. The sidebar needs no equivalent top offset — it has no
-  // wrapping p-7 of its own, only per-row px-7/py-5.
+  // below so continuation pages don't lose it). The content panel has no
+  // separate "column gap" on the page — it's a plain adjacent flex sibling
+  // with its own p-7 inset on ALL sides (left AND top, not just left), which
+  // PDF_CONTENT_PANEL_PADDING mirrors here. The sidebar needs no equivalent
+  // top offset — it has no wrapping p-7 of its own, only per-row px-7/py-5.
   const dividerX = sidebarWidth;
   const contentX = sidebarWidth + PDF_CONTENT_PANEL_PADDING;
   const contentY = columnTopY + PDF_CONTENT_PANEL_PADDING;
@@ -1603,13 +2042,28 @@ const buildVersionHistoryDocument = (
   const entries = resolveVersionEntries(selectedVersion, data.createdBy);
 
   if (entries.length === 0) {
+    // Matches the on-screen empty state (TemplateEmptyStateMessage via
+    // versionHistory.activityLog.emptyState.*) — a title + description, not
+    // the single plain sentence this used to be. No illustration image: the
+    // PDF already substitutes text/vectors for other on-screen imagery (e.g.
+    // the System avatar is a drawn monitor icon, not a photo).
     doc
-      .font(PDF_FONT_SEMIBOLD)
-      .fontSize(SUMMARY_FONT_SIZE)
-      .fillColor(PDF_COLORS.muted)
-      .text(PDF_LABELS.noChanges, contentX, cursorY, {
+      .font(PDF_FONT_BOLD)
+      .fontSize(EMPTY_STATE_TITLE_FONT_SIZE)
+      .fillColor(PDF_COLORS.heading)
+      .text(PDF_LABELS.noActivityTitle, contentX, cursorY, {
         width: mainContentWidth,
       });
+    doc
+      .font(PDF_FONT_SEMIBOLD)
+      .fontSize(EMPTY_STATE_DESCRIPTION_FONT_SIZE)
+      .fillColor(PDF_COLORS.body)
+      .text(
+        PDF_LABELS.noActivityDescription,
+        contentX,
+        doc.y + EMPTY_STATE_TITLE_GAP,
+        { width: mainContentWidth }
+      );
   }
 
   entries.forEach(entry => {
@@ -1632,7 +2086,7 @@ const buildVersionHistoryDocument = (
     const entryHeight =
       attributionHeight +
       ATTRIBUTION_CARD_GAP +
-      renderChange(probe, entry.change, 0) +
+      renderChange(probe, entry, 0) +
       PDF_CARD_PADDING * 2;
 
     if (cursorY + entryHeight > doc.page.height - doc.page.margins.bottom) {
@@ -1644,6 +2098,53 @@ const buildVersionHistoryDocument = (
       renderEntry(doc, entry, contentX, mainContentWidth, cursorY) +
       PDF_ENTRY_GAP;
   });
+
+  // Sidebar rows are drawn AFTER the Activity Log (which may have already
+  // paginated) rather than before it, so every version gets a page to land
+  // on: walk the pages the Activity Log already created first, then add
+  // further pages only if the version list itself outlasts those — never
+  // drop a version the way a fixed "page-1-only, +N more" cap used to (the
+  // on-screen sidebar is a plain scrollable list with no cap at all, so a
+  // downloaded PDF listing fewer versions than the page is a real data
+  // mismatch, not an acceptable simplification).
+  const sidebarMetrics = measureSidebarRowMetrics(doc);
+  let remainingVersions = versions;
+  const activityLogRange = doc.bufferedPageRange();
+  for (
+    let i = activityLogRange.start;
+    i < activityLogRange.start + activityLogRange.count &&
+    remainingVersions.length > 0;
+    i++
+  ) {
+    doc.switchToPage(i);
+    const pageTop =
+      i === activityLogRange.start ? columnTopY : doc.page.margins.top;
+    const drawnCount = renderSidebarRowsOnCurrentPage(
+      doc,
+      { x: 0, y: pageTop, width: sidebarWidth },
+      remainingVersions,
+      selectedVersion?.versionNumber,
+      data.createdBy,
+      sidebarMetrics
+    );
+    remainingVersions = remainingVersions.slice(drawnCount);
+  }
+  while (remainingVersions.length > 0) {
+    doc.addPage();
+    const drawnCount = renderSidebarRowsOnCurrentPage(
+      doc,
+      { x: 0, y: doc.page.margins.top, width: sidebarWidth },
+      remainingVersions,
+      selectedVersion?.versionNumber,
+      data.createdBy,
+      sidebarMetrics
+    );
+    // A single row that can never fit even on a fresh page shouldn't happen
+    // at any realistic page size/font scale, but bail rather than spin
+    // forever if it somehow did.
+    if (drawnCount === 0) break;
+    remainingVersions = remainingVersions.slice(drawnCount);
+  }
 
   const range = doc.bufferedPageRange();
   for (let i = range.start; i < range.start + range.count; i++) {

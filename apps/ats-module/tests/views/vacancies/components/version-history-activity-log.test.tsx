@@ -130,11 +130,16 @@ describe('VersionHistoryActivityLog', () => {
     expect(screen.getAllByText('versionHistory.systemLabel')).toHaveLength(1);
   });
 
-  it('attributes a status change to "System" even when the API files it under changes.user', () => {
-    // A vacancy going Live/On Hold is always the system's own doing, never a
-    // field the recruiter typed — but the API reports STATUS_CHANGED under
-    // changes.user on versions where a person also made edits, which would
-    // otherwise label the transition with that person's email.
+  it('attributes a status change to the real actor when the API files it under changes.user', () => {
+    // Regression test: this app has real manual status actions
+    // (VacancyOnholdUpdateDialog, VacancyToggleStatusDialog), so a
+    // STATUS_CHANGED filed under changes.user is a genuine deliberate action
+    // by whoever performed it, not an automatic side effect — a prior round
+    // force-attributed EVERY STATUS_CHANGED to "System" regardless of which
+    // array it arrived in, which hid the real person who put a vacancy on
+    // hold. `changes.user` vs `changes.system` is the API's own signal for
+    // "a person did this" vs "this was automatic," trusted the same way for
+    // every change type, STATUS_CHANGED included.
     render(
       <VersionHistoryActivityLog
         createdBy={CREATED_BY}
@@ -166,9 +171,45 @@ describe('VersionHistoryActivityLog', () => {
       />
     );
 
-    // The status transition reads as "System"...
+    // Both the status transition AND the field edit attribute to the same
+    // real actor — neither is forced to "System".
+    expect(
+      screen.queryByText('versionHistory.systemLabel')
+    ).not.toBeInTheDocument();
+    expect(screen.getAllByText('ruvin@oxoholdings.group')).toHaveLength(2);
+  });
+
+  it('still attributes a status change to "System" when the API files it under changes.system', () => {
+    // The array split still matters — an automatic side-effect transition
+    // (e.g. a scheduled auto-publish) stays "System" regardless of the
+    // version's own updatedBy.
+    render(
+      <VersionHistoryActivityLog
+        createdBy={CREATED_BY}
+        version={{
+          versionNumber: 2,
+          updatedAt: '2026-07-07T20:55:43.071146',
+          updatedBy: 'ruvin@oxoholdings.group',
+          profilePicture: null,
+          changes: {
+            user: [],
+            system: [
+              {
+                changeType: 'STATUS_CHANGED',
+                sectionName: 'Vacancy',
+                fieldName: 'Status',
+                oldValue: ['LIVE'],
+                newValue: ['ONHOLD'],
+              },
+            ],
+          },
+        }}
+      />
+    );
+
     expect(screen.getByText('versionHistory.systemLabel')).toBeInTheDocument();
-    // ...while the genuine field edit on the same version keeps the person.
-    expect(screen.getByText('ruvin@oxoholdings.group')).toBeInTheDocument();
+    expect(
+      screen.queryByText('ruvin@oxoholdings.group')
+    ).not.toBeInTheDocument();
   });
 });

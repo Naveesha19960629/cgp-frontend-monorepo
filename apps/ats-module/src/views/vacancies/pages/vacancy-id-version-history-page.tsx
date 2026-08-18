@@ -128,7 +128,7 @@ export default function VacancyIdVersionHistoryPage() {
   }
 
   return (
-    <section className="flex min-h-0 flex-1 flex-col overflow-hidden">
+    <section className="flex h-full flex-col overflow-hidden">
       {/* Figma BFyxZ6AzbRZgVvjLzRFwv3, node 4229:229200: gray/100 fill with a
           neutral/200 bottom rule, 28px inset all round, a 28px gap under the
           breadcrumb and a 16px gap under the title. Note Figma reports
@@ -140,93 +140,95 @@ export default function VacancyIdVersionHistoryPage() {
           strokes; browsers draw a crisp full-opacity line) — confirmed
           against a live render, not a token mismatch — so the opacity is
           dialed back to read as the same subtle hairline. */}
-      <header className="flex items-start justify-between gap-4 border-b border-[#e5e5e5]/60 bg-[#f8fafc] px-7 py-7">
-        <div className="flex flex-col">
-          {/* The back chevron matches Figma's breadcrumb (node 4229:229204)
-              — restored on the page only, per explicit request; the PDF's
-              breadcrumb deliberately stays chevron-less (it's not an
-              interactive control there). */}
-          <button
-            type="button"
-            aria-label={t('common.back')}
-            onClick={handleBack}
-            className="flex cursor-pointer items-center gap-2 self-start rounded-md text-2xl leading-8 font-bold tracking-[-0.144px] text-[#0f172a] focus-visible:ring-2 focus-visible:ring-slate-200 focus-visible:outline-none"
-          >
-            <ChevronLeft className="size-6 shrink-0" />
-            <span>{t('versionHistory.heading')}</span>
-          </button>
-          {versionHistoryData && (
-            <>
-              <p className="mt-7 text-[36px] leading-10 font-bold tracking-[-0.27px] text-[#0f172a]">
-                {versionHistoryData.vacancyTitle}
-              </p>
-              <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 text-base leading-6 font-semibold text-[#475569]">
-                <span className="flex items-center gap-1">
-                  <img
-                    src={META_ICONS.calendar}
-                    alt=""
-                    width={META_ICON_SIZE}
-                    height={META_ICON_SIZE}
-                    className="shrink-0"
-                  />
-                  {t('versionHistory.meta.created', {
-                    date: formatDisplayDate(versionHistoryData.createdAt),
-                  })}
-                </span>
-                <span className="flex items-center gap-1">
-                  <img
-                    src={META_ICONS.clock}
-                    alt=""
-                    width={META_ICON_SIZE}
-                    height={META_ICON_SIZE}
-                    className="shrink-0"
-                  />
-                  {t('versionHistory.meta.lastUpdated', {
-                    date: formatDisplayDate(versionHistoryData.lastUpdatedAt),
-                  })}
-                </span>
-                <span className="flex items-center gap-1">
-                  <img
-                    src={META_ICONS.user}
-                    alt=""
-                    width={META_ICON_SIZE}
-                    height={META_ICON_SIZE}
-                    className="shrink-0"
-                  />
-                  {versionHistoryData.createdBy}
-                </span>
-                <span className="flex items-center gap-1">
-                  <img
-                    src={META_ICONS.versions}
-                    alt=""
-                    width={META_ICON_SIZE}
-                    height={META_ICON_SIZE}
-                    className="shrink-0"
-                  />
-                  {t('versionHistory.meta.versionsCount', {
-                    count: versionHistoryData.totalVersions,
-                  })}
-                </span>
-              </div>
-            </>
-          )}
-        </div>
+      {!isLoading && (
+        <header className="flex items-start justify-between gap-4 border-b border-[#e5e5e5]/60 bg-[#f8fafc] px-7 py-7">
+          <div className="flex flex-col">
+            {/* The back chevron matches Figma's breadcrumb (node 4229:229204)
+                — restored on the page only, per explicit request; the PDF's
+                breadcrumb deliberately stays chevron-less (it's not an
+                interactive control there). */}
+            <button
+              type="button"
+              aria-label={t('common.back')}
+              onClick={handleBack}
+              className="flex cursor-pointer items-center gap-2 self-start rounded-md text-2xl leading-8 font-bold tracking-[-0.144px] text-[#0f172a] focus-visible:ring-2 focus-visible:ring-slate-200 focus-visible:outline-none"
+            >
+              <ChevronLeft className="size-6 shrink-0" />
+              <span>{t('versionHistory.heading')}</span>
+            </button>
+            {versionHistoryData && (
+              <>
+                <p className="mt-7 text-[36px] leading-10 font-bold tracking-[-0.27px] text-[#0f172a]">
+                  {versionHistoryData.vacancyTitle}
+                </p>
+                <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 text-base leading-6 font-semibold text-[#475569]">
+                  <span className="flex items-center gap-1">
+                    <img
+                      src={META_ICONS.calendar}
+                      alt=""
+                      width={META_ICON_SIZE}
+                      height={META_ICON_SIZE}
+                      className="shrink-0"
+                    />
+                    {t('versionHistory.meta.created', {
+                      date: formatDisplayDate(versionHistoryData.createdAt),
+                    })}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <img
+                      src={META_ICONS.clock}
+                      alt=""
+                      width={META_ICON_SIZE}
+                      height={META_ICON_SIZE}
+                      className="shrink-0"
+                    />
+                    {t('versionHistory.meta.lastUpdated', {
+                      date: formatDisplayDate(versionHistoryData.lastUpdatedAt),
+                    })}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <img
+                      src={META_ICONS.user}
+                      alt=""
+                      width={META_ICON_SIZE}
+                      height={META_ICON_SIZE}
+                      className="shrink-0"
+                    />
+                    {versionHistoryData.createdBy}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <img
+                      src={META_ICONS.versions}
+                      alt=""
+                      width={META_ICON_SIZE}
+                      height={META_ICON_SIZE}
+                      className="shrink-0"
+                    />
+                    {t('versionHistory.meta.versionsCount', {
+                      count: versionHistoryData.totalVersions,
+                    })}
+                  </span>
+                </div>
+              </>
+            )}
+          </div>
 
-        <Button
-          size="icon"
-          variant="outline"
-          className="size-11 rounded-lg border-slate-300"
-          onClick={() => void handleDownload()}
-          disabled={isDownloading || !selectedVersion}
-          aria-label={t('versionHistory.download')}
-        >
-          {isDownloading ? (
-            <Spinner className="size-5 text-slate-500" />
-          ) : (
-            <Download className="size-5! text-slate-500" />
-          )}
-        </Button>
-      </header>
+          <Button
+            size="icon"
+            variant="outline"
+            className="size-11 rounded-lg border-slate-300"
+            onClick={() => void handleDownload()}
+            disabled={isDownloading || !selectedVersion}
+            aria-label={t('versionHistory.download')}
+          >
+            {isDownloading ? (
+              <Spinner className="size-5 text-slate-500" />
+            ) : (
+              <Download className="size-5! text-slate-500" />
+            )}
+          </Button>
+        </header>
+      )}
 
       {/* VacancyLoadingState sizes itself with h-full and no width — this
           resolves correctly as a plain flex-grow block (matching every other

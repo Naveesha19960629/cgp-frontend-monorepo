@@ -1,16 +1,19 @@
-import { ArrowRight, Monitor } from 'lucide-react';
+import { ArrowRight, Monitor, User } from 'lucide-react';
 
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import VersionHistoryChangeSummary from '@/views/vacancies/components/version-history-change-summary';
+import VersionHistoryCheckboxIndicator from '@/views/vacancies/components/version-history-checkbox-indicator';
 import VersionHistoryChipList from '@/views/vacancies/components/version-history-chip-list';
 import VersionHistoryScalarDiff from '@/views/vacancies/components/version-history-scalar-diff';
 import VersionHistoryStatusPill from '@/views/vacancies/components/version-history-status-pill';
+import VersionHistoryToggleSwitch from '@/views/vacancies/components/version-history-toggle-switch';
 import VersionHistoryValueBoxGrid from '@/views/vacancies/components/version-history-value-box-grid';
 import type {
   VacancyVersionHistoryChange,
   VersionHistoryChangeEntryProps,
+  VersionHistoryEntry,
   VersionHistoryValueBoxGridProps,
 } from '@/views/vacancies/types';
 import {
@@ -18,7 +21,9 @@ import {
   formatIsoDateForDisplay,
   formatIsoTimeForDisplay,
   getSingleScalar,
+  isDataTakenFromCandidateChange,
   isObjectArray,
+  parseBooleanFlag,
   pluralizeFieldName,
   resolveChangeVariant,
   resolveScalarChangeLabelKey,
@@ -203,11 +208,165 @@ function CreatedChange({
   );
 }
 
-function ChangeBody({
+/**
+ * All of a version's VACANCY_CREATED sub-fields combined into one card
+ * (Figma nodes 4229:230488 "Scheduled for publishing" / 4229:230451 "Saved
+ * as {status}") instead of one card per field — only rendered when
+ * `entry.vacancyCreationSummary` is present (see resolveVersionEntries() /
+ * buildVacancyCreationSummary() in version-history-helpers.ts); otherwise
+ * `ChangeBody` falls back to the plain per-field `CreatedChange` above.
+ */
+function VacancyCreationSummaryCard({
+  entry,
+}: Readonly<{ entry: VersionHistoryEntry }>) {
+  const { t } = useTranslation('ats');
+  const summary = entry.vacancyCreationSummary;
+  if (!summary) return null;
+  const isScheduled = summary.scheduleDate !== null;
+
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex flex-wrap items-center gap-2 text-sm font-bold">
+        <span className="text-[#047857]">
+          {t('versionHistory.changeTypes.vacancyCreated')}
+        </span>
+        <span className="text-[#334155]">
+          {isScheduled
+            ? `- ${t('versionHistory.changeTypes.scheduledForPublishing')}`
+            : `- ${t('versionHistory.changeTypes.savedAs')}`}
+        </span>
+        {!isScheduled && <VersionHistoryStatusPill status={summary.status} />}
+      </div>
+      <div className="rounded-lg border border-[#059669] bg-white p-7">
+        <p className="text-base font-bold wrap-break-word text-[#047857]">
+          {summary.title}
+        </p>
+        <div className="mt-1 flex flex-wrap items-center gap-2 text-sm font-medium text-[#475569]">
+          <span className="flex items-center gap-1">
+            <User className="size-5" />
+            {t('versionHistory.changeTypes.createdBy')}
+          </span>
+          <span aria-hidden className="size-1.5 rounded-full bg-current" />
+          <span className="flex items-center gap-2 text-[#0f172a]">
+            <Avatar className="size-5">
+              {entry.profilePicture && (
+                <AvatarImage src={entry.profilePicture} alt="" />
+              )}
+              <AvatarFallback className="bg-[#0f172a] text-[10px] font-bold text-white">
+                {entry.attribution.slice(0, 1).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            {entry.attribution}
+          </span>
+          {isScheduled && (
+            <>
+              <span aria-hidden className="size-1.5 rounded-full bg-current" />
+              <span>
+                {t('versionHistory.changeTypes.willGoLiveOn', {
+                  date: formatChangeValue(summary.scheduleDate ?? ''),
+                })}
+              </span>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * A section's enabled/disabled toggle (Figma node 4229:229289) — a header
+ * line ("Section Enabled - {sectionName}", verb-first, no "Section Name -"
+ * prefix or divider — a different shape from every other change type's
+ * header) plus a description sentence and the toggle switch itself,
+ * right-aligned. `fieldName` is always the literal "Section Status" on this
+ * changeType (confirmed from a real API response), so it carries no display
+ * value of its own; only `newValue`'s boolean flag and `sectionName` do.
+ */
+function SectionToggleChange({
   change,
 }: Readonly<{ change: VacancyVersionHistoryChange }>) {
   const { t } = useTranslation('ats');
-  const variant = resolveChangeVariant(change.changeType);
+  const isEnabled = parseBooleanFlag(getSingleScalar(change.newValue));
+
+  return (
+    <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-col gap-1">
+        <p className="text-base font-bold wrap-break-word">
+          <span className={isEnabled ? 'text-[#047857]' : 'text-[#475569]'}>
+            {t(
+              isEnabled
+                ? 'versionHistory.changeTypes.sectionEnabled'
+                : 'versionHistory.changeTypes.sectionDisabled'
+            )}
+          </span>
+          <span className="text-[#334155]">{` - ${change.sectionName}`}</span>
+        </p>
+        <p className="text-sm font-medium text-[#475569]">
+          {t(
+            isEnabled
+              ? 'versionHistory.changeTypes.sectionEnabledDescription'
+              : 'versionHistory.changeTypes.sectionDisabledDescription'
+          )}
+        </p>
+      </div>
+      <VersionHistoryToggleSwitch isOn={isEnabled} />
+    </div>
+  );
+}
+
+/**
+ * "Data Taken From Candidate" — Figma's "'No manual input required'
+ * Enabled/Disabled" checkbox (node 6536:91081) — same header/description/
+ * indicator shape as SectionToggleChange above, but a checkbox instead of a
+ * toggle switch, and detected by `fieldName` rather than `changeType` since
+ * this arrives as a plain FIELD_VALUE_UPDATED (confirmed from a real API
+ * response), not its own dedicated changeType the way SECTION_ENABLED is.
+ */
+function DataTakenFromCandidateChange({
+  change,
+}: Readonly<{ change: VacancyVersionHistoryChange }>) {
+  const { t } = useTranslation('ats');
+  const isEnabled = parseBooleanFlag(getSingleScalar(change.newValue));
+
+  return (
+    <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-col gap-1">
+        <p className="text-base font-bold wrap-break-word">
+          <span className={isEnabled ? 'text-[#047857]' : 'text-[#475569]'}>
+            {t(
+              isEnabled
+                ? 'versionHistory.changeTypes.dataTakenFromCandidateEnabled'
+                : 'versionHistory.changeTypes.dataTakenFromCandidateDisabled'
+            )}
+          </span>
+          <span className="text-[#334155]">{` - ${change.sectionName}`}</span>
+        </p>
+        <p className="text-sm font-medium text-[#475569]">
+          {t(
+            isEnabled
+              ? 'versionHistory.changeTypes.dataTakenFromCandidateEnabledDescription'
+              : 'versionHistory.changeTypes.dataTakenFromCandidateDisabledDescription'
+          )}
+        </p>
+      </div>
+      <VersionHistoryCheckboxIndicator isChecked={isEnabled} />
+    </div>
+  );
+}
+
+function ChangeBody({ entry }: Readonly<{ entry: VersionHistoryEntry }>) {
+  const { t } = useTranslation('ats');
+  const { change, vacancyCreationSummary } = entry;
+  const variant = resolveChangeVariant(change);
+
+  if (change.changeType === 'SECTION_ENABLED') {
+    return <SectionToggleChange change={change} />;
+  }
+
+  if (isDataTakenFromCandidateChange(change)) {
+    return <DataTakenFromCandidateChange change={change} />;
+  }
 
   if (change.changeType === 'STATUS_CHANGED') {
     return (
@@ -229,7 +388,11 @@ function ChangeBody({
   }
 
   if (change.changeType === 'VACANCY_CREATED') {
-    return <CreatedChange change={change} />;
+    return vacancyCreationSummary ? (
+      <VacancyCreationSummaryCard entry={entry} />
+    ) : (
+      <CreatedChange change={change} />
+    );
   }
 
   // A removal describes what went away, so its values live on oldValue;
@@ -284,7 +447,7 @@ export default function VersionHistoryChangeEntry({
   entry,
 }: Readonly<VersionHistoryChangeEntryProps>) {
   const { t } = useTranslation('ats');
-  const { change, attribution, isSystem, updatedAt, profilePicture } = entry;
+  const { attribution, isSystem, updatedAt, profilePicture } = entry;
   const displayName = isSystem ? t('versionHistory.systemLabel') : attribution;
 
   return (
@@ -322,7 +485,7 @@ export default function VersionHistoryChangeEntry({
       </div>
       {/* Figma insets card content by 28px (node 4229:229311). */}
       <div className="rounded-lg border border-[#e5e5e5] bg-[#f8fafc] p-7">
-        <ChangeBody change={change} />
+        <ChangeBody entry={entry} />
       </div>
     </div>
   );

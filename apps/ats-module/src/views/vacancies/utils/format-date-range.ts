@@ -77,13 +77,48 @@ function formatVersionListDate(dateStr: string): string {
 }
 
 /**
+ * Some fields (e.g. an award/license's "Represented Organization", captured
+ * as one composite value rather than a real object-array item like School)
+ * arrive JSON-stringified — `{"organization":"OXO Labs","organizationLocation":
+ * "Colombo, Western Province, Sri Lanka"}` — instead of as a plain string.
+ * Rendered as-is that reads as raw JSON to the recruiter, so it is parsed and
+ * its values joined into one readable line ("OXO Labs, Colombo, Western
+ * Province, Sri Lanka"), in the same key order the API sent them. Returns
+ * null for anything that isn't a JSON *object* string (arrays/primitives —
+ * and non-JSON text, via the try/catch) so the caller's own handling for
+ * those is unaffected.
+ */
+function formatJsonObjectChangeValue(value: string): string | null {
+  if (!value.startsWith('{') || !value.endsWith('}')) return null;
+  try {
+    const parsed: unknown = JSON.parse(value);
+    if (
+      typeof parsed !== 'object' ||
+      parsed === null ||
+      Array.isArray(parsed)
+    ) {
+      return null;
+    }
+    const parts = Object.values(parsed)
+      .filter(part => part !== null && part !== undefined && part !== '')
+      .map(String);
+    return parts.length > 0 ? parts.join(', ') : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Present one version-history change value. The API hands these over as
  * opaque strings with no type hint, so date-shaped values are detected by
  * shape and formatted for display ("2026-07-07T20:07:10" -> "7th Jul 2026,
- * 8:07 PM"); anything else is passed through untouched.
+ * 8:07 PM"); JSON-object-shaped values are flattened to a readable line (see
+ * formatJsonObjectChangeValue); anything else is passed through untouched.
  */
 function formatChangeValue(value: string): string {
   const trimmed = value.trim();
+  const jsonFormatted = formatJsonObjectChangeValue(trimmed);
+  if (jsonFormatted !== null) return jsonFormatted;
   if (!ISO_DATE_LIKE_PATTERN.test(trimmed)) return value;
   const d = parseLocalDate(trimmed);
   if (!d) return value;
