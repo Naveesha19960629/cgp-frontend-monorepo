@@ -418,8 +418,7 @@
   "vacancies": {
     "title": "Vacancies",
     "stepBadge": {
-      "applied": "Applied",
-      "applicants": "Applicants"
+      "applied": "Applied"
     },
     "createVacancyButton": "Create Vacancy",
     "emptyState": {
@@ -492,7 +491,6 @@
     },
     "view": {
       "untitledVacancy": "Untitled Vacancy",
-      "applied": "Applied",
       "noDetails": {
         "title": "No Details Added",
         "description": "This section was enabled during vacancy setup, but no information has been added"

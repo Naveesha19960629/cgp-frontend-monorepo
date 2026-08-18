@@ -187,7 +187,10 @@ export default function PreferredLanguagesStep({
             {t('preferredLanguages.title')}
           </h2>
           {mode === 'edit' && vacancyStatus ? (
-            <VacancyStatusBadge status={vacancyStatus} />
+            <VacancyStatusBadge
+              status={vacancyStatus}
+              applicantCount={form.applicantCount}
+            />
           ) : null}
         </div>
         <Switch

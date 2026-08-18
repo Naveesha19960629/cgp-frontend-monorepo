@@ -1552,10 +1552,6 @@ type VacancyStatus = 'draft' | 'unpublished' | 'live' | 'expired' | 'on_hold';
 interface VacancyStatusBadgeProps {
   status: string;
   applicantCount?: number;
-  // How the applicant count is appended to the status label: 'applicants'
-  // renders "Live - 3 Applicants" (form steps / edit header), 'applied'
-  // renders "Live (3 Applied)" (View Vacancy header).
-  countFormat?: 'applicants' | 'applied';
 }
 
 interface JobRequirementApiPayload {

@@ -202,7 +202,10 @@ export default function PreferredIndustryStep({
             {t('preferredIndustries.title')}
           </h2>
           {mode === 'edit' && form.status ? (
-            <VacancyStatusBadge status={form.status} />
+            <VacancyStatusBadge
+              status={form.status}
+              applicantCount={form.applicantCount}
+            />
           ) : null}
         </div>
         <Switch

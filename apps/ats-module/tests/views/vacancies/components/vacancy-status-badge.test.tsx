@@ -42,34 +42,22 @@ describe('VacancyStatusBadge', () => {
     }
   );
 
-  it('appends the applicant count as "- N Applicants" by default', () => {
+  it('appends the applicant count as "(N Applied)"', () => {
     render(<VacancyStatusBadge status="LIVE" applicantCount={3} />);
     expect(screen.getByTestId('vacancy-live')).toHaveTextContent(
-      'vacancies.table.filter.statusOptions.live - 3 vacancies.stepBadge.applicants'
+      'vacancies.table.filter.statusOptions.live (3 vacancies.stepBadge.applied)'
     );
   });
 
-  it('appends the applicant count as "(N Applied)" for countFormat="applied"', () => {
-    render(
-      <VacancyStatusBadge
-        status="ONHOLD"
-        applicantCount={3}
-        countFormat="applied"
-      />
-    );
+  it('appends the applicant count as "(N Applied)" for on_hold statuses too', () => {
+    render(<VacancyStatusBadge status="ONHOLD" applicantCount={3} />);
     expect(screen.getByTestId('vacancy-on_hold')).toHaveTextContent(
-      'vacancies.table.filter.statusOptions.onHold (3 vacancies.view.applied)'
+      'vacancies.table.filter.statusOptions.onHold (3 vacancies.stepBadge.applied)'
     );
   });
 
-  it('omits the applicant count for draft regardless of countFormat', () => {
-    render(
-      <VacancyStatusBadge
-        status="DRAFT"
-        applicantCount={3}
-        countFormat="applied"
-      />
-    );
+  it('omits the applicant count for draft', () => {
+    render(<VacancyStatusBadge status="DRAFT" applicantCount={3} />);
     expect(screen.getByTestId('vacancy-draft')).toHaveTextContent(
       'vacancies.table.filter.statusOptions.draft'
     );
