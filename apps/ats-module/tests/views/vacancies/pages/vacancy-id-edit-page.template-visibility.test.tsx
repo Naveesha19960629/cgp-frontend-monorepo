@@ -170,15 +170,58 @@ describe('VacancyIdEditPage — template field-visibility restore', () => {
     expect(props?.templateId).toBe('tmpl-1');
   });
 
-  it('reads the snapshot keyed by vacancy id, not by template id', () => {
-    setVacancy({ vacancyTemplateId: 'tmpl-1' });
+  it('reads the snapshot keyed by baseVacancyId, not by the version id or template id', () => {
+    // Version 3 of a vacancy: its own id differs from the base id.
+    setVacancy({ vacancyTemplateId: 'tmpl-1', baseVacancyId: 'base-1' });
+
+    render(<VacancyIdEditPage />);
+
+    expect(useVacancyTemplateSnapshotQueryMock).toHaveBeenCalledWith(
+      'base-1',
+      expect.objectContaining({ enabled: true })
+    );
+  });
+
+  it('restores the template restriction for a later version that lost vacancyTemplateId', () => {
+    // The backend's createNewVersion drops the column, so a v2+ row looks like
+    // a plain vacancy. The snapshot at baseVacancyId is what recovers it.
+    setVacancy({ vacancyTemplateId: null, baseVacancyId: 'base-1' });
+    useVacancyTemplateSnapshotQueryMock.mockReturnValue({
+      data: templateUseResponse(CLUBS_AND_SKILLS),
+      isFetched: true,
+    });
+
+    render(<VacancyIdEditPage />);
+
+    // Probed despite the missing template column, because id !== baseVacancyId.
+    expect(useVacancyTemplateSnapshotQueryMock).toHaveBeenCalledWith(
+      'base-1',
+      expect.objectContaining({ enabled: true })
+    );
+    const props = providerProps.current;
+    // Steps and fields are restricted exactly as on version 1...
+    expect(props?.visibleStepKeys).toEqual(
+      expect.arrayContaining(['preferred-club-societies', 'preferred-skills'])
+    );
+    expect(props?.templateFieldVisibility?.clubsAndSocieties).toMatchObject({
+      clubSociety: true,
+      organization: false,
+    });
+    // ...and lineage is recovered from the snapshot body.
+    expect(props?.templateId).toBe('tmpl-1');
+  });
+
+  it('skips the snapshot probe for a first-version vacancy with no template', () => {
+    // Own base + no template column → cannot be a stripped version, so no request.
+    setVacancy({ vacancyTemplateId: null, baseVacancyId: 'vacancy-1' });
 
     render(<VacancyIdEditPage />);
 
     expect(useVacancyTemplateSnapshotQueryMock).toHaveBeenCalledWith(
       'vacancy-1',
-      expect.objectContaining({ enabled: true })
+      expect.objectContaining({ enabled: false })
     );
+    expect(providerProps.current?.templateFieldVisibility).toBeUndefined();
   });
 
   it('never reads the live template when a snapshot exists (AC 8: template edits must not leak into existing vacancies)', () => {
