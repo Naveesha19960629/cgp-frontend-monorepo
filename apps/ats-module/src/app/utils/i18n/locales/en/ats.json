@@ -1595,7 +1595,7 @@
     "notifications": {
       "disable": {
         "title": "Section Disabled",
-        "message": "Projects Requirements section has been disabled successfully."
+        "message": "Project Requirements section has been disabled successfully."
       }
     },
     "placeholders": {
