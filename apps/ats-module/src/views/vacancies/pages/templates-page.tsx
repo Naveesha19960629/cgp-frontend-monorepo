@@ -141,7 +141,7 @@ export default function TemplatesPage() {
 
   return (
     <section className="flex h-full flex-col overflow-hidden px-7 py-5">
-      <div className="flex items-center gap-4 pb-5.5">
+      <div className="flex items-center gap-4 pb-8">
         <p className="shrink-0 text-2xl/8 font-bold text-slate-900">
           {t('templates.title')}
         </p>
