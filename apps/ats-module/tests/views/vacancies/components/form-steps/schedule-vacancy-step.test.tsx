@@ -1354,6 +1354,31 @@ describe('ScheduleVacancyStep', () => {
       });
     });
 
+    it('keeps Update enabled for an on-hold vacancy with an already-past saved schedule when the schedule itself is left unchanged (regression: DQCGP onhold-update-button-disabled)', async () => {
+      vi.mocked(useParams).mockReturnValue({
+        id: 'vacancy-onhold-past-schedule',
+      });
+      mockVacancyForm({
+        form: {
+          status: 'on_hold',
+          applicantCount: 0,
+          schedule: {
+            schedulePublishAt: '2020-01-01T10:00:00 AM',
+            expirationAt: '2020-01-02T11:59:59 PM',
+          },
+        },
+      });
+
+      renderComponent({ mode: 'edit' as const });
+
+      // Pre-filled from the saved (already-lapsed) schedule; since the
+      // recruiter hasn't touched the schedule fields, the past-date check
+      // must not block the button.
+      await waitFor(() => {
+        expect(getCreateButton()).not.toBeDisabled();
+      });
+    });
+
     it('shows the onhold confirmation dialog for zero-applicant vacancy', async () => {
       renderComponent({ mode: 'edit' as const });
 
