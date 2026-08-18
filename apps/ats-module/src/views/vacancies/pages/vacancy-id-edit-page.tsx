@@ -199,16 +199,26 @@ function EditVacancyContent({ id }: Readonly<{ id: string | undefined }>) {
   const {
     data: vacancyResponse,
     isLoading,
+    isFetching,
     error,
   } = useVacancyByIdQuery(id || '', {
     enabled: initialized && !!keycloak?.authenticated && !!id,
   });
 
   useEffect(() => {
+    // `isFetching` (not just `isLoading`) is the settle signal. Hydration runs
+    // exactly once, so it must not run against a cached-but-revalidating
+    // payload: after a status toggle the list mutation invalidates this key,
+    // React Query serves the pre-toggle entry while refetching in the
+    // background, and `isLoading` stays false because cached data exists.
+    // Hydrating there would latch the stale status into the form and the
+    // one-shot guard would then discard the fresh result (DQCGP: Edit page
+    // showed "Live" for a vacancy just moved to On Hold until a full reload).
     if (
       !vacancyResponse?.success ||
       isHydratedRef.current ||
       isLoading ||
+      isFetching ||
       !!error
     ) {
       return;
@@ -257,6 +267,7 @@ function EditVacancyContent({ id }: Readonly<{ id: string | undefined }>) {
     error,
     initCompletedStepsFromForm,
     initialStep,
+    isFetching,
     isLoading,
     originalFormRef,
     setCurrentStepIndex,
