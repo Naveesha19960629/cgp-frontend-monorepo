@@ -12,7 +12,6 @@ import { cn } from '@cgp/ui-kit/lib/utils';
 export default function VacancyStatusBadge({
   status,
   applicantCount,
-  countFormat = 'applicants',
 }: Readonly<VacancyStatusBadgeProps>) {
   const { t } = useTranslation('ats');
   const key = normalizeStatusKey(status);
@@ -22,10 +21,7 @@ export default function VacancyStatusBadge({
     VACANCY_STATUS_FALLBACK_CONFIG;
   const statusLabel = config.labelKey ? t(config.labelKey) : status;
   const hidesApplicantCount = key === 'draft' || key === 'unpublished';
-  const countSuffix =
-    countFormat === 'applied'
-      ? ` (${applicantCount} ${t('vacancies.view.applied')})`
-      : ` - ${applicantCount} ${t('vacancies.stepBadge.applicants')}`;
+  const countSuffix = ` (${applicantCount} ${t('vacancies.stepBadge.applied')})`;
   const label =
     !hidesApplicantCount && applicantCount !== undefined
       ? `${statusLabel}${countSuffix}`

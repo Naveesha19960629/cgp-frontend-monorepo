@@ -109,7 +109,6 @@ export default function VacancyIdViewPage() {
           <VacancyStatusBadge
             status={viewModel.status || 'draft'}
             applicantCount={viewModel.applicantCount}
-            countFormat="applied"
           />
         }
         onBack={() => void navigate('/dashboard/ats/vacancies')}

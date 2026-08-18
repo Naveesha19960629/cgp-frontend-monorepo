@@ -603,7 +603,10 @@ export default function TertiaryEducationStep({
   };
 
   return (
-    <div data-testid="tertiaryEducation-section-form" className="flex flex-col">
+    <div
+      data-testid="tertiaryEducation-section-form"
+      className="flex min-h-full flex-1 flex-col"
+    >
       {/* -- Informational Banner ------------------------------------------ */}
       <MessageBox
         fields={[
@@ -637,7 +640,10 @@ export default function TertiaryEducationStep({
             {t('tertiaryEducation.title')}
           </h2>
           {mode === 'edit' && vacancyForm.status ? (
-            <VacancyStatusBadge status={vacancyForm.status} />
+            <VacancyStatusBadge
+              status={vacancyForm.status}
+              applicantCount={vacancyForm.applicantCount}
+            />
           ) : null}
         </div>
         <Controller
@@ -1690,7 +1696,7 @@ export default function TertiaryEducationStep({
       />
 
       {/* -- Step footer ---------------------------------------------------- */}
-      <div className="sticky bottom-0 flex items-center justify-end gap-4 bg-white px-6 py-7 shadow-[0px_-8px_6.8px_0px_rgba(0,0,0,0.04)]">
+      <div className="sticky bottom-0 mt-auto flex items-center justify-end gap-4 bg-white px-6 py-7 shadow-[0px_-8px_6.8px_0px_rgba(0,0,0,0.04)]">
         <Button variant="secondary" className="h-12 w-48" onClick={onCancel}>
           {t('tertiaryEducation.cancel')}
         </Button>

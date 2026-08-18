@@ -1204,7 +1204,10 @@ export default function CustomizableFormStep({
             {t('customizableForm.title')}
           </h2>
           {mode === 'edit' && form.status ? (
-            <VacancyStatusBadge status={form.status} />
+            <VacancyStatusBadge
+              status={form.status}
+              applicantCount={form.applicantCount}
+            />
           ) : null}
         </div>
 

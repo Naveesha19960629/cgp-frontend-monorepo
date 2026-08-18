@@ -18,7 +18,8 @@
     "versionHistory": "Version History",
     "findCandidates": "Find Candidates",
     "templates": "Templates",
-    "createTemplate": "Create Template"
+    "createTemplate": "Create Template",
+    "editTemplate": "Edit Template"
   },
   "errorPage": {
     "title": "Something Went Wrong",

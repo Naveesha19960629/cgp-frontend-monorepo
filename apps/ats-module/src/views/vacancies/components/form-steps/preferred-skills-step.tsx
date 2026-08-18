@@ -758,7 +758,10 @@ export default function PreferredSkillsStep({
             {t('preferredSkills.title')}
           </h2>
           {mode === 'edit' && vacancyStatus ? (
-            <VacancyStatusBadge status={vacancyStatus} />
+            <VacancyStatusBadge
+              status={vacancyStatus}
+              applicantCount={form.applicantCount}
+            />
           ) : null}
         </div>
         <Switch

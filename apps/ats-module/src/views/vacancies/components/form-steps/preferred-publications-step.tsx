@@ -557,7 +557,10 @@ export default function PreferredPublicationsStep({
               {t('preferredPublications.title')}
             </h2>
             {mode === 'edit' && vacancyStatus ? (
-              <VacancyStatusBadge status={vacancyStatus} />
+              <VacancyStatusBadge
+                status={vacancyStatus}
+                applicantCount={contextForm.applicantCount}
+              />
             ) : null}
           </div>
           <Switch

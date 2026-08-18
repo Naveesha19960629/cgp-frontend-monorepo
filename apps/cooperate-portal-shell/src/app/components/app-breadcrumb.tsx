@@ -69,6 +69,20 @@ const breadcrumbRoutes: BreadcrumbRoute[] = [
       { labelKey: 'breadcrumb.createTemplate' },
     ],
   },
+  {
+    url: '/dashboard/ats/templates/:id/edit',
+    items: [
+      { labelKey: 'breadcrumb.vacancies', link: '/dashboard/ats/vacancies' },
+      { labelKey: 'breadcrumb.editTemplate' },
+    ],
+  },
+  {
+    url: '/dashboard/ats/vacancies/from-template/:templateId',
+    items: [
+      { labelKey: 'breadcrumb.vacancies', link: '/dashboard/ats/vacancies' },
+      { labelKey: 'breadcrumb.addVacancy' },
+    ],
+  },
 ];
 
 export function AppBreadcrumb() {

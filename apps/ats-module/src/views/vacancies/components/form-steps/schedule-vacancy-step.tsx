@@ -477,7 +477,7 @@ export default function ScheduleVacancyStep({
   return (
     <div
       data-testid="scheduleVacancy-section-form"
-      className="flex min-h-full flex-col"
+      className="flex min-h-full flex-1 flex-col"
     >
       {/* ── Header ─────────────────────────────────────────────────── */}
       <div className="flex items-center gap-2 px-7 py-8">
@@ -499,7 +499,10 @@ export default function ScheduleVacancyStep({
         {(() => {
           const displayStatus = scheduleToOnhold ? 'on_hold' : form.status;
           return displayStatus ? (
-            <VacancyStatusBadge status={displayStatus} />
+            <VacancyStatusBadge
+              status={displayStatus}
+              applicantCount={form.applicantCount}
+            />
           ) : null;
         })()}
       </div>
@@ -632,7 +635,7 @@ export default function ScheduleVacancyStep({
       </div>
 
       {/* ── Footer ──────────────────────────────────────────────────── */}
-      <div className="sticky bottom-0 flex items-center justify-end gap-4 bg-white px-6 py-7 shadow-[0px_-8px_6.8px_0px_rgba(0,0,0,0.04)]">
+      <div className="sticky bottom-0 mt-auto flex items-center justify-end gap-4 bg-white px-6 py-7 shadow-[0px_-8px_6.8px_0px_rgba(0,0,0,0.04)]">
         <Button
           variant="secondary"
           className="h-12 w-48"

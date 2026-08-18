@@ -183,7 +183,10 @@ export default function PreferredCausesStep({
             {t('preferredCauses.title')}
           </h2>
           {mode === 'edit' && vacancyStatus ? (
-            <VacancyStatusBadge status={vacancyStatus} />
+            <VacancyStatusBadge
+              status={vacancyStatus}
+              applicantCount={form.applicantCount}
+            />
           ) : null}
         </div>
         <Switch

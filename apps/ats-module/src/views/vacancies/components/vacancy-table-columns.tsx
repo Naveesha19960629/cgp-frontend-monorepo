@@ -328,7 +328,7 @@ const createVacancyColumns = ({
       </div>
     ),
     cell: ({ row }) => {
-      const { status } = row.original;
+      const { status, applicantCount } = row.original;
       const normalizedStatus = status.toLowerCase();
       const isLive = normalizedStatus === 'live';
       // API enum is ONHOLD (no underscore); on_hold is the form/UI key
@@ -340,7 +340,10 @@ const createVacancyColumns = ({
       return (
         <div className="flex items-center gap-3 px-6">
           <div className="min-w-30">
-            <VacancyStatusBadge status={status} />
+            <VacancyStatusBadge
+              status={status}
+              applicantCount={applicantCount}
+            />
           </div>
           <VacancyActiveToggle
             isActive={isLive}

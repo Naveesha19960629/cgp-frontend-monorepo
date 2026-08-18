@@ -992,7 +992,10 @@ export default function PreferredHonoursAwardsStep({
                 {t('preferredHonoursAwards.title')}
               </h2>
               {mode === 'edit' && contextForm.status ? (
-                <VacancyStatusBadge status={contextForm.status} />
+                <VacancyStatusBadge
+                  status={contextForm.status}
+                  applicantCount={contextForm.applicantCount}
+                />
               ) : null}
             </div>
 

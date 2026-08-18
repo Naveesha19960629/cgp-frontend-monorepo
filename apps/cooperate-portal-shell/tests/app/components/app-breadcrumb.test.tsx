@@ -68,6 +68,24 @@ describe('AppBreadcrumb', () => {
     expect(screen.getByText('Version History').closest('a')).toBeNull();
   });
 
+  it('renders two items for /dashboard/ats/vacancies/from-template/:templateId', () => {
+    // Regression test: this route had no breadcrumbRoutes entry at all, so
+    // AppBreadcrumb silently rendered nothing on the Use Template page —
+    // reported as the "Vacancies > Create Vacancy" trail missing from the
+    // top of the page (DQCGP-3652).
+    renderWithRouter('/dashboard/ats/vacancies/from-template/tmpl-123');
+
+    expect(screen.getByText('Vacancies')).toBeInTheDocument();
+    expect(screen.getByText('Create Vacancy')).toBeInTheDocument();
+  });
+
+  it('renders two items for /dashboard/ats/templates/:id/edit', () => {
+    renderWithRouter('/dashboard/ats/templates/tmpl-123/edit');
+
+    expect(screen.getByText('Vacancies')).toBeInTheDocument();
+    expect(screen.getByText('Edit Template')).toBeInTheDocument();
+  });
+
   it('renders parent breadcrumb as a link and current item without a link', () => {
     renderWithRouter('/dashboard/ats/vacancies/new');
 

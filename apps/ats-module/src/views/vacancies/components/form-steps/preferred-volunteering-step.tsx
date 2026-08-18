@@ -929,7 +929,10 @@ export default function PreferredVolunteeringStep({
               {t('preferredVolunteering.title')}
             </h2>
             {mode === 'edit' && vacancyStatus ? (
-              <VacancyStatusBadge status={vacancyStatus} />
+              <VacancyStatusBadge
+                status={vacancyStatus}
+                applicantCount={contextForm.applicantCount}
+              />
             ) : null}
           </div>
           <Switch
