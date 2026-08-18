@@ -205,7 +205,7 @@ const PDF_STATUS_DISPLAY_LABELS: Record<VacancyStatus, string> = {
   unpublished: 'Unpublished',
   live: 'Live',
   expired: 'Expired',
-  on_hold: 'On Hold',
+  on_hold: 'Onhold',
 };
 
 const EMPTY_STATE_ROW_WIDTHS = [

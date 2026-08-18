@@ -67,7 +67,10 @@ const multiSelectInfoAvatar = new URL(
   import.meta.url
 ).href;
 
-export default function JobRequirementsStep({ onNext }: Readonly<StepProps>) {
+export default function JobRequirementsStep({
+  onNext,
+  mode = 'create',
+}: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
   const {
     form: contextForm,
@@ -401,10 +404,12 @@ export default function JobRequirementsStep({ onNext }: Readonly<StepProps>) {
               >
                 {t('jobRequirements.sectionTitle')}
               </h2>
-              <VacancyStatusBadge
-                status={contextForm.status}
-                applicantCount={contextForm.applicantCount}
-              />
+              {mode === 'edit' && contextForm.status ? (
+                <VacancyStatusBadge
+                  status={contextForm.status}
+                  applicantCount={contextForm.applicantCount}
+                />
+              ) : null}
             </div>
           </div>
 
