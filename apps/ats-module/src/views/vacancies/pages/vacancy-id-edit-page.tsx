@@ -16,6 +16,7 @@ import {
 import {
   useVacancyByIdQuery,
   useVacancyTemplateByIdQuery,
+  useVacancyTemplateSnapshotQuery,
 } from '@/views/vacancies/hooks';
 import type { VacancyForm } from '@/views/vacancies/types';
 import { toVacancyFormFromResponse } from '@/views/vacancies/utils/vacancy-edit-response-helpers';
@@ -347,25 +348,45 @@ export default function VacancyIdEditPage() {
       : undefined;
   }, [vacancyResponse]);
 
-  // For template-created vacancies, re-fetch the source template so the edit
-  // navigator mirrors the Use Template create flow at BOTH levels: which steps
-  // show AND which fields within them. The GET /vacancies/{id} payload only
-  // carries per-section `isEnabled` (not per-field flags), so field visibility
-  // can only be reconstructed from the template itself. Same query key as the
-  // create-from-template page → shared cache.
-  const { data: templateResponse, isLoading: isTemplateLoading } =
-    useVacancyTemplateByIdQuery(vacancyTemplateId ?? '', {
+  // For template-created vacancies the edit navigator must mirror the Use
+  // Template create flow at BOTH levels: which steps show AND which fields
+  // within them. The GET /vacancies/{id} payload only carries per-section
+  // `isEnabled` (not per-field flags), so field visibility has to come from the
+  // template definition.
+  //
+  // Source of truth is the SNAPSHOT taken at creation time, not the live
+  // template: DQCGP-2560 AC 8 requires later template edits (and deletions) to
+  // leave already-created vacancies untouched.
+  const { data: snapshotResponse, isFetched: isSnapshotFetched } =
+    useVacancyTemplateSnapshotQuery(id ?? '', {
       enabled: initialized && !!keycloak?.authenticated && !!vacancyTemplateId,
     });
 
+  const snapshotRequestBody = snapshotResponse?.success
+    ? snapshotResponse.data?.requestBody
+    : undefined;
+
+  // Legacy fallback: vacancies created before snapshotting existed have no
+  // snapshot row (404). Only then do we read the live template — better a
+  // possibly-drifted definition than an unrestricted form.
+  const needsLiveTemplateFallback =
+    !!vacancyTemplateId && isSnapshotFetched && !snapshotRequestBody;
+
+  const { data: templateResponse, isFetched: isTemplateFetched } =
+    useVacancyTemplateByIdQuery(vacancyTemplateId ?? '', {
+      enabled:
+        initialized && !!keycloak?.authenticated && needsLiveTemplateFallback,
+    });
+
   const templateMapped = useMemo(() => {
-    const requestBody = templateResponse?.success
+    const liveRequestBody = templateResponse?.success
       ? templateResponse.data?.requestBody
       : undefined;
+    const requestBody = snapshotRequestBody ?? liveRequestBody;
     return requestBody
       ? toVacancyFormFromTemplateUsePayload(requestBody, DEFAULT_FORM)
       : undefined;
-  }, [templateResponse]);
+  }, [snapshotRequestBody, templateResponse]);
 
   // Fallback step list: reconstructed from the saved vacancy's enabled sections.
   // Used until the template resolves (or if the template fetch fails).
@@ -377,10 +398,18 @@ export default function VacancyIdEditPage() {
     return getEnabledStepKeys(toVacancyFormFromResponse(record, DEFAULT_FORM));
   }, [vacancyResponse]);
 
-  // Hold the provider until both the vacancy and (for templated ones) its
-  // template are ready, so step + field restrictions are correct on first paint
-  // and the provider mounts exactly once.
-  if (isVacancyLoading || (vacancyTemplateId && isTemplateLoading)) {
+  // Hold the provider until the vacancy and (for templated ones) its template
+  // definition are ready, so step + field restrictions are correct on first
+  // paint and the provider mounts exactly once. Without this the form would
+  // briefly render unrestricted.
+  // `isFetched` (not `isLoading`) is the settle signal: it flips true on both
+  // success and 404, and stays false across the render where the query is first
+  // enabled but has not started fetching — the window `isLoading` would miss.
+  const isTemplateDefinitionPending =
+    !!vacancyTemplateId &&
+    (!isSnapshotFetched || (needsLiveTemplateFallback && !isTemplateFetched));
+
+  if (isVacancyLoading || isTemplateDefinitionPending) {
     return <EditNavigatorSkeleton />;
   }
 
