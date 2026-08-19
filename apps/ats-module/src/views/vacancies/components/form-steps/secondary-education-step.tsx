@@ -5,6 +5,11 @@ import { ArrowLeft2, Calendar as CalendarIcon } from 'iconsax-reactjs';
 import { useEffect, useRef, useState } from 'react';
 import type { RefObject } from 'react';
 import { Controller } from 'react-hook-form';
+import type {
+  Control,
+  UseFormGetValues,
+  UseFormResetField,
+} from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 
 import MessageBox from '@/components/message-box';
@@ -33,6 +38,7 @@ import {
   useSecondaryEducationForm,
   useStepGuard,
 } from '@/views/vacancies/hooks';
+import type { SecondaryEducationFormValues } from '@/views/vacancies/hooks';
 import type { StepProps } from '@/views/vacancies/types';
 import {
   formatDate,
@@ -118,6 +124,197 @@ const SECONDARY_GRID_FIELDS = [
   { code: 'fieldsOfStudy', span: 2 },
   { code: 'result', span: 2 },
 ] as const;
+
+/** Shared button/trigger styling for the two date-picker fields below. */
+const DATE_TRIGGER_CLASSNAME = cn(
+  'border-input flex h-11 w-full min-w-0 items-center justify-between rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
+  'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
+  'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
+  'dark:bg-input/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
+  applyTypography('body-medium'),
+  'shadow-none!'
+);
+
+function SecondaryStartDateField({
+  control,
+  fieldsDisabled,
+  isOpen,
+  onOpenChange,
+  getValues,
+  resetField,
+  t,
+}: Readonly<{
+  control: Control<SecondaryEducationFormValues>;
+  fieldsDisabled: boolean;
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  getValues: UseFormGetValues<SecondaryEducationFormValues>;
+  resetField: UseFormResetField<SecondaryEducationFormValues>;
+  t: (key: string) => string;
+}>) {
+  return (
+    <FormField
+      control={control}
+      name="entries.0.startDate"
+      render={({ field }) => (
+        <FormItem className="flex w-full flex-col gap-1 space-y-0 xl:col-span-1">
+          <div className="flex h-5 items-center">
+            <FormLabel data-testid="secondaryEducation-startDate-label">
+              {t('secondaryEducation.startDate')}
+            </FormLabel>
+          </div>
+          <Popover
+            modal
+            open={isOpen}
+            onOpenChange={open => onOpenChange(!fieldsDisabled && open)}
+          >
+            <PopoverTrigger asChild>
+              <FormControl>
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={fieldsDisabled}
+                  className={cn(
+                    DATE_TRIGGER_CLASSNAME,
+                    !field.value && 'text-slate-500',
+                    field.value && 'text-zinc-800'
+                  )}
+                >
+                  {field.value ? (
+                    <span className="truncate pr-2">
+                      {formatDate(field.value)}
+                    </span>
+                  ) : (
+                    <span className="truncate pr-2">
+                      {t('secondaryEducation.placeholders.startDate')}
+                    </span>
+                  )}
+                  <CalendarIcon
+                    variant="Linear"
+                    size={20}
+                    className="shrink-0 text-zinc-800"
+                  />
+                </Button>
+              </FormControl>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={field.value ? new Date(field.value) : undefined}
+                defaultMonth={
+                  field.value
+                    ? (parseLocalDate(field.value) ?? new Date())
+                    : new Date()
+                }
+                onSelect={date => {
+                  field.onChange(date ? formatLocalDate(date) : undefined);
+                  onOpenChange(false);
+                  const endDate = getValues('entries.0.endDate');
+                  if (endDate && date && compareDates(endDate, date) <= 0) {
+                    resetField('entries.0.endDate', {
+                      defaultValue: undefined,
+                    });
+                  }
+                }}
+                disabled={date => date > TODAY || date < HUNDRED_YEARS_AGO}
+                captionLayout="dropdown"
+                startMonth={HUNDRED_YEARS_AGO}
+                endMonth={TODAY}
+              />
+            </PopoverContent>
+          </Popover>
+        </FormItem>
+      )}
+    />
+  );
+}
+
+function SecondaryEndDateField({
+  control,
+  fieldsDisabled,
+  isOpen,
+  onOpenChange,
+  minEndDate,
+  endDateDefaultMonth,
+  t,
+}: Readonly<{
+  control: Control<SecondaryEducationFormValues>;
+  fieldsDisabled: boolean;
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  minEndDate: Date | null;
+  endDateDefaultMonth: Date;
+  t: (key: string) => string;
+}>) {
+  return (
+    <FormField
+      control={control}
+      name="entries.0.endDate"
+      render={({ field }) => (
+        <FormItem className="flex w-full flex-col gap-1 space-y-0 xl:col-span-1">
+          <div className="flex h-5 items-center">
+            <FormLabel data-testid="secondaryEducation-endDate-label">
+              {t('secondaryEducation.endDate')}
+            </FormLabel>
+          </div>
+          <Popover
+            modal
+            open={isOpen}
+            onOpenChange={open => onOpenChange(!fieldsDisabled && open)}
+          >
+            <PopoverTrigger asChild>
+              <FormControl>
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={fieldsDisabled}
+                  className={cn(
+                    DATE_TRIGGER_CLASSNAME,
+                    !field.value && 'text-slate-500',
+                    field.value && 'text-zinc-800'
+                  )}
+                >
+                  {field.value ? (
+                    <span className="truncate pr-2">
+                      {formatDate(field.value)}
+                    </span>
+                  ) : (
+                    <span className="truncate pr-2">
+                      {t('secondaryEducation.placeholders.endDate')}
+                    </span>
+                  )}
+                  <CalendarIcon
+                    variant="Linear"
+                    size={20}
+                    className="shrink-0 text-zinc-800"
+                  />
+                </Button>
+              </FormControl>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={field.value ? new Date(field.value) : undefined}
+                defaultMonth={endDateDefaultMonth}
+                onSelect={date => {
+                  field.onChange(date ? formatLocalDate(date) : undefined);
+                  onOpenChange(false);
+                }}
+                disabled={date =>
+                  date > HUNDRED_YEARS_FROM_NOW ||
+                  (minEndDate ? compareDates(date, minEndDate) < 0 : false)
+                }
+                captionLayout="dropdown"
+                startMonth={minEndDate ?? HUNDRED_YEARS_AGO}
+                endMonth={HUNDRED_YEARS_FROM_NOW}
+              />
+            </PopoverContent>
+          </Popover>
+        </FormItem>
+      )}
+    />
+  );
+}
 
 export default function SecondaryEducationStep({
   onNext,
@@ -906,197 +1103,30 @@ export default function SecondaryEducationStep({
                   )}
 
                   {isFieldVisible('startDate') && (
-                    <FormField
+                    <SecondaryStartDateField
                       control={control}
-                      name="entries.0.startDate"
-                      render={({ field }) => (
-                        <FormItem className="flex w-full flex-col gap-1 space-y-0 xl:col-span-1">
-                          <div className="flex h-5 items-center">
-                            <FormLabel data-testid="secondaryEducation-startDate-label">
-                              {t('secondaryEducation.startDate')}
-                            </FormLabel>
-                          </div>
-                          <Popover
-                            modal
-                            open={openDatePopover === 'startDate'}
-                            onOpenChange={open =>
-                              setOpenDatePopover(
-                                !fieldsDisabled && open ? 'startDate' : null
-                              )
-                            }
-                          >
-                            <PopoverTrigger asChild>
-                              <FormControl>
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  disabled={fieldsDisabled}
-                                  className={cn(
-                                    'border-input flex h-11 w-full min-w-0 items-center justify-between rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
-                                    !field.value && 'text-slate-500',
-                                    field.value && 'text-zinc-800',
-                                    'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
-                                    'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
-                                    'dark:bg-input/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
-                                    applyTypography('body-medium'),
-                                    'shadow-none!'
-                                  )}
-                                >
-                                  {field.value ? (
-                                    <span className="truncate pr-2">
-                                      {formatDate(field.value)}
-                                    </span>
-                                  ) : (
-                                    <span className="truncate pr-2">
-                                      {t(
-                                        'secondaryEducation.placeholders.startDate'
-                                      )}
-                                    </span>
-                                  )}
-                                  <CalendarIcon
-                                    variant="Linear"
-                                    size={20}
-                                    className="shrink-0 text-zinc-800"
-                                  />
-                                </Button>
-                              </FormControl>
-                            </PopoverTrigger>
-                            <PopoverContent
-                              className="w-auto p-0"
-                              align="start"
-                            >
-                              <Calendar
-                                mode="single"
-                                selected={
-                                  field.value
-                                    ? new Date(field.value)
-                                    : undefined
-                                }
-                                defaultMonth={
-                                  field.value
-                                    ? (parseLocalDate(field.value) ??
-                                      new Date())
-                                    : new Date()
-                                }
-                                onSelect={date => {
-                                  field.onChange(
-                                    date ? formatLocalDate(date) : undefined
-                                  );
-                                  setOpenDatePopover(null);
-                                  const endDate =
-                                    getValues('entries.0.endDate');
-                                  if (
-                                    endDate &&
-                                    date &&
-                                    compareDates(endDate, date) <= 0
-                                  ) {
-                                    resetField('entries.0.endDate', {
-                                      defaultValue: undefined,
-                                    });
-                                  }
-                                }}
-                                disabled={date =>
-                                  date > TODAY || date < HUNDRED_YEARS_AGO
-                                }
-                                captionLayout="dropdown"
-                                startMonth={HUNDRED_YEARS_AGO}
-                                endMonth={TODAY}
-                              />
-                            </PopoverContent>
-                          </Popover>
-                        </FormItem>
-                      )}
+                      fieldsDisabled={fieldsDisabled}
+                      isOpen={openDatePopover === 'startDate'}
+                      onOpenChange={open =>
+                        setOpenDatePopover(open ? 'startDate' : null)
+                      }
+                      getValues={getValues}
+                      resetField={resetField}
+                      t={t}
                     />
                   )}
 
                   {isFieldVisible('endDate') && (
-                    <FormField
+                    <SecondaryEndDateField
                       control={control}
-                      name="entries.0.endDate"
-                      render={({ field }) => (
-                        <FormItem className="flex w-full flex-col gap-1 space-y-0 xl:col-span-1">
-                          <div className="flex h-5 items-center">
-                            <FormLabel data-testid="secondaryEducation-endDate-label">
-                              {t('secondaryEducation.endDate')}
-                            </FormLabel>
-                          </div>
-                          <Popover
-                            modal
-                            open={openDatePopover === 'endDate'}
-                            onOpenChange={open =>
-                              setOpenDatePopover(
-                                !fieldsDisabled && open ? 'endDate' : null
-                              )
-                            }
-                          >
-                            <PopoverTrigger asChild>
-                              <FormControl>
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  disabled={fieldsDisabled}
-                                  className={cn(
-                                    'border-input flex h-11 w-full min-w-0 items-center justify-between rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
-                                    !field.value && 'text-slate-500',
-                                    field.value && 'text-zinc-800',
-                                    'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
-                                    'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
-                                    'dark:bg-input/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
-                                    applyTypography('body-medium'),
-                                    'shadow-none!'
-                                  )}
-                                >
-                                  {field.value ? (
-                                    <span className="truncate pr-2">
-                                      {formatDate(field.value)}
-                                    </span>
-                                  ) : (
-                                    <span className="truncate pr-2">
-                                      {t(
-                                        'secondaryEducation.placeholders.endDate'
-                                      )}
-                                    </span>
-                                  )}
-                                  <CalendarIcon
-                                    variant="Linear"
-                                    size={20}
-                                    className="shrink-0 text-zinc-800"
-                                  />
-                                </Button>
-                              </FormControl>
-                            </PopoverTrigger>
-                            <PopoverContent
-                              className="w-auto p-0"
-                              align="start"
-                            >
-                              <Calendar
-                                mode="single"
-                                selected={
-                                  field.value
-                                    ? new Date(field.value)
-                                    : undefined
-                                }
-                                defaultMonth={endDateDefaultMonth}
-                                onSelect={date => {
-                                  field.onChange(
-                                    date ? formatLocalDate(date) : undefined
-                                  );
-                                  setOpenDatePopover(null);
-                                }}
-                                disabled={date =>
-                                  date > HUNDRED_YEARS_FROM_NOW ||
-                                  (minEndDate
-                                    ? compareDates(date, minEndDate) < 0
-                                    : false)
-                                }
-                                captionLayout="dropdown"
-                                startMonth={minEndDate ?? HUNDRED_YEARS_AGO}
-                                endMonth={HUNDRED_YEARS_FROM_NOW}
-                              />
-                            </PopoverContent>
-                          </Popover>
-                        </FormItem>
-                      )}
+                      fieldsDisabled={fieldsDisabled}
+                      isOpen={openDatePopover === 'endDate'}
+                      onOpenChange={open =>
+                        setOpenDatePopover(open ? 'endDate' : null)
+                      }
+                      minEndDate={minEndDate}
+                      endDateDefaultMonth={endDateDefaultMonth}
+                      t={t}
                     />
                   )}
 

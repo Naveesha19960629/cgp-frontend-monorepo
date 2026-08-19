@@ -1,9 +1,11 @@
-import { render, screen } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import ProjectsRequirementsStep from '@/views/vacancies/components/form-steps/projects-requirements-step';
+
+import { Calendar } from '@cgp/ui-kit/components/ui/calendar';
 
 // ── Mock react-i18next ──────────────────────────────────────────────────────
 
@@ -199,8 +201,13 @@ vi.mock('@cgp/ui-kit/components/ui/popover', () => ({
   ),
 }));
 
+type CalendarProps = {
+  disabled?: (date: Date) => boolean;
+  onSelect?: (date: Date | undefined) => void;
+};
+
 vi.mock('@cgp/ui-kit/components/ui/calendar', () => ({
-  Calendar: () => <div>Calendar</div>,
+  Calendar: vi.fn((_props: CalendarProps) => <div>Calendar</div>),
 }));
 
 vi.mock('@cgp/ui-kit/components/ui/checkbox', () => ({
@@ -584,6 +591,86 @@ describe('ProjectsRequirementsStep', () => {
       await user.click(toggleSwitch); // disable, no data entered yet
 
       expect(dataFromCandidateCheckbox).toBeDisabled();
+    });
+  });
+
+  describe('project date pickers', () => {
+    function renderEnabled() {
+      render(
+        <ProjectsRequirementsStep
+          onNext={mockOnNext}
+          onBack={mockOnBack}
+          onSubmit={vi.fn()}
+        />
+      );
+      return screen.getByTestId('toggle-switch');
+    }
+
+    it("rejects future dates and dates before the 100-year boundary for the project's start date", async () => {
+      const user = userEvent.setup();
+      const toggleSwitch = renderEnabled();
+      await user.click(toggleSwitch); // enable
+
+      // [startDate call, endDate call] — start renders first each pass.
+      const startCall = vi.mocked(Calendar).mock.calls[0]?.[0] as
+        | CalendarProps
+        | undefined;
+      const disabled = startCall?.disabled;
+
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const hundredOneYearsAgo = new Date();
+      hundredOneYearsAgo.setFullYear(hundredOneYearsAgo.getFullYear() - 101);
+
+      expect(disabled?.(new Date())).toBe(false); // today is allowed
+      expect(disabled?.(tomorrow)).toBe(true); // a start date can't be in the future
+      expect(disabled?.(hundredOneYearsAgo)).toBe(true);
+    });
+
+    it("rejects dates before the current start date and beyond the 100-year boundary for the project's end date", async () => {
+      const user = userEvent.setup();
+      const toggleSwitch = renderEnabled();
+      await user.click(toggleSwitch); // enable
+
+      const endCall = vi.mocked(Calendar).mock.calls[1]?.[0] as
+        | CalendarProps
+        | undefined;
+      const disabled = endCall?.disabled;
+
+      const hundredOneYearsFromNow = new Date();
+      hundredOneYearsFromNow.setFullYear(
+        hundredOneYearsFromNow.getFullYear() + 101
+      );
+
+      expect(disabled?.(new Date())).toBe(false); // no start date yet — today is allowed
+      expect(disabled?.(hundredOneYearsFromNow)).toBe(true);
+    });
+
+    it('clears the end date once a newly selected start date falls after it', async () => {
+      const user = userEvent.setup();
+      const toggleSwitch = renderEnabled();
+      await user.click(toggleSwitch); // enable
+
+      // Select an end date first.
+      let calls = vi.mocked(Calendar).mock.calls;
+      const initialEndCall = calls[calls.length - 1]?.[0] as CalendarProps;
+      act(() => {
+        initialEndCall.onSelect?.(new Date(2025, 5, 10)); // 2025-06-10
+      });
+
+      // Then select a start date that falls after that end date.
+      calls = vi.mocked(Calendar).mock.calls;
+      const latestStartCall = calls[calls.length - 2]?.[0] as CalendarProps;
+      act(() => {
+        latestStartCall.onSelect?.(new Date(2025, 5, 20)); // 2025-06-20
+      });
+
+      // The end date field should have been cleared back to its placeholder.
+      await waitFor(() => {
+        expect(
+          screen.getByText('projectsRequirements.placeholders.endDate')
+        ).toBeInTheDocument();
+      });
     });
   });
 });
