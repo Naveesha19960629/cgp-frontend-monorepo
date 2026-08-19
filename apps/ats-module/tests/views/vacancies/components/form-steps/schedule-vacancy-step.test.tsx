@@ -14,6 +14,7 @@ import {
   useNotifyApplicantsMutation,
   useUpdateVacancyMutation,
 } from '@/views/vacancies/hooks';
+import { getHundredYearDateBoundaries } from '@/views/vacancies/utils/date-timezone-safe';
 
 import { ErrorToast, SuccessToast } from '@cgp/ui-kit/components/custom-toast';
 import { CalendarWithTime } from '@cgp/ui-kit/components/ui/calendar-with-time';
@@ -29,6 +30,8 @@ type CalendarWithTimeProps = {
   error?: string;
   formattedDateDisplay?: string;
   disabledDates?: (date: Date) => boolean;
+  startMonth?: Date;
+  endMonth?: Date;
 };
 
 vi.mock('@/views/vacancies/context/vacancy-form-context');
@@ -800,6 +803,33 @@ describe('ScheduleVacancyStep', () => {
       expect(disabledDates?.(new Date('2099-12-31'))).toBe(false);
     });
 
+    it('publish disabledDates blocks dates beyond 100 years from today', () => {
+      renderComponent();
+
+      const { maxDate } = getHundredYearDateBoundaries();
+      const oneDayPastMax = new Date(
+        maxDate.getFullYear(),
+        maxDate.getMonth(),
+        maxDate.getDate() + 1
+      );
+
+      const publishCall = vi.mocked(CalendarWithTime).mock.calls[0]?.[0];
+      const disabledDates = publishCall?.disabledDates;
+
+      expect(disabledDates?.(maxDate)).toBe(false); // exact boundary is inclusive
+      expect(disabledDates?.(oneDayPastMax)).toBe(true);
+    });
+
+    it('passes startMonth/endMonth bounding the publish picker to [today, today + 100 years]', () => {
+      renderComponent();
+
+      const { today, maxDate } = getHundredYearDateBoundaries();
+      const publishCall = vi.mocked(CalendarWithTime).mock.calls[0]?.[0];
+
+      expect(publishCall?.startMonth).toEqual(today);
+      expect(publishCall?.endMonth).toEqual(maxDate);
+    });
+
     it('passes a disabledDates function to the expiration picker', () => {
       renderComponent();
 
@@ -824,6 +854,33 @@ describe('ScheduleVacancyStep', () => {
         // Same day as publish → not disabled (only submit-level check)
         expect(disabledDates?.(new Date('2099-12-25'))).toBe(false);
       });
+    });
+
+    it('expiration disabledDates blocks dates beyond 100 years from today', () => {
+      renderComponent();
+
+      const { maxDate } = getHundredYearDateBoundaries();
+      const oneDayPastMax = new Date(
+        maxDate.getFullYear(),
+        maxDate.getMonth(),
+        maxDate.getDate() + 1
+      );
+
+      const expirationCall = vi.mocked(CalendarWithTime).mock.calls[1]?.[0];
+      const disabledDates = expirationCall?.disabledDates;
+
+      expect(disabledDates?.(maxDate)).toBe(false); // exact boundary is inclusive
+      expect(disabledDates?.(oneDayPastMax)).toBe(true);
+    });
+
+    it('passes startMonth/endMonth bounding the expiration picker to [today, today + 100 years]', () => {
+      renderComponent();
+
+      const { today, maxDate } = getHundredYearDateBoundaries();
+      const expirationCall = vi.mocked(CalendarWithTime).mock.calls[1]?.[0];
+
+      expect(expirationCall?.startMonth).toEqual(today);
+      expect(expirationCall?.endMonth).toEqual(maxDate);
     });
 
     it('does not render inline error for expirationAfterPublish violation', async () => {
