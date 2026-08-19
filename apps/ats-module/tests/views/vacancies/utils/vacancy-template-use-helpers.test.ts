@@ -54,6 +54,32 @@ describe('toVacancyFormFromTemplateUsePayload', () => {
     });
   });
 
+  it('leaves the candidate-profile checkbox unticked while still inheriting field visibility (DQCGP-3661)', () => {
+    const requestBody = makeRequestBody({
+      profileRequirement: [
+        {
+          isEnabled: true,
+          dataTakenFromCandidate: true,
+          content: { gender: true, maritalStatus: false },
+        },
+      ],
+    });
+
+    const { form, templateFieldVisibility, visibleStepKeys } =
+      toVacancyFormFromTemplateUsePayload(requestBody, DEFAULT_FORM);
+
+    // The section is still included and enabled by default (AC 8.2)...
+    expect(visibleStepKeys).toContain('profile-requirements');
+    expect(form.profileRequirements.isEnabled).toBe(true);
+    // ...and its field visibility is still inherited from the template (AC 7.2)...
+    expect(templateFieldVisibility.profileRequirement).toEqual({
+      gender: true,
+      maritalStatus: false,
+    });
+    // ...but the recruiter opts into the candidate-profile option themselves.
+    expect(form.profileRequirements.dataTakenFromCandidate).toBe(false);
+  });
+
   it('always includes the mandatory step keys even when data is empty', () => {
     const requestBody = makeRequestBody({});
 
@@ -104,7 +130,8 @@ describe('toVacancyFormFromTemplateUsePayload', () => {
     );
 
     expect(form.jobRequirements[0].isEnabled).toBe(true);
-    expect(form.jobRequirements[0].dataTakenFromCandidate).toBe(true);
+    // DQCGP-3661: the template's flag is never carried over.
+    expect(form.jobRequirements[0].dataTakenFromCandidate).toBe(false);
     expect(visibleStepKeys).toContain('job-requirements');
   });
 
@@ -282,7 +309,7 @@ describe('toVacancyFormFromTemplateUsePayload', () => {
       toVacancyFormFromTemplateUsePayload(requestBody, DEFAULT_FORM);
 
     expect(form.secondaryEducation[0].isEnabled).toBe(true);
-    expect(form.secondaryEducation[0].dataTakenFromCandidate).toBe(true);
+    expect(form.secondaryEducation[0].dataTakenFromCandidate).toBe(false);
     expect(form.tertiaryEducation[0].isEnabled).toBe(true);
     expect(form.projectsRequirements?.isEnabled).toBe(true);
     expect(form.preferredPublications?.isEnabled).toBe(true);
@@ -297,6 +324,23 @@ describe('toVacancyFormFromTemplateUsePayload', () => {
     expect(form.preferredCauses?.isEnabled).toBe(true);
     expect(form.preferredHobbies?.isEnabled).toBe(true);
     expect(form.preferredIndustries?.isEnabled).toBe(true);
+
+    // DQCGP-3661: every section in this fixture has dataTakenFromCandidate:true,
+    // yet the recruiter must always start with the checkbox unticked.
+    expect(form.tertiaryEducation[0].dataTakenFromCandidate).toBe(false);
+    expect(form.projectsRequirements?.dataTakenFromCandidate).toBe(false);
+    expect(form.preferredPublications?.dataTakenFromCandidate).toBe(false);
+    expect(form.preferredClubSocieties?.dataTakenFromCandidate).toBe(false);
+    expect(form.preferredSports?.dataTakenFromCandidate).toBe(false);
+    expect(form.preferredVolunteering?.dataTakenFromCandidate).toBe(false);
+    expect(form.patents?.dataTakenFromCandidate).toBe(false);
+    expect(form.preferredHonoursAwards?.dataTakenFromCandidate).toBe(false);
+    expect(form.licenseCertificates?.[0].dataTakenFromCandidate).toBe(false);
+    expect(form.preferredSkills?.dataTakenFromCandidate).toBe(false);
+    expect(form.preferredLanguages?.dataTakenFromCandidate).toBe(false);
+    expect(form.preferredCauses?.dataTakenFromCandidate).toBe(false);
+    expect(form.preferredHobbies?.dataTakenFromCandidate).toBe(false);
+    expect(form.preferredIndustries?.dataTakenFromCandidate).toBe(false);
 
     const expectedStepKeys = [
       'job-requirements',

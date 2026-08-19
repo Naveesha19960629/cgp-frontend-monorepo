@@ -12,6 +12,11 @@
  * marks each present section enabled; all form values stay empty so the recruiter
  * fills them in. `customizedForm` is the exception — it carries actual copied
  * form data, reused verbatim via `normalizeCustomizableFormSection`.
+ *
+ * The template's `dataTakenFromCandidate` flag is deliberately NOT carried over
+ * (DQCGP-3661): the "data will be taken from the candidate profile" checkbox is
+ * always presented unticked so the recruiter opts in explicitly. Only the
+ * template's field VISIBILITY is inherited.
  */
 import type {
   VacancyForm,
@@ -34,10 +39,6 @@ interface TemplateUseMapResult {
   templateFieldVisibility: Record<string, Record<string, boolean>>;
 }
 
-interface SectionFlags {
-  dataTakenFromCandidate: boolean;
-}
-
 function readContentFlags(
   section: Record<string, unknown>
 ): Record<string, boolean> {
@@ -47,142 +48,52 @@ function readContentFlags(
   return out;
 }
 
+/** The two section-level flags every `VacancyForm` section shares. */
+interface SectionToggles {
+  isEnabled: boolean;
+  dataTakenFromCandidate: boolean;
+}
+
 /**
- * Per backend section key, mark the matching `VacancyForm` section enabled and
- * carry over the candidate-profile flag. Values are intentionally left empty.
+ * Per backend section key, locate the matching `VacancyForm` section. Returns
+ * undefined when the form has no such section, in which case there is nothing
+ * to enable. List-shaped sections are represented by their first entry.
  */
-const SECTION_APPLIERS: Record<
+const SECTION_TARGETS: Record<
   string,
-  (form: VacancyForm, flags: SectionFlags) => void
+  (form: VacancyForm) => SectionToggles | undefined
 > = {
-  jobRequirement: (form, flags) => {
-    const entry = form.jobRequirements[0];
-    if (entry) {
-      entry.isEnabled = true;
-      entry.dataTakenFromCandidate = flags.dataTakenFromCandidate;
-    }
-  },
-  profileRequirement: (form, flags) => {
-    form.profileRequirements.isEnabled = true;
-    form.profileRequirements.dataTakenFromCandidate =
-      flags.dataTakenFromCandidate;
-  },
-  secondaryEducation: (form, flags) => {
-    const entry = form.secondaryEducation[0];
-    if (entry) {
-      entry.isEnabled = true;
-      entry.dataTakenFromCandidate = flags.dataTakenFromCandidate;
-    }
-  },
-  tertiaryEducation: (form, flags) => {
-    const entry = form.tertiaryEducation[0];
-    if (entry) {
-      entry.isEnabled = true;
-      entry.dataTakenFromCandidate = flags.dataTakenFromCandidate;
-    }
-  },
-  projects: (form, flags) => {
-    if (form.projectsRequirements) {
-      form.projectsRequirements.isEnabled = true;
-      form.projectsRequirements.dataTakenFromCandidate =
-        flags.dataTakenFromCandidate;
-    }
-  },
-  publications: (form, flags) => {
-    if (form.preferredPublications) {
-      form.preferredPublications.isEnabled = true;
-      form.preferredPublications.dataTakenFromCandidate =
-        flags.dataTakenFromCandidate;
-    }
-  },
-  clubsAndSocieties: (form, flags) => {
-    if (form.preferredClubSocieties) {
-      form.preferredClubSocieties.isEnabled = true;
-      form.preferredClubSocieties.dataTakenFromCandidate =
-        flags.dataTakenFromCandidate;
-    }
-  },
-  sports: (form, flags) => {
-    if (form.preferredSports) {
-      form.preferredSports.isEnabled = true;
-      form.preferredSports.dataTakenFromCandidate =
-        flags.dataTakenFromCandidate;
-    }
-  },
-  volunteering: (form, flags) => {
-    if (form.preferredVolunteering) {
-      form.preferredVolunteering.isEnabled = true;
-      form.preferredVolunteering.dataTakenFromCandidate =
-        flags.dataTakenFromCandidate;
-    }
-  },
-  patents: (form, flags) => {
-    if (form.patents) {
-      form.patents.isEnabled = true;
-      form.patents.dataTakenFromCandidate = flags.dataTakenFromCandidate;
-    }
-  },
-  honoursAndAwards: (form, flags) => {
-    if (form.preferredHonoursAwards) {
-      form.preferredHonoursAwards.isEnabled = true;
-      form.preferredHonoursAwards.dataTakenFromCandidate =
-        flags.dataTakenFromCandidate;
-    }
-  },
-  licensesAndCertifications: (form, flags) => {
-    const entry = form.licenseCertificates?.[0];
-    if (entry) {
-      entry.isEnabled = true;
-      entry.dataTakenFromCandidate = flags.dataTakenFromCandidate;
-    }
-  },
-  skills: (form, flags) => {
-    if (form.preferredSkills) {
-      form.preferredSkills.isEnabled = true;
-      form.preferredSkills.dataTakenFromCandidate =
-        flags.dataTakenFromCandidate;
-    }
-  },
-  languages: (form, flags) => {
-    if (form.preferredLanguages) {
-      form.preferredLanguages.isEnabled = true;
-      form.preferredLanguages.dataTakenFromCandidate =
-        flags.dataTakenFromCandidate;
-    }
-  },
-  causes: (form, flags) => {
-    if (form.preferredCauses) {
-      form.preferredCauses.isEnabled = true;
-      form.preferredCauses.dataTakenFromCandidate =
-        flags.dataTakenFromCandidate;
-    }
-  },
-  hobbyList: (form, flags) => {
-    if (form.preferredHobbies) {
-      form.preferredHobbies.isEnabled = true;
-      form.preferredHobbies.dataTakenFromCandidate =
-        flags.dataTakenFromCandidate;
-    }
-  },
-  industry: (form, flags) => {
-    if (form.preferredIndustries) {
-      form.preferredIndustries.isEnabled = true;
-      form.preferredIndustries.dataTakenFromCandidate =
-        flags.dataTakenFromCandidate;
-    }
-  },
+  jobRequirement: form => form.jobRequirements[0],
+  profileRequirement: form => form.profileRequirements,
+  secondaryEducation: form => form.secondaryEducation[0],
+  tertiaryEducation: form => form.tertiaryEducation[0],
+  projects: form => form.projectsRequirements,
+  publications: form => form.preferredPublications,
+  clubsAndSocieties: form => form.preferredClubSocieties,
+  sports: form => form.preferredSports,
+  volunteering: form => form.preferredVolunteering,
+  patents: form => form.patents,
+  honoursAndAwards: form => form.preferredHonoursAwards,
+  licensesAndCertifications: form => form.licenseCertificates?.[0],
+  skills: form => form.preferredSkills,
+  languages: form => form.preferredLanguages,
+  causes: form => form.preferredCauses,
+  hobbyList: form => form.preferredHobbies,
+  industry: form => form.preferredIndustries,
 };
 
-// Job Requirements is a mandatory step: always shown and enabled, all fields
-// visible, regardless of the template section's isEnabled flag.
-function applyJobRequirementSection(
-  form: VacancyForm,
-  rawValue: unknown
-): void {
-  const jobSection = unwrapSection(rawValue);
-  SECTION_APPLIERS.jobRequirement(form, {
-    dataTakenFromCandidate: Boolean(jobSection?.dataTakenFromCandidate),
-  });
+/**
+ * Marks a section enabled (AC 8.2 — template sections are on by default) and
+ * leaves its values empty for the recruiter to fill in. The candidate-profile
+ * checkbox is always reset to unticked (DQCGP-3661) so the recruiter opts in
+ * explicitly rather than inheriting the template's choice.
+ */
+function enableSection(form: VacancyForm, sectionKey: string): void {
+  const section = SECTION_TARGETS[sectionKey]?.(form);
+  if (!section) return;
+
+  section.isEnabled = true;
+  section.dataTakenFromCandidate = false;
 }
 
 // Customizable Forms carry real copied data — reuse the edit-flow normaliser.
@@ -222,9 +133,7 @@ function applyOptionalSection(
   const stepKey = SECTION_KEY_TO_STEP_KEY[sectionKey];
   if (stepKey) visibleStepKeys.add(stepKey);
 
-  SECTION_APPLIERS[sectionKey]?.(form, {
-    dataTakenFromCandidate: Boolean(section.dataTakenFromCandidate),
-  });
+  enableSection(form, sectionKey);
   templateFieldVisibility[sectionKey] = readContentFlags(section);
 }
 
@@ -245,8 +154,10 @@ function toVacancyFormFromTemplateUsePayload(
   for (const [sectionKey, rawValue] of Object.entries(data)) {
     if (rawValue === null || rawValue === undefined) continue;
 
+    // Job Requirements is a mandatory step: always shown and enabled, all
+    // fields visible, regardless of the template section's isEnabled flag.
     if (sectionKey === 'jobRequirement') {
-      applyJobRequirementSection(form, rawValue);
+      enableSection(form, 'jobRequirement');
       continue;
     }
 
