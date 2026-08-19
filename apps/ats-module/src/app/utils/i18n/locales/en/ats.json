@@ -608,6 +608,12 @@
       "cancel": "No",
       "delete": "Yes"
     },
+    "notifications": {
+      "deleteForm": {
+        "title": "Successfully Deleted",
+        "message": "Form deleted successfully."
+      }
+    },
     "errors": {
       "errorTitle": "Error",
       "maxLengthExceeded": "Exceeded maximum character length of {{max}}",

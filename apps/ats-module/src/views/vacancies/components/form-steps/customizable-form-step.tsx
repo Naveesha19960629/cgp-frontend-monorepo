@@ -17,7 +17,7 @@ import type {
 } from '@/views/vacancies/types';
 
 import { CharacterCount } from '@cgp/ui-kit/components/character-count';
-import { ErrorToast } from '@cgp/ui-kit/components/custom-toast';
+import { ErrorToast, SuccessToast } from '@cgp/ui-kit/components/custom-toast';
 import { Button } from '@cgp/ui-kit/components/ui/button';
 import {
   Select,
@@ -957,7 +957,14 @@ export default function CustomizableFormStep({
 
   // Deleting a form simply removes it — remaining copies are never renumbered.
   const removeForm = (id: number) => {
+    // Guard so the success toast only fires when a form was actually removed.
+    if (!forms.some(f => f.id === id)) return;
+
     setForms(prev => prev.filter(f => f.id !== id));
+    SuccessToast({
+      title: t('customizableForm.notifications.deleteForm.title'),
+      description: t('customizableForm.notifications.deleteForm.message'),
+    });
   };
 
   const duplicateForm = (id: number) => {
