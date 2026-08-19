@@ -316,6 +316,510 @@ function SecondaryEndDateField({
   );
 }
 
+function SecondarySchoolsField({
+  control,
+  fieldsDisabled,
+  colStart1,
+  schoolsSelectorKey,
+  searchSchools,
+  getValues,
+  schoolsSnapshotRef,
+  setPendingSchoolLabel,
+  setAddSchoolDialogOpen,
+  isMaxReached,
+  setMax,
+  clearMax,
+  t,
+}: Readonly<{
+  control: Control<SecondaryEducationFormValues>;
+  fieldsDisabled: boolean;
+  colStart1: boolean;
+  schoolsSelectorKey: number;
+  searchSchools: ReturnType<typeof useSchoolsSearch>;
+  getValues: UseFormGetValues<SecondaryEducationFormValues>;
+  schoolsSnapshotRef: RefObject<
+    { value: string; label: string; source: string }[]
+  >;
+  setPendingSchoolLabel: (label: string) => void;
+  setAddSchoolDialogOpen: (open: boolean) => void;
+  isMaxReached: boolean;
+  setMax: (field: string) => void;
+  clearMax: (field: string) => void;
+  t: (key: string) => string;
+}>) {
+  return (
+    <div
+      className={cn(
+        'flex min-w-0 flex-col gap-1 xl:col-span-2',
+        colStart1 && 'xl:col-start-1'
+      )}
+    >
+      <Label
+        data-testid="secondaryEducation-schoolName-label"
+        className="truncate"
+      >
+        {t('secondaryEducation.schoolName')}
+      </Label>
+      <Controller
+        control={control}
+        name="entries.0.schools"
+        render={({ field }) => (
+          <MultipleSelector
+            key={schoolsSelectorKey}
+            value={field.value}
+            onSearch={async (search: string) => {
+              const results = await searchSchools(search);
+              // Filter out items already selected to prevent duplication
+              const selectedValues = new Set(
+                field.value.map(v => v.value.toLowerCase())
+              );
+              return results.filter(
+                item => !selectedValues.has(item.value.toLowerCase())
+              );
+            }}
+            onChange={options => {
+              if (options.length > MAX_SELECTIONS) {
+                setMax('schools');
+                return;
+              }
+              if (options.length < MAX_SELECTIONS) clearMax('schools');
+              const newItem = options.find(o => o.value === o.label);
+              if (newItem) {
+                schoolsSnapshotRef.current = getValues('entries.0.schools');
+                setPendingSchoolLabel(newItem.label);
+                setAddSchoolDialogOpen(true);
+              } else {
+                field.onChange(options);
+              }
+            }}
+            maxSelected={MAX_SELECTIONS}
+            onMaxSelected={() => setMax('schools')}
+            errorMessage={
+              isMaxReached
+                ? t('secondaryEducation.errors.maxSelections')
+                : undefined
+            }
+            creatable
+            hideClearAllButton
+            triggerSearchOnFocus
+            keepSelectedInList
+            disabled={fieldsDisabled}
+            loadingIndicator={
+              <p className="px-3 pb-3 text-left">{t('common.loading')}</p>
+            }
+            emptyIndicator={
+              <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
+                <div className="flex flex-col items-start">
+                  <img src={multiSelectInfoAvatar} alt={t('common.noData')} />
+                  <div className="mt-3 w-61 text-left">
+                    <p className="font-bold text-slate-900">
+                      {t('common.noDataTitle')}
+                    </p>
+                    <p className="text-sm font-semibold text-slate-700">
+                      {t('common.noDataDescription')}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            }
+            placeholder={t('secondaryEducation.placeholders.school')}
+          />
+        )}
+      />
+    </div>
+  );
+}
+
+function SecondarySchoolLocationsField({
+  control,
+  fieldsDisabled,
+  colStart1,
+  searchLocations,
+  isMaxReached,
+  setMax,
+  clearMax,
+  t,
+}: Readonly<{
+  control: Control<SecondaryEducationFormValues>;
+  fieldsDisabled: boolean;
+  colStart1: boolean;
+  searchLocations: ReturnType<typeof useSchoolLocationsSearch>;
+  isMaxReached: boolean;
+  setMax: (field: string) => void;
+  clearMax: (field: string) => void;
+  t: (key: string) => string;
+}>) {
+  return (
+    <div
+      className={cn(
+        'flex min-w-0 flex-col gap-1 xl:col-span-2',
+        colStart1 && 'xl:col-start-1'
+      )}
+    >
+      <Label
+        data-testid="secondaryEducation-schoolLocation-label"
+        className="truncate"
+      >
+        {t('secondaryEducation.schoolLocation')}
+      </Label>
+      <Controller
+        control={control}
+        name="entries.0.schoolLocations"
+        render={({ field }) => (
+          <MultipleSelector
+            value={field.value}
+            onSearch={searchLocations}
+            onChange={options => {
+              if (options.length < MAX_SELECTIONS) clearMax('schoolLocations');
+              field.onChange(options);
+            }}
+            showArrow
+            maxSelected={MAX_SELECTIONS}
+            onMaxSelected={() => setMax('schoolLocations')}
+            errorMessage={
+              isMaxReached
+                ? t('secondaryEducation.errors.maxSelections')
+                : undefined
+            }
+            hideClearAllButton
+            triggerSearchOnFocus
+            keepSelectedInList
+            disabled={fieldsDisabled}
+            loadingIndicator={
+              <p className="px-3 pb-3 text-left">{t('common.loading')}</p>
+            }
+            emptyIndicator={
+              <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
+                <div className="flex flex-col items-start">
+                  <img src={multiSelectInfoAvatar} alt={t('common.noData')} />
+                  <div className="mt-3 w-61 text-left">
+                    <p className="font-bold text-slate-900">
+                      {t('common.noDataTitle')}
+                    </p>
+                    <p className="text-sm font-semibold text-slate-700">
+                      {t('common.noDataDescription')}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            }
+            placeholder={t('secondaryEducation.placeholders.schoolLocation')}
+          />
+        )}
+      />
+    </div>
+  );
+}
+
+function SecondaryExaminationsField({
+  control,
+  fieldsDisabled,
+  colStart1,
+  searchExaminations,
+  examinationRef,
+  examinationInput,
+  setExaminationInput,
+  isMaxReached,
+  setMax,
+  clearMax,
+  t,
+}: Readonly<{
+  control: Control<SecondaryEducationFormValues>;
+  fieldsDisabled: boolean;
+  colStart1: boolean;
+  searchExaminations: ReturnType<typeof useExaminationsSearch>;
+  examinationRef: RefObject<MultipleSelectorRef | null>;
+  examinationInput: string;
+  setExaminationInput: (value: string) => void;
+  isMaxReached: boolean;
+  setMax: (field: string) => void;
+  clearMax: (field: string) => void;
+  t: (key: string) => string;
+}>) {
+  return (
+    <div
+      className={cn(
+        'flex min-w-0 flex-col gap-1 xl:col-span-2',
+        colStart1 && 'xl:col-start-1'
+      )}
+    >
+      <div className="flex min-w-0 items-center justify-between gap-2">
+        <Label
+          data-testid="secondaryEducation-examination-label"
+          className="shrink-0"
+        >
+          {t('secondaryEducation.examination')}
+        </Label>
+        <CharacterCount
+          currentLength={examinationInput.length}
+          maxLength={100}
+        />
+      </div>
+      <Controller
+        control={control}
+        name="entries.0.examinations"
+        render={({ field }) => (
+          <MultipleSelector
+            ref={examinationRef}
+            value={field.value}
+            onSearch={searchExaminations}
+            onChange={options => {
+              if (options.length > MAX_SELECTIONS) {
+                setMax('examinations');
+                return;
+              }
+              if (options.length < MAX_SELECTIONS) clearMax('examinations');
+              setExaminationInput('');
+              field.onChange(options);
+            }}
+            maxSelected={MAX_SELECTIONS}
+            onMaxSelected={() => setMax('examinations')}
+            errorMessage={
+              isMaxReached
+                ? t('secondaryEducation.errors.maxSelections')
+                : undefined
+            }
+            creatable
+            hideClearAllButton
+            triggerSearchOnFocus
+            keepSelectedInList
+            disabled={fieldsDisabled}
+            loadingIndicator={
+              <p className="px-3 pb-3 text-left">{t('common.loading')}</p>
+            }
+            emptyIndicator={
+              <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
+                <div className="flex flex-col items-start">
+                  <img src={multiSelectInfoAvatar} alt={t('common.noData')} />
+                  <div className="mt-3 w-61 text-left">
+                    <p className="font-bold text-slate-900">
+                      {t('common.noDataTitle')}
+                    </p>
+                    <p className="text-sm font-semibold text-slate-700">
+                      {t('common.noDataDescription')}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            }
+            inputProps={{
+              maxLength: 100,
+              onValueChange: val => setExaminationInput(val),
+            }}
+            placeholder={t('secondaryEducation.placeholders.examination')}
+          />
+        )}
+      />
+    </div>
+  );
+}
+
+function SecondaryAwardingBodyField({
+  control,
+  fieldsDisabled,
+  colStart1,
+  searchAwardingBodies,
+  awardingBodyRef,
+  awardingBodyInput,
+  setAwardingBodyInput,
+  isMaxReached,
+  setMax,
+  clearMax,
+  t,
+}: Readonly<{
+  control: Control<SecondaryEducationFormValues>;
+  fieldsDisabled: boolean;
+  colStart1: boolean;
+  searchAwardingBodies: ReturnType<typeof useAwardingBodiesSearch>;
+  awardingBodyRef: RefObject<MultipleSelectorRef | null>;
+  awardingBodyInput: string;
+  setAwardingBodyInput: (value: string) => void;
+  isMaxReached: boolean;
+  setMax: (field: string) => void;
+  clearMax: (field: string) => void;
+  t: (key: string) => string;
+}>) {
+  return (
+    <div
+      className={cn(
+        'flex min-w-0 flex-col gap-1 xl:col-span-2',
+        colStart1 && 'xl:col-start-1'
+      )}
+    >
+      <div className="flex min-w-0 items-center justify-between gap-2">
+        <Label
+          data-testid="secondaryEducation-awardingBody-label"
+          className="shrink-0"
+        >
+          {t('secondaryEducation.awardingBody')}
+        </Label>
+        <CharacterCount
+          currentLength={awardingBodyInput.length}
+          maxLength={200}
+        />
+      </div>
+      <Controller
+        control={control}
+        name="entries.0.awardingBodies"
+        render={({ field }) => (
+          <MultipleSelector
+            ref={awardingBodyRef}
+            value={field.value}
+            onSearch={searchAwardingBodies}
+            onChange={options => {
+              if (options.length > MAX_SELECTIONS) {
+                setMax('awardingBodies');
+                return;
+              }
+              if (options.length < MAX_SELECTIONS) clearMax('awardingBodies');
+              setAwardingBodyInput('');
+              field.onChange(options);
+            }}
+            maxSelected={MAX_SELECTIONS}
+            onMaxSelected={() => setMax('awardingBodies')}
+            errorMessage={
+              isMaxReached
+                ? t('secondaryEducation.errors.maxSelections')
+                : undefined
+            }
+            creatable
+            hideClearAllButton
+            triggerSearchOnFocus
+            keepSelectedInList
+            disabled={fieldsDisabled}
+            loadingIndicator={
+              <p className="px-3 pb-3 text-left">{t('common.loading')}</p>
+            }
+            emptyIndicator={
+              <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
+                <div className="flex flex-col items-start">
+                  <img src={multiSelectInfoAvatar} alt={t('common.noData')} />
+                  <div className="mt-3 w-61 text-left">
+                    <p className="font-bold text-slate-900">
+                      {t('common.noDataTitle')}
+                    </p>
+                    <p className="text-sm font-semibold text-slate-700">
+                      {t('common.noDataDescription')}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            }
+            inputProps={{
+              maxLength: 200,
+              onValueChange: val => setAwardingBodyInput(val),
+            }}
+            placeholder={t('secondaryEducation.placeholders.awardingBody')}
+          />
+        )}
+      />
+    </div>
+  );
+}
+
+function SecondaryFieldsOfStudyField({
+  control,
+  fieldsDisabled,
+  colStart1,
+  searchFieldsOfStudy,
+  fieldOfStudyRef,
+  fieldOfStudyInput,
+  setFieldOfStudyInput,
+  isMaxReached,
+  setMax,
+  clearMax,
+  t,
+}: Readonly<{
+  control: Control<SecondaryEducationFormValues>;
+  fieldsDisabled: boolean;
+  colStart1: boolean;
+  searchFieldsOfStudy: ReturnType<typeof useFieldsOfStudySearch>;
+  fieldOfStudyRef: RefObject<MultipleSelectorRef | null>;
+  fieldOfStudyInput: string;
+  setFieldOfStudyInput: (value: string) => void;
+  isMaxReached: boolean;
+  setMax: (field: string) => void;
+  clearMax: (field: string) => void;
+  t: (key: string) => string;
+}>) {
+  return (
+    <div
+      className={cn(
+        'flex min-w-0 flex-col gap-1 xl:col-span-2',
+        colStart1 && 'xl:col-start-1'
+      )}
+    >
+      <div className="flex min-w-0 items-center justify-between gap-2">
+        <Label
+          data-testid="secondaryEducation-fieldOfStudy-label"
+          className="shrink-0"
+        >
+          {t('secondaryEducation.fieldOfStudy')}
+        </Label>
+        <CharacterCount
+          currentLength={fieldOfStudyInput.length}
+          maxLength={100}
+        />
+      </div>
+      <Controller
+        control={control}
+        name="entries.0.fieldsOfStudy"
+        render={({ field }) => (
+          <MultipleSelector
+            ref={fieldOfStudyRef}
+            value={field.value}
+            onSearch={searchFieldsOfStudy}
+            onChange={options => {
+              if (options.length > MAX_SELECTIONS) {
+                setMax('fieldsOfStudy');
+                return;
+              }
+              if (options.length < MAX_SELECTIONS) clearMax('fieldsOfStudy');
+              setFieldOfStudyInput('');
+              field.onChange(options);
+            }}
+            maxSelected={MAX_SELECTIONS}
+            onMaxSelected={() => setMax('fieldsOfStudy')}
+            errorMessage={
+              isMaxReached
+                ? t('secondaryEducation.errors.maxSelections')
+                : undefined
+            }
+            creatable
+            hideClearAllButton
+            triggerSearchOnFocus
+            keepSelectedInList
+            disabled={fieldsDisabled}
+            loadingIndicator={
+              <p className="px-3 pb-3 text-left">{t('common.loading')}</p>
+            }
+            emptyIndicator={
+              <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
+                <div className="flex flex-col items-start">
+                  <img src={multiSelectInfoAvatar} alt={t('common.noData')} />
+                  <div className="mt-3 w-61 text-left">
+                    <p className="font-bold text-slate-900">
+                      {t('common.noDataTitle')}
+                    </p>
+                    <p className="text-sm font-semibold text-slate-700">
+                      {t('common.noDataDescription')}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            }
+            inputProps={{
+              maxLength: 100,
+              onValueChange: val => setFieldOfStudyInput(val),
+            }}
+            placeholder={t('secondaryEducation.placeholders.fieldOfStudy')}
+          />
+        )}
+      />
+    </div>
+  );
+}
+
 export default function SecondaryEducationStep({
   onNext,
   onBack,
@@ -902,166 +1406,34 @@ export default function SecondaryEducationStep({
                   )}
 
                   {isFieldVisible('schools') && (
-                    <div
-                      className={cn(
-                        'flex min-w-0 flex-col gap-1 xl:col-span-2',
-                        rowStartCodes.has('schools') && 'xl:col-start-1'
-                      )}
-                    >
-                      <Label
-                        data-testid="secondaryEducation-schoolName-label"
-                        className="truncate"
-                      >
-                        {t('secondaryEducation.schoolName')}
-                      </Label>
-                      <Controller
-                        control={control}
-                        name="entries.0.schools"
-                        render={({ field }) => (
-                          <MultipleSelector
-                            key={schoolsSelectorKey}
-                            value={field.value}
-                            onSearch={async (search: string) => {
-                              const results = await searchSchools(search);
-                              // Filter out items already selected to prevent duplication
-                              const selectedValues = new Set(
-                                field.value.map(v => v.value.toLowerCase())
-                              );
-                              return results.filter(
-                                item =>
-                                  !selectedValues.has(item.value.toLowerCase())
-                              );
-                            }}
-                            onChange={options => {
-                              if (options.length > MAX_SELECTIONS) {
-                                setMax('schools');
-                                return;
-                              }
-                              if (options.length < MAX_SELECTIONS)
-                                clearMax('schools');
-                              const newItem = options.find(
-                                o => o.value === o.label
-                              );
-                              if (newItem) {
-                                schoolsSnapshotRef.current =
-                                  getValues('entries.0.schools');
-                                setPendingSchoolLabel(newItem.label);
-                                setAddSchoolDialogOpen(true);
-                              } else {
-                                field.onChange(options);
-                              }
-                            }}
-                            maxSelected={MAX_SELECTIONS}
-                            onMaxSelected={() => setMax('schools')}
-                            errorMessage={
-                              maxReachedFields.has('schools')
-                                ? t('secondaryEducation.errors.maxSelections')
-                                : undefined
-                            }
-                            creatable
-                            hideClearAllButton
-                            triggerSearchOnFocus
-                            keepSelectedInList
-                            disabled={fieldsDisabled}
-                            loadingIndicator={
-                              <p className="px-3 pb-3 text-left">
-                                {t('common.loading')}
-                              </p>
-                            }
-                            emptyIndicator={
-                              <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
-                                <div className="flex flex-col items-start">
-                                  <img
-                                    src={multiSelectInfoAvatar}
-                                    alt={t('common.noData')}
-                                  />
-                                  <div className="mt-3 w-61 text-left">
-                                    <p className="font-bold text-slate-900">
-                                      {t('common.noDataTitle')}
-                                    </p>
-                                    <p className="text-sm font-semibold text-slate-700">
-                                      {t('common.noDataDescription')}
-                                    </p>
-                                  </div>
-                                </div>
-                              </div>
-                            }
-                            placeholder={t(
-                              'secondaryEducation.placeholders.school'
-                            )}
-                          />
-                        )}
-                      />
-                    </div>
+                    <SecondarySchoolsField
+                      control={control}
+                      fieldsDisabled={fieldsDisabled}
+                      colStart1={rowStartCodes.has('schools')}
+                      schoolsSelectorKey={schoolsSelectorKey}
+                      searchSchools={searchSchools}
+                      getValues={getValues}
+                      schoolsSnapshotRef={schoolsSnapshotRef}
+                      setPendingSchoolLabel={setPendingSchoolLabel}
+                      setAddSchoolDialogOpen={setAddSchoolDialogOpen}
+                      isMaxReached={maxReachedFields.has('schools')}
+                      setMax={setMax}
+                      clearMax={clearMax}
+                      t={t}
+                    />
                   )}
 
                   {isFieldVisible('schoolLocations') && (
-                    <div
-                      className={cn(
-                        'flex min-w-0 flex-col gap-1 xl:col-span-2',
-                        rowStartCodes.has('schoolLocations') && 'xl:col-start-1'
-                      )}
-                    >
-                      <Label
-                        data-testid="secondaryEducation-schoolLocation-label"
-                        className="truncate"
-                      >
-                        {t('secondaryEducation.schoolLocation')}
-                      </Label>
-                      <Controller
-                        control={control}
-                        name="entries.0.schoolLocations"
-                        render={({ field }) => (
-                          <MultipleSelector
-                            value={field.value}
-                            onSearch={searchLocations}
-                            onChange={options => {
-                              if (options.length < MAX_SELECTIONS)
-                                clearMax('schoolLocations');
-                              field.onChange(options);
-                            }}
-                            showArrow
-                            maxSelected={MAX_SELECTIONS}
-                            onMaxSelected={() => setMax('schoolLocations')}
-                            errorMessage={
-                              maxReachedFields.has('schoolLocations')
-                                ? t('secondaryEducation.errors.maxSelections')
-                                : undefined
-                            }
-                            hideClearAllButton
-                            triggerSearchOnFocus
-                            keepSelectedInList
-                            disabled={fieldsDisabled}
-                            loadingIndicator={
-                              <p className="px-3 pb-3 text-left">
-                                {t('common.loading')}
-                              </p>
-                            }
-                            emptyIndicator={
-                              <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
-                                <div className="flex flex-col items-start">
-                                  <img
-                                    src={multiSelectInfoAvatar}
-                                    alt={t('common.noData')}
-                                  />
-                                  <div className="mt-3 w-61 text-left">
-                                    <p className="font-bold text-slate-900">
-                                      {t('common.noDataTitle')}
-                                    </p>
-                                    <p className="text-sm font-semibold text-slate-700">
-                                      {t('common.noDataDescription')}
-                                    </p>
-                                  </div>
-                                </div>
-                              </div>
-                            }
-                            placeholder={t(
-                              'secondaryEducation.placeholders.schoolLocation'
-                            )}
-                          />
-                        )}
-                      />
-                    </div>
+                    <SecondarySchoolLocationsField
+                      control={control}
+                      fieldsDisabled={fieldsDisabled}
+                      colStart1={rowStartCodes.has('schoolLocations')}
+                      searchLocations={searchLocations}
+                      isMaxReached={maxReachedFields.has('schoolLocations')}
+                      setMax={setMax}
+                      clearMax={clearMax}
+                      t={t}
+                    />
                   )}
 
                   {isFieldVisible('grade') && (
@@ -1131,259 +1503,51 @@ export default function SecondaryEducationStep({
                   )}
 
                   {isFieldVisible('examinations') && (
-                    <div
-                      className={cn(
-                        'flex min-w-0 flex-col gap-1 xl:col-span-2',
-                        rowStartCodes.has('examinations') && 'xl:col-start-1'
-                      )}
-                    >
-                      <div className="flex min-w-0 items-center justify-between gap-2">
-                        <Label
-                          data-testid="secondaryEducation-examination-label"
-                          className="shrink-0"
-                        >
-                          {t('secondaryEducation.examination')}
-                        </Label>
-                        <CharacterCount
-                          currentLength={examinationInput.length}
-                          maxLength={100}
-                        />
-                      </div>
-                      <Controller
-                        control={control}
-                        name="entries.0.examinations"
-                        render={({ field }) => (
-                          <MultipleSelector
-                            ref={examinationRef}
-                            value={field.value}
-                            onSearch={searchExaminations}
-                            onChange={options => {
-                              if (options.length > MAX_SELECTIONS) {
-                                setMax('examinations');
-                                return;
-                              }
-                              if (options.length < MAX_SELECTIONS)
-                                clearMax('examinations');
-                              setExaminationInput('');
-                              field.onChange(options);
-                            }}
-                            maxSelected={MAX_SELECTIONS}
-                            onMaxSelected={() => setMax('examinations')}
-                            errorMessage={
-                              maxReachedFields.has('examinations')
-                                ? t('secondaryEducation.errors.maxSelections')
-                                : undefined
-                            }
-                            creatable
-                            hideClearAllButton
-                            triggerSearchOnFocus
-                            keepSelectedInList
-                            disabled={fieldsDisabled}
-                            loadingIndicator={
-                              <p className="px-3 pb-3 text-left">
-                                {t('common.loading')}
-                              </p>
-                            }
-                            emptyIndicator={
-                              <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
-                                <div className="flex flex-col items-start">
-                                  <img
-                                    src={multiSelectInfoAvatar}
-                                    alt={t('common.noData')}
-                                  />
-                                  <div className="mt-3 w-61 text-left">
-                                    <p className="font-bold text-slate-900">
-                                      {t('common.noDataTitle')}
-                                    </p>
-                                    <p className="text-sm font-semibold text-slate-700">
-                                      {t('common.noDataDescription')}
-                                    </p>
-                                  </div>
-                                </div>
-                              </div>
-                            }
-                            inputProps={{
-                              maxLength: 100,
-                              onValueChange: val => setExaminationInput(val),
-                            }}
-                            placeholder={t(
-                              'secondaryEducation.placeholders.examination'
-                            )}
-                          />
-                        )}
-                      />
-                    </div>
+                    <SecondaryExaminationsField
+                      control={control}
+                      fieldsDisabled={fieldsDisabled}
+                      colStart1={rowStartCodes.has('examinations')}
+                      searchExaminations={searchExaminations}
+                      examinationRef={examinationRef}
+                      examinationInput={examinationInput}
+                      setExaminationInput={setExaminationInput}
+                      isMaxReached={maxReachedFields.has('examinations')}
+                      setMax={setMax}
+                      clearMax={clearMax}
+                      t={t}
+                    />
                   )}
 
                   {isFieldVisible('secondaryAwardingBody') && (
-                    <div
-                      className={cn(
-                        'flex min-w-0 flex-col gap-1 xl:col-span-2',
-                        rowStartCodes.has('secondaryAwardingBody') &&
-                          'xl:col-start-1'
-                      )}
-                    >
-                      <div className="flex min-w-0 items-center justify-between gap-2">
-                        <Label
-                          data-testid="secondaryEducation-awardingBody-label"
-                          className="shrink-0"
-                        >
-                          {t('secondaryEducation.awardingBody')}
-                        </Label>
-                        <CharacterCount
-                          currentLength={awardingBodyInput.length}
-                          maxLength={200}
-                        />
-                      </div>
-                      <Controller
-                        control={control}
-                        name="entries.0.awardingBodies"
-                        render={({ field }) => (
-                          <MultipleSelector
-                            ref={awardingBodyRef}
-                            value={field.value}
-                            onSearch={searchAwardingBodies}
-                            onChange={options => {
-                              if (options.length > MAX_SELECTIONS) {
-                                setMax('awardingBodies');
-                                return;
-                              }
-                              if (options.length < MAX_SELECTIONS)
-                                clearMax('awardingBodies');
-                              setAwardingBodyInput('');
-                              field.onChange(options);
-                            }}
-                            maxSelected={MAX_SELECTIONS}
-                            onMaxSelected={() => setMax('awardingBodies')}
-                            errorMessage={
-                              maxReachedFields.has('awardingBodies')
-                                ? t('secondaryEducation.errors.maxSelections')
-                                : undefined
-                            }
-                            creatable
-                            hideClearAllButton
-                            triggerSearchOnFocus
-                            keepSelectedInList
-                            disabled={fieldsDisabled}
-                            loadingIndicator={
-                              <p className="px-3 pb-3 text-left">
-                                {t('common.loading')}
-                              </p>
-                            }
-                            emptyIndicator={
-                              <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
-                                <div className="flex flex-col items-start">
-                                  <img
-                                    src={multiSelectInfoAvatar}
-                                    alt={t('common.noData')}
-                                  />
-                                  <div className="mt-3 w-61 text-left">
-                                    <p className="font-bold text-slate-900">
-                                      {t('common.noDataTitle')}
-                                    </p>
-                                    <p className="text-sm font-semibold text-slate-700">
-                                      {t('common.noDataDescription')}
-                                    </p>
-                                  </div>
-                                </div>
-                              </div>
-                            }
-                            inputProps={{
-                              maxLength: 200,
-                              onValueChange: val => setAwardingBodyInput(val),
-                            }}
-                            placeholder={t(
-                              'secondaryEducation.placeholders.awardingBody'
-                            )}
-                          />
-                        )}
-                      />
-                    </div>
+                    <SecondaryAwardingBodyField
+                      control={control}
+                      fieldsDisabled={fieldsDisabled}
+                      colStart1={rowStartCodes.has('secondaryAwardingBody')}
+                      searchAwardingBodies={searchAwardingBodies}
+                      awardingBodyRef={awardingBodyRef}
+                      awardingBodyInput={awardingBodyInput}
+                      setAwardingBodyInput={setAwardingBodyInput}
+                      isMaxReached={maxReachedFields.has('awardingBodies')}
+                      setMax={setMax}
+                      clearMax={clearMax}
+                      t={t}
+                    />
                   )}
 
                   {isFieldVisible('fieldsOfStudy') && (
-                    <div
-                      className={cn(
-                        'flex min-w-0 flex-col gap-1 xl:col-span-2',
-                        rowStartCodes.has('fieldsOfStudy') && 'xl:col-start-1'
-                      )}
-                    >
-                      <div className="flex min-w-0 items-center justify-between gap-2">
-                        <Label
-                          data-testid="secondaryEducation-fieldOfStudy-label"
-                          className="shrink-0"
-                        >
-                          {t('secondaryEducation.fieldOfStudy')}
-                        </Label>
-                        <CharacterCount
-                          currentLength={fieldOfStudyInput.length}
-                          maxLength={100}
-                        />
-                      </div>
-                      <Controller
-                        control={control}
-                        name="entries.0.fieldsOfStudy"
-                        render={({ field }) => (
-                          <MultipleSelector
-                            ref={fieldOfStudyRef}
-                            value={field.value}
-                            onSearch={searchFieldsOfStudy}
-                            onChange={options => {
-                              if (options.length > MAX_SELECTIONS) {
-                                setMax('fieldsOfStudy');
-                                return;
-                              }
-                              if (options.length < MAX_SELECTIONS)
-                                clearMax('fieldsOfStudy');
-                              setFieldOfStudyInput('');
-                              field.onChange(options);
-                            }}
-                            maxSelected={MAX_SELECTIONS}
-                            onMaxSelected={() => setMax('fieldsOfStudy')}
-                            errorMessage={
-                              maxReachedFields.has('fieldsOfStudy')
-                                ? t('secondaryEducation.errors.maxSelections')
-                                : undefined
-                            }
-                            creatable
-                            hideClearAllButton
-                            triggerSearchOnFocus
-                            keepSelectedInList
-                            disabled={fieldsDisabled}
-                            loadingIndicator={
-                              <p className="px-3 pb-3 text-left">
-                                {t('common.loading')}
-                              </p>
-                            }
-                            emptyIndicator={
-                              <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
-                                <div className="flex flex-col items-start">
-                                  <img
-                                    src={multiSelectInfoAvatar}
-                                    alt={t('common.noData')}
-                                  />
-                                  <div className="mt-3 w-61 text-left">
-                                    <p className="font-bold text-slate-900">
-                                      {t('common.noDataTitle')}
-                                    </p>
-                                    <p className="text-sm font-semibold text-slate-700">
-                                      {t('common.noDataDescription')}
-                                    </p>
-                                  </div>
-                                </div>
-                              </div>
-                            }
-                            inputProps={{
-                              maxLength: 100,
-                              onValueChange: val => setFieldOfStudyInput(val),
-                            }}
-                            placeholder={t(
-                              'secondaryEducation.placeholders.fieldOfStudy'
-                            )}
-                          />
-                        )}
-                      />
-                    </div>
+                    <SecondaryFieldsOfStudyField
+                      control={control}
+                      fieldsDisabled={fieldsDisabled}
+                      colStart1={rowStartCodes.has('fieldsOfStudy')}
+                      searchFieldsOfStudy={searchFieldsOfStudy}
+                      fieldOfStudyRef={fieldOfStudyRef}
+                      fieldOfStudyInput={fieldOfStudyInput}
+                      setFieldOfStudyInput={setFieldOfStudyInput}
+                      isMaxReached={maxReachedFields.has('fieldsOfStudy')}
+                      setMax={setMax}
+                      clearMax={clearMax}
+                      t={t}
+                    />
                   )}
 
                   {isFieldVisible('result') && (
