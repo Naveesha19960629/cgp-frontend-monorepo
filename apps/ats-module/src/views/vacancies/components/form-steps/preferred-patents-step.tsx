@@ -544,6 +544,7 @@ function PatentCard({
 export default function PreferredPatentsStep({
   onNext,
   onBack,
+  mode = 'create',
 }: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
 
@@ -806,10 +807,12 @@ export default function PreferredPatentsStep({
               >
                 {t('preferredPatents.title')}
               </h2>
-              <VacancyStatusBadge
-                status={contextForm.status}
-                applicantCount={contextForm.applicantCount}
-              />
+              {mode === 'edit' && contextForm.status ? (
+                <VacancyStatusBadge
+                  status={contextForm.status}
+                  applicantCount={contextForm.applicantCount}
+                />
+              ) : null}
             </div>
 
             {/* Toggle switch */}

@@ -619,6 +619,7 @@ function AddressCard({
 export default function ProfileRequirementsStep({
   onNext,
   onBack,
+  mode = 'create',
 }: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
   const showDisableToast = useDisableSuccessToast();
@@ -889,10 +890,12 @@ export default function ProfileRequirementsStep({
               >
                 {t('profileRequirements.title')}
               </h2>
-              <VacancyStatusBadge
-                status={contextForm.status}
-                applicantCount={contextForm.applicantCount}
-              />
+              {mode === 'edit' && contextForm.status ? (
+                <VacancyStatusBadge
+                  status={contextForm.status}
+                  applicantCount={contextForm.applicantCount}
+                />
+              ) : null}
             </div>
 
             {/* Toggle switch */}

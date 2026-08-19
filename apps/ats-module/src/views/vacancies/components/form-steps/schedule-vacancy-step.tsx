@@ -110,12 +110,11 @@ export default function ScheduleVacancyStep({
   const hasPastScheduleDateTime = useMemo(() => {
     if (form.status === 'expired') return false;
 
-    // An on-hold vacancy's scheduled date is a promise to publish in the
-    // future, so an already-lapsed date is invalid and must be rescheduled —
-    // evaluate the past-date check even when the schedule is unchanged. For
-    // other statuses (e.g. live/active) an unchanged, already-past publish date
-    // is expected, so skip the check to avoid blocking edits to other fields.
-    if (!isScheduleChanged && form.status !== 'on_hold') {
+    // A changed schedule can never resolve to a past date/time (mirrors the
+    // onValid submit check below) — but an unchanged schedule is never
+    // blocked here, even for an on-hold vacancy, so the recruiter can still
+    // save edits to other sections without being forced to reschedule.
+    if (!isScheduleChanged) {
       return false;
     }
 
