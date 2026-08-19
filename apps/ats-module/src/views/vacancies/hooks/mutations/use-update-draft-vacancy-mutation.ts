@@ -24,6 +24,9 @@ const useUpdateDraftVacancyMutation = () => {
     onSuccess: (_, { id }) => {
       void queryClient.invalidateQueries({ queryKey: ['vacancies'] });
       void queryClient.invalidateQueries({ queryKey: ['vacancy', id] });
+      void queryClient.invalidateQueries({
+        queryKey: ['vacancy-job-description', id],
+      });
     },
   });
 };

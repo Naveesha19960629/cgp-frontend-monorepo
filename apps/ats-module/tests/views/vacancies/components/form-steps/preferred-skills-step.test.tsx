@@ -515,6 +515,60 @@ describe('PreferredSkillsStep', () => {
     });
   });
 
+  describe('DQCGP-2866 — disable clears uncommitted row state', () => {
+    it('marks the skill and career path combobox as disabled once toggled off', async () => {
+      const user = userEvent.setup();
+      renderStep();
+      const row = getRows()[0];
+
+      expect(
+        within(row).getByPlaceholderText(SKILL_PLACEHOLDER)
+      ).not.toBeDisabled();
+      expect(
+        within(row).getByPlaceholderText(CAREER_PATH_PLACEHOLDER)
+      ).not.toBeDisabled();
+
+      await user.click(screen.getByRole('switch')); // toggle off, no data yet
+
+      expect(
+        within(row).getByPlaceholderText(SKILL_PLACEHOLDER)
+      ).toBeDisabled();
+      expect(
+        within(row).getByPlaceholderText(CAREER_PATH_PLACEHOLDER)
+      ).toBeDisabled();
+    });
+
+    it('resets both character counters when disabled with uncommitted search text', async () => {
+      const user = userEvent.setup();
+      renderStep();
+      const row = getRows()[0];
+
+      await user.type(
+        within(row).getByPlaceholderText(SKILL_PLACEHOLDER),
+        'Rust'
+      );
+      await user.type(
+        within(row).getByPlaceholderText(CAREER_PATH_PLACEHOLDER),
+        'Backend'
+      );
+      expect(within(row).getAllByTestId('char-count')[0]).toHaveTextContent(
+        '4/100'
+      );
+      expect(within(row).getAllByTestId('char-count')[1]).toHaveTextContent(
+        '7/100'
+      );
+
+      await user.click(screen.getByRole('switch')); // toggle off, no data yet
+
+      expect(within(row).getAllByTestId('char-count')[0]).toHaveTextContent(
+        '0/100'
+      );
+      expect(within(row).getAllByTestId('char-count')[1]).toHaveTextContent(
+        '0/100'
+      );
+    });
+  });
+
   describe('confirmDisableDialog', () => {
     async function openConfirmDialog() {
       const user = userEvent.setup();

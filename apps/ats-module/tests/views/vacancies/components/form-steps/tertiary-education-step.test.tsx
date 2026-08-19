@@ -244,6 +244,7 @@ vi.mock('@cgp/ui-kit/components/multi-select', () => ({
         loadingIndicator,
         emptyIndicator,
         showArrow,
+        disabled,
       }: {
         placeholder: string;
         onMaxSelected?: () => void;
@@ -253,6 +254,7 @@ vi.mock('@cgp/ui-kit/components/multi-select', () => ({
         emptyIndicator?: ReactNode;
         keepSelectedInList?: boolean;
         showArrow?: boolean;
+        disabled?: boolean;
       },
       ref
     ) => {
@@ -262,7 +264,13 @@ vi.mock('@cgp/ui-kit/components/multi-select', () => ({
       }));
       return (
         <>
-          <input placeholder={placeholder} readOnly ref={inputRef} />
+          <input
+            placeholder={placeholder}
+            readOnly
+            ref={inputRef}
+            disabled={disabled}
+            data-disabled={String(Boolean(disabled))}
+          />
           {showArrow && <span data-testid={`arrow-${placeholder}`} />}
           {onChange && (
             <button
@@ -668,6 +676,42 @@ describe('TertiaryEducationStep', () => {
         expect(
           screen.getByText('tertiaryEducation.confirmDisableDialog.title')
         ).toBeInTheDocument();
+      });
+    });
+
+    it('marks every select-or-add field as disabled once the section is toggled off (DQCGP-2866)', async () => {
+      const user = userEvent.setup();
+      renderStep();
+      await enableSection(user);
+
+      const placeholders = [
+        'tertiaryEducation.placeholders.qualificationName',
+        'tertiaryEducation.placeholders.awardingBodyLocation',
+        'tertiaryEducation.placeholders.batch',
+        'tertiaryEducation.placeholders.awardingBody',
+        'tertiaryEducation.placeholders.levelOfQualification',
+        'tertiaryEducation.placeholders.specialization',
+        'tertiaryEducation.placeholders.studyMode',
+        'tertiaryEducation.placeholders.studyPattern',
+        'tertiaryEducation.placeholders.deliverySchedule',
+        'tertiaryEducation.placeholders.department',
+        'tertiaryEducation.placeholders.faculty',
+      ];
+
+      placeholders.forEach(placeholder => {
+        expect(screen.getByPlaceholderText(placeholder)).toHaveAttribute(
+          'data-disabled',
+          'false'
+        );
+      });
+
+      await user.click(screen.getByRole('switch')); // toggle off
+
+      placeholders.forEach(placeholder => {
+        expect(screen.getByPlaceholderText(placeholder)).toHaveAttribute(
+          'data-disabled',
+          'true'
+        );
       });
     });
   });

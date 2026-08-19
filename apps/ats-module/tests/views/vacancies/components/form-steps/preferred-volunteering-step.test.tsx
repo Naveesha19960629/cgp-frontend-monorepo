@@ -132,19 +132,33 @@ vi.mock('@cgp/ui-kit/components/multi-select', () => ({
     placeholder,
     options = [],
     onChange,
+    onSearchSync,
+    disabled,
   }: {
     placeholder: string;
     options?: StubOption[];
     onChange?: (options: StubOption[]) => void;
+    onSearchSync?: (value: string) => StubOption[];
+    disabled?: boolean;
   }) => (
     <div>
-      <input placeholder={placeholder} readOnly />
+      <input
+        placeholder={placeholder}
+        readOnly
+        disabled={disabled}
+        data-disabled={String(Boolean(disabled))}
+      />
       {options.map(o => (
         <span key={o.value}>{o.label}</span>
       ))}
       <button type="button" onClick={() => onChange?.(options)}>
         {`select:${placeholder}`}
       </button>
+      {onSearchSync && (
+        <button type="button" onClick={() => onSearchSync('xaxaxax')}>
+          {`search:${placeholder}`}
+        </button>
+      )}
     </div>
   ),
 }));
@@ -156,7 +170,9 @@ vi.mock('@cgp/ui-kit/components/combobox', () => ({
 }));
 
 vi.mock('@cgp/ui-kit/components/character-count', () => ({
-  CharacterCount: () => <span>0/100</span>,
+  CharacterCount: ({ currentLength }: { currentLength: number }) => (
+    <span data-testid="character-count">{currentLength}</span>
+  ),
 }));
 
 vi.mock('@cgp/ui-kit/components/custom-toast', () => ({
@@ -367,5 +383,68 @@ describe('PreferredVolunteeringStep', () => {
     await user.click(addButton);
 
     expect(screen.queryByText('Volunteering 02')).not.toBeInTheDocument();
+  });
+
+  describe('enable/disable toggle (DQCGP-2866)', () => {
+    it('marks every select-or-add field as disabled once the section is toggled off', async () => {
+      const user = userEvent.setup();
+      render(
+        <PreferredVolunteeringStep
+          onNext={mockOnNext}
+          onBack={mockOnBack}
+          onSubmit={vi.fn()}
+        />
+      );
+
+      await user.click(screen.getByRole('switch')); // toggle on
+
+      expect(
+        screen.getByPlaceholderText('preferredVolunteering.placeholders.cause')
+      ).toHaveAttribute('data-disabled', 'false');
+      expect(screen.getByPlaceholderText('Select location')).toHaveAttribute(
+        'data-disabled',
+        'false'
+      );
+
+      await user.click(screen.getByRole('switch')); // toggle off
+
+      expect(
+        screen.getByPlaceholderText('preferredVolunteering.placeholders.cause')
+      ).toHaveAttribute('data-disabled', 'true');
+      expect(screen.getByPlaceholderText('Select location')).toHaveAttribute(
+        'data-disabled',
+        'true'
+      );
+    });
+
+    it('resets the character counter when disabled with uncommitted search text', async () => {
+      const user = userEvent.setup();
+      render(
+        <PreferredVolunteeringStep
+          onNext={mockOnNext}
+          onBack={mockOnBack}
+          onSubmit={vi.fn()}
+        />
+      );
+
+      await user.click(screen.getByRole('switch')); // toggle on
+      await user.click(
+        screen.getByRole('button', {
+          name: 'search:preferredVolunteering.placeholders.cause',
+        })
+      );
+
+      // The cause counter is the first of the card's two CharacterCount
+      // instances (cause, then position).
+      expect(screen.getAllByTestId('character-count')[0]).toHaveTextContent(
+        '7'
+      );
+
+      await user.click(screen.getByRole('switch')); // toggle off
+
+      expect(screen.getAllByTestId('character-count')[0]).toHaveTextContent(
+        '0'
+      );
+    });
   });
 });

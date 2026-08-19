@@ -845,6 +845,23 @@ export default function PreferredClubSocietiesStep({
   const canNavigate =
     !isEnabled || dataTakenFromCandidate || hasClubSocietyData;
 
+  // The direct-disable path (toggling off with no committed data) doesn't
+  // otherwise clear a row's uncommitted search text, which also drives the
+  // character counter next to the Club/Society label (DQCGP-2866). Adjusted
+  // during render (not an effect) per
+  // https://react.dev/learn/you-might-not-need-an-effect.
+  const [prevFieldsDisabled, setPrevFieldsDisabled] = useState(fieldsDisabled);
+  if (fieldsDisabled !== prevFieldsDisabled) {
+    setPrevFieldsDisabled(fieldsDisabled);
+    if (fieldsDisabled) {
+      setEntries(prev =>
+        prev.some(e => e.clubSocietySearch)
+          ? prev.map(e => ({ ...e, clubSocietySearch: '' }))
+          : prev
+      );
+    }
+  }
+
   // Societies API
   const { data: societiesData, isLoading: isSocietiesLoading } =
     useSocietiesQuery(

@@ -142,6 +142,21 @@ function PreferredSkillRow({
     CareerPathItem[]
   >([]);
 
+  // Mirrors the combobox's own clear-on-disable behaviour (DQCGP-2866) for
+  // this row's separate search-text state, which also drives the character
+  // counters next to the Skill / Career Path labels. Adjusted during render
+  // (not an effect) per https://react.dev/learn/you-might-not-need-an-effect.
+  const [prevDisabled, setPrevDisabled] = useState(disabled);
+  if (disabled !== prevDisabled) {
+    setPrevDisabled(disabled);
+    if (disabled) {
+      setSkillSearch('');
+      setCareerPathApiSearch('');
+      setSkillInputLength(entry.skillName.length);
+      setCareerPathInputLength(entry.careerPathName.length);
+    }
+  }
+
   const { data: skillsData, isLoading: isSkillsLoading } =
     useSkillsQuery(skillSearch);
   const { data: careerPathsData, isLoading: isCareerPathsLoading } =

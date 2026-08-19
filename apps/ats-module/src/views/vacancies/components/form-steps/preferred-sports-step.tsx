@@ -950,6 +950,23 @@ export default function PreferredSportsStep({
   const fieldsDisabled = !isEnabled || dataTakenFromCandidate;
   const canNavigate = !isEnabled || dataTakenFromCandidate || hasSportsData;
 
+  // The direct-disable path (toggling off with no committed data) doesn't
+  // otherwise clear a row's uncommitted search text, which also drives the
+  // character counter next to the Sport label (DQCGP-2866). Adjusted during
+  // render (not an effect) per
+  // https://react.dev/learn/you-might-not-need-an-effect.
+  const [prevFieldsDisabled, setPrevFieldsDisabled] = useState(fieldsDisabled);
+  if (fieldsDisabled !== prevFieldsDisabled) {
+    setPrevFieldsDisabled(fieldsDisabled);
+    if (fieldsDisabled) {
+      setEntries(prev =>
+        prev.some(e => e.sportSearch)
+          ? prev.map(e => ({ ...e, sportSearch: '' }))
+          : prev
+      );
+    }
+  }
+
   // Sports API
   const { data: sportsData, isLoading: isSportsLoading } = useSportsQuery(
     sportsSearchQuery,

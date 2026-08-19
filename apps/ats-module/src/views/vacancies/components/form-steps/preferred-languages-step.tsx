@@ -104,6 +104,21 @@ export default function PreferredLanguagesStep({
 
   // Language search state for the query
   const [langSearch, setLangSearch] = useState('');
+  const isLanguagesFieldDisabled = !isEnabled || dataTakenFromCandidate;
+
+  // Mirrors the combobox's own clear-on-disable behaviour (DQCGP-2866) for
+  // this step's separate search-text state, which also drives the character
+  // counter next to the section label. Adjusted during render (not an
+  // effect) per https://react.dev/learn/you-might-not-need-an-effect.
+  const [prevLanguagesFieldDisabled, setPrevLanguagesFieldDisabled] = useState(
+    isLanguagesFieldDisabled
+  );
+  if (isLanguagesFieldDisabled !== prevLanguagesFieldDisabled) {
+    setPrevLanguagesFieldDisabled(isLanguagesFieldDisabled);
+    if (isLanguagesFieldDisabled) {
+      setLangSearch('');
+    }
+  }
 
   // Query
   const { data: languagesData, isLoading: isLanguagesLoading } =

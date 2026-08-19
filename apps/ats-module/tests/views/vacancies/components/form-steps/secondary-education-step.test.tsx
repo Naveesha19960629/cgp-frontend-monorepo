@@ -169,6 +169,7 @@ vi.mock('@cgp/ui-kit/components/multi-select', () => ({
     loadingIndicator,
     emptyIndicator,
     showArrow,
+    disabled,
   }: {
     placeholder: string;
     onMaxSelected?: () => void;
@@ -178,9 +179,15 @@ vi.mock('@cgp/ui-kit/components/multi-select', () => ({
     emptyIndicator?: ReactNode;
     keepSelectedInList?: boolean;
     showArrow?: boolean;
+    disabled?: boolean;
   }) => (
     <>
-      <input placeholder={placeholder} readOnly />
+      <input
+        placeholder={placeholder}
+        readOnly
+        disabled={disabled}
+        data-disabled={String(Boolean(disabled))}
+      />
       {showArrow && <span data-testid={`arrow-${placeholder}`} />}
       {onChange && (
         <button
@@ -660,6 +667,62 @@ describe('SecondaryEducationStep', () => {
           screen.getByText('secondaryEducation.confirmDisableDialog.title')
         ).toBeInTheDocument();
       });
+    });
+
+    it('marks every select-or-add field as disabled once the section is toggled off (DQCGP-2866)', async () => {
+      const user = userEvent.setup();
+      renderStep();
+      await enableSection(user);
+
+      expect(
+        screen.getByPlaceholderText('secondaryEducation.placeholders.school')
+      ).toHaveAttribute('data-disabled', 'false');
+      expect(
+        screen.getByPlaceholderText(
+          'secondaryEducation.placeholders.schoolLocation'
+        )
+      ).toHaveAttribute('data-disabled', 'false');
+      expect(
+        screen.getByPlaceholderText(
+          'secondaryEducation.placeholders.examination'
+        )
+      ).toHaveAttribute('data-disabled', 'false');
+      expect(
+        screen.getByPlaceholderText(
+          'secondaryEducation.placeholders.awardingBody'
+        )
+      ).toHaveAttribute('data-disabled', 'false');
+      expect(
+        screen.getByPlaceholderText(
+          'secondaryEducation.placeholders.fieldOfStudy'
+        )
+      ).toHaveAttribute('data-disabled', 'false');
+
+      await user.click(screen.getByRole('switch')); // toggle off
+
+      expect(
+        screen.getByPlaceholderText('secondaryEducation.placeholders.school')
+      ).toHaveAttribute('data-disabled', 'true');
+      expect(
+        screen.getByPlaceholderText(
+          'secondaryEducation.placeholders.schoolLocation'
+        )
+      ).toHaveAttribute('data-disabled', 'true');
+      expect(
+        screen.getByPlaceholderText(
+          'secondaryEducation.placeholders.examination'
+        )
+      ).toHaveAttribute('data-disabled', 'true');
+      expect(
+        screen.getByPlaceholderText(
+          'secondaryEducation.placeholders.awardingBody'
+        )
+      ).toHaveAttribute('data-disabled', 'true');
+      expect(
+        screen.getByPlaceholderText(
+          'secondaryEducation.placeholders.fieldOfStudy'
+        )
+      ).toHaveAttribute('data-disabled', 'true');
     });
   });
 

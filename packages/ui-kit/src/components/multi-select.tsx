@@ -342,6 +342,19 @@ const MultipleSelector = React.forwardRef<
       }
     }, [value, maxSelected]);
 
+    // Disabling the field (e.g. a section toggle turning off) should drop
+    // whatever the user was typing but never committed — otherwise it
+    // reappears, uncommitted, if the field is re-enabled (DQCGP-2866). Adjusted
+    // during render (not an effect) so the clear lands in the same commit as
+    // the `disabled` change, per https://react.dev/learn/you-might-not-need-an-effect.
+    const [prevDisabled, setPrevDisabled] = React.useState(disabled);
+    if (disabled !== prevDisabled) {
+      setPrevDisabled(disabled);
+      if (disabled) {
+        setInputValue('');
+      }
+    }
+
     useEffect(() => {
       /** If `onSearch` is provided, do not trigger options updated. */
       if (!arrayOptions || onSearch) {

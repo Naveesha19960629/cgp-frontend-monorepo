@@ -139,6 +139,18 @@ function ProjectCard({
     'startDate' | 'endDate' | null
   >(null);
 
+  // Mirrors the combobox's own clear-on-disable behaviour (DQCGP-2866) for
+  // this row's separate search-text state, which also drives the character
+  // counter next to the Industries label. Adjusted during render (not an
+  // effect) per https://react.dev/learn/you-might-not-need-an-effect.
+  const [prevFieldsDisabled, setPrevFieldsDisabled] = useState(fieldsDisabled);
+  if (fieldsDisabled !== prevFieldsDisabled) {
+    setPrevFieldsDisabled(fieldsDisabled);
+    if (fieldsDisabled) {
+      setIndustriesSearch('');
+    }
+  }
+
   return (
     <Collapsible
       open={project.isOpen}

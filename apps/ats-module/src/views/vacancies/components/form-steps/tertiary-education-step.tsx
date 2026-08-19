@@ -247,6 +247,23 @@ export default function TertiaryEducationStep({
   const [departmentInput, setDepartmentInput] = useState('');
   const [facultyInput, setFacultyInput] = useState('');
 
+  // Mirrors each combobox's own clear-on-disable behaviour (DQCGP-2866) for
+  // these step-level search-text states, which also drive the character
+  // counters next to their labels. Adjusted during render (not an effect)
+  // per https://react.dev/learn/you-might-not-need-an-effect.
+  const [prevFieldsDisabled, setPrevFieldsDisabled] = useState(fieldsDisabled);
+  if (fieldsDisabled !== prevFieldsDisabled) {
+    setPrevFieldsDisabled(fieldsDisabled);
+    if (fieldsDisabled) {
+      setQualificationInput('');
+      setLevelInput('');
+      setSpecializationInput('');
+      setBatchInput('');
+      setDepartmentInput('');
+      setFacultyInput('');
+    }
+  }
+
   // -- Refs for creatable selectors (used to commit pending input on Next) --
   const qualificationRef = useRef<MultipleSelectorRef>(null);
   const levelRef = useRef<MultipleSelectorRef>(null);
@@ -764,6 +781,7 @@ export default function TertiaryEducationStep({
                           hideClearAllButton
                           triggerSearchOnFocus
                           keepSelectedInList
+                          disabled={fieldsDisabled}
                           loadingIndicator={
                             <p className="px-3 pb-3 text-left">
                               {t('common.loading')}
@@ -875,6 +893,7 @@ export default function TertiaryEducationStep({
                           hideClearAllButton
                           triggerSearchOnFocus
                           keepSelectedInList
+                          disabled={fieldsDisabled}
                           loadingIndicator={
                             <p className="px-3 pb-3 text-left">
                               {t('common.loading')}
@@ -952,6 +971,7 @@ export default function TertiaryEducationStep({
                           hideClearAllButton
                           triggerSearchOnFocus
                           keepSelectedInList
+                          disabled={fieldsDisabled}
                           loadingIndicator={
                             <p className="px-3 pb-3 text-left">
                               {t('common.loading')}
@@ -1045,6 +1065,7 @@ export default function TertiaryEducationStep({
                           hideClearAllButton
                           triggerSearchOnFocus
                           keepSelectedInList
+                          disabled={fieldsDisabled}
                           loadingIndicator={
                             <p className="px-3 pb-3 text-left">
                               {t('common.loading')}
@@ -1122,6 +1143,7 @@ export default function TertiaryEducationStep({
                           hideClearAllButton
                           triggerSearchOnFocus
                           keepSelectedInList
+                          disabled={fieldsDisabled}
                           loadingIndicator={
                             <p className="px-3 pb-3 text-left">
                               {t('common.loading')}
@@ -1203,6 +1225,7 @@ export default function TertiaryEducationStep({
                           hideClearAllButton
                           triggerSearchOnFocus
                           keepSelectedInList
+                          disabled={fieldsDisabled}
                           loadingIndicator={
                             <p className="px-3 pb-3 text-left">
                               {t('common.loading')}
@@ -1272,6 +1295,7 @@ export default function TertiaryEducationStep({
                           }
                           triggerSearchOnFocus
                           keepSelectedInList
+                          disabled={fieldsDisabled}
                           loadingIndicator={
                             <p className="px-3 pb-3 text-left">
                               {t('common.loading')}
@@ -1335,6 +1359,7 @@ export default function TertiaryEducationStep({
                           }
                           triggerSearchOnFocus
                           keepSelectedInList
+                          disabled={fieldsDisabled}
                           loadingIndicator={
                             <p className="px-3 pb-3 text-left">
                               {t('common.loading')}
@@ -1398,6 +1423,7 @@ export default function TertiaryEducationStep({
                           }
                           triggerSearchOnFocus
                           keepSelectedInList
+                          disabled={fieldsDisabled}
                           loadingIndicator={
                             <p className="px-3 pb-3 text-left">
                               {t('common.loading')}
@@ -1475,6 +1501,7 @@ export default function TertiaryEducationStep({
                           hideClearAllButton
                           triggerSearchOnFocus
                           keepSelectedInList
+                          disabled={fieldsDisabled}
                           loadingIndicator={
                             <p className="px-3 pb-3 text-left">
                               {t('common.loading')}
@@ -1556,6 +1583,7 @@ export default function TertiaryEducationStep({
                           hideClearAllButton
                           triggerSearchOnFocus
                           keepSelectedInList
+                          disabled={fieldsDisabled}
                           loadingIndicator={
                             <p className="px-3 pb-3 text-left">
                               {t('common.loading')}

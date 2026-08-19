@@ -130,11 +130,13 @@ vi.mock('@cgp/ui-kit/components/multi-select', () => ({
     placeholder,
     options = [],
     onChange,
+    onSearchSync,
     disabled,
   }: {
     placeholder: string;
     options?: StubOption[];
     onChange?: (options: StubOption[]) => void;
+    onSearchSync?: (value: string) => StubOption[];
     disabled?: boolean;
   }) => (
     <div>
@@ -154,12 +156,19 @@ vi.mock('@cgp/ui-kit/components/multi-select', () => ({
       >
         {`select:${placeholder}`}
       </button>
+      {onSearchSync && (
+        <button type="button" onClick={() => onSearchSync('xaxaxax')}>
+          {`search:${placeholder}`}
+        </button>
+      )}
     </div>
   ),
 }));
 
 vi.mock('@cgp/ui-kit/components/character-count', () => ({
-  CharacterCount: () => <span>0/100</span>,
+  CharacterCount: ({ currentLength }: { currentLength: number }) => (
+    <span data-testid="character-count">{currentLength}</span>
+  ),
 }));
 
 vi.mock('@cgp/ui-kit/components/custom-toast', () => ({
@@ -522,5 +531,32 @@ describe('ProjectsRequirementsStep', () => {
     expect(
       screen.getByText('projectsRequirements.dataTakenFromCandidate')
     ).toBeInTheDocument();
+  });
+
+  describe('enable/disable toggle (DQCGP-2866)', () => {
+    it('resets the industries character counter when disabled with uncommitted search text', async () => {
+      const user = userEvent.setup();
+      render(
+        <ProjectsRequirementsStep
+          onNext={mockOnNext}
+          onBack={mockOnBack}
+          onSubmit={vi.fn()}
+        />
+      );
+
+      const toggleSwitch = screen.getByTestId('toggle-switch');
+      await user.click(toggleSwitch); // enable
+
+      await user.click(
+        screen.getByRole('button', {
+          name: 'search:projectsRequirements.placeholders.relatedIndustry',
+        })
+      );
+      expect(screen.getByTestId('character-count')).toHaveTextContent('7');
+
+      await user.click(toggleSwitch); // disable, no data entered yet
+
+      expect(screen.getByTestId('character-count')).toHaveTextContent('0');
+    });
   });
 });

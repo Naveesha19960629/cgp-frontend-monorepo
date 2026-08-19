@@ -159,6 +159,7 @@ vi.mock('@cgp/ui-kit/components/multi-select', () => ({
     value = [],
     onChange,
     inputProps,
+    disabled,
   }: {
     placeholder?: string;
     value?: { value: string; label: string; source?: string }[];
@@ -169,9 +170,15 @@ vi.mock('@cgp/ui-kit/components/multi-select', () => ({
       maxLength?: number;
       onValueChange?: (value: string) => void;
     };
+    disabled?: boolean;
   }) => {
     if (placeholder !== 'licenseCertificates.placeholders.nameOfLicenseCert') {
-      return <div data-testid={`selector-${placeholder ?? 'other'}`} />;
+      return (
+        <div
+          data-testid={`selector-${placeholder ?? 'other'}`}
+          data-disabled={String(Boolean(disabled))}
+        />
+      );
     }
 
     const options10 = Array.from({ length: 10 }, (_, i) => makeOption(i + 1));
@@ -183,6 +190,8 @@ vi.mock('@cgp/ui-kit/components/multi-select', () => ({
         <input
           data-testid="name-of-license-cert-input"
           maxLength={inputProps?.maxLength}
+          disabled={disabled}
+          data-disabled={String(Boolean(disabled))}
           onChange={e => inputProps?.onValueChange?.(e.target.value)}
         />
         <button type="button" onClick={() => onChange?.(options10)}>
@@ -423,6 +432,30 @@ describe('LicenseCertificatesStep', () => {
 
       expect(screen.getByRole('status')).toHaveTextContent('0/200');
     });
+
+    it('resets the character count when the section becomes disabled with uncommitted search text (DQCGP-2866)', async () => {
+      const user = userEvent.setup();
+
+      render(
+        <LicenseCertificatesStep
+          onNext={vi.fn()}
+          onBack={vi.fn()}
+          onSubmit={vi.fn()}
+        />
+      );
+
+      await user.type(screen.getByTestId('name-of-license-cert-input'), 'AWS');
+      expect(screen.getByRole('status')).toHaveTextContent('3/200');
+
+      // Checking "collect from candidates" makes fieldsDisabled true
+      // (fieldsDisabled = !isEnabled || dataTakenFromCandidate), the same
+      // condition that disables the underlying MultipleSelector.
+      await user.click(
+        screen.getByLabelText('licenseCertificates.collectFromCandidates')
+      );
+
+      expect(screen.getByRole('status')).toHaveTextContent('0/200');
+    });
   });
 
   describe('Step guard behavior with pending licenses (fix verification)', () => {
@@ -591,6 +624,56 @@ describe('LicenseCertificatesStep', () => {
       // Should only return Paris (new york is filtered out)
       expect(filtered).toHaveLength(1);
       expect(filtered[0]?.label).toBe('Paris');
+    });
+  });
+
+  describe('select-or-add fields disabled on toggle off (DQCGP-2866)', () => {
+    it('marks nameOfLicenseCert, issuingOrganization and organizationLocations as disabled once dataTakenFromCandidate is checked', async () => {
+      const user = userEvent.setup();
+
+      render(
+        <LicenseCertificatesStep
+          onNext={vi.fn()}
+          onBack={vi.fn()}
+          onSubmit={vi.fn()}
+        />
+      );
+
+      expect(screen.getByTestId('name-of-license-cert-input')).toHaveAttribute(
+        'data-disabled',
+        'false'
+      );
+      expect(
+        screen.getByTestId(
+          'selector-licenseCertificates.placeholders.issuingOrganization'
+        )
+      ).toHaveAttribute('data-disabled', 'false');
+      expect(
+        screen.getByTestId(
+          'selector-licenseCertificates.placeholders.organizationLocations'
+        )
+      ).toHaveAttribute('data-disabled', 'false');
+
+      // fieldsDisabled = !isEnabled || dataTakenFromCandidate — checking this
+      // box disables the fields the same way toggling the section off does.
+      await user.click(
+        screen.getByLabelText('licenseCertificates.collectFromCandidates')
+      );
+
+      expect(screen.getByTestId('name-of-license-cert-input')).toHaveAttribute(
+        'data-disabled',
+        'true'
+      );
+      expect(
+        screen.getByTestId(
+          'selector-licenseCertificates.placeholders.issuingOrganization'
+        )
+      ).toHaveAttribute('data-disabled', 'true');
+      expect(
+        screen.getByTestId(
+          'selector-licenseCertificates.placeholders.organizationLocations'
+        )
+      ).toHaveAttribute('data-disabled', 'true');
     });
   });
 

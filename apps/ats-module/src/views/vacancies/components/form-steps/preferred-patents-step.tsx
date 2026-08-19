@@ -107,6 +107,18 @@ function PatentCard({
   const isEnabled = form.watch('isEnabled');
   const isFieldDisabled = !isEnabled || dataTakenFromCandidate;
 
+  // Mirrors the combobox's own clear-on-disable behaviour (DQCGP-2866) for
+  // this step's separate search-text state, which also drives the character
+  // counter next to the section label. Adjusted during render (not an
+  // effect) per https://react.dev/learn/you-might-not-need-an-effect.
+  const [prevFieldDisabled, setPrevFieldDisabled] = useState(isFieldDisabled);
+  if (isFieldDisabled !== prevFieldDisabled) {
+    setPrevFieldDisabled(isFieldDisabled);
+    if (isFieldDisabled) {
+      setIndustriesSearch('');
+    }
+  }
+
   const STATUS_OPTIONS: Option[] = [
     { value: 'PATENT_PENDING', label: t('preferredPatents.statusPending') },
     { value: 'PATENT_ISSUED', label: t('preferredPatents.statusIssued') },
