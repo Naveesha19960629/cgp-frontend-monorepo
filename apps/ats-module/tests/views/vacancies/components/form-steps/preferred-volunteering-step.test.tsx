@@ -446,5 +446,47 @@ describe('PreferredVolunteeringStep', () => {
         '0'
       );
     });
+
+    it('marks the Position / Role input as HTML-disabled once toggled off (DQCGP-3640)', async () => {
+      const user = userEvent.setup();
+      render(
+        <PreferredVolunteeringStep
+          onNext={mockOnNext}
+          onBack={mockOnBack}
+          onSubmit={vi.fn()}
+        />
+      );
+
+      await user.click(screen.getByRole('switch')); // toggle on
+
+      const positionInput = screen.getByPlaceholderText(
+        'preferredVolunteering.placeholders.position'
+      );
+      expect(positionInput).not.toBeDisabled();
+
+      await user.click(screen.getByRole('switch')); // toggle off
+
+      expect(positionInput).toBeDisabled();
+    });
+
+    it('marks the dataTakenFromCandidate checkbox itself as disabled once toggled off', async () => {
+      const user = userEvent.setup();
+      render(
+        <PreferredVolunteeringStep
+          onNext={mockOnNext}
+          onBack={mockOnBack}
+          onSubmit={vi.fn()}
+        />
+      );
+
+      const checkbox = screen.getByLabelText(
+        /If selected, no manual input is required, and data will be taken from the candidate profile/i
+      );
+      expect(checkbox).toBeDisabled(); // section starts disabled by default
+
+      await user.click(screen.getByRole('switch')); // toggle on
+
+      expect(checkbox).not.toBeDisabled();
+    });
   });
 });

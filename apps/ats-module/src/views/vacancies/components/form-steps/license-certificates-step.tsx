@@ -502,6 +502,7 @@ export default function LicenseCertificatesStep({
               <Checkbox
                 id="licenseCertDataTakenFromCandidate"
                 checked={field.value}
+                disabled={!isEnabled}
                 onCheckedChange={newValue => {
                   const checked = newValue === true;
                   if (checked) clearEntryData();
@@ -1061,6 +1062,7 @@ export default function LicenseCertificatesStep({
                             <Checkbox
                               id="internationallyAccepted"
                               checked={field.value}
+                              disabled={fieldsDisabled}
                               onCheckedChange={val =>
                                 field.onChange(val === true)
                               }

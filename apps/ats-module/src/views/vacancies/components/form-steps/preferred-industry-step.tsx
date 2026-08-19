@@ -245,6 +245,7 @@ export default function PreferredIndustryStep({
             <Checkbox
               id="industries-data-from-candidate"
               checked={dataTakenFromCandidate}
+              disabled={!isEnabled}
               onCheckedChange={checked => {
                 if (checked) {
                   updatePreferredIndustries({

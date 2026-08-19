@@ -541,6 +541,7 @@ function SportCard({
                     }}
                     maxLength={MAX_POSITION_LENGTH}
                     placeholder={t('preferredSports.placeholders.position')}
+                    disabled={fieldsDisabled}
                     className="h-11"
                   />
                 </div>
@@ -1135,6 +1136,7 @@ export default function PreferredSportsStep({
           <Checkbox
             id="sportsDataTakenFromCandidate"
             checked={dataTakenFromCandidate}
+            disabled={!isEnabled}
             onCheckedChange={value => handleTakeFromCandidateChange(!!value)}
             className="mt-0.5"
           />

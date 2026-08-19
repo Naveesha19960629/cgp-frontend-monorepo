@@ -227,6 +227,7 @@ export default function PreferredCausesStep({
             <Checkbox
               id="causes-data-from-candidate"
               checked={dataTakenFromCandidate}
+              disabled={!isEnabled}
               onCheckedChange={checked => {
                 if (checked) {
                   setSelectedCauses([]);

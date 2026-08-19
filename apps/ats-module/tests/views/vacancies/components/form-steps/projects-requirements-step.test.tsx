@@ -206,10 +206,12 @@ vi.mock('@cgp/ui-kit/components/ui/calendar', () => ({
 vi.mock('@cgp/ui-kit/components/ui/checkbox', () => ({
   Checkbox: ({
     checked,
+    disabled,
     onCheckedChange,
     id,
   }: {
     checked?: boolean;
+    disabled?: boolean;
     onCheckedChange?: (checked: boolean) => void;
     id?: string;
   }) => (
@@ -217,6 +219,7 @@ vi.mock('@cgp/ui-kit/components/ui/checkbox', () => ({
       type="checkbox"
       id={id}
       checked={checked}
+      disabled={disabled}
       onChange={e => onCheckedChange?.(e.target.checked)}
     />
   ),
@@ -557,6 +560,30 @@ describe('ProjectsRequirementsStep', () => {
       await user.click(toggleSwitch); // disable, no data entered yet
 
       expect(screen.getByTestId('character-count')).toHaveTextContent('0');
+    });
+
+    it('marks the dataTakenFromCandidate checkbox itself as disabled once toggled off (DQCGP-3640)', async () => {
+      const user = userEvent.setup();
+      render(
+        <ProjectsRequirementsStep
+          onNext={mockOnNext}
+          onBack={mockOnBack}
+          onSubmit={vi.fn()}
+        />
+      );
+
+      const toggleSwitch = screen.getByTestId('toggle-switch');
+      await user.click(toggleSwitch); // enable
+
+      const checkboxes = screen.getAllByRole('checkbox');
+      const dataFromCandidateCheckbox = checkboxes.find(
+        cb => cb.id === 'projectsDataTakenFromCandidate'
+      );
+      expect(dataFromCandidateCheckbox).not.toBeDisabled();
+
+      await user.click(toggleSwitch); // disable, no data entered yet
+
+      expect(dataFromCandidateCheckbox).toBeDisabled();
     });
   });
 });

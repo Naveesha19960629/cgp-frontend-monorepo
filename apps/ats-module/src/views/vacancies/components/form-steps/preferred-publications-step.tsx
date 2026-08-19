@@ -156,6 +156,7 @@ function PublicationCard({
                     placeholder={t(
                       'preferredPublications.placeholders.acceptedPublisher'
                     )}
+                    disabled={fieldsDisabled}
                     className="h-11"
                   />
                 </div>
@@ -578,6 +579,7 @@ export default function PreferredPublicationsStep({
           <Checkbox
             id="publicationsDataTakenFromCandidate"
             checked={dataTakenFromCandidate}
+            disabled={!isEnabled}
             onCheckedChange={value => {
               const checked = !!value;
               setDataTakenFromCandidate(checked);

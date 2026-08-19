@@ -690,6 +690,7 @@ export default function TertiaryEducationStep({
             <Checkbox
               id="tertiaryDataTakenFromCandidate"
               checked={field.value}
+              disabled={!isEnabled}
               onCheckedChange={newValue => {
                 const checked = newValue === true;
                 if (checked) clearEntryData();
@@ -845,6 +846,7 @@ export default function TertiaryEducationStep({
                         <Input
                           {...field}
                           maxLength={80}
+                          disabled={fieldsDisabled}
                           className="h-11"
                           placeholder={t(
                             'tertiaryEducation.placeholders.grade'

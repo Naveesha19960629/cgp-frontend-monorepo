@@ -633,6 +633,7 @@ export default function SecondaryEducationStep({
               <Checkbox
                 id="dataTakenFromCandidate"
                 checked={field.value}
+                disabled={!isEnabled}
                 onCheckedChange={newValue => {
                   const checked = newValue === true;
                   if (checked) clearEntryData();
@@ -686,6 +687,7 @@ export default function SecondaryEducationStep({
                           <Checkbox
                             id="acceptsHomeSchooling"
                             checked={field.value}
+                            disabled={fieldsDisabled}
                             onCheckedChange={newValue =>
                               field.onChange(newValue === true)
                             }
@@ -892,6 +894,7 @@ export default function SecondaryEducationStep({
                           <Input
                             {...field}
                             maxLength={80}
+                            disabled={fieldsDisabled}
                             className="h-11"
                             placeholder={t(
                               'secondaryEducation.placeholders.grade'
@@ -1385,6 +1388,7 @@ export default function SecondaryEducationStep({
                           <Textarea
                             {...field}
                             maxLength={1000}
+                            disabled={fieldsDisabled}
                             className="min-h-42.5"
                             placeholder={t(
                               'secondaryEducation.placeholders.results'

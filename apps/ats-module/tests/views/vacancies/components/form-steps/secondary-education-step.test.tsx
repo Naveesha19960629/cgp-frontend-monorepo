@@ -240,16 +240,19 @@ vi.mock('@cgp/ui-kit/components/ui/checkbox', () => ({
   Checkbox: ({
     id,
     checked,
+    disabled,
     onCheckedChange,
   }: {
     id?: string;
     checked?: boolean;
+    disabled?: boolean;
     onCheckedChange?: (v: boolean) => void;
   }) => (
     <input
       type="checkbox"
       id={id}
       checked={checked ?? false}
+      disabled={disabled}
       onChange={e => onCheckedChange?.(e.target.checked)}
     />
   ),
@@ -724,6 +727,47 @@ describe('SecondaryEducationStep', () => {
         )
       ).toHaveAttribute('data-disabled', 'true');
     });
+
+    it('marks the Grade input, Results textarea, and Accepts Home Schooling checkbox as HTML-disabled once toggled off (DQCGP-3640)', async () => {
+      const user = userEvent.setup();
+      renderStep();
+      await enableSection(user);
+
+      const gradeInput = screen.getByPlaceholderText(
+        'secondaryEducation.placeholders.grade'
+      );
+      const resultsTextarea = screen.getByPlaceholderText(
+        'secondaryEducation.placeholders.results'
+      );
+      const homeSchoolingCheckbox = document.getElementById(
+        'acceptsHomeSchooling'
+      );
+
+      expect(gradeInput).not.toBeDisabled();
+      expect(resultsTextarea).not.toBeDisabled();
+      expect(homeSchoolingCheckbox).not.toBeDisabled();
+
+      await user.click(screen.getByRole('switch')); // toggle off
+
+      expect(gradeInput).toBeDisabled();
+      expect(resultsTextarea).toBeDisabled();
+      expect(homeSchoolingCheckbox).toBeDisabled();
+    });
+
+    it('marks the "collect from candidates" checkbox itself as disabled once the section is toggled off (DQCGP-3640)', async () => {
+      const user = userEvent.setup();
+      renderStep();
+      await enableSection(user);
+
+      const collectFromCandidatesCheckbox = screen.getByLabelText(
+        'secondaryEducation.collectFromCandidates'
+      );
+      expect(collectFromCandidatesCheckbox).not.toBeDisabled();
+
+      await user.click(screen.getByRole('switch')); // toggle off
+
+      expect(collectFromCandidatesCheckbox).toBeDisabled();
+    });
   });
 
   describe('disable confirmation dialog', () => {
@@ -783,6 +827,7 @@ describe('SecondaryEducationStep', () => {
     it('checks when clicked', async () => {
       const user = userEvent.setup();
       renderStep();
+      await enableSection(user);
 
       const checkbox = screen.getByLabelText(
         'secondaryEducation.collectFromCandidates'
@@ -795,6 +840,7 @@ describe('SecondaryEducationStep', () => {
     it('clears the grade field when checked', async () => {
       const user = userEvent.setup();
       renderStep();
+      await enableSection(user);
 
       const gradeInput = screen.getByPlaceholderText(
         'secondaryEducation.placeholders.grade'
@@ -905,6 +951,7 @@ describe('SecondaryEducationStep', () => {
     it('checks when clicked', async () => {
       const user = userEvent.setup();
       renderStep();
+      await enableSection(user);
 
       const checkbox = screen.getByLabelText(
         'secondaryEducation.acceptsHomeSchooling'

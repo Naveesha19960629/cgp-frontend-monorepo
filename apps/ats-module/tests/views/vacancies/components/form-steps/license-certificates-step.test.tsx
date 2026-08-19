@@ -231,16 +231,19 @@ vi.mock('@cgp/ui-kit/components/ui/checkbox', () => ({
   Checkbox: ({
     id,
     checked,
+    disabled,
     onCheckedChange,
   }: {
     id?: string;
     checked?: boolean;
+    disabled?: boolean;
     onCheckedChange?: (checked: boolean) => void;
   }) => (
     <input
       type="checkbox"
       id={id}
       checked={checked ?? false}
+      disabled={disabled}
       onChange={e => onCheckedChange?.(e.target.checked)}
     />
   ),
@@ -674,6 +677,56 @@ describe('LicenseCertificatesStep', () => {
           'selector-licenseCertificates.placeholders.organizationLocations'
         )
       ).toHaveAttribute('data-disabled', 'true');
+    });
+
+    it('marks the internationallyAccepted checkbox as HTML-disabled once dataTakenFromCandidate is checked (DQCGP-3640)', async () => {
+      const user = userEvent.setup();
+
+      render(
+        <LicenseCertificatesStep
+          onNext={vi.fn()}
+          onBack={vi.fn()}
+          onSubmit={vi.fn()}
+        />
+      );
+
+      const internationallyAcceptedCheckbox = document.getElementById(
+        'internationallyAccepted'
+      );
+      expect(internationallyAcceptedCheckbox).not.toBeDisabled();
+
+      await user.click(
+        screen.getByLabelText('licenseCertificates.collectFromCandidates')
+      );
+
+      expect(internationallyAcceptedCheckbox).toBeDisabled();
+    });
+
+    it('marks the collectFromCandidates checkbox itself as disabled when the section is off (DQCGP-3640)', () => {
+      stableForm = {
+        isEnabled: false,
+        dataTakenFromCandidate: false,
+        entry: {
+          nameOfLicenseCert: [],
+          issuingOrganization: [],
+          organizationLocations: [],
+          internationallyAccepted: false,
+          issueDate: undefined,
+          expirationDate: undefined,
+        },
+      };
+
+      render(
+        <LicenseCertificatesStep
+          onNext={vi.fn()}
+          onBack={vi.fn()}
+          onSubmit={vi.fn()}
+        />
+      );
+
+      expect(
+        screen.getByLabelText('licenseCertificates.collectFromCandidates')
+      ).toBeDisabled();
     });
   });
 

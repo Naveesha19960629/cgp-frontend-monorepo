@@ -802,6 +802,7 @@ export default function PreferredSkillsStep({
             <Checkbox
               id="data-from-candidate"
               checked={dataTakenFromCandidate}
+              disabled={!isEnabled}
               onCheckedChange={checked => {
                 if (checked) {
                   setRowKeys([crypto.randomUUID()]);

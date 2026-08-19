@@ -613,6 +613,7 @@ function ClubSocietyCard({
                     placeholder={t(
                       'preferredClubSocieties.placeholders.position'
                     )}
+                    disabled={fieldsDisabled}
                     className="h-11"
                   />
                 </div>
@@ -1048,6 +1049,7 @@ export default function PreferredClubSocietiesStep({
           <Checkbox
             id="clubSocietiesDataTakenFromCandidate"
             checked={dataTakenFromCandidate}
+            disabled={!isEnabled}
             onCheckedChange={value => handleTakeFromCandidateChange(!!value)}
             className="mt-0.5"
           />

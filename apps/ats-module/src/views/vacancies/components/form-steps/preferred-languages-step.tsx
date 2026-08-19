@@ -231,6 +231,7 @@ export default function PreferredLanguagesStep({
             <Checkbox
               id="lang-data-from-candidate"
               checked={dataTakenFromCandidate}
+              disabled={!isEnabled}
               onCheckedChange={checked => {
                 if (checked) {
                   setSelectedLanguages([]);

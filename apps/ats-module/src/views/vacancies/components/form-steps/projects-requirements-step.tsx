@@ -1004,6 +1004,7 @@ export default function ProjectsRequirementsStep({
           <Checkbox
             id="projectsDataTakenFromCandidate"
             checked={dataTakenFromCandidate}
+            disabled={!isEnabled}
             onCheckedChange={value => handleTakeFromCandidateChange(!!value)}
           />
           <Label

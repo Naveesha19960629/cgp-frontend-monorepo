@@ -184,16 +184,19 @@ vi.mock('@cgp/ui-kit/components/ui/checkbox', () => ({
   Checkbox: ({
     id,
     checked,
+    disabled,
     onCheckedChange,
   }: {
     id?: string;
     checked?: boolean;
+    disabled?: boolean;
     onCheckedChange?: (v: boolean) => void;
   }) => (
     <input
       type="checkbox"
       id={id}
       checked={checked ?? false}
+      disabled={disabled}
       onChange={e => onCheckedChange?.(e.target.checked)}
     />
   ),
@@ -566,6 +569,20 @@ describe('PreferredSkillsStep', () => {
       expect(within(row).getAllByTestId('char-count')[1]).toHaveTextContent(
         '0/100'
       );
+    });
+
+    it('marks the dataTakenFromCandidate checkbox itself as disabled once toggled off (DQCGP-3640)', async () => {
+      const user = userEvent.setup();
+      renderStep();
+
+      const checkbox = screen.getByLabelText(
+        'preferredSkills.dataTakenFromCandidate'
+      );
+      expect(checkbox).not.toBeDisabled();
+
+      await user.click(screen.getByRole('switch')); // toggle off, no data yet
+
+      expect(checkbox).toBeDisabled();
     });
   });
 

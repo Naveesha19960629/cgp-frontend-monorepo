@@ -227,6 +227,7 @@ export default function PreferredHobbiesStep({
             <Checkbox
               id="hobbies-data-from-candidate"
               checked={dataTakenFromCandidate}
+              disabled={!isEnabled}
               onCheckedChange={checked => {
                 if (checked) {
                   setSelectedHobbies([]);
