@@ -88,6 +88,11 @@ const {
   maxDate: HUNDRED_YEARS_FROM_NOW,
 } = getHundredYearDateBoundaries();
 
+const multiSelectInfoAvatar = new URL(
+  '../../../../assets/images/multi-select-info-avatar.svg',
+  import.meta.url
+).href;
+
 interface ClubSocietyEntry {
   id: string;
   isOpen: boolean;
@@ -291,16 +296,29 @@ function ClubSocietyCard({
                       'preferredClubSocieties.placeholders.clubSociety'
                     )}
                     emptyIndicator={
-                      <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                        {t('preferredClubSocieties.empty.societies')}
-                      </p>
+                      <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
+                        <div className="flex flex-col items-start">
+                          <img
+                            src={multiSelectInfoAvatar}
+                            alt={t('common.noData')}
+                          />
+                          <div className="mt-3 w-61 text-left">
+                            <p className="font-bold text-slate-900">
+                              {t('common.noDataTitle')}
+                            </p>
+                            <p className="text-sm font-semibold text-slate-700">
+                              {t('common.noDataDescription')}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
                     }
                   />
                 </div>
               )}
 
               {isFieldVisible('startDate') && (
-                <div className="flex flex-col gap-1 xl:col-span-1">
+                <div className="flex min-w-0 flex-col gap-1 xl:col-span-1">
                   <div className="flex h-5 items-center">
                     <Label data-testid="preferredClubSocieties-startDate-label">
                       {t('preferredClubSocieties.labels.startDate')}
@@ -321,7 +339,7 @@ function ClubSocietyCard({
                         variant="outline"
                         disabled={fieldsDisabled}
                         className={cn(
-                          'border-input flex h-11 w-full items-center justify-between rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
+                          'border-input flex h-11 w-full min-w-0 items-center justify-between rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
                           !entry.startDate && 'text-slate-500',
                           entry.startDate && 'text-zinc-800',
                           'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
@@ -331,13 +349,17 @@ function ClubSocietyCard({
                           'shadow-none!'
                         )}
                       >
-                        {entry.startDate
-                          ? formatDate(entry.startDate)
-                          : t('preferredClubSocieties.placeholders.startDate')}
+                        <span className="truncate pr-2">
+                          {entry.startDate
+                            ? formatDate(entry.startDate)
+                            : t(
+                                'preferredClubSocieties.placeholders.startDate'
+                              )}
+                        </span>
                         <CalendarIcon
                           variant="Linear"
                           size={20}
-                          className="text-zinc-800"
+                          className="shrink-0 text-zinc-800"
                         />
                       </Button>
                     </PopoverTrigger>
@@ -377,7 +399,7 @@ function ClubSocietyCard({
               )}
 
               {isFieldVisible('endDate') && (
-                <div className="flex flex-col gap-1 xl:col-span-1">
+                <div className="flex min-w-0 flex-col gap-1 xl:col-span-1">
                   <div className="flex h-5 items-center">
                     <Label data-testid="preferredClubSocieties-endDate-label">
                       {t('preferredClubSocieties.labels.endDate')}
@@ -398,7 +420,7 @@ function ClubSocietyCard({
                         variant="outline"
                         disabled={fieldsDisabled}
                         className={cn(
-                          'border-input flex h-11 w-full items-center justify-between rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
+                          'border-input flex h-11 w-full min-w-0 items-center justify-between rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
                           !entry.endDate && 'text-slate-500',
                           entry.endDate && 'text-zinc-800',
                           'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
@@ -408,13 +430,15 @@ function ClubSocietyCard({
                           'shadow-none!'
                         )}
                       >
-                        {entry.endDate
-                          ? formatDate(entry.endDate)
-                          : t('preferredClubSocieties.placeholders.endDate')}
+                        <span className="truncate pr-2">
+                          {entry.endDate
+                            ? formatDate(entry.endDate)
+                            : t('preferredClubSocieties.placeholders.endDate')}
+                        </span>
                         <CalendarIcon
                           variant="Linear"
                           size={20}
-                          className="text-zinc-800"
+                          className="shrink-0 text-zinc-800"
                         />
                       </Button>
                     </PopoverTrigger>
@@ -529,9 +553,22 @@ function ClubSocietyCard({
                       'preferredClubSocieties.placeholders.representedOrganization'
                     )}
                     emptyIndicator={
-                      <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                        {t('preferredClubSocieties.empty.organizations')}
-                      </p>
+                      <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
+                        <div className="flex flex-col items-start">
+                          <img
+                            src={multiSelectInfoAvatar}
+                            alt={t('common.noData')}
+                          />
+                          <div className="mt-3 w-61 text-left">
+                            <p className="font-bold text-slate-900">
+                              {t('common.noDataTitle')}
+                            </p>
+                            <p className="text-sm font-semibold text-slate-700">
+                              {t('common.noDataDescription')}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
                     }
                   />
                 </div>
@@ -584,9 +621,22 @@ function ClubSocietyCard({
                       'preferredClubSocieties.placeholders.organizationLocation'
                     )}
                     emptyIndicator={
-                      <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                        {t('preferredClubSocieties.empty.locations')}
-                      </p>
+                      <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
+                        <div className="flex flex-col items-start">
+                          <img
+                            src={multiSelectInfoAvatar}
+                            alt={t('common.noData')}
+                          />
+                          <div className="mt-3 w-61 text-left">
+                            <p className="font-bold text-slate-900">
+                              {t('common.noDataTitle')}
+                            </p>
+                            <p className="text-sm font-semibold text-slate-700">
+                              {t('common.noDataDescription')}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
                     }
                   />
                 </div>
