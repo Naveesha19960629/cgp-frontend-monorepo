@@ -505,6 +505,60 @@ describe('CustomizableFormStep', () => {
       expect(deleteButtonsFinal[0]).toBeDisabled();
     });
 
+    // DQCGP-3590: deletion worked but the success toast was never shown.
+    it('should show the success toast after a form is deleted', async () => {
+      const user = userEvent.setup();
+      renderComponent();
+
+      const toggle = getSectionToggle();
+      await user.click(toggle);
+
+      // A second form is needed — the delete button is disabled with only one.
+      await user.click(screen.getByRole('button', { name: 'Add Form' }));
+
+      const deleteButtons = screen.getAllByRole('button', {
+        name: 'Delete form',
+      });
+      await user.click(deleteButtons[1]);
+
+      expect(mockSuccessToast).not.toHaveBeenCalled();
+
+      await user.click(
+        screen.getByRole('button', {
+          name: 'customizableForm.deleteFormModal.delete',
+        })
+      );
+
+      expect(mockSuccessToast).toHaveBeenCalledWith({
+        title: 'customizableForm.notifications.deleteForm.title',
+        description: 'customizableForm.notifications.deleteForm.message',
+      });
+    });
+
+    it('should not show the success toast when deletion is cancelled', async () => {
+      const user = userEvent.setup();
+      renderComponent();
+
+      const toggle = getSectionToggle();
+      await user.click(toggle);
+
+      await user.click(screen.getByRole('button', { name: 'Add Form' }));
+
+      const deleteButtons = screen.getAllByRole('button', {
+        name: 'Delete form',
+      });
+      await user.click(deleteButtons[1]);
+
+      await user.click(
+        screen.getByRole('button', {
+          name: 'customizableForm.deleteFormModal.cancel',
+        })
+      );
+
+      expect(screen.queryAllByPlaceholderText('Form Title')).toHaveLength(2);
+      expect(mockSuccessToast).not.toHaveBeenCalled();
+    });
+
     it('should duplicate a form when duplicate button is clicked', async () => {
       const user = userEvent.setup();
       renderComponent();

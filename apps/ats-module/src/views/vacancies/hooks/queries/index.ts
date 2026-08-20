@@ -2,6 +2,7 @@ export { useGendersQuery } from '@/views/vacancies/hooks/queries/use-gender-quer
 export { useNextTemplateNameQuery } from '@/views/vacancies/hooks/queries/use-next-template-name-query';
 export { useVacancyTemplatesQuery } from '@/views/vacancies/hooks/queries/use-vacancy-templates-query';
 export { useVacancyTemplateByIdQuery } from '@/views/vacancies/hooks/queries/use-vacancy-template-by-id-query';
+export { useVacancyTemplateSnapshotQuery } from '@/views/vacancies/hooks/queries/use-vacancy-template-snapshot-query';
 export {
   useIndustriesQuery,
   useIndustriesSearch,

@@ -25,17 +25,17 @@ export default function TemplateCard({
 
   return (
     <article className="flex h-full flex-col overflow-hidden rounded-xl border border-[#d4d4d4] bg-white">
-      <div className="flex flex-1 flex-col px-4 pt-4 pb-5">
+      <div className="flex flex-1 flex-col px-4 pt-4 pb-6">
         <span className="w-fit rounded-lg border border-[#d4d4d4] bg-[#f5f5f5] px-3 py-1.5 text-sm font-semibold text-[#737373]">
           {t('templates.card.lastUpdated', {
             date: formatDisplayDate(template.updatedAt),
           })}
         </span>
 
-        <h3 className="mt-4 truncate text-xl font-bold tracking-[-0.1px] text-slate-900">
+        <h3 className="mt-3 truncate text-xl/6 font-bold tracking-[-0.1px] text-slate-900">
           {template.templateName}
         </h3>
-        <p className="mt-1 truncate text-base font-medium text-slate-600">
+        <p className="mt-2 truncate text-base font-medium text-slate-600">
           {template.refNumber}
         </p>
       </div>
@@ -46,17 +46,17 @@ export default function TemplateCard({
             type="button"
             aria-label={t('templates.card.edit')}
             onClick={() => onEdit(template.vacancyTemplateId)}
-            className="flex size-10 cursor-pointer items-center justify-center rounded-lg border border-[#e5e5e5] bg-white text-slate-600 hover:bg-slate-50"
+            className="flex size-10 cursor-pointer items-center justify-center rounded-lg border border-[#e5e5e5] bg-white text-slate-900 hover:bg-slate-50"
           >
-            <Edit2 className="size-5" variant="Linear" />
+            <Edit2 className="size-6" variant="Linear" />
           </button>
           <button
             type="button"
             aria-label={t('templates.card.delete')}
             onClick={() => onDelete(template.vacancyTemplateId)}
-            className="flex size-10 cursor-pointer items-center justify-center rounded-lg border border-[#e5e5e5] bg-white text-slate-600 hover:bg-slate-50"
+            className="flex size-10 cursor-pointer items-center justify-center rounded-lg border border-[#e5e5e5] bg-white text-slate-900 hover:bg-slate-50"
           >
-            <Trash className="size-5" variant="Linear" />
+            <Trash className="size-6" variant="Linear" />
           </button>
         </div>
 

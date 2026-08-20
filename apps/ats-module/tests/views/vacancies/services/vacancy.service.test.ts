@@ -314,4 +314,60 @@ describe('vacancyService', () => {
       ).rejects.toThrow('Update network error');
     });
   });
+  describe('getVacancyTemplateSnapshot', () => {
+    it('sends GET request to /vacancies/:id/template-snapshots', async () => {
+      mockGet.mockResolvedValue({ data: { success: true, data: null } });
+
+      await vacancyService.getVacancyTemplateSnapshot('vacancy-123');
+
+      expect(mockGet).toHaveBeenCalledWith(
+        '/vacancies/vacancy-123/template-snapshots'
+      );
+    });
+
+    it('returns the point-in-time template payload', async () => {
+      const snapshot = {
+        templateId: 'tmpl-1',
+        templateName: 'Template 01',
+        refNumber: 'TPL-001',
+        requestBody: {
+          title: '',
+          status: '',
+          lastActiveStep: '',
+          templateId: 'tmpl-1',
+          data: {
+            skills: {
+              isEnabled: true,
+              dataTakenFromCandidate: false,
+              content: { skillCareerPath: true },
+            },
+          },
+        },
+      };
+      mockGet.mockResolvedValue({
+        data: {
+          success: true,
+          requestId: 'req-1',
+          message: 'ok',
+          data: snapshot,
+        },
+      });
+
+      const result =
+        await vacancyService.getVacancyTemplateSnapshot('vacancy-123');
+
+      expect(result.success).toBe(true);
+      expect(result.data).toEqual(snapshot);
+    });
+
+    it('propagates the 404 raised for a vacancy with no snapshot', async () => {
+      mockGet.mockRejectedValue(
+        new Error('Request failed with status code 404')
+      );
+
+      await expect(
+        vacancyService.getVacancyTemplateSnapshot('vacancy-404')
+      ).rejects.toThrow('404');
+    });
+  });
 });

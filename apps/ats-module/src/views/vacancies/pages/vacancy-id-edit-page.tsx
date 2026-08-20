@@ -16,6 +16,7 @@ import {
 import {
   useVacancyByIdQuery,
   useVacancyTemplateByIdQuery,
+  useVacancyTemplateSnapshotQuery,
 } from '@/views/vacancies/hooks';
 import type { VacancyForm } from '@/views/vacancies/types';
 import { toVacancyFormFromResponse } from '@/views/vacancies/utils/vacancy-edit-response-helpers';
@@ -198,16 +199,26 @@ function EditVacancyContent({ id }: Readonly<{ id: string | undefined }>) {
   const {
     data: vacancyResponse,
     isLoading,
+    isFetching,
     error,
   } = useVacancyByIdQuery(id || '', {
     enabled: initialized && !!keycloak?.authenticated && !!id,
   });
 
   useEffect(() => {
+    // `isFetching` (not just `isLoading`) is the settle signal. Hydration runs
+    // exactly once, so it must not run against a cached-but-revalidating
+    // payload: after a status toggle the list mutation invalidates this key,
+    // React Query serves the pre-toggle entry while refetching in the
+    // background, and `isLoading` stays false because cached data exists.
+    // Hydrating there would latch the stale status into the form and the
+    // one-shot guard would then discard the fresh result (DQCGP: Edit page
+    // showed "Live" for a vacancy just moved to On Hold until a full reload).
     if (
       !vacancyResponse?.success ||
       isHydratedRef.current ||
       isLoading ||
+      isFetching ||
       !!error
     ) {
       return;
@@ -256,6 +267,7 @@ function EditVacancyContent({ id }: Readonly<{ id: string | undefined }>) {
     error,
     initCompletedStepsFromForm,
     initialStep,
+    isFetching,
     isLoading,
     originalFormRef,
     setCurrentStepIndex,
@@ -339,48 +351,109 @@ export default function VacancyIdEditPage() {
       enabled: initialized && !!keycloak?.authenticated && !!id,
     });
 
-  // Vacancies created from a template carry `vacancyTemplateId`.
-  const vacancyTemplateId = useMemo<string | undefined>(() => {
+  const vacancyRecord = useMemo<Record<string, unknown> | undefined>(() => {
     const record = vacancyResponse?.success ? vacancyResponse.data : undefined;
-    return isRecord(record) && typeof record.vacancyTemplateId === 'string'
-      ? record.vacancyTemplateId
-      : undefined;
+    return isRecord(record) ? record : undefined;
   }, [vacancyResponse]);
 
-  // For template-created vacancies, re-fetch the source template so the edit
-  // navigator mirrors the Use Template create flow at BOTH levels: which steps
-  // show AND which fields within them. The GET /vacancies/{id} payload only
-  // carries per-section `isEnabled` (not per-field flags), so field visibility
-  // can only be reconstructed from the template itself. Same query key as the
-  // create-from-template page → shared cache.
-  const { data: templateResponse, isLoading: isTemplateLoading } =
-    useVacancyTemplateByIdQuery(vacancyTemplateId ?? '', {
-      enabled: initialized && !!keycloak?.authenticated && !!vacancyTemplateId,
+  const readString = (key: string): string | undefined =>
+    typeof vacancyRecord?.[key] === 'string' ? vacancyRecord[key] : undefined;
+
+  // Only version 1 of a template-created vacancy carries `vacancyTemplateId`:
+  // the backend's `createNewVersion` does not copy the column, so editing a
+  // LIVE/EXPIRED/ONHOLD vacancy produces a version where it is null. Treated as
+  // a hint, never as the deciding signal — see `baseVacancyId` below.
+  const vacancyTemplateId = readString('vacancyTemplateId');
+
+  // The template snapshot is written once, against version 1's id, and
+  // `baseVacancyId === vacancyId` for version 1 — so the base id reaches the
+  // snapshot from ANY version, whether or not that version kept the template
+  // column. This is what makes the edit form survive a version bump.
+  const baseVacancyId = readString('baseVacancyId') ?? id;
+
+  // A later version may have lost `vacancyTemplateId`, so its absence does not
+  // prove the vacancy is template-free. Probe the snapshot whenever the vacancy
+  // is either known template-backed or is not its own base (i.e. a later
+  // version, which may have been stripped). A plain first-version vacancy is
+  // its own base and has no template id, so it skips the request entirely.
+  const mayBeTemplateBacked =
+    !!vacancyTemplateId || (!!baseVacancyId && baseVacancyId !== id);
+
+  // For template-created vacancies the edit navigator must mirror the Use
+  // Template create flow at BOTH levels: which steps show AND which fields
+  // within them. The GET /vacancies/{id} payload only carries per-section
+  // `isEnabled` (not per-field flags), so field visibility has to come from the
+  // template definition.
+  //
+  // Source of truth is the SNAPSHOT taken at creation time, not the live
+  // template: DQCGP-2560 AC 8 requires later template edits (and deletions) to
+  // leave already-created vacancies untouched. A 404 here is a normal answer
+  // meaning "not created from a template".
+  const { data: snapshotResponse, isFetched: isSnapshotFetched } =
+    useVacancyTemplateSnapshotQuery(baseVacancyId ?? '', {
+      enabled: initialized && !!keycloak?.authenticated && mayBeTemplateBacked,
+    });
+
+  const snapshotRequestBody = snapshotResponse?.success
+    ? snapshotResponse.data?.requestBody
+    : undefined;
+
+  // The snapshot carries the template id, so lineage is recoverable even when
+  // the vacancy row itself lost it.
+  const resolvedTemplateId =
+    vacancyTemplateId ??
+    (typeof snapshotRequestBody?.templateId === 'string'
+      ? snapshotRequestBody.templateId
+      : undefined);
+
+  // Legacy fallback: vacancies created before snapshotting existed have no
+  // snapshot row (404). Only then do we read the live template — better a
+  // possibly-drifted definition than an unrestricted form.
+  const needsLiveTemplateFallback =
+    !!resolvedTemplateId && isSnapshotFetched && !snapshotRequestBody;
+
+  const { data: templateResponse, isFetched: isTemplateFetched } =
+    useVacancyTemplateByIdQuery(resolvedTemplateId ?? '', {
+      enabled:
+        initialized && !!keycloak?.authenticated && needsLiveTemplateFallback,
     });
 
   const templateMapped = useMemo(() => {
-    const requestBody = templateResponse?.success
+    const liveRequestBody = templateResponse?.success
       ? templateResponse.data?.requestBody
       : undefined;
+    const requestBody = snapshotRequestBody ?? liveRequestBody;
     return requestBody
       ? toVacancyFormFromTemplateUsePayload(requestBody, DEFAULT_FORM)
       : undefined;
-  }, [templateResponse]);
+  }, [snapshotRequestBody, templateResponse]);
 
-  // Fallback step list: reconstructed from the saved vacancy's enabled sections.
-  // Used until the template resolves (or if the template fetch fails).
+  // Last-resort step list, for a template-backed vacancy whose definition is
+  // unreachable (pre-snapshot row and a deleted template). Reconstructed from
+  // the saved vacancy's enabled sections, so it cannot list a section the
+  // recruiter has disabled — good enough to keep the navigator restricted, but
+  // always outranked by the snapshot above.
   const inferredVisibleStepKeys = useMemo<string[] | undefined>(() => {
-    const record = vacancyResponse?.success ? vacancyResponse.data : undefined;
-    if (!isRecord(record) || !record.vacancyTemplateId) {
+    if (!vacancyRecord?.vacancyTemplateId) {
       return undefined;
     }
-    return getEnabledStepKeys(toVacancyFormFromResponse(record, DEFAULT_FORM));
-  }, [vacancyResponse]);
+    return getEnabledStepKeys(
+      toVacancyFormFromResponse(vacancyRecord, DEFAULT_FORM)
+    );
+  }, [vacancyRecord]);
 
-  // Hold the provider until both the vacancy and (for templated ones) its
-  // template are ready, so step + field restrictions are correct on first paint
-  // and the provider mounts exactly once.
-  if (isVacancyLoading || (vacancyTemplateId && isTemplateLoading)) {
+  // Hold the provider until the vacancy and (for templated ones) its template
+  // definition are ready, so step + field restrictions are correct on first
+  // paint and the provider mounts exactly once. Without this the form would
+  // briefly render unrestricted.
+  // `isFetched` (not `isLoading`) is the settle signal: it flips true on both
+  // success and 404, and stays false across the render where the query is first
+  // enabled but has not started fetching — the window `isLoading` would miss.
+  const isTemplateDefinitionPending =
+    mayBeTemplateBacked &&
+    (!isSnapshotFetched || (needsLiveTemplateFallback && !isTemplateFetched));
+
+  if (isVacancyLoading || isTemplateDefinitionPending) {
     return <EditNavigatorSkeleton />;
   }
 
@@ -393,7 +466,7 @@ export default function VacancyIdEditPage() {
       vacancyId={id}
       visibleStepKeys={visibleStepKeys}
       templateFieldVisibility={templateMapped?.templateFieldVisibility}
-      templateId={vacancyTemplateId}
+      templateId={resolvedTemplateId}
     >
       <section className="flex min-h-0 flex-1 flex-col overflow-hidden">
         <EditVacancyContent id={id} />
