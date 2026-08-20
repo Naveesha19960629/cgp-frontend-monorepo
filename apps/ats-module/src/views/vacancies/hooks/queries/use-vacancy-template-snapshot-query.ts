@@ -2,6 +2,8 @@ import { useQuery } from '@tanstack/react-query';
 
 import { vacancyService } from '@/views/vacancies/services';
 
+const VACANCY_TEMPLATE_SNAPSHOT_STALE_TIME = 5 * 60 * 1000; // 5 minutes
+
 const VACANCY_TEMPLATE_SNAPSHOT_QUERY_KEY = (vacancyId: string) =>
   ['vacancy-template-snapshot', vacancyId] as const;
 
@@ -27,7 +29,7 @@ const useVacancyTemplateSnapshotQuery = (
     queryFn: () => vacancyService.getVacancyTemplateSnapshot(vacancyId),
     enabled: isEnabled,
     retry: false,
-    staleTime: 5 * 60 * 1000,
+    staleTime: VACANCY_TEMPLATE_SNAPSHOT_STALE_TIME,
     refetchOnWindowFocus: false,
   });
 };
