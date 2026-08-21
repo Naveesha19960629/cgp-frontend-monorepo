@@ -66,6 +66,11 @@ const MAX_CAUSE_LENGTH = 100;
 const MAX_POSITION_LENGTH = 100;
 const MAX_SELECTIONS = 10;
 
+const multiSelectInfoAvatar = new URL(
+  '../../../../assets/images/multi-select-info-avatar.svg',
+  import.meta.url
+).href;
+
 // Template field-visibility codes for the Volunteering section. When a
 // template marks this section as "data taken from candidate", the backend
 // forces every flag false, so none of these entry fields render.
@@ -278,9 +283,22 @@ function VolunteeringCard({
                       'preferredVolunteering.placeholders.organizationName'
                     )}
                     emptyIndicator={
-                      <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                        {t('preferredVolunteering.empty.organizations')}
-                      </p>
+                      <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
+                        <div className="flex flex-col items-start">
+                          <img
+                            src={multiSelectInfoAvatar}
+                            alt={t('common.noData')}
+                          />
+                          <div className="mt-3 w-61 text-left">
+                            <p className="font-bold text-slate-900">
+                              {t('common.noDataTitle')}
+                            </p>
+                            <p className="text-sm font-semibold text-slate-700">
+                              {t('common.noDataDescription')}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
                     }
                   />
                 </div>
@@ -333,9 +351,22 @@ function VolunteeringCard({
                       'preferredVolunteering.placeholders.organizationLocation'
                     )}
                     emptyIndicator={
-                      <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                        {t('preferredVolunteering.empty.locations')}
-                      </p>
+                      <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
+                        <div className="flex flex-col items-start">
+                          <img
+                            src={multiSelectInfoAvatar}
+                            alt={t('common.noData')}
+                          />
+                          <div className="mt-3 w-61 text-left">
+                            <p className="font-bold text-slate-900">
+                              {t('common.noDataTitle')}
+                            </p>
+                            <p className="text-sm font-semibold text-slate-700">
+                              {t('common.noDataDescription')}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
                     }
                   />
                 </div>
@@ -405,9 +436,22 @@ function VolunteeringCard({
                     loading={isCausesLoading}
                     placeholder={t('preferredVolunteering.placeholders.cause')}
                     emptyIndicator={
-                      <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                        {t('preferredVolunteering.empty.causes')}
-                      </p>
+                      <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
+                        <div className="flex flex-col items-start">
+                          <img
+                            src={multiSelectInfoAvatar}
+                            alt={t('common.noData')}
+                          />
+                          <div className="mt-3 w-61 text-left">
+                            <p className="font-bold text-slate-900">
+                              {t('common.noDataTitle')}
+                            </p>
+                            <p className="text-sm font-semibold text-slate-700">
+                              {t('common.noDataDescription')}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
                     }
                   />
                 </div>
