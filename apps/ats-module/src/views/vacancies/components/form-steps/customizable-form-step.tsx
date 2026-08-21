@@ -222,6 +222,7 @@ interface QuestionCardProps {
   isDeleteDisabled: boolean;
   isDuplicateDisabled: boolean;
   showValidation: boolean;
+  fieldsDisabled: boolean;
 }
 
 function QuestionCard({
@@ -234,6 +235,7 @@ function QuestionCard({
   isDeleteDisabled,
   isDuplicateDisabled,
   showValidation,
+  fieldsDisabled,
 }: Readonly<QuestionCardProps>) {
   const { t } = useTranslation('ats');
 
@@ -354,6 +356,7 @@ function QuestionCard({
             }
             placeholder={t('customizableForm.question.questionPlaceholder')}
             onChange={e => set({ text: removeEmoji(e.target.value) })}
+            disabled={fieldsDisabled}
             className="h-11 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:ring-0 focus:outline-none"
           />
           {showValidation && question.text.trim() === '' && (
@@ -377,7 +380,11 @@ function QuestionCard({
             {t('customizableForm.question.typeLabel')}
             <span className="ml-0.5 text-red-500">*</span>
           </label>
-          <Select value={question.type} onValueChange={changeType}>
+          <Select
+            value={question.type}
+            onValueChange={changeType}
+            disabled={fieldsDisabled}
+          >
             <SelectTrigger className="!h-11 w-full bg-white shadow-none">
               <SelectValue
                 placeholder={t('customizableForm.question.typePlaceholder')}
@@ -443,6 +450,7 @@ function QuestionCard({
                         updateOption(opt.id, removeEmoji(e.target.value))
                       }
                       placeholder={t('customizableForm.question.enterOption')}
+                      disabled={fieldsDisabled}
                       className={`h-11 w-full rounded-md border ${
                         showValidation && duplicateOptionIds.has(opt.id)
                           ? 'border-[#FF4A55]'
@@ -454,6 +462,7 @@ function QuestionCard({
                     <button
                       type="button"
                       onClick={() => removeOption(opt.id)}
+                      disabled={fieldsDisabled}
                       className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-md border border-slate-200 bg-white text-neutral-600 transition-colors hover:border-red-300 hover:text-red-500"
                       aria-label="Remove option"
                     >
@@ -477,6 +486,7 @@ function QuestionCard({
               type="button"
               className="inline-flex h-9 cursor-pointer items-center gap-1 rounded-lg bg-neutral-200 px-8 text-sm font-semibold text-slate-700 transition-colors hover:bg-neutral-300"
               onClick={addOption}
+              disabled={fieldsDisabled}
             >
               <Plus className="size-5" />
               {t('customizableForm.question.addOption')}
@@ -516,6 +526,7 @@ function QuestionCard({
                         updateOption(opt.id, removeEmoji(e.target.value))
                       }
                       placeholder={t('customizableForm.question.enterOption')}
+                      disabled={fieldsDisabled}
                       className={`h-11 w-full rounded-md border ${
                         showValidation && duplicateOptionIds.has(opt.id)
                           ? 'border-[#FF4A55]'
@@ -527,6 +538,7 @@ function QuestionCard({
                     <button
                       type="button"
                       onClick={() => removeOption(opt.id)}
+                      disabled={fieldsDisabled}
                       className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-md border border-slate-200 bg-white text-neutral-600 transition-colors hover:border-red-300 hover:text-red-500"
                       aria-label="Remove option"
                     >
@@ -550,6 +562,7 @@ function QuestionCard({
               type="button"
               className="inline-flex h-9 cursor-pointer items-center gap-1 rounded-lg bg-neutral-200 px-8 text-sm font-semibold text-slate-700 transition-colors hover:bg-neutral-300"
               onClick={addOption}
+              disabled={fieldsDisabled}
             >
               <Plus className="size-5" />
               {t('customizableForm.question.addOption')}
@@ -589,6 +602,7 @@ function QuestionCard({
                         updateOption(opt.id, removeEmoji(e.target.value))
                       }
                       placeholder={t('customizableForm.question.enterOption')}
+                      disabled={fieldsDisabled}
                       className={`h-11 w-full rounded-md border ${
                         showValidation && duplicateOptionIds.has(opt.id)
                           ? 'border-[#FF4A55]'
@@ -600,6 +614,7 @@ function QuestionCard({
                     <button
                       type="button"
                       onClick={() => removeOption(opt.id)}
+                      disabled={fieldsDisabled}
                       className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-md border border-slate-200 bg-white text-neutral-600 transition-colors hover:border-red-300 hover:text-red-500"
                       aria-label="Remove option"
                     >
@@ -623,6 +638,7 @@ function QuestionCard({
               type="button"
               className="inline-flex h-9 cursor-pointer items-center gap-1 rounded-lg bg-neutral-200 px-8 text-sm font-semibold text-slate-700 transition-colors hover:bg-neutral-300"
               onClick={addOption}
+              disabled={fieldsDisabled}
             >
               <Plus className="size-5" />
               {t('customizableForm.question.addOption')}
@@ -646,6 +662,7 @@ function QuestionCard({
               <Select
                 value={String(question.from)}
                 onValueChange={val => set({ from: Number(val) })}
+                disabled={fieldsDisabled}
               >
                 <SelectTrigger className="!h-11 w-[68px] bg-white shadow-none">
                   <SelectValue />
@@ -670,6 +687,7 @@ function QuestionCard({
               <Select
                 value={String(question.to)}
                 onValueChange={val => set({ to: Number(val) })}
+                disabled={fieldsDisabled}
               >
                 <SelectTrigger className="!h-11 w-[68px] bg-white shadow-none">
                   <SelectValue />
@@ -705,6 +723,7 @@ function QuestionCard({
                 maxLength={START_END_MAX}
                 value={question.startLabel}
                 onChange={e => set({ startLabel: removeEmoji(e.target.value) })}
+                disabled={fieldsDisabled}
                 className="h-11 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:ring-0 focus:outline-none"
               />
             </div>
@@ -727,6 +746,7 @@ function QuestionCard({
                 maxLength={START_END_MAX}
                 value={question.endLabel}
                 onChange={e => set({ endLabel: removeEmoji(e.target.value) })}
+                disabled={fieldsDisabled}
                 className="h-11 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-400 focus:ring-0 focus:outline-none"
               />
             </div>
@@ -744,7 +764,7 @@ function QuestionCard({
               ? 'cursor-not-allowed text-slate-300'
               : 'cursor-pointer text-slate-500 transition-colors hover:text-slate-700'
           }
-          disabled={isDuplicateDisabled}
+          disabled={isDuplicateDisabled || fieldsDisabled}
           onClick={onDuplicate}
         >
           <Simcard2 size={24} />
@@ -757,7 +777,7 @@ function QuestionCard({
               ? 'cursor-not-allowed text-slate-300'
               : 'cursor-pointer text-slate-500 transition-colors hover:text-red-500'
           }
-          disabled={isDeleteDisabled}
+          disabled={isDeleteDisabled || fieldsDisabled}
           onClick={onRemove}
         >
           <Trash size={24} />
@@ -773,6 +793,7 @@ function QuestionCard({
           <Switch
             checked={question.required}
             onCheckedChange={val => set({ required: val })}
+            disabled={fieldsDisabled}
             size="lg"
             data-testid="toggle-button"
           />
@@ -901,6 +922,12 @@ export default function CustomizableFormStep({
     sectionTitle.trim().length > 0 || forms.some(form => !isFormEmpty(form));
 
   const isSectionTitleError = sectionTitle.length > SECTION_TITLE_MAX;
+
+  // The section body is only visually disabled via `pointer-events-none
+  // opacity-60` below — without this, its inputs stay HTML-enabled and remain
+  // typeable by automation tools/AI agents despite looking disabled to a
+  // human (DQCGP-3640).
+  const isFieldsDisabled = !isEnabled;
 
   // Question-level mandatory content (text, type, and options for choice types).
   const isQuestionContentInvalid = (q: Question): boolean => {
@@ -1245,6 +1272,7 @@ export default function CustomizableFormStep({
                 : undefined
             }
             onChange={e => setSectionTitle(removeEmoji(e.target.value))}
+            disabled={isFieldsDisabled}
             className="w-full border-0 border-b border-slate-200 bg-transparent px-0 pb-3 text-[24px] leading-8 font-bold tracking-[-0.144px] text-slate-900 placeholder:text-slate-300 focus:border-slate-300 focus:ring-0 focus:outline-none"
           />
           {isSectionTitleError && (
@@ -1295,7 +1323,7 @@ export default function CustomizableFormStep({
                           ? 'cursor-not-allowed text-slate-300'
                           : 'cursor-pointer transition-colors hover:text-slate-700'
                       }
-                      disabled={isFormDuplicateDisabled}
+                      disabled={isFormDuplicateDisabled || isFieldsDisabled}
                       onClick={() => duplicateForm(form.id)}
                     >
                       <Simcard2 size={24} />
@@ -1309,7 +1337,7 @@ export default function CustomizableFormStep({
                           ? 'cursor-not-allowed text-slate-300'
                           : 'cursor-pointer transition-colors hover:text-red-600'
                       }
-                      disabled={forms.length === 1}
+                      disabled={forms.length === 1 || isFieldsDisabled}
                       onClick={() => setPendingFormDelete(form.id)}
                     >
                       <Trash size={24} />
@@ -1319,6 +1347,7 @@ export default function CustomizableFormStep({
                       type="button"
                       aria-label={form.isOpen ? 'Collapse form' : 'Expand form'}
                       className="cursor-pointer transition-colors hover:text-slate-700"
+                      disabled={isFieldsDisabled}
                       onClick={() => toggleOpen(form.id)}
                     >
                       <ArrowDown2
@@ -1347,6 +1376,7 @@ export default function CustomizableFormStep({
                         onChange={e =>
                           updateFormTitle(form.id, removeEmoji(e.target.value))
                         }
+                        disabled={isFieldsDisabled}
                         className="w-full border-0 border-b border-slate-200 bg-transparent px-0 pb-3 text-xl leading-6 font-bold text-slate-900 placeholder:text-slate-300 focus:border-slate-300 focus:ring-0 focus:outline-none"
                       />
                       {isFormTitleError && (
@@ -1383,6 +1413,7 @@ export default function CustomizableFormStep({
                         isDeleteDisabled={form.questions.length === 1}
                         isDuplicateDisabled={isQuestionEmpty(question)}
                         showValidation={showValidation}
+                        fieldsDisabled={isFieldsDisabled}
                       />
                     ))}
 
@@ -1392,6 +1423,7 @@ export default function CustomizableFormStep({
                         type="button"
                         className="inline-flex h-14 cursor-pointer items-center gap-1 rounded-lg bg-neutral-200 px-8 text-sm font-semibold text-slate-700 transition-colors hover:bg-neutral-300"
                         onClick={() => addQuestion(form.id)}
+                        disabled={isFieldsDisabled}
                       >
                         <Plus className="size-5" />
                         {t('customizableForm.createQuestion')}
@@ -1412,6 +1444,7 @@ export default function CustomizableFormStep({
             className="size-11 rounded-lg bg-gray-200 px-3 text-sm"
             aria-label={t('customizableForm.addForm')}
             onClick={addForm}
+            disabled={isFieldsDisabled}
           >
             <Plus className="size-4 text-neutral-600!" />
           </Button>

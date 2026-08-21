@@ -75,7 +75,7 @@ describe('useUpdateVacancyMutation', () => {
     });
   });
 
-  it('onSuccess invalidates vacancies list and vacancy-by-id queries', async () => {
+  it('onSuccess invalidates vacancies list, vacancy-by-id, and vacancy-job-description queries', async () => {
     const mutation = useUpdateVacancyMutation() as unknown as MockMutation;
 
     await mutation.onSuccess(
@@ -92,6 +92,9 @@ describe('useUpdateVacancyMutation', () => {
     });
     expect(mockInvalidateQueries).toHaveBeenCalledWith({
       queryKey: ['vacancy', 'vacancy-99'],
+    });
+    expect(mockInvalidateQueries).toHaveBeenCalledWith({
+      queryKey: ['vacancy-job-description', 'vacancy-99'],
     });
   });
 });

@@ -350,6 +350,55 @@ describe('CustomizableFormStep', () => {
     });
   });
 
+  describe('DQCGP-3640 — HTML-disabled wiring when section is off', () => {
+    it('marks the Section Title input, Add Form button, and Create Question button as HTML-disabled while the section is off, and re-enables them once toggled on', async () => {
+      const user = userEvent.setup();
+      renderComponent();
+
+      const sectionTitleInput = screen.getByPlaceholderText('Section Title');
+      expect(sectionTitleInput).toBeDisabled();
+      expect(screen.getByRole('button', { name: 'Add Form' })).toBeDisabled();
+      expect(
+        screen.getByRole('button', { name: 'Create Question' })
+      ).toBeDisabled();
+
+      await user.click(getSectionToggle());
+
+      expect(sectionTitleInput).not.toBeDisabled();
+      expect(
+        screen.getByRole('button', { name: 'Add Form' })
+      ).not.toBeDisabled();
+      expect(
+        screen.getByRole('button', { name: 'Create Question' })
+      ).not.toBeDisabled();
+    });
+
+    it('marks the Form Title input, Question text input, Type select, and Required switch as HTML-disabled once the section is toggled back off', async () => {
+      const user = userEvent.setup();
+      renderComponent();
+
+      await user.click(getSectionToggle()); // enable
+
+      const formTitleInput = screen.getByPlaceholderText('Form Title');
+      const questionInput = screen.getByPlaceholderText('Question');
+      const typeSelect = screen.getByRole('combobox');
+      // Switches: [0] section toggle, [1] first question's Required switch.
+      const requiredSwitch = screen.getAllByRole('switch')[1];
+
+      expect(formTitleInput).not.toBeDisabled();
+      expect(questionInput).not.toBeDisabled();
+      expect(typeSelect).not.toBeDisabled();
+      expect(requiredSwitch).not.toBeDisabled();
+
+      await user.click(getSectionToggle()); // disable, no data entered yet
+
+      expect(formTitleInput).toBeDisabled();
+      expect(questionInput).toBeDisabled();
+      expect(typeSelect).toBeDisabled();
+      expect(requiredSwitch).toBeDisabled();
+    });
+  });
+
   describe('Section Title Management', () => {
     it('should update section title on input change', async () => {
       const user = userEvent.setup();

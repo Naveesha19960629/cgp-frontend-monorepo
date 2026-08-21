@@ -171,5 +171,22 @@ describe('useUpdateDraftVacancyMutation', () => {
         queryKey: ['vacancy', 'vacancy-abc'],
       });
     });
+
+    it("invalidates the ['vacancy-job-description', id] query cache", async () => {
+      // Regression test for DQCGP-3651: without this invalidation the Edit JD
+      // page kept serving its cached (stale) toggle state after a vacancy
+      // edit, since the two queries don't otherwise share a cache key.
+      const mutation =
+        useUpdateDraftVacancyMutation() as unknown as MockMutation<MutationInput>;
+
+      await mutation.onSuccess(undefined, {
+        id: 'vacancy-abc',
+        form: mockForm,
+      });
+
+      expect(mockInvalidateQueries).toHaveBeenCalledWith({
+        queryKey: ['vacancy-job-description', 'vacancy-abc'],
+      });
+    });
   });
 });

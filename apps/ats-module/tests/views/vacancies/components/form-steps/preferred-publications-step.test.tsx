@@ -113,11 +113,13 @@ vi.mock('@cgp/ui-kit/components/ui/checkbox', () => ({
   Checkbox: ({
     id,
     checked,
+    disabled,
     onCheckedChange,
     className,
   }: {
     id?: string;
     checked?: boolean;
+    disabled?: boolean;
     onCheckedChange?: (v: boolean) => void;
     className?: string;
   }) => (
@@ -125,6 +127,7 @@ vi.mock('@cgp/ui-kit/components/ui/checkbox', () => ({
       type="checkbox"
       id={id}
       checked={checked ?? false}
+      disabled={disabled}
       onChange={e => onCheckedChange?.(e.target.checked)}
       className={className}
     />
@@ -452,6 +455,26 @@ describe('PreferredPublicationsStep', () => {
 
       // Fields should be disabled
       expect(cardBody?.className).toContain('opacity-60');
+      // ...and not just visually — the actual HTML disabled attribute must be
+      // set too, or automation tools can still type into it (DQCGP-3640).
+      expect(publisherInput).toBeDisabled();
+    });
+
+    it('marks the dataTakenFromCandidate checkbox itself as disabled once the section is toggled off (DQCGP-3640)', async () => {
+      const user = userEvent.setup();
+      renderStep();
+
+      const toggle = screen.getByRole('switch');
+      await user.click(toggle); // enable
+
+      const checkbox = screen.getByLabelText(
+        /If selected, no manual input is required/i
+      );
+      expect(checkbox).not.toBeDisabled();
+
+      await user.click(toggle); // disable, no data entered yet
+
+      expect(checkbox).toBeDisabled();
     });
   });
 

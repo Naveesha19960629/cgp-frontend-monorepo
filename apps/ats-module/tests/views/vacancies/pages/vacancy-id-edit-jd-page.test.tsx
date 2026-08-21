@@ -155,3 +155,29 @@ describe('VacancyIdEditJdPage — cancel button behaviour', () => {
     expect(mockNavigate).toHaveBeenCalledWith('/dashboard/ats/vacancies');
   });
 });
+
+describe('VacancyIdEditJdPage — footer button styling', () => {
+  it('applies the Figma-specified colors and sizing to the Cancel and Update buttons', () => {
+    // Regression test: Cancel previously used the ui-kit `secondary` variant
+    // (oklch(0.97 0 0) bg / oklch(0.205 0 0) text ≈ #f5f5f5 / #171717) and
+    // Update used the generic brand-primary token (#0f5351) at h-12/w-44 —
+    // all visibly diverged from Figma node 4229:245390 (#e5e5e5 bg /
+    // #525252 text, 193x56, 8px radius) and node 4229:245391 (#075056 bg,
+    // white text, same size/radius).
+    render(<VacancyIdEditJdPage />);
+
+    const cancelButton = screen.getByRole('button', {
+      name: 'editJobDescription.cancel',
+    });
+    const updateButton = screen.getByRole('button', {
+      name: 'editJobDescription.update',
+    });
+
+    expect(cancelButton).toHaveClass('bg-[#e5e5e5]', 'text-[#525252]');
+    expect(updateButton).toHaveClass('bg-[#075056]', 'text-white');
+
+    for (const button of [cancelButton, updateButton]) {
+      expect(button).toHaveClass('h-14', 'w-48.25', 'rounded-lg');
+    }
+  });
+});

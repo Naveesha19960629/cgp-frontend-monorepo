@@ -34,12 +34,18 @@ import {
   hasScheduleChanged,
   to24HourTime,
 } from '@/views/vacancies/utils';
+import { getHundredYearDateBoundaries } from '@/views/vacancies/utils/date-timezone-safe';
 
 import { ErrorToast, SuccessToast } from '@cgp/ui-kit/components/custom-toast';
 import { Button } from '@cgp/ui-kit/components/ui/button';
 import { CalendarWithTime } from '@cgp/ui-kit/components/ui/calendar-with-time';
 import { Label } from '@cgp/ui-kit/components/ui/label';
 import { startOfToday } from 'date-fns';
+
+// Both the publish and expiration dates must fall within [today, today + 100
+// years] — selecting anything further out is not a valid schedule.
+const { today: TODAY, maxDate: HUNDRED_YEARS_FROM_NOW } =
+  getHundredYearDateBoundaries();
 
 export default function ScheduleVacancyStep({
   onBack,
@@ -538,7 +544,11 @@ export default function ScheduleVacancyStep({
                       timeInputPlaceholder={t(
                         'scheduleVacancy.timePlaceholder'
                       )}
-                      disabledDates={date => date < startOfToday()}
+                      disabledDates={date =>
+                        date < startOfToday() || date > HUNDRED_YEARS_FROM_NOW
+                      }
+                      startMonth={TODAY}
+                      endMonth={HUNDRED_YEARS_FROM_NOW}
                       formattedDateDisplay={
                         dateField.value
                           ? formatDisplayDateTime(
@@ -601,9 +611,12 @@ export default function ScheduleVacancyStep({
                         ].join('-');
                         return (
                           date < startOfToday() ||
+                          date > HUNDRED_YEARS_FROM_NOW ||
                           (publishDate ? localStr < publishDate : false)
                         );
                       }}
+                      startMonth={TODAY}
+                      endMonth={HUNDRED_YEARS_FROM_NOW}
                       formattedDateDisplay={
                         dateField.value
                           ? formatDisplayDateTime(

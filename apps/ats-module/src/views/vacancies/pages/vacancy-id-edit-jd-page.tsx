@@ -162,17 +162,17 @@ export default function VacancyIdEditJdPage() {
         )}
       </div>
 
-      <footer className="flex justify-end gap-4 border-t border-slate-200 px-7 py-4">
+      <footer className="flex justify-end gap-3 border-t border-slate-200 px-7 py-4">
         <Button
           variant="secondary"
-          className="h-12 w-44"
+          className="h-14 w-48.25 rounded-lg bg-[#e5e5e5] text-[#525252] hover:bg-[#d4d4d4]"
           onClick={handleCancel}
           disabled={updateJobDescription.isPending}
         >
           {t('editJobDescription.cancel')}
         </Button>
         <Button
-          className="h-12 w-44"
+          className="h-14 w-48.25 rounded-lg bg-[#075056] text-white hover:bg-[#075056]/90"
           onClick={handleUpdate}
           disabled={!isDirty || updateJobDescription.isPending}
         >

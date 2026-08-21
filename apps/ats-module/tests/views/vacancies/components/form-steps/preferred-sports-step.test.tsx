@@ -149,19 +149,33 @@ vi.mock('@cgp/ui-kit/components/multi-select', () => ({
     placeholder,
     options = [],
     onChange,
+    onSearchSync,
+    disabled,
   }: {
     placeholder: string;
     options?: StubOption[];
     onChange?: (options: StubOption[]) => void;
+    onSearchSync?: (value: string) => StubOption[];
+    disabled?: boolean;
   }) => (
     <div>
-      <input placeholder={placeholder} readOnly />
+      <input
+        placeholder={placeholder}
+        readOnly
+        disabled={disabled}
+        data-disabled={String(Boolean(disabled))}
+      />
       {options.map(o => (
         <span key={o.value}>{o.label}</span>
       ))}
       <button type="button" onClick={() => onChange?.(options)}>
         {`select:${placeholder}`}
       </button>
+      {onSearchSync && (
+        <button type="button" onClick={() => onSearchSync('xaxaxax')}>
+          {`search:${placeholder}`}
+        </button>
+      )}
     </div>
   ),
 }));
@@ -173,7 +187,9 @@ vi.mock('@cgp/ui-kit/components/combobox', () => ({
 }));
 
 vi.mock('@cgp/ui-kit/components/character-count', () => ({
-  CharacterCount: () => <span>0/100</span>,
+  CharacterCount: ({ currentLength }: { currentLength: number }) => (
+    <span data-testid="character-count">{currentLength}</span>
+  ),
 }));
 
 vi.mock('@cgp/ui-kit/components/custom-toast', () => ({
@@ -407,5 +423,108 @@ describe('PreferredSportsStep', () => {
 
     // Disabled button must not append a second card.
     expect(screen.queryByText('Sports 02')).not.toBeInTheDocument();
+  });
+
+  describe('enable/disable toggle (DQCGP-2866)', () => {
+    it('marks every select-or-add field as disabled once the section is toggled off', async () => {
+      const user = userEvent.setup();
+      render(
+        <PreferredSportsStep
+          onNext={mockOnNext}
+          onBack={mockOnBack}
+          onSubmit={vi.fn()}
+        />
+      );
+
+      await user.click(screen.getByRole('switch')); // toggle on
+
+      expect(
+        screen.getByPlaceholderText('Select or add sport name')
+      ).toHaveAttribute('data-disabled', 'false');
+      expect(screen.getByPlaceholderText('Select location')).toHaveAttribute(
+        'data-disabled',
+        'false'
+      );
+
+      await user.click(screen.getByRole('switch')); // toggle off
+
+      expect(
+        screen.getByPlaceholderText('Select or add sport name')
+      ).toHaveAttribute('data-disabled', 'true');
+      expect(screen.getByPlaceholderText('Select location')).toHaveAttribute(
+        'data-disabled',
+        'true'
+      );
+    });
+
+    it('resets the character counter when disabled with uncommitted search text', async () => {
+      const user = userEvent.setup();
+      render(
+        <PreferredSportsStep
+          onNext={mockOnNext}
+          onBack={mockOnBack}
+          onSubmit={vi.fn()}
+        />
+      );
+
+      await user.click(screen.getByRole('switch')); // toggle on
+      await user.click(
+        screen.getByRole('button', { name: 'search:Select or add sport name' })
+      );
+
+      // The sport-name counter is the first of the card's two CharacterCount
+      // instances (sport name, then position).
+      expect(screen.getAllByTestId('character-count')[0]).toHaveTextContent(
+        '7'
+      );
+
+      await user.click(screen.getByRole('switch')); // toggle off
+
+      expect(screen.getAllByTestId('character-count')[0]).toHaveTextContent(
+        '0'
+      );
+    });
+
+    it('marks the Position / Role Held input as HTML-disabled once toggled off (DQCGP-3640)', async () => {
+      const user = userEvent.setup();
+      render(
+        <PreferredSportsStep
+          onNext={mockOnNext}
+          onBack={mockOnBack}
+          onSubmit={vi.fn()}
+        />
+      );
+
+      await user.click(screen.getByRole('switch')); // toggle on
+
+      const positionInput = screen.getByPlaceholderText(
+        'preferredSports.placeholders.position'
+      );
+      expect(positionInput).not.toBeDisabled();
+
+      await user.click(screen.getByRole('switch')); // toggle off
+
+      expect(positionInput).toBeDisabled();
+    });
+
+    it('marks the dataTakenFromCandidate checkbox itself as disabled once toggled off', async () => {
+      const user = userEvent.setup();
+      render(
+        <PreferredSportsStep
+          onNext={mockOnNext}
+          onBack={mockOnBack}
+          onSubmit={vi.fn()}
+        />
+      );
+
+      const checkbox = screen.getByLabelText(
+        /If selected, no manual input is required, and data will be taken from the candidate profile/i
+      );
+      expect(checkbox).toBeDisabled(); // section starts disabled by default
+
+      await user.click(screen.getByRole('switch')); // toggle on
+
+      expect(checkbox).not.toBeDisabled();
+    });
   });
 });
