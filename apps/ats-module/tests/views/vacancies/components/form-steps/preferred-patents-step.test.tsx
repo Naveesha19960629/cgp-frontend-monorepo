@@ -116,7 +116,29 @@ vi.mock('@cgp/ui-kit/components/ui/switch', () => ({
 }));
 
 vi.mock('@cgp/ui-kit/components/multi-select', () => ({
-  default: () => null,
+  default: ({
+    placeholder,
+    onSearchSync,
+    disabled,
+  }: {
+    placeholder?: string;
+    onSearchSync?: (value: string) => unknown;
+    disabled?: boolean;
+  }) => (
+    <div>
+      <input
+        placeholder={placeholder}
+        readOnly
+        disabled={disabled}
+        data-disabled={String(Boolean(disabled))}
+      />
+      {onSearchSync && (
+        <button type="button" onClick={() => onSearchSync('xaxaxax')}>
+          {`search:${placeholder}`}
+        </button>
+      )}
+    </div>
+  ),
 }));
 
 vi.mock('@cgp/ui-kit/components/ui/calendar', () => ({
@@ -140,7 +162,9 @@ vi.mock('@cgp/ui-kit/components/ui/collapsible', () => ({
 }));
 
 vi.mock('@cgp/ui-kit/components/character-count', () => ({
-  CharacterCount: () => null,
+  CharacterCount: ({ currentLength }: { currentLength: number }) => (
+    <span data-testid="character-count">{currentLength}</span>
+  ),
 }));
 
 vi.mock('@cgp/ui-kit/components/ui/checkbox', () => ({
@@ -257,5 +281,58 @@ describe('PreferredPatentsStep', () => {
     await user.click(screen.getByRole('button', { name: /back/i }));
 
     expect(onNext).not.toHaveBeenCalled();
+  });
+
+  describe('toggle (DQCGP-2866)', () => {
+    it('marks the related-industry combobox as disabled once toggled off', async () => {
+      const user = userEvent.setup();
+      render(
+        <PreferredPatentsStep
+          onNext={onNext}
+          onBack={onBack}
+          onSubmit={onSubmit}
+        />
+      );
+
+      await user.click(screen.getByRole('switch')); // enable
+
+      expect(
+        screen.getByPlaceholderText(
+          'preferredPatents.relatedIndustryPlaceholder'
+        )
+      ).toHaveAttribute('data-disabled', 'false');
+
+      await user.click(screen.getByRole('switch')); // disable, no data yet
+
+      expect(
+        screen.getByPlaceholderText(
+          'preferredPatents.relatedIndustryPlaceholder'
+        )
+      ).toHaveAttribute('data-disabled', 'true');
+    });
+
+    it('resets the related-industry character counter when disabled with uncommitted search text', async () => {
+      const user = userEvent.setup();
+      render(
+        <PreferredPatentsStep
+          onNext={onNext}
+          onBack={onBack}
+          onSubmit={onSubmit}
+        />
+      );
+
+      await user.click(screen.getByRole('switch')); // enable
+      await user.click(
+        screen.getByRole('button', {
+          name: 'search:preferredPatents.relatedIndustryPlaceholder',
+        })
+      );
+
+      expect(screen.getByTestId('character-count')).toHaveTextContent('7');
+
+      await user.click(screen.getByRole('switch')); // disable, no data yet
+
+      expect(screen.getByTestId('character-count')).toHaveTextContent('0');
+    });
   });
 });

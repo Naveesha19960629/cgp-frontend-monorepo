@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { forwardRef, useState } from 'react';
+import { forwardRef, useEffect, useState } from 'react';
 
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -47,7 +47,9 @@ vi.mock('@/views/vacancies/utils', () => ({
 }));
 
 vi.mock('@cgp/ui-kit/components/character-count', () => ({
-  CharacterCount: () => null,
+  CharacterCount: ({ currentLength }: { currentLength: number }) => (
+    <span data-testid="languages-character-count">{currentLength}</span>
+  ),
 }));
 
 vi.mock('@cgp/ui-kit/components/multi-select', () => {
@@ -83,8 +85,20 @@ vi.mock('@cgp/ui-kit/components/multi-select', () => {
     const [open, setOpen] = useState(false);
     const [search, setSearch] = useState('');
     const [maxError, setMaxError] = useState(false);
+    const [syncedOptions, setSyncedOptions] = useState<Option[]>(options);
 
-    const displayOptions = onSearchSync ? onSearchSync(search) : options;
+    // Only re-run the (side-effecting) onSearchSync when `search` actually
+    // changes, mirroring the real component's debounced-effect timing —
+    // calling it unconditionally during render caused it to re-fire (with
+    // stale search text) whenever an unrelated prop like `disabled` changed.
+    useEffect(() => {
+      if (onSearchSync) {
+        setSyncedOptions(onSearchSync(search));
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [search]);
+
+    const displayOptions = onSearchSync ? syncedOptions : options;
     const filtered = displayOptions.filter(
       o =>
         o.label.toLowerCase().includes(search.toLowerCase()) &&
@@ -182,16 +196,19 @@ vi.mock('@cgp/ui-kit/components/ui/checkbox', () => ({
   Checkbox: ({
     id,
     checked,
+    disabled,
     onCheckedChange,
   }: {
     id?: string;
     checked?: boolean;
+    disabled?: boolean;
     onCheckedChange?: (v: boolean) => void;
   }) => (
     <input
       type="checkbox"
       id={id}
       checked={checked ?? false}
+      disabled={disabled}
       onChange={e => onCheckedChange?.(e.target.checked)}
     />
   ),
@@ -376,6 +393,41 @@ describe('PreferredLanguagesStep', () => {
         'aria-checked',
         'true'
       );
+    });
+
+    it('resets the character counter when disabled with uncommitted search text (DQCGP-2866)', async () => {
+      const user = userEvent.setup();
+      renderStep();
+
+      await user.type(
+        screen.getByPlaceholderText('preferredLanguages.input.placeholder'),
+        'Swahili'
+      );
+      expect(screen.getByTestId('languages-character-count')).toHaveTextContent(
+        '7'
+      );
+
+      await user.click(screen.getByRole('switch'));
+
+      await waitFor(() => {
+        expect(
+          screen.getByTestId('languages-character-count')
+        ).toHaveTextContent('0');
+      });
+    });
+
+    it('marks the dataTakenFromCandidate checkbox itself as disabled once toggled off (DQCGP-3640)', async () => {
+      const user = userEvent.setup();
+      renderStep();
+
+      const checkbox = screen.getByLabelText(
+        'preferredLanguages.dataTakenFromCandidate'
+      );
+      expect(checkbox).not.toBeDisabled();
+
+      await user.click(screen.getByRole('switch')); // toggle off, no data yet
+
+      expect(checkbox).toBeDisabled();
     });
   });
 

@@ -26,6 +26,9 @@ const useUpdateVacancyMutation = () => {
       await queryClient.invalidateQueries({
         queryKey: ['vacancy', variables.id],
       });
+      await queryClient.invalidateQueries({
+        queryKey: ['vacancy-job-description', variables.id],
+      });
     },
   });
 };

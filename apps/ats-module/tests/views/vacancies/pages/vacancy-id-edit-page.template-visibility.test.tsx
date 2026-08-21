@@ -17,6 +17,7 @@ const providerProps = vi.hoisted(() => ({
 
 const useVacancyByIdQueryMock = vi.hoisted(() => vi.fn());
 const useVacancyTemplateByIdQueryMock = vi.hoisted(() => vi.fn());
+const useVacancyTemplateSnapshotQueryMock = vi.hoisted(() => vi.fn());
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
@@ -46,6 +47,8 @@ vi.mock('@/views/vacancies/hooks', async importOriginal => {
       useVacancyByIdQueryMock(...args) as unknown,
     useVacancyTemplateByIdQuery: (...args: unknown[]) =>
       useVacancyTemplateByIdQueryMock(...args) as unknown,
+    useVacancyTemplateSnapshotQuery: (...args: unknown[]) =>
+      useVacancyTemplateSnapshotQueryMock(...args) as unknown,
   };
 });
 
@@ -82,57 +85,68 @@ function setVacancy(data: Record<string, unknown>, isLoading = false) {
   });
 }
 
+/** A GET /vacancy-templates/{id}-shaped body; the snapshot endpoint matches it. */
+function templateUseResponse(data: Record<string, unknown>) {
+  return {
+    success: true,
+    data: {
+      requestBody: {
+        title: '',
+        status: '',
+        lastActiveStep: '',
+        templateId: 'tmpl-1',
+        data,
+      },
+    },
+  };
+}
+
+const CLUBS_AND_SKILLS = {
+  clubsAndSocieties: {
+    isEnabled: true,
+    dataTakenFromCandidate: false,
+    content: {
+      clubSociety: true,
+      organization: false,
+      organizationLocations: true,
+      positionRoleHeld: false,
+      startDate: false,
+      endDate: false,
+    },
+  },
+  skills: {
+    isEnabled: true,
+    dataTakenFromCandidate: false,
+    content: { skillCareerPath: true },
+  },
+};
+
 describe('VacancyIdEditPage — template field-visibility restore', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     providerProps.current = undefined;
     useVacancyTemplateByIdQueryMock.mockReturnValue({
       data: undefined,
-      isLoading: false,
+      isFetched: true,
+    });
+    useVacancyTemplateSnapshotQueryMock.mockReturnValue({
+      data: undefined,
+      isFetched: true,
     });
   });
 
-  it('restores field visibility from the source template on edit', () => {
+  it('restores field visibility from the template snapshot on edit', () => {
     setVacancy({ vacancyTemplateId: 'tmpl-1' });
-    useVacancyTemplateByIdQueryMock.mockReturnValue({
-      data: {
-        success: true,
-        data: {
-          requestBody: {
-            title: '',
-            status: '',
-            lastActiveStep: '',
-            templateId: 'tmpl-1',
-            data: {
-              clubsAndSocieties: {
-                isEnabled: true,
-                dataTakenFromCandidate: false,
-                content: {
-                  clubSociety: true,
-                  organization: false,
-                  organizationLocations: true,
-                  positionRoleHeld: false,
-                  startDate: false,
-                  endDate: false,
-                },
-              },
-              skills: {
-                isEnabled: true,
-                dataTakenFromCandidate: false,
-                content: { skillCareerPath: true },
-              },
-            },
-          },
-        },
-      },
-      isLoading: false,
+    useVacancyTemplateSnapshotQueryMock.mockReturnValue({
+      data: templateUseResponse(CLUBS_AND_SKILLS),
+      isFetched: true,
     });
 
     render(<VacancyIdEditPage />);
 
     const props = providerProps.current;
     expect(props).toBeDefined();
-    // Field-level visibility flags are rebuilt from the template content map.
+    // Field-level visibility flags are rebuilt from the snapshot content map.
     expect(props?.templateFieldVisibility?.clubsAndSocieties).toEqual({
       clubSociety: true,
       organization: false,
@@ -144,7 +158,7 @@ describe('VacancyIdEditPage — template field-visibility restore', () => {
     expect(props?.templateFieldVisibility?.skills).toEqual({
       skillCareerPath: true,
     });
-    // Authoritative step list comes from the template (mandatory + enabled).
+    // Authoritative step list comes from the snapshot (mandatory + enabled).
     expect(props?.visibleStepKeys).toEqual(
       expect.arrayContaining([
         'job-requirements',
@@ -156,12 +170,130 @@ describe('VacancyIdEditPage — template field-visibility restore', () => {
     expect(props?.templateId).toBe('tmpl-1');
   });
 
+  it('reads the snapshot keyed by baseVacancyId, not by the version id or template id', () => {
+    // Version 3 of a vacancy: its own id differs from the base id.
+    setVacancy({ vacancyTemplateId: 'tmpl-1', baseVacancyId: 'base-1' });
+
+    render(<VacancyIdEditPage />);
+
+    expect(useVacancyTemplateSnapshotQueryMock).toHaveBeenCalledWith(
+      'base-1',
+      expect.objectContaining({ enabled: true })
+    );
+  });
+
+  it('restores the template restriction for a later version that lost vacancyTemplateId', () => {
+    // The backend's createNewVersion drops the column, so a v2+ row looks like
+    // a plain vacancy. The snapshot at baseVacancyId is what recovers it.
+    setVacancy({ vacancyTemplateId: null, baseVacancyId: 'base-1' });
+    useVacancyTemplateSnapshotQueryMock.mockReturnValue({
+      data: templateUseResponse(CLUBS_AND_SKILLS),
+      isFetched: true,
+    });
+
+    render(<VacancyIdEditPage />);
+
+    // Probed despite the missing template column, because id !== baseVacancyId.
+    expect(useVacancyTemplateSnapshotQueryMock).toHaveBeenCalledWith(
+      'base-1',
+      expect.objectContaining({ enabled: true })
+    );
+    const props = providerProps.current;
+    // Steps and fields are restricted exactly as on version 1...
+    expect(props?.visibleStepKeys).toEqual(
+      expect.arrayContaining(['preferred-club-societies', 'preferred-skills'])
+    );
+    expect(props?.templateFieldVisibility?.clubsAndSocieties).toMatchObject({
+      clubSociety: true,
+      organization: false,
+    });
+    // ...and lineage is recovered from the snapshot body.
+    expect(props?.templateId).toBe('tmpl-1');
+  });
+
+  it('skips the snapshot probe for a first-version vacancy with no template', () => {
+    // Own base + no template column → cannot be a stripped version, so no request.
+    setVacancy({ vacancyTemplateId: null, baseVacancyId: 'vacancy-1' });
+
+    render(<VacancyIdEditPage />);
+
+    expect(useVacancyTemplateSnapshotQueryMock).toHaveBeenCalledWith(
+      'vacancy-1',
+      expect.objectContaining({ enabled: false })
+    );
+    expect(providerProps.current?.templateFieldVisibility).toBeUndefined();
+  });
+
+  it('never reads the live template when a snapshot exists (AC 8: template edits must not leak into existing vacancies)', () => {
+    setVacancy({ vacancyTemplateId: 'tmpl-1' });
+    useVacancyTemplateSnapshotQueryMock.mockReturnValue({
+      data: templateUseResponse(CLUBS_AND_SKILLS),
+      isFetched: true,
+    });
+    // The live template has since been edited to drop clubs and add languages.
+    useVacancyTemplateByIdQueryMock.mockReturnValue({
+      data: templateUseResponse({
+        languages: {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          content: { language: true },
+        },
+      }),
+      isFetched: true,
+    });
+
+    render(<VacancyIdEditPage />);
+
+    // The live-template query stays disabled...
+    expect(useVacancyTemplateByIdQueryMock).toHaveBeenCalledWith(
+      'tmpl-1',
+      expect.objectContaining({ enabled: false })
+    );
+    // ...and the drifted definition does not reach the form.
+    const props = providerProps.current;
+    expect(props?.templateFieldVisibility?.languages).toBeUndefined();
+    expect(props?.templateFieldVisibility?.clubsAndSocieties).toBeDefined();
+    expect(props?.visibleStepKeys).not.toContain('preferred-languages');
+  });
+
+  it('falls back to the live template when no snapshot exists (pre-snapshot vacancies)', () => {
+    setVacancy({ vacancyTemplateId: 'tmpl-1' });
+    // 404 → settled with no data.
+    useVacancyTemplateSnapshotQueryMock.mockReturnValue({
+      data: undefined,
+      isFetched: true,
+    });
+    useVacancyTemplateByIdQueryMock.mockReturnValue({
+      data: templateUseResponse(CLUBS_AND_SKILLS),
+      isFetched: true,
+    });
+
+    render(<VacancyIdEditPage />);
+
+    // Fallback query is enabled only in this case.
+    expect(useVacancyTemplateByIdQueryMock).toHaveBeenCalledWith(
+      'tmpl-1',
+      expect.objectContaining({ enabled: true })
+    );
+    const props = providerProps.current;
+    expect(props?.templateFieldVisibility?.skills).toEqual({
+      skillCareerPath: true,
+    });
+    expect(props?.visibleStepKeys).toEqual(
+      expect.arrayContaining(['preferred-club-societies', 'preferred-skills'])
+    );
+  });
+
   it('does not fetch a template or gate fields for a normal vacancy', () => {
     setVacancy({ vacancyTemplateId: null });
 
     render(<VacancyIdEditPage />);
 
-    // Template query is disabled for non-template vacancies.
+    // Both template queries are disabled for non-template vacancies.
+    expect(useVacancyTemplateSnapshotQueryMock).toHaveBeenCalledWith(
+      'vacancy-1',
+      expect.objectContaining({ enabled: false })
+    );
     expect(useVacancyTemplateByIdQueryMock).toHaveBeenCalledWith(
       '',
       expect.objectContaining({ enabled: false })
@@ -171,17 +303,33 @@ describe('VacancyIdEditPage — template field-visibility restore', () => {
     expect(props?.templateId).toBeUndefined();
   });
 
-  it('holds the provider behind a skeleton until the template resolves', () => {
+  it('holds the provider behind a skeleton until the snapshot resolves', () => {
     setVacancy({ vacancyTemplateId: 'tmpl-1' });
-    useVacancyTemplateByIdQueryMock.mockReturnValue({
+    useVacancyTemplateSnapshotQueryMock.mockReturnValue({
       data: undefined,
-      isLoading: true,
+      isFetched: false,
     });
 
     render(<VacancyIdEditPage />);
 
     // Provider must not mount (and thus fields must not render) with all-visible
-    // defaults while the template is still loading.
+    // defaults while the template definition is still loading.
+    expect(screen.queryByTestId('provider')).not.toBeInTheDocument();
+  });
+
+  it('holds the provider behind a skeleton while the live-template fallback resolves', () => {
+    setVacancy({ vacancyTemplateId: 'tmpl-1' });
+    useVacancyTemplateSnapshotQueryMock.mockReturnValue({
+      data: undefined,
+      isFetched: true,
+    });
+    useVacancyTemplateByIdQueryMock.mockReturnValue({
+      data: undefined,
+      isFetched: false,
+    });
+
+    render(<VacancyIdEditPage />);
+
     expect(screen.queryByTestId('provider')).not.toBeInTheDocument();
   });
 });

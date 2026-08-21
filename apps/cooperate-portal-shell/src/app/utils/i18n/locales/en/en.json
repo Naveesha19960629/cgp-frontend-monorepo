@@ -15,6 +15,7 @@
     "addVacancy": "Create Vacancy",
     "editVacancy": "Edit Vacancy",
     "viewVacancy": "View Vacancy",
+    "updateJobDescription": "Update Job Description",
     "versionHistory": "Version History",
     "findCandidates": "Find Candidates",
     "templates": "Templates",

@@ -75,6 +75,18 @@ describe('AppBreadcrumb', () => {
     expect(screen.getByText('Version History').closest('a')).toBeNull();
   });
 
+  it('renders two items for /dashboard/ats/vacancies/:id/edit-jd', () => {
+    // Regression test: this route had no breadcrumbRoutes entry at all, so
+    // AppBreadcrumb silently rendered nothing on the Update Job Description
+    // page — the same class of bug already fixed above for Version History.
+    renderWithRouter('/dashboard/ats/vacancies/abc-123/edit-jd');
+
+    expect(screen.getByText('Vacancies')).toBeInTheDocument();
+    expect(screen.getByText('Update Job Description')).toBeInTheDocument();
+    expect(screen.getByText('Vacancies').closest('a')).not.toBeNull();
+    expect(screen.getByText('Update Job Description').closest('a')).toBeNull();
+  });
+
   it('renders parent breadcrumb as a link and current item without a link', () => {
     renderWithRouter('/dashboard/ats/vacancies/new');
 

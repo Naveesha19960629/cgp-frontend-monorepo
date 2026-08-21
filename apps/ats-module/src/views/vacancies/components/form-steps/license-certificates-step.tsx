@@ -225,6 +225,19 @@ export default function LicenseCertificatesStep({
   // ── Creatable input tracking (for character count) ──────────────────────
   const [nameOfLicenseCertInput, setNameOfLicenseCertInput] = useState('');
 
+  // Mirrors the combobox's own clear-on-disable behaviour (DQCGP-2866) for
+  // this step's separate search-text state, which also drives the character
+  // counter next to the license/certificate name label. Adjusted during
+  // render (not an effect) per
+  // https://react.dev/learn/you-might-not-need-an-effect.
+  const [prevFieldsDisabled, setPrevFieldsDisabled] = useState(fieldsDisabled);
+  if (fieldsDisabled !== prevFieldsDisabled) {
+    setPrevFieldsDisabled(fieldsDisabled);
+    if (fieldsDisabled) {
+      setNameOfLicenseCertInput('');
+    }
+  }
+
   // ── Add License/Cert dialog state ────────────────────────────────────────
   const addLicenseCertMutation = useAddLicenseCertificateMutation();
   const { mutateAsync: createOrganization } = useCreateOrganizationMutation();
@@ -492,6 +505,7 @@ export default function LicenseCertificatesStep({
               <Checkbox
                 id="licenseCertDataTakenFromCandidate"
                 checked={field.value}
+                disabled={!isEnabled}
                 onCheckedChange={newValue => {
                   const checked = newValue === true;
                   if (checked) clearEntryData();
@@ -608,6 +622,7 @@ export default function LicenseCertificatesStep({
                               hideClearAllButton
                               triggerSearchOnFocus
                               keepSelectedInList
+                              disabled={fieldsDisabled}
                               loadingIndicator={
                                 <p className="px-3 pb-3 text-left">
                                   {t('common.loading')}
@@ -715,6 +730,7 @@ export default function LicenseCertificatesStep({
                               hideClearAllButton
                               triggerSearchOnFocus
                               keepSelectedInList
+                              disabled={fieldsDisabled}
                               loadingIndicator={
                                 <p className="px-3 pb-3 text-left">
                                   {t('common.loading')}
@@ -799,6 +815,7 @@ export default function LicenseCertificatesStep({
                               }
                               triggerSearchOnFocus
                               keepSelectedInList
+                              disabled={fieldsDisabled}
                               loadingIndicator={
                                 <p className="px-3 pb-3 text-left">
                                   {t('common.loading')}
@@ -1048,6 +1065,7 @@ export default function LicenseCertificatesStep({
                             <Checkbox
                               id="internationallyAccepted"
                               checked={field.value}
+                              disabled={fieldsDisabled}
                               onCheckedChange={val =>
                                 field.onChange(val === true)
                               }

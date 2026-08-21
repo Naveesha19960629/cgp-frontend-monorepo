@@ -244,6 +244,7 @@ vi.mock('@cgp/ui-kit/components/multi-select', () => ({
         loadingIndicator,
         emptyIndicator,
         showArrow,
+        disabled,
       }: {
         placeholder: string;
         onMaxSelected?: () => void;
@@ -253,6 +254,7 @@ vi.mock('@cgp/ui-kit/components/multi-select', () => ({
         emptyIndicator?: ReactNode;
         keepSelectedInList?: boolean;
         showArrow?: boolean;
+        disabled?: boolean;
       },
       ref
     ) => {
@@ -262,7 +264,13 @@ vi.mock('@cgp/ui-kit/components/multi-select', () => ({
       }));
       return (
         <>
-          <input placeholder={placeholder} readOnly ref={inputRef} />
+          <input
+            placeholder={placeholder}
+            readOnly
+            ref={inputRef}
+            disabled={disabled}
+            data-disabled={String(Boolean(disabled))}
+          />
           {showArrow && <span data-testid={`arrow-${placeholder}`} />}
           {onChange && (
             <button
@@ -328,16 +336,19 @@ vi.mock('@cgp/ui-kit/components/ui/checkbox', () => ({
   Checkbox: ({
     id,
     checked,
+    disabled,
     onCheckedChange,
   }: {
     id?: string;
     checked?: boolean;
+    disabled?: boolean;
     onCheckedChange?: (v: boolean) => void;
   }) => (
     <input
       type="checkbox"
       id={id}
       checked={checked ?? false}
+      disabled={disabled}
       onChange={e => onCheckedChange?.(e.target.checked)}
     />
   ),
@@ -670,6 +681,72 @@ describe('TertiaryEducationStep', () => {
         ).toBeInTheDocument();
       });
     });
+
+    it('marks every select-or-add field as disabled once the section is toggled off (DQCGP-2866)', async () => {
+      const user = userEvent.setup();
+      renderStep();
+      await enableSection(user);
+
+      const placeholders = [
+        'tertiaryEducation.placeholders.qualificationName',
+        'tertiaryEducation.placeholders.awardingBodyLocation',
+        'tertiaryEducation.placeholders.batch',
+        'tertiaryEducation.placeholders.awardingBody',
+        'tertiaryEducation.placeholders.levelOfQualification',
+        'tertiaryEducation.placeholders.specialization',
+        'tertiaryEducation.placeholders.studyMode',
+        'tertiaryEducation.placeholders.studyPattern',
+        'tertiaryEducation.placeholders.deliverySchedule',
+        'tertiaryEducation.placeholders.department',
+        'tertiaryEducation.placeholders.faculty',
+      ];
+
+      placeholders.forEach(placeholder => {
+        expect(screen.getByPlaceholderText(placeholder)).toHaveAttribute(
+          'data-disabled',
+          'false'
+        );
+      });
+
+      await user.click(screen.getByRole('switch')); // toggle off
+
+      placeholders.forEach(placeholder => {
+        expect(screen.getByPlaceholderText(placeholder)).toHaveAttribute(
+          'data-disabled',
+          'true'
+        );
+      });
+    });
+
+    it('marks the Grade input as HTML-disabled once toggled off (DQCGP-3640)', async () => {
+      const user = userEvent.setup();
+      renderStep();
+      await enableSection(user);
+
+      const gradeInput = screen.getByPlaceholderText(
+        'tertiaryEducation.placeholders.grade'
+      );
+      expect(gradeInput).not.toBeDisabled();
+
+      await user.click(screen.getByRole('switch')); // toggle off
+
+      expect(gradeInput).toBeDisabled();
+    });
+
+    it('marks the "collect from candidates" checkbox itself as disabled once the section is toggled off (DQCGP-3640)', async () => {
+      const user = userEvent.setup();
+      renderStep();
+      await enableSection(user);
+
+      const collectFromCandidatesCheckbox = screen.getByLabelText(
+        'tertiaryEducation.collectFromCandidates'
+      );
+      expect(collectFromCandidatesCheckbox).not.toBeDisabled();
+
+      await user.click(screen.getByRole('switch')); // toggle off
+
+      expect(collectFromCandidatesCheckbox).toBeDisabled();
+    });
   });
 
   describe('disable confirmation dialog', () => {
@@ -738,6 +815,7 @@ describe('TertiaryEducationStep', () => {
     it('checks when clicked', async () => {
       const user = userEvent.setup();
       renderStep();
+      await enableSection(user);
 
       const checkbox = screen.getByLabelText(
         'tertiaryEducation.collectFromCandidates'
@@ -750,6 +828,7 @@ describe('TertiaryEducationStep', () => {
     it('clears the grade field when checked', async () => {
       const user = userEvent.setup();
       renderStep();
+      await enableSection(user);
 
       const gradeInput = screen.getByPlaceholderText(
         'tertiaryEducation.placeholders.grade'

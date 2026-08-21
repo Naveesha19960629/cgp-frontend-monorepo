@@ -93,7 +93,10 @@ export default function TemplatesToolbar({
         />
       </div>
 
-      <Button className="h-12 w-45 shrink-0 gap-1" onClick={onCreate}>
+      <Button
+        className="h-12 w-46 shrink-0 gap-1 rounded-lg"
+        onClick={onCreate}
+      >
         <Add className="size-5 stroke-2" />
         {t('templates.createButton')}
       </Button>

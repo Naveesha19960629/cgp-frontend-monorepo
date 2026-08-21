@@ -169,6 +169,7 @@ vi.mock('@cgp/ui-kit/components/multi-select', () => ({
     loadingIndicator,
     emptyIndicator,
     showArrow,
+    disabled,
   }: {
     placeholder: string;
     onMaxSelected?: () => void;
@@ -178,9 +179,15 @@ vi.mock('@cgp/ui-kit/components/multi-select', () => ({
     emptyIndicator?: ReactNode;
     keepSelectedInList?: boolean;
     showArrow?: boolean;
+    disabled?: boolean;
   }) => (
     <>
-      <input placeholder={placeholder} readOnly />
+      <input
+        placeholder={placeholder}
+        readOnly
+        disabled={disabled}
+        data-disabled={String(Boolean(disabled))}
+      />
       {showArrow && <span data-testid={`arrow-${placeholder}`} />}
       {onChange && (
         <button
@@ -233,16 +240,19 @@ vi.mock('@cgp/ui-kit/components/ui/checkbox', () => ({
   Checkbox: ({
     id,
     checked,
+    disabled,
     onCheckedChange,
   }: {
     id?: string;
     checked?: boolean;
+    disabled?: boolean;
     onCheckedChange?: (v: boolean) => void;
   }) => (
     <input
       type="checkbox"
       id={id}
       checked={checked ?? false}
+      disabled={disabled}
       onChange={e => onCheckedChange?.(e.target.checked)}
     />
   ),
@@ -661,6 +671,103 @@ describe('SecondaryEducationStep', () => {
         ).toBeInTheDocument();
       });
     });
+
+    it('marks every select-or-add field as disabled once the section is toggled off (DQCGP-2866)', async () => {
+      const user = userEvent.setup();
+      renderStep();
+      await enableSection(user);
+
+      expect(
+        screen.getByPlaceholderText('secondaryEducation.placeholders.school')
+      ).toHaveAttribute('data-disabled', 'false');
+      expect(
+        screen.getByPlaceholderText(
+          'secondaryEducation.placeholders.schoolLocation'
+        )
+      ).toHaveAttribute('data-disabled', 'false');
+      expect(
+        screen.getByPlaceholderText(
+          'secondaryEducation.placeholders.examination'
+        )
+      ).toHaveAttribute('data-disabled', 'false');
+      expect(
+        screen.getByPlaceholderText(
+          'secondaryEducation.placeholders.awardingBody'
+        )
+      ).toHaveAttribute('data-disabled', 'false');
+      expect(
+        screen.getByPlaceholderText(
+          'secondaryEducation.placeholders.fieldOfStudy'
+        )
+      ).toHaveAttribute('data-disabled', 'false');
+
+      await user.click(screen.getByRole('switch')); // toggle off
+
+      expect(
+        screen.getByPlaceholderText('secondaryEducation.placeholders.school')
+      ).toHaveAttribute('data-disabled', 'true');
+      expect(
+        screen.getByPlaceholderText(
+          'secondaryEducation.placeholders.schoolLocation'
+        )
+      ).toHaveAttribute('data-disabled', 'true');
+      expect(
+        screen.getByPlaceholderText(
+          'secondaryEducation.placeholders.examination'
+        )
+      ).toHaveAttribute('data-disabled', 'true');
+      expect(
+        screen.getByPlaceholderText(
+          'secondaryEducation.placeholders.awardingBody'
+        )
+      ).toHaveAttribute('data-disabled', 'true');
+      expect(
+        screen.getByPlaceholderText(
+          'secondaryEducation.placeholders.fieldOfStudy'
+        )
+      ).toHaveAttribute('data-disabled', 'true');
+    });
+
+    it('marks the Grade input, Results textarea, and Accepts Home Schooling checkbox as HTML-disabled once toggled off (DQCGP-3640)', async () => {
+      const user = userEvent.setup();
+      renderStep();
+      await enableSection(user);
+
+      const gradeInput = screen.getByPlaceholderText(
+        'secondaryEducation.placeholders.grade'
+      );
+      const resultsTextarea = screen.getByPlaceholderText(
+        'secondaryEducation.placeholders.results'
+      );
+      const homeSchoolingCheckbox = document.getElementById(
+        'acceptsHomeSchooling'
+      );
+
+      expect(gradeInput).not.toBeDisabled();
+      expect(resultsTextarea).not.toBeDisabled();
+      expect(homeSchoolingCheckbox).not.toBeDisabled();
+
+      await user.click(screen.getByRole('switch')); // toggle off
+
+      expect(gradeInput).toBeDisabled();
+      expect(resultsTextarea).toBeDisabled();
+      expect(homeSchoolingCheckbox).toBeDisabled();
+    });
+
+    it('marks the "collect from candidates" checkbox itself as disabled once the section is toggled off (DQCGP-3640)', async () => {
+      const user = userEvent.setup();
+      renderStep();
+      await enableSection(user);
+
+      const collectFromCandidatesCheckbox = screen.getByLabelText(
+        'secondaryEducation.collectFromCandidates'
+      );
+      expect(collectFromCandidatesCheckbox).not.toBeDisabled();
+
+      await user.click(screen.getByRole('switch')); // toggle off
+
+      expect(collectFromCandidatesCheckbox).toBeDisabled();
+    });
   });
 
   describe('disable confirmation dialog', () => {
@@ -720,6 +827,7 @@ describe('SecondaryEducationStep', () => {
     it('checks when clicked', async () => {
       const user = userEvent.setup();
       renderStep();
+      await enableSection(user);
 
       const checkbox = screen.getByLabelText(
         'secondaryEducation.collectFromCandidates'
@@ -732,6 +840,7 @@ describe('SecondaryEducationStep', () => {
     it('clears the grade field when checked', async () => {
       const user = userEvent.setup();
       renderStep();
+      await enableSection(user);
 
       const gradeInput = screen.getByPlaceholderText(
         'secondaryEducation.placeholders.grade'
@@ -842,6 +951,7 @@ describe('SecondaryEducationStep', () => {
     it('checks when clicked', async () => {
       const user = userEvent.setup();
       renderStep();
+      await enableSection(user);
 
       const checkbox = screen.getByLabelText(
         'secondaryEducation.acceptsHomeSchooling'
