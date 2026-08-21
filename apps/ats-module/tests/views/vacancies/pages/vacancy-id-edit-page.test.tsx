@@ -20,6 +20,7 @@ let keycloakState: {
 type QueryState = {
   data?: { success: boolean; message?: string; data?: unknown };
   isLoading: boolean;
+  isFetching?: boolean;
   error: unknown;
 };
 
@@ -87,7 +88,14 @@ vi.mock('@/views/vacancies/hooks', async importOriginal => {
     useVacancyByIdQuery: () => queryState,
     // These specs predate template-driven visibility and never exercise a
     // resolved template; a disabled/empty result keeps that path inert.
-    useVacancyTemplateByIdQuery: () => ({ data: undefined, isLoading: false }),
+    useVacancyTemplateByIdQuery: () => ({
+      data: undefined,
+      isFetched: true,
+    }),
+    useVacancyTemplateSnapshotQuery: () => ({
+      data: undefined,
+      isFetched: true,
+    }),
   };
 });
 
@@ -283,6 +291,39 @@ describe('VacancyIdEditPage', () => {
 
       expect(screen.queryByText('common.error.title')).not.toBeInTheDocument();
       expect(screen.queryByTestId('stepper-form')).not.toBeInTheDocument();
+    });
+
+    // Regression (stale status on Edit after a table toggle): invalidating
+    // ['vacancy', id] makes React Query serve the pre-toggle entry while it
+    // refetches, with isLoading false because cached data exists. Hydrating
+    // there latched the old status in, and the one-shot guard then threw away
+    // the fresh payload — the badge read "Live" for an On Hold vacancy until a
+    // full page reload.
+    it('does not hydrate from a cached entry that is still revalidating', () => {
+      queryState = {
+        isLoading: false,
+        isFetching: true,
+        error: null,
+        data: { success: true, data: { title: 'Engineer', status: 'live' } },
+      };
+
+      render(<VacancyIdEditPage />);
+
+      expect(mockSetForm).not.toHaveBeenCalled();
+      expect(screen.queryByTestId('stepper-form')).not.toBeInTheDocument();
+    });
+
+    it('hydrates once the refetch settles', () => {
+      queryState = {
+        isLoading: false,
+        isFetching: false,
+        error: null,
+        data: { success: true, data: { title: 'Engineer', status: 'onhold' } },
+      };
+
+      render(<VacancyIdEditPage />);
+
+      expect(mockSetForm).toHaveBeenCalled();
     });
 
     it('shows the failure message when the query errors', () => {

@@ -123,6 +123,20 @@ export default function PreferredIndustryStep({
   }, [setForm, stepDisableRef]);
 
   const [industrySearch, setIndustrySearch] = useState('');
+  const isIndustriesFieldDisabled = !isEnabled || dataTakenFromCandidate;
+
+  // Mirrors the combobox's own clear-on-disable behaviour (DQCGP-2866) for
+  // this step's separate search-text state, which also drives the character
+  // counter next to the section label. Adjusted during render (not an
+  // effect) per https://react.dev/learn/you-might-not-need-an-effect.
+  const [prevIndustriesFieldDisabled, setPrevIndustriesFieldDisabled] =
+    useState(isIndustriesFieldDisabled);
+  if (isIndustriesFieldDisabled !== prevIndustriesFieldDisabled) {
+    setPrevIndustriesFieldDisabled(isIndustriesFieldDisabled);
+    if (isIndustriesFieldDisabled) {
+      setIndustrySearch('');
+    }
+  }
 
   const { data: industriesData, isLoading: isIndustriesLoading } =
     useIndustriesQuery(industrySearch);
@@ -234,6 +248,7 @@ export default function PreferredIndustryStep({
             <Checkbox
               id="industries-data-from-candidate"
               checked={dataTakenFromCandidate}
+              disabled={!isEnabled}
               onCheckedChange={checked => {
                 if (checked) {
                   updatePreferredIndustries({

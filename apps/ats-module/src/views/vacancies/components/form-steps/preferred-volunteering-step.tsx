@@ -477,6 +477,7 @@ function VolunteeringCard({
                     placeholder={t(
                       'preferredVolunteering.placeholders.position'
                     )}
+                    disabled={fieldsDisabled}
                     className="h-11"
                   />
                 </div>
@@ -849,6 +850,23 @@ export default function PreferredVolunteeringStep({
   const canNavigate =
     !isEnabled || dataTakenFromCandidate || hasVolunteeringData;
 
+  // The direct-disable path (toggling off with no committed data) doesn't
+  // otherwise clear a row's uncommitted search text, which also drives the
+  // character counter next to the Cause label (DQCGP-2866). Adjusted during
+  // render (not an effect) per
+  // https://react.dev/learn/you-might-not-need-an-effect.
+  const [prevFieldsDisabled, setPrevFieldsDisabled] = useState(fieldsDisabled);
+  if (fieldsDisabled !== prevFieldsDisabled) {
+    setPrevFieldsDisabled(fieldsDisabled);
+    if (fieldsDisabled) {
+      setEntries(prev =>
+        prev.some(e => e.causeSearch)
+          ? prev.map(e => ({ ...e, causeSearch: '' }))
+          : prev
+      );
+    }
+  }
+
   // Organizations API
   const { data: organizationsData, isLoading: isOrganizationsLoading } =
     useOrganizationsQuery(
@@ -997,6 +1015,7 @@ export default function PreferredVolunteeringStep({
           <Checkbox
             id="volunteeringDataTakenFromCandidate"
             checked={dataTakenFromCandidate}
+            disabled={!isEnabled}
             onCheckedChange={value => handleTakeFromCandidateChange(!!value)}
             className="mt-0.5"
           />

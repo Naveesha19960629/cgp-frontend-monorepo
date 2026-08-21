@@ -45,6 +45,13 @@ const breadcrumbRoutes: BreadcrumbRoute[] = [
     ],
   },
   {
+    url: '/dashboard/ats/vacancies/:id/edit-jd',
+    items: [
+      { labelKey: 'breadcrumb.vacancies', link: '/dashboard/ats/vacancies' },
+      { labelKey: 'breadcrumb.updateJobDescription' },
+    ],
+  },
+  {
     url: '/dashboard/ats/vacancies/:id/version-history',
     items: [
       { labelKey: 'breadcrumb.vacancies', link: '/dashboard/ats/vacancies' },

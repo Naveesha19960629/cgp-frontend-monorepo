@@ -104,6 +104,21 @@ export default function PreferredHobbiesStep({
 
   // Hobby search state for the query
   const [hobbySearch, setHobbySearch] = useState('');
+  const isHobbiesFieldDisabled = !isEnabled || dataTakenFromCandidate;
+
+  // Mirrors the combobox's own clear-on-disable behaviour (DQCGP-2866) for
+  // this step's separate search-text state, which also drives the character
+  // counter next to the section label. Adjusted during render (not an
+  // effect) per https://react.dev/learn/you-might-not-need-an-effect.
+  const [prevHobbiesFieldDisabled, setPrevHobbiesFieldDisabled] = useState(
+    isHobbiesFieldDisabled
+  );
+  if (isHobbiesFieldDisabled !== prevHobbiesFieldDisabled) {
+    setPrevHobbiesFieldDisabled(isHobbiesFieldDisabled);
+    if (isHobbiesFieldDisabled) {
+      setHobbySearch('');
+    }
+  }
 
   // Query
   const { data: hobbiesData, isLoading: isHobbiesLoading } =
@@ -215,6 +230,7 @@ export default function PreferredHobbiesStep({
             <Checkbox
               id="hobbies-data-from-candidate"
               checked={dataTakenFromCandidate}
+              disabled={!isEnabled}
               onCheckedChange={checked => {
                 if (checked) {
                   setSelectedHobbies([]);

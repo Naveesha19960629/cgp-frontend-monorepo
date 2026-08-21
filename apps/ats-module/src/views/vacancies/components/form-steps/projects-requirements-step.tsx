@@ -97,6 +97,188 @@ interface ProjectEntry {
   organizations: Array<{ value: string; label: string; source: string }>;
 }
 
+/** Shared button/trigger styling for the two date-picker fields below. */
+const DATE_TRIGGER_CLASSNAME = cn(
+  'border-input flex h-11 w-full items-center justify-between rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
+  'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
+  'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
+  'dark:bg-input/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
+  applyTypography('body-medium'),
+  'shadow-none!'
+);
+
+function ProjectStartDateField({
+  index,
+  project,
+  fieldsDisabled,
+  isOpen,
+  onOpenChange,
+  onUpdate,
+  t,
+}: Readonly<{
+  index: number;
+  project: ProjectEntry;
+  fieldsDisabled: boolean;
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  onUpdate: (index: number, updates: Partial<ProjectEntry>) => void;
+  t: (key: string) => string;
+}>) {
+  const handleSelect = (date: Date | undefined) => {
+    onUpdate(index, { startDate: date ? formatLocalDate(date) : undefined });
+    onOpenChange(false);
+
+    const currentEndDate =
+      date && project.endDate ? parseLocalDate(project.endDate) : null;
+    if (currentEndDate != null && date != null && currentEndDate < date) {
+      onUpdate(index, { endDate: undefined });
+    }
+  };
+
+  return (
+    <div className="flex flex-col gap-1 xl:col-span-1">
+      <div className="flex h-5 items-center">
+        <Label data-testid={`projectsRequirements-startDate-${index}-label`}>
+          {t('projectsRequirements.startDate')}
+        </Label>
+      </div>
+      <Popover
+        modal
+        open={isOpen}
+        onOpenChange={open => onOpenChange(!fieldsDisabled && open)}
+      >
+        <PopoverTrigger asChild>
+          <Button
+            type="button"
+            variant="outline"
+            disabled={fieldsDisabled}
+            className={cn(
+              DATE_TRIGGER_CLASSNAME,
+              !project.startDate && 'text-slate-500',
+              project.startDate && 'text-zinc-800'
+            )}
+          >
+            {project.startDate
+              ? formatDate(project.startDate)
+              : t('projectsRequirements.placeholders.startDate')}
+            <CalendarIcon
+              variant="Linear"
+              size={20}
+              className="text-zinc-800"
+            />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-0" align="start">
+          <Calendar
+            mode="single"
+            selected={parseLocalDate(project.startDate) ?? undefined}
+            defaultMonth={
+              parseLocalDate(project.startDate) ||
+              parseLocalDate(project.endDate) ||
+              new Date()
+            }
+            onSelect={handleSelect}
+            disabled={date =>
+              isAfter(startOfDay(date), TODAY) ||
+              isBeforeMinDate(date, HUNDRED_YEARS_AGO)
+            }
+            captionLayout="dropdown"
+            startMonth={HUNDRED_YEARS_AGO}
+            endMonth={TODAY}
+          />
+        </PopoverContent>
+      </Popover>
+    </div>
+  );
+}
+
+function ProjectEndDateField({
+  index,
+  project,
+  fieldsDisabled,
+  isOpen,
+  onOpenChange,
+  onUpdate,
+  t,
+}: Readonly<{
+  index: number;
+  project: ProjectEntry;
+  fieldsDisabled: boolean;
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+  onUpdate: (index: number, updates: Partial<ProjectEntry>) => void;
+  t: (key: string) => string;
+}>) {
+  const startDate = parseLocalDate(project.startDate);
+
+  const handleSelect = (date: Date | undefined) => {
+    onUpdate(index, { endDate: date ? formatLocalDate(date) : undefined });
+    onOpenChange(false);
+  };
+
+  const isDateDisabled = (date: Date) => {
+    const day = startOfDay(date);
+    return (
+      isBeforeMinDate(date, HUNDRED_YEARS_AGO) ||
+      isAfter(day, HUNDRED_YEARS_FROM_NOW) ||
+      (startDate != null && isBefore(day, startOfDay(startDate)))
+    );
+  };
+
+  return (
+    <div className="flex flex-col gap-1 xl:col-span-1">
+      <div className="flex h-5 items-center">
+        <Label data-testid={`projectsRequirements-endDate-${index}-label`}>
+          {t('projectsRequirements.endDate')}
+        </Label>
+      </div>
+      <Popover
+        modal
+        open={isOpen}
+        onOpenChange={open => onOpenChange(!fieldsDisabled && open)}
+      >
+        <PopoverTrigger asChild>
+          <Button
+            type="button"
+            variant="outline"
+            disabled={fieldsDisabled}
+            className={cn(
+              DATE_TRIGGER_CLASSNAME,
+              !project.endDate && 'text-slate-500',
+              project.endDate && 'text-zinc-800'
+            )}
+          >
+            {project.endDate
+              ? formatDate(project.endDate)
+              : t('projectsRequirements.placeholders.endDate')}
+            <CalendarIcon
+              variant="Linear"
+              size={20}
+              className="text-zinc-800"
+            />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-0" align="start">
+          <Calendar
+            mode="single"
+            selected={parseLocalDate(project.endDate) ?? undefined}
+            defaultMonth={
+              parseLocalDate(project.endDate) ||
+              parseLocalDate(project.startDate) ||
+              new Date()
+            }
+            onSelect={handleSelect}
+            disabled={isDateDisabled}
+            captionLayout="dropdown"
+            startMonth={HUNDRED_YEARS_AGO}
+            endMonth={HUNDRED_YEARS_FROM_NOW}
+          />
+        </PopoverContent>
+      </Popover>
+    </div>
+  );
+}
+
 function ProjectCard({
   index,
   project,
@@ -143,6 +325,18 @@ function ProjectCard({
   const [openDatePopover, setOpenDatePopover] = useState<
     'startDate' | 'endDate' | null
   >(null);
+
+  // Mirrors the combobox's own clear-on-disable behaviour (DQCGP-2866) for
+  // this row's separate search-text state, which also drives the character
+  // counter next to the Industries label. Adjusted during render (not an
+  // effect) per https://react.dev/learn/you-might-not-need-an-effect.
+  const [prevFieldsDisabled, setPrevFieldsDisabled] = useState(fieldsDisabled);
+  if (fieldsDisabled !== prevFieldsDisabled) {
+    setPrevFieldsDisabled(fieldsDisabled);
+    if (fieldsDisabled) {
+      setIndustriesSearch('');
+    }
+  }
 
   return (
     <Collapsible
@@ -201,162 +395,31 @@ function ProjectCard({
             {/* Fields (dense grid so hidden fields repack with no gaps) */}
             <div className="grid grid-cols-1 gap-4 xl:grid-cols-4">
               {isFieldVisible('startDate') && (
-                <div className="flex flex-col gap-1 xl:col-span-1">
-                  <div className="flex h-5 items-center">
-                    <Label
-                      data-testid={`projectsRequirements-startDate-${index}-label`}
-                    >
-                      {t('projectsRequirements.startDate')}
-                    </Label>
-                  </div>
-                  <Popover
-                    modal
-                    open={openDatePopover === 'startDate'}
-                    onOpenChange={open =>
-                      setOpenDatePopover(
-                        !fieldsDisabled && open ? 'startDate' : null
-                      )
-                    }
-                  >
-                    <PopoverTrigger asChild>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        disabled={fieldsDisabled}
-                        className={cn(
-                          'border-input flex h-11 w-full items-center justify-between rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
-                          !project.startDate && 'text-slate-500',
-                          project.startDate && 'text-zinc-800',
-                          'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
-                          'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
-                          'dark:bg-input/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
-                          applyTypography('body-medium'),
-                          'shadow-none!'
-                        )}
-                      >
-                        {project.startDate
-                          ? formatDate(project.startDate)
-                          : t('projectsRequirements.placeholders.startDate')}
-                        <CalendarIcon
-                          variant="Linear"
-                          size={20}
-                          className="text-zinc-800"
-                        />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={
-                          parseLocalDate(project.startDate) ?? undefined
-                        }
-                        defaultMonth={
-                          parseLocalDate(project.startDate) ||
-                          parseLocalDate(project.endDate) ||
-                          new Date()
-                        }
-                        onSelect={date => {
-                          onUpdate(index, {
-                            startDate: date ? formatLocalDate(date) : undefined,
-                          });
-                          setOpenDatePopover(null);
-
-                          if (project.endDate && date) {
-                            const endDate = parseLocalDate(project.endDate);
-                            if (endDate != null && endDate < date) {
-                              onUpdate(index, { endDate: undefined });
-                            }
-                          }
-                        }}
-                        disabled={date =>
-                          isAfter(startOfDay(date), TODAY) ||
-                          isBeforeMinDate(date, HUNDRED_YEARS_AGO)
-                        }
-                        captionLayout="dropdown"
-                        startMonth={HUNDRED_YEARS_AGO}
-                        endMonth={TODAY}
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
+                <ProjectStartDateField
+                  index={index}
+                  project={project}
+                  fieldsDisabled={fieldsDisabled}
+                  isOpen={openDatePopover === 'startDate'}
+                  onOpenChange={open =>
+                    setOpenDatePopover(open ? 'startDate' : null)
+                  }
+                  onUpdate={onUpdate}
+                  t={t}
+                />
               )}
 
               {isFieldVisible('endDate') && (
-                <div className="flex flex-col gap-1 xl:col-span-1">
-                  <div className="flex h-5 items-center">
-                    <Label
-                      data-testid={`projectsRequirements-endDate-${index}-label`}
-                    >
-                      {t('projectsRequirements.endDate')}
-                    </Label>
-                  </div>
-                  <Popover
-                    modal
-                    open={openDatePopover === 'endDate'}
-                    onOpenChange={open =>
-                      setOpenDatePopover(
-                        !fieldsDisabled && open ? 'endDate' : null
-                      )
-                    }
-                  >
-                    <PopoverTrigger asChild>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        disabled={fieldsDisabled}
-                        className={cn(
-                          'border-input flex h-11 w-full items-center justify-between rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
-                          !project.endDate && 'text-slate-500',
-                          project.endDate && 'text-zinc-800',
-                          'focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
-                          'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
-                          'dark:bg-input/30 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50',
-                          applyTypography('body-medium'),
-                          'shadow-none!'
-                        )}
-                      >
-                        {project.endDate
-                          ? formatDate(project.endDate)
-                          : t('projectsRequirements.placeholders.endDate')}
-                        <CalendarIcon
-                          variant="Linear"
-                          size={20}
-                          className="text-zinc-800"
-                        />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={parseLocalDate(project.endDate) ?? undefined}
-                        defaultMonth={
-                          parseLocalDate(project.endDate) ||
-                          parseLocalDate(project.startDate) ||
-                          new Date()
-                        }
-                        onSelect={date => {
-                          onUpdate(index, {
-                            endDate: date ? formatLocalDate(date) : undefined,
-                          });
-                          setOpenDatePopover(null);
-                        }}
-                        disabled={date => {
-                          const day = startOfDay(date);
-                          const startDate = parseLocalDate(project.startDate);
-                          return (
-                            isBeforeMinDate(date, HUNDRED_YEARS_AGO) ||
-                            isAfter(day, HUNDRED_YEARS_FROM_NOW) ||
-                            (startDate != null &&
-                              isBefore(day, startOfDay(startDate)))
-                          );
-                        }}
-                        captionLayout="dropdown"
-                        startMonth={HUNDRED_YEARS_AGO}
-                        endMonth={HUNDRED_YEARS_FROM_NOW}
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
+                <ProjectEndDateField
+                  index={index}
+                  project={project}
+                  fieldsDisabled={fieldsDisabled}
+                  isOpen={openDatePopover === 'endDate'}
+                  onOpenChange={open =>
+                    setOpenDatePopover(open ? 'endDate' : null)
+                  }
+                  onUpdate={onUpdate}
+                  t={t}
+                />
               )}
 
               {isFieldVisible('relatedIndustry') && (
@@ -1033,6 +1096,7 @@ export default function ProjectsRequirementsStep({
           <Checkbox
             id="projectsDataTakenFromCandidate"
             checked={dataTakenFromCandidate}
+            disabled={!isEnabled}
             onCheckedChange={value => handleTakeFromCandidateChange(!!value)}
           />
           <Label

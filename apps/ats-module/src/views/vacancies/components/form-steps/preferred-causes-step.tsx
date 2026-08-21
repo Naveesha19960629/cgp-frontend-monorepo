@@ -104,6 +104,21 @@ export default function PreferredCausesStep({
 
   // Cause search state for the query
   const [causeSearch, setCauseSearch] = useState('');
+  const isCausesFieldDisabled = !isEnabled || dataTakenFromCandidate;
+
+  // Mirrors the combobox's own clear-on-disable behaviour (DQCGP-2866) for
+  // this step's separate search-text state, which also drives the character
+  // counter next to the section label. Adjusted during render (not an
+  // effect) per https://react.dev/learn/you-might-not-need-an-effect.
+  const [prevCausesFieldDisabled, setPrevCausesFieldDisabled] = useState(
+    isCausesFieldDisabled
+  );
+  if (isCausesFieldDisabled !== prevCausesFieldDisabled) {
+    setPrevCausesFieldDisabled(isCausesFieldDisabled);
+    if (isCausesFieldDisabled) {
+      setCauseSearch('');
+    }
+  }
 
   // Query
   const { data: causesData, isLoading: isCausesLoading } =
@@ -215,6 +230,7 @@ export default function PreferredCausesStep({
             <Checkbox
               id="causes-data-from-candidate"
               checked={dataTakenFromCandidate}
+              disabled={!isEnabled}
               onCheckedChange={checked => {
                 if (checked) {
                   setSelectedCauses([]);

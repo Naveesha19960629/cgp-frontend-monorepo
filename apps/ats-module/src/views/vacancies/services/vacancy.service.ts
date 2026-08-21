@@ -6,6 +6,7 @@ import type {
   VacancyDetailData,
   VacancyFilterOptionsApiResponse,
   VacancyQueryParams,
+  VacancyTemplateUseResponse,
   VacancyToggleAction,
   VacancyToggleActiveData,
 } from '@/views/vacancies/types';
@@ -27,6 +28,27 @@ export const vacancyService = {
     const response = await httpClient.get<
       SingleRecordApiResponse<VacancyDetailData>
     >(`/vacancies/${id}`);
+    return response.data;
+  },
+  /**
+   * GET /vacancies/{id}/template-snapshots — the point-in-time copy of the
+   * vacancy template as it was when this vacancy was created.
+   *
+   * Response shape is identical to GET /vacancy-templates/{id}, so the same
+   * `toVacancyFormFromTemplateUsePayload` mapper consumes it. This is the
+   * correct source for restoring section/field visibility on edit: the live
+   * template may have been edited or deleted since, and AC 8 of DQCGP-2560
+   * requires template changes to leave existing vacancies untouched.
+   *
+   * 404s when the vacancy was not created from a template (or predates
+   * snapshotting) — callers fall back to the live template.
+   */
+  getVacancyTemplateSnapshot: async (
+    id: string
+  ): Promise<SingleRecordApiResponse<VacancyTemplateUseResponse>> => {
+    const response = await httpClient.get<
+      SingleRecordApiResponse<VacancyTemplateUseResponse>
+    >(`/vacancies/${id}/template-snapshots`);
     return response.data;
   },
   createVacancy: async (
