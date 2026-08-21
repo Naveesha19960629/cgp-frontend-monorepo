@@ -1,7 +1,7 @@
 {
   "name": "cooperate-portal-shell",
   "private": true,
-  "version": "0.1.97",
+  "version": "0.1.99",
   "type": "module",
   "nx": {
     "projectType": "application"
