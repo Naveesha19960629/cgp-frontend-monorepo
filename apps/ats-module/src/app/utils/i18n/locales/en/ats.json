@@ -1465,6 +1465,18 @@
     "yesButton": "Yes",
     "noButton": "No"
   },
+  "vacancyLiveUpdateDialog": {
+    "scheduleChangedNoApplicants": {
+      "title": "Are you sure?",
+      "description": "Are you sure you want to update and reschedule this vacancy? It will go live on the new publish date."
+    },
+    "scheduleUnchangedNoApplicants": {
+      "title": "Are you sure?",
+      "description": "Are you sure you want to update this vacancy without rescheduling? It will remain Live."
+    },
+    "yesButton": "Yes",
+    "noButton": "No"
+  },
   "preferredClubSocieties": {
     "title": "Preferred Clubs and Societies",
     "back": "Back",
