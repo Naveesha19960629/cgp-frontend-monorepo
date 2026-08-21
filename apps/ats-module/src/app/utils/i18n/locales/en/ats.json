@@ -1407,7 +1407,9 @@
     "validation": {
       "publishDateRequired": "Scheduled Publish Date & Time is required.",
       "expirationDateRequired": "Expiration Date & Time is required.",
-      "expirationAfterPublish": "Expiration Date & Time must be after Scheduled Publish Date & Time."
+      "expirationAfterPublish": "Expiration Date & Time must be greater than the Scheduled Publish Date & Time.",
+      "publishDateInPast": "Scheduled Publish Date & Time must be a current or future date and time.",
+      "expirationDateInPast": "Expiration Date & Time must be a current or future date and time."
     },
     "notifications": {
       "successTitle": "Successfully Created",

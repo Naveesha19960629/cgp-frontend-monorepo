@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { formatDisplayDateTime, to24HourTime } from '@/views/vacancies/utils';
+import {
+  formatDisplayDateTime,
+  isDateTimeInPast,
+  to24HourTime,
+} from '@/views/vacancies/utils';
 
 describe('formatDisplayDateTime', () => {
   it('returns undefined when date is missing', () => {
@@ -73,5 +77,38 @@ describe('to24HourTime', () => {
 
   it('keeps unrecognized input unchanged', () => {
     expect(to24HourTime('invalid')).toBe('invalid');
+  });
+});
+
+describe('isDateTimeInPast', () => {
+  const toLocalDateTimeParts = (value: Date) => ({
+    date: [
+      value.getFullYear(),
+      String(value.getMonth() + 1).padStart(2, '0'),
+      String(value.getDate()).padStart(2, '0'),
+    ].join('-'),
+    time: [
+      String(value.getHours()).padStart(2, '0'),
+      String(value.getMinutes()).padStart(2, '0'),
+      String(value.getSeconds()).padStart(2, '0'),
+    ].join(':'),
+  });
+
+  it('returns true for a date/time an hour before now', () => {
+    const { date, time } = toLocalDateTimeParts(
+      new Date(Date.now() - 60 * 60 * 1000)
+    );
+    expect(isDateTimeInPast(date, time)).toBe(true);
+  });
+
+  it('returns false for a date/time an hour after now', () => {
+    const { date, time } = toLocalDateTimeParts(
+      new Date(Date.now() + 60 * 60 * 1000)
+    );
+    expect(isDateTimeInPast(date, time)).toBe(false);
+  });
+
+  it('returns false for an unparseable date/time', () => {
+    expect(isDateTimeInPast('not-a-date', 'not-a-time')).toBe(false);
   });
 });

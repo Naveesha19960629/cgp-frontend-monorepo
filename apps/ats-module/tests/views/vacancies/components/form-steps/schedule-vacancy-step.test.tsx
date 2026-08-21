@@ -435,6 +435,112 @@ describe('ScheduleVacancyStep', () => {
     });
   });
 
+  describe('inline past date/time validation', () => {
+    it('shows an inline error on the publish field when its date/time is in the past', async () => {
+      renderComponent();
+
+      const past = new Date(Date.now() - 60 * 60 * 1000);
+      const yyyy = past.getFullYear();
+      const mm = String(past.getMonth() + 1).padStart(2, '0');
+      const dd = String(past.getDate()).padStart(2, '0');
+
+      fillPublish(`${yyyy}-${mm}-${dd}`, '12:00:00 AM');
+
+      await waitFor(() => {
+        const errorDivs = screen.getAllByTestId('calendar-error');
+        expect(
+          errorDivs.some(el =>
+            el.textContent?.includes(
+              'scheduleVacancy.validation.publishDateInPast'
+            )
+          )
+        ).toBe(true);
+      });
+    });
+
+    it('shows an inline error on the expiration field when its date/time is in the past', async () => {
+      renderComponent();
+
+      const past = new Date(Date.now() - 60 * 60 * 1000);
+      const yyyy = past.getFullYear();
+      const mm = String(past.getMonth() + 1).padStart(2, '0');
+      const dd = String(past.getDate()).padStart(2, '0');
+
+      fillExpiration(`${yyyy}-${mm}-${dd}`, '12:00:00 AM');
+
+      await waitFor(() => {
+        const errorDivs = screen.getAllByTestId('calendar-error');
+        expect(
+          errorDivs.some(el =>
+            el.textContent?.includes(
+              'scheduleVacancy.validation.expirationDateInPast'
+            )
+          )
+        ).toBe(true);
+      });
+    });
+
+    it('clears the inline past-date error once a future date/time is chosen', async () => {
+      renderComponent();
+
+      fillPublish('2020-01-01', '10:00:00 AM');
+
+      await waitFor(() => {
+        const errorDivs = screen.getAllByTestId('calendar-error');
+        expect(
+          errorDivs.some(el =>
+            el.textContent?.includes(
+              'scheduleVacancy.validation.publishDateInPast'
+            )
+          )
+        ).toBe(true);
+      });
+
+      fillPublish('2099-12-25', '10:00:00 AM');
+
+      await waitFor(() => {
+        const errorDivs = screen.queryAllByTestId('calendar-error');
+        expect(
+          errorDivs.some(el =>
+            el.textContent?.includes(
+              'scheduleVacancy.validation.publishDateInPast'
+            )
+          )
+        ).toBe(false);
+      });
+    });
+
+    it('does not show an inline past-date error for an unchanged saved schedule that is already in the past', () => {
+      mockVacancyForm({
+        form: {
+          schedule: {
+            schedulePublishAt: '2020-01-01T10:30:00 AM',
+            expirationAt: '2020-01-02T11:59:59 PM',
+          },
+          status: 'unpublished',
+        },
+      });
+
+      renderComponent({ mode: 'edit' as const });
+
+      const errorDivs = screen.queryAllByTestId('calendar-error');
+      expect(
+        errorDivs.some(el =>
+          el.textContent?.includes(
+            'scheduleVacancy.validation.publishDateInPast'
+          )
+        )
+      ).toBe(false);
+      expect(
+        errorDivs.some(el =>
+          el.textContent?.includes(
+            'scheduleVacancy.validation.expirationDateInPast'
+          )
+        )
+      ).toBe(false);
+    });
+  });
+
   describe('button interactions', () => {
     it('calls onCancel when Cancel is clicked', async () => {
       renderComponent();
@@ -883,7 +989,7 @@ describe('ScheduleVacancyStep', () => {
       expect(expirationCall?.endMonth).toEqual(maxDate);
     });
 
-    it('does not render inline error for expirationAfterPublish violation', async () => {
+    it('renders an inline error for an expirationAfterPublish violation (DQCGP-3677)', async () => {
       renderComponent();
 
       // Expiration before publish — triggers the schema superRefine error
@@ -895,14 +1001,65 @@ describe('ScheduleVacancyStep', () => {
         expect(getCreateButton()).toBeDisabled();
       });
 
-      // The expirationAfterPublish error must NOT appear as inline text
-      const errorDivs = screen.queryAllByTestId('calendar-error');
-      const hasInlineExpirationError = errorDivs.some(el =>
-        el.textContent?.includes(
-          'scheduleVacancy.validation.expirationAfterPublish'
-        )
-      );
-      expect(hasInlineExpirationError).toBe(false);
+      // The disabled button must be explained by an inline error, not silence
+      await waitFor(() => {
+        const errorDivs = screen.queryAllByTestId('calendar-error');
+        const hasInlineExpirationError = errorDivs.some(el =>
+          el.textContent?.includes(
+            'scheduleVacancy.validation.expirationAfterPublish'
+          )
+        );
+        expect(hasInlineExpirationError).toBe(true);
+      });
+    });
+
+    it('renders an inline error when expiration equals publish datetime (DQCGP-3677)', async () => {
+      renderComponent();
+
+      fillPublish('2099-12-25', '10:00:00 AM');
+      fillExpiration('2099-12-25', '10:00:00 AM');
+
+      await waitFor(() => {
+        const errorDivs = screen.queryAllByTestId('calendar-error');
+        const hasInlineExpirationError = errorDivs.some(el =>
+          el.textContent?.includes(
+            'scheduleVacancy.validation.expirationAfterPublish'
+          )
+        );
+        expect(hasInlineExpirationError).toBe(true);
+      });
+    });
+
+    it('clears the expirationAfterPublish inline error once expiration is moved after publish (DQCGP-3677)', async () => {
+      renderComponent();
+
+      fillPublish('2099-12-26', '10:00:00 AM');
+      fillExpiration('2099-12-25', '10:00:00 AM');
+
+      await waitFor(() => {
+        const errorDivs = screen.queryAllByTestId('calendar-error');
+        expect(
+          errorDivs.some(el =>
+            el.textContent?.includes(
+              'scheduleVacancy.validation.expirationAfterPublish'
+            )
+          )
+        ).toBe(true);
+      });
+
+      fillExpiration('2099-12-27', '10:00:00 AM');
+
+      await waitFor(() => {
+        const errorDivs = screen.queryAllByTestId('calendar-error');
+        expect(
+          errorDivs.some(el =>
+            el.textContent?.includes(
+              'scheduleVacancy.validation.expirationAfterPublish'
+            )
+          )
+        ).toBe(false);
+        expect(getCreateButton()).not.toBeDisabled();
+      });
     });
   });
 

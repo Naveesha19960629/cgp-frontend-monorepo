@@ -32,6 +32,7 @@ import {
   formatDisplayDateTime,
   hasPublishDateChanged,
   hasScheduleChanged,
+  isDateTimeInPast,
   to24HourTime,
 } from '@/views/vacancies/utils';
 import { getHundredYearDateBoundaries } from '@/views/vacancies/utils/date-timezone-safe';
@@ -113,17 +114,40 @@ export default function ScheduleVacancyStep({
     [publishDate, publishTime, form.schedule]
   );
 
+  // A changed schedule can never resolve to a past date/time (mirrors the
+  // onValid submit check below) — but an unchanged schedule is never
+  // flagged here, even for an on-hold vacancy, so the recruiter can still
+  // save edits to other sections without being forced to reschedule.
+  const isPublishDateTimeInPast = useMemo(
+    () =>
+      isScheduleChanged &&
+      !!publishDate &&
+      !!publishTime &&
+      isDateTimeInPast(publishDate, publishTime),
+    [isScheduleChanged, publishDate, publishTime]
+  );
+
+  const isExpirationDateTimeInPast = useMemo(
+    () =>
+      isScheduleChanged &&
+      !!expirationDate &&
+      !!expirationTime &&
+      isDateTimeInPast(expirationDate, expirationTime),
+    [isScheduleChanged, expirationDate, expirationTime]
+  );
+
   const hasPastScheduleDateTime = useMemo(() => {
     if (form.status === 'expired') return false;
 
-    // A changed schedule can never resolve to a past date/time (mirrors the
-    // onValid submit check below) — but an unchanged schedule is never
-    // blocked here, even for an on-hold vacancy, so the recruiter can still
-    // save edits to other sections without being forced to reschedule.
-    if (!isScheduleChanged) {
-      return false;
-    }
+    return isPublishDateTimeInPast || isExpirationDateTimeInPast;
+  }, [form.status, isPublishDateTimeInPast, isExpirationDateTimeInPast]);
 
+  // The Zod superRefine below reliably drives `isValid`, but its cross-field
+  // issue (path: ['expirationDate']) does not reliably surface through
+  // react-hook-form's `errors` object when driven via Controller onChange —
+  // so the inline message is computed directly from the watched values
+  // instead of relying on `errors.expirationDate` (DQCGP-3677).
+  const isExpirationBeforeOrEqualPublish = useMemo(() => {
     if (!publishDate || !publishTime || !expirationDate || !expirationTime) {
       return false;
     }
@@ -140,16 +164,8 @@ export default function ScheduleVacancyStep({
       return false;
     }
 
-    const now = new Date();
-    return publishAt < now || expirationAt < now;
-  }, [
-    form.status,
-    publishDate,
-    publishTime,
-    expirationDate,
-    expirationTime,
-    isScheduleChanged,
-  ]);
+    return expirationAt <= publishAt;
+  }, [publishDate, publishTime, expirationDate, expirationTime]);
 
   const { mutateAsync: createVacancy, isPending } = useCreateVacancyMutation();
   const { mutateAsync: updateVacancy, isPending: isUpdating } =
@@ -558,14 +574,16 @@ export default function ScheduleVacancyStep({
                           : undefined
                       }
                       error={
-                        errors.schedulePublishDate?.message ||
-                        errors.schedulePublishTime?.message
-                          ? t(
-                              errors.schedulePublishDate?.message ||
-                                errors.schedulePublishTime?.message ||
-                                ''
-                            )
-                          : undefined
+                        isPublishDateTimeInPast
+                          ? t('scheduleVacancy.validation.publishDateInPast')
+                          : errors.schedulePublishDate?.message ||
+                              errors.schedulePublishTime?.message
+                            ? t(
+                                errors.schedulePublishDate?.message ||
+                                  errors.schedulePublishTime?.message ||
+                                  ''
+                              )
+                            : undefined
                       }
                     />
                   )}
@@ -626,6 +644,16 @@ export default function ScheduleVacancyStep({
                           : undefined
                       }
                       error={(() => {
+                        if (isExpirationDateTimeInPast) {
+                          return t(
+                            'scheduleVacancy.validation.expirationDateInPast'
+                          );
+                        }
+                        if (isExpirationBeforeOrEqualPublish) {
+                          return t(
+                            'scheduleVacancy.validation.expirationAfterPublish'
+                          );
+                        }
                         const msg =
                           errors.expirationDate?.message ||
                           errors.expirationTime?.message;
