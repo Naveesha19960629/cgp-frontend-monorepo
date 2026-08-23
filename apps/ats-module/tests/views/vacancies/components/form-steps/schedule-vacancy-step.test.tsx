@@ -214,6 +214,38 @@ vi.mock('@/views/vacancies/components/vacancy-onhold-update-dialog', () => ({
   },
 }));
 
+vi.mock('@/views/vacancies/components/vacancy-live-update-dialog', () => ({
+  default: ({
+    open,
+    onConfirm,
+    onOpenChange,
+    isPublishDateChanged,
+    hasApplicants,
+  }: {
+    open: boolean;
+    onConfirm: () => void;
+    onOpenChange: (open: boolean) => void;
+    isPublishDateChanged: boolean;
+    hasApplicants: boolean;
+  }) => {
+    if (!open) return null;
+    return (
+      <div
+        data-testid="live-update-dialog"
+        data-publish-changed={String(isPublishDateChanged)}
+        data-has-applicants={String(hasApplicants)}
+      >
+        <button type="button" onClick={onConfirm}>
+          dialog-yes
+        </button>
+        <button type="button" onClick={() => onOpenChange(false)}>
+          dialog-no
+        </button>
+      </div>
+    );
+  },
+}));
+
 vi.mock('date-fns', async importOriginal => ({
   ...(await importOriginal<typeof import('date-fns')>()),
   format: (_date: Date, _format: string) => '10 Jun 2026',
@@ -1966,6 +1998,10 @@ describe('ScheduleVacancyStep', () => {
   });
 
   describe('live vacancy confirmation dialogs', () => {
+    // DQCGP-3611: these tests exercise the with-applicants path (CGP-2550,
+    // unchanged), so applicantCount is set explicitly to a positive number —
+    // a Live vacancy with 0 applicants now routes to VacancyLiveUpdateDialog
+    // instead (see "live vacancy without applicants" below).
     const liveSchedule = {
       schedulePublishAt: '2099-12-20T10:00:00 AM',
       expirationAt: '2099-12-30T11:59:59 PM',
@@ -1978,7 +2014,9 @@ describe('ScheduleVacancyStep', () => {
     });
 
     it('shows the no-reschedule confirmation dialog when Update is clicked without schedule changes', async () => {
-      mockVacancyForm({ form: { schedule: liveSchedule, status: 'live' } });
+      mockVacancyForm({
+        form: { schedule: liveSchedule, status: 'live', applicantCount: 1 },
+      });
       renderComponent({ mode: 'edit' as const });
 
       await waitFor(() => expect(getCreateButton()).not.toBeDisabled());
@@ -1994,7 +2032,9 @@ describe('ScheduleVacancyStep', () => {
     });
 
     it('shows the reschedule confirmation dialog when the publish date is changed', async () => {
-      mockVacancyForm({ form: { schedule: liveSchedule, status: 'live' } });
+      mockVacancyForm({
+        form: { schedule: liveSchedule, status: 'live', applicantCount: 1 },
+      });
       renderComponent({ mode: 'edit' as const });
 
       fillPublish('2099-11-01', '09:00:00 AM');
@@ -2011,7 +2051,9 @@ describe('ScheduleVacancyStep', () => {
     });
 
     it('updates with existingStatus on_hold and shows the reschedule success toast when reschedule is confirmed', async () => {
-      mockVacancyForm({ form: { schedule: liveSchedule, status: 'live' } });
+      mockVacancyForm({
+        form: { schedule: liveSchedule, status: 'live', applicantCount: 1 },
+      });
       renderComponent({ mode: 'edit' as const });
 
       fillPublish('2099-11-01', '09:00:00 AM');
@@ -2043,7 +2085,9 @@ describe('ScheduleVacancyStep', () => {
     });
 
     it('updates keeping live status and shows the stays-live success toast when no-reschedule is confirmed', async () => {
-      mockVacancyForm({ form: { schedule: liveSchedule, status: 'live' } });
+      mockVacancyForm({
+        form: { schedule: liveSchedule, status: 'live', applicantCount: 1 },
+      });
       renderComponent({ mode: 'edit' as const });
 
       await waitFor(() => expect(getCreateButton()).not.toBeDisabled());
@@ -2074,7 +2118,9 @@ describe('ScheduleVacancyStep', () => {
     });
 
     it('closes the dialog and does not call updateVacancy when No is clicked', async () => {
-      mockVacancyForm({ form: { schedule: liveSchedule, status: 'live' } });
+      mockVacancyForm({
+        form: { schedule: liveSchedule, status: 'live', applicantCount: 1 },
+      });
       renderComponent({ mode: 'edit' as const });
 
       await waitFor(() => expect(getCreateButton()).not.toBeDisabled());
@@ -2176,21 +2222,157 @@ describe('ScheduleVacancyStep', () => {
         );
       });
     });
+  });
 
-    it('does not trigger notifyApplicants when there are no applicants, even though the update succeeds', async () => {
+  // DQCGP-3611: Live vacancy, no applicants — mirrors the "onhold vacancy
+  // without applicants" describe block above, using VacancyLiveUpdateDialog
+  // (Notif 2.28.3 / 2.28.4) instead of the with-applicants SimpleConfirmDialog.
+  describe('live vacancy without applicants', () => {
+    const liveSchedule = {
+      schedulePublishAt: '2099-12-20T10:00:00 AM',
+      expirationAt: '2099-12-30T11:59:59 PM',
+    };
+
+    beforeEach(() => {
+      vi.mocked(useParams).mockReturnValue({
+        id: 'vacancy-live-no-applicants',
+      });
+      mockUpdateVacancy.mockResolvedValue(undefined);
+      mockNotifyApplicants.mockResolvedValue(undefined);
       mockVacancyForm({
         form: { schedule: liveSchedule, status: 'live', applicantCount: 0 },
       });
+    });
 
+    it('shows VacancyLiveUpdateDialog instead of SimpleConfirmDialog when there are no applicants', async () => {
       renderComponent({ mode: 'edit' as const });
+
+      await waitFor(() => expect(getCreateButton()).not.toBeDisabled());
+      await userEvent.click(getCreateButton());
+
+      await waitFor(() => {
+        expect(screen.getByTestId('live-update-dialog')).toBeInTheDocument();
+      });
+      expect(
+        screen.queryByTestId('simple-confirm-dialog')
+      ).not.toBeInTheDocument();
+      expect(mockUpdateVacancy).not.toHaveBeenCalled();
+    });
+
+    it('passes isPublishDateChanged=false and hasApplicants=false when schedule is unchanged (Notif 2.28.4)', async () => {
+      renderComponent({ mode: 'edit' as const });
+
+      await waitFor(() => expect(getCreateButton()).not.toBeDisabled());
+      await userEvent.click(getCreateButton());
+
+      await waitFor(() => {
+        expect(screen.getByTestId('live-update-dialog')).toBeInTheDocument();
+      });
+      const dialog = screen.getByTestId('live-update-dialog');
+      expect(dialog.dataset['publishChanged']).toBe('false');
+      expect(dialog.dataset['hasApplicants']).toBe('false');
+    });
+
+    it('passes isPublishDateChanged=true when the publish date is changed (Notif 2.28.3)', async () => {
+      renderComponent({ mode: 'edit' as const });
+
+      fillPublish('2099-11-01', '09:00:00 AM');
+
+      await waitFor(() => expect(getCreateButton()).not.toBeDisabled());
+      await userEvent.click(getCreateButton());
+
+      await waitFor(() => {
+        expect(
+          screen.getByTestId('live-update-dialog').dataset['publishChanged']
+        ).toBe('true');
+      });
+    });
+
+    it('updates with existingStatus on_hold and the reschedule success toast when reschedule is confirmed', async () => {
+      renderComponent({ mode: 'edit' as const });
+
+      fillPublish('2099-11-01', '09:00:00 AM');
       await waitFor(() => expect(getCreateButton()).not.toBeDisabled());
       await userEvent.click(getCreateButton());
       await waitFor(() =>
-        expect(screen.getByTestId('simple-confirm-dialog')).toBeInTheDocument()
+        expect(screen.getByTestId('live-update-dialog')).toBeInTheDocument()
       );
-      await userEvent.click(
-        screen.getByRole('button', { name: 'simple-confirm-yes' })
+
+      await userEvent.click(screen.getByRole('button', { name: 'dialog-yes' }));
+
+      await waitFor(() => {
+        expect(mockUpdateVacancy).toHaveBeenCalledWith(
+          expect.objectContaining({
+            id: 'vacancy-live-no-applicants',
+            existingStatus: 'on_hold',
+          })
+        );
+        expect(SuccessToast).toHaveBeenCalledWith(
+          expect.objectContaining({
+            title: 'scheduleVacancy.notifications.liveRescheduleSuccessTitle',
+            description:
+              'scheduleVacancy.notifications.liveRescheduleSuccessMessage',
+          })
+        );
+      });
+    });
+
+    it('updates keeping live status and the stays-live success toast when no-reschedule is confirmed', async () => {
+      renderComponent({ mode: 'edit' as const });
+
+      await waitFor(() => expect(getCreateButton()).not.toBeDisabled());
+      await userEvent.click(getCreateButton());
+      await waitFor(() =>
+        expect(screen.getByTestId('live-update-dialog')).toBeInTheDocument()
       );
+
+      await userEvent.click(screen.getByRole('button', { name: 'dialog-yes' }));
+
+      await waitFor(() => {
+        expect(mockUpdateVacancy).toHaveBeenCalledWith(
+          expect.objectContaining({
+            id: 'vacancy-live-no-applicants',
+            existingStatus: 'live',
+          })
+        );
+        expect(SuccessToast).toHaveBeenCalledWith(
+          expect.objectContaining({
+            title: 'scheduleVacancy.notifications.liveNoRescheduleSuccessTitle',
+            description:
+              'scheduleVacancy.notifications.liveNoRescheduleSuccessMessage',
+          })
+        );
+      });
+    });
+
+    it('closes the dialog and does not call updateVacancy when No is clicked', async () => {
+      renderComponent({ mode: 'edit' as const });
+
+      await waitFor(() => expect(getCreateButton()).not.toBeDisabled());
+      await userEvent.click(getCreateButton());
+      await waitFor(() =>
+        expect(screen.getByTestId('live-update-dialog')).toBeInTheDocument()
+      );
+
+      await userEvent.click(screen.getByRole('button', { name: 'dialog-no' }));
+
+      await waitFor(() => {
+        expect(
+          screen.queryByTestId('live-update-dialog')
+        ).not.toBeInTheDocument();
+      });
+      expect(mockUpdateVacancy).not.toHaveBeenCalled();
+    });
+
+    it('does not trigger notifyApplicants when there are no applicants, even though the update succeeds', async () => {
+      renderComponent({ mode: 'edit' as const });
+
+      await waitFor(() => expect(getCreateButton()).not.toBeDisabled());
+      await userEvent.click(getCreateButton());
+      await waitFor(() =>
+        expect(screen.getByTestId('live-update-dialog')).toBeInTheDocument()
+      );
+      await userEvent.click(screen.getByRole('button', { name: 'dialog-yes' }));
 
       await waitFor(() => expect(mockUpdateVacancy).toHaveBeenCalled());
       expect(mockNotifyApplicants).not.toHaveBeenCalled();
