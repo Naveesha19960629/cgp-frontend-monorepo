@@ -1,4 +1,4 @@
-import { Add, SearchNormal1 } from 'iconsax-reactjs';
+import { Add, ArrowDown2, SearchNormal1 } from 'iconsax-reactjs';
 
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -73,7 +73,10 @@ export default function TemplatesToolbar({
         value={sortOrder}
         onValueChange={value => onSortOrderChange(value as TemplateSortOrder)}
       >
-        <SelectTrigger className="h-12 w-fit gap-2 rounded-lg border-slate-300 bg-white px-4 text-base font-medium text-slate-600 shadow-none [&_svg]:opacity-100">
+        <SelectTrigger
+          className="!h-12 w-fit gap-2 rounded-lg border-slate-300 bg-white px-4 text-base font-medium text-slate-600 shadow-none [&_svg]:opacity-100"
+          icon={<ArrowDown2 className="size-4" />}
+        >
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
