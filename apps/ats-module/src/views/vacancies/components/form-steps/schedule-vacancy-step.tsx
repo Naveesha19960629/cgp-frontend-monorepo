@@ -79,6 +79,7 @@ export default function ScheduleVacancyStep({
     control,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors, isValid },
   } = useScheduleVacancyForm(form.schedule);
 
@@ -145,30 +146,71 @@ export default function ScheduleVacancyStep({
     return isPublishDateTimeInPast || isExpirationDateTimeInPast;
   }, [form.status, isPublishDateTimeInPast, isExpirationDateTimeInPast]);
 
-  // The Zod superRefine below reliably drives `isValid`, but its cross-field
-  // issue (path: ['expirationDate']) does not reliably surface through
-  // react-hook-form's `errors` object when driven via Controller onChange —
-  // so the inline message is computed directly from the watched values
-  // instead of relying on `errors.expirationDate` (DQCGP-3677).
-  const isExpirationBeforeOrEqualPublish = useMemo(() => {
-    if (!publishDate || !publishTime || !expirationDate || !expirationTime) {
-      return false;
-    }
+  // No inline message for either restriction below — instead of an error,
+  // an invalid expiration is cleared outright so the recruiter is prompted
+  // to pick a fresh, valid one. This covers both directions: the publish
+  // field changing out from under an already-valid expiration, and the
+  // recruiter setting expiration itself to the current moment/past or to
+  // before-or-equal the currently selected publish date/time (`disabledDates`
+  // on the expiration calendar only blocks earlier *days* — same-day-earlier
+  // -time combinations still need this check).
+  const clearExpirationIfInvalid = useCallback(
+    (
+      nextPublishDate: string,
+      nextPublishTime: string,
+      nextExpirationDate: string,
+      nextExpirationTime: string
+    ) => {
+      if (!nextExpirationDate || !nextExpirationTime) return;
 
-    const publishAt = new Date(`${publishDate}T${to24HourTime(publishTime)}`);
-    const expirationAt = new Date(
-      `${expirationDate}T${to24HourTime(expirationTime)}`
-    );
+      if (isDateTimeInPast(nextExpirationDate, nextExpirationTime)) {
+        setValue('expirationDate', '');
+        setValue('expirationTime', '');
+        return;
+      }
 
-    if (
-      Number.isNaN(publishAt.getTime()) ||
-      Number.isNaN(expirationAt.getTime())
-    ) {
-      return false;
-    }
+      if (!nextPublishDate || !nextPublishTime) return;
 
-    return expirationAt <= publishAt;
-  }, [publishDate, publishTime, expirationDate, expirationTime]);
+      const publishAt = new Date(
+        `${nextPublishDate}T${to24HourTime(nextPublishTime)}`
+      );
+      const expirationAt = new Date(
+        `${nextExpirationDate}T${to24HourTime(nextExpirationTime)}`
+      );
+
+      if (
+        Number.isNaN(publishAt.getTime()) ||
+        Number.isNaN(expirationAt.getTime())
+      ) {
+        return;
+      }
+
+      if (expirationAt <= publishAt) {
+        // shouldValidate is intentionally omitted: the onChange that just
+        // fired already triggers its own validation pass (mode: 'onChange'),
+        // and by the time it runs, _formValues already reflects these clears
+        // (synchronous). Triggering extra validation passes here raced with
+        // that one and left `isValid` stuck on a stale result.
+        setValue('expirationDate', '');
+        setValue('expirationTime', '');
+      }
+    },
+    [setValue]
+  );
+
+  // A publish date/time that resolves to the current moment or the past is
+  // restricted by clearing the field outright — same "no message" approach.
+  const clearPublishIfPast = useCallback(
+    (nextPublishDate: string, nextPublishTime: string) => {
+      if (!nextPublishDate || !nextPublishTime) return false;
+      if (!isDateTimeInPast(nextPublishDate, nextPublishTime)) return false;
+
+      setValue('schedulePublishDate', '');
+      setValue('schedulePublishTime', '');
+      return true;
+    },
+    [setValue]
+  );
 
   const { mutateAsync: createVacancy, isPending } = useCreateVacancyMutation();
   const { mutateAsync: updateVacancy, isPending: isUpdating } =
@@ -594,9 +636,29 @@ export default function ScheduleVacancyStep({
                   render={({ field: timeField }) => (
                     <CalendarWithTime
                       dateValue={dateField.value}
-                      onDateChange={dateField.onChange}
+                      onDateChange={value => {
+                        dateField.onChange(value);
+                        if (!clearPublishIfPast(value, timeField.value)) {
+                          clearExpirationIfInvalid(
+                            value,
+                            timeField.value,
+                            expirationDate,
+                            expirationTime
+                          );
+                        }
+                      }}
                       timeValue={timeField.value}
-                      onTimeChange={timeField.onChange}
+                      onTimeChange={value => {
+                        timeField.onChange(value);
+                        if (!clearPublishIfPast(dateField.value, value)) {
+                          clearExpirationIfInvalid(
+                            dateField.value,
+                            value,
+                            expirationDate,
+                            expirationTime
+                          );
+                        }
+                      }}
                       timeLabel={t('scheduleVacancy.timeLabel')}
                       dateButtonPlaceholder={t(
                         'scheduleVacancy.publishDatePlaceholder'
@@ -618,16 +680,14 @@ export default function ScheduleVacancyStep({
                           : undefined
                       }
                       error={
-                        isPublishDateTimeInPast
-                          ? t('scheduleVacancy.validation.publishDateInPast')
-                          : errors.schedulePublishDate?.message ||
-                              errors.schedulePublishTime?.message
-                            ? t(
-                                errors.schedulePublishDate?.message ||
-                                  errors.schedulePublishTime?.message ||
-                                  ''
-                              )
-                            : undefined
+                        errors.schedulePublishDate?.message ||
+                        errors.schedulePublishTime?.message
+                          ? t(
+                              errors.schedulePublishDate?.message ||
+                                errors.schedulePublishTime?.message ||
+                                ''
+                            )
+                          : undefined
                       }
                     />
                   )}
@@ -655,9 +715,25 @@ export default function ScheduleVacancyStep({
                   render={({ field: timeField }) => (
                     <CalendarWithTime
                       dateValue={dateField.value}
-                      onDateChange={dateField.onChange}
+                      onDateChange={value => {
+                        dateField.onChange(value);
+                        clearExpirationIfInvalid(
+                          publishDate,
+                          publishTime,
+                          value,
+                          timeField.value
+                        );
+                      }}
                       timeValue={timeField.value}
-                      onTimeChange={timeField.onChange}
+                      onTimeChange={value => {
+                        timeField.onChange(value);
+                        clearExpirationIfInvalid(
+                          publishDate,
+                          publishTime,
+                          dateField.value,
+                          value
+                        );
+                      }}
                       timeLabel={t('scheduleVacancy.expirationTimeLabel')}
                       dateButtonPlaceholder={t(
                         'scheduleVacancy.expirationDatePlaceholder'
@@ -688,16 +764,6 @@ export default function ScheduleVacancyStep({
                           : undefined
                       }
                       error={(() => {
-                        if (isExpirationDateTimeInPast) {
-                          return t(
-                            'scheduleVacancy.validation.expirationDateInPast'
-                          );
-                        }
-                        if (isExpirationBeforeOrEqualPublish) {
-                          return t(
-                            'scheduleVacancy.validation.expirationAfterPublish'
-                          );
-                        }
                         const msg =
                           errors.expirationDate?.message ||
                           errors.expirationTime?.message;
