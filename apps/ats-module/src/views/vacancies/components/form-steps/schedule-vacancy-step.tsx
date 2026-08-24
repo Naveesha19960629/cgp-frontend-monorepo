@@ -35,6 +35,7 @@ import {
   formatDisplayDateTime,
   hasPublishDateChanged,
   hasScheduleChanged,
+  isDateTimeBeyondMaxBoundary,
   isDateTimeInPast,
   to24HourTime,
 } from '@/views/vacancies/utils';
@@ -118,42 +119,47 @@ export default function ScheduleVacancyStep({
     [publishDate, publishTime, form.schedule]
   );
 
-  // A changed schedule can never resolve to a past date/time (mirrors the
-  // onValid submit check below) — but an unchanged schedule is never
-  // flagged here, even for an on-hold vacancy, so the recruiter can still
-  // save edits to other sections without being forced to reschedule.
-  const isPublishDateTimeInPast = useMemo(
+  // A changed schedule can never resolve to a past date/time, nor to a
+  // date/time beyond 100 years from now (mirrors the onValid submit check
+  // below) — but an unchanged schedule is never flagged here, even for an
+  // on-hold vacancy, so the recruiter can still save edits to other sections
+  // without being forced to reschedule.
+  const isPublishDateTimeInvalid = useMemo(
     () =>
       isScheduleChanged &&
       !!publishDate &&
       !!publishTime &&
-      isDateTimeInPast(publishDate, publishTime),
+      (isDateTimeInPast(publishDate, publishTime) ||
+        isDateTimeBeyondMaxBoundary(publishDate, publishTime)),
     [isScheduleChanged, publishDate, publishTime]
   );
 
-  const isExpirationDateTimeInPast = useMemo(
+  const isExpirationDateTimeInvalid = useMemo(
     () =>
       isScheduleChanged &&
       !!expirationDate &&
       !!expirationTime &&
-      isDateTimeInPast(expirationDate, expirationTime),
+      (isDateTimeInPast(expirationDate, expirationTime) ||
+        isDateTimeBeyondMaxBoundary(expirationDate, expirationTime)),
     [isScheduleChanged, expirationDate, expirationTime]
   );
 
-  const hasPastScheduleDateTime = useMemo(() => {
+  const hasInvalidScheduleDateTime = useMemo(() => {
     if (form.status === 'expired') return false;
 
-    return isPublishDateTimeInPast || isExpirationDateTimeInPast;
-  }, [form.status, isPublishDateTimeInPast, isExpirationDateTimeInPast]);
+    return isPublishDateTimeInvalid || isExpirationDateTimeInvalid;
+  }, [form.status, isPublishDateTimeInvalid, isExpirationDateTimeInvalid]);
 
   // No inline message for either restriction below — instead of an error,
   // an invalid expiration is cleared outright so the recruiter is prompted
   // to pick a fresh, valid one. This covers both directions: the publish
   // field changing out from under an already-valid expiration, and the
-  // recruiter setting expiration itself to the current moment/past or to
-  // before-or-equal the currently selected publish date/time (`disabledDates`
-  // on the expiration calendar only blocks earlier *days* — same-day-earlier
-  // -time combinations still need this check).
+  // recruiter setting expiration itself to the current moment/past, to
+  // more than 100 years from now, or to before-or-equal the currently
+  // selected publish date/time (`disabledDates` on the expiration calendar
+  // only blocks earlier *days* and days beyond the 100-year boundary —
+  // same-day-earlier-time and same-day-beyond-boundary-time combinations
+  // still need this check).
   const clearExpirationIfInvalid = useCallback(
     (
       nextPublishDate: string,
@@ -163,7 +169,10 @@ export default function ScheduleVacancyStep({
     ) => {
       if (!nextExpirationDate || !nextExpirationTime) return;
 
-      if (isDateTimeInPast(nextExpirationDate, nextExpirationTime)) {
+      if (
+        isDateTimeInPast(nextExpirationDate, nextExpirationTime) ||
+        isDateTimeBeyondMaxBoundary(nextExpirationDate, nextExpirationTime)
+      ) {
         setValue('expirationDate', '');
         setValue('expirationTime', '');
         return;
@@ -198,12 +207,17 @@ export default function ScheduleVacancyStep({
     [setValue]
   );
 
-  // A publish date/time that resolves to the current moment or the past is
-  // restricted by clearing the field outright — same "no message" approach.
-  const clearPublishIfPast = useCallback(
+  // A publish date/time that resolves to the current moment/past, or to more
+  // than 100 years from now, is restricted by clearing the field outright —
+  // same "no message" approach.
+  const clearPublishIfInvalid = useCallback(
     (nextPublishDate: string, nextPublishTime: string) => {
       if (!nextPublishDate || !nextPublishTime) return false;
-      if (!isDateTimeInPast(nextPublishDate, nextPublishTime)) return false;
+      if (
+        !isDateTimeInPast(nextPublishDate, nextPublishTime) &&
+        !isDateTimeBeyondMaxBoundary(nextPublishDate, nextPublishTime)
+      )
+        return false;
 
       setValue('schedulePublishDate', '');
       setValue('schedulePublishTime', '');
@@ -407,6 +421,29 @@ export default function ScheduleVacancyStep({
       ErrorToast({
         title: t('scheduleVacancy.notifications.validationErrorTitle'),
         description: t('scheduleVacancy.notifications.pastDateTimeMessage'),
+      });
+      return;
+    }
+
+    // Nor can it resolve to more than 100 years from now — the calendar's
+    // disabledDates only caps the day, so a time later than "now" on the
+    // exact boundary day can still slip through to here.
+    if (
+      isScheduleChanged &&
+      (isDateTimeBeyondMaxBoundary(
+        values.schedulePublishDate,
+        values.schedulePublishTime
+      ) ||
+        isDateTimeBeyondMaxBoundary(
+          values.expirationDate,
+          values.expirationTime
+        ))
+    ) {
+      ErrorToast({
+        title: t('scheduleVacancy.notifications.validationErrorTitle'),
+        description: t(
+          'scheduleVacancy.notifications.exceedsMaxDateTimeMessage'
+        ),
       });
       return;
     }
@@ -638,7 +675,7 @@ export default function ScheduleVacancyStep({
                       dateValue={dateField.value}
                       onDateChange={value => {
                         dateField.onChange(value);
-                        if (!clearPublishIfPast(value, timeField.value)) {
+                        if (!clearPublishIfInvalid(value, timeField.value)) {
                           clearExpirationIfInvalid(
                             value,
                             timeField.value,
@@ -650,7 +687,7 @@ export default function ScheduleVacancyStep({
                       timeValue={timeField.value}
                       onTimeChange={value => {
                         timeField.onChange(value);
-                        if (!clearPublishIfPast(dateField.value, value)) {
+                        if (!clearPublishIfInvalid(dateField.value, value)) {
                           clearExpirationIfInvalid(
                             dateField.value,
                             value,
@@ -802,7 +839,7 @@ export default function ScheduleVacancyStep({
             isPending ||
             isUpdating ||
             !isValid ||
-            hasPastScheduleDateTime
+            hasInvalidScheduleDateTime
           }
           onClick={() => {
             handleSubmit(onValid, onInvalid)().catch(() => {});

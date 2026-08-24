@@ -564,6 +564,81 @@ describe('ScheduleVacancyStep', () => {
     });
   });
 
+  describe('100-year boundary validation (DQCGP-3625)', () => {
+    // The calendar's disabledDates only caps the *day* — the exact boundary
+    // day (today + 100 years) stays selectable — so a time later than "now"
+    // on that day still resolves to more than 100 years from this instant.
+    // 23:59:59 on the boundary day is always later than "now" on today
+    // (whatever "now" is), and 12:00:00 AM is always earlier-or-equal.
+    const boundaryDate = () => {
+      const { maxDate } = getHundredYearDateBoundaries();
+      const yyyy = maxDate.getFullYear();
+      const mm = String(maxDate.getMonth() + 1).padStart(2, '0');
+      const dd = String(maxDate.getDate()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd}`;
+    };
+
+    it('clears the publish field when set to the boundary day with a time later than now', async () => {
+      renderComponent();
+
+      fillPublish(boundaryDate(), '11:59:59 PM');
+
+      await waitFor(() => {
+        expect(
+          screen.getByLabelText('date-scheduleVacancy.timeLabel')
+        ).toHaveValue('');
+        expect(
+          screen.getByLabelText('time-scheduleVacancy.timeLabel')
+        ).toHaveValue('');
+      });
+    });
+
+    it('does not clear the publish field when set to the boundary day with a time not later than now', async () => {
+      renderComponent();
+
+      fillPublish(boundaryDate(), '12:00:00 AM');
+
+      await waitFor(() => {
+        expect(
+          screen.getByLabelText('date-scheduleVacancy.timeLabel')
+        ).toHaveValue(boundaryDate());
+        expect(
+          screen.getByLabelText('time-scheduleVacancy.timeLabel')
+        ).toHaveValue('12:00:00 AM');
+      });
+    });
+
+    it('clears the expiration field when set to the boundary day with a time later than now', async () => {
+      renderComponent();
+
+      fillExpiration(boundaryDate(), '11:59:59 PM');
+
+      await waitFor(() => {
+        expect(
+          screen.getByLabelText('date-scheduleVacancy.expirationTimeLabel')
+        ).toHaveValue('');
+        expect(
+          screen.getByLabelText('time-scheduleVacancy.expirationTimeLabel')
+        ).toHaveValue('');
+      });
+    });
+
+    it('does not clear the expiration field when set to the boundary day with a time not later than now', async () => {
+      renderComponent();
+
+      fillExpiration(boundaryDate(), '12:00:00 AM');
+
+      await waitFor(() => {
+        expect(
+          screen.getByLabelText('date-scheduleVacancy.expirationTimeLabel')
+        ).toHaveValue(boundaryDate());
+        expect(
+          screen.getByLabelText('time-scheduleVacancy.expirationTimeLabel')
+        ).toHaveValue('12:00:00 AM');
+      });
+    });
+  });
+
   describe('button interactions', () => {
     it('calls onCancel when Cancel is clicked', async () => {
       renderComponent();
