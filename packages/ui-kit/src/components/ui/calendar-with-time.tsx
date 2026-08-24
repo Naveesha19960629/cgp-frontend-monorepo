@@ -1,7 +1,7 @@
 import { Clock2Icon } from 'lucide-react';
 
 import type { ReactNode } from 'react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import { Button } from '@cgp/ui-kit/components/ui/button';
 import { Calendar } from '@cgp/ui-kit/components/ui/calendar';
@@ -148,14 +148,6 @@ export function CalendarWithTime({
 }: Readonly<CalendarWithTimeProps>) {
   const [isOpen, setIsOpen] = useState(false);
 
-  // Close the popover when a validation error appears so the message
-  // (rendered below the trigger) isn't hidden behind the open popup.
-  useEffect(() => {
-    if (error) {
-      setIsOpen(false);
-    }
-  }, [error]);
-
   const selectedDate = dateValue ? new Date(dateValue) : undefined;
 
   const handleDateSelect = (date: Date | undefined) => {
@@ -178,9 +170,21 @@ export function CalendarWithTime({
       const parts = newTime.split(':');
       const normalized = parts.length >= 3 ? newTime : `${newTime}:00`;
       onTimeChange(normalized);
-    } else {
-      onTimeChange('');
+      return;
     }
+
+    if (!timeValue) {
+      onTimeChange('');
+      return;
+    }
+
+    // The native <input type="time"> reports an empty value while a segment
+    // is mid-edit and briefly out of range (e.g. typing "0" over the hour of
+    // an already-set "10:00:00 PM" isn't a valid 12-hour hour) — not just
+    // when the user actually clears the field. Ignoring it here keeps the
+    // previously valid time (the controlled `value` below reasserts it on
+    // the input) instead of wiping the field and surfacing a spurious
+    // "required" error.
   };
 
   return (
