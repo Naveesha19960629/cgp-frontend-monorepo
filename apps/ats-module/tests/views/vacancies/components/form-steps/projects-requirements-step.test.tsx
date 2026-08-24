@@ -1,4 +1,4 @@
-import { act, render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -134,12 +134,14 @@ vi.mock('@cgp/ui-kit/components/multi-select', () => ({
     onChange,
     onSearchSync,
     disabled,
+    emptyIndicator,
   }: {
     placeholder: string;
     options?: StubOption[];
     onChange?: (options: StubOption[]) => void;
     onSearchSync?: (value: string) => StubOption[];
     disabled?: boolean;
+    emptyIndicator?: React.ReactNode;
   }) => (
     <div>
       <input
@@ -162,6 +164,9 @@ vi.mock('@cgp/ui-kit/components/multi-select', () => ({
         <button type="button" onClick={() => onSearchSync('xaxaxax')}>
           {`search:${placeholder}`}
         </button>
+      )}
+      {emptyIndicator && (
+        <div data-testid={`empty-${placeholder}`}>{emptyIndicator}</div>
       )}
     </div>
   ),
@@ -541,6 +546,35 @@ describe('ProjectsRequirementsStep', () => {
     expect(
       screen.getByText('projectsRequirements.dataTakenFromCandidate')
     ).toBeInTheDocument();
+  });
+
+  // ── Multi-select empty state (DQCGP-3671) ─────────────────────────────────
+  // Every searchable multi-select must show the shared icon + title +
+  // description "no data" state instead of the old plain-text message, so
+  // an incorrectly formatted result doesn't look like a broken modal.
+  it('passes the shared no-data empty indicator to every multi-select field', () => {
+    render(
+      <ProjectsRequirementsStep
+        onNext={mockOnNext}
+        onBack={mockOnBack}
+        onSubmit={vi.fn()}
+      />
+    );
+
+    const placeholders = [
+      'projectsRequirements.placeholders.relatedIndustry',
+      'projectsRequirements.placeholders.organizationLocation',
+      'projectsRequirements.placeholders.organizationName',
+    ];
+
+    placeholders.forEach(placeholder => {
+      const emptyState = screen.getByTestId(`empty-${placeholder}`);
+      expect(
+        within(emptyState).getByAltText('common.noData')
+      ).toBeInTheDocument();
+      expect(emptyState).toHaveTextContent('common.noDataTitle');
+      expect(emptyState).toHaveTextContent('common.noDataDescription');
+    });
   });
 
   describe('enable/disable toggle (DQCGP-2866)', () => {

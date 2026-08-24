@@ -1122,6 +1122,18 @@ interface VacancyOnholdUpdateDialogProps {
   isConfirming?: boolean;
 }
 
+// DQCGP-3611: Live vacancy update confirmation — mirrors VacancyOnholdUpdateDialogProps.
+// hasApplicants is kept generic (not hardcoded false) so CGP-2550 can pass true later
+// without needing to touch this component's shape again.
+interface VacancyLiveUpdateDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onConfirm: () => void;
+  isPublishDateChanged: boolean;
+  hasApplicants: boolean;
+  isConfirming?: boolean;
+}
+
 // ─── Applicant Notification (Onhold vacancy with applicants) ────────────────
 
 /** Result of diffing the original vs. edited VacancyForm's applicant-facing sections. */
@@ -2313,6 +2325,7 @@ export type {
   VacancyToggleActiveData,
   VacancyToggleStatusDialogProps,
   VacancyOnholdUpdateDialogProps,
+  VacancyLiveUpdateDialogProps,
   ApplicationFormChanges,
   ApplicationFieldChangeType,
   ApplicationFieldChange,

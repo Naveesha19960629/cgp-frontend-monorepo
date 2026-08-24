@@ -43,3 +43,4 @@ export {
   type VacancyTemplateFormValues,
 } from '@/views/vacancies/hooks/use-vacancy-template-form';
 export { useEditJobDescriptionForm } from '@/views/vacancies/hooks/use-edit-job-description-form';
+export { useVacancyStatusRevalidation } from '@/views/vacancies/hooks/use-vacancy-status-revalidation';

@@ -95,6 +95,11 @@ const {
   maxDate: HUNDRED_YEARS_FROM_NOW,
 } = getHundredYearDateBoundaries();
 
+const multiSelectInfoAvatar = new URL(
+  '../../../../assets/images/multi-select-info-avatar.svg',
+  import.meta.url
+).href;
+
 interface SportEntry {
   id: string;
   isOpen: boolean;
@@ -320,9 +325,22 @@ function SportCard({
                     loading={isSportsLoading}
                     placeholder={t('preferredSports.placeholders.sport')}
                     emptyIndicator={
-                      <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                        {t('preferredSports.empty.sports')}
-                      </p>
+                      <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
+                        <div className="flex flex-col items-start">
+                          <img
+                            src={multiSelectInfoAvatar}
+                            alt={t('common.noData')}
+                          />
+                          <div className="mt-3 w-61 text-left">
+                            <p className="font-bold text-slate-900">
+                              {t('common.noDataTitle')}
+                            </p>
+                            <p className="text-sm font-semibold text-slate-700">
+                              {t('common.noDataDescription')}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
                     }
                   />
                 </div>
@@ -376,9 +394,22 @@ function SportCard({
                       'preferredSports.placeholders.organizationLocation'
                     )}
                     emptyIndicator={
-                      <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                        {t('preferredSports.empty.locations')}
-                      </p>
+                      <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
+                        <div className="flex flex-col items-start">
+                          <img
+                            src={multiSelectInfoAvatar}
+                            alt={t('common.noData')}
+                          />
+                          <div className="mt-3 w-61 text-left">
+                            <p className="font-bold text-slate-900">
+                              {t('common.noDataTitle')}
+                            </p>
+                            <p className="text-sm font-semibold text-slate-700">
+                              {t('common.noDataDescription')}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
                     }
                   />
                 </div>
@@ -437,9 +468,22 @@ function SportCard({
                       'preferredSports.placeholders.levelRepresented'
                     )}
                     emptyIndicator={
-                      <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                        {t('preferredSports.empty.levels')}
-                      </p>
+                      <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
+                        <div className="flex flex-col items-start">
+                          <img
+                            src={multiSelectInfoAvatar}
+                            alt={t('common.noData')}
+                          />
+                          <div className="mt-3 w-61 text-left">
+                            <p className="font-bold text-slate-900">
+                              {t('common.noDataTitle')}
+                            </p>
+                            <p className="text-sm font-semibold text-slate-700">
+                              {t('common.noDataDescription')}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
                     }
                   />
                 </div>
@@ -515,9 +559,22 @@ function SportCard({
                       'preferredSports.placeholders.representedOrganization'
                     )}
                     emptyIndicator={
-                      <p className="px-3 pb-3 text-left text-sm text-slate-500">
-                        {t('preferredSports.empty.organizations')}
-                      </p>
+                      <div className="flex h-full flex-col content-start items-center pt-3 pb-6">
+                        <div className="flex flex-col items-start">
+                          <img
+                            src={multiSelectInfoAvatar}
+                            alt={t('common.noData')}
+                          />
+                          <div className="mt-3 w-61 text-left">
+                            <p className="font-bold text-slate-900">
+                              {t('common.noDataTitle')}
+                            </p>
+                            <p className="text-sm font-semibold text-slate-700">
+                              {t('common.noDataDescription')}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
                     }
                   />
                 </div>

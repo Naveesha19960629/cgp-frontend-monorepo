@@ -8,7 +8,10 @@ import type { FieldErrors } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
-import { VacancyOnholdUpdateDialog } from '@/views/vacancies/components';
+import {
+  VacancyLiveUpdateDialog,
+  VacancyOnholdUpdateDialog,
+} from '@/views/vacancies/components';
 import SimpleConfirmDialog from '@/views/vacancies/components/simple-confirm-dialog';
 import VacancyNoRescheduleConfirmDialog from '@/views/vacancies/components/vacancy-no-reschedule-confirm-dialog';
 import VacancyRescheduleConfirmDialog from '@/views/vacancies/components/vacancy-reschedule-confirm-dialog';
@@ -190,6 +193,11 @@ export default function ScheduleVacancyStep({
     'reschedule' | 'noReschedule' | null
   >(null);
   const [showOnholdDialog, setShowOnholdDialog] = useState(false);
+  // DQCGP-3611: Live-without-applicants uses its own 4-variant-shaped dialog
+  // (only 2 variants have copy for now), mirroring the Onhold flow. The
+  // with-applicants Live path keeps using the existing SimpleConfirmDialog
+  // below (CGP-2550, separate story).
+  const [showLiveUpdateDialog, setShowLiveUpdateDialog] = useState(false);
   const [pendingValues, setPendingValues] =
     useState<ScheduleVacancyFormValues | null>(null);
 
@@ -375,9 +383,16 @@ export default function ScheduleVacancyStep({
 
     // For a Live vacancy, the confirmation copy — and whether it moves to
     // On Hold — depends only on whether the publish date/time changed.
+    // DQCGP-3611: a Live vacancy with no applicants gets its own 4-variant-
+    // shaped dialog (mirroring Onhold); the with-applicants case (CGP-2550)
+    // keeps using the existing reschedule/no-reschedule SimpleConfirmDialog.
     if (!isCreateAction && isLiveVacancy) {
       setPendingValues(values);
-      setConfirmDialog(confirmDialogKind);
+      if (isLiveWithApplicants) {
+        setConfirmDialog(confirmDialogKind);
+      } else {
+        setShowLiveUpdateDialog(true);
+      }
       return;
     }
 
@@ -486,6 +501,35 @@ export default function ScheduleVacancyStep({
         toScheduleVacancyPayload(pendingValues).schedulePublishAt
       );
     }
+
+    setPendingValues(null);
+  };
+
+  // DQCGP-3611: Live vacancy, no applicants — mirrors handleOnholdConfirm's
+  // without-applicants behavior: no application-change diff and no applicant
+  // notification, since there are no past applicants to notify.
+  const handleLiveUpdateConfirm = async () => {
+    if (!pendingValues) return;
+    const isReschedule = isPublishDateChanged;
+    setShowLiveUpdateDialog(false);
+
+    await executeUpdate(
+      pendingValues,
+      isReschedule ? 'on_hold' : undefined,
+      isReschedule
+        ? {
+            titleKey:
+              'scheduleVacancy.notifications.liveRescheduleSuccessTitle',
+            messageKey:
+              'scheduleVacancy.notifications.liveRescheduleSuccessMessage',
+          }
+        : {
+            titleKey:
+              'scheduleVacancy.notifications.liveNoRescheduleSuccessTitle',
+            messageKey:
+              'scheduleVacancy.notifications.liveNoRescheduleSuccessMessage',
+          }
+    );
 
     setPendingValues(null);
   };
@@ -729,9 +773,15 @@ export default function ScheduleVacancyStep({
         isConfirming={isSubmitting || isPending || isUpdating}
       />
 
-      {/* ── Live vacancy update confirmation dialogs ────────────────── */}
+      {/* ── Live vacancy (with applicants) update confirmation dialogs ─
+          CGP-2550, unchanged by DQCGP-3611 — gated to isLiveWithApplicants
+          so the without-applicants case below never opens these. ────── */}
       <SimpleConfirmDialog
-        open={isLiveVacancy && confirmDialog === 'reschedule'}
+        open={
+          isLiveVacancy &&
+          isLiveWithApplicants &&
+          confirmDialog === 'reschedule'
+        }
         onOpenChange={open => {
           if (!open) setConfirmDialog(null);
         }}
@@ -746,7 +796,11 @@ export default function ScheduleVacancyStep({
       />
 
       <SimpleConfirmDialog
-        open={isLiveVacancy && confirmDialog === 'noReschedule'}
+        open={
+          isLiveVacancy &&
+          isLiveWithApplicants &&
+          confirmDialog === 'noReschedule'
+        }
         onOpenChange={open => {
           if (!open) setConfirmDialog(null);
         }}
@@ -758,6 +812,19 @@ export default function ScheduleVacancyStep({
         descriptionKey="scheduleVacancy.liveUpdateConfirmDialog.description"
         cancelLabelKey="scheduleVacancy.liveUpdateConfirmDialog.noButton"
         confirmLabelKey="scheduleVacancy.liveUpdateConfirmDialog.yesButton"
+      />
+
+      {/* ── Live vacancy (without applicants) update confirmation dialog ──
+          DQCGP-3611 — Notif 2.28.3 / 2.28.4. ─────────────────────────── */}
+      <VacancyLiveUpdateDialog
+        open={showLiveUpdateDialog}
+        onOpenChange={setShowLiveUpdateDialog}
+        onConfirm={() => {
+          handleLiveUpdateConfirm().catch(() => {});
+        }}
+        isPublishDateChanged={isPublishDateChanged}
+        hasApplicants={false}
+        isConfirming={isSubmitting || isPending || isUpdating}
       />
 
       {/* ── Onhold update confirmation dialog ───────────────────────── */}
