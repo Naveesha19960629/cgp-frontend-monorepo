@@ -27,6 +27,7 @@ import {
   useSaveVacancyAsTemplateMutation,
   useToggleVacancyStatusMutation,
   useVacanciesQuery,
+  useVacancyStatusRevalidation,
   useVacancyTableParams,
 } from '@/views/vacancies';
 import { TABLE_PAGE_SIZE } from '@/views/vacancies/utils';
@@ -87,11 +88,18 @@ export default function VacanciesPage() {
     data: vacanciesResponse,
     isLoading,
     isFetching,
+    refetch: refetchVacancies,
   } = useVacanciesQuery(queryParams, {
     enabled: initialized && !!keycloak.authenticated,
   });
 
   const data = vacanciesResponse?.data?.content ?? [];
+
+  // Vacancy status flips (Unpublished -> Live, Live -> Expired) purely by
+  // the clock reaching schedulePublishAt/expirationAt, with no user action
+  // to trigger a refetch — schedule one for the next such transition.
+  useVacancyStatusRevalidation(data, refetchVacancies);
+
   const totalPages = vacanciesResponse?.data?.totalPages ?? 0;
   const hasActiveFilters = Boolean(
     params.search || params.careerPath || params.discipline || params.status
