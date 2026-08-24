@@ -1417,6 +1417,7 @@
       "validationErrorTitle": "Error",
       "expirationLessOrEqualMessage": "Expiration Date & Time cannot be less than or equal to the Scheduled Publish Date & Time",
       "pastDateTimeMessage": "Scheduled Publish Date & Time and Expiration Date & Time cannot be in the past.",
+      "exceedsMaxDateTimeMessage": "Scheduled Publish Date & Time and Expiration Date & Time must not exceed 100 years from today.",
       "apiErrorTitle": "Try Again",
       "apiErrorMessage": "Some changes could not be saved. Please try again.",
       "networkErrorTitle": "Try Again",
