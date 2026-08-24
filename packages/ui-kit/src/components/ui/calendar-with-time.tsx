@@ -1,7 +1,7 @@
 import { Clock2Icon } from 'lucide-react';
 
 import type { ReactNode } from 'react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { Button } from '@cgp/ui-kit/components/ui/button';
 import { Calendar } from '@cgp/ui-kit/components/ui/calendar';
@@ -147,6 +147,14 @@ export function CalendarWithTime({
   formattedDateDisplay,
 }: Readonly<CalendarWithTimeProps>) {
   const [isOpen, setIsOpen] = useState(false);
+
+  // Close the popover when a validation error appears so the message
+  // (rendered below the trigger) isn't hidden behind the open popup.
+  useEffect(() => {
+    if (error) {
+      setIsOpen(false);
+    }
+  }, [error]);
 
   const selectedDate = dateValue ? new Date(dateValue) : undefined;
 
