@@ -60,4 +60,11 @@ function formatDisplayDateTime(dateValue?: string, timeValue?: string) {
   return formattedDate;
 }
 
-export { formatDisplayDateTime, to24HourTime };
+function isDateTimeInPast(date: string, time: string): boolean {
+  const dateTime = new Date(`${date}T${to24HourTime(time)}`);
+  if (Number.isNaN(dateTime.getTime())) return false;
+
+  return dateTime < new Date();
+}
+
+export { formatDisplayDateTime, to24HourTime, isDateTimeInPast };
