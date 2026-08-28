@@ -1,4 +1,9 @@
 import type {
+  CustomFormChangeSummary,
+  CustomFormFieldItem,
+  CustomFormLinearScaleRow,
+  CustomFormOptionGroup,
+  CustomFormSummaryItem,
   VacancyCreationSummary,
   VacancyVersionHistoryChange,
   VacancyVersionHistoryVersion,
@@ -214,6 +219,330 @@ const buildVacancyCreationSummary = (
   };
 };
 
+// ── Customizable Forms (DQCGP-2235) ─────────────────────────────────────────
+// sectionName "Customizable Forms" carries its own object shapes in
+// oldValue/newValue rather than the generic scalar/object-array values every
+// other section uses (see the CustomForm* types in types.ts) — parsed here
+// into a render-ready CustomFormChangeSummary rather than widening the
+// generic renderer to understand them.
+
+type CustomFormFieldKind =
+  | 'form'
+  | 'question'
+  | 'questionText'
+  | 'questionType'
+  | 'option'
+  | 'optionValue'
+  | 'required'
+  | 'linearScaleStartValue'
+  | 'linearScaleEndValue'
+  | 'linearScaleStartLabel'
+  | 'linearScaleEndLabel';
+
+const CUSTOM_FORMS_SECTION_NAME = 'customizable forms';
+
+const CUSTOM_FORM_FIELD_KINDS: Record<string, CustomFormFieldKind> = {
+  form: 'form',
+  question: 'question',
+  'question text': 'questionText',
+  'question type': 'questionType',
+  option: 'option',
+  'option value': 'optionValue',
+  required: 'required',
+  'linear scale start value': 'linearScaleStartValue',
+  'linear scale end value': 'linearScaleEndValue',
+  'linear scale start label': 'linearScaleStartLabel',
+  'linear scale end label': 'linearScaleEndLabel',
+};
+
+const resolveCustomFormFieldKind = (
+  fieldName: string
+): CustomFormFieldKind | null =>
+  CUSTOM_FORM_FIELD_KINDS[fieldName.trim().toLowerCase()] ?? null;
+
+const isCustomFormChange = (change: VacancyVersionHistoryChange): boolean =>
+  change.sectionName.trim().toLowerCase() === CUSTOM_FORMS_SECTION_NAME &&
+  resolveCustomFormFieldKind(change.fieldName) !== null;
+
+const LINEAR_SCALE_FIELD_ORDER: CustomFormLinearScaleRow['field'][] = [
+  'startValue',
+  'endValue',
+  'startLabel',
+  'endLabel',
+];
+
+const LINEAR_SCALE_KIND_TO_ROW_FIELD: Partial<
+  Record<CustomFormFieldKind, CustomFormLinearScaleRow['field']>
+> = {
+  linearScaleStartValue: 'startValue',
+  linearScaleEndValue: 'endValue',
+  linearScaleStartLabel: 'startLabel',
+  linearScaleEndLabel: 'endLabel',
+};
+
+const asCustomFormSummaryItems = (
+  value: unknown[] | null
+): CustomFormSummaryItem[] =>
+  (value ?? []).filter(
+    (item): item is CustomFormSummaryItem =>
+      typeof item === 'object' &&
+      item !== null &&
+      'formTitle' in item &&
+      'questionCount' in item
+  );
+
+const asCustomFormFieldItems = (
+  value: unknown[] | null
+): CustomFormFieldItem[] =>
+  (value ?? []).filter(
+    (item): item is CustomFormFieldItem =>
+      typeof item === 'object' &&
+      item !== null &&
+      'formTitle' in item &&
+      'value' in item &&
+      'changeIndex' in item
+  );
+
+// Options belonging to the same question share one `changeIndex` (confirmed
+// from the one real sample with 3 options across 3 different questions, each
+// tagged with its own index) — grouped into one card per question rather
+// than one card per option.
+const groupCustomFormItemsByQuestion = (
+  items: CustomFormFieldItem[]
+): CustomFormOptionGroup[] => {
+  const groups: CustomFormOptionGroup[] = [];
+  const groupIndexByChangeIndex = new Map<number, number>();
+  items.forEach(item => {
+    let groupIndex = groupIndexByChangeIndex.get(item.changeIndex);
+    if (groupIndex === undefined) {
+      groupIndex = groups.length;
+      groupIndexByChangeIndex.set(item.changeIndex, groupIndex);
+      groups.push({ questionText: item.questionText ?? '', options: [] });
+    }
+    groups[groupIndex].options.push(item.value);
+  });
+  return groups;
+};
+
+/**
+ * Parses the "Customizable Forms" change starting at `changes[index]` into a
+ * render-ready CustomFormChangeSummary. Every kind consumes exactly 1 raw
+ * change EXCEPT Linear Scale, which merges up to 4 consecutive changes
+ * sharing the same form+question into one card (Figma node 4229:230027 draws
+ * Start/End Value and Start/End Label as one card with stacked rows, but the
+ * API reports each as its own flat FIELD_VALUE_UPDATED entry) — returns how
+ * many raw entries it consumed so the caller can skip past them. Returns
+ * null when the item shape doesn't match what's expected (missing
+ * questionText where required, empty arrays, etc.), letting the caller fall
+ * back to the generic renderer rather than showing a broken card.
+ */
+const buildCustomFormChangeSummary = (
+  changes: VacancyVersionHistoryChange[],
+  index: number
+): { summary: CustomFormChangeSummary; consumed: number } | null => {
+  const change = changes[index];
+  const kind = resolveCustomFormFieldKind(change.fieldName);
+  if (!kind) return null;
+  const isRemoval = change.changeType === 'FIELD_VALUE_REMOVED';
+
+  if (kind === 'form') {
+    const items = asCustomFormSummaryItems(
+      isRemoval ? change.oldValue : change.newValue
+    );
+    if (items.length === 0) return null;
+    return {
+      summary: {
+        kind: isRemoval ? 'formsRemoved' : 'formsAdded',
+        forms: items,
+      },
+      consumed: 1,
+    };
+  }
+
+  if (kind === 'question') {
+    const items = asCustomFormFieldItems(
+      isRemoval ? change.oldValue : change.newValue
+    );
+    if (items.length === 0) return null;
+    return {
+      summary: {
+        kind: isRemoval ? 'questionsRemoved' : 'questionsAdded',
+        formTitle: items[0].formTitle,
+        questions: items.map(item => ({
+          text: item.value,
+          questionType: item.questionType,
+          required: item.required,
+        })),
+      },
+      consumed: 1,
+    };
+  }
+
+  if (kind === 'questionText') {
+    const before = asCustomFormFieldItems(change.oldValue)[0];
+    const after = asCustomFormFieldItems(change.newValue)[0];
+    if (!before || !after) return null;
+    return {
+      summary: {
+        kind: 'questionTextUpdated',
+        formTitle: after.formTitle,
+        before: before.value,
+        after: after.value,
+      },
+      consumed: 1,
+    };
+  }
+
+  if (kind === 'questionType') {
+    const before = asCustomFormFieldItems(change.oldValue)[0];
+    const after = asCustomFormFieldItems(change.newValue)[0];
+    if (!before || !after || !after.questionText) return null;
+    return {
+      summary: {
+        kind: 'questionTypeUpdated',
+        formTitle: after.formTitle,
+        questionText: after.questionText,
+        before: before.value,
+        after: after.value,
+      },
+      consumed: 1,
+    };
+  }
+
+  if (kind === 'option') {
+    const items = asCustomFormFieldItems(
+      isRemoval ? change.oldValue : change.newValue
+    );
+    if (items.length === 0) return null;
+    return {
+      summary: {
+        kind: isRemoval ? 'optionsRemoved' : 'optionsAdded',
+        formTitle: items[0].formTitle,
+        groups: groupCustomFormItemsByQuestion(items),
+      },
+      consumed: 1,
+    };
+  }
+
+  if (kind === 'optionValue') {
+    const before = asCustomFormFieldItems(change.oldValue)[0];
+    const after = asCustomFormFieldItems(change.newValue)[0];
+    if (!before || !after || !after.questionText) return null;
+    return {
+      summary: {
+        kind: 'optionValueUpdated',
+        formTitle: after.formTitle,
+        questionText: after.questionText,
+        before: before.value,
+        after: after.value,
+      },
+      consumed: 1,
+    };
+  }
+
+  if (kind === 'required') {
+    const before = asCustomFormFieldItems(change.oldValue)[0];
+    const after = asCustomFormFieldItems(change.newValue)[0];
+    if (!before || !after || !after.questionText) return null;
+    return {
+      summary: {
+        kind: 'requiredToggleChanged',
+        formTitle: after.formTitle,
+        questionText: after.questionText,
+        before: parseBooleanFlag(before.value),
+        after: parseBooleanFlag(after.value),
+      },
+      consumed: 1,
+    };
+  }
+
+  const rowField = LINEAR_SCALE_KIND_TO_ROW_FIELD[kind];
+  if (!rowField) return null;
+
+  const firstAfter = asCustomFormFieldItems(change.newValue)[0];
+  if (!firstAfter || !firstAfter.questionText) return null;
+  const { formTitle, questionText } = firstAfter;
+
+  const rowsByField = new Map<
+    CustomFormLinearScaleRow['field'],
+    CustomFormLinearScaleRow
+  >();
+  let consumed = 0;
+  for (let cursor = index; cursor < changes.length; cursor += 1) {
+    const candidate = changes[cursor];
+    const candidateKind = resolveCustomFormFieldKind(candidate.fieldName);
+    const candidateRowField = candidateKind
+      ? LINEAR_SCALE_KIND_TO_ROW_FIELD[candidateKind]
+      : undefined;
+    if (!candidateRowField) break;
+    const before = asCustomFormFieldItems(candidate.oldValue)[0];
+    const after = asCustomFormFieldItems(candidate.newValue)[0];
+    if (
+      !before ||
+      !after ||
+      after.formTitle !== formTitle ||
+      after.questionText !== questionText
+    ) {
+      break;
+    }
+    rowsByField.set(candidateRowField, {
+      field: candidateRowField,
+      before: before.value,
+      after: after.value,
+    });
+    consumed += 1;
+  }
+  if (consumed === 0) return null;
+
+  return {
+    summary: {
+      kind: 'linearScaleUpdated',
+      formTitle,
+      questionText,
+      rows: LINEAR_SCALE_FIELD_ORDER.filter(field =>
+        rowsByField.has(field)
+      ).map(field => rowsByField.get(field) as CustomFormLinearScaleRow),
+    },
+    consumed,
+  };
+};
+
+// Maps a flat change list into render-ready entries, folding Customizable
+// Forms changes through buildCustomFormChangeSummary() above (which may
+// consume more than one raw change) instead of the plain 1:1 mapping used
+// for every other section.
+const buildChangeEntries = (
+  changes: VacancyVersionHistoryChange[],
+  attribution: string,
+  isSystem: boolean,
+  updatedAt: string,
+  profilePicture: string | null
+): VersionHistoryEntry[] => {
+  const entries: VersionHistoryEntry[] = [];
+  let index = 0;
+  while (index < changes.length) {
+    const change = changes[index];
+    if (isCustomFormChange(change)) {
+      const result = buildCustomFormChangeSummary(changes, index);
+      if (result) {
+        entries.push({
+          change,
+          attribution,
+          isSystem,
+          updatedAt,
+          profilePicture,
+          customFormChange: result.summary,
+        });
+        index += result.consumed;
+        continue;
+      }
+    }
+    entries.push({ change, attribution, isSystem, updatedAt, profilePicture });
+    index += 1;
+  }
+  return entries;
+};
+
 // Flattens a version into render-ready entries. "user" vs "system" is NOT
 // "human vs machine" — it separates direct field edits from automatic
 // side-effect changes — so the split is carried through as an explicit
@@ -269,20 +598,20 @@ const resolveVersionEntries = (
     // person who did it. Trusting the array split for every change type
     // (not just STATUS_CHANGED) resolves both — `changes.system` entries
     // are still unconditionally "System" below, unaffected by this.
-    ...userChanges.map(change => ({
-      change,
-      attribution: actorIsSystem ? SYSTEM_ACTOR : actor,
-      isSystem: actorIsSystem,
-      updatedAt: version.updatedAt,
-      profilePicture: actorIsSystem ? null : version.profilePicture,
-    })),
-    ...version.changes.system.map(change => ({
-      change,
-      attribution: SYSTEM_ACTOR,
-      isSystem: true,
-      updatedAt: version.updatedAt,
-      profilePicture: null,
-    })),
+    ...buildChangeEntries(
+      userChanges,
+      actorIsSystem ? SYSTEM_ACTOR : actor,
+      actorIsSystem,
+      version.updatedAt,
+      actorIsSystem ? null : version.profilePicture
+    ),
+    ...buildChangeEntries(
+      version.changes.system,
+      SYSTEM_ACTOR,
+      true,
+      version.updatedAt,
+      null
+    ),
   ];
 };
 
@@ -303,5 +632,8 @@ export {
   resolveVersionActor,
   resolveVersionEntries,
   buildVacancyCreationSummary,
+  resolveCustomFormFieldKind,
+  isCustomFormChange,
+  buildCustomFormChangeSummary,
   SYSTEM_ACTOR,
 };

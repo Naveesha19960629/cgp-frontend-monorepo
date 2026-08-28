@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import VersionHistoryChangeSummary from '@/views/vacancies/components/version-history-change-summary';
 import VersionHistoryCheckboxIndicator from '@/views/vacancies/components/version-history-checkbox-indicator';
 import VersionHistoryChipList from '@/views/vacancies/components/version-history-chip-list';
+import VersionHistoryCustomFormChange from '@/views/vacancies/components/version-history-custom-form-change';
 import VersionHistoryScalarDiff from '@/views/vacancies/components/version-history-scalar-diff';
 import VersionHistoryStatusPill from '@/views/vacancies/components/version-history-status-pill';
 import VersionHistoryToggleSwitch from '@/views/vacancies/components/version-history-toggle-switch';
@@ -359,6 +360,10 @@ function ChangeBody({ entry }: Readonly<{ entry: VersionHistoryEntry }>) {
   const { t } = useTranslation('ats');
   const { change, vacancyCreationSummary } = entry;
   const variant = resolveChangeVariant(change);
+
+  if (entry.customFormChange) {
+    return <VersionHistoryCustomFormChange summary={entry.customFormChange} />;
+  }
 
   if (change.changeType === 'SECTION_ENABLED') {
     return <SectionToggleChange change={change} />;

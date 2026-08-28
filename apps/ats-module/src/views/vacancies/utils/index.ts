@@ -115,6 +115,9 @@ export {
   resolveVersionActor,
   resolveVersionEntries,
   buildVacancyCreationSummary,
+  resolveCustomFormFieldKind,
+  isCustomFormChange,
+  buildCustomFormChangeSummary,
   SYSTEM_ACTOR,
 } from '@/views/vacancies/utils/version-history-helpers';
 export { detectApplicationFormChanges } from '@/views/vacancies/utils/detect-application-form-changes';

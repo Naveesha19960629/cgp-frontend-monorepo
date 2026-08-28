@@ -291,7 +291,39 @@
       "dataTakenFromCandidateEnabled": "\"No manual input required\" Enabled",
       "dataTakenFromCandidateDisabled": "\"No manual input required\" Disabled",
       "dataTakenFromCandidateEnabledDescription": "Data will now be auto-populated from the candidate profile",
-      "dataTakenFromCandidateDisabledDescription": "Data will no longer be auto-populated from the candidate profile"
+      "dataTakenFromCandidateDisabledDescription": "Data will no longer be auto-populated from the candidate profile",
+      "customForm": {
+        "formNameLabel": "Form Name - ",
+        "questionLabel": "Question - ",
+        "formLabel": "Customizable Form",
+        "questionCount_one": "{{count}} Question",
+        "questionCount_other": "{{count}} Questions",
+        "questionAdded": "Question Added",
+        "questionsRemoved_one": "Removed {{count}} Question",
+        "questionsRemoved_other": "Removed {{count}} Questions",
+        "questionTextUpdated": "Question Text Updated",
+        "questionTypeUpdated": "Question Type Updated",
+        "newOptionAdded_one": "New Option Added",
+        "newOptionAdded_other": "New Options Added",
+        "optionsRemoved_one": "Removed {{count}} Option",
+        "optionsRemoved_other": "Removed {{count}} Options",
+        "optionValueUpdated_one": "Updated {{count}} Option Value",
+        "optionValueUpdated_other": "Updated {{count}} Option Values",
+        "requiredToggleChanged": "Required Toggle Changed",
+        "linearScaleUpdated": "Linear Scale Updated",
+        "linearScaleFieldPrevious": "{{field}} - Previous",
+        "linearScaleFieldUpdated": "{{field}} - Updated",
+        "linearScaleFields": {
+          "startValue": "Start Value",
+          "endValue": "End Value",
+          "startLabel": "Start Label",
+          "endLabel": "End Label"
+        },
+        "typeMetaLabel": "Type",
+        "requiredMetaLabel": "Required",
+        "yes": "Yes",
+        "no": "No"
+      }
     }
   },
   "error": {
