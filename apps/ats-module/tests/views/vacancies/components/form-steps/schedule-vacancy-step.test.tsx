@@ -467,6 +467,178 @@ describe('ScheduleVacancyStep', () => {
     });
   });
 
+  describe('inline past date/time validation', () => {
+    it('does not show an inline error on the publish field when its date/time is in the past (no inline message for this case)', async () => {
+      renderComponent();
+
+      const past = new Date(Date.now() - 60 * 60 * 1000);
+      const yyyy = past.getFullYear();
+      const mm = String(past.getMonth() + 1).padStart(2, '0');
+      const dd = String(past.getDate()).padStart(2, '0');
+
+      fillPublish(`${yyyy}-${mm}-${dd}`, '12:00:00 AM');
+
+      // No inline message — the button-disable below is the only signal.
+      await waitFor(() => {
+        expect(getCreateButton()).toBeDisabled();
+      });
+    });
+
+    it('still disables Create for a past publish date/time even without an inline message', async () => {
+      renderComponent();
+
+      fillPublish('2020-01-01', '10:00:00 AM');
+
+      await waitFor(() => {
+        expect(getCreateButton()).toBeDisabled();
+      });
+
+      fillPublish('2099-12-25', '10:00:00 AM');
+      fillExpiration('2099-12-26', '10:00:00 AM');
+
+      await waitFor(() => {
+        expect(getCreateButton()).not.toBeDisabled();
+      });
+    });
+
+    it('clears the publish field when it is set to a past date/time (restricted, not just disabled)', async () => {
+      renderComponent();
+
+      fillPublish('2020-01-01', '10:00:00 AM');
+
+      await waitFor(() => {
+        expect(
+          screen.getByLabelText('date-scheduleVacancy.timeLabel')
+        ).toHaveValue('');
+        expect(
+          screen.getByLabelText('time-scheduleVacancy.timeLabel')
+        ).toHaveValue('');
+      });
+    });
+
+    it('clears the publish field when today is picked with a time that has already passed', async () => {
+      renderComponent();
+
+      const past = new Date(Date.now() - 60 * 60 * 1000);
+      const yyyy = past.getFullYear();
+      const mm = String(past.getMonth() + 1).padStart(2, '0');
+      const dd = String(past.getDate()).padStart(2, '0');
+
+      fillPublish(`${yyyy}-${mm}-${dd}`, '12:00:00 AM');
+
+      await waitFor(() => {
+        expect(
+          screen.getByLabelText('date-scheduleVacancy.timeLabel')
+        ).toHaveValue('');
+      });
+    });
+
+    it('clears the expiration field when it is set to a past date/time', async () => {
+      renderComponent();
+
+      fillExpiration('2020-01-01', '10:00:00 AM');
+
+      await waitFor(() => {
+        expect(
+          screen.getByLabelText('date-scheduleVacancy.expirationTimeLabel')
+        ).toHaveValue('');
+        expect(
+          screen.getByLabelText('time-scheduleVacancy.expirationTimeLabel')
+        ).toHaveValue('');
+      });
+    });
+
+    it('does not clear the publish field when it is set to a valid future date/time', async () => {
+      renderComponent();
+
+      fillPublish('2099-12-25', '10:00:00 AM');
+
+      await waitFor(() => {
+        expect(
+          screen.getByLabelText('date-scheduleVacancy.timeLabel')
+        ).toHaveValue('2099-12-25');
+        expect(
+          screen.getByLabelText('time-scheduleVacancy.timeLabel')
+        ).toHaveValue('10:00:00 AM');
+      });
+    });
+  });
+
+  describe('100-year boundary validation (DQCGP-3625)', () => {
+    // The calendar's disabledDates only caps the *day* — the exact boundary
+    // day (today + 100 years) stays selectable — so a time later than "now"
+    // on that day still resolves to more than 100 years from this instant.
+    // 23:59:59 on the boundary day is always later than "now" on today
+    // (whatever "now" is), and 12:00:00 AM is always earlier-or-equal.
+    const boundaryDate = () => {
+      const { maxDate } = getHundredYearDateBoundaries();
+      const yyyy = maxDate.getFullYear();
+      const mm = String(maxDate.getMonth() + 1).padStart(2, '0');
+      const dd = String(maxDate.getDate()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd}`;
+    };
+
+    it('clears the publish field when set to the boundary day with a time later than now', async () => {
+      renderComponent();
+
+      fillPublish(boundaryDate(), '11:59:59 PM');
+
+      await waitFor(() => {
+        expect(
+          screen.getByLabelText('date-scheduleVacancy.timeLabel')
+        ).toHaveValue('');
+        expect(
+          screen.getByLabelText('time-scheduleVacancy.timeLabel')
+        ).toHaveValue('');
+      });
+    });
+
+    it('does not clear the publish field when set to the boundary day with a time not later than now', async () => {
+      renderComponent();
+
+      fillPublish(boundaryDate(), '12:00:00 AM');
+
+      await waitFor(() => {
+        expect(
+          screen.getByLabelText('date-scheduleVacancy.timeLabel')
+        ).toHaveValue(boundaryDate());
+        expect(
+          screen.getByLabelText('time-scheduleVacancy.timeLabel')
+        ).toHaveValue('12:00:00 AM');
+      });
+    });
+
+    it('clears the expiration field when set to the boundary day with a time later than now', async () => {
+      renderComponent();
+
+      fillExpiration(boundaryDate(), '11:59:59 PM');
+
+      await waitFor(() => {
+        expect(
+          screen.getByLabelText('date-scheduleVacancy.expirationTimeLabel')
+        ).toHaveValue('');
+        expect(
+          screen.getByLabelText('time-scheduleVacancy.expirationTimeLabel')
+        ).toHaveValue('');
+      });
+    });
+
+    it('does not clear the expiration field when set to the boundary day with a time not later than now', async () => {
+      renderComponent();
+
+      fillExpiration(boundaryDate(), '12:00:00 AM');
+
+      await waitFor(() => {
+        expect(
+          screen.getByLabelText('date-scheduleVacancy.expirationTimeLabel')
+        ).toHaveValue(boundaryDate());
+        expect(
+          screen.getByLabelText('time-scheduleVacancy.expirationTimeLabel')
+        ).toHaveValue('12:00:00 AM');
+      });
+    });
+  });
+
   describe('button interactions', () => {
     it('calls onCancel when Cancel is clicked', async () => {
       renderComponent();
@@ -915,26 +1087,140 @@ describe('ScheduleVacancyStep', () => {
       expect(expirationCall?.endMonth).toEqual(maxDate);
     });
 
-    it('does not render inline error for expirationAfterPublish violation', async () => {
+    it('does not render an inline error for an expirationAfterPublish violation (no inline message for this case)', async () => {
       renderComponent();
 
-      // Expiration before publish — triggers the schema superRefine error
+      // Expiration before publish — no inline message shown for this case;
+      // see the "auto-clears expiration" tests below for the actual behavior.
       fillPublish('2099-12-26', '10:00:00 AM');
       fillExpiration('2099-12-25', '10:00:00 AM');
 
-      // Create stays disabled when expiration <= publish
       await waitFor(() => {
-        expect(getCreateButton()).toBeDisabled();
+        const errorDivs = screen.queryAllByTestId('calendar-error');
+        expect(
+          errorDivs.some(el =>
+            el.textContent?.includes(
+              'scheduleVacancy.validation.expirationAfterPublish'
+            )
+          )
+        ).toBe(false);
+      });
+    });
+
+    it('auto-clears expiration once a later publish date makes it invalid (DQCGP-3677)', async () => {
+      renderComponent();
+
+      // Valid combo first: publish today, expiration tomorrow.
+      fillPublish('2099-12-25', '10:00:00 AM');
+      fillExpiration('2099-12-26', '10:00:00 AM');
+
+      await waitFor(() => {
+        expect(getCreateButton()).not.toBeDisabled();
       });
 
-      // The expirationAfterPublish error must NOT appear as inline text
-      const errorDivs = screen.queryAllByTestId('calendar-error');
-      const hasInlineExpirationError = errorDivs.some(el =>
-        el.textContent?.includes(
-          'scheduleVacancy.validation.expirationAfterPublish'
-        )
-      );
-      expect(hasInlineExpirationError).toBe(false);
+      // Now push publish past the already-selected expiration.
+      fillPublish('2099-12-27', '10:00:00 AM');
+
+      await waitFor(() => {
+        expect(
+          screen.getByLabelText('date-scheduleVacancy.expirationTimeLabel')
+        ).toHaveValue('');
+        expect(
+          screen.getByLabelText('time-scheduleVacancy.expirationTimeLabel')
+        ).toHaveValue('');
+      });
+
+      // Create is disabled again (expiration required) rather than showing
+      // a validation message, prompting the recruiter to pick a fresh date.
+      expect(getCreateButton()).toBeDisabled();
+    });
+
+    it('auto-clears expiration when a new publish datetime equals the selected expiration', async () => {
+      renderComponent();
+
+      fillPublish('2099-12-25', '10:00:00 AM');
+      fillExpiration('2099-12-26', '10:00:00 AM');
+
+      await waitFor(() => {
+        expect(getCreateButton()).not.toBeDisabled();
+      });
+
+      fillPublish('2099-12-26', '10:00:00 AM');
+
+      await waitFor(() => {
+        expect(
+          screen.getByLabelText('date-scheduleVacancy.expirationTimeLabel')
+        ).toHaveValue('');
+      });
+    });
+
+    it('does not clear expiration when publish still leaves it valid', async () => {
+      renderComponent();
+
+      fillPublish('2099-12-25', '10:00:00 AM');
+      fillExpiration('2099-12-27', '10:00:00 AM');
+
+      await waitFor(() => {
+        expect(getCreateButton()).not.toBeDisabled();
+      });
+
+      // Publish moves later but is still before the existing expiration.
+      fillPublish('2099-12-26', '10:00:00 AM');
+
+      await waitFor(() => {
+        expect(getCreateButton()).not.toBeDisabled();
+      });
+      expect(
+        screen.getByLabelText('date-scheduleVacancy.expirationTimeLabel')
+      ).toHaveValue('2099-12-27');
+    });
+
+    it('clears expiration when it is set to an earlier time on the same day as publish (order violation, not blocked by disabledDates)', async () => {
+      renderComponent();
+
+      fillPublish('2099-12-25', '03:00:00 PM');
+
+      // Same calendar day as publish — disabledDates does not block this,
+      // only the time portion makes the combination invalid.
+      fillExpiration('2099-12-25', '10:00:00 AM');
+
+      await waitFor(() => {
+        expect(
+          screen.getByLabelText('date-scheduleVacancy.expirationTimeLabel')
+        ).toHaveValue('');
+        expect(
+          screen.getByLabelText('time-scheduleVacancy.expirationTimeLabel')
+        ).toHaveValue('');
+      });
+    });
+
+    it('clears expiration when it is set to exactly the same date/time as publish', async () => {
+      renderComponent();
+
+      fillPublish('2099-12-25', '10:00:00 AM');
+      fillExpiration('2099-12-25', '10:00:00 AM');
+
+      await waitFor(() => {
+        expect(
+          screen.getByLabelText('date-scheduleVacancy.expirationTimeLabel')
+        ).toHaveValue('');
+      });
+    });
+
+    it('does not clear expiration when it is set to a valid time after publish on the same day', async () => {
+      renderComponent();
+
+      fillPublish('2099-12-25', '10:00:00 AM');
+      fillExpiration('2099-12-25', '03:00:00 PM');
+
+      await waitFor(() => {
+        expect(
+          screen.getByLabelText('date-scheduleVacancy.expirationTimeLabel')
+        ).toHaveValue('2099-12-25');
+        expect(
+          screen.getByLabelText('time-scheduleVacancy.expirationTimeLabel')
+        ).toHaveValue('03:00:00 PM');
+      });
     });
   });
 
@@ -1806,7 +2092,7 @@ describe('ScheduleVacancyStep', () => {
       expect(ErrorToast).not.toHaveBeenCalled();
     });
 
-    it('shows ErrorToast (not a dialog) when changed dates are in the past', async () => {
+    it('auto-clears the publish date/time when changed to the past, even for an expired vacancy', async () => {
       mockVacancyForm({
         form: { schedule: expiredSchedule, status: 'expired' },
       });
@@ -1816,17 +2102,15 @@ describe('ScheduleVacancyStep', () => {
       fillPublish('2019-01-01', '10:00:00 AM');
       fillExpiration('2019-01-02', '11:59:59 PM');
 
-      await waitFor(() => expect(getCreateButton()).not.toBeDisabled());
-      await userEvent.click(getCreateButton());
-
+      // The picker itself restricts/clears a past selection — no submission
+      // of an invalid past schedule is possible, so no toast or dialog fires.
       await waitFor(() => {
-        expect(ErrorToast).toHaveBeenCalledWith(
-          expect.objectContaining({
-            title: 'scheduleVacancy.notifications.validationErrorTitle',
-            description: 'scheduleVacancy.notifications.pastDateTimeMessage',
-          })
-        );
+        expect(
+          screen.getByLabelText('date-scheduleVacancy.timeLabel')
+        ).toHaveValue('');
       });
+      expect(getCreateButton()).toBeDisabled();
+      expect(ErrorToast).not.toHaveBeenCalled();
       expect(
         screen.queryByTestId('reschedule-confirm-dialog')
       ).not.toBeInTheDocument();

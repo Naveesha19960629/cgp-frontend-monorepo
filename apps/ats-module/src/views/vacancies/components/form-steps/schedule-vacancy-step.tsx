@@ -35,6 +35,8 @@ import {
   formatDisplayDateTime,
   hasPublishDateChanged,
   hasScheduleChanged,
+  isDateTimeBeyondMaxBoundary,
+  isDateTimeInPast,
   to24HourTime,
 } from '@/views/vacancies/utils';
 import { getHundredYearDateBoundaries } from '@/views/vacancies/utils/date-timezone-safe';
@@ -78,6 +80,7 @@ export default function ScheduleVacancyStep({
     control,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors, isValid },
   } = useScheduleVacancyForm(form.schedule);
 
@@ -116,43 +119,112 @@ export default function ScheduleVacancyStep({
     [publishDate, publishTime, form.schedule]
   );
 
-  const hasPastScheduleDateTime = useMemo(() => {
+  // A changed schedule can never resolve to a past date/time, nor to a
+  // date/time beyond 100 years from now (mirrors the onValid submit check
+  // below) — but an unchanged schedule is never flagged here, even for an
+  // on-hold vacancy, so the recruiter can still save edits to other sections
+  // without being forced to reschedule.
+  const isPublishDateTimeInvalid = useMemo(
+    () =>
+      isScheduleChanged &&
+      !!publishDate &&
+      !!publishTime &&
+      (isDateTimeInPast(publishDate, publishTime) ||
+        isDateTimeBeyondMaxBoundary(publishDate, publishTime)),
+    [isScheduleChanged, publishDate, publishTime]
+  );
+
+  const isExpirationDateTimeInvalid = useMemo(
+    () =>
+      isScheduleChanged &&
+      !!expirationDate &&
+      !!expirationTime &&
+      (isDateTimeInPast(expirationDate, expirationTime) ||
+        isDateTimeBeyondMaxBoundary(expirationDate, expirationTime)),
+    [isScheduleChanged, expirationDate, expirationTime]
+  );
+
+  const hasInvalidScheduleDateTime = useMemo(() => {
     if (form.status === 'expired') return false;
 
-    // A changed schedule can never resolve to a past date/time (mirrors the
-    // onValid submit check below) — but an unchanged schedule is never
-    // blocked here, even for an on-hold vacancy, so the recruiter can still
-    // save edits to other sections without being forced to reschedule.
-    if (!isScheduleChanged) {
-      return false;
-    }
+    return isPublishDateTimeInvalid || isExpirationDateTimeInvalid;
+  }, [form.status, isPublishDateTimeInvalid, isExpirationDateTimeInvalid]);
 
-    if (!publishDate || !publishTime || !expirationDate || !expirationTime) {
-      return false;
-    }
+  // No inline message for either restriction below — instead of an error,
+  // an invalid expiration is cleared outright so the recruiter is prompted
+  // to pick a fresh, valid one. This covers both directions: the publish
+  // field changing out from under an already-valid expiration, and the
+  // recruiter setting expiration itself to the current moment/past, to
+  // more than 100 years from now, or to before-or-equal the currently
+  // selected publish date/time (`disabledDates` on the expiration calendar
+  // only blocks earlier *days* and days beyond the 100-year boundary —
+  // same-day-earlier-time and same-day-beyond-boundary-time combinations
+  // still need this check).
+  const clearExpirationIfInvalid = useCallback(
+    (
+      nextPublishDate: string,
+      nextPublishTime: string,
+      nextExpirationDate: string,
+      nextExpirationTime: string
+    ) => {
+      if (!nextExpirationDate || !nextExpirationTime) return;
 
-    const publishAt = new Date(`${publishDate}T${to24HourTime(publishTime)}`);
-    const expirationAt = new Date(
-      `${expirationDate}T${to24HourTime(expirationTime)}`
-    );
+      if (
+        isDateTimeInPast(nextExpirationDate, nextExpirationTime) ||
+        isDateTimeBeyondMaxBoundary(nextExpirationDate, nextExpirationTime)
+      ) {
+        setValue('expirationDate', '');
+        setValue('expirationTime', '');
+        return;
+      }
 
-    if (
-      Number.isNaN(publishAt.getTime()) ||
-      Number.isNaN(expirationAt.getTime())
-    ) {
-      return false;
-    }
+      if (!nextPublishDate || !nextPublishTime) return;
 
-    const now = new Date();
-    return publishAt < now || expirationAt < now;
-  }, [
-    form.status,
-    publishDate,
-    publishTime,
-    expirationDate,
-    expirationTime,
-    isScheduleChanged,
-  ]);
+      const publishAt = new Date(
+        `${nextPublishDate}T${to24HourTime(nextPublishTime)}`
+      );
+      const expirationAt = new Date(
+        `${nextExpirationDate}T${to24HourTime(nextExpirationTime)}`
+      );
+
+      if (
+        Number.isNaN(publishAt.getTime()) ||
+        Number.isNaN(expirationAt.getTime())
+      ) {
+        return;
+      }
+
+      if (expirationAt <= publishAt) {
+        // shouldValidate is intentionally omitted: the onChange that just
+        // fired already triggers its own validation pass (mode: 'onChange'),
+        // and by the time it runs, _formValues already reflects these clears
+        // (synchronous). Triggering extra validation passes here raced with
+        // that one and left `isValid` stuck on a stale result.
+        setValue('expirationDate', '');
+        setValue('expirationTime', '');
+      }
+    },
+    [setValue]
+  );
+
+  // A publish date/time that resolves to the current moment/past, or to more
+  // than 100 years from now, is restricted by clearing the field outright —
+  // same "no message" approach.
+  const clearPublishIfInvalid = useCallback(
+    (nextPublishDate: string, nextPublishTime: string) => {
+      if (!nextPublishDate || !nextPublishTime) return false;
+      if (
+        !isDateTimeInPast(nextPublishDate, nextPublishTime) &&
+        !isDateTimeBeyondMaxBoundary(nextPublishDate, nextPublishTime)
+      )
+        return false;
+
+      setValue('schedulePublishDate', '');
+      setValue('schedulePublishTime', '');
+      return true;
+    },
+    [setValue]
+  );
 
   const { mutateAsync: createVacancy, isPending } = useCreateVacancyMutation();
   const { mutateAsync: updateVacancy, isPending: isUpdating } =
@@ -349,6 +421,29 @@ export default function ScheduleVacancyStep({
       ErrorToast({
         title: t('scheduleVacancy.notifications.validationErrorTitle'),
         description: t('scheduleVacancy.notifications.pastDateTimeMessage'),
+      });
+      return;
+    }
+
+    // Nor can it resolve to more than 100 years from now — the calendar's
+    // disabledDates only caps the day, so a time later than "now" on the
+    // exact boundary day can still slip through to here.
+    if (
+      isScheduleChanged &&
+      (isDateTimeBeyondMaxBoundary(
+        values.schedulePublishDate,
+        values.schedulePublishTime
+      ) ||
+        isDateTimeBeyondMaxBoundary(
+          values.expirationDate,
+          values.expirationTime
+        ))
+    ) {
+      ErrorToast({
+        title: t('scheduleVacancy.notifications.validationErrorTitle'),
+        description: t(
+          'scheduleVacancy.notifications.exceedsMaxDateTimeMessage'
+        ),
       });
       return;
     }
@@ -578,9 +673,29 @@ export default function ScheduleVacancyStep({
                   render={({ field: timeField }) => (
                     <CalendarWithTime
                       dateValue={dateField.value}
-                      onDateChange={dateField.onChange}
+                      onDateChange={value => {
+                        dateField.onChange(value);
+                        if (!clearPublishIfInvalid(value, timeField.value)) {
+                          clearExpirationIfInvalid(
+                            value,
+                            timeField.value,
+                            expirationDate,
+                            expirationTime
+                          );
+                        }
+                      }}
                       timeValue={timeField.value}
-                      onTimeChange={timeField.onChange}
+                      onTimeChange={value => {
+                        timeField.onChange(value);
+                        if (!clearPublishIfInvalid(dateField.value, value)) {
+                          clearExpirationIfInvalid(
+                            dateField.value,
+                            value,
+                            expirationDate,
+                            expirationTime
+                          );
+                        }
+                      }}
                       timeLabel={t('scheduleVacancy.timeLabel')}
                       dateButtonPlaceholder={t(
                         'scheduleVacancy.publishDatePlaceholder'
@@ -637,9 +752,25 @@ export default function ScheduleVacancyStep({
                   render={({ field: timeField }) => (
                     <CalendarWithTime
                       dateValue={dateField.value}
-                      onDateChange={dateField.onChange}
+                      onDateChange={value => {
+                        dateField.onChange(value);
+                        clearExpirationIfInvalid(
+                          publishDate,
+                          publishTime,
+                          value,
+                          timeField.value
+                        );
+                      }}
                       timeValue={timeField.value}
-                      onTimeChange={timeField.onChange}
+                      onTimeChange={value => {
+                        timeField.onChange(value);
+                        clearExpirationIfInvalid(
+                          publishDate,
+                          publishTime,
+                          dateField.value,
+                          value
+                        );
+                      }}
                       timeLabel={t('scheduleVacancy.expirationTimeLabel')}
                       dateButtonPlaceholder={t(
                         'scheduleVacancy.expirationDatePlaceholder'
@@ -708,7 +839,7 @@ export default function ScheduleVacancyStep({
             isPending ||
             isUpdating ||
             !isValid ||
-            hasPastScheduleDateTime
+            hasInvalidScheduleDateTime
           }
           onClick={() => {
             handleSubmit(onValid, onInvalid)().catch(() => {});

@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { formatDisplayDateTime, to24HourTime } from '@/views/vacancies/utils';
+import {
+  formatDisplayDateTime,
+  isDateTimeBeyondMaxBoundary,
+  isDateTimeInPast,
+  to24HourTime,
+} from '@/views/vacancies/utils';
+import { getHundredYearDateBoundaries } from '@/views/vacancies/utils/date-timezone-safe';
 
 describe('formatDisplayDateTime', () => {
   it('returns undefined when date is missing', () => {
@@ -73,5 +79,69 @@ describe('to24HourTime', () => {
 
   it('keeps unrecognized input unchanged', () => {
     expect(to24HourTime('invalid')).toBe('invalid');
+  });
+});
+
+describe('isDateTimeInPast', () => {
+  const toLocalDateTimeParts = (value: Date) => ({
+    date: [
+      value.getFullYear(),
+      String(value.getMonth() + 1).padStart(2, '0'),
+      String(value.getDate()).padStart(2, '0'),
+    ].join('-'),
+    time: [
+      String(value.getHours()).padStart(2, '0'),
+      String(value.getMinutes()).padStart(2, '0'),
+      String(value.getSeconds()).padStart(2, '0'),
+    ].join(':'),
+  });
+
+  it('returns true for a date/time an hour before now', () => {
+    const { date, time } = toLocalDateTimeParts(
+      new Date(Date.now() - 60 * 60 * 1000)
+    );
+    expect(isDateTimeInPast(date, time)).toBe(true);
+  });
+
+  it('returns false for a date/time an hour after now', () => {
+    const { date, time } = toLocalDateTimeParts(
+      new Date(Date.now() + 60 * 60 * 1000)
+    );
+    expect(isDateTimeInPast(date, time)).toBe(false);
+  });
+
+  it('returns false for an unparseable date/time', () => {
+    expect(isDateTimeInPast('not-a-date', 'not-a-time')).toBe(false);
+  });
+});
+
+describe('isDateTimeBeyondMaxBoundary', () => {
+  // The exact-day boundary (today + 100 years) is inclusive of the day
+  // itself — 23:59:59 on that day always falls after "now + 100 years",
+  // and 00:00:00 always falls at or before it, regardless of what time
+  // "now" actually is.
+  const boundaryDate = () => {
+    const { maxDate } = getHundredYearDateBoundaries();
+    return [
+      maxDate.getFullYear(),
+      String(maxDate.getMonth() + 1).padStart(2, '0'),
+      String(maxDate.getDate()).padStart(2, '0'),
+    ].join('-');
+  };
+
+  it('returns true for a time later than now on the boundary day', () => {
+    expect(isDateTimeBeyondMaxBoundary(boundaryDate(), '23:59:59')).toBe(true);
+  });
+
+  it('returns false for a time not later than now on the boundary day', () => {
+    expect(isDateTimeBeyondMaxBoundary(boundaryDate(), '00:00:00')).toBe(false);
+  });
+
+  it('returns false for a near-future date well within the boundary', () => {
+    expect(isDateTimeBeyondMaxBoundary('2099-12-25', '10:00:00')).toBe(false);
+  });
+
+  it('returns false for an unparseable date/time', () => {
+    expect(isDateTimeBeyondMaxBoundary('not-a-date', 'not-a-time')).toBe(false);
   });
 });

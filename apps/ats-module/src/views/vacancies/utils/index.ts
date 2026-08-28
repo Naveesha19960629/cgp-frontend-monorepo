@@ -58,6 +58,8 @@ export type { DraftFormResolverDeps } from '@/views/vacancies/utils/resolve-draf
 export {
   formatDisplayDateTime,
   to24HourTime,
+  isDateTimeInPast,
+  isDateTimeBeyondMaxBoundary,
 } from '@/views/vacancies/utils/schedule-display-date-time';
 export {
   formatDateRange,

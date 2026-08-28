@@ -1441,7 +1441,7 @@
     "validation": {
       "publishDateRequired": "Scheduled Publish Date & Time is required.",
       "expirationDateRequired": "Expiration Date & Time is required.",
-      "expirationAfterPublish": "Expiration Date & Time must be after Scheduled Publish Date & Time."
+      "expirationAfterPublish": "Expiration Date & Time must be greater than the Scheduled Publish Date & Time."
     },
     "notifications": {
       "successTitle": "Successfully Created",
@@ -1451,6 +1451,7 @@
       "validationErrorTitle": "Error",
       "expirationLessOrEqualMessage": "Expiration Date & Time cannot be less than or equal to the Scheduled Publish Date & Time",
       "pastDateTimeMessage": "Scheduled Publish Date & Time and Expiration Date & Time cannot be in the past.",
+      "exceedsMaxDateTimeMessage": "Scheduled Publish Date & Time and Expiration Date & Time must not exceed 100 years from today.",
       "apiErrorTitle": "Try Again",
       "apiErrorMessage": "Some changes could not be saved. Please try again.",
       "networkErrorTitle": "Try Again",

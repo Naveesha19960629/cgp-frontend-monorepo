@@ -3,8 +3,9 @@ import {
   TWELVE_HOUR_TIME_REGEX,
   TWENTY_FOUR_HOUR_TIME_REGEX,
 } from '@/views/vacancies/utils/constants';
+import { DATE_BOUNDARY_YEARS } from '@/views/vacancies/utils/date-timezone-safe';
 
-import { format } from 'date-fns';
+import { addYears, format } from 'date-fns';
 
 function to24HourTime(time: string): string {
   const trimmed = time.trim();
@@ -60,4 +61,28 @@ function formatDisplayDateTime(dateValue?: string, timeValue?: string) {
   return formattedDate;
 }
 
-export { formatDisplayDateTime, to24HourTime };
+function isDateTimeInPast(date: string, time: string): boolean {
+  const dateTime = new Date(`${date}T${to24HourTime(time)}`);
+  if (Number.isNaN(dateTime.getTime())) return false;
+
+  return dateTime < new Date();
+}
+
+// The date-only 100-year boundary used by the calendar's disabledDates only
+// caps the *day* — the exact boundary day itself stays fully selectable, so a
+// time later than "now" on that day still resolves to more than 100 years
+// from this instant. This checks the real cutoff instant (now + 100 years),
+// not just the calendar day.
+function isDateTimeBeyondMaxBoundary(date: string, time: string): boolean {
+  const dateTime = new Date(`${date}T${to24HourTime(time)}`);
+  if (Number.isNaN(dateTime.getTime())) return false;
+
+  return dateTime > addYears(new Date(), DATE_BOUNDARY_YEARS);
+}
+
+export {
+  formatDisplayDateTime,
+  to24HourTime,
+  isDateTimeInPast,
+  isDateTimeBeyondMaxBoundary,
+};
