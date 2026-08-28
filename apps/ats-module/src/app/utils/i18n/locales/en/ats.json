@@ -298,15 +298,13 @@
         "formLabel": "Customizable Form",
         "questionCount_one": "{{count}} Question",
         "questionCount_other": "{{count}} Questions",
+        "questionFieldLabel": "Question",
+        "optionFieldLabel": "Option",
         "questionAdded": "Question Added",
-        "questionsRemoved_one": "Removed {{count}} Question",
-        "questionsRemoved_other": "Removed {{count}} Questions",
         "questionTextUpdated": "Question Text Updated",
         "questionTypeUpdated": "Question Type Updated",
         "newOptionAdded_one": "New Option Added",
         "newOptionAdded_other": "New Options Added",
-        "optionsRemoved_one": "Removed {{count}} Option",
-        "optionsRemoved_other": "Removed {{count}} Options",
         "optionValueUpdated_one": "Updated {{count}} Option Value",
         "optionValueUpdated_other": "Updated {{count}} Option Values",
         "requiredToggleChanged": "Required Toggle Changed",
@@ -322,7 +320,11 @@
         "typeMetaLabel": "Type",
         "requiredMetaLabel": "Required",
         "yes": "Yes",
-        "no": "No"
+        "no": "No",
+        "questionTextFieldLabel": "question text",
+        "questionTypeFieldLabel": "question type",
+        "optionValueFieldLabel": "option value",
+        "requiredStatusToggleFieldLabel": "Required Status Toggle"
       }
     }
   },

@@ -1,10 +1,13 @@
-import { ArrowRight } from 'lucide-react';
+import {
+  ArrowRight,
+  I3Square,
+  ToggleOffCircle,
+  ToggleOnCircle,
+} from 'iconsax-reactjs';
 
-import { I3Square, ToggleOffCircle, ToggleOnCircle } from 'iconsax-reactjs';
-
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
-import VersionHistoryScalarDiff from '@/views/vacancies/components/version-history-scalar-diff';
 import VersionHistoryToggleSwitch from '@/views/vacancies/components/version-history-toggle-switch';
 import VersionHistoryValueBoxGrid from '@/views/vacancies/components/version-history-value-box-grid';
 import { QUESTION_TYPE_LABEL_KEYS } from '@/views/vacancies/components/view-vacancy/vacancy-customizable-form-section';
@@ -21,6 +24,12 @@ import { cn } from '@cgp/ui-kit/lib/utils';
 const CF = 'versionHistory.changeTypes.customForm';
 const META_ICON_SIZE = 20;
 const META_ICON_COLOR = '#475569';
+// Same size/color as the arrow every other version-history diff already
+// uses (VersionHistoryScalarDiff's lucide ArrowRight, size-4 = 16px,
+// #475569) — only the icon library changes, and only within these
+// Customizable Forms cards; VersionHistoryScalarDiff itself (used by the
+// unrelated generic vacancy-field diff) is left untouched.
+const ARROW_ICON_SIZE = 20;
 
 const ADDED_TEXT_CLASS = 'text-[#047857]';
 const REMOVED_TEXT_CLASS = 'text-[#be123c]';
@@ -46,11 +55,17 @@ function CustomFormHeader({
   formTitle,
   questionText,
   changeLabel,
+  changeLabelDetail,
   isRemoved,
 }: Readonly<{
   formTitle: string;
   questionText?: string;
   changeLabel: string;
+  // Set only for a "Removed {count} {noun}" label (Figma nodes 9553:305660 /
+  // 4229:229937): just the "Removed" verb is red, the count+noun stays the
+  // header's default slate — unlike every other (added/updated) label,
+  // which is colored in full. Omitted, `changeLabel` alone is colored.
+  changeLabelDetail?: string;
   isRemoved: boolean;
 }>) {
   const { t } = useTranslation('ats');
@@ -71,13 +86,18 @@ function CustomFormHeader({
         </>
       )}
       <span aria-hidden className="h-4 w-px shrink-0 bg-[#e5e5e5]" />
-      <span
-        className={cn(
-          'font-bold',
-          isRemoved ? REMOVED_TEXT_CLASS : ADDED_TEXT_CLASS
+      <span>
+        <span
+          className={cn(
+            'font-bold',
+            isRemoved ? REMOVED_TEXT_CLASS : ADDED_TEXT_CLASS
+          )}
+        >
+          {changeLabel}
+        </span>
+        {changeLabelDetail && (
+          <span className="font-bold">{` ${changeLabelDetail}`}</span>
         )}
-      >
-        {changeLabel}
       </span>
     </div>
   );
@@ -175,16 +195,29 @@ function OptionGroupBlock({
   isRemoved: boolean;
 }>) {
   const { t } = useTranslation('ats');
-  const changeLabel = isRemoved
-    ? t(`${CF}.optionsRemoved`, { count: group.options.length })
-    : t(`${CF}.newOptionAdded`, { count: group.options.length });
+  const optionCount = group.options.length;
 
   return (
     <div className="flex flex-col gap-4">
       <CustomFormHeader
         formTitle={formTitle}
         questionText={group.questionText}
-        changeLabel={changeLabel}
+        changeLabel={
+          isRemoved
+            ? t('versionHistory.changeTypes.verbs.removed')
+            : t(`${CF}.newOptionAdded`, { count: optionCount })
+        }
+        changeLabelDetail={
+          isRemoved
+            ? t('versionHistory.changeTypes.details.removedItems', {
+                count: optionCount,
+                field: pluralizeFieldName(
+                  t(`${CF}.optionFieldLabel`),
+                  optionCount
+                ),
+              })
+            : undefined
+        }
         isRemoved={isRemoved}
       />
       <VersionHistoryValueBoxGrid
@@ -215,13 +248,59 @@ function LinearScaleRow({ row }: Readonly<{ row: CustomFormLinearScaleRow }>) {
           {t(`${CF}.linearScaleFieldPrevious`, { field: fieldLabel })}
         </p>
       </div>
-      <ArrowRight className="size-4 shrink-0 text-[#475569]" />
+      <ArrowRight
+        variant="Linear"
+        size={ARROW_ICON_SIZE}
+        color={META_ICON_COLOR}
+      />
       <div className="min-w-0 flex-1 rounded-lg border border-[#059669] bg-white p-7">
         <p className="text-base font-bold wrap-break-word text-[#047857]">
           {row.after}
         </p>
         <p className="mt-1 text-sm font-medium text-[#475569]">
           {t(`${CF}.linearScaleFieldUpdated`, { field: fieldLabel })}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Customizable-Forms-only counterpart to VersionHistoryScalarDiff — same
+ * two-box-plus-arrow layout and "Previous {field}"/"Updated {field}"
+ * captions, but with iconsax's ArrowRight instead of lucide's, per explicit
+ * request scoped to these cards only. Kept as its own component (rather
+ * than adding an icon-override prop to the shared one) so the generic,
+ * already-shipped vacancy-field scalar diff is untouched.
+ */
+function CustomFormScalarDiff({
+  field,
+  before,
+  after,
+}: Readonly<{ field: string; before: ReactNode; after: ReactNode }>) {
+  const { t } = useTranslation('ats');
+
+  return (
+    <div className="flex items-center gap-5">
+      <div className="min-w-0 flex-1 rounded-lg border border-[#d4d4d4] bg-white p-7">
+        <p className="text-base font-bold wrap-break-word text-[#0f172a]">
+          {before}
+        </p>
+        <p className="mt-1 text-sm font-medium text-[#475569]">
+          {t('versionHistory.changeTypes.previousValue', { field })}
+        </p>
+      </div>
+      <ArrowRight
+        variant="Linear"
+        size={ARROW_ICON_SIZE}
+        color={META_ICON_COLOR}
+      />
+      <div className="min-w-0 flex-1 rounded-lg border border-[#059669] bg-white p-7">
+        <p className="text-base font-bold wrap-break-word text-[#047857]">
+          {after}
+        </p>
+        <p className="mt-1 text-sm font-medium text-[#475569]">
+          {t('versionHistory.changeTypes.updatedValue', { field })}
         </p>
       </div>
     </div>
@@ -291,14 +370,27 @@ export default function VersionHistoryCustomFormChange({
     case 'questionsAdded':
     case 'questionsRemoved': {
       const isRemoved = summary.kind === 'questionsRemoved';
-      const changeLabel = isRemoved
-        ? t(`${CF}.questionsRemoved`, { count: summary.questions.length })
-        : t(`${CF}.questionAdded`);
+      const removedCount = summary.questions.length;
       return (
         <div className="flex flex-col gap-4">
           <CustomFormHeader
             formTitle={summary.formTitle}
-            changeLabel={changeLabel}
+            changeLabel={
+              isRemoved
+                ? t('versionHistory.changeTypes.verbs.removed')
+                : t(`${CF}.questionAdded`)
+            }
+            changeLabelDetail={
+              isRemoved
+                ? t('versionHistory.changeTypes.details.removedItems', {
+                    count: removedCount,
+                    field: pluralizeFieldName(
+                      t(`${CF}.questionFieldLabel`),
+                      removedCount
+                    ),
+                  })
+                : undefined
+            }
             isRemoved={isRemoved}
           />
           <div className="flex flex-col gap-3">
@@ -326,8 +418,8 @@ export default function VersionHistoryCustomFormChange({
             changeLabel={t(`${CF}.questionTextUpdated`)}
             isRemoved={false}
           />
-          <VersionHistoryScalarDiff
-            field="question text"
+          <CustomFormScalarDiff
+            field={t(`${CF}.questionTextFieldLabel`)}
             before={summary.before}
             after={summary.after}
           />
@@ -343,8 +435,8 @@ export default function VersionHistoryCustomFormChange({
             changeLabel={t(`${CF}.questionTypeUpdated`)}
             isRemoved={false}
           />
-          <VersionHistoryScalarDiff
-            field="question type"
+          <CustomFormScalarDiff
+            field={t(`${CF}.questionTypeFieldLabel`)}
             before={questionTypeLabel(summary.before)}
             after={questionTypeLabel(summary.after)}
           />
@@ -377,8 +469,8 @@ export default function VersionHistoryCustomFormChange({
             changeLabel={t(`${CF}.optionValueUpdated`, { count: 1 })}
             isRemoved={false}
           />
-          <VersionHistoryScalarDiff
-            field="option value"
+          <CustomFormScalarDiff
+            field={t(`${CF}.optionValueFieldLabel`)}
             before={summary.before}
             after={summary.after}
           />
@@ -394,8 +486,8 @@ export default function VersionHistoryCustomFormChange({
             changeLabel={t(`${CF}.requiredToggleChanged`)}
             isRemoved={false}
           />
-          <VersionHistoryScalarDiff
-            field="Required Status Toggle"
+          <CustomFormScalarDiff
+            field={t(`${CF}.requiredStatusToggleFieldLabel`)}
             before={<VersionHistoryToggleSwitch isOn={summary.before} />}
             after={<VersionHistoryToggleSwitch isOn={summary.after} />}
           />

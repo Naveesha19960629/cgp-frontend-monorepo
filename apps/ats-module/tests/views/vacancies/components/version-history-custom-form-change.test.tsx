@@ -81,6 +81,35 @@ describe('VersionHistoryCustomFormChange', () => {
     ).toBe(2);
   });
 
+  it('colors only "Removed" red in the header — the count+noun stays the default slate, not red', () => {
+    const summary: CustomFormChangeSummary = {
+      kind: 'questionsRemoved',
+      formTitle: 'Behavioral Assessment',
+      questions: [
+        {
+          text: 'Add New question to exisiting form',
+          questionType: null,
+          required: null,
+        },
+        {
+          text: 'Add New 2 question to exisiting form',
+          questionType: null,
+          required: null,
+        },
+      ],
+    };
+    render(<VersionHistoryCustomFormChange summary={summary} />);
+
+    const removedVerb = screen.getByText(
+      'versionHistory.changeTypes.verbs.removed'
+    );
+    expect(removedVerb).toHaveClass('text-[#be123c]');
+    const countDetail = screen.getByText(
+      'versionHistory.changeTypes.details.removedItems:2,versionHistory.changeTypes.customForm.questionFieldLabels'
+    );
+    expect(countDetail).not.toHaveClass('text-[#be123c]');
+  });
+
   it('hides the Type/Required meta row for a removed question when the API sends them as null', () => {
     const summary: CustomFormChangeSummary = {
       kind: 'questionsRemoved',
@@ -263,10 +292,9 @@ describe('VersionHistoryCustomFormChange', () => {
     expect(screen.getByText('Star from 1')).toBeInTheDocument();
     expect(screen.getByText('End from 0')).toBeInTheDocument();
     expect(screen.getByText('End to 7')).toBeInTheDocument();
-    // Only the 2 rows that changed (each rendering one arrow icon) — no
-    // Start/End Value row rendered even though the union type allows it.
-    expect(container.querySelectorAll('svg.lucide-arrow-right')).toHaveLength(
-      2
-    );
+    // Only the 2 rows that changed (each rendering one arrow icon, and
+    // nothing else in this card renders an svg) — no Start/End Value row
+    // rendered even though the union type allows it.
+    expect(container.querySelectorAll('svg')).toHaveLength(2);
   });
 });
