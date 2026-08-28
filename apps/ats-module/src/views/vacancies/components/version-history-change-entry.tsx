@@ -456,7 +456,7 @@ export default function VersionHistoryChangeEntry({
   const displayName = isSystem ? t('versionHistory.systemLabel') : attribution;
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-7">
       <div className="flex items-center gap-3">
         <Avatar
           className={cn(
@@ -475,11 +475,11 @@ export default function VersionHistoryChangeEntry({
             )}
           </AvatarFallback>
         </Avatar>
-        <div className="flex min-w-0 flex-col">
+        <div className="flex min-w-0 flex-col gap-1">
           <p className="truncate text-base font-bold text-[#1e293b]">
             {displayName}
           </p>
-          <div className="flex items-center gap-2 text-sm font-semibold text-[#475569]">
+          <div className="flex items-center gap-2 text-base font-semibold text-[#475569]">
             <span>{formatIsoDateForDisplay(updatedAt)}</span>
             {/* Figma separates the date and time with a 6px vector dot, not a
                 bullet character (node 4229:229245). */}

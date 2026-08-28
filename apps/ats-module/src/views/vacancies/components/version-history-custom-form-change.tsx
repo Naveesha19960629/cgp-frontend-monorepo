@@ -29,7 +29,7 @@ const META_ICON_COLOR = '#475569';
 // #475569) — only the icon library changes, and only within these
 // Customizable Forms cards; VersionHistoryScalarDiff itself (used by the
 // unrelated generic vacancy-field diff) is left untouched.
-const ARROW_ICON_SIZE = 20;
+const ARROW_ICON_SIZE = 16;
 
 const ADDED_TEXT_CLASS = 'text-[#047857]';
 const REMOVED_TEXT_CLASS = 'text-[#be123c]';
@@ -135,7 +135,7 @@ function QuestionCard({
         {question.text}
       </p>
       {hasMetaRow && (
-        <div className="mt-3 flex flex-wrap items-center gap-3 text-sm font-medium text-[#475569]">
+        <div className="mt-1 flex flex-wrap items-center gap-3 text-sm font-medium text-[#475569]">
           {typeLabelKey && (
             <span className="flex items-center gap-2">
               <span className="flex items-center gap-1">
@@ -239,7 +239,7 @@ function LinearScaleRow({ row }: Readonly<{ row: CustomFormLinearScaleRow }>) {
   const fieldLabel = t(`${CF}.linearScaleFields.${row.field}`);
 
   return (
-    <div className="flex items-center gap-5">
+    <div className="flex items-stretch gap-5">
       <div className="min-w-0 flex-1 rounded-lg border border-[#d4d4d4] bg-white p-7">
         <p className="text-base font-bold wrap-break-word text-[#0f172a]">
           {row.before}
@@ -249,6 +249,7 @@ function LinearScaleRow({ row }: Readonly<{ row: CustomFormLinearScaleRow }>) {
         </p>
       </div>
       <ArrowRight
+        className="self-center"
         variant="Linear"
         size={ARROW_ICON_SIZE}
         color={META_ICON_COLOR}
@@ -281,7 +282,7 @@ function CustomFormScalarDiff({
   const { t } = useTranslation('ats');
 
   return (
-    <div className="flex items-center gap-5">
+    <div className="flex items-stretch gap-5">
       <div className="min-w-0 flex-1 rounded-lg border border-[#d4d4d4] bg-white p-7">
         <p className="text-base font-bold wrap-break-word text-[#0f172a]">
           {before}
@@ -291,6 +292,7 @@ function CustomFormScalarDiff({
         </p>
       </div>
       <ArrowRight
+        className="self-center"
         variant="Linear"
         size={ARROW_ICON_SIZE}
         color={META_ICON_COLOR}
