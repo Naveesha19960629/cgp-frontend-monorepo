@@ -100,7 +100,7 @@ export default function VacanciesPage() {
   // with no user action to trigger a refetch — schedule one for the next
   // such transition.
   useVacancyStatusRevalidation(data, () => {
-    void refetchVacancies();
+    refetchVacancies().catch(() => {});
   });
 
   const totalPages = vacanciesResponse?.data?.totalPages ?? 0;

@@ -324,143 +324,150 @@ const groupCustomFormItemsByQuestion = (
   return groups;
 };
 
-/**
- * Parses the "Customizable Forms" change starting at `changes[index]` into a
- * render-ready CustomFormChangeSummary. Every kind consumes exactly 1 raw
- * change EXCEPT Linear Scale, which merges up to 4 consecutive changes
- * sharing the same form+question into one card (Figma node 4229:230027 draws
- * Start/End Value and Start/End Label as one card with stacked rows, but the
- * API reports each as its own flat FIELD_VALUE_UPDATED entry) — returns how
- * many raw entries it consumed so the caller can skip past them. Returns
- * null when the item shape doesn't match what's expected (missing
- * questionText where required, empty arrays, etc.), letting the caller fall
- * back to the generic renderer rather than showing a broken card.
- */
-const buildCustomFormChangeSummary = (
+type CustomFormChangeSummaryResult = {
+  summary: CustomFormChangeSummary;
+  consumed: number;
+} | null;
+
+const buildFormSummary = (
+  change: VacancyVersionHistoryChange,
+  isRemoval: boolean
+): CustomFormChangeSummaryResult => {
+  const items = asCustomFormSummaryItems(
+    isRemoval ? change.oldValue : change.newValue
+  );
+  if (items.length === 0) return null;
+  return {
+    summary: {
+      kind: isRemoval ? 'formsRemoved' : 'formsAdded',
+      forms: items,
+    },
+    consumed: 1,
+  };
+};
+
+const buildQuestionSummary = (
+  change: VacancyVersionHistoryChange,
+  isRemoval: boolean
+): CustomFormChangeSummaryResult => {
+  const items = asCustomFormFieldItems(
+    isRemoval ? change.oldValue : change.newValue
+  );
+  if (items.length === 0) return null;
+  return {
+    summary: {
+      kind: isRemoval ? 'questionsRemoved' : 'questionsAdded',
+      formTitle: items[0].formTitle,
+      questions: items.map(item => ({
+        text: item.value,
+        questionType: item.questionType,
+        required: item.required,
+      })),
+    },
+    consumed: 1,
+  };
+};
+
+const buildQuestionTextSummary = (
+  change: VacancyVersionHistoryChange
+): CustomFormChangeSummaryResult => {
+  const before = asCustomFormFieldItems(change.oldValue)[0];
+  const after = asCustomFormFieldItems(change.newValue)[0];
+  if (!before || !after) return null;
+  return {
+    summary: {
+      kind: 'questionTextUpdated',
+      formTitle: after.formTitle,
+      before: before.value,
+      after: after.value,
+    },
+    consumed: 1,
+  };
+};
+
+const buildQuestionTypeSummary = (
+  change: VacancyVersionHistoryChange
+): CustomFormChangeSummaryResult => {
+  const before = asCustomFormFieldItems(change.oldValue)[0];
+  const after = asCustomFormFieldItems(change.newValue)[0];
+  if (!before || !after?.questionText) return null;
+  return {
+    summary: {
+      kind: 'questionTypeUpdated',
+      formTitle: after.formTitle,
+      questionText: after.questionText,
+      before: before.value,
+      after: after.value,
+    },
+    consumed: 1,
+  };
+};
+
+const buildOptionSummary = (
+  change: VacancyVersionHistoryChange,
+  isRemoval: boolean
+): CustomFormChangeSummaryResult => {
+  const items = asCustomFormFieldItems(
+    isRemoval ? change.oldValue : change.newValue
+  );
+  if (items.length === 0) return null;
+  return {
+    summary: {
+      kind: isRemoval ? 'optionsRemoved' : 'optionsAdded',
+      formTitle: items[0].formTitle,
+      groups: groupCustomFormItemsByQuestion(items),
+    },
+    consumed: 1,
+  };
+};
+
+const buildOptionValueSummary = (
+  change: VacancyVersionHistoryChange
+): CustomFormChangeSummaryResult => {
+  const before = asCustomFormFieldItems(change.oldValue)[0];
+  const after = asCustomFormFieldItems(change.newValue)[0];
+  if (!before || !after?.questionText) return null;
+  return {
+    summary: {
+      kind: 'optionValueUpdated',
+      formTitle: after.formTitle,
+      questionText: after.questionText,
+      before: before.value,
+      after: after.value,
+    },
+    consumed: 1,
+  };
+};
+
+const buildRequiredSummary = (
+  change: VacancyVersionHistoryChange
+): CustomFormChangeSummaryResult => {
+  const before = asCustomFormFieldItems(change.oldValue)[0];
+  const after = asCustomFormFieldItems(change.newValue)[0];
+  if (!before || !after?.questionText) return null;
+  return {
+    summary: {
+      kind: 'requiredToggleChanged',
+      formTitle: after.formTitle,
+      questionText: after.questionText,
+      before: parseBooleanFlag(before.value),
+      after: parseBooleanFlag(after.value),
+    },
+    consumed: 1,
+  };
+};
+
+const buildLinearScaleSummary = (
   changes: VacancyVersionHistoryChange[],
-  index: number
-): { summary: CustomFormChangeSummary; consumed: number } | null => {
+  index: number,
+  kind: CustomFormFieldKind
+): CustomFormChangeSummaryResult => {
   const change = changes[index];
-  const kind = resolveCustomFormFieldKind(change.fieldName);
-  if (!kind) return null;
-  const isRemoval = change.changeType === 'FIELD_VALUE_REMOVED';
-
-  if (kind === 'form') {
-    const items = asCustomFormSummaryItems(
-      isRemoval ? change.oldValue : change.newValue
-    );
-    if (items.length === 0) return null;
-    return {
-      summary: {
-        kind: isRemoval ? 'formsRemoved' : 'formsAdded',
-        forms: items,
-      },
-      consumed: 1,
-    };
-  }
-
-  if (kind === 'question') {
-    const items = asCustomFormFieldItems(
-      isRemoval ? change.oldValue : change.newValue
-    );
-    if (items.length === 0) return null;
-    return {
-      summary: {
-        kind: isRemoval ? 'questionsRemoved' : 'questionsAdded',
-        formTitle: items[0].formTitle,
-        questions: items.map(item => ({
-          text: item.value,
-          questionType: item.questionType,
-          required: item.required,
-        })),
-      },
-      consumed: 1,
-    };
-  }
-
-  if (kind === 'questionText') {
-    const before = asCustomFormFieldItems(change.oldValue)[0];
-    const after = asCustomFormFieldItems(change.newValue)[0];
-    if (!before || !after) return null;
-    return {
-      summary: {
-        kind: 'questionTextUpdated',
-        formTitle: after.formTitle,
-        before: before.value,
-        after: after.value,
-      },
-      consumed: 1,
-    };
-  }
-
-  if (kind === 'questionType') {
-    const before = asCustomFormFieldItems(change.oldValue)[0];
-    const after = asCustomFormFieldItems(change.newValue)[0];
-    if (!before || !after || !after.questionText) return null;
-    return {
-      summary: {
-        kind: 'questionTypeUpdated',
-        formTitle: after.formTitle,
-        questionText: after.questionText,
-        before: before.value,
-        after: after.value,
-      },
-      consumed: 1,
-    };
-  }
-
-  if (kind === 'option') {
-    const items = asCustomFormFieldItems(
-      isRemoval ? change.oldValue : change.newValue
-    );
-    if (items.length === 0) return null;
-    return {
-      summary: {
-        kind: isRemoval ? 'optionsRemoved' : 'optionsAdded',
-        formTitle: items[0].formTitle,
-        groups: groupCustomFormItemsByQuestion(items),
-      },
-      consumed: 1,
-    };
-  }
-
-  if (kind === 'optionValue') {
-    const before = asCustomFormFieldItems(change.oldValue)[0];
-    const after = asCustomFormFieldItems(change.newValue)[0];
-    if (!before || !after || !after.questionText) return null;
-    return {
-      summary: {
-        kind: 'optionValueUpdated',
-        formTitle: after.formTitle,
-        questionText: after.questionText,
-        before: before.value,
-        after: after.value,
-      },
-      consumed: 1,
-    };
-  }
-
-  if (kind === 'required') {
-    const before = asCustomFormFieldItems(change.oldValue)[0];
-    const after = asCustomFormFieldItems(change.newValue)[0];
-    if (!before || !after || !after.questionText) return null;
-    return {
-      summary: {
-        kind: 'requiredToggleChanged',
-        formTitle: after.formTitle,
-        questionText: after.questionText,
-        before: parseBooleanFlag(before.value),
-        after: parseBooleanFlag(after.value),
-      },
-      consumed: 1,
-    };
-  }
-
   const rowField = LINEAR_SCALE_KIND_TO_ROW_FIELD[kind];
   if (!rowField) return null;
 
   const firstAfter = asCustomFormFieldItems(change.newValue)[0];
-  if (!firstAfter || !firstAfter.questionText) return null;
+  if (!firstAfter?.questionText) return null;
   const { formTitle, questionText } = firstAfter;
 
   const rowsByField = new Map<
@@ -479,8 +486,7 @@ const buildCustomFormChangeSummary = (
     const after = asCustomFormFieldItems(candidate.newValue)[0];
     if (
       !before ||
-      !after ||
-      after.formTitle !== formTitle ||
+      after?.formTitle !== formTitle ||
       after.questionText !== questionText
     ) {
       break;
@@ -505,6 +511,38 @@ const buildCustomFormChangeSummary = (
     },
     consumed,
   };
+};
+
+/**
+ * Parses the "Customizable Forms" change starting at `changes[index]` into a
+ * render-ready CustomFormChangeSummary. Every kind consumes exactly 1 raw
+ * change EXCEPT Linear Scale, which merges up to 4 consecutive changes
+ * sharing the same form+question into one card (Figma node 4229:230027 draws
+ * Start/End Value and Start/End Label as one card with stacked rows, but the
+ * API reports each as its own flat FIELD_VALUE_UPDATED entry) — returns how
+ * many raw entries it consumed so the caller can skip past them. Returns
+ * null when the item shape doesn't match what's expected (missing
+ * questionText where required, empty arrays, etc.), letting the caller fall
+ * back to the generic renderer rather than showing a broken card.
+ */
+const buildCustomFormChangeSummary = (
+  changes: VacancyVersionHistoryChange[],
+  index: number
+): CustomFormChangeSummaryResult => {
+  const change = changes[index];
+  const kind = resolveCustomFormFieldKind(change.fieldName);
+  if (!kind) return null;
+  const isRemoval = change.changeType === 'FIELD_VALUE_REMOVED';
+
+  if (kind === 'form') return buildFormSummary(change, isRemoval);
+  if (kind === 'question') return buildQuestionSummary(change, isRemoval);
+  if (kind === 'questionText') return buildQuestionTextSummary(change);
+  if (kind === 'questionType') return buildQuestionTypeSummary(change);
+  if (kind === 'option') return buildOptionSummary(change, isRemoval);
+  if (kind === 'optionValue') return buildOptionValueSummary(change);
+  if (kind === 'required') return buildRequiredSummary(change);
+
+  return buildLinearScaleSummary(changes, index, kind);
 };
 
 // Maps a flat change list into render-ready entries, folding Customizable
