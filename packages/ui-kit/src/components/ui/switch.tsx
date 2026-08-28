@@ -9,7 +9,7 @@ function Switch({
   size = 'default',
   ...props
 }: React.ComponentProps<typeof SwitchPrimitive.Root> & {
-  size?: 'sm' | 'default' | 'lg';
+  size?: 'sm' | 'default' | 'md' | 'lg';
 }) {
   return (
     <SwitchPrimitive.Root
@@ -22,6 +22,10 @@ function Switch({
         // The 1px transparent border is inside this box, so the flex content box is 26px and
         // `items-center` lands the 20px knob 3px in, i.e. 4px from the painted outer edge.
         'data-[size=lg]:h-7 data-[size=lg]:w-12',
+        // Figma ATS-Handover 4229:229985 / 6536:91053 — track 48x24, knob 20px inset 2px.
+        // Same 1px-border-inside-the-box logic as lg: content box is 22px tall, `items-center`
+        // lands the knob 1px in, i.e. 2px from the painted outer edge.
+        'data-[size=md]:h-6 data-[size=md]:w-12',
         'data-[size=default]:h-[18.4px] data-[size=default]:w-8',
         'data-[size=sm]:h-3.5 data-[size=sm]:w-6',
         className
@@ -34,14 +38,17 @@ function Switch({
           'bg-background dark:data-checked:bg-primary-foreground dark:data-unchecked:bg-foreground pointer-events-none block rounded-full ring-0 transition-transform',
           // Knob sizes
           'group-data-[size=lg]/switch:size-5', // 20px x 20px
+          'group-data-[size=md]/switch:size-5', // 20px x 20px
           'group-data-[size=default]/switch:size-4',
           'group-data-[size=sm]/switch:size-3',
           // Sliding translation math (checked)
           'group-data-[size=lg]/switch:data-checked:translate-x-[23px]', // 24px from the outer edge, less the 1px border
+          'group-data-[size=md]/switch:data-checked:translate-x-6.25', // 26px from the outer edge, less the 1px border
           'group-data-[size=default]/switch:data-checked:translate-x-[calc(100%-2px)]',
           'group-data-[size=sm]/switch:data-checked:translate-x-[calc(100%-2px)]',
           // Unchecked positions
           'group-data-[size=lg]/switch:data-unchecked:translate-x-[3px]', // 4px from the outer edge, less the 1px border
+          'group-data-[size=md]/switch:data-unchecked:translate-x-px', // 2px from the outer edge, less the 1px border
           'group-data-[size=default]/switch:data-unchecked:translate-x-0',
           'group-data-[size=sm]/switch:data-unchecked:translate-x-0'
         )}

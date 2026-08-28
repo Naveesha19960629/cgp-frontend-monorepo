@@ -95,10 +95,13 @@ export default function VacanciesPage() {
 
   const data = vacanciesResponse?.data?.content ?? [];
 
-  // Vacancy status flips (Unpublished -> Live, Live -> Expired) purely by
-  // the clock reaching schedulePublishAt/expirationAt, with no user action
-  // to trigger a refetch — schedule one for the next such transition.
-  useVacancyStatusRevalidation(data, refetchVacancies);
+  // Vacancy status flips (Unpublished -> Live, On hold -> Live, Live ->
+  // Expired) purely by the clock reaching schedulePublishAt/expirationAt,
+  // with no user action to trigger a refetch — schedule one for the next
+  // such transition.
+  useVacancyStatusRevalidation(data, () => {
+    refetchVacancies().catch(() => {});
+  });
 
   const totalPages = vacanciesResponse?.data?.totalPages ?? 0;
   const hasActiveFilters = Boolean(

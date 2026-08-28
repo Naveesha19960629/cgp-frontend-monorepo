@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+
 import type { useReactTable } from '@tanstack/react-table';
 
 interface AddOrSelectOption {
@@ -2007,6 +2009,103 @@ interface VacancyVersionHistoryData {
   versions: VacancyVersionHistoryVersion[];
 }
 
+// ── Vacancy Version History — Customizable Forms (DQCGP-2235) ──────────────
+// sectionName "Customizable Forms" carries its own object shapes in
+// oldValue/newValue (confirmed from real API responses) instead of the
+// generic scalar/object-array values every other section uses — narrowed via
+// buildCustomFormChangeSummary() in version-history-helpers.ts rather than
+// widening VacancyVersionHistoryChange's own oldValue/newValue type.
+
+/** One array item for fieldName "Form" (added/removed) — Figma nodes
+ * 4229:229674 / 4229:229703. */
+interface CustomFormSummaryItem {
+  formTitle: string;
+  questionCount: number;
+}
+
+/** `value` is overloaded by fieldName: question text, a type enum, an
+ * option value, or a linear-scale number/label. `questionText` is populated
+ * only when the item needs to reference an EXISTING question in its header
+ * (Option / Option Value / Required / Linear Scale); it's null when the item
+ * itself IS the question (Question Added/Removed/Text Updated). */
+interface CustomFormFieldItem {
+  formTitle: string;
+  questionText: string | null;
+  value: string;
+  questionType: string | null;
+  required: boolean | null;
+  changeIndex: number;
+}
+
+interface CustomFormQuestionCardData {
+  text: string;
+  questionType: string | null;
+  required: boolean | null;
+}
+
+interface CustomFormOptionGroup {
+  questionText: string;
+  options: string[];
+}
+
+interface CustomFormLinearScaleRow {
+  field: 'startValue' | 'endValue' | 'startLabel' | 'endLabel';
+  before: string;
+  after: string;
+}
+
+/** Render-ready shape for one "Customizable Forms" card, built by
+ * buildCustomFormChangeSummary() and attached to a VersionHistoryEntry in
+ * place of its raw `change` — unlike every other section, one card here can
+ * summarize MULTIPLE raw API change entries (Linear Scale merges up to 4) or
+ * split one raw entry's array into several per-question groups (Option
+ * Added/Removed). */
+type CustomFormChangeSummary =
+  | { kind: 'formsAdded' | 'formsRemoved'; forms: CustomFormSummaryItem[] }
+  | {
+      kind: 'questionsAdded' | 'questionsRemoved';
+      formTitle: string;
+      questions: CustomFormQuestionCardData[];
+    }
+  | {
+      kind: 'questionTextUpdated';
+      formTitle: string;
+      before: string;
+      after: string;
+    }
+  | {
+      kind: 'questionTypeUpdated';
+      formTitle: string;
+      questionText: string;
+      before: string; // raw type enum, resolved to a label at render time
+      after: string;
+    }
+  | {
+      kind: 'optionsAdded' | 'optionsRemoved';
+      formTitle: string;
+      groups: CustomFormOptionGroup[];
+    }
+  | {
+      kind: 'optionValueUpdated';
+      formTitle: string;
+      questionText: string;
+      before: string;
+      after: string;
+    }
+  | {
+      kind: 'requiredToggleChanged';
+      formTitle: string;
+      questionText: string;
+      before: boolean;
+      after: boolean;
+    }
+  | {
+      kind: 'linearScaleUpdated';
+      formTitle: string;
+      questionText: string;
+      rows: CustomFormLinearScaleRow[];
+    };
+
 /** A single item in the "added/removed/updated N items" box grid — shared by
  * the PDF generator and the on-screen Activity Log (see
  * utils/version-history-helpers.ts). */
@@ -2056,6 +2155,10 @@ interface VersionHistoryEntry {
    * above) — renderers check this, not `change.changeType` alone, to choose
    * between the combined card and the plain per-field fallback. */
   vacancyCreationSummary?: VacancyCreationSummary;
+  /** Present only when `change.sectionName === 'Customizable Forms'` — see
+   * CustomFormChangeSummary above. Renderers check this, not `change`
+   * directly, since one card here can represent multiple raw API changes. */
+  customFormChange?: CustomFormChangeSummary;
 }
 
 interface VersionHistorySidebarProps {
@@ -2108,14 +2211,20 @@ interface VersionHistoryChangeSummaryProps {
  * fields (status, title, schedule/expiration dates). */
 interface VersionHistoryScalarDiffProps {
   field: string;
-  before: string;
-  after: string;
+  // ReactNode (not just string) so Required Toggle Changed can pass a
+  // VersionHistoryToggleSwitch in place of plain text (DQCGP-2235).
+  before: ReactNode;
+  after: ReactNode;
 }
 
 /** The on/off switch drawn for a SECTION_ENABLED change (Figma node
- * 4229:229289) — mirrors renderToggleSwitch in utils/version-history-pdf.ts. */
+ * 4229:229289) — mirrors renderToggleSwitch in utils/version-history-pdf.ts.
+ * `size` defaults to the SECTION_ENABLED toggle's own 48x28 ("lg"); the
+ * Customizable Forms "Required Toggle Changed" card (Figma node 4229:229985)
+ * is a visibly smaller 48x24 toggle, passed explicitly as "md". */
 interface VersionHistoryToggleSwitchProps {
   isOn: boolean;
+  size?: 'md' | 'lg';
 }
 
 /** The checkbox drawn for a "Data Taken From Candidate" change (Figma node
@@ -2269,6 +2378,12 @@ export type {
   VacancyVersionHistoryData,
   VersionHistoryGridItem,
   VacancyCreationSummary,
+  CustomFormSummaryItem,
+  CustomFormFieldItem,
+  CustomFormQuestionCardData,
+  CustomFormOptionGroup,
+  CustomFormLinearScaleRow,
+  CustomFormChangeSummary,
   VersionHistoryEntry,
   VersionHistorySidebarProps,
   VersionHistoryActivityLogProps,

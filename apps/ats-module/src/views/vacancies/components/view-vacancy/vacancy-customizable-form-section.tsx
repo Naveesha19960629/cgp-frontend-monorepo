@@ -9,6 +9,10 @@ import type {
 
 import { Badge } from '@cgp/ui-kit/components/ui/badge';
 
+// Re-exported below (with VacancyCustomizableFormSection) for reuse by
+// version-history-custom-form-change.tsx (DQCGP-2235) so version history
+// shows the exact same question-type labels as the form builder itself,
+// instead of a second, possibly-drifting copy.
 const QUESTION_TYPE_LABEL_KEYS: Record<
   Exclude<VacancyViewCustomizableFormQuestion['type'], ''>,
   string
@@ -187,4 +191,4 @@ function VacancyCustomizableFormSection({
   );
 }
 
-export { VacancyCustomizableFormSection };
+export { VacancyCustomizableFormSection, QUESTION_TYPE_LABEL_KEYS };

@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import VersionHistoryChangeSummary from '@/views/vacancies/components/version-history-change-summary';
 import VersionHistoryCheckboxIndicator from '@/views/vacancies/components/version-history-checkbox-indicator';
 import VersionHistoryChipList from '@/views/vacancies/components/version-history-chip-list';
+import VersionHistoryCustomFormChange from '@/views/vacancies/components/version-history-custom-form-change';
 import VersionHistoryScalarDiff from '@/views/vacancies/components/version-history-scalar-diff';
 import VersionHistoryStatusPill from '@/views/vacancies/components/version-history-status-pill';
 import VersionHistoryToggleSwitch from '@/views/vacancies/components/version-history-toggle-switch';
@@ -49,6 +50,9 @@ const SUMMARY_KEYS: Record<ChangeVariant, { verb: string; many: string }> = {
   updated: { verb: 'updated', many: 'updatedItems' },
 };
 
+const ARROW_ICON_SIZE = 24;
+const ARROW_ICON_COLOR = '#075056';
+
 /**
  * A single-line "label   old → new" row — Figma renders status, title and
  * schedule-date changes this way (BFyxZ6AzbRZgVvjLzRFwv3, nodes 4229:229249 /
@@ -79,7 +83,11 @@ function InlineDiffRow({
       >
         {before}
       </span>
-      <ArrowRight className="size-4 shrink-0 text-[#475569]" />
+      <ArrowRight
+        className="size-6 shrink-0"
+        color={ARROW_ICON_COLOR}
+        size={ARROW_ICON_SIZE}
+      />
       <span className="text-base font-semibold text-[#0f172a]">{after}</span>
     </div>
   );
@@ -360,6 +368,10 @@ function ChangeBody({ entry }: Readonly<{ entry: VersionHistoryEntry }>) {
   const { change, vacancyCreationSummary } = entry;
   const variant = resolveChangeVariant(change);
 
+  if (entry.customFormChange) {
+    return <VersionHistoryCustomFormChange summary={entry.customFormChange} />;
+  }
+
   if (change.changeType === 'SECTION_ENABLED') {
     return <SectionToggleChange change={change} />;
   }
@@ -451,7 +463,7 @@ export default function VersionHistoryChangeEntry({
   const displayName = isSystem ? t('versionHistory.systemLabel') : attribution;
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-7">
       <div className="flex items-center gap-3">
         <Avatar
           className={cn(
@@ -470,11 +482,11 @@ export default function VersionHistoryChangeEntry({
             )}
           </AvatarFallback>
         </Avatar>
-        <div className="flex min-w-0 flex-col">
+        <div className="flex min-w-0 flex-col gap-1">
           <p className="truncate text-base font-bold text-[#1e293b]">
             {displayName}
           </p>
-          <div className="flex items-center gap-2 text-sm font-semibold text-[#475569]">
+          <div className="flex items-center gap-2 text-base font-semibold text-[#475569]">
             <span>{formatIsoDateForDisplay(updatedAt)}</span>
             {/* Figma separates the date and time with a 6px vector dot, not a
                 bullet character (node 4229:229245). */}
