@@ -2218,9 +2218,13 @@ interface VersionHistoryScalarDiffProps {
 }
 
 /** The on/off switch drawn for a SECTION_ENABLED change (Figma node
- * 4229:229289) — mirrors renderToggleSwitch in utils/version-history-pdf.ts. */
+ * 4229:229289) — mirrors renderToggleSwitch in utils/version-history-pdf.ts.
+ * `size` defaults to the SECTION_ENABLED toggle's own 48x28 ("lg"); the
+ * Customizable Forms "Required Toggle Changed" card (Figma node 4229:229985)
+ * is a visibly smaller 48x24 toggle, passed explicitly as "md". */
 interface VersionHistoryToggleSwitchProps {
   isOn: boolean;
+  size?: 'md' | 'lg';
 }
 
 /** The checkbox drawn for a "Data Taken From Candidate" change (Figma node

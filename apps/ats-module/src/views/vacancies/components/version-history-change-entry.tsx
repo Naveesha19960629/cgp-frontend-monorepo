@@ -50,6 +50,9 @@ const SUMMARY_KEYS: Record<ChangeVariant, { verb: string; many: string }> = {
   updated: { verb: 'updated', many: 'updatedItems' },
 };
 
+const ARROW_ICON_SIZE = 24;
+const ARROW_ICON_COLOR = '#075056';
+
 /**
  * A single-line "label   old → new" row — Figma renders status, title and
  * schedule-date changes this way (BFyxZ6AzbRZgVvjLzRFwv3, nodes 4229:229249 /
@@ -80,7 +83,11 @@ function InlineDiffRow({
       >
         {before}
       </span>
-      <ArrowRight className="size-4 shrink-0 text-[#475569]" />
+      <ArrowRight
+        className="size-6 shrink-0"
+        color={ARROW_ICON_COLOR}
+        size={ARROW_ICON_SIZE}
+      />
       <span className="text-base font-semibold text-[#0f172a]">{after}</span>
     </div>
   );

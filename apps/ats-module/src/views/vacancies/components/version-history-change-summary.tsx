@@ -39,7 +39,7 @@ export default function VersionHistoryChangeSummary({
         </span>
         <span className="font-bold">{sectionName}</span>
       </span>
-      <span aria-hidden className="h-4 w-px shrink-0 bg-[#e5e5e5]" />
+      <span aria-hidden className="h-4 w-px shrink-0 bg-slate-500" />
       <span className="font-bold">
         <span className={cn(VARIANT_VERB_CLASS[variant])}>{verb}</span>
         {detail ? ` ${detail}` : null}

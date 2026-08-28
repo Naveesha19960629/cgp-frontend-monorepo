@@ -24,12 +24,13 @@ import { cn } from '@cgp/ui-kit/lib/utils';
 const CF = 'versionHistory.changeTypes.customForm';
 const META_ICON_SIZE = 20;
 const META_ICON_COLOR = '#475569';
-// Same size/color as the arrow every other version-history diff already
-// uses (VersionHistoryScalarDiff's lucide ArrowRight, size-4 = 16px,
-// #475569) — only the icon library changes, and only within these
-// Customizable Forms cards; VersionHistoryScalarDiff itself (used by the
-// unrelated generic vacancy-field diff) is left untouched.
-const ARROW_ICON_SIZE = 16;
+// Same size as the arrow every other version-history diff already uses
+// (VersionHistoryScalarDiff's lucide ArrowRight, size-4 = 16px) — only the
+// icon library changes, and only within these Customizable Forms cards;
+// VersionHistoryScalarDiff itself (used by the unrelated generic
+// vacancy-field diff) is left untouched.
+const ARROW_ICON_SIZE = 24;
+const ARROW_ICON_COLOR = '#075056';
 
 const ADDED_TEXT_CLASS = 'text-[#047857]';
 const REMOVED_TEXT_CLASS = 'text-[#be123c]';
@@ -78,14 +79,14 @@ function CustomFormHeader({
       </span>
       {questionText && (
         <>
-          <span aria-hidden className="h-4 w-px shrink-0 bg-[#e5e5e5]" />
+          <span aria-hidden className="h-4 w-px shrink-0 bg-[#64748b]" />
           <span className="wrap-break-word">
             <span className="font-semibold">{t(`${CF}.questionLabel`)}</span>
             <span className="font-bold">{questionText}</span>
           </span>
         </>
       )}
-      <span aria-hidden className="h-4 w-px shrink-0 bg-[#e5e5e5]" />
+      <span aria-hidden className="h-4 w-px shrink-0 bg-[#64748b]" />
       <span>
         <span
           className={cn(
@@ -252,7 +253,7 @@ function LinearScaleRow({ row }: Readonly<{ row: CustomFormLinearScaleRow }>) {
         className="self-center"
         variant="Linear"
         size={ARROW_ICON_SIZE}
-        color={META_ICON_COLOR}
+        color={ARROW_ICON_COLOR}
       />
       <div className="min-w-0 flex-1 rounded-lg border border-[#059669] bg-white p-7">
         <p className="text-base font-bold wrap-break-word text-[#047857]">
@@ -295,7 +296,7 @@ function CustomFormScalarDiff({
         className="self-center"
         variant="Linear"
         size={ARROW_ICON_SIZE}
-        color={META_ICON_COLOR}
+        color={ARROW_ICON_COLOR}
       />
       <div className="min-w-0 flex-1 rounded-lg border border-[#059669] bg-white p-7">
         <p className="text-base font-bold wrap-break-word text-[#047857]">
@@ -490,8 +491,12 @@ export default function VersionHistoryCustomFormChange({
           />
           <CustomFormScalarDiff
             field={t(`${CF}.requiredStatusToggleFieldLabel`)}
-            before={<VersionHistoryToggleSwitch isOn={summary.before} />}
-            after={<VersionHistoryToggleSwitch isOn={summary.after} />}
+            before={
+              <VersionHistoryToggleSwitch isOn={summary.before} size="md" />
+            }
+            after={
+              <VersionHistoryToggleSwitch isOn={summary.after} size="md" />
+            }
           />
         </div>
       );
