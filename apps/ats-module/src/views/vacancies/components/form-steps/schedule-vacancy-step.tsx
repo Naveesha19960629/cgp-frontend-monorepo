@@ -653,6 +653,13 @@ export default function ScheduleVacancyStep({
 
       {/* ── Body ────────────────────────────────────────────────────── */}
       <div className="flex-1 px-7 pb-6">
+        {isLiveWithApplicants && (
+          <div className="mb-4 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3">
+            <p className="text-sm font-medium text-amber-800">
+              {t('scheduleVacancy.applicantWarning')}
+            </p>
+          </div>
+        )}
         <div className="flex flex-wrap gap-4">
           {/* ── Scheduled Publish Date & Time ── */}
           <div className="flex w-76 flex-col gap-1">

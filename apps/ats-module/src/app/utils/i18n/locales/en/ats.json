@@ -1438,6 +1438,7 @@
     "create": "Create",
     "update": "Update",
     "cancel": "Cancel",
+    "applicantWarning": "This vacancy has active applicants. Any changes you make may affect them and they may be notified.",
     "validation": {
       "publishDateRequired": "Scheduled Publish Date & Time is required.",
       "expirationDateRequired": "Expiration Date & Time is required.",
@@ -1475,13 +1476,13 @@
     },
     "liveRescheduleConfirmDialog": {
       "title": "Reschedule Vacancy",
-      "description": "You have changed the scheduled publish date and time.\n\nUpdating this vacancy will move it to On Hold until the scheduled publish date and time.\n\nThe vacancy will automatically become Live again when the scheduled publish date and time is reached.\n\nDo you want to continue?",
+      "description": "You have changed the Scheduled Publish Date & Time.\n\n• This vacancy will move to On Hold and automatically go Live on the updated Scheduled Publish Date & Time.\n\n• Past applicants will be notified to review and update their applications if new fields or preferred values have been added.\n\nDo you want to continue?",
       "yesButton": "Yes",
       "noButton": "No"
     },
     "liveUpdateConfirmDialog": {
       "title": "Update Live Vacancy",
-      "description": "You are updating this vacancy without changing the scheduled publish date and time.\n\nThe vacancy will remain Live after updating.\n\nDo you want to continue?",
+      "description": "You are updating this vacancy without changing the Scheduled Publish Date & Time.\n\n• The vacancy will remain Live after updating.\n\n• Past applicants will be notified to review and update their applications if new fields or preferred values have been added.\n\nDo you want to continue?",
       "yesButton": "Yes",
       "noButton": "No"
     }
