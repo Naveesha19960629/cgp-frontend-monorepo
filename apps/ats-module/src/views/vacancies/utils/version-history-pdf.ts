@@ -258,7 +258,8 @@ const SIDEBAR_ROW_TEXT_GAP = 16 * PX_TO_PT; // sidebar row: gap-4
 const ATTRIBUTION_CARD_GAP = 12 * PX_TO_PT; // change-entry: gap-3
 const AVATAR_NAME_GAP = 12 * PX_TO_PT; // change-entry: gap-3
 const NAME_FONT_SIZE = 16 * PX_TO_PT; // change-entry name: text-base
-const DATETIME_FONT_SIZE = 14 * PX_TO_PT; // change-entry date/time: text-sm
+const DATETIME_FONT_SIZE = 16 * PX_TO_PT; // change-entry date/time: text-base
+const NAME_DATETIME_GAP = 4 * PX_TO_PT; // change-entry name -> date/time: gap-1
 const DATETIME_GAP = 8 * PX_TO_PT; // change-entry date-dot-time row: gap-2
 const DOT_DIAMETER = 6 * PX_TO_PT; // change-entry separator dot: size-1.5
 const SIDEBAR_AVATAR_TEXT_GAP = 8 * PX_TO_PT; // sidebar row: gap-2
@@ -1747,9 +1748,8 @@ const renderEntry = (
   const nameHeight = doc.currentLineHeight(true);
   doc.font(PDF_FONT_SEMIBOLD).fontSize(DATETIME_FONT_SIZE);
   const metaHeight = doc.currentLineHeight(true);
-  // change-entry stacks name/date-time in a plain flex-col with no gap
-  // utility of its own — the gap comes entirely from line-height.
-  const textBlockHeight = nameHeight + metaHeight;
+  // change-entry stacks name/date-time in a flex-col with gap-1.
+  const textBlockHeight = nameHeight + NAME_DATETIME_GAP + metaHeight;
   const attributionHeight = Math.max(AVATAR_DIAMETER, textBlockHeight);
 
   const cardCtx: ContentCtx = {
@@ -1779,7 +1779,7 @@ const renderEntry = (
   // Figma separates the date and time with a small vector dot rather than a
   // bullet character (node 4229:229245); the date-dot-time row's own gap-2
   // spaces all three.
-  const metaY = textY + nameHeight;
+  const metaY = textY + nameHeight + NAME_DATETIME_GAP;
   const dateText = formatPdfDate(entry.updatedAt);
   const timeText = formatPdfTime(entry.updatedAt);
   doc
@@ -2081,7 +2081,7 @@ const buildVersionHistoryDocument = (
     const metaHeight = doc.currentLineHeight(true);
     const attributionHeight = Math.max(
       AVATAR_DIAMETER,
-      nameHeight + metaHeight
+      nameHeight + NAME_DATETIME_GAP + metaHeight
     );
     const entryHeight =
       attributionHeight +

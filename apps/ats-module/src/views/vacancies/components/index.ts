@@ -63,3 +63,4 @@ export { default as VersionHistoryChangeSummary } from '@/views/vacancies/compon
 export { default as VersionHistoryScalarDiff } from '@/views/vacancies/components/version-history-scalar-diff';
 export { default as VersionHistoryToggleSwitch } from '@/views/vacancies/components/version-history-toggle-switch';
 export { default as VersionHistoryCheckboxIndicator } from '@/views/vacancies/components/version-history-checkbox-indicator';
+export { default as VersionHistoryCustomFormChange } from '@/views/vacancies/components/version-history-custom-form-change';

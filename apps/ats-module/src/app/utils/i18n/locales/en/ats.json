@@ -291,7 +291,41 @@
       "dataTakenFromCandidateEnabled": "\"No manual input required\" Enabled",
       "dataTakenFromCandidateDisabled": "\"No manual input required\" Disabled",
       "dataTakenFromCandidateEnabledDescription": "Data will now be auto-populated from the candidate profile",
-      "dataTakenFromCandidateDisabledDescription": "Data will no longer be auto-populated from the candidate profile"
+      "dataTakenFromCandidateDisabledDescription": "Data will no longer be auto-populated from the candidate profile",
+      "customForm": {
+        "formNameLabel": "Form Name - ",
+        "questionLabel": "Question - ",
+        "formLabel": "Customizable Form",
+        "questionCount_one": "{{count}} Question",
+        "questionCount_other": "{{count}} Questions",
+        "questionFieldLabel": "Question",
+        "optionFieldLabel": "Option",
+        "questionAdded": "Question Added",
+        "questionTextUpdated": "Question Text Updated",
+        "questionTypeUpdated": "Question Type Updated",
+        "newOptionAdded_one": "New Option Added",
+        "newOptionAdded_other": "New Options Added",
+        "optionValueUpdated_one": "Updated {{count}} Option Value",
+        "optionValueUpdated_other": "Updated {{count}} Option Values",
+        "requiredToggleChanged": "Required Toggle Changed",
+        "linearScaleUpdated": "Linear Scale Updated",
+        "linearScaleFieldPrevious": "{{field}} - Previous",
+        "linearScaleFieldUpdated": "{{field}} - Updated",
+        "linearScaleFields": {
+          "startValue": "Start Value",
+          "endValue": "End Value",
+          "startLabel": "Start Label",
+          "endLabel": "End Label"
+        },
+        "typeMetaLabel": "Type",
+        "requiredMetaLabel": "Required",
+        "yes": "Yes",
+        "no": "No",
+        "questionTextFieldLabel": "question text",
+        "questionTypeFieldLabel": "question type",
+        "optionValueFieldLabel": "option value",
+        "requiredStatusToggleFieldLabel": "Required Status Toggle"
+      }
     }
   },
   "error": {
@@ -1404,6 +1438,7 @@
     "create": "Create",
     "update": "Update",
     "cancel": "Cancel",
+    "applicantWarning": "This vacancy has active applicants. Any changes you make may affect them and they may be notified.",
     "validation": {
       "publishDateRequired": "Scheduled Publish Date & Time is required.",
       "expirationDateRequired": "Expiration Date & Time is required.",
@@ -1441,13 +1476,13 @@
     },
     "liveRescheduleConfirmDialog": {
       "title": "Reschedule Vacancy",
-      "description": "You have changed the scheduled publish date and time.\n\nUpdating this vacancy will move it to On Hold until the scheduled publish date and time.\n\nThe vacancy will automatically become Live again when the scheduled publish date and time is reached.\n\nDo you want to continue?",
+      "description": "You have changed the Scheduled Publish Date & Time.\n\n• This vacancy will move to On Hold and automatically go Live on the updated Scheduled Publish Date & Time.\n\n• Past applicants will be notified to review and update their applications if new fields or preferred values have been added.\n\nDo you want to continue?",
       "yesButton": "Yes",
       "noButton": "No"
     },
     "liveUpdateConfirmDialog": {
       "title": "Update Live Vacancy",
-      "description": "You are updating this vacancy without changing the scheduled publish date and time.\n\nThe vacancy will remain Live after updating.\n\nDo you want to continue?",
+      "description": "You are updating this vacancy without changing the Scheduled Publish Date & Time.\n\n• The vacancy will remain Live after updating.\n\n• Past applicants will be notified to review and update their applications if new fields or preferred values have been added.\n\nDo you want to continue?",
       "yesButton": "Yes",
       "noButton": "No"
     }

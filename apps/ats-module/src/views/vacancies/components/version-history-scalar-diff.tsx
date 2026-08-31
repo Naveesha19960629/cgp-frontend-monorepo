@@ -29,7 +29,7 @@ export default function VersionHistoryScalarDiff({
           {t('versionHistory.changeTypes.previousValue', { field })}
         </p>
       </div>
-      <ArrowRight className="size-4 shrink-0 text-[#475569]" />
+      <ArrowRight className="size-6 shrink-0 text-[#075056]!" />
       <div className="min-w-0 flex-1 rounded-lg border border-[#059669] bg-white p-7">
         <p className="text-base font-bold wrap-break-word text-[#047857]">
           {after}
