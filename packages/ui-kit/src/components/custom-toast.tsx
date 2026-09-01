@@ -40,6 +40,7 @@ function Toast({
 
   return (
     <div
+      role="presentation"
       className="pointer-events-auto relative"
       onClick={e => e.stopPropagation()}
       onPointerDown={e => e.stopPropagation()}
