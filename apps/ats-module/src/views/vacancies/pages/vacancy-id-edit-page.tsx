@@ -14,6 +14,7 @@ import {
   useVacancyForm,
 } from '@/views/vacancies/context/vacancy-form-context';
 import {
+  useVacancyApplicantWs,
   useVacancyByIdQuery,
   useVacancyTemplateByIdQuery,
   useVacancyTemplateSnapshotQuery,
@@ -66,7 +67,6 @@ function EditVacancyTitleStep() {
   const fromPath = (location.state as { from?: string } | null)?.from ?? '';
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [titleError, setTitleError] = useState('');
-
   const handleTitleChange = (value: string) => {
     const sanitizedTitle = removeEmoji(value);
     setForm(prev => ({ ...prev, title: sanitizedTitle }));
@@ -178,13 +178,17 @@ function EditVacancyTitleStep() {
   );
 }
 
-function EditVacancyContent({ id }: Readonly<{ id: string | undefined }>) {
+function EditVacancyContent({
+  id,
+  baseVacancyId,
+}: Readonly<{ id: string | undefined; baseVacancyId: string | undefined }>) {
   const { t } = useTranslation('ats');
   const location = useLocation();
   const { keycloak, initialized } = useKeycloak();
   const initialStep = (location.state as { initialStep?: string } | null)
     ?.initialStep;
   const {
+    form,
     visibleSteps,
     isInitialStep,
     setIsInitialStep,
@@ -203,6 +207,12 @@ function EditVacancyContent({ id }: Readonly<{ id: string | undefined }>) {
     error,
   } = useVacancyByIdQuery(id || '', {
     enabled: initialized && !!keycloak?.authenticated && !!id,
+  });
+
+  // Tracked against the base (version-independent) id, matching how applicantCount accrues across versions.
+  useVacancyApplicantWs({
+    vacancyId: baseVacancyId ?? id,
+    enabled: form.status === 'live',
   });
 
   useEffect(() => {
@@ -469,7 +479,7 @@ export default function VacancyIdEditPage() {
       templateId={resolvedTemplateId}
     >
       <section className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        <EditVacancyContent id={id} />
+        <EditVacancyContent id={id} baseVacancyId={baseVacancyId} />
       </section>
     </VacancyFormProvider>
   );

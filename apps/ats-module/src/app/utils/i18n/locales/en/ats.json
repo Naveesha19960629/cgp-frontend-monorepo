@@ -468,7 +468,11 @@
     "addVacancy": "Create Vacancy",
     "edit": {
       "invalidId": "Invalid vacancy ID.",
-      "failedToLoadVacancy": "Failed to load vacancy details. Please try again."
+      "failedToLoadVacancy": "Failed to load vacancy details. Please try again.",
+      "applicantNotification": {
+        "title": "Info",
+        "message": "One candidate has applied to this vacancy. Your privileges will be changed."
+      }
     },
     "deleteDialog": {
       "title": "Are you sure?",
