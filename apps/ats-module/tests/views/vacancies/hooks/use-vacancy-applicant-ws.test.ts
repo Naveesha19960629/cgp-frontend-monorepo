@@ -104,7 +104,9 @@ describe('useVacancyApplicantWs', () => {
 
     await waitFor(() => expect(MockWebSocket.instances).toHaveLength(1));
     const socket = MockWebSocket.instances[0];
-    expect(socket.url).toBe(import.meta.env.VITE_NOTIFICATION_SERVICE_WS_URL);
+    expect(socket.url).toBe(
+      `${import.meta.env.VITE_WS_URL}/vacancy-applicant-ws`
+    );
 
     socket.onopen?.();
 

@@ -45,7 +45,9 @@ function useVacancyApplicantWs({
       const token = keycloakRef.current.token;
       if (cancelled || !token) return;
 
-      socket = new WebSocket(import.meta.env.VITE_NOTIFICATION_SERVICE_WS_URL);
+      socket = new WebSocket(
+        `${import.meta.env.VITE_WS_URL}/vacancy-applicant-ws`
+      );
 
       socket.onopen = () => {
         socket?.send(
