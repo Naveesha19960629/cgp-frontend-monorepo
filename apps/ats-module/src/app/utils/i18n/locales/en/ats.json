@@ -1456,11 +1456,7 @@
       "apiErrorTitle": "Try Again",
       "apiErrorMessage": "Some changes could not be saved. Please try again.",
       "networkErrorTitle": "Try Again",
-      "networkErrorMessage": "Some changes could not be saved. Please retry.",
-      "liveRescheduleSuccessTitle": "Successfully Updated",
-      "liveRescheduleSuccessMessage": "The vacancy has been moved to On Hold and will automatically go Live on the scheduled publish date.",
-      "liveNoRescheduleSuccessTitle": "Successfully Updated",
-      "liveNoRescheduleSuccessMessage": "The vacancy remains Live."
+      "networkErrorMessage": "Some changes could not be saved. Please retry."
     },
     "rescheduleConfirmDialog": {
       "title": "Are you sure?",
