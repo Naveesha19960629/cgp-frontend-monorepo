@@ -283,4 +283,264 @@ describe('VacancyIdVersionHistoryPage', () => {
     });
     expect(mockAnchorClick).not.toHaveBeenCalled();
   });
+
+  // DQCGP-3902: "Tracked changes are displayed in all versions" — reported
+  // after multiple Update saves on the same vacancy. This is the real
+  // 4-version API response from a live repro (vacancy "test bug"), each
+  // version carrying its own distinct changes (SECTION_ENABLED/DISABLED for
+  // "Hobby" in v2/v3, a STATUS_CHANGED + Schedule Date edit in v4, the
+  // VACANCY_CREATED grouped card in v1) — used verbatim as a regression
+  // fixture to prove each version's Activity Log shows only its own changes.
+  describe('DQCGP-3902: a real 4-version response with distinct per-version changes', () => {
+    const bugRepro = {
+      vacancyTitle: 'test bug',
+      status: 'LIVE',
+      createdAt: '2026-09-01T10:17:56.875715',
+      createdBy: 'chamathnirmal99@gmail.com',
+      lastUpdatedAt: '2026-09-04T14:13:00.225528',
+      totalVersions: 4,
+      versions: [
+        {
+          versionNumber: 4,
+          updatedAt: '2026-09-04T14:13:00.225528',
+          updatedBy: 'SYSTEM',
+          profilePicture: null,
+          changes: {
+            user: [
+              {
+                changeType: 'STATUS_CHANGED' as const,
+                sectionName: 'Vacancy',
+                fieldName: 'Status',
+                oldValue: ['LIVE'],
+                newValue: ['ONHOLD'],
+              },
+              {
+                changeType: 'FIELD_VALUE_UPDATED' as const,
+                sectionName: 'Schedule',
+                fieldName: 'Scheduled Publish Date',
+                oldValue: ['2026-09-03T11:00'],
+                newValue: ['2026-09-04T14:13'],
+              },
+            ],
+            system: [
+              {
+                changeType: 'STATUS_CHANGED' as const,
+                sectionName: 'Vacancy',
+                fieldName: 'Status',
+                oldValue: ['ONHOLD'],
+                newValue: ['LIVE'],
+              },
+            ],
+          },
+        },
+        {
+          versionNumber: 3,
+          updatedAt: '2026-09-04T13:04:50.032911',
+          updatedBy: 'chamathnirmal99@gmail.com',
+          profilePicture: null,
+          changes: {
+            user: [
+              {
+                changeType: 'SECTION_DISABLED' as const,
+                sectionName: 'Hobby',
+                fieldName: 'Section Status',
+                oldValue: ['true'],
+                newValue: ['false'],
+              },
+              {
+                changeType: 'FIELD_VALUE_REMOVED' as const,
+                sectionName: 'Hobby',
+                fieldName: 'Hobby',
+                oldValue: ['Chess'],
+                newValue: null,
+              },
+            ],
+            system: [],
+          },
+        },
+        {
+          versionNumber: 2,
+          updatedAt: '2026-09-04T13:04:10.81687',
+          updatedBy: 'chamathnirmal99@gmail.com',
+          profilePicture: null,
+          changes: {
+            user: [
+              {
+                changeType: 'SECTION_ENABLED' as const,
+                sectionName: 'Hobby',
+                fieldName: 'Section Status',
+                oldValue: ['false'],
+                newValue: ['true'],
+              },
+              {
+                changeType: 'FIELD_VALUE_ADDED' as const,
+                sectionName: 'Hobby',
+                fieldName: 'Hobby',
+                oldValue: null,
+                newValue: ['Chess'],
+              },
+            ],
+            system: [],
+          },
+        },
+        {
+          versionNumber: 1,
+          updatedAt: '2026-09-03T11:00:02.437395',
+          updatedBy: 'SYSTEM',
+          profilePicture: null,
+          changes: {
+            user: [
+              {
+                changeType: 'VACANCY_CREATED' as const,
+                sectionName: 'Vacancy',
+                fieldName: 'Title',
+                oldValue: null,
+                newValue: ['test bug'],
+              },
+              {
+                changeType: 'VACANCY_CREATED' as const,
+                sectionName: 'Vacancy',
+                fieldName: 'Status',
+                oldValue: null,
+                newValue: ['UNPUBLISHED'],
+              },
+              {
+                changeType: 'VACANCY_CREATED' as const,
+                sectionName: 'Vacancy',
+                fieldName: 'Schedule Date',
+                oldValue: null,
+                newValue: ['2026-09-03T11:00'],
+              },
+              {
+                changeType: 'VACANCY_CREATED' as const,
+                sectionName: 'Vacancy',
+                fieldName: 'Expiration Date',
+                oldValue: null,
+                newValue: ['2026-09-15T16:00'],
+              },
+            ],
+            system: [
+              {
+                changeType: 'STATUS_CHANGED' as const,
+                sectionName: 'Vacancy',
+                fieldName: 'Status',
+                oldValue: ['UNPUBLISHED'],
+                newValue: ['LIVE'],
+              },
+            ],
+          },
+        },
+      ],
+    };
+
+    beforeEach(() => {
+      mockUseVacancyVersionHistoryQuery.mockReturnValue({
+        data: { success: true, message: 'ok', data: bugRepro },
+        isLoading: false,
+      });
+    });
+
+    const selectVersion = async (
+      user: ReturnType<typeof userEvent.setup>,
+      versionNumber: number
+    ) => {
+      await user.click(
+        screen.getByRole('button', {
+          name: new RegExp(`versionLabel:${versionNumber}\\b`),
+        })
+      );
+    };
+
+    // `p.wrap-break-word` covers several change types' value/header
+    // paragraphs (SectionToggleChange's header, but also plain scalar
+    // values like "Chess"/"test bug") — filtering to ones starting with the
+    // sectionEnabled/sectionDisabled key isolates just the toggle header,
+    // avoiding the substring ambiguity called out in
+    // version-history-change-entry.test.tsx ("sectionEnabled" is a
+    // text-prefix of its own "...Description" i18n key).
+    const sectionToggleHeaders = (container: HTMLElement) =>
+      Array.from(container.querySelectorAll('p.wrap-break-word'))
+        .map(el => el.textContent)
+        .filter(text =>
+          /^versionHistory\.changeTypes\.section(Enabled|Disabled) -/.test(
+            text ?? ''
+          )
+        );
+
+    it("shows only v4's own changes (Status + Schedule Date) and nothing from v1-v3", () => {
+      render(<VacancyIdVersionHistoryPage />);
+
+      // v4 is selected by default (latest version).
+      expect(
+        screen.getAllByText('versionHistory.changeTypes.statusUpdated')
+      ).toHaveLength(2); // one user entry, one system entry
+      expect(
+        screen.getByText('versionHistory.changeTypes.scheduleDateChanged')
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByText('versionHistory.changeTypes.vacancyCreated')
+      ).not.toBeInTheDocument();
+      expect(screen.queryByText('Chess')).not.toBeInTheDocument();
+    });
+
+    it("shows only v3's own changes (Hobby disabled + Chess removed) when selected — regression for the DQCGP-3902 leak from v4", async () => {
+      const user = userEvent.setup();
+      const { container } = render(<VacancyIdVersionHistoryPage />);
+
+      await selectVersion(user, 3);
+
+      expect(sectionToggleHeaders(container)).toEqual([
+        'versionHistory.changeTypes.sectionDisabled - Hobby',
+      ]);
+      expect(screen.getByText('Chess')).toBeInTheDocument();
+      // v3 has no STATUS_CHANGED/Schedule Date change of its own — any
+      // match here would be v4's leaked entry surviving the version switch
+      // (the DQCGP-3902 bug: a duplicate React key on v4's two
+      // STATUS_CHANGED entries orphaned one of them in the DOM instead of
+      // removing it).
+      expect(
+        screen.queryByText('versionHistory.changeTypes.statusUpdated')
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByText('versionHistory.changeTypes.scheduleDateChanged')
+      ).not.toBeInTheDocument();
+    });
+
+    it("shows only v2's own changes (Hobby enabled + Chess added) when selected — regression for the DQCGP-3902 leak from v4/v3", async () => {
+      const user = userEvent.setup();
+      const { container } = render(<VacancyIdVersionHistoryPage />);
+
+      await selectVersion(user, 2);
+
+      expect(sectionToggleHeaders(container)).toEqual([
+        'versionHistory.changeTypes.sectionEnabled - Hobby',
+      ]);
+      expect(screen.getByText('Chess')).toBeInTheDocument();
+      expect(
+        screen.queryByText('versionHistory.changeTypes.statusUpdated')
+      ).not.toBeInTheDocument();
+    });
+
+    it("shows only v1's own changes (the grouped Vacancy Created card + its own status entry) when selected — regression for the DQCGP-3902 leak", async () => {
+      const user = userEvent.setup();
+      const { container } = render(<VacancyIdVersionHistoryPage />);
+
+      await selectVersion(user, 1);
+
+      expect(
+        screen.getByText('versionHistory.changeTypes.vacancyCreated')
+      ).toBeInTheDocument();
+      expect(sectionToggleHeaders(container)).toEqual([]);
+      expect(screen.queryByText('Chess')).not.toBeInTheDocument();
+      // v1 has exactly one STATUS_CHANGED of its own (system,
+      // UNPUBLISHED → LIVE) — a second match here would be v4's leaked
+      // "LIVE → ONHOLD" user entry.
+      expect(
+        screen.getAllByText('versionHistory.changeTypes.statusUpdated')
+      ).toHaveLength(1);
+      expect(
+        screen.queryByText('vacancies.table.filter.statusOptions.onHold')
+      ).not.toBeInTheDocument();
+    });
+  });
 });

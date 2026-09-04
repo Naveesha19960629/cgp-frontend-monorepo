@@ -24,6 +24,7 @@ import {
   getSingleScalar,
   isDataTakenFromCandidateChange,
   isObjectArray,
+  isSectionStatusChange,
   parseBooleanFlag,
   pluralizeFieldName,
   resolveChangeVariant,
@@ -77,7 +78,7 @@ function InlineDiffRow({
       )}
       <span
         className={cn(
-          'text-base font-semibold text-[#0f172a]',
+          'text-base font-semibold text-[#334155]',
           strikeBefore && 'line-through'
         )}
       >
@@ -283,12 +284,14 @@ function VacancyCreationSummaryCard({
 }
 
 /**
- * A section's enabled/disabled toggle (Figma node 4229:229289) — a header
- * line ("Section Enabled - {sectionName}", verb-first, no "Section Name -"
- * prefix or divider — a different shape from every other change type's
- * header) plus a description sentence and the toggle switch itself,
- * right-aligned. `fieldName` is always the literal "Section Status" on this
- * changeType (confirmed from a real API response), so it carries no display
+ * A section's enabled/disabled toggle (Figma nodes 4229:229289 "Section
+ * Enabled" / 10122:134392 "Section Disabled") — a header line ("Section
+ * Enabled - {sectionName}", verb-first, no "Section Name -" prefix or
+ * divider — a different shape from every other change type's header) plus a
+ * description sentence and the toggle switch itself, right-aligned.
+ * `fieldName` is always the literal "Section Status" (confirmed from real
+ * API responses) — see isSectionStatusChange's own comment for why this is
+ * matched by fieldName rather than changeType — so it carries no display
  * value of its own; only `newValue`'s boolean flag and `sectionName` do.
  */
 function SectionToggleChange({
@@ -301,7 +304,10 @@ function SectionToggleChange({
     <div className="flex items-center justify-between gap-4">
       <div className="flex flex-col gap-1">
         <p className="text-base font-bold wrap-break-word">
-          <span className={isEnabled ? 'text-[#047857]' : 'text-[#475569]'}>
+          {/* The label reads green in both states (Figma nodes 4229:229289
+              "Enabled" and 10122:134392 "Disabled" both use #047857) — only
+              the toggle switch itself changes color with isEnabled. */}
+          <span className="text-[#047857]">
             {t(
               isEnabled
                 ? 'versionHistory.changeTypes.sectionEnabled'
@@ -372,7 +378,7 @@ function ChangeBody({ entry }: Readonly<{ entry: VersionHistoryEntry }>) {
     return <VersionHistoryCustomFormChange summary={entry.customFormChange} />;
   }
 
-  if (change.changeType === 'SECTION_ENABLED') {
+  if (isSectionStatusChange(change)) {
     return <SectionToggleChange change={change} />;
   }
 
@@ -428,9 +434,6 @@ function ChangeBody({ entry }: Readonly<{ entry: VersionHistoryEntry }>) {
     return (
       <InlineDiffRow
         label={t(`versionHistory.changeTypes.${labelKey}`)}
-        // Figma strikes the superseded schedule date but leaves the old
-        // vacancy title un-struck (node 4229:229271).
-        strikeBefore={labelKey !== 'titleChanged'}
         before={before}
         after={after}
       />

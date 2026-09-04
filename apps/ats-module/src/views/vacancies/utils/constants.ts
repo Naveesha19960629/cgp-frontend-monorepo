@@ -133,6 +133,11 @@ const PDF_COLORS = {
   // (node 4229:229804) — neutral/300, distinct from `border`'s lighter
   // neutral/200 hairline used for plain card outlines.
   scalarDiffPreviousBorder: '#d4d4d4',
+  // The before/after arrow (Figma's vuesax/linear/arrow-left, rotated —
+  // nodes 4229:229804 and 4229:229630 both confirm the same dark-teal
+  // brand accent, not `muted`'s neutral gray) shared by InlineDiffRow's
+  // renderInlineDiff and the scalar-diff box pair's renderArrow call.
+  arrow: '#075056',
   // SECTION_ENABLED's toggle switch (node 4229:229289 for "on"; "off" reuses
   // the same gray/200 the "Required Toggle Changed" example's off-state
   // toggle uses, node 4229:229985 — not the same hex as `border` even though

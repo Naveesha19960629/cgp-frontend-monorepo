@@ -143,6 +143,18 @@ describe('VersionHistoryChangeEntry', () => {
     expect(
       screen.queryByText(/versionHistory\.sectionNameLabel/)
     ).not.toBeInTheDocument();
+    // DQCGP-3880: the old title is struck through and reads in the muted
+    // body color; the new title stays the heading color, unstruck.
+    expect(screen.getByText('Senior Software Engineer')).toHaveClass(
+      'line-through',
+      'text-[#334155]'
+    );
+    expect(screen.getByText('Lead Software Engineer')).toHaveClass(
+      'text-[#0f172a]'
+    );
+    expect(screen.getByText('Lead Software Engineer')).not.toHaveClass(
+      'line-through'
+    );
   });
 
   it('renders a schedule-date change as its own sentence', () => {
@@ -357,6 +369,48 @@ describe('VersionHistoryChangeEntry', () => {
     expect(
       container.querySelector('button[aria-checked="false"]')
     ).toBeInTheDocument();
+    // Figma node 10122:134392: "Section Disabled" still reads in the green
+    // accent, same as "Section Enabled" — only the toggle switch's own
+    // color reflects on/off state.
+    expect(
+      screen.getByText('versionHistory.changeTypes.sectionDisabled')
+    ).toHaveClass('text-[#047857]');
+  });
+
+  it('renders a Section Status change as a toggle switch even when it arrives as FIELD_VALUE_UPDATED, not SECTION_ENABLED (Figma node 10122:134392)', () => {
+    // Real API response shape confirmed for the "Hobby" section: the API is
+    // inconsistent about which changeType it reports a section's toggle
+    // under (SECTION_ENABLED for some sections, plain FIELD_VALUE_UPDATED
+    // for others) — before this fix, the FIELD_VALUE_UPDATED shape fell
+    // through to the generic scalar-diff renderer ("Section Name - Hobby |
+    // Updated Section Status" with "true" → "false" boxes) instead of this
+    // dedicated toggle UI.
+    const { container } = render(
+      <VersionHistoryChangeEntry
+        entry={userEntry({
+          changeType: 'FIELD_VALUE_UPDATED',
+          sectionName: 'Hobby',
+          fieldName: 'Section Status',
+          oldValue: ['true'],
+          newValue: ['false'],
+        })}
+      />
+    );
+
+    expect(container.querySelector('p.wrap-break-word')).toHaveTextContent(
+      'versionHistory.changeTypes.sectionDisabled - Hobby'
+    );
+    expect(
+      screen.getByText('versionHistory.changeTypes.sectionDisabledDescription')
+    ).toBeInTheDocument();
+    expect(
+      container.querySelector('button[aria-checked="false"]')
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText('versionHistory.changeTypes.details.field', {
+        exact: false,
+      })
+    ).not.toBeInTheDocument();
   });
 
   it('renders the grouped Vacancy Created card with "Scheduled for publishing" when a schedule date is present (Figma node 4229:230488)', () => {

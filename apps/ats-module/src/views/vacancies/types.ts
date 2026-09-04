@@ -1978,7 +1978,8 @@ type VacancyVersionHistoryChangeType =
   | 'FIELD_VALUE_REMOVED'
   | 'FIELD_VALUE_UPDATED'
   | 'VACANCY_CREATED'
-  | 'SECTION_ENABLED';
+  | 'SECTION_ENABLED'
+  | 'SECTION_DISABLED';
 
 interface VacancyVersionHistoryChange {
   changeType: VacancyVersionHistoryChangeType;

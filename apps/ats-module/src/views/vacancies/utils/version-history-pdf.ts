@@ -40,6 +40,7 @@ import {
   getSingleScalar,
   isDataTakenFromCandidateChange,
   isObjectArray,
+  isSectionStatusChange,
   isSystemActor,
   normalizeStatusKey,
   parseBooleanFlag,
@@ -354,7 +355,7 @@ const renderArrow = (
     .lineTo(x + size, centerY)
     .lineWidth(1.4)
     .lineCap('round')
-    .strokeColor(PDF_COLORS.muted)
+    .strokeColor(PDF_COLORS.arrow)
     .stroke();
   doc
     .moveTo(x + size - headSize, centerY - headSize)
@@ -363,7 +364,7 @@ const renderArrow = (
     .lineWidth(1.4)
     .lineCap('round')
     .lineJoin('round')
-    .strokeColor(PDF_COLORS.muted)
+    .strokeColor(PDF_COLORS.arrow)
     .stroke();
 };
 
@@ -433,13 +434,15 @@ const renderToggleSwitch = (
 };
 
 /**
- * SECTION_ENABLED (Figma node 4229:229289): "Section Enabled - {sectionName}"
- * (verb-first, no "Section Name -" prefix or divider rule — a different
- * header shape from every other change type), a description line, and the
- * toggle switch itself right-aligned against the card's own width. `newValue`
- * carries the flag as the literal string "true"/"false" (confirmed from a
- * real API response); `fieldName` is always "Section Status" and carries no
- * display value of its own.
+ * A section's enabled/disabled toggle (Figma nodes 4229:229289 "Section
+ * Enabled" / 10122:134392 "Section Disabled"): "Section Enabled/Disabled -
+ * {sectionName}" (verb-first, no "Section Name -" prefix or divider rule — a
+ * different header shape from every other change type), a description line,
+ * and the toggle switch itself right-aligned against the card's own width.
+ * `newValue` carries the flag as the literal string "true"/"false"
+ * (confirmed from a real API response); `fieldName` is always "Section
+ * Status" and carries no display value of its own. Detected by fieldName,
+ * not changeType — see isSectionStatusChange's own comment.
  */
 const renderSectionToggleChange = (
   ctx: ContentCtx,
@@ -454,7 +457,10 @@ const renderSectionToggleChange = (
   const description = isEnabled
     ? PDF_LABELS.sectionEnabledDescription
     : PDF_LABELS.sectionDisabledDescription;
-  const labelColor = isEnabled ? PDF_COLORS.added : PDF_COLORS.muted;
+  // The label reads green in both states (Figma nodes 4229:229289 "Enabled"
+  // and 10122:134392 "Disabled" both use #047857/`added`) — only the toggle
+  // switch itself changes color with isEnabled.
+  const labelColor = PDF_COLORS.added;
   const sectionSuffix = ` - ${change.sectionName}`;
   const textWidth = ctx.width - TOGGLE_WIDTH - INLINE_GAP;
 
@@ -692,7 +698,7 @@ const renderSummaryLine = (
 };
 
 type InlineValue =
-  | { kind: 'text'; text: string; strike?: boolean }
+  | { kind: 'text'; text: string; strike?: boolean; color?: string }
   | { kind: 'status'; status: string };
 
 const measureInlineValue = (ctx: ContentCtx, value: InlineValue): number => {
@@ -729,7 +735,7 @@ const drawInlineValue = (
   const textHeight = doc.currentLineHeight(true);
   const textY = rowTop + (rowHeight - textHeight) / 2;
   doc
-    .fillColor(PDF_COLORS.heading)
+    .fillColor(value.color ?? PDF_COLORS.heading)
     .text(value.text, x, textY, { lineBreak: false });
 
   // The strikethrough is drawn as a vector rule rather than via pdfkit's
@@ -1329,9 +1335,10 @@ const renderFieldValueChange = (
       ctx,
       y,
       PDF_LABELS[labelKey],
-      // Figma strikes the superseded schedule date but leaves the old
-      // vacancy title un-struck (node 4229:229271).
-      { kind: 'text', text: before, strike: labelKey !== 'titleChanged' },
+      // Figma strikes the superseded title/schedule-date and reads it in
+      // the muted body color, with the new value staying the heading color
+      // (DQCGP-3880).
+      { kind: 'text', text: before, strike: true, color: PDF_COLORS.body },
       { kind: 'text', text: after }
     );
   }
@@ -1376,9 +1383,15 @@ const renderChange = (
   y: number
 ): number => {
   const { change } = entry;
-  // Detected by fieldName, not changeType (it's a plain FIELD_VALUE_UPDATED
-  // — see isDataTakenFromCandidateChange's own comment), so it has to be
+  // Both detected by fieldName, not changeType — the API reports a section's
+  // enabled/disabled toggle under SECTION_ENABLED for some sections but a
+  // plain FIELD_VALUE_UPDATED for others (see isSectionStatusChange's own
+  // comment), and Data Taken From Candidate is always FIELD_VALUE_UPDATED
+  // (see isDataTakenFromCandidateChange's own comment) — so both have to be
   // checked before the changeType switch rather than as one of its cases.
+  if (isSectionStatusChange(change)) {
+    return renderSectionToggleChange(ctx, change, y);
+  }
   if (isDataTakenFromCandidateChange(change)) {
     return renderDataTakenFromCandidateChange(ctx, change, y);
   }
@@ -1395,8 +1408,6 @@ const renderChange = (
       return entry.vacancyCreationSummary
         ? renderVacancyCreationSummaryCard(ctx, entry, y)
         : renderVacancyCreatedChange(ctx, change, y);
-    case 'SECTION_ENABLED':
-      return renderSectionToggleChange(ctx, change, y);
     default:
       return renderFieldValueChange(ctx, change, y);
   }

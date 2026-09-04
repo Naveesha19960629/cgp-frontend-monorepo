@@ -451,6 +451,11 @@ describe('buildVersionHistoryPdfBlob', () => {
     );
     // #e5e5e5 (the toggle's "off" fill) as fractional DeviceRGB components.
     expect(operators).toMatch(/0\.898\d* 0\.898\d* 0\.898\d*/);
+    // Figma node 10122:134392: the "Section Disabled" label still reads in
+    // the green accent (#047857, same as PDF_COLORS.added), same as
+    // "Section Enabled" — only the toggle switch's own fill reflects
+    // on/off state.
+    expect(operators).toMatch(/0\.0156\d* 0\.4705\d* 0\.3411\d*/);
   });
 
   it('groups VACANCY_CREATED Title+Status+Schedule Date into one card, "Scheduled for publishing" (Figma node 4229:230488)', async () => {
