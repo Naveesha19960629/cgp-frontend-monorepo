@@ -556,22 +556,12 @@ export default function ScheduleVacancyStep({
       ? detectApplicationFormChanges(originalFormRef.current ?? form, form)
       : null;
 
+    // DQCGP-3704: the success toast always shows the standard "Successfully
+    // Updated" message regardless of reschedule outcome — only the
+    // confirmation dialogs (above) differ on that.
     const updateSucceeded = await executeUpdate(
       pendingValues,
-      isReschedule ? 'on_hold' : undefined,
-      isReschedule
-        ? {
-            titleKey:
-              'scheduleVacancy.notifications.liveRescheduleSuccessTitle',
-            messageKey:
-              'scheduleVacancy.notifications.liveRescheduleSuccessMessage',
-          }
-        : {
-            titleKey:
-              'scheduleVacancy.notifications.liveNoRescheduleSuccessTitle',
-            messageKey:
-              'scheduleVacancy.notifications.liveNoRescheduleSuccessMessage',
-          }
+      isReschedule ? 'on_hold' : undefined
     );
 
     if (updateSucceeded) {
@@ -592,23 +582,10 @@ export default function ScheduleVacancyStep({
     const isReschedule = isPublishDateChanged;
     setShowLiveUpdateDialog(false);
 
-    await executeUpdate(
-      pendingValues,
-      isReschedule ? 'on_hold' : undefined,
-      isReschedule
-        ? {
-            titleKey:
-              'scheduleVacancy.notifications.liveRescheduleSuccessTitle',
-            messageKey:
-              'scheduleVacancy.notifications.liveRescheduleSuccessMessage',
-          }
-        : {
-            titleKey:
-              'scheduleVacancy.notifications.liveNoRescheduleSuccessTitle',
-            messageKey:
-              'scheduleVacancy.notifications.liveNoRescheduleSuccessMessage',
-          }
-    );
+    // DQCGP-3704: the success toast always shows the standard "Successfully
+    // Updated" message regardless of reschedule outcome — only the
+    // confirmation dialog differs on that.
+    await executeUpdate(pendingValues, isReschedule ? 'on_hold' : undefined);
 
     setPendingValues(null);
   };

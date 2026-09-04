@@ -2334,7 +2334,7 @@ describe('ScheduleVacancyStep', () => {
       });
     });
 
-    it('updates with existingStatus on_hold and shows the reschedule success toast when reschedule is confirmed', async () => {
+    it('updates with existingStatus on_hold and shows the standard update success toast when reschedule is confirmed', async () => {
       mockVacancyForm({
         form: { schedule: liveSchedule, status: 'live', applicantCount: 1 },
       });
@@ -2360,15 +2360,14 @@ describe('ScheduleVacancyStep', () => {
         );
         expect(SuccessToast).toHaveBeenCalledWith(
           expect.objectContaining({
-            title: 'scheduleVacancy.notifications.liveRescheduleSuccessTitle',
-            description:
-              'scheduleVacancy.notifications.liveRescheduleSuccessMessage',
+            title: 'scheduleVacancy.notifications.updateSuccessTitle',
+            description: 'scheduleVacancy.notifications.updateSuccessMessage',
           })
         );
       });
     });
 
-    it('updates keeping live status and shows the stays-live success toast when no-reschedule is confirmed', async () => {
+    it('updates keeping live status and shows the standard update success toast when no-reschedule is confirmed', async () => {
       mockVacancyForm({
         form: { schedule: liveSchedule, status: 'live', applicantCount: 1 },
       });
@@ -2393,9 +2392,8 @@ describe('ScheduleVacancyStep', () => {
         );
         expect(SuccessToast).toHaveBeenCalledWith(
           expect.objectContaining({
-            title: 'scheduleVacancy.notifications.liveNoRescheduleSuccessTitle',
-            description:
-              'scheduleVacancy.notifications.liveNoRescheduleSuccessMessage',
+            title: 'scheduleVacancy.notifications.updateSuccessTitle',
+            description: 'scheduleVacancy.notifications.updateSuccessMessage',
           })
         );
       });
@@ -2572,7 +2570,7 @@ describe('ScheduleVacancyStep', () => {
       });
     });
 
-    it('updates with existingStatus on_hold and the reschedule success toast when reschedule is confirmed', async () => {
+    it('updates with existingStatus on_hold and the standard update success toast when reschedule is confirmed', async () => {
       renderComponent({ mode: 'edit' as const });
 
       fillPublish('2099-11-01', '09:00:00 AM');
@@ -2593,15 +2591,14 @@ describe('ScheduleVacancyStep', () => {
         );
         expect(SuccessToast).toHaveBeenCalledWith(
           expect.objectContaining({
-            title: 'scheduleVacancy.notifications.liveRescheduleSuccessTitle',
-            description:
-              'scheduleVacancy.notifications.liveRescheduleSuccessMessage',
+            title: 'scheduleVacancy.notifications.updateSuccessTitle',
+            description: 'scheduleVacancy.notifications.updateSuccessMessage',
           })
         );
       });
     });
 
-    it('updates keeping live status and the stays-live success toast when no-reschedule is confirmed', async () => {
+    it('updates keeping live status and the standard update success toast when no-reschedule is confirmed', async () => {
       renderComponent({ mode: 'edit' as const });
 
       await waitFor(() => expect(getCreateButton()).not.toBeDisabled());
@@ -2621,9 +2618,8 @@ describe('ScheduleVacancyStep', () => {
         );
         expect(SuccessToast).toHaveBeenCalledWith(
           expect.objectContaining({
-            title: 'scheduleVacancy.notifications.liveNoRescheduleSuccessTitle',
-            description:
-              'scheduleVacancy.notifications.liveNoRescheduleSuccessMessage',
+            title: 'scheduleVacancy.notifications.updateSuccessTitle',
+            description: 'scheduleVacancy.notifications.updateSuccessMessage',
           })
         );
       });
