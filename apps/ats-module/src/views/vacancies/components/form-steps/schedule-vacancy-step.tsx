@@ -32,9 +32,11 @@ import type {
 } from '@/views/vacancies/types';
 import {
   detectApplicationFormChanges,
+  diffVacancyData,
   formatDisplayDateTime,
   hasPublishDateChanged,
   hasScheduleChanged,
+  hasVacancyDataChanged,
   isDateTimeBeyondMaxBoundary,
   isDateTimeInPast,
   to24HourTime,
@@ -349,7 +351,16 @@ export default function ScheduleVacancyStep({
 
     setIsSubmitting(true);
     try {
-      const schedule = toScheduleVacancyPayload(values);
+      // DQCGP-3862: only re-serialize the schedule when it actually changed.
+      // toScheduleVacancyPayload always emits the 12-hour AM/PM format, which
+      // can differ textually from the 24-hour ISO string the backend
+      // originally sent for the same instant — sending that re-serialized
+      // (but otherwise untouched) value made the backend see a "change" and
+      // create a new vacancy version even when the recruiter edited nothing.
+      // Keeping the saved schedule as-is when unchanged avoids that.
+      const schedule = hasScheduleChanged(form.schedule, values)
+        ? toScheduleVacancyPayload(values)
+        : (form.schedule ?? toScheduleVacancyPayload(values));
       const payloadForm = await resolveFormUserCreatedEntries({
         ...form,
         schedule,
@@ -366,11 +377,36 @@ export default function ScheduleVacancyStep({
           fallbackStatus = form.status;
         }
         const existingStatus = existingStatusOverride ?? fallbackStatus;
-        await updateVacancy({
-          id,
-          form: payloadForm,
-          existingStatus,
-        });
+
+        // DQCGP-3862: if nothing in the vacancy actually changed (same
+        // content, same status), skip the update call entirely rather than
+        // relying on the backend's own diff to decide whether to version —
+        // this is the only way to guarantee "no changes -> no new version"
+        // regardless of how the backend versions a same-content PUT.
+        const originalForm = originalFormRef.current;
+        const isNoOpUpdate =
+          !!originalForm &&
+          !hasVacancyDataChanged(originalForm, payloadForm, existingStatus);
+
+        // DEV-ONLY diagnostic for DQCGP-3862: pinpoints exactly which
+        // section still differs when the update goes out despite the
+        // recruiter not touching anything. Remove once the root cause of
+        // every remaining false-positive diff is confirmed and fixed.
+        if (import.meta.env.DEV && originalForm && !isNoOpUpdate) {
+          // eslint-disable-next-line no-console
+          console.warn(
+            '[DQCGP-3862] vacancy update payload differs from original:',
+            diffVacancyData(originalForm, payloadForm, existingStatus)
+          );
+        }
+
+        if (!isNoOpUpdate) {
+          await updateVacancy({
+            id,
+            form: payloadForm,
+            existingStatus,
+          });
+        }
       } else {
         await createVacancy({
           form: payloadForm,
