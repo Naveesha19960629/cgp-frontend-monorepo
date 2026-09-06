@@ -465,18 +465,32 @@ export default function VersionHistoryCustomFormChange({
 
     case 'optionValueUpdated':
       return (
-        <div className="flex flex-col gap-4">
-          <CustomFormHeader
-            formTitle={summary.formTitle}
-            questionText={summary.questionText}
-            changeLabel={t(`${CF}.optionValueUpdated`, { count: 1 })}
-            isRemoved={false}
-          />
-          <CustomFormScalarDiff
-            field={t(`${CF}.optionValueFieldLabel`)}
-            before={summary.before}
-            after={summary.after}
-          />
+        <div className="flex flex-col gap-6">
+          {summary.groups.map((group, index) => (
+            <div
+              key={`${group.questionText}-${index}`}
+              className="flex flex-col gap-4"
+            >
+              <CustomFormHeader
+                formTitle={summary.formTitle}
+                questionText={group.questionText}
+                changeLabel={t(`${CF}.optionValueUpdated`, {
+                  count: group.rows.length,
+                })}
+                isRemoved={false}
+              />
+              <div className="flex flex-col gap-4">
+                {group.rows.map((row, rowIndex) => (
+                  <CustomFormScalarDiff
+                    key={`${row.before}-${row.after}-${rowIndex}`}
+                    field={t(`${CF}.optionValueFieldLabel`)}
+                    before={row.before}
+                    after={row.after}
+                  />
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
       );
 

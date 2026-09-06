@@ -2048,6 +2048,11 @@ interface CustomFormOptionGroup {
   options: string[];
 }
 
+interface CustomFormOptionValueGroup {
+  questionText: string;
+  rows: { before: string; after: string }[];
+}
+
 interface CustomFormLinearScaleRow {
   field: 'startValue' | 'endValue' | 'startLabel' | 'endLabel';
   before: string;
@@ -2088,9 +2093,7 @@ type CustomFormChangeSummary =
   | {
       kind: 'optionValueUpdated';
       formTitle: string;
-      questionText: string;
-      before: string;
-      after: string;
+      groups: CustomFormOptionValueGroup[];
     }
   | {
       kind: 'requiredToggleChanged';
@@ -2382,6 +2385,7 @@ export type {
   CustomFormFieldItem,
   CustomFormQuestionCardData,
   CustomFormOptionGroup,
+  CustomFormOptionValueGroup,
   CustomFormLinearScaleRow,
   CustomFormChangeSummary,
   VersionHistoryEntry,

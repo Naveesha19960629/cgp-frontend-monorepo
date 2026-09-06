@@ -240,9 +240,12 @@ describe('VersionHistoryCustomFormChange', () => {
     const summary: CustomFormChangeSummary = {
       kind: 'optionValueUpdated',
       formTitle: 'Behavioral Assessment',
-      questionText: 'Check box - 1st New Choise Question added',
-      before: 'Check box  A',
-      after: 'Check box  A - Chamod',
+      groups: [
+        {
+          questionText: 'Check box - 1st New Choise Question added',
+          rows: [{ before: 'Check box  A', after: 'Check box  A - Chamod' }],
+        },
+      ],
     };
     render(<VersionHistoryCustomFormChange summary={summary} />);
 
@@ -250,6 +253,34 @@ describe('VersionHistoryCustomFormChange', () => {
     // real API's double space ("Check box  A") is queried as a single space.
     expect(screen.getByText('Check box A')).toBeInTheDocument();
     expect(screen.getByText('Check box A - Chamod')).toBeInTheDocument();
+  });
+
+  it('renders every changed option across every question for Option Value Updated (DQCGP-3882)', () => {
+    const summary: CustomFormChangeSummary = {
+      kind: 'optionValueUpdated',
+      formTitle: 'Behavioral Assessment',
+      groups: [
+        {
+          questionText: 'Check box - 1st New Choise Question added',
+          rows: [
+            { before: 'Check box A', after: 'Check box A - CK' },
+            { before: 'Check box B', after: 'Check box B - CK' },
+          ],
+        },
+        {
+          questionText: 'Multiple Choice - 2nd New Choice Questions added',
+          rows: [{ before: 'Multiple Choise A', after: 'Multiple Choise A - CK' }],
+        },
+      ],
+    };
+    render(<VersionHistoryCustomFormChange summary={summary} />);
+
+    expect(screen.getByText('Check box A')).toBeInTheDocument();
+    expect(screen.getByText('Check box A - CK')).toBeInTheDocument();
+    expect(screen.getByText('Check box B')).toBeInTheDocument();
+    expect(screen.getByText('Check box B - CK')).toBeInTheDocument();
+    expect(screen.getByText('Multiple Choise A')).toBeInTheDocument();
+    expect(screen.getByText('Multiple Choise A - CK')).toBeInTheDocument();
   });
 
   it('renders Required Toggle Changed as two toggle switches, off then on', () => {
