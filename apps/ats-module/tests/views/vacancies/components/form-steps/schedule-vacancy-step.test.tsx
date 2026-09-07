@@ -1132,7 +1132,13 @@ describe('ScheduleVacancyStep', () => {
 
       // Create is disabled again (expiration required) rather than showing
       // a validation message, prompting the recruiter to pick a fresh date.
-      expect(getCreateButton()).toBeDisabled();
+      // RHF's formState.isValid updates a tick after the field clear itself
+      // (same reason the "not disabled" check above is wrapped in waitFor),
+      // so asserting this synchronously right after the field-value waitFor
+      // races and fails intermittently.
+      await waitFor(() => {
+        expect(getCreateButton()).toBeDisabled();
+      });
     });
 
     it('auto-clears expiration when a new publish datetime equals the selected expiration', async () => {
@@ -2109,7 +2115,12 @@ describe('ScheduleVacancyStep', () => {
           screen.getByLabelText('date-scheduleVacancy.timeLabel')
         ).toHaveValue('');
       });
-      expect(getCreateButton()).toBeDisabled();
+      // formState.isValid updates a tick after the field clear itself, so
+      // this must be its own waitFor rather than a bare assertion right
+      // after the field-value one above (see the same fix a few tests up).
+      await waitFor(() => {
+        expect(getCreateButton()).toBeDisabled();
+      });
       expect(ErrorToast).not.toHaveBeenCalled();
       expect(
         screen.queryByTestId('reschedule-confirm-dialog')
