@@ -3,6 +3,7 @@ import type {
   CustomFormFieldItem,
   CustomFormLinearScaleRow,
   CustomFormOptionGroup,
+  CustomFormOptionValueGroup,
   CustomFormSummaryItem,
   VacancyCreationSummary,
   VacancyVersionHistoryChange,
@@ -421,19 +422,51 @@ const buildOptionSummary = (
   };
 };
 
+// Unlike Option Added/Removed (whose options share one changeIndex per
+// question), a real multi-option Option Value Updated response tags every
+// changed option with its OWN unique changeIndex regardless of which
+// question it belongs to (confirmed from DQCGP-3882's sample: 11 changed
+// options across 3 questions, changeIndex 1-11). So before/after pairs are
+// matched by changeIndex, then grouped by questionText in order of first
+// appearance — one card per question, one before/after row per option.
+const groupOptionValueItemsByQuestion = (
+  beforeItems: CustomFormFieldItem[],
+  afterItems: CustomFormFieldItem[]
+): CustomFormOptionValueGroup[] => {
+  const beforeByIndex = new Map(
+    beforeItems.map(item => [item.changeIndex, item])
+  );
+  const groups: CustomFormOptionValueGroup[] = [];
+  const groupIndexByQuestionText = new Map<string, number>();
+  afterItems.forEach(after => {
+    const before = beforeByIndex.get(after.changeIndex);
+    if (!before) return;
+    const questionText = after.questionText ?? '';
+    let groupIndex = groupIndexByQuestionText.get(questionText);
+    if (groupIndex === undefined) {
+      groupIndex = groups.length;
+      groupIndexByQuestionText.set(questionText, groupIndex);
+      groups.push({ questionText, rows: [] });
+    }
+    groups[groupIndex].rows.push({ before: before.value, after: after.value });
+  });
+  return groups;
+};
+
 const buildOptionValueSummary = (
   change: VacancyVersionHistoryChange
 ): CustomFormChangeSummaryResult => {
-  const before = asCustomFormFieldItems(change.oldValue)[0];
-  const after = asCustomFormFieldItems(change.newValue)[0];
-  if (!before || !after?.questionText) return null;
+  const beforeItems = asCustomFormFieldItems(change.oldValue);
+  const afterItems = asCustomFormFieldItems(change.newValue);
+  const formTitle = afterItems[0]?.formTitle;
+  if (!formTitle) return null;
+  const groups = groupOptionValueItemsByQuestion(beforeItems, afterItems);
+  if (groups.length === 0) return null;
   return {
     summary: {
       kind: 'optionValueUpdated',
-      formTitle: after.formTitle,
-      questionText: after.questionText,
-      before: before.value,
-      after: after.value,
+      formTitle,
+      groups,
     },
     consumed: 1,
   };

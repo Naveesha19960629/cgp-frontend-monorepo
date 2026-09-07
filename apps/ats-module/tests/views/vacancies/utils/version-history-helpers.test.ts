@@ -669,9 +669,66 @@ describe('buildCustomFormChangeSummary', () => {
       summary: {
         kind: 'optionValueUpdated',
         formTitle: 'Behavioral Assessment',
-        questionText: 'Check box - 1st New Choise Question added',
-        before: 'Check box  A',
-        after: 'Check box  A - Chamod',
+        groups: [
+          {
+            questionText: 'Check box - 1st New Choise Question added',
+            rows: [{ before: 'Check box  A', after: 'Check box  A - Chamod' }],
+          },
+        ],
+      },
+      consumed: 1,
+    });
+  });
+
+  it('parses Option Value Updated with multiple options across multiple questions (DQCGP-3882)', () => {
+    const buildItem = (
+      questionText: string,
+      value: string,
+      changeIndex: number
+    ) => ({
+      formTitle: 'Behavioral Assessment',
+      questionText,
+      value,
+      questionType: 'CHECKBOXES',
+      required: null,
+      changeIndex,
+    });
+    const change: VacancyVersionHistoryChange = {
+      changeType: 'FIELD_VALUE_UPDATED',
+      sectionName: 'Customizable Forms',
+      fieldName: 'Option Value',
+      oldValue: [
+        buildItem('Check box - 1st New Choise Question added', 'A', 1),
+        buildItem('Check box - 1st New Choise Question added', 'B', 2),
+        buildItem('Multiple Choice - 2nd New Choice Questions added', 'C', 3),
+      ],
+      newValue: [
+        buildItem('Check box - 1st New Choise Question added', 'A - CK', 1),
+        buildItem('Check box - 1st New Choise Question added', 'B - CK', 2),
+        buildItem(
+          'Multiple Choice - 2nd New Choice Questions added',
+          'C - CK',
+          3
+        ),
+      ],
+    };
+    expect(buildCustomFormChangeSummary([change], 0)).toEqual({
+      summary: {
+        kind: 'optionValueUpdated',
+        formTitle: 'Behavioral Assessment',
+        groups: [
+          {
+            questionText: 'Check box - 1st New Choise Question added',
+            rows: [
+              { before: 'A', after: 'A - CK' },
+              { before: 'B', after: 'B - CK' },
+            ],
+          },
+          {
+            questionText: 'Multiple Choice - 2nd New Choice Questions added',
+            rows: [{ before: 'C', after: 'C - CK' }],
+          },
+        ],
       },
       consumed: 1,
     });
