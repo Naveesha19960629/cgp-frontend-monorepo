@@ -736,6 +736,36 @@ describe('ProfileRequirementsStep', () => {
 
       expect(maritalStatusSelect).toHaveValue('single');
     });
+
+    it('clears a previously selected gender via the first "clear" dropdown option', async () => {
+      const user = userEvent.setup();
+      renderStep({
+        isEnabled: true,
+        gender: { id: 'male', label: 'Male' },
+      });
+
+      const [genderSelect] = screen.getAllByRole('combobox');
+      expect(genderSelect).toHaveValue('male');
+
+      await user.selectOptions(genderSelect, '__unselected__');
+
+      expect(genderSelect).toHaveValue('');
+    });
+
+    it('clears a previously selected marital status via the first "clear" dropdown option', async () => {
+      const user = userEvent.setup();
+      renderStep({
+        isEnabled: true,
+        maritalStatus: { id: 'single', label: 'Single' },
+      });
+
+      const [, maritalStatusSelect] = screen.getAllByRole('combobox');
+      expect(maritalStatusSelect).toHaveValue('single');
+
+      await user.selectOptions(maritalStatusSelect, '__unselected__');
+
+      expect(maritalStatusSelect).toHaveValue('');
+    });
   });
 
   describe('address place resolution', () => {
