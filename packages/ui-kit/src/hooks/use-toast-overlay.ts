@@ -34,7 +34,12 @@ export const useToastOverlay = () => {
           toast.type === 'warning'
       );
 
-      // Priority: Error > Warning > Success > Default
+      // Check for info toasts
+      const hasInfo = toasts.some(toast =>
+        toast.className?.includes('toast-type-info')
+      );
+
+      // Priority: Error > Warning > Success > Info > Default
       if (hasError) {
         return 'linear-gradient(0deg, rgba(127, 16, 16, 0.50) -2.6%, rgba(255, 255, 255, 0.00) 100%)';
       }
@@ -43,6 +48,9 @@ export const useToastOverlay = () => {
       }
       if (hasSuccess) {
         return 'linear-gradient(0deg, rgba(7, 96, 11, 0.50) -2.6%, rgba(255, 255, 255, 0.00) 100%)';
+      }
+      if (hasInfo) {
+        return 'linear-gradient(0deg, rgba(59, 130, 246, 0.50) -2.6%, rgba(255, 255, 255, 0.00) 100%)';
       }
 
       // Default black overlay for custom or other types

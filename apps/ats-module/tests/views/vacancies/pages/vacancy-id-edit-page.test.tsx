@@ -37,6 +37,7 @@ const toVacancyFormFromResponseMock = vi.fn(
 );
 
 const vacancyFormProviderSpy = vi.fn();
+const useVacancyApplicantWsMock = vi.fn();
 
 const mockSetForm = vi.fn();
 const mockSetIsInitialStep = vi.fn();
@@ -96,6 +97,9 @@ vi.mock('@/views/vacancies/hooks', async importOriginal => {
       data: undefined,
       isFetched: true,
     }),
+    useVacancyApplicantWs: (options: unknown) => {
+      useVacancyApplicantWsMock(options);
+    },
   };
 });
 
@@ -619,6 +623,63 @@ describe('VacancyIdEditPage', () => {
       expect(
         screen.queryByRole('dialog', { name: 'vacancyEditCancelDialog.title' })
       ).not.toBeInTheDocument();
+    });
+  });
+
+  describe('applicant websocket wiring', () => {
+    it('disables the applicant websocket for a non-live vacancy', () => {
+      queryState = {
+        isLoading: false,
+        error: null,
+        data: { success: true, data: { title: 'Engineer', status: 'draft' } },
+      };
+      vacancyFormValue.form = { title: 'Engineer', status: 'draft' };
+
+      render(<VacancyIdEditPage />);
+
+      expect(useVacancyApplicantWsMock).toHaveBeenCalledWith({
+        vacancyId: 'vacancy-1',
+        enabled: false,
+      });
+    });
+
+    it('enables the applicant websocket with the base vacancy id once live', () => {
+      queryState = {
+        isLoading: false,
+        error: null,
+        data: {
+          success: true,
+          data: {
+            title: 'Engineer',
+            status: 'live',
+            baseVacancyId: 'base-99',
+          },
+        },
+      };
+      vacancyFormValue.form = { title: 'Engineer', status: 'live' };
+
+      render(<VacancyIdEditPage />);
+
+      expect(useVacancyApplicantWsMock).toHaveBeenCalledWith({
+        vacancyId: 'base-99',
+        enabled: true,
+      });
+    });
+
+    it('falls back to the version id when the vacancy has no baseVacancyId', () => {
+      queryState = {
+        isLoading: false,
+        error: null,
+        data: { success: true, data: { title: 'Engineer', status: 'live' } },
+      };
+      vacancyFormValue.form = { title: 'Engineer', status: 'live' };
+
+      render(<VacancyIdEditPage />);
+
+      expect(useVacancyApplicantWsMock).toHaveBeenCalledWith({
+        vacancyId: 'vacancy-1',
+        enabled: true,
+      });
     });
   });
 });

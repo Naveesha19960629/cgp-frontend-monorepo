@@ -8,6 +8,7 @@ import { Button } from '@cgp/ui-kit/components/ui/button';
 import { applyTypography } from '@cgp/ui-kit/lib/typography';
 
 import errorAvatar from '../assets/images/error-toast-avatar.svg';
+import infoAvatar from '../assets/images/info-toast-avatar.svg';
 import successAvatar from '../assets/images/success-toast-avatar.svg';
 import warningAvatar from '../assets/images/warning-toast-avatar.svg';
 
@@ -16,7 +17,7 @@ interface ToastProps {
   dismissIds?: Array<string | number>;
   title: string;
   description: string;
-  type?: 'success' | 'error' | 'warning';
+  type?: 'success' | 'error' | 'warning' | 'info';
 }
 
 const TOAST_TEST_IDS: Partial<Record<NonNullable<ToastProps['type']>, string>> =
@@ -35,9 +36,11 @@ function Toast({
   let avatarSrc = warningAvatar;
   if (type === 'success') avatarSrc = successAvatar;
   else if (type === 'error') avatarSrc = errorAvatar;
+  else if (type === 'info') avatarSrc = infoAvatar;
 
   return (
     <div
+      role="presentation"
       className="pointer-events-auto relative"
       onClick={e => e.stopPropagation()}
       onPointerDown={e => e.stopPropagation()}
@@ -82,6 +85,36 @@ function Toast({
                 >
                   <circle cx="22" cy="22" r="22" fill="#FEF9C3" />
                   <circle cx="22" cy="22" r="10" fill="#EAB308" />
+                  <path
+                    d="M22 18V23.25"
+                    stroke="white"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M22 26.4502V26.5502"
+                    stroke="white"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </div>
+            )}
+
+            {type === 'info' && (
+              <div>
+                <svg
+                  data-testid="info-circle-svg"
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="44"
+                  height="44"
+                  viewBox="0 0 44 44"
+                  fill="none"
+                >
+                  <circle cx="22" cy="22" r="22" fill="#DBEAFE" />
+                  <circle cx="22" cy="22" r="10" fill="#3B82F6" />
                   <path
                     d="M22 18V23.25"
                     stroke="white"
@@ -190,4 +223,20 @@ function WarningToast(toast: Omit<ToastProps, 'id'>) {
   );
 }
 
-export { SuccessToast, ErrorToast, WarningToast };
+function InfoToast(toast: Omit<ToastProps, 'id'>) {
+  return sonnerToast.custom(
+    id => (
+      <Toast
+        id={id}
+        title={toast.title}
+        description={toast.description}
+        type="info"
+      />
+    ),
+    {
+      className: 'toast-type-info',
+    }
+  );
+}
+
+export { SuccessToast, ErrorToast, WarningToast, InfoToast };
