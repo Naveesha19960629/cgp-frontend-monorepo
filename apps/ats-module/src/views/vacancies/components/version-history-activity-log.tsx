@@ -39,12 +39,23 @@ export default function VersionHistoryActivityLog({
         {t('versionHistory.activityLog.heading')}
       </p>
       <div className="flex flex-col gap-7">
-        {entries.map(entry => (
-          // No stable id exists, but the change's own section/field/type —
-          // combined with the timestamp shared by every change in the same
-          // version — distinguishes entries in practice.
+        {entries.map((entry, index) => (
+          // No stable id exists from the API. The change's own
+          // section/field/type + the version's shared timestamp do NOT
+          // reliably distinguish entries on their own — DQCGP-3902: a real
+          // response had a `user` STATUS_CHANGED and a `system`
+          // STATUS_CHANGED for the same section/field in the same version
+          // (a manual status edit immediately reverted by a system side
+          // effect), producing two entries with an identical key. React then
+          // loses track of one during reconciliation on the next version
+          // switch and leaves its DOM node orphaned — it never gets removed
+          // again, so it silently persists across every version selected
+          // afterward ("tracked changes are displayed in all versions").
+          // `index` is a safe tiebreaker here: entries is rebuilt fresh from
+          // `version` + `createdBy` on every render, so its order is stable
+          // for a given version.
           <VersionHistoryChangeEntry
-            key={`${entry.updatedAt}-${entry.change.sectionName}-${entry.change.fieldName}-${entry.change.changeType}`}
+            key={`${entry.updatedAt}-${entry.change.sectionName}-${entry.change.fieldName}-${entry.change.changeType}-${index}`}
             entry={entry}
           />
         ))}

@@ -35,12 +35,16 @@ export default function VersionHistoryValueBoxGrid({
 }: Readonly<VersionHistoryValueBoxGridProps>) {
   return (
     <div className="grid grid-cols-2 gap-3">
-      {items.map(item => (
-        // No stable id exists, but the title (+ subtitle as a tie-breaker)
-        // is the actual displayed content and distinguishes items in
-        // practice (e.g. distinct school/form names within one change).
+      {items.map((item, index) => (
+        // No stable id exists from the API, and title+subtitle alone isn't
+        // guaranteed unique (two identically-named/located schools is a
+        // real possible value, not just a hypothetical) — see DQCGP-3902,
+        // where an equivalent content-only key elsewhere in this feature
+        // let two entries collide and orphaned one permanently in the DOM.
+        // `index` is a safe tiebreaker: `items` is rebuilt fresh from the
+        // same source data on every render, so its order is stable.
         <div
-          key={`${item.title}-${item.subtitle ?? ''}`}
+          key={`${item.title}-${item.subtitle ?? ''}-${index}`}
           // Figma insets box content by 28px (node 4229:229313).
           className={cn(
             'rounded-lg border bg-white p-7',

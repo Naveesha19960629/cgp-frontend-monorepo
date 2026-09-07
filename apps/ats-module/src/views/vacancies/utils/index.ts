@@ -104,6 +104,7 @@ export {
   normalizeStatusKey,
   parseBooleanFlag,
   isDataTakenFromCandidateChange,
+  isSectionStatusChange,
   getSingleScalar,
   isObjectArray,
   shouldRenderAsGrid,

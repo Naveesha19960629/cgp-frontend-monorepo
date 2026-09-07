@@ -44,6 +44,18 @@ const isDataTakenFromCandidateChange = (
   change.changeType === 'FIELD_VALUE_UPDATED' &&
   change.fieldName.trim().toLowerCase() === 'data taken from candidate';
 
+// A section's enabled/disabled toggle (Figma node 10122:134392 "Section
+// Disabled" / 4229:229289 "Section Enabled"). The API is inconsistent about
+// which changeType it reports this under — a real response confirmed
+// SECTION_ENABLED for one section ("Language") but a plain
+// FIELD_VALUE_UPDATED for another ("Hobby"), both carrying the same literal
+// fieldName "Section Status" — so, like isDataTakenFromCandidateChange
+// above, this is detected by fieldName alone rather than trusting
+// changeType, or the FIELD_VALUE_UPDATED case fell through to the generic
+// scalar-diff renderer (true → false boxes) instead of this dedicated UI.
+const isSectionStatusChange = (change: VacancyVersionHistoryChange): boolean =>
+  change.fieldName.trim().toLowerCase() === 'section status';
+
 const getSingleScalar = (value: unknown[] | null): string | null => {
   if (!value || value.length === 0) return null;
   const [first] = value;
@@ -690,6 +702,7 @@ export {
   normalizeStatusKey,
   parseBooleanFlag,
   isDataTakenFromCandidateChange,
+  isSectionStatusChange,
   getSingleScalar,
   isObjectArray,
   shouldRenderAsGrid,
