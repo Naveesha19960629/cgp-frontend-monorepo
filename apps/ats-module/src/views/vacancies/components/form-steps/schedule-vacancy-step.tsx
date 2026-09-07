@@ -29,6 +29,7 @@ import {
 import type {
   ApplicationFormChanges,
   StepProps,
+  VacancyForm,
 } from '@/views/vacancies/types';
 import {
   detectApplicationFormChanges,
@@ -53,6 +54,67 @@ import { startOfToday } from 'date-fns';
 // years] — selecting anything further out is not a valid schedule.
 const { today: TODAY, maxDate: HUNDRED_YEARS_FROM_NOW } =
   getHundredYearDateBoundaries();
+
+/** LIVE if the publish time is now or in the past, UNPUBLISHED if it's in the future. */
+function resolveTargetStatus(values: ScheduleVacancyFormValues) {
+  const publishAt = new Date(
+    `${values.schedulePublishDate}T${to24HourTime(values.schedulePublishTime)}`
+  );
+  const targetStatus = publishAt <= new Date() ? 'live' : 'unpublished';
+  const targetApiStatus = targetStatus === 'live' ? 'LIVE' : 'UNPUBLISHED';
+  return { targetStatus, targetApiStatus };
+}
+
+// DQCGP-3862: only re-serialize the schedule when it actually changed.
+// toScheduleVacancyPayload always emits the 12-hour AM/PM format, which can
+// differ textually from the 24-hour ISO string the backend originally sent
+// for the same instant — sending that re-serialized (but otherwise
+// untouched) value made the backend see a "change" and create a new vacancy
+// version even when the recruiter edited nothing. Keeping the saved schedule
+// as-is when unchanged avoids that.
+function resolveSchedulePayload(
+  currentSchedule: VacancyForm['schedule'],
+  values: ScheduleVacancyFormValues
+) {
+  if (!hasScheduleChanged(currentSchedule, values)) {
+    return currentSchedule ?? toScheduleVacancyPayload(values);
+  }
+  return toScheduleVacancyPayload(values);
+}
+
+function resolveFallbackStatus({
+  scheduleToOnhold,
+  isCreateAction,
+  targetStatus,
+  currentStatus,
+}: {
+  scheduleToOnhold: boolean;
+  isCreateAction: boolean;
+  targetStatus: string;
+  currentStatus: string;
+}): string {
+  if (scheduleToOnhold) return 'on_hold';
+  if (isCreateAction) return targetStatus;
+  return currentStatus;
+}
+
+function resolveSuccessNotification(
+  isCreateAction: boolean,
+  successNotification?: { titleKey: string; messageKey: string }
+) {
+  return {
+    titleKey:
+      successNotification?.titleKey ??
+      (isCreateAction
+        ? 'scheduleVacancy.notifications.successTitle'
+        : 'scheduleVacancy.notifications.updateSuccessTitle'),
+    messageKey:
+      successNotification?.messageKey ??
+      (isCreateAction
+        ? 'scheduleVacancy.notifications.successMessage'
+        : 'scheduleVacancy.notifications.updateSuccessMessage'),
+  };
+}
 
 export default function ScheduleVacancyStep({
   onBack,
@@ -337,30 +399,47 @@ export default function ScheduleVacancyStep({
     }
   };
 
+  // DQCGP-3862: if nothing in the vacancy actually changed (same content,
+  // same status), skip the update call entirely rather than relying on the
+  // backend's own diff to decide whether to version — this is the only way
+  // to guarantee "no changes -> no new version" regardless of how the
+  // backend versions a same-content PUT.
+  const saveExistingVacancy = async (
+    vacancyId: string,
+    payloadForm: VacancyForm,
+    existingStatus: string
+  ) => {
+    const originalForm = originalFormRef.current;
+    const isNoOpUpdate =
+      !!originalForm &&
+      !hasVacancyDataChanged(originalForm, payloadForm, existingStatus);
+
+    // DEV-ONLY diagnostic for DQCGP-3862: pinpoints exactly which section
+    // still differs when the update goes out despite the recruiter not
+    // touching anything. Remove once the root cause of every remaining
+    // false-positive diff is confirmed and fixed.
+    if (import.meta.env.DEV && originalForm && !isNoOpUpdate) {
+      console.warn(
+        '[DQCGP-3862] vacancy update payload differs from original:',
+        diffVacancyData(originalForm, payloadForm, existingStatus)
+      );
+    }
+
+    if (isNoOpUpdate) return;
+
+    await updateVacancy({ id: vacancyId, form: payloadForm, existingStatus });
+  };
+
   const executeUpdate = async (
     values: ScheduleVacancyFormValues,
     existingStatusOverride?: string,
     successNotification?: { titleKey: string; messageKey: string }
   ): Promise<boolean> => {
-    // LIVE if publish time is now or in the past, UNPUBLISHED if future
-    const publishAt = new Date(
-      `${values.schedulePublishDate}T${to24HourTime(values.schedulePublishTime)}`
-    );
-    const targetStatus = publishAt <= new Date() ? 'live' : 'unpublished';
-    const targetApiStatus = targetStatus === 'live' ? 'LIVE' : 'UNPUBLISHED';
+    const { targetStatus, targetApiStatus } = resolveTargetStatus(values);
 
     setIsSubmitting(true);
     try {
-      // DQCGP-3862: only re-serialize the schedule when it actually changed.
-      // toScheduleVacancyPayload always emits the 12-hour AM/PM format, which
-      // can differ textually from the 24-hour ISO string the backend
-      // originally sent for the same instant — sending that re-serialized
-      // (but otherwise untouched) value made the backend see a "change" and
-      // create a new vacancy version even when the recruiter edited nothing.
-      // Keeping the saved schedule as-is when unchanged avoids that.
-      const schedule = hasScheduleChanged(form.schedule, values)
-        ? toScheduleVacancyPayload(values)
-        : (form.schedule ?? toScheduleVacancyPayload(values));
+      const schedule = resolveSchedulePayload(form.schedule, values);
       const payloadForm = await resolveFormUserCreatedEntries({
         ...form,
         schedule,
@@ -368,45 +447,14 @@ export default function ScheduleVacancyStep({
       setForm(payloadForm);
 
       if (id) {
-        let fallbackStatus: string;
-        if (scheduleToOnhold) {
-          fallbackStatus = 'on_hold';
-        } else if (isCreateAction) {
-          fallbackStatus = targetStatus;
-        } else {
-          fallbackStatus = form.status;
-        }
+        const fallbackStatus = resolveFallbackStatus({
+          scheduleToOnhold,
+          isCreateAction,
+          targetStatus,
+          currentStatus: form.status,
+        });
         const existingStatus = existingStatusOverride ?? fallbackStatus;
-
-        // DQCGP-3862: if nothing in the vacancy actually changed (same
-        // content, same status), skip the update call entirely rather than
-        // relying on the backend's own diff to decide whether to version —
-        // this is the only way to guarantee "no changes -> no new version"
-        // regardless of how the backend versions a same-content PUT.
-        const originalForm = originalFormRef.current;
-        const isNoOpUpdate =
-          !!originalForm &&
-          !hasVacancyDataChanged(originalForm, payloadForm, existingStatus);
-
-        // DEV-ONLY diagnostic for DQCGP-3862: pinpoints exactly which
-        // section still differs when the update goes out despite the
-        // recruiter not touching anything. Remove once the root cause of
-        // every remaining false-positive diff is confirmed and fixed.
-        if (import.meta.env.DEV && originalForm && !isNoOpUpdate) {
-          // eslint-disable-next-line no-console
-          console.warn(
-            '[DQCGP-3862] vacancy update payload differs from original:',
-            diffVacancyData(originalForm, payloadForm, existingStatus)
-          );
-        }
-
-        if (!isNoOpUpdate) {
-          await updateVacancy({
-            id,
-            form: payloadForm,
-            existingStatus,
-          });
-        }
+        await saveExistingVacancy(id, payloadForm, existingStatus);
       } else {
         await createVacancy({
           form: payloadForm,
@@ -414,20 +462,12 @@ export default function ScheduleVacancyStep({
           templateId,
         });
       }
-      SuccessToast({
-        title: t(
-          successNotification?.titleKey ??
-            (isCreateAction
-              ? 'scheduleVacancy.notifications.successTitle'
-              : 'scheduleVacancy.notifications.updateSuccessTitle')
-        ),
-        description: t(
-          successNotification?.messageKey ??
-            (isCreateAction
-              ? 'scheduleVacancy.notifications.successMessage'
-              : 'scheduleVacancy.notifications.updateSuccessMessage')
-        ),
-      });
+
+      const { titleKey, messageKey } = resolveSuccessNotification(
+        isCreateAction,
+        successNotification
+      );
+      SuccessToast({ title: t(titleKey), description: t(messageKey) });
       onSubmit();
       void navigate('/dashboard/ats/vacancies');
       return true;
