@@ -58,6 +58,13 @@ import { cn } from '@cgp/ui-kit/lib/utils';
 const MAX_ADDRESS_ENTRIES = 5;
 
 /**
+ * Sentinel value for the "clear selection" item placed first in the Gender
+ * and Marital Status fixed dropdowns (Radix Select rejects an empty-string
+ * item value), per the clear-selection NFR for fixed dropdowns.
+ */
+const UNSELECTED_OPTION_VALUE = '__unselected__';
+
+/**
  * Field codes that make up the Addresses group. In the Use Template flow the
  * whole Addresses section (and its add button) is hidden when none of these are
  * enabled by the template — see `hasVisibleAddressField`.
@@ -993,6 +1000,10 @@ export default function ProfileRequirementsStep({
                       <Select
                         value={field.value?.id ?? ''}
                         onValueChange={val => {
+                          if (val === UNSELECTED_OPTION_VALUE) {
+                            field.onChange({ id: '', label: '' });
+                            return;
+                          }
                           const found = gendersData.find(g => g.id === val);
                           if (found) {
                             field.onChange({
@@ -1011,6 +1022,9 @@ export default function ProfileRequirementsStep({
                           />
                         </SelectTrigger>
                         <SelectContent>
+                          <SelectItem value={UNSELECTED_OPTION_VALUE}>
+                            {t('profileRequirements.genderPlaceholder')}
+                          </SelectItem>
                           {gendersData.map(g => (
                             <SelectItem key={g.id} value={g.id}>
                               {g.label}
@@ -1045,6 +1059,10 @@ export default function ProfileRequirementsStep({
                       <Select
                         value={field.value?.id ?? ''}
                         onValueChange={val => {
+                          if (val === UNSELECTED_OPTION_VALUE) {
+                            field.onChange({ id: '', label: '' });
+                            return;
+                          }
                           const found = maritalStatusesData.find(
                             ms => ms.id === val
                           );
@@ -1065,6 +1083,9 @@ export default function ProfileRequirementsStep({
                           />
                         </SelectTrigger>
                         <SelectContent>
+                          <SelectItem value={UNSELECTED_OPTION_VALUE}>
+                            {t('profileRequirements.maritalStatusPlaceholder')}
+                          </SelectItem>
                           {maritalStatusesData.map(ms => (
                             <SelectItem key={ms.id} value={ms.id}>
                               {ms.label}

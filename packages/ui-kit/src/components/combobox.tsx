@@ -271,6 +271,21 @@ export function Combobox({
           onKeyDown={e => {
             if (e.key === 'Enter') {
               e.preventDefault();
+              return;
+            }
+            // Keyboard accessibility: Backspace clears a previously selected
+            // value once the search text is already empty, mirroring the
+            // multi-select's "Backspace removes the last chip" behaviour for
+            // this single-value combobox.
+            if (
+              (e.key === 'Backspace' || e.key === 'Delete') &&
+              searchValue === '' &&
+              (value || selectedOption)
+            ) {
+              e.preventDefault();
+              setSelectedOption(undefined);
+              onValueChange?.('');
+              handleOpenChange(false);
             }
           }}
           placeholder={placeholder}

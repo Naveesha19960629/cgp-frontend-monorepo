@@ -269,7 +269,9 @@ describe('VersionHistoryCustomFormChange', () => {
         },
         {
           questionText: 'Multiple Choice - 2nd New Choice Questions added',
-          rows: [{ before: 'Multiple Choise A', after: 'Multiple Choise A - CK' }],
+          rows: [
+            { before: 'Multiple Choise A', after: 'Multiple Choise A - CK' },
+          ],
         },
       ],
     };
