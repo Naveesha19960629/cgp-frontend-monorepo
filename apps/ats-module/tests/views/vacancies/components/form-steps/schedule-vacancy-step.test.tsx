@@ -282,16 +282,58 @@ describe('ScheduleVacancyStep', () => {
     mode: 'create' as const,
   };
 
+  // Minimal-but-complete stand-in for VacancyForm's required (non-optional)
+  // sections. Real form state (see DEFAULT_FORM in vacancy-form-context.tsx)
+  // always populates these, but tests here only care about the schedule/
+  // status/applicantCount/preferredSkills fields — without this base, the
+  // DQCGP-3862 hasVacancyDataChanged() diff (which maps every section via
+  // toVacancyPayload) throws on the missing arrays/objects.
+  const BASE_VACANCY_FORM_FIELDS = {
+    jobRequirements: [
+      {
+        isEnabled: true,
+        dataTakenFromCandidate: false,
+        discipline: [],
+        careerPath: [],
+        level: [],
+        role: [],
+        jobTitle: [],
+        employmentType: [],
+        workSchedule: [],
+        engagementModel: [],
+        description: '',
+      },
+    ],
+    profileRequirements: {
+      isEnabled: false,
+      dataTakenFromCandidate: false,
+      gender: { id: '', label: '' },
+      maritalStatus: { id: '', label: '' },
+      addresses: [],
+    },
+    secondaryEducation: [
+      { isEnabled: false, dataTakenFromCandidate: false, content: [] },
+    ],
+    tertiaryEducation: [
+      { isEnabled: false, dataTakenFromCandidate: false, content: [] },
+    ],
+  };
+
   /** Helper — sets up the useVacancyForm mock with required fields + optional overrides. */
   const mockVacancyForm = (overrides: Record<string, unknown> = {}) => {
+    const { form: formOverride, ...restOverrides } = overrides;
     vi.mocked(useVacancyForm).mockReturnValue({
-      form: { schedule: undefined },
+      form: {
+        schedule: undefined,
+        ...BASE_VACANCY_FORM_FIELDS,
+        ...(formOverride as Record<string, unknown> | undefined),
+      },
       setForm: mockSetForm,
       onCancel: mockOnCancel,
       stepPersistRef: mockStepPersistRef,
       resolveFormUserCreatedEntries: mockResolveFormUserCreatedEntries,
       originalFormRef: mockOriginalFormRef,
-      ...overrides,
+      ...restOverrides,
     } as unknown as ReturnType<typeof useVacancyForm>);
   };
 
@@ -1553,6 +1595,7 @@ describe('ScheduleVacancyStep', () => {
     };
 
     const baseForm = {
+      ...BASE_VACANCY_FORM_FIELDS,
       status: 'on_hold',
       applicantCount: 5,
       schedule: {
@@ -2482,6 +2525,7 @@ describe('ScheduleVacancyStep', () => {
       };
 
       mockOriginalFormRef.current = {
+        ...BASE_VACANCY_FORM_FIELDS,
         schedule: liveSchedule,
         status: 'live',
         applicantCount: 3,

@@ -96,8 +96,13 @@ const useJobRequirementsForm = () => {
     resolver: zodResolver(jobRequirementsSchema),
     mode: 'onChange',
     defaultValues: {
-      isEnabled: true,
-      dataTakenFromCandidate: false,
+      // DQCGP-3862: round-trip the loaded flags instead of hardcoding —
+      // this section has no UI toggle for either, but silently resetting
+      // them to a fixed default on every edit (regardless of what the
+      // vacancy was actually saved with) mutated data the user never
+      // touched and triggered a spurious new version on Update.
+      isEnabled: initial?.isEnabled ?? true,
+      dataTakenFromCandidate: initial?.dataTakenFromCandidate ?? false,
       discipline: mapRefToFormOption(initial?.discipline),
       careerPath: mapRefToFormOption(initial?.careerPath),
       level: mapRefToFormOption(initial?.level),

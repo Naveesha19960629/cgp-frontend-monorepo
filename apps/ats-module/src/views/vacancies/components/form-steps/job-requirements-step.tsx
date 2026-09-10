@@ -81,6 +81,14 @@ export default function JobRequirementsStep({
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // DQCGP-3862: this section has no UI toggle for either flag — round-trip
+  // whatever was loaded instead of hardcoding, so an untouched Job
+  // Requirements step never silently mutates data the user didn't change.
+  const loadedJobRequirement = contextForm.jobRequirements[0];
+  const isEnabled = loadedJobRequirement?.isEnabled ?? true;
+  const dataTakenFromCandidate =
+    loadedJobRequirement?.dataTakenFromCandidate ?? false;
+
   const [disciplineSearch, setDisciplineSearch] = useState('');
   const [careerPathSearch, setCareerPathSearch] = useState('');
   const [roleSearch, setRoleSearch] = useState('');
@@ -234,8 +242,8 @@ export default function JobRequirementsStep({
       return {
         jobRequirements: [
           {
-            isEnabled: true,
-            dataTakenFromCandidate: false,
+            isEnabled,
+            dataTakenFromCandidate,
             discipline: toPayloadOptions(data.discipline),
             careerPath: toPayloadOptions(data.careerPath),
             level: toPayloadOptions(data.level),
@@ -267,8 +275,8 @@ export default function JobRequirementsStep({
       onNext({
         jobRequirements: [
           {
-            isEnabled: true,
-            dataTakenFromCandidate: false,
+            isEnabled,
+            dataTakenFromCandidate,
             discipline: toPayloadOptions(discipline),
             careerPath: toPayloadOptions(careerPath),
             level: toPayloadOptions(data.level),

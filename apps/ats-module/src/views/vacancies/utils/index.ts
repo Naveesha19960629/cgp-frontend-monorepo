@@ -73,6 +73,8 @@ export {
 export {
   toCreateVacancyPayload,
   toUpdateVacancyPayload,
+  hasVacancyDataChanged,
+  diffVacancyData,
 } from '@/views/vacancies/utils/vacancy-payload-helpers';
 export {
   toVacancyFormFromResponse,
