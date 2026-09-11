@@ -68,38 +68,46 @@ function VacancyProfileRequirementsSection({
                         {addressTitle}
                       </h3>
                       <div className="flex flex-wrap gap-x-9 gap-y-2">
-                        <div className="flex min-w-[80px] flex-col">
-                          <span className="text-sm font-semibold text-slate-500">
-                            {t('profileRequirements.city')}
-                          </span>
-                          <span className="text-base font-semibold text-slate-900">
-                            {address.city || '-'}
-                          </span>
-                        </div>
-                        <div className="flex min-w-[120px] flex-col">
-                          <span className="text-sm font-semibold text-slate-500">
-                            {t('profileRequirements.stateProvince')}
-                          </span>
-                          <span className="text-base font-semibold text-slate-900">
-                            {address.stateProvince || '-'}
-                          </span>
-                        </div>
-                        <div className="flex min-w-[80px] flex-col">
-                          <span className="text-sm font-semibold text-slate-500">
-                            {t('profileRequirements.country')}
-                          </span>
-                          <span className="text-base font-semibold text-slate-900">
-                            {address.country || '-'}
-                          </span>
-                        </div>
-                        <div className="flex min-w-[80px] flex-col">
-                          <span className="text-sm font-semibold text-slate-500">
-                            {t('profileRequirements.postalCode')}
-                          </span>
-                          <span className="text-base font-semibold text-slate-900">
-                            {address.postalCode || '-'}
-                          </span>
-                        </div>
+                        {address.city && (
+                          <div className="flex min-w-[80px] flex-col">
+                            <span className="text-sm font-semibold text-slate-500">
+                              {t('profileRequirements.city')}
+                            </span>
+                            <span className="text-base font-semibold text-slate-900">
+                              {address.city}
+                            </span>
+                          </div>
+                        )}
+                        {address.stateProvince && (
+                          <div className="flex min-w-[120px] flex-col">
+                            <span className="text-sm font-semibold text-slate-500">
+                              {t('profileRequirements.stateProvince')}
+                            </span>
+                            <span className="text-base font-semibold text-slate-900">
+                              {address.stateProvince}
+                            </span>
+                          </div>
+                        )}
+                        {address.country && (
+                          <div className="flex min-w-[80px] flex-col">
+                            <span className="text-sm font-semibold text-slate-500">
+                              {t('profileRequirements.country')}
+                            </span>
+                            <span className="text-base font-semibold text-slate-900">
+                              {address.country}
+                            </span>
+                          </div>
+                        )}
+                        {address.postalCode && (
+                          <div className="flex min-w-[80px] flex-col">
+                            <span className="text-sm font-semibold text-slate-500">
+                              {t('profileRequirements.postalCode')}
+                            </span>
+                            <span className="text-base font-semibold text-slate-900">
+                              {address.postalCode}
+                            </span>
+                          </div>
+                        )}
                       </div>
                     </div>
                   );

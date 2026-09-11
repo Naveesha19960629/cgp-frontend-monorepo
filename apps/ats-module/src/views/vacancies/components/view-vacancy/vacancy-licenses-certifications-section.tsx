@@ -27,54 +27,74 @@ function VacancyLicensesCertificationsSection({
   } else {
     content = (
       <div className="flex flex-col gap-6">
-        {licenseCertificates.content.map((entry, index) => (
-          <div
-            key={`${entry.issueDate}-${entry.expirationDate}-${index}`}
-            className="flex flex-col gap-3"
-          >
-            {/* Top metadata row */}
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center gap-1 text-sm">
-                <Clock size={20} className="text-slate-600" variant="Bold" />
-                <span className="font-semibold text-slate-600">
-                  {formatDateRange(entry.issueDate, entry.expirationDate)}
-                </span>
-              </div>
-              {entry.internationallyAccepted && (
-                <div className="flex items-center gap-1 text-sm">
-                  <Global size={20} className="text-slate-600" variant="Bold" />
-                  <span className="font-semibold text-slate-600">
-                    {t(
-                      'licenseCertificates.internationallyAcceptedShort',
-                      'Internationally accepted'
-                    )}
-                  </span>
-                </div>
-              )}
-            </div>
+        {licenseCertificates.content.map((entry, index) => {
+          const dateRange = formatDateRange(
+            entry.issueDate,
+            entry.expirationDate
+          );
 
-            {/* Shaded box grid */}
-            <div className="rounded-lg border border-[#ebedf0] bg-[#f8fafc] p-4">
-              <VacancyView.Grid>
-                <VacancyView.Field
-                  label={t('licenseCertificates.nameOfLicenseCert')}
-                >
-                  <VacancyView.Tags values={entry.nameOfLicenseCert} />
-                </VacancyView.Field>
-                <VacancyView.Field
-                  label={t('licenseCertificates.issuingOrganization')}
-                >
-                  <VacancyView.Tags values={entry.issuingOrganization} />
-                </VacancyView.Field>
-                <VacancyView.Field
-                  label={t('licenseCertificates.organizationLocations')}
-                >
-                  <VacancyView.Tags values={entry.organizationLocations} />
-                </VacancyView.Field>
-              </VacancyView.Grid>
+          return (
+            <div
+              key={`${entry.issueDate}-${entry.expirationDate}-${index}`}
+              className="flex flex-col gap-3"
+            >
+              {/* Top metadata row */}
+              <div className="flex flex-col gap-2">
+                {dateRange && (
+                  <div className="flex items-center gap-1 text-sm">
+                    <Clock
+                      size={20}
+                      className="text-slate-600"
+                      variant="Bold"
+                    />
+                    <span className="font-semibold text-slate-600">
+                      {dateRange}
+                    </span>
+                  </div>
+                )}
+                {entry.internationallyAccepted && (
+                  <div className="flex items-center gap-1 text-sm">
+                    <Global
+                      size={20}
+                      className="text-slate-600"
+                      variant="Bold"
+                    />
+                    <span className="font-semibold text-slate-600">
+                      {t(
+                        'licenseCertificates.internationallyAcceptedShort',
+                        'Internationally accepted'
+                      )}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Shaded box grid */}
+              <div className="rounded-lg border border-[#ebedf0] bg-[#f8fafc] p-4">
+                <VacancyView.Grid>
+                  <VacancyView.Field
+                    label={t('licenseCertificates.nameOfLicenseCert')}
+                    isEmpty={entry.nameOfLicenseCert.length === 0}
+                  >
+                    <VacancyView.Tags values={entry.nameOfLicenseCert} />
+                  </VacancyView.Field>
+                  <VacancyView.Field
+                    label={t('licenseCertificates.issuingOrganization')}
+                    isEmpty={entry.issuingOrganization.length === 0}
+                  >
+                    <VacancyView.Tags values={entry.issuingOrganization} />
+                  </VacancyView.Field>
+                  <VacancyView.Field
+                    label={t('licenseCertificates.organizationLocations')}
+                    isEmpty={entry.organizationLocations.length === 0}
+                  >
+                    <VacancyView.Tags values={entry.organizationLocations} />
+                  </VacancyView.Field>
+                </VacancyView.Grid>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     );
   }

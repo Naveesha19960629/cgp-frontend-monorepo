@@ -93,7 +93,7 @@ describe('VacancyPublicationsSection', () => {
     expect(screen.getByText('Nature')).toBeInTheDocument();
   });
 
-  it('shows a dash for the publisher value when it is empty', () => {
+  it('hides the publisher field entirely when its value is empty', () => {
     render(
       <VacancyPublicationsSection
         preferredPublications={{
@@ -104,9 +104,8 @@ describe('VacancyPublicationsSection', () => {
       />
     );
     expect(
-      screen.getByText('preferredPublications.fieldList.publisher')
-    ).toBeInTheDocument();
-    expect(screen.getByText('-')).toBeInTheDocument();
+      screen.queryByText('preferredPublications.fieldList.publisher')
+    ).not.toBeInTheDocument();
   });
 
   it('formats publishedDateFrom and publishedDateTo as a date range', () => {
@@ -130,7 +129,7 @@ describe('VacancyPublicationsSection', () => {
     ).toBeInTheDocument();
   });
 
-  it('shows "- Present" when only publishedDateFrom is set', () => {
+  it('shows "N/A" for publishedDateTo when only publishedDateFrom is set', () => {
     render(
       <VacancyPublicationsSection
         preferredPublications={{
@@ -140,10 +139,10 @@ describe('VacancyPublicationsSection', () => {
         }}
       />
     );
-    expect(screen.getByText('5th Mar 2022 - Present')).toBeInTheDocument();
+    expect(screen.getByText('5th Mar 2022 - N/A')).toBeInTheDocument();
   });
 
-  it('shows "Until ..." when only publishedDateTo is set', () => {
+  it('shows "N/A" for publishedDateFrom when only publishedDateTo is set', () => {
     render(
       <VacancyPublicationsSection
         preferredPublications={{
@@ -153,7 +152,7 @@ describe('VacancyPublicationsSection', () => {
         }}
       />
     );
-    expect(screen.getByText('Until 1st Nov 2024')).toBeInTheDocument();
+    expect(screen.getByText('N/A - 1st Nov 2024')).toBeInTheDocument();
   });
 
   it('renders multiple content entries', () => {

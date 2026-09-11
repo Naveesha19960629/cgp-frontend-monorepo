@@ -93,7 +93,7 @@ describe('VacancyPatentsSection', () => {
     ).toBeInTheDocument();
   });
 
-  it('shows only fromDate when toDate is absent', () => {
+  it('shows "N/A" for toDate when only fromDate is provided', () => {
     render(
       <VacancyPatentsSection
         preferredPatents={{
@@ -103,10 +103,10 @@ describe('VacancyPatentsSection', () => {
         }}
       />
     );
-    expect(screen.getByText('5th Mar 2022')).toBeInTheDocument();
+    expect(screen.getByText('5th Mar 2022 - N/A')).toBeInTheDocument();
   });
 
-  it('shows only toDate when fromDate is absent', () => {
+  it('shows "N/A" for fromDate when only toDate is provided', () => {
     render(
       <VacancyPatentsSection
         preferredPatents={{
@@ -116,7 +116,7 @@ describe('VacancyPatentsSection', () => {
         }}
       />
     );
-    expect(screen.getByText('1st Nov 2024')).toBeInTheDocument();
+    expect(screen.getByText('N/A - 1st Nov 2024')).toBeInTheDocument();
   });
 
   it('does not render the date row when both fromDate and toDate are absent', () => {
@@ -129,9 +129,7 @@ describe('VacancyPatentsSection', () => {
         }}
       />
     );
-    expect(
-      screen.queryByText(/Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec/)
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText(/N\/A/)).not.toBeInTheDocument();
   });
 
   it('renders status tags', () => {

@@ -33,17 +33,18 @@ function formatIsoDateTimeForDisplay(dateStr: string): string {
 }
 
 /**
- * Format a start/end date pair as a display range:
- * - both  -> "12th Jan 2022 - 13th Feb 2023"
- * - start -> "12th Jan 2022 - Present"
- * - end   -> "Until 13th Feb 2023"
+ * Format a start/end date pair as a display range (CR-10):
+ * - both    -> "12th Jan 2022 - 13th Feb 2023"
+ * - start   -> "12th Jan 2022 - N/A"
+ * - end     -> "N/A - 13th Feb 2023"
+ * - neither -> '' (caller should not render the field at all)
  */
 function formatDateRange(startDate?: string, endDate?: string): string {
   const start = formatDisplayDate(startDate);
   const end = formatDisplayDate(endDate);
   if (start && end) return `${start} - ${end}`;
-  if (start) return `${start} - Present`;
-  if (end) return `Until ${end}`;
+  if (start) return `${start} - N/A`;
+  if (end) return `N/A - ${end}`;
   return '';
 }
 

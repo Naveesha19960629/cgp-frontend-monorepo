@@ -45,7 +45,7 @@ describe('VacancyLanguagesSection', () => {
     ).toBeInTheDocument();
   });
 
-  it('shows a dash when section is enabled but content is empty', () => {
+  it('shows the section title but no tags when content is empty', () => {
     render(
       <VacancyLanguagesSection
         preferredLanguages={{
@@ -55,7 +55,8 @@ describe('VacancyLanguagesSection', () => {
         }}
       />
     );
-    expect(screen.getByText('-')).toBeInTheDocument();
+    expect(screen.getByText('preferredLanguages.title')).toBeInTheDocument();
+    expect(screen.queryByText('-')).not.toBeInTheDocument();
   });
 
   it('renders the section title and each language tag when content exists', () => {

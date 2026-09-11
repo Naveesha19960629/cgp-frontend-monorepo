@@ -45,7 +45,7 @@ describe('VacancyIndustriesSection', () => {
     ).toBeInTheDocument();
   });
 
-  it('shows a dash when section is enabled but content is empty', () => {
+  it('shows the section title but no tags when content is empty', () => {
     render(
       <VacancyIndustriesSection
         preferredIndustries={{
@@ -55,7 +55,8 @@ describe('VacancyIndustriesSection', () => {
         }}
       />
     );
-    expect(screen.getByText('-')).toBeInTheDocument();
+    expect(screen.getByText('preferredIndustries.title')).toBeInTheDocument();
+    expect(screen.queryByText('-')).not.toBeInTheDocument();
   });
 
   it('renders the section title when data exists', () => {

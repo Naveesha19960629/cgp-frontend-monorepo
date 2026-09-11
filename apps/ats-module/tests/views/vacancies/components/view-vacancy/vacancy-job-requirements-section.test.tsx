@@ -29,21 +29,33 @@ describe('VacancyJobRequirementsSection', () => {
     ).toBeInTheDocument();
   });
 
-  it('renders the info row labels', () => {
+  it('renders the info row labels when data is present', () => {
     render(
-      <VacancyJobRequirementsSection jobRequirement={baseJobRequirement} />
+      <VacancyJobRequirementsSection
+        jobRequirement={{
+          ...baseJobRequirement,
+          discipline: ['Engineering'],
+          careerPath: ['Individual Contributor'],
+          level: ['Senior'],
+        }}
+      />
     );
     expect(screen.getByText('jobRequirements.discipline')).toBeInTheDocument();
     expect(screen.getByText('jobRequirements.careerPath')).toBeInTheDocument();
     expect(screen.getByText('jobRequirements.level')).toBeInTheDocument();
   });
 
-  it('shows a dash for discipline, careerPath and level when they are empty arrays', () => {
+  it('hides discipline, careerPath and level rows when they are empty arrays', () => {
     render(
       <VacancyJobRequirementsSection jobRequirement={baseJobRequirement} />
     );
-    // three info rows all render '-' when their values are empty
-    expect(screen.getAllByText('-').length).toBeGreaterThanOrEqual(3);
+    expect(
+      screen.queryByText('jobRequirements.discipline')
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('jobRequirements.careerPath')
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('jobRequirements.level')).not.toBeInTheDocument();
   });
 
   it('renders joined discipline, careerPath and level values', () => {
@@ -62,12 +74,13 @@ describe('VacancyJobRequirementsSection', () => {
     expect(screen.getByText('Senior')).toBeInTheDocument();
   });
 
-  it('shows a dash for the description when it is empty', () => {
-    render(
+  it('hides the description entirely when it is empty', () => {
+    const { container } = render(
       <VacancyJobRequirementsSection jobRequirement={baseJobRequirement} />
     );
-    // Description renders its own dash in addition to the info-row dashes
-    expect(screen.getAllByText('-').length).toBeGreaterThanOrEqual(4);
+    expect(
+      container.querySelector('.whitespace-pre-wrap')
+    ).not.toBeInTheDocument();
   });
 
   it('renders the description text when present', () => {
@@ -84,9 +97,18 @@ describe('VacancyJobRequirementsSection', () => {
     ).toBeInTheDocument();
   });
 
-  it('renders the field labels for role, jobTitle, employmentType, workSchedule and engagementModel', () => {
+  it('renders the field labels for role, jobTitle, employmentType, workSchedule and engagementModel when present', () => {
     render(
-      <VacancyJobRequirementsSection jobRequirement={baseJobRequirement} />
+      <VacancyJobRequirementsSection
+        jobRequirement={{
+          ...baseJobRequirement,
+          role: ['Backend Developer'],
+          jobTitle: ['Software Engineer II'],
+          employmentType: ['Full-Time'],
+          workSchedule: ['Standard Hours'],
+          engagementModel: ['Permanent'],
+        }}
+      />
     );
     expect(screen.getByText('jobRequirements.role')).toBeInTheDocument();
     expect(screen.getByText('jobRequirements.jobTitle')).toBeInTheDocument();
@@ -121,14 +143,24 @@ describe('VacancyJobRequirementsSection', () => {
     expect(screen.getByText('Permanent')).toBeInTheDocument();
   });
 
-  it('shows a dash for each chip field when its array is empty', () => {
+  it('hides every chip field when its array is empty', () => {
     const { container } = render(
       <VacancyJobRequirementsSection jobRequirement={baseJobRequirement} />
     );
-    // 5 Tags fields (role, jobTitle, employmentType, workSchedule, engagementModel)
-    // each render a '-' when empty, plus 3 info-row dashes and 1 description dash.
-    const dashes = screen.getAllByText('-');
-    expect(dashes.length).toBe(9);
+    expect(screen.queryByText('jobRequirements.role')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('jobRequirements.jobTitle')
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('jobRequirements.employmentType')
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('jobRequirements.workSchedule')
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('jobRequirements.engagementModel')
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('-')).not.toBeInTheDocument();
     expect(container.querySelector('.bg-\\[\\#f8fafc\\]')).toBeInTheDocument();
   });
 

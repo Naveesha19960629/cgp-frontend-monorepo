@@ -62,17 +62,18 @@ describe('VacancyProfileRequirementsSection', () => {
     expect(screen.getByText('profileRequirements.title')).toBeInTheDocument();
   });
 
-  it('renders the gender and marital status labels with a dash when values are empty', () => {
+  it('hides the gender and marital status rows when values are empty', () => {
     render(
       <VacancyProfileRequirementsSection
         profileRequirement={baseProfileRequirement}
       />
     );
-    expect(screen.getByText('profileRequirements.gender')).toBeInTheDocument();
     expect(
-      screen.getByText('profileRequirements.maritalStatus')
-    ).toBeInTheDocument();
-    expect(screen.getAllByText('-')).toHaveLength(2);
+      screen.queryByText('profileRequirements.gender')
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('profileRequirements.maritalStatus')
+    ).not.toBeInTheDocument();
   });
 
   it('renders gender and marital status values when present', () => {
@@ -123,7 +124,7 @@ describe('VacancyProfileRequirementsSection', () => {
     expect(screen.getByText('00100')).toBeInTheDocument();
   });
 
-  it('shows a dash for each address field that is empty', () => {
+  it('hides each address field that is empty', () => {
     render(
       <VacancyProfileRequirementsSection
         profileRequirement={{
@@ -134,8 +135,19 @@ describe('VacancyProfileRequirementsSection', () => {
         }}
       />
     );
-    // 2 dashes from gender/maritalStatus + 4 from the empty address fields
-    expect(screen.getAllByText('-')).toHaveLength(6);
+    expect(
+      screen.queryByText('profileRequirements.city')
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('profileRequirements.stateProvince')
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('profileRequirements.country')
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('profileRequirements.postalCode')
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('-')).not.toBeInTheDocument();
   });
 
   it('renders multiple addresses in reverse order with descending, zero-padded titles', () => {

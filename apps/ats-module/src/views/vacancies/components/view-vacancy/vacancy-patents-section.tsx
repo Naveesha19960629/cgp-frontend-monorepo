@@ -6,16 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { VacancyNoDetailsState } from '@/views/vacancies/components/view-vacancy/vacancy-no-details-state';
 import { VacancyView } from '@/views/vacancies/components/view-vacancy/vacancy-view';
 import type { VacancyViewModel } from '@/views/vacancies/types';
-import { formatDisplayDate } from '@/views/vacancies/utils/format-date-range';
-
-function formatDateRange(fromDate?: string, toDate?: string): string {
-  const from = formatDisplayDate(fromDate);
-  const to = formatDisplayDate(toDate);
-  if (from && to) return `${from} - ${to}`;
-  if (from) return from;
-  if (to) return to;
-  return '';
-}
+import { formatDateRange } from '@/views/vacancies/utils/format-date-range';
 
 function VacancyPatentsSection({
   preferredPatents,
