@@ -405,6 +405,13 @@ function AddressCard({
     form.setValue(`addresses.${index}.country`, toPlaceOption(r.country), {
       shouldValidate: true,
     });
+    // A new State/Province no longer matches the previously selected City,
+    // so clear it and let the user pick a City valid for this State.
+    form.setValue(
+      `addresses.${index}.city`,
+      { id: '', label: '' },
+      { shouldValidate: true }
+    );
     void (async () => {
       const country = await resolveCountry(r.country);
       form.setValue(`addresses.${index}.country`, country, {
@@ -420,6 +427,18 @@ function AddressCard({
     form.setValue(
       `addresses.${index}.country`,
       { id: r.country.id, label: r.country.label },
+      { shouldValidate: true }
+    );
+    // A new Country invalidates the previously selected State/Province and
+    // City, so clear both and let the user pick values valid for this Country.
+    form.setValue(
+      `addresses.${index}.stateProvince`,
+      { id: '', label: '' },
+      { shouldValidate: true }
+    );
+    form.setValue(
+      `addresses.${index}.city`,
+      { id: '', label: '' },
       { shouldValidate: true }
     );
     setTimeout(() => checkDuplicate(), 0);

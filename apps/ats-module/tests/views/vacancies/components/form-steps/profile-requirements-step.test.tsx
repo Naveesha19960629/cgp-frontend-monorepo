@@ -872,6 +872,93 @@ describe('ProfileRequirementsStep', () => {
         ).toHaveTextContent(COUNTRY_ID);
       });
     });
+
+    it('clears the previously selected City when a new State/Province is selected', async () => {
+      const user = userEvent.setup();
+      const STATE_ID = '44444444-4444-4444-4444-444444444444';
+      mockUsePlacesStateQuery.mockReturnValue({
+        data: [
+          {
+            state: { id: STATE_ID, label: 'Bavaria' },
+            country: { label: 'Germany' },
+          },
+        ],
+        isFetching: false,
+      });
+      mockGetByCountry.mockResolvedValue([
+        { country: { id: RESOLVED_COUNTRY_ID, label: 'Germany' } },
+      ]);
+
+      renderStep({
+        isEnabled: true,
+        addresses: [
+          {
+            city: { id: 'city-1', label: 'Aachen' },
+            stateProvince: { id: 'state-1', label: 'North Rhine-Westphalia' },
+            country: { id: 'country-1', label: 'Germany' },
+            postalCode: '52062',
+          },
+        ],
+      });
+
+      expect(
+        screen.getByTestId(
+          'combobox-profileRequirements.cityPlaceholder-current'
+        )
+      ).toHaveTextContent('Aachen');
+
+      await user.click(
+        screen.getByText(
+          'opt:profileRequirements.stateProvincePlaceholder:Bavaria, Germany'
+        )
+      );
+
+      await waitFor(() => {
+        expect(
+          screen.getByTestId(
+            'combobox-profileRequirements.cityPlaceholder-current'
+          )
+        ).toHaveTextContent('');
+      });
+    });
+
+    it('clears the previously selected State/Province and City when a new Country is selected', async () => {
+      const user = userEvent.setup();
+      const COUNTRY_ID = '55555555-5555-5555-5555-555555555555';
+      mockUsePlacesCountryQuery.mockReturnValue({
+        data: [{ country: { id: COUNTRY_ID, label: 'France' } }],
+        isFetching: false,
+      });
+
+      renderStep({
+        isEnabled: true,
+        addresses: [
+          {
+            city: { id: 'city-1', label: 'Aachen' },
+            stateProvince: { id: 'state-1', label: 'North Rhine-Westphalia' },
+            country: { id: 'country-1', label: 'Germany' },
+            postalCode: '52062',
+          },
+        ],
+      });
+
+      await user.click(
+        screen.getByText('opt:profileRequirements.countryPlaceholder:France')
+      );
+
+      await waitFor(() => {
+        expect(
+          screen.getByTestId(
+            'combobox-profileRequirements.stateProvincePlaceholder-current'
+          )
+        ).toHaveTextContent('');
+      });
+      expect(
+        screen.getByTestId(
+          'combobox-profileRequirements.cityPlaceholder-current'
+        )
+      ).toHaveTextContent('');
+    });
   });
 
   describe('duplicate address detection', () => {
