@@ -146,7 +146,7 @@ describe('VacancyCustomizableFormSection', () => {
     expect(screen.getByText('Second question')).toBeInTheDocument();
   });
 
-  it('shows a dash for question text when it is empty', () => {
+  it('hides the question field entirely when question text is empty', () => {
     render(
       <VacancyCustomizableFormSection
         customizableForm={{
@@ -156,10 +156,13 @@ describe('VacancyCustomizableFormSection', () => {
         }}
       />
     );
-    expect(screen.getByText('-')).toBeInTheDocument();
+    expect(
+      screen.queryByText('customizableForm.view.question')
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('-')).not.toBeInTheDocument();
   });
 
-  it('shows a dash for type label when question type is empty', () => {
+  it('hides the type field entirely when question type is empty', () => {
     render(
       <VacancyCustomizableFormSection
         customizableForm={{
@@ -169,8 +172,10 @@ describe('VacancyCustomizableFormSection', () => {
         }}
       />
     );
-    const dashes = screen.getAllByText('-');
-    expect(dashes.length).toBeGreaterThan(0);
+    expect(
+      screen.queryByText('customizableForm.view.type')
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('-')).not.toBeInTheDocument();
   });
 
   it.each([

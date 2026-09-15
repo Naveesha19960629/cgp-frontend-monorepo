@@ -103,7 +103,7 @@ describe('VacancyHonoursAwardsSection', () => {
     ).toBeInTheDocument();
   });
 
-  it('shows issuedFromDate with a "Present" suffix when issuedToDate is absent', () => {
+  it('shows issuedFromDate with "N/A" for issuedToDate when issuedToDate is absent', () => {
     render(
       <VacancyHonoursAwardsSection
         preferredHonoursAwards={{
@@ -115,10 +115,10 @@ describe('VacancyHonoursAwardsSection', () => {
         }}
       />
     );
-    expect(screen.getByText('5th Mar 2022 - Present')).toBeInTheDocument();
+    expect(screen.getByText('5th Mar 2022 - N/A')).toBeInTheDocument();
   });
 
-  it('shows issuedToDate with an "Until" prefix when issuedFromDate is absent', () => {
+  it('shows issuedToDate with "N/A" for issuedFromDate when issuedFromDate is absent', () => {
     render(
       <VacancyHonoursAwardsSection
         preferredHonoursAwards={{
@@ -130,7 +130,7 @@ describe('VacancyHonoursAwardsSection', () => {
         }}
       />
     );
-    expect(screen.getByText('Until 1st Nov 2024')).toBeInTheDocument();
+    expect(screen.getByText('N/A - 1st Nov 2024')).toBeInTheDocument();
   });
 
   it('renders an empty date row when both issuedFromDate and issuedToDate are absent', () => {

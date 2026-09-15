@@ -27,30 +27,39 @@ function VacancyPublicationsSection({
   } else {
     content = (
       <div className="flex flex-col gap-6">
-        {preferredPublications.content.map((pub, index) => (
-          <div
-            key={`${pub.acceptedPublisherName}-${pub.publishedDateFrom}-${index}`}
-            className="flex flex-col gap-2"
-          >
-            <VacancyView.InfoRow
-              icon={
-                <DocumentText
-                  size={20}
-                  className="text-slate-600"
-                  variant="Bold"
-                />
-              }
-              label={t('preferredPublications.fieldList.publisher')}
-              value={pub.acceptedPublisherName}
-            />
-            <div className="flex items-center gap-1 text-sm">
-              <Clock size={20} className="text-slate-600" variant="Bold" />
-              <span className="font-semibold text-slate-600">
-                {formatDateRange(pub.publishedDateFrom, pub.publishedDateTo)}
-              </span>
+        {preferredPublications.content.map((pub, index) => {
+          const dateRange = formatDateRange(
+            pub.publishedDateFrom,
+            pub.publishedDateTo
+          );
+
+          return (
+            <div
+              key={`${pub.acceptedPublisherName}-${pub.publishedDateFrom}-${index}`}
+              className="flex flex-col gap-2"
+            >
+              <VacancyView.InfoRow
+                icon={
+                  <DocumentText
+                    size={20}
+                    className="text-slate-600"
+                    variant="Bold"
+                  />
+                }
+                label={t('preferredPublications.fieldList.publisher')}
+                value={pub.acceptedPublisherName}
+              />
+              {dateRange && (
+                <div className="flex items-center gap-1 text-sm">
+                  <Clock size={20} className="text-slate-600" variant="Bold" />
+                  <span className="font-semibold text-slate-600">
+                    {dateRange}
+                  </span>
+                </div>
+              )}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     );
   }

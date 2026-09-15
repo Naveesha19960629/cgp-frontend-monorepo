@@ -98,7 +98,7 @@ describe('VacancySportsSection', () => {
     ).toBeInTheDocument();
   });
 
-  it('shows startDate with a "Present" suffix when endDate is absent', () => {
+  it('shows startDate with "N/A" for endDate when endDate is absent', () => {
     render(
       <VacancySportsSection
         preferredSports={{
@@ -108,10 +108,10 @@ describe('VacancySportsSection', () => {
         }}
       />
     );
-    expect(screen.getByText('5th Mar 2022 - Present')).toBeInTheDocument();
+    expect(screen.getByText('5th Mar 2022 - N/A')).toBeInTheDocument();
   });
 
-  it('shows endDate with an "Until" prefix when startDate is absent', () => {
+  it('shows endDate with "N/A" for startDate when startDate is absent', () => {
     render(
       <VacancySportsSection
         preferredSports={{
@@ -121,7 +121,7 @@ describe('VacancySportsSection', () => {
         }}
       />
     );
-    expect(screen.getByText('Until 1st Nov 2024')).toBeInTheDocument();
+    expect(screen.getByText('N/A - 1st Nov 2024')).toBeInTheDocument();
   });
 
   it('renders an empty date row when both startDate and endDate are absent', () => {

@@ -138,7 +138,7 @@ describe('VacancySecondaryEducationSection', () => {
         }}
       />
     );
-    expect(screen.getByText('12th Jan 2022 - Present')).toBeInTheDocument();
+    expect(screen.getByText('12th Jan 2022 - N/A')).toBeInTheDocument();
   });
 
   it('does not render the date row when both startDate and endDate are absent', () => {
@@ -151,7 +151,7 @@ describe('VacancySecondaryEducationSection', () => {
         }}
       />
     );
-    expect(screen.queryByText(/Present/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/N\/A/)).not.toBeInTheDocument();
   });
 
   it('displays results as an info row when present', () => {

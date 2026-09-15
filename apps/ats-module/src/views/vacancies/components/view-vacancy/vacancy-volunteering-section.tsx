@@ -27,50 +27,67 @@ function VacancyVolunteeringSection({
   } else {
     content = (
       <div className="flex flex-col gap-6">
-        {preferredVolunteering.content.map((entry, index) => (
-          <div
-            key={`${entry.positionRole}-${entry.startDate}-${index}`}
-            className="flex flex-col gap-3"
-          >
-            {/* Top metadata rows stacked vertically */}
-            <div className="flex flex-col gap-2">
-              <VacancyView.InfoRow
-                icon={
-                  <Crown size={20} className="text-slate-600" variant="Bold" />
-                }
-                label={t('preferredVolunteering.fieldList.position')}
-                value={entry.positionRole}
-              />
-              <div className="flex items-center gap-1 text-sm">
-                <Clock size={20} className="text-slate-600" variant="Bold" />
-                <span className="font-semibold text-slate-600">
-                  {formatDateRange(entry.startDate, entry.endDate)}
-                </span>
+        {preferredVolunteering.content.map((entry, index) => {
+          const dateRange = formatDateRange(entry.startDate, entry.endDate);
+
+          return (
+            <div
+              key={`${entry.positionRole}-${entry.startDate}-${index}`}
+              className="flex flex-col gap-3"
+            >
+              {/* Top metadata rows stacked vertically */}
+              <div className="flex flex-col gap-2">
+                <VacancyView.InfoRow
+                  icon={
+                    <Crown
+                      size={20}
+                      className="text-slate-600"
+                      variant="Bold"
+                    />
+                  }
+                  label={t('preferredVolunteering.fieldList.position')}
+                  value={entry.positionRole}
+                />
+                {dateRange && (
+                  <div className="flex items-center gap-1 text-sm">
+                    <Clock
+                      size={20}
+                      className="text-slate-600"
+                      variant="Bold"
+                    />
+                    <span className="font-semibold text-slate-600">
+                      {dateRange}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Shaded box grid */}
+              <div className="rounded-lg border border-[#ebedf0] bg-[#f8fafc] p-4">
+                <VacancyView.Grid>
+                  <VacancyView.Field
+                    label={t('preferredVolunteering.fieldList.organization')}
+                    isEmpty={entry.organization.length === 0}
+                  >
+                    <VacancyView.Tags values={entry.organization} />
+                  </VacancyView.Field>
+                  <VacancyView.Field
+                    label={t('preferredVolunteering.fieldList.location')}
+                    isEmpty={entry.organizationLocations.length === 0}
+                  >
+                    <VacancyView.Tags values={entry.organizationLocations} />
+                  </VacancyView.Field>
+                  <VacancyView.Field
+                    label={t('preferredVolunteering.fieldList.cause')}
+                    isEmpty={entry.cause.length === 0}
+                  >
+                    <VacancyView.Tags values={entry.cause} />
+                  </VacancyView.Field>
+                </VacancyView.Grid>
               </div>
             </div>
-
-            {/* Shaded box grid */}
-            <div className="rounded-lg border border-[#ebedf0] bg-[#f8fafc] p-4">
-              <VacancyView.Grid>
-                <VacancyView.Field
-                  label={t('preferredVolunteering.fieldList.organization')}
-                >
-                  <VacancyView.Tags values={entry.organization} />
-                </VacancyView.Field>
-                <VacancyView.Field
-                  label={t('preferredVolunteering.fieldList.location')}
-                >
-                  <VacancyView.Tags values={entry.organizationLocations} />
-                </VacancyView.Field>
-                <VacancyView.Field
-                  label={t('preferredVolunteering.fieldList.cause')}
-                >
-                  <VacancyView.Tags values={entry.cause} />
-                </VacancyView.Field>
-              </VacancyView.Grid>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     );
   }

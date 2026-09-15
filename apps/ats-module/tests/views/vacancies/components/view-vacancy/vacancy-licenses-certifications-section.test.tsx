@@ -101,7 +101,7 @@ describe('VacancyLicensesCertificationsSection', () => {
     ).toBeInTheDocument();
   });
 
-  it('shows "Present" when only issueDate is provided', () => {
+  it('shows "N/A" for expirationDate when only issueDate is provided', () => {
     render(
       <VacancyLicensesCertificationsSection
         licenseCertificates={{
@@ -113,10 +113,10 @@ describe('VacancyLicensesCertificationsSection', () => {
         }}
       />
     );
-    expect(screen.getByText('5th Mar 2022 - Present')).toBeInTheDocument();
+    expect(screen.getByText('5th Mar 2022 - N/A')).toBeInTheDocument();
   });
 
-  it('shows "Until" when only expirationDate is provided', () => {
+  it('shows "N/A" for issueDate when only expirationDate is provided', () => {
     render(
       <VacancyLicensesCertificationsSection
         licenseCertificates={{
@@ -128,7 +128,7 @@ describe('VacancyLicensesCertificationsSection', () => {
         }}
       />
     );
-    expect(screen.getByText('Until 1st Nov 2024')).toBeInTheDocument();
+    expect(screen.getByText('N/A - 1st Nov 2024')).toBeInTheDocument();
   });
 
   it('renders the internationally accepted row when internationallyAccepted is true', () => {
@@ -216,7 +216,14 @@ describe('VacancyLicensesCertificationsSection', () => {
         licenseCertificates={{
           isEnabled: true,
           dataTakenFromCandidate: false,
-          content: [{ ...baseEntry }],
+          content: [
+            {
+              ...baseEntry,
+              nameOfLicenseCert: ['AWS Certified'],
+              issuingOrganization: ['Amazon'],
+              organizationLocations: ['Colombo'],
+            },
+          ],
         }}
       />
     );

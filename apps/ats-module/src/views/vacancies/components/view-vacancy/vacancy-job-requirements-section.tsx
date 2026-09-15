@@ -44,30 +44,47 @@ function VacancyJobRequirementsSection({
       </div>
 
       {/* Description Text */}
-      <div className="mb-4">
-        <VacancyView.Description value={jobRequirement.description} />
-      </div>
+      {jobRequirement.description && (
+        <div className="mb-4">
+          <VacancyView.Description value={jobRequirement.description} />
+        </div>
+      )}
 
       {/* Grid of Chips inside a shaded box */}
       <div className="rounded-lg border border-[#ebedf0] bg-[#f8fafc] p-4">
         <VacancyView.Grid>
-          <VacancyView.Field label={t('jobRequirements.role')}>
+          <VacancyView.Field
+            label={t('jobRequirements.role')}
+            isEmpty={jobRequirement.role.length === 0}
+          >
             <VacancyView.Tags values={jobRequirement.role} />
           </VacancyView.Field>
 
-          <VacancyView.Field label={t('jobRequirements.jobTitle')}>
+          <VacancyView.Field
+            label={t('jobRequirements.jobTitle')}
+            isEmpty={jobRequirement.jobTitle.length === 0}
+          >
             <VacancyView.Tags values={jobRequirement.jobTitle} />
           </VacancyView.Field>
 
-          <VacancyView.Field label={t('jobRequirements.employmentType')}>
+          <VacancyView.Field
+            label={t('jobRequirements.employmentType')}
+            isEmpty={jobRequirement.employmentType.length === 0}
+          >
             <VacancyView.Tags values={jobRequirement.employmentType} />
           </VacancyView.Field>
 
-          <VacancyView.Field label={t('jobRequirements.workSchedule')}>
+          <VacancyView.Field
+            label={t('jobRequirements.workSchedule')}
+            isEmpty={jobRequirement.workSchedule.length === 0}
+          >
             <VacancyView.Tags values={jobRequirement.workSchedule} />
           </VacancyView.Field>
 
-          <VacancyView.Field label={t('jobRequirements.engagementModel')}>
+          <VacancyView.Field
+            label={t('jobRequirements.engagementModel')}
+            isEmpty={jobRequirement.engagementModel.length === 0}
+          >
             <VacancyView.Tags values={jobRequirement.engagementModel} />
           </VacancyView.Field>
         </VacancyView.Grid>

@@ -1,4 +1,29 @@
-import { formatChangeValue } from '@/views/vacancies/utils/format-date-range';
+import {
+  formatChangeValue,
+  formatDateRange,
+} from '@/views/vacancies/utils/format-date-range';
+
+describe('formatDateRange', () => {
+  // CR-10: Recruiter - View Empty Fields Based on Data Availability.
+  it('formats both dates as a range when both are present', () => {
+    expect(formatDateRange('2022-01-02', '2023-06-15')).toBe(
+      '2nd Jan 2022 - 15th Jun 2023'
+    );
+  });
+
+  it('shows "N/A" for the end date when only startDate is present', () => {
+    expect(formatDateRange('2022-03-05', undefined)).toBe('5th Mar 2022 - N/A');
+  });
+
+  it('shows "N/A" for the start date when only endDate is present', () => {
+    expect(formatDateRange(undefined, '2024-11-01')).toBe('N/A - 1st Nov 2024');
+  });
+
+  it('returns an empty string when both dates are missing', () => {
+    expect(formatDateRange(undefined, undefined)).toBe('');
+    expect(formatDateRange('', '')).toBe('');
+  });
+});
 
 describe('formatChangeValue', () => {
   it('flattens a JSON-object-shaped change value into a readable, comma-joined line', () => {

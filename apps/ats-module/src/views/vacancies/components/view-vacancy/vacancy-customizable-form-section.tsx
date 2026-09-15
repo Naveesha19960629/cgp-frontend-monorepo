@@ -6,6 +6,7 @@ import type {
   VacancyViewCustomizableFormQuestion,
   VacancyViewModel,
 } from '@/views/vacancies/types';
+import { hasValue } from '@/views/vacancies/utils/has-value';
 
 import { Badge } from '@cgp/ui-kit/components/ui/badge';
 
@@ -38,13 +39,17 @@ function MetaField({
   value: string;
   className?: string;
 }>) {
+  if (!hasValue(value)) {
+    return null;
+  }
+
   return (
     <div className={`flex min-w-0 flex-col gap-1.5 ${className}`}>
       <p className="text-sm font-semibold wrap-break-word text-slate-500">
         {label}
       </p>
       <p className="text-base font-semibold wrap-break-word text-slate-900">
-        {value || '-'}
+        {value}
       </p>
     </div>
   );
@@ -59,7 +64,7 @@ function QuestionCard({
 
   const typeLabel = question.type
     ? t(QUESTION_TYPE_LABEL_KEYS[question.type])
-    : '-';
+    : '';
   const isLinearScale = question.type === 'LINEAR_SCALE';
   const showOptions =
     OPTION_QUESTION_TYPES.has(question.type) && question.options.length > 0;
@@ -68,14 +73,16 @@ function QuestionCard({
     <div className="rounded-lg border border-[#ebedf0] bg-[#f8fafc] p-4">
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-8">
         <div className="flex min-w-0 flex-col gap-4">
-          <div className="flex flex-col gap-1.5">
-            <p className="text-sm font-semibold text-slate-500">
-              {t('customizableForm.view.question')}
-            </p>
-            <p className="text-base font-semibold wrap-break-word text-slate-900">
-              {question.text || '-'}
-            </p>
-          </div>
+          {hasValue(question.text) && (
+            <div className="flex flex-col gap-1.5">
+              <p className="text-sm font-semibold text-slate-500">
+                {t('customizableForm.view.question')}
+              </p>
+              <p className="text-base font-semibold wrap-break-word text-slate-900">
+                {question.text}
+              </p>
+            </div>
+          )}
 
           {showOptions && (
             <div className="flex flex-col gap-2">

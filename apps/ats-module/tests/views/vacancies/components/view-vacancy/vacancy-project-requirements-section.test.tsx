@@ -49,6 +49,78 @@ describe('VacancyProjectRequirementsSection', () => {
     expect(screen.getByText('University of Kelaniya')).toBeInTheDocument();
   });
 
+  it('shows "N/A" for endDate when only startDate is provided', () => {
+    render(
+      <VacancyProjectRequirementsSection
+        preferredProjects={{
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          content: [
+            {
+              startDate: '2022-03-05',
+              endDate: '',
+              relatedIndustry: [],
+              organizationLocations: [],
+              organization: [],
+            },
+          ],
+        }}
+      />
+    );
+    expect(screen.getByText('5th Mar 2022 - N/A')).toBeInTheDocument();
+  });
+
+  it('shows "N/A" for startDate when only endDate is provided', () => {
+    render(
+      <VacancyProjectRequirementsSection
+        preferredProjects={{
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          content: [
+            {
+              startDate: '',
+              endDate: '2024-11-01',
+              relatedIndustry: [],
+              organizationLocations: [],
+              organization: [],
+            },
+          ],
+        }}
+      />
+    );
+    expect(screen.getByText('N/A - 1st Nov 2024')).toBeInTheDocument();
+  });
+
+  it('hides the date row and each chip field when they have no data', () => {
+    render(
+      <VacancyProjectRequirementsSection
+        preferredProjects={{
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          content: [
+            {
+              startDate: '',
+              endDate: '',
+              relatedIndustry: [],
+              organizationLocations: [],
+              organization: [],
+            },
+          ],
+        }}
+      />
+    );
+    expect(screen.queryByText(/N\/A/)).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('projectsRequirements.relatedIndustry')
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('projectsRequirements.organizationLocation')
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('projectsRequirements.organizationName')
+    ).not.toBeInTheDocument();
+  });
+
   it('renders no details state when data is taken from candidate', () => {
     render(
       <VacancyProjectRequirementsSection

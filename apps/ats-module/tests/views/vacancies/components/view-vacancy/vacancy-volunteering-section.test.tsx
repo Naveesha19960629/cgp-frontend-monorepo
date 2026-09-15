@@ -96,7 +96,7 @@ describe('VacancyVolunteeringSection', () => {
     expect(screen.getByText('Coordinator')).toBeInTheDocument();
   });
 
-  it('shows a dash for the positionRole value when it is empty', () => {
+  it('hides the position field entirely when positionRole is empty', () => {
     render(
       <VacancyVolunteeringSection
         preferredVolunteering={{
@@ -107,8 +107,8 @@ describe('VacancyVolunteeringSection', () => {
       />
     );
     expect(
-      screen.getByText('preferredVolunteering.fieldList.position')
-    ).toBeInTheDocument();
+      screen.queryByText('preferredVolunteering.fieldList.position')
+    ).not.toBeInTheDocument();
   });
 
   it('formats startDate and endDate as a date range', () => {
@@ -128,7 +128,7 @@ describe('VacancyVolunteeringSection', () => {
     ).toBeInTheDocument();
   });
 
-  it('shows "Present" when only startDate is provided', () => {
+  it('shows "N/A" for endDate when only startDate is provided', () => {
     render(
       <VacancyVolunteeringSection
         preferredVolunteering={{
@@ -138,10 +138,10 @@ describe('VacancyVolunteeringSection', () => {
         }}
       />
     );
-    expect(screen.getByText('5th Mar 2022 - Present')).toBeInTheDocument();
+    expect(screen.getByText('5th Mar 2022 - N/A')).toBeInTheDocument();
   });
 
-  it('shows "Until" when only endDate is provided', () => {
+  it('shows "N/A" for startDate when only endDate is provided', () => {
     render(
       <VacancyVolunteeringSection
         preferredVolunteering={{
@@ -151,7 +151,7 @@ describe('VacancyVolunteeringSection', () => {
         }}
       />
     );
-    expect(screen.getByText('Until 1st Nov 2024')).toBeInTheDocument();
+    expect(screen.getByText('N/A - 1st Nov 2024')).toBeInTheDocument();
   });
 
   it('renders organization tags', () => {
@@ -204,7 +204,14 @@ describe('VacancyVolunteeringSection', () => {
         preferredVolunteering={{
           isEnabled: true,
           dataTakenFromCandidate: false,
-          content: [{ ...baseEntry }],
+          content: [
+            {
+              ...baseEntry,
+              organization: ['Red Cross'],
+              organizationLocations: ['Colombo'],
+              cause: ['Education'],
+            },
+          ],
         }}
       />
     );

@@ -45,7 +45,7 @@ describe('VacancyCausesSection', () => {
     ).toBeInTheDocument();
   });
 
-  it('shows a dash when section is enabled but content is empty', () => {
+  it('shows the section title but no tags when content is empty', () => {
     render(
       <VacancyCausesSection
         preferredCauses={{
@@ -55,7 +55,8 @@ describe('VacancyCausesSection', () => {
         }}
       />
     );
-    expect(screen.getByText('-')).toBeInTheDocument();
+    expect(screen.getByText('preferredCauses.title')).toBeInTheDocument();
+    expect(screen.queryByText('-')).not.toBeInTheDocument();
   });
 
   it('renders the section title when data exists', () => {

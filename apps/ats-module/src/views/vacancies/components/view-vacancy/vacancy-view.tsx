@@ -2,6 +2,8 @@ import { ChevronLeft } from 'lucide-react';
 
 import type { ReactNode } from 'react';
 
+import { hasValue } from '@/views/vacancies/utils/has-value';
+
 import { Badge } from '@cgp/ui-kit/components/ui/badge';
 
 function Root({ children }: Readonly<{ children: ReactNode }>) {
@@ -58,8 +60,13 @@ function Grid({ children }: Readonly<{ children: ReactNode }>) {
 
 function Field({
   label,
+  isEmpty = false,
   children,
-}: Readonly<{ label: string; children: ReactNode }>) {
+}: Readonly<{ label: string; isEmpty?: boolean; children: ReactNode }>) {
+  if (isEmpty) {
+    return null;
+  }
+
   return (
     <div className="flex min-w-0 flex-col gap-3">
       <p className="text-sm font-semibold text-slate-600">{label}</p>
@@ -70,7 +77,7 @@ function Field({
 
 function Tags({ values }: Readonly<{ values: string[] }>) {
   if (!values.length) {
-    return <p className="text-sm text-slate-500">-</p>;
+    return null;
   }
 
   return (
@@ -85,8 +92,8 @@ function Tags({ values }: Readonly<{ values: string[] }>) {
 }
 
 function Description({ value }: Readonly<{ value: string }>) {
-  if (!value) {
-    return <p className="text-sm text-slate-500">-</p>;
+  if (!hasValue(value)) {
+    return null;
   }
 
   return (
@@ -134,6 +141,10 @@ function InfoRow({
   label: string;
   value: string | string[];
 }>) {
+  if (!hasValue(value)) {
+    return null;
+  }
+
   const displayValue = Array.isArray(value) ? value.join(', ') : value;
 
   return (
@@ -143,9 +154,7 @@ function InfoRow({
         <span className="font-semibold">{label}</span>
       </div>
       <span className="size-1.5 shrink-0 rounded-full bg-slate-600" />
-      <span className="font-semibold text-slate-600">
-        {displayValue || '-'}
-      </span>
+      <span className="font-semibold text-slate-600">{displayValue}</span>
     </div>
   );
 }

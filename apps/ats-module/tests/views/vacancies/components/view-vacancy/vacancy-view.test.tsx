@@ -104,12 +104,21 @@ describe('VacancyView.Field', () => {
     expect(screen.getByText('Field Label')).toBeInTheDocument();
     expect(screen.getByText('field-child')).toBeInTheDocument();
   });
+
+  it('renders nothing when isEmpty is true', () => {
+    const { container } = render(
+      <VacancyView.Field label="Field Label" isEmpty>
+        <p>field-child</p>
+      </VacancyView.Field>
+    );
+    expect(container).toBeEmptyDOMElement();
+  });
 });
 
 describe('VacancyView.Tags', () => {
-  it('renders a dash when values is empty', () => {
-    render(<VacancyView.Tags values={[]} />);
-    expect(screen.getByText('-')).toBeInTheDocument();
+  it('renders nothing when values is empty', () => {
+    const { container } = render(<VacancyView.Tags values={[]} />);
+    expect(container).toBeEmptyDOMElement();
   });
 
   it('renders a badge for each value', () => {
@@ -120,9 +129,9 @@ describe('VacancyView.Tags', () => {
 });
 
 describe('VacancyView.Description', () => {
-  it('renders a dash when value is empty', () => {
-    render(<VacancyView.Description value="" />);
-    expect(screen.getByText('-')).toBeInTheDocument();
+  it('renders nothing when value is empty', () => {
+    const { container } = render(<VacancyView.Description value="" />);
+    expect(container).toBeEmptyDOMElement();
   });
 
   it('renders the value when non-empty', () => {
@@ -156,25 +165,25 @@ describe('VacancyView.InfoRow', () => {
     expect(screen.getByText('React, Node')).toBeInTheDocument();
   });
 
-  it('renders a dash when the string value is empty', () => {
-    render(
+  it('renders nothing when the string value is empty', () => {
+    const { container } = render(
       <VacancyView.InfoRow
         icon={<span data-testid="icon" />}
         label="Location"
         value=""
       />
     );
-    expect(screen.getByText('-')).toBeInTheDocument();
+    expect(container).toBeEmptyDOMElement();
   });
 
-  it('renders a dash when the array value is empty', () => {
-    render(
+  it('renders nothing when the array value is empty', () => {
+    const { container } = render(
       <VacancyView.InfoRow
         icon={<span data-testid="icon" />}
         label="Skills"
         value={[]}
       />
     );
-    expect(screen.getByText('-')).toBeInTheDocument();
+    expect(container).toBeEmptyDOMElement();
   });
 });

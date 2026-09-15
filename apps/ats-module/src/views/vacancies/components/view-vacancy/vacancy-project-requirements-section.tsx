@@ -27,41 +27,48 @@ function VacancyProjectRequirementsSection({
   } else {
     content = (
       <div className="flex flex-col gap-6">
-        {preferredProjects.content.map((project, index) => (
-          <div
-            key={`${project.startDate}-${project.endDate}-${index}`}
-            className="flex flex-col gap-4"
-          >
-            <div className="flex items-center gap-1 text-sm text-slate-600">
-              <Clock size={18} className="text-slate-600" variant="Bold" />
-              <span className="font-semibold">
-                {formatDateRange(project.startDate, project.endDate) || '-'}
-              </span>
+        {preferredProjects.content.map((project, index) => {
+          const dateRange = formatDateRange(project.startDate, project.endDate);
+
+          return (
+            <div
+              key={`${project.startDate}-${project.endDate}-${index}`}
+              className="flex flex-col gap-4"
+            >
+              {dateRange && (
+                <div className="flex items-center gap-1 text-sm text-slate-600">
+                  <Clock size={18} className="text-slate-600" variant="Bold" />
+                  <span className="font-semibold">{dateRange}</span>
+                </div>
+              )}
+
+              <div className="rounded-lg border border-[#ebedf0] bg-[#f8fafc] p-4">
+                <VacancyView.Grid>
+                  <VacancyView.Field
+                    label={t('projectsRequirements.relatedIndustry')}
+                    isEmpty={project.relatedIndustry.length === 0}
+                  >
+                    <VacancyView.Tags values={project.relatedIndustry} />
+                  </VacancyView.Field>
+
+                  <VacancyView.Field
+                    label={t('projectsRequirements.organizationLocation')}
+                    isEmpty={project.organizationLocations.length === 0}
+                  >
+                    <VacancyView.Tags values={project.organizationLocations} />
+                  </VacancyView.Field>
+
+                  <VacancyView.Field
+                    label={t('projectsRequirements.organizationName')}
+                    isEmpty={project.organization.length === 0}
+                  >
+                    <VacancyView.Tags values={project.organization} />
+                  </VacancyView.Field>
+                </VacancyView.Grid>
+              </div>
             </div>
-
-            <div className="rounded-lg border border-[#ebedf0] bg-[#f8fafc] p-4">
-              <VacancyView.Grid>
-                <VacancyView.Field
-                  label={t('projectsRequirements.relatedIndustry')}
-                >
-                  <VacancyView.Tags values={project.relatedIndustry} />
-                </VacancyView.Field>
-
-                <VacancyView.Field
-                  label={t('projectsRequirements.organizationLocation')}
-                >
-                  <VacancyView.Tags values={project.organizationLocations} />
-                </VacancyView.Field>
-
-                <VacancyView.Field
-                  label={t('projectsRequirements.organizationName')}
-                >
-                  <VacancyView.Tags values={project.organization} />
-                </VacancyView.Field>
-              </VacancyView.Grid>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     );
   }
