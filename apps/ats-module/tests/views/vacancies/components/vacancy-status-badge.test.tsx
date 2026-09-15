@@ -49,11 +49,19 @@ describe('VacancyStatusBadge', () => {
     );
   });
 
-  it('appends the applicant count as "(N Applied)" for on_hold statuses too', () => {
+  it('renders "Live (0 Applied)" when a live vacancy has no applicants', () => {
+    render(<VacancyStatusBadge status="LIVE" applicantCount={0} />);
+    expect(screen.getByTestId('vacancy-live')).toHaveTextContent(
+      'vacancies.table.filter.statusOptions.live (0 vacancies.stepBadge.applied)'
+    );
+  });
+
+  it('omits the applicant count for on_hold statuses', () => {
     render(<VacancyStatusBadge status="ONHOLD" applicantCount={3} />);
     expect(screen.getByTestId('vacancy-on_hold')).toHaveTextContent(
-      'vacancies.table.filter.statusOptions.onHold (3 vacancies.stepBadge.applied)'
+      'vacancies.table.filter.statusOptions.onHold'
     );
+    expect(screen.getByTestId('vacancy-on_hold')).not.toHaveTextContent('3');
   });
 
   it('omits the applicant count for draft', () => {
@@ -62,5 +70,15 @@ describe('VacancyStatusBadge', () => {
       'vacancies.table.filter.statusOptions.draft'
     );
     expect(screen.getByTestId('vacancy-draft')).not.toHaveTextContent('3');
+  });
+
+  it('omits the applicant count for unpublished', () => {
+    render(<VacancyStatusBadge status="UNPUBLISHED" applicantCount={3} />);
+    expect(screen.getByTestId('vacancy-unpublished')).toHaveTextContent(
+      'vacancies.table.filter.statusOptions.unpublished'
+    );
+    expect(screen.getByTestId('vacancy-unpublished')).not.toHaveTextContent(
+      '3'
+    );
   });
 });

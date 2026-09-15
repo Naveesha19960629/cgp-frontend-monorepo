@@ -46,8 +46,16 @@ vi.mock('@/views/vacancies/components/vacancy-active-toggle', () => ({
 }));
 
 vi.mock('@/views/vacancies/components/vacancy-status-badge', () => ({
-  default: ({ status }: { status: string }) => (
-    <div data-testid="status-badge">{status}</div>
+  default: ({
+    status,
+    applicantCount,
+  }: {
+    status: string;
+    applicantCount?: number;
+  }) => (
+    <div data-testid="status-badge" data-applicant-count={applicantCount}>
+      {status}
+    </div>
   ),
 }));
 
@@ -224,6 +232,14 @@ describe('createVacancyColumns', () => {
     render(<TableWrapper data={[sampleRow]} />);
     expect(screen.getByTestId('status-badge')).toBeInTheDocument();
     expect(screen.getByTestId('active-toggle')).toBeInTheDocument();
+  });
+
+  it('passes the row applicantCount to the status badge (DQCGP-3194)', () => {
+    render(<TableWrapper data={[{ ...sampleRow, applicantCount: 5 }]} />);
+    expect(screen.getByTestId('status-badge')).toHaveAttribute(
+      'data-applicant-count',
+      '5'
+    );
   });
 
   it('renders an inactive toggle for the ONHOLD API enum status', () => {
