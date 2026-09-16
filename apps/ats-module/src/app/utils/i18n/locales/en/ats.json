@@ -360,7 +360,7 @@
     "notifications": {
       "disable": {
         "title": "Successfully Disabled",
-        "message": "{{sectionName}} has been successfully disabled."
+        "message": "{{sectionName}} section has been successfully disabled."
       }
     }
   },
@@ -797,7 +797,7 @@
     "notifications": {
       "disable": {
         "title": "Successfully Disabled",
-        "message": "Preferred patents have been successfully disabled."
+        "message": "Preferred patents section has been successfully disabled."
       }
     }
   },
@@ -848,7 +848,7 @@
     "notifications": {
       "disable": {
         "title": "Successfully Disabled",
-        "message": "Preferred Honours and Awards have been successfully disabled."
+        "message": "Preferred Honours and Awards section has been successfully disabled."
       }
     }
   },
