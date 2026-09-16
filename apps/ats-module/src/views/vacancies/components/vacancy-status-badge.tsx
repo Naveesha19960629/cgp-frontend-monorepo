@@ -1,7 +1,9 @@
 import { useTranslation } from 'react-i18next';
 
 import type { VacancyStatusBadgeProps } from '@/views/vacancies';
+import type { VacancyStatus } from '@/views/vacancies/types';
 import {
+  VACANCY_STATUSES_WITHOUT_APPLICANT_COUNT,
   VACANCY_STATUS_CONFIG,
   VACANCY_STATUS_FALLBACK_CONFIG,
   normalizeStatusKey,
@@ -20,10 +22,9 @@ export default function VacancyStatusBadge({
     VACANCY_STATUS_CONFIG[key as keyof typeof VACANCY_STATUS_CONFIG] ??
     VACANCY_STATUS_FALLBACK_CONFIG;
   const statusLabel = config.labelKey ? t(config.labelKey) : status;
-  // DQCGP-3866: Live/Onhold/Expired all surface the applicant count next to
-  // status (frozen at the onhold/expiry point for those two) — only Draft
-  // and Unpublished have no applicant concept yet.
-  const hidesApplicantCount = key === 'draft' || key === 'unpublished';
+  const hidesApplicantCount = VACANCY_STATUSES_WITHOUT_APPLICANT_COUNT.includes(
+    key as VacancyStatus
+  );
   const countSuffix = ` (${applicantCount} ${t('vacancies.stepBadge.applied')})`;
   const label =
     !hidesApplicantCount && applicantCount !== undefined

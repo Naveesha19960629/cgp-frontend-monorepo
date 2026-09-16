@@ -49,6 +49,14 @@ const VACANCY_STATUS_FALLBACK_CONFIG: StatusConfig = {
   labelKey: '',
 };
 
+// DQCGP-3866: Live/Onhold/Expired all surface the applicant count next to
+// status (frozen at the onhold/expiry point for those two) — only Draft
+// and Unpublished have no applicant concept yet.
+const VACANCY_STATUSES_WITHOUT_APPLICANT_COUNT: readonly VacancyStatus[] = [
+  'draft',
+  'unpublished',
+];
+
 // pdfkit fills/strokes need raw hex, not Tailwind class strings, so these
 // mirror VACANCY_STATUS_CONFIG's hex values one-for-one — keep both in sync
 // when a status color changes. VACANCY_STATUS_CONFIG's `expired` bg/border
@@ -242,6 +250,7 @@ export {
   SEARCH_DEBOUNCE_MS,
   VACANCY_STATUS_CONFIG,
   VACANCY_STATUS_FALLBACK_CONFIG,
+  VACANCY_STATUSES_WITHOUT_APPLICANT_COUNT,
   PDF_STATUS_PILL_COLORS,
   PDF_STATUS_PILL_FALLBACK_COLORS,
   PDF_PAGE_SIZE,
