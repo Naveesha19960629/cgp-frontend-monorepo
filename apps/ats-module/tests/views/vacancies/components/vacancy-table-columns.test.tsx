@@ -209,16 +209,22 @@ describe('createVacancyColumns', () => {
     expect(ids).toContain('actions');
   });
 
-  it('renders vacancyId as first 4 chars uppercase with # prefix', () => {
+  it.each([
+    {
+      description: 'vacancyId as first 4 chars uppercase with # prefix',
+      expectedText: '#F4E3',
+    },
+    {
+      description: 'the title cell content',
+      expectedText: 'DevOps Engineer - AWS/Kubernetes',
+    },
+    {
+      description: 'a single configured role as plain text (DQCGP-3838)',
+      expectedText: 'Individual Contributor',
+    },
+  ])('renders $description', ({ expectedText }) => {
     render(<TableWrapper data={[sampleRow]} />);
-    expect(screen.getByText('#F4E3')).toBeInTheDocument();
-  });
-
-  it('renders the title cell content', () => {
-    render(<TableWrapper data={[sampleRow]} />);
-    expect(
-      screen.getByText('DevOps Engineer - AWS/Kubernetes')
-    ).toBeInTheDocument();
+    expect(screen.getByText(expectedText)).toBeInTheDocument();
   });
 
   it('calls onView when title is clicked', async () => {
@@ -246,11 +252,6 @@ describe('createVacancyColumns', () => {
     expect(
       screen.queryByRole('button', { name: /job title/i })
     ).not.toBeInTheDocument();
-  });
-
-  it('renders a single configured role as plain text (DQCGP-3838)', () => {
-    render(<TableWrapper data={[sampleRow]} />);
-    expect(screen.getByText('Individual Contributor')).toBeInTheDocument();
   });
 
   it('renders a count trigger with all job titles accessible via tooltip when multiple are configured (DQCGP-3838)', () => {
