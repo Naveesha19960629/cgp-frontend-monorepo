@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
@@ -12,6 +14,15 @@ import {
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
+}));
+
+// Radix Tooltip relies on pointer geometry that jsdom does not implement, so
+// (matching the existing pattern in job-requirements-step.test.tsx) the
+// trigger/content are rendered unconditionally instead of simulating hover.
+vi.mock('@cgp/ui-kit/components/ui/tooltip', () => ({
+  Tooltip: ({ children }: { children?: ReactNode }) => <>{children}</>,
+  TooltipContent: ({ children }: { children?: ReactNode }) => <>{children}</>,
+  TooltipTrigger: ({ children }: { children?: ReactNode }) => <>{children}</>,
 }));
 
 vi.mock('@/views/vacancies', async importOriginal => {
@@ -59,7 +70,8 @@ vi.mock('@/views/vacancies/components/vacancy-status-badge', () => ({
   ),
 }));
 
-const t = (key: string) => key;
+const t = (key: string, options?: { count?: number }) =>
+  options?.count !== undefined ? `${key}:${options.count}` : key;
 const onSort = vi.fn();
 const onView = vi.fn();
 const onEdit = vi.fn();
@@ -72,10 +84,10 @@ const onCopyLink = vi.fn();
 const sampleRow: VacancyTableColumn = {
   vacancyId: 'f4e3d2c1-b0a9-8f7e-6d5c-4b3a2f1e0d9c',
   title: 'DevOps Engineer - AWS/Kubernetes',
-  jobTitle: 'DevOps Engineer',
+  jobTitle: ['DevOps Engineer'],
   discipline: 'Infrastructure',
   careerPath: 'Technical',
-  role: 'Individual Contributor',
+  role: ['Individual Contributor'],
   createdAt: '2026-05-29T11:15:00.000Z',
   createdAtLabel: 'May 29, 2026',
   createdBy: 'Cloud Operations',
@@ -226,6 +238,96 @@ describe('createVacancyColumns', () => {
     const titleButton = screen.getByText(longTitle);
     expect(titleButton).toHaveClass('truncate');
     expect(titleButton).toHaveAttribute('title', longTitle);
+  });
+
+  it('renders a single configured job title as plain text (DQCGP-3838)', () => {
+    render(<TableWrapper data={[sampleRow]} />);
+    expect(screen.getByText('DevOps Engineer')).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: /job title/i })
+    ).not.toBeInTheDocument();
+  });
+
+  it('renders a single configured role as plain text (DQCGP-3838)', () => {
+    render(<TableWrapper data={[sampleRow]} />);
+    expect(screen.getByText('Individual Contributor')).toBeInTheDocument();
+  });
+
+  it('renders a count trigger with all job titles accessible via tooltip when multiple are configured (DQCGP-3838)', () => {
+    render(
+      <TableWrapper
+        data={[
+          {
+            ...sampleRow,
+            jobTitle: ['Software Engineer', 'Senior Software Engineer'],
+          },
+        ]}
+      />
+    );
+
+    expect(
+      screen.getByRole('button', {
+        name: 'vacancies.table.multiValue.jobTitlesCount:2',
+      })
+    ).toBeInTheDocument();
+    expect(screen.getByText('Software Engineer')).toBeInTheDocument();
+    expect(screen.getByText('Senior Software Engineer')).toBeInTheDocument();
+  });
+
+  it('renders a count trigger with all roles accessible via tooltip when multiple are configured (DQCGP-3838)', () => {
+    render(
+      <TableWrapper
+        data={[
+          {
+            ...sampleRow,
+            role: ['Individual Contributor', 'Team Lead'],
+          },
+        ]}
+      />
+    );
+
+    expect(
+      screen.getByRole('button', {
+        name: 'vacancies.table.multiValue.rolesCount:2',
+      })
+    ).toBeInTheDocument();
+    expect(screen.getByText('Individual Contributor')).toBeInTheDocument();
+    expect(screen.getByText('Team Lead')).toBeInTheDocument();
+  });
+
+  it('does not crash and renders the value when jobTitle/role come back as a legacy plain string (pre-DQCGP-3838 API shape)', () => {
+    render(
+      <TableWrapper
+        data={[
+          {
+            ...sampleRow,
+            jobTitle: 'DevOps Engineer' as unknown as string[],
+            role: 'Individual Contributor' as unknown as string[],
+          },
+        ]}
+      />
+    );
+
+    expect(screen.getAllByText('DevOps Engineer')).not.toHaveLength(0);
+    expect(screen.getAllByText('Individual Contributor')).not.toHaveLength(0);
+  });
+
+  it('renders an empty job title cell without crashing when the field is missing entirely', () => {
+    render(
+      <TableWrapper
+        data={[
+          {
+            ...sampleRow,
+            jobTitle: null as unknown as string[],
+            role: undefined as unknown as string[],
+          },
+        ]}
+      />
+    );
+
+    expect(
+      screen.queryByRole('button', { name: /job title/i })
+    ).not.toBeInTheDocument();
   });
 
   it('renders the status badge and active toggle in the status cell', () => {

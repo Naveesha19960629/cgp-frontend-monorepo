@@ -1172,10 +1172,10 @@ interface NotifyApplicantsPayload {
 interface VacancyTableColumn {
   vacancyId: string;
   title: string;
-  jobTitle: string;
+  jobTitle: string[];
   discipline: string;
   careerPath: string;
-  role: string;
+  role: string[];
   createdAt: string;
   createdAtLabel: string;
   createdBy: string;
@@ -1293,7 +1293,7 @@ interface CreateColumnsOptions {
   onSaveAsTemplate: (vacancyId: string) => void;
   onToggleActive: (vacancyId: string, action: VacancyToggleAction) => void;
   onCopyLink: (vacancyLink: string) => void;
-  t: (key: string) => string;
+  t: (key: string, options?: Record<string, unknown>) => string;
 }
 
 interface VacancyViewJobRequirement {
