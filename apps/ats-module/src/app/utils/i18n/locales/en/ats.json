@@ -575,6 +575,12 @@
         "version": "Version",
         "status": "Status"
       },
+      "multiValue": {
+        "jobTitlesCount_one": "{{count}} Job Title",
+        "jobTitlesCount_other": "{{count}} Job Titles",
+        "rolesCount_one": "{{count}} Job Role",
+        "rolesCount_other": "{{count}} Job Roles"
+      },
       "actions": {
         "openMenu": "Open menu",
         "versionHistory": "Version History",

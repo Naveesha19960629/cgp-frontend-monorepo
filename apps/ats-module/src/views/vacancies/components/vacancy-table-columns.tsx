@@ -2,6 +2,7 @@ import { ChevronDown, ChevronUp } from 'lucide-react';
 
 import { VacancyTableAction } from '@/views/vacancies';
 import VacancyActiveToggle from '@/views/vacancies/components/vacancy-active-toggle';
+import VacancyMultiValueCell from '@/views/vacancies/components/vacancy-multi-value-cell';
 import VacancyStatusBadge from '@/views/vacancies/components/vacancy-status-badge';
 import type {
   CreateColumnsOptions,
@@ -44,6 +45,19 @@ function SortableHeader({
       </span>
     </Button>
   );
+}
+
+/**
+ * Normalizes jobTitle/role to a string array. The list endpoint used to return
+ * a single string (pre-DQCGP-3838); tolerating that shape here means the cell
+ * won't crash if a deployed backend hasn't rolled out the array response yet.
+ */
+function toDisplayValues(
+  value: string[] | string | null | undefined
+): string[] {
+  if (Array.isArray(value)) return value;
+  if (typeof value === 'string' && value.length > 0) return [value];
+  return [];
 }
 
 const createVacancyColumns = ({
@@ -134,9 +148,17 @@ const createVacancyColumns = ({
         onSort={onSort}
       />
     ),
-    cell: ({ row }) => (
-      <span className="text-sm text-slate-600">{row.original.jobTitle}</span>
-    ),
+    cell: ({ row }) => {
+      const jobTitles = toDisplayValues(row.original.jobTitle);
+      return (
+        <VacancyMultiValueCell
+          values={jobTitles}
+          countLabel={t('vacancies.table.multiValue.jobTitlesCount', {
+            count: jobTitles.length,
+          })}
+        />
+      );
+    },
     size: 211,
   },
   {
@@ -178,9 +200,17 @@ const createVacancyColumns = ({
         onSort={onSort}
       />
     ),
-    cell: ({ row }) => (
-      <span className="text-sm text-slate-600">{row.original.role}</span>
-    ),
+    cell: ({ row }) => {
+      const roles = toDisplayValues(row.original.role);
+      return (
+        <VacancyMultiValueCell
+          values={roles}
+          countLabel={t('vacancies.table.multiValue.rolesCount', {
+            count: roles.length,
+          })}
+        />
+      );
+    },
     size: 216,
   },
   {
