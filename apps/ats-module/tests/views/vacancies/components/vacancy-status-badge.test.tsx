@@ -56,12 +56,18 @@ describe('VacancyStatusBadge', () => {
     );
   });
 
-  it('omits the applicant count for on_hold statuses', () => {
+  it('appends the (frozen) applicant count for on_hold statuses', () => {
     render(<VacancyStatusBadge status="ONHOLD" applicantCount={3} />);
     expect(screen.getByTestId('vacancy-on_hold')).toHaveTextContent(
-      'vacancies.table.filter.statusOptions.onHold'
+      'vacancies.table.filter.statusOptions.onHold (3 vacancies.stepBadge.applied)'
     );
-    expect(screen.getByTestId('vacancy-on_hold')).not.toHaveTextContent('3');
+  });
+
+  it('appends the (frozen) applicant count for expired statuses', () => {
+    render(<VacancyStatusBadge status="EXPIRED" applicantCount={5} />);
+    expect(screen.getByTestId('vacancy-expired')).toHaveTextContent(
+      'vacancies.table.filter.statusOptions.expired (5 vacancies.stepBadge.applied)'
+    );
   });
 
   it('omits the applicant count for draft', () => {
