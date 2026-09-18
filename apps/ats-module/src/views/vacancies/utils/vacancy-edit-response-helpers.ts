@@ -1589,29 +1589,30 @@ function toVacancyFormFromResponse(
  * point for template-backed vacancies while leaving the actual toggle/discard
  * mechanics (and any other vacancy) untouched.
  */
+function disableIfPresent(section: { isEnabled: boolean } | undefined): void {
+  if (section) section.isEnabled = false;
+}
+
 function disableOptionalSections(form: VacancyForm): VacancyForm {
   const next = structuredClone(form);
 
-  if (next.profileRequirements) next.profileRequirements.isEnabled = false;
-  if (next.secondaryEducation[0]) next.secondaryEducation[0].isEnabled = false;
-  if (next.tertiaryEducation[0]) next.tertiaryEducation[0].isEnabled = false;
-  if (next.projectsRequirements) next.projectsRequirements.isEnabled = false;
-  if (next.preferredPublications) next.preferredPublications.isEnabled = false;
-  if (next.preferredClubSocieties)
-    next.preferredClubSocieties.isEnabled = false;
-  if (next.preferredSports) next.preferredSports.isEnabled = false;
-  if (next.preferredVolunteering) next.preferredVolunteering.isEnabled = false;
-  if (next.preferredSkills) next.preferredSkills.isEnabled = false;
-  if (next.preferredLanguages) next.preferredLanguages.isEnabled = false;
-  if (next.preferredCauses) next.preferredCauses.isEnabled = false;
-  if (next.preferredHobbies) next.preferredHobbies.isEnabled = false;
-  if (next.preferredIndustries) next.preferredIndustries.isEnabled = false;
-  if (next.patents) next.patents.isEnabled = false;
-  if (next.preferredHonoursAwards)
-    next.preferredHonoursAwards.isEnabled = false;
-  if (next.licenseCertificates?.[0])
-    next.licenseCertificates[0].isEnabled = false;
-  if (next.customizableForm) next.customizableForm.isEnabled = false;
+  disableIfPresent(next.profileRequirements);
+  disableIfPresent(next.secondaryEducation[0]);
+  disableIfPresent(next.tertiaryEducation[0]);
+  disableIfPresent(next.projectsRequirements);
+  disableIfPresent(next.preferredPublications);
+  disableIfPresent(next.preferredClubSocieties);
+  disableIfPresent(next.preferredSports);
+  disableIfPresent(next.preferredVolunteering);
+  disableIfPresent(next.preferredSkills);
+  disableIfPresent(next.preferredLanguages);
+  disableIfPresent(next.preferredCauses);
+  disableIfPresent(next.preferredHobbies);
+  disableIfPresent(next.preferredIndustries);
+  disableIfPresent(next.patents);
+  disableIfPresent(next.preferredHonoursAwards);
+  disableIfPresent(next.licenseCertificates?.[0]);
+  disableIfPresent(next.customizableForm);
 
   return next;
 }
