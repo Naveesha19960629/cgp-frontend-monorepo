@@ -35,6 +35,10 @@ const toVacancyFormFromResponseMock = vi.fn(
     ...record,
   })
 );
+const disableOptionalSectionsMock = vi.fn((form: Record<string, unknown>) => ({
+  ...form,
+  disabledOptionalSections: true,
+}));
 
 const vacancyFormProviderSpy = vi.fn();
 const useVacancyApplicantWsMock = vi.fn();
@@ -55,6 +59,7 @@ const vacancyFormValue: {
   initCompletedStepsFromForm: typeof mockInitCompletedStepsFromForm;
   onNext: typeof mockOnNext;
   originalFormRef: { current: unknown };
+  templateId: string | undefined;
 } = {
   form: { title: '', status: 'draft', applicantCount: undefined },
   setForm: mockSetForm,
@@ -65,6 +70,7 @@ const vacancyFormValue: {
   initCompletedStepsFromForm: mockInitCompletedStepsFromForm,
   onNext: mockOnNext,
   originalFormRef: { current: null },
+  templateId: undefined,
 };
 
 vi.mock('react-i18next', () => ({
@@ -161,6 +167,8 @@ vi.mock('@/views/vacancies/utils/vacancy-edit-response-helpers', () => ({
     record: Record<string, unknown>,
     prev: Record<string, unknown>
   ) => toVacancyFormFromResponseMock(record, prev),
+  disableOptionalSections: (form: Record<string, unknown>) =>
+    disableOptionalSectionsMock(form),
 }));
 
 describe('VacancyIdEditPage', () => {
@@ -191,6 +199,7 @@ describe('VacancyIdEditPage', () => {
     ];
     vacancyFormValue.isInitialStep = true;
     vacancyFormValue.originalFormRef.current = null;
+    vacancyFormValue.templateId = undefined;
     // Mirrors the real setState updater form so the component's internal
     // `resolvedForm` (captured via the setForm callback) actually gets set,
     // which in turn gates the initCompletedStepsFromForm call.
@@ -328,6 +337,37 @@ describe('VacancyIdEditPage', () => {
       render(<VacancyIdEditPage />);
 
       expect(mockSetForm).toHaveBeenCalled();
+    });
+
+    // DQCGP-3840: a template-backed vacancy must not surface its optional
+    // sections pre-enabled on edit.
+    it('disables optional sections on hydration when the vacancy is template-backed', () => {
+      vacancyFormValue.templateId = 'template-9';
+      queryState = {
+        isLoading: false,
+        error: null,
+        data: { success: true, data: { title: 'Engineer' } },
+      };
+
+      render(<VacancyIdEditPage />);
+
+      expect(disableOptionalSectionsMock).toHaveBeenCalledWith(
+        toVacancyFormFromResponseMock.mock.results[0]?.value
+      );
+    });
+
+    it('does not touch section defaults for a vacancy with no template lineage', () => {
+      vacancyFormValue.templateId = undefined;
+      queryState = {
+        isLoading: false,
+        error: null,
+        data: { success: true, data: { title: 'Engineer' } },
+      };
+
+      render(<VacancyIdEditPage />);
+
+      expect(toVacancyFormFromResponseMock).toHaveBeenCalled();
+      expect(disableOptionalSectionsMock).not.toHaveBeenCalled();
     });
 
     it('shows the failure message when the query errors', () => {

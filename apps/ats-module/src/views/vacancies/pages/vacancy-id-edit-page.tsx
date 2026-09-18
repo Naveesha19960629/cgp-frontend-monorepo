@@ -20,7 +20,10 @@ import {
   useVacancyTemplateSnapshotQuery,
 } from '@/views/vacancies/hooks';
 import type { VacancyForm } from '@/views/vacancies/types';
-import { toVacancyFormFromResponse } from '@/views/vacancies/utils/vacancy-edit-response-helpers';
+import {
+  disableOptionalSections,
+  toVacancyFormFromResponse,
+} from '@/views/vacancies/utils/vacancy-edit-response-helpers';
 import { toVacancyFormFromTemplateUsePayload } from '@/views/vacancies/utils/vacancy-template-use-helpers';
 
 import { CharacterCount } from '@cgp/ui-kit/components/character-count';
@@ -196,6 +199,7 @@ function EditVacancyContent({
     setCurrentStepIndex,
     initCompletedStepsFromForm,
     originalFormRef,
+    templateId,
   } = useVacancyForm();
   const isHydratedRef = useRef(false);
   const [isHydrated, setIsHydrated] = useState(false);
@@ -244,6 +248,14 @@ function EditVacancyContent({
     let resolvedForm: VacancyForm | undefined;
     setForm((prev: VacancyForm): VacancyForm => {
       resolvedForm = toVacancyFormFromResponse(vacancyRecord, prev);
+      // DQCGP-3840: a template-backed vacancy persists `isEnabled: true` for
+      // every section the template included, even when the recruiter never
+      // filled it in. Reset those to the same "off by default" state as a
+      // vacancy created without a template; the recruiter re-enables via the
+      // section toggle as usual.
+      if (templateId) {
+        resolvedForm = disableOptionalSections(resolvedForm);
+      }
       return resolvedForm;
     });
     if (resolvedForm) {
@@ -283,6 +295,7 @@ function EditVacancyContent({
     setCurrentStepIndex,
     setForm,
     setIsInitialStep,
+    templateId,
     vacancyResponse,
     visibleSteps,
   ]);

@@ -1577,4 +1577,47 @@ function toVacancyFormFromResponse(
   };
 }
 
-export { toVacancyFormFromResponse, normalizeCustomizableFormSection };
+/**
+ * Forces every optional section's `isEnabled` flag to `false`, leaving the
+ * mandatory Job Requirements (and Schedule, which has no toggle) untouched.
+ *
+ * DQCGP-3840: the "Use Template" create flow persists `isEnabled: true` for
+ * every section the template included (vacancy-template-use-helpers.ts), even
+ * though the recruiter never explicitly turned it on. Echoing that value back
+ * as-is on edit would show those sections pre-enabled, unlike a vacancy
+ * created without a template — this restores the same "off by default" entry
+ * point for template-backed vacancies while leaving the actual toggle/discard
+ * mechanics (and any other vacancy) untouched.
+ */
+function disableOptionalSections(form: VacancyForm): VacancyForm {
+  const next = structuredClone(form);
+
+  if (next.profileRequirements) next.profileRequirements.isEnabled = false;
+  if (next.secondaryEducation[0]) next.secondaryEducation[0].isEnabled = false;
+  if (next.tertiaryEducation[0]) next.tertiaryEducation[0].isEnabled = false;
+  if (next.projectsRequirements) next.projectsRequirements.isEnabled = false;
+  if (next.preferredPublications) next.preferredPublications.isEnabled = false;
+  if (next.preferredClubSocieties)
+    next.preferredClubSocieties.isEnabled = false;
+  if (next.preferredSports) next.preferredSports.isEnabled = false;
+  if (next.preferredVolunteering) next.preferredVolunteering.isEnabled = false;
+  if (next.preferredSkills) next.preferredSkills.isEnabled = false;
+  if (next.preferredLanguages) next.preferredLanguages.isEnabled = false;
+  if (next.preferredCauses) next.preferredCauses.isEnabled = false;
+  if (next.preferredHobbies) next.preferredHobbies.isEnabled = false;
+  if (next.preferredIndustries) next.preferredIndustries.isEnabled = false;
+  if (next.patents) next.patents.isEnabled = false;
+  if (next.preferredHonoursAwards)
+    next.preferredHonoursAwards.isEnabled = false;
+  if (next.licenseCertificates?.[0])
+    next.licenseCertificates[0].isEnabled = false;
+  if (next.customizableForm) next.customizableForm.isEnabled = false;
+
+  return next;
+}
+
+export {
+  disableOptionalSections,
+  normalizeCustomizableFormSection,
+  toVacancyFormFromResponse,
+};
