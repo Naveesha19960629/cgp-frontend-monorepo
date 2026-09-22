@@ -1577,4 +1577,48 @@ function toVacancyFormFromResponse(
   };
 }
 
-export { toVacancyFormFromResponse, normalizeCustomizableFormSection };
+/**
+ * Forces every optional section's `isEnabled` flag to `false`, leaving the
+ * mandatory Job Requirements (and Schedule, which has no toggle) untouched.
+ *
+ * DQCGP-3840: the "Use Template" create flow persists `isEnabled: true` for
+ * every section the template included (vacancy-template-use-helpers.ts), even
+ * though the recruiter never explicitly turned it on. Echoing that value back
+ * as-is on edit would show those sections pre-enabled, unlike a vacancy
+ * created without a template — this restores the same "off by default" entry
+ * point for template-backed vacancies while leaving the actual toggle/discard
+ * mechanics (and any other vacancy) untouched.
+ */
+function disableIfPresent(section: { isEnabled: boolean } | undefined): void {
+  if (section) section.isEnabled = false;
+}
+
+function disableOptionalSections(form: VacancyForm): VacancyForm {
+  const next = structuredClone(form);
+
+  disableIfPresent(next.profileRequirements);
+  disableIfPresent(next.secondaryEducation[0]);
+  disableIfPresent(next.tertiaryEducation[0]);
+  disableIfPresent(next.projectsRequirements);
+  disableIfPresent(next.preferredPublications);
+  disableIfPresent(next.preferredClubSocieties);
+  disableIfPresent(next.preferredSports);
+  disableIfPresent(next.preferredVolunteering);
+  disableIfPresent(next.preferredSkills);
+  disableIfPresent(next.preferredLanguages);
+  disableIfPresent(next.preferredCauses);
+  disableIfPresent(next.preferredHobbies);
+  disableIfPresent(next.preferredIndustries);
+  disableIfPresent(next.patents);
+  disableIfPresent(next.preferredHonoursAwards);
+  disableIfPresent(next.licenseCertificates?.[0]);
+  disableIfPresent(next.customizableForm);
+
+  return next;
+}
+
+export {
+  disableOptionalSections,
+  normalizeCustomizableFormSection,
+  toVacancyFormFromResponse,
+};

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { VacancyForm } from '@/views/vacancies/types';
 import {
+  disableOptionalSections,
   normalizeCustomizableFormSection,
   toVacancyFormFromResponse,
 } from '@/views/vacancies/utils/vacancy-edit-response-helpers';
@@ -3171,5 +3172,95 @@ describe('toVacancyFormFromResponse — customizableForm section resolution', ()
       { ...FALLBACK_FORM }
     );
     expect(result.customizableForm!.sectionTitle).toBe('Custom');
+  });
+});
+
+// DQCGP-3840: template-backed vacancies must open on edit with every optional
+// section defaulted off, matching a vacancy created without a template.
+describe('disableOptionalSections', () => {
+  const ALL_ENABLED_FORM: VacancyForm = {
+    ...FALLBACK_FORM,
+    jobRequirements: [{ ...FALLBACK_FORM.jobRequirements[0], isEnabled: true }],
+    profileRequirements: {
+      ...FALLBACK_FORM.profileRequirements,
+      isEnabled: true,
+    },
+    secondaryEducation: [
+      { ...FALLBACK_FORM.secondaryEducation[0], isEnabled: true },
+    ],
+    tertiaryEducation: [
+      { ...FALLBACK_FORM.tertiaryEducation[0], isEnabled: true },
+    ],
+    projectsRequirements: {
+      ...FALLBACK_FORM.projectsRequirements!,
+      isEnabled: true,
+    },
+    preferredPublications: {
+      ...FALLBACK_FORM.preferredPublications!,
+      isEnabled: true,
+    },
+    preferredClubSocieties: {
+      ...FALLBACK_FORM.preferredClubSocieties!,
+      isEnabled: true,
+    },
+    preferredSports: { ...FALLBACK_FORM.preferredSports!, isEnabled: true },
+    preferredVolunteering: {
+      ...FALLBACK_FORM.preferredVolunteering!,
+      isEnabled: true,
+    },
+    patents: { ...FALLBACK_FORM.patents!, isEnabled: true },
+    preferredHonoursAwards: {
+      ...FALLBACK_FORM.preferredHonoursAwards!,
+      isEnabled: true,
+    },
+    licenseCertificates: [
+      { ...FALLBACK_FORM.licenseCertificates![0], isEnabled: true },
+    ],
+    preferredSkills: { ...FALLBACK_FORM.preferredSkills!, isEnabled: true },
+    preferredLanguages: {
+      ...FALLBACK_FORM.preferredLanguages!,
+      isEnabled: true,
+    },
+    preferredCauses: { ...FALLBACK_FORM.preferredCauses!, isEnabled: true },
+    preferredHobbies: { ...FALLBACK_FORM.preferredHobbies!, isEnabled: true },
+    preferredIndustries: {
+      ...FALLBACK_FORM.preferredIndustries!,
+      isEnabled: true,
+    },
+    customizableForm: { ...FALLBACK_FORM.customizableForm!, isEnabled: true },
+  };
+
+  it('turns every optional section off while leaving Job Requirements enabled', () => {
+    const result = disableOptionalSections(ALL_ENABLED_FORM);
+
+    expect(result.jobRequirements[0].isEnabled).toBe(true);
+    expect(result.profileRequirements.isEnabled).toBe(false);
+    expect(result.secondaryEducation[0].isEnabled).toBe(false);
+    expect(result.tertiaryEducation[0].isEnabled).toBe(false);
+    expect(result.projectsRequirements!.isEnabled).toBe(false);
+    expect(result.preferredPublications!.isEnabled).toBe(false);
+    expect(result.preferredClubSocieties!.isEnabled).toBe(false);
+    expect(result.preferredSports!.isEnabled).toBe(false);
+    expect(result.preferredVolunteering!.isEnabled).toBe(false);
+    expect(result.patents!.isEnabled).toBe(false);
+    expect(result.preferredHonoursAwards!.isEnabled).toBe(false);
+    expect(result.licenseCertificates![0].isEnabled).toBe(false);
+    expect(result.preferredSkills!.isEnabled).toBe(false);
+    expect(result.preferredLanguages!.isEnabled).toBe(false);
+    expect(result.preferredCauses!.isEnabled).toBe(false);
+    expect(result.preferredHobbies!.isEnabled).toBe(false);
+    expect(result.preferredIndustries!.isEnabled).toBe(false);
+    expect(result.customizableForm!.isEnabled).toBe(false);
+  });
+
+  it('does not mutate the form passed in', () => {
+    const original = structuredClone(ALL_ENABLED_FORM);
+    disableOptionalSections(ALL_ENABLED_FORM);
+    expect(ALL_ENABLED_FORM).toEqual(original);
+  });
+
+  it('is a no-op for a form whose optional sections are already disabled', () => {
+    const result = disableOptionalSections(FALLBACK_FORM);
+    expect(result).toEqual(FALLBACK_FORM);
   });
 });
