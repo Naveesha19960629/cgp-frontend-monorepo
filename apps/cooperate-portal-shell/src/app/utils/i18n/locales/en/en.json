@@ -32,5 +32,10 @@
     "title": "Something Went Wrong",
     "notFoundPageMessage": "Error 404: Page not found",
     "goBackAndFixButton": "Go Back & Fix"
+  },
+  "landscapeBlocker": {
+    "title": "Please Rotate your Device",
+    "description": "This application is designed to work in portrait mode only. Rotate your device to continue using the application smoothly",
+    "iconAlt": "Rotate device illustration"
   }
 }
