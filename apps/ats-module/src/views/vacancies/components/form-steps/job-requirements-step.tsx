@@ -27,6 +27,7 @@ import type {
   StepProps,
 } from '@/views/vacancies/types';
 import { resolveUserCreatedOptions } from '@/views/vacancies/utils';
+import { clearFieldQuietly } from '@/views/vacancies/utils/clear-field-quietly';
 
 import { CharacterCount } from '@cgp/ui-kit/components/character-count';
 import { Combobox } from '@cgp/ui-kit/components/combobox';
@@ -43,6 +44,7 @@ import {
   FormMessage,
 } from '@cgp/ui-kit/components/ui/form';
 import {
+  SELECT_CLEAR_VALUE,
   Select,
   SelectContent,
   SelectItem,
@@ -458,6 +460,15 @@ export default function JobRequirementsStep({
                               })),
                           ]}
                           onValueChange={value => {
+                            // Backspace/Delete (NFR-024): no discipline, and
+                            // nothing that depended on it. The required error
+                            // waits for Next.
+                            if (!value) {
+                              clearFieldQuietly(form, 'discipline', []);
+                              form.setValue('careerPath', []);
+                              form.setValue('role', []);
+                              return;
+                            }
                             const master = disciplines.find(
                               item => item.id === value
                             );
@@ -657,6 +668,14 @@ export default function JobRequirementsStep({
                                   })),
                               ]}
                               onValueChange={value => {
+                                // Backspace/Delete (NFR-024): no career path,
+                                // and no role that depended on it. The
+                                // required error waits for Next.
+                                if (!value) {
+                                  clearFieldQuietly(form, 'careerPath', []);
+                                  form.setValue('role', []);
+                                  return;
+                                }
                                 const master = careerPaths.find(
                                   item => item.id === value
                                 );
@@ -730,8 +749,18 @@ export default function JobRequirementsStep({
                     </FormLabel>
                     <FormControl>
                       <Select
+                        clearable
                         value={field.value[0]?.value ?? ''}
                         onValueChange={value => {
+                          // Backspace/Delete (NFR-024): no level, and no
+                          // role that depended on it. When Level is required
+                          // (any discipline but Other) its error waits for
+                          // Next.
+                          if (value === SELECT_CLEAR_VALUE) {
+                            clearFieldQuietly(form, 'level', []);
+                            form.setValue('role', []);
+                            return;
+                          }
                           const selected = jobLevels.find(
                             level => level.id === value
                           );
@@ -806,7 +835,10 @@ export default function JobRequirementsStep({
                                   source: role.source,
                                 }))}
                                 onChange={opts =>
-                                  field.onChange(opts.map(toFormOption))
+                                  // Emptying a required field waits for Next (NFR-024).
+                                  opts.length
+                                    ? field.onChange(opts.map(toFormOption))
+                                    : clearFieldQuietly(form, 'role', [])
                                 }
                                 options={roles.map(toOption)}
                                 onSearchSync={value => {
@@ -894,7 +926,10 @@ export default function JobRequirementsStep({
                               source: role.source,
                             }))}
                             onChange={opts =>
-                              field.onChange(opts.map(toFormOption))
+                              // Emptying a required field waits for Next (NFR-024).
+                              opts.length
+                                ? field.onChange(opts.map(toFormOption))
+                                : clearFieldQuietly(form, 'role', [])
                             }
                             options={roles.map(toOption)}
                             onSearchSync={value => {
@@ -974,7 +1009,10 @@ export default function JobRequirementsStep({
                           source: jobTitle.source,
                         }))}
                         onChange={opts =>
-                          field.onChange(opts.map(toFormOption))
+                          // Emptying a required field waits for Next (NFR-024).
+                          opts.length
+                            ? field.onChange(opts.map(toFormOption))
+                            : clearFieldQuietly(form, 'jobTitle', [])
                         }
                         options={jobTitles.map(toOption)}
                         onSearchSync={value => {

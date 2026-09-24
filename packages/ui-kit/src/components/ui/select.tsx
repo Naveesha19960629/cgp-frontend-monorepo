@@ -6,13 +6,82 @@ import * as SelectPrimitive from '@radix-ui/react-select';
 import * as React from 'react';
 
 import { ScrollBar } from '@cgp/ui-kit/components/ui/scroll-area';
+import { getKeyboardAction } from '@cgp/ui-kit/lib/keyboard-actions';
 import { applyTypography } from '@cgp/ui-kit/lib/typography';
 import { cn } from '@cgp/ui-kit/lib/utils';
 
+/**
+ * What a `clearable` Select sends to `onValueChange` on Backspace/Delete.
+ * Radix reserves '' on the Select itself for "show the placeholder", so map
+ * this back to the field's empty value and set the Select's `value` to ''.
+ * The list itself never shows a placeholder option; the placeholder lives
+ * in the trigger only.
+ */
+const SELECT_CLEAR_VALUE = '__unselected__';
+
+/** Clears a `clearable` Select; undefined while there is nothing to clear. */
+const SelectClearContext = React.createContext<(() => void) | undefined>(
+  undefined
+);
+
 function Select({
+  clearable = false,
   ...props
-}: React.ComponentProps<typeof SelectPrimitive.Root>) {
-  return <SelectPrimitive.Root data-slot="select" {...props} />;
+}: React.ComponentProps<typeof SelectPrimitive.Root> & {
+  /**
+   * NFR-024 (ATS): Backspace or Delete, on the trigger or in the open list,
+   * sends `SELECT_CLEAR_VALUE`. Set it only where `onValueChange` handles
+   * that value: back to empty, or to a default for a field that can never be
+   * empty.
+   */
+  clearable?: boolean;
+}) {
+  // Held here so that a clear from the open list can also close it.
+  const [uncontrolledOpen, setUncontrolledOpen] = React.useState(
+    props.defaultOpen ?? false
+  );
+  const open = props.open ?? uncontrolledOpen;
+  const handleOpenChange = (next: boolean) => {
+    setUncontrolledOpen(next);
+    props.onOpenChange?.(next);
+  };
+
+  const canClear =
+    clearable &&
+    !props.disabled &&
+    !!props.value &&
+    props.value !== SELECT_CLEAR_VALUE;
+  const clear = canClear
+    ? () => {
+        props.onValueChange?.(SELECT_CLEAR_VALUE);
+        if (open) handleOpenChange(false);
+      }
+    : undefined;
+
+  return (
+    <SelectClearContext.Provider value={clear}>
+      <SelectPrimitive.Root
+        data-slot="select"
+        {...props}
+        open={open}
+        onOpenChange={handleOpenChange}
+      />
+    </SelectClearContext.Provider>
+  );
+}
+
+/** The caller's handler, then Backspace/Delete clears a `clearable` Select. */
+function useSelectClearKeyDown<T extends HTMLElement>(
+  onKeyDown?: React.KeyboardEventHandler<T>
+) {
+  const clear = React.useContext(SelectClearContext);
+  return (event: React.KeyboardEvent<T>) => {
+    onKeyDown?.(event);
+    if (event.defaultPrevented || !clear) return;
+    if (getKeyboardAction(event, false) !== 'clear') return;
+    event.preventDefault();
+    clear();
+  };
 }
 
 function SelectGroup({
@@ -32,11 +101,13 @@ function SelectTrigger({
   size = 'default',
   children,
   icon,
+  onKeyDown,
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Trigger> & {
   size?: 'sm' | 'default';
   icon?: React.ReactNode;
 }) {
+  const handleKeyDown = useSelectClearKeyDown(onKeyDown);
   return (
     <SelectPrimitive.Trigger
       data-slot="select-trigger"
@@ -48,6 +119,7 @@ function SelectTrigger({
         className
       )}
       {...props}
+      onKeyDown={handleKeyDown}
     >
       {children}
       <SelectPrimitive.Icon asChild>
@@ -61,8 +133,10 @@ function SelectContent({
   className,
   children,
   position = 'popper',
+  onKeyDown,
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Content>) {
+  const handleKeyDown = useSelectClearKeyDown(onKeyDown);
   return (
     <SelectPrimitive.Portal>
       <SelectPrimitive.Content
@@ -75,6 +149,7 @@ function SelectContent({
         )}
         position={position}
         {...props}
+        onKeyDown={handleKeyDown}
       >
         <ScrollAreaPrimitive.Root
           type="auto"
@@ -184,6 +259,7 @@ function SelectScrollDownButton({
 }
 
 export {
+  SELECT_CLEAR_VALUE,
   Select,
   SelectContent,
   SelectGroup,

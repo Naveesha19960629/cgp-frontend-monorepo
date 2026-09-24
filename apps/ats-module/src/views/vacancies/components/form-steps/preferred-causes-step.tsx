@@ -267,6 +267,7 @@ export default function PreferredCausesStep({
               </div>
 
               <MultipleSelector
+                aria-label={t('preferredCauses.sectionLabel')}
                 value={selectedCauses.map(c => ({
                   value: c.id,
                   label: c.label,

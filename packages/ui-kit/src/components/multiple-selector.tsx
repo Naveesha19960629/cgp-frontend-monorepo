@@ -481,6 +481,7 @@ const MultipleSelector = React.forwardRef<
         } // When onSearch is provided, we don't want to filter the options. You can still override it.
         filter={commandFilter()}
       >
+        {/* eslint-disable-next-line jsx-a11y-x/click-events-have-key-events, jsx-a11y-x/no-static-element-interactions -- pointer shortcut that focuses the input, which is focusable itself */}
         <div
           className={cn(
             'border-input ring-offset-background focus-within:ring-ring py-auto flex h-11 items-center justify-between rounded-md border px-3 text-base focus-within:ring-2 focus-within:ring-offset-2 md:text-sm',

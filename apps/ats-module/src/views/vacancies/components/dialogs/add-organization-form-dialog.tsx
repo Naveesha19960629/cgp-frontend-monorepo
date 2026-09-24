@@ -12,6 +12,7 @@ import {
   useLocationsQuery,
   useOrganizationForm,
 } from '@/views/vacancies/hooks';
+import { clearFieldQuietly } from '@/views/vacancies/utils/clear-field-quietly';
 
 import { CharacterCount } from '@cgp/ui-kit/components/character-count';
 import { SuccessToast } from '@cgp/ui-kit/components/custom-toast';
@@ -305,7 +306,13 @@ export default function AddOrganizationFormDialog({
                             onSearchChange={value =>
                               setLocationsSearch(removeEmoji(value))
                             }
-                            onSelect={option => field.onChange(option)}
+                            onSelect={option =>
+                              // A cleared location (NFR-024) waits for
+                              // submit to show its required error.
+                              option.id
+                                ? field.onChange(option)
+                                : clearFieldQuietly(form, 'location', option)
+                            }
                           />
                         </FormControl>
                         <FormMessage />

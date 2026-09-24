@@ -12,6 +12,7 @@ import {
 } from 'react-day-picker';
 
 import { Button, buttonVariants } from '@cgp/ui-kit/components/ui/button';
+import { getKeyboardAction } from '@cgp/ui-kit/lib/keyboard-actions';
 import { cn } from '@cgp/ui-kit/lib/utils';
 
 function Calendar({
@@ -28,7 +29,18 @@ function Calendar({
 }) {
   const defaultClassNames = getDefaultClassNames();
 
-  return (
+  // NFR-024 (ATS): Backspace or Delete anywhere in an open single-date
+  // calendar clears the date, as clicking the selected day again does. Every
+  // picker already handles that deselect (clear the field, close the popover,
+  // focus back on the trigger), so it runs unchanged.
+  const handleClearKey = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (props.mode !== 'single' || props.required || !props.selected) return;
+    if (getKeyboardAction(event, true) !== 'clear') return;
+    event.preventDefault();
+    props.onSelect?.(undefined, props.selected, {}, event);
+  };
+
+  const dayPicker = (
     <DayPicker
       showOutsideDays={showOutsideDays}
       className={cn(
@@ -175,6 +187,15 @@ function Calendar({
       }}
       {...props}
     />
+  );
+
+  return (
+    // DayPicker's root takes no key handler, so a box-less wrapper picks the
+    // keys up from the focusable days, nav buttons and month/year selects.
+    // eslint-disable-next-line jsx-a11y-x/no-static-element-interactions -- key delegation only; every control inside is focusable itself
+    <div className="contents" onKeyDown={handleClearKey}>
+      {dayPicker}
+    </div>
   );
 }
 

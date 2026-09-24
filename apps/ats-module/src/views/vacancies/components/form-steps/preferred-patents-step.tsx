@@ -57,6 +57,7 @@ import {
   PopoverTrigger,
 } from '@cgp/ui-kit/components/ui/popover';
 import { Switch } from '@cgp/ui-kit/components/ui/switch';
+import { createDateClearHandler } from '@cgp/ui-kit/lib/keyboard-actions';
 import { applyTypography } from '@cgp/ui-kit/lib/typography';
 import { cn } from '@cgp/ui-kit/lib/utils';
 import { format, isAfter, isBefore, startOfDay } from 'date-fns';
@@ -378,6 +379,11 @@ function PatentCard({
                       <PopoverTrigger asChild>
                         <FormControl>
                           <Button
+                            onKeyDown={createDateClearHandler({
+                              hasValue: !!field.value,
+                              isOpen: openDatePopover === 'fromDate',
+                              onClear: () => field.onChange(null),
+                            })}
                             type="button"
                             variant="outline"
                             disabled={isFieldDisabled}
@@ -407,7 +413,11 @@ function PatentCard({
                           </Button>
                         </FormControl>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
+                      <PopoverContent
+                        aria-label={t('common.a11y.chooseDate')}
+                        className="w-auto p-0"
+                        align="start"
+                      >
                         <Calendar
                           mode="single"
                           selected={field.value}
@@ -417,7 +427,8 @@ function PatentCard({
                             new Date()
                           }
                           onSelect={date => {
-                            field.onChange(date);
+                            // Deselecting the day clears to null, not undefined (DQCGP-4212).
+                            field.onChange(date ?? null);
                             setOpenDatePopover(null);
                             const toDate = form.getValues(
                               `patents.${index}.toDate`
@@ -483,6 +494,11 @@ function PatentCard({
                       <PopoverTrigger asChild>
                         <FormControl>
                           <Button
+                            onKeyDown={createDateClearHandler({
+                              hasValue: !!field.value,
+                              isOpen: openDatePopover === 'toDate',
+                              onClear: () => field.onChange(null),
+                            })}
                             type="button"
                             variant="outline"
                             disabled={isFieldDisabled}
@@ -510,7 +526,11 @@ function PatentCard({
                           </Button>
                         </FormControl>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
+                      <PopoverContent
+                        aria-label={t('common.a11y.chooseDate')}
+                        className="w-auto p-0"
+                        align="start"
+                      >
                         <Calendar
                           mode="single"
                           selected={field.value}
@@ -520,7 +540,8 @@ function PatentCard({
                             new Date()
                           }
                           onSelect={date => {
-                            field.onChange(date);
+                            // Deselecting the day clears to null, not undefined (DQCGP-4212).
+                            field.onChange(date ?? null);
                             setOpenDatePopover(null);
                           }}
                           disabled={date => {

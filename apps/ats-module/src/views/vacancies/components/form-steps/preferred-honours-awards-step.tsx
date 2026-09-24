@@ -57,6 +57,7 @@ import {
   PopoverTrigger,
 } from '@cgp/ui-kit/components/ui/popover';
 import { Switch } from '@cgp/ui-kit/components/ui/switch';
+import { createDateClearHandler } from '@cgp/ui-kit/lib/keyboard-actions';
 import { applyTypography } from '@cgp/ui-kit/lib/typography';
 import { cn, removeEmoji } from '@cgp/ui-kit/lib/utils';
 import { format } from 'date-fns';
@@ -353,6 +354,11 @@ function HonoursAndAwardsCard({
                       <PopoverTrigger asChild>
                         <FormControl>
                           <Button
+                            onKeyDown={createDateClearHandler({
+                              hasValue: !!field.value,
+                              isOpen: openDatePopover === 'issuedDateFrom',
+                              onClear: () => field.onChange(null),
+                            })}
                             type="button"
                             variant="outline"
                             disabled={isFieldDisabled}
@@ -383,13 +389,18 @@ function HonoursAndAwardsCard({
                           </Button>
                         </FormControl>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
+                      <PopoverContent
+                        aria-label={t('common.a11y.chooseDate')}
+                        className="w-auto p-0"
+                        align="start"
+                      >
                         <Calendar
                           mode="single"
                           selected={field.value ?? undefined}
                           defaultMonth={field.value ?? new Date()}
                           onSelect={date => {
-                            field.onChange(date);
+                            // Deselecting the day clears to null, not undefined (DQCGP-4212).
+                            field.onChange(date ?? null);
                             setOpenDatePopover(null);
                             const issuedDateTo = form.getValues(
                               `honoursAndAwards.${index}.issuedDateTo`
@@ -443,6 +454,11 @@ function HonoursAndAwardsCard({
                       <PopoverTrigger asChild>
                         <FormControl>
                           <Button
+                            onKeyDown={createDateClearHandler({
+                              hasValue: !!field.value,
+                              isOpen: openDatePopover === 'issuedDateTo',
+                              onClear: () => field.onChange(null),
+                            })}
                             type="button"
                             variant="outline"
                             disabled={isFieldDisabled}
@@ -473,13 +489,18 @@ function HonoursAndAwardsCard({
                           </Button>
                         </FormControl>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
+                      <PopoverContent
+                        aria-label={t('common.a11y.chooseDate')}
+                        className="w-auto p-0"
+                        align="start"
+                      >
                         <Calendar
                           mode="single"
                           selected={field.value ?? undefined}
                           defaultMonth={field.value ?? new Date()}
                           onSelect={date => {
-                            field.onChange(date);
+                            // Deselecting the day clears to null, not undefined (DQCGP-4212).
+                            field.onChange(date ?? null);
                             setOpenDatePopover(null);
                           }}
                           disabled={date => {

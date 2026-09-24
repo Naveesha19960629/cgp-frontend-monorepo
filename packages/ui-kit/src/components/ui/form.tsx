@@ -106,6 +106,9 @@ function FormLabel({
         'text-gray-700'
       )}
       htmlFor={formItemId}
+      // Lets controls that can't carry `formItemId` as their own id (the
+      // cmdk-based multi-select) point aria-labelledby here instead.
+      id={`${formItemId}-label`}
       {...props}
     />
   );

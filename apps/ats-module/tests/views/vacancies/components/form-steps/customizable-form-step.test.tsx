@@ -1395,6 +1395,106 @@ describe('CustomizableFormStep', () => {
     });
   });
 
+  describe('Question type — Backspace / Delete (NFR-024)', () => {
+    const fillAndPickMultipleChoice = async (
+      user: ReturnType<typeof userEvent.setup>
+    ) => {
+      await user.click(getSectionToggle());
+      await user.type(screen.getByPlaceholderText('Section Title'), 'Skills');
+      await user.type(screen.getByPlaceholderText('Form Title'), 'Tech');
+      await user.type(screen.getByPlaceholderText('Question'), 'Pick one');
+      await user.click(screen.getByRole('combobox'));
+      await user.click(screen.getByText('Multiple Choice'));
+      await user.type(screen.getAllByPlaceholderText('Enter option')[0], 'Red');
+    };
+
+    it.each(['{Backspace}', '{Delete}'])(
+      'clears the type with %s and blocks Next with the required error',
+      async key => {
+        const user = userEvent.setup();
+        const mockOnNext = vi.fn();
+        renderComponent({
+          onNext: mockOnNext,
+          onBack: vi.fn(),
+          onSubmit: vi.fn(),
+        });
+        await fillAndPickMultipleChoice(user);
+
+        const typeTrigger = screen.getByRole('combobox');
+        typeTrigger.focus();
+        await user.keyboard(key);
+
+        expect(typeTrigger).toHaveTextContent(
+          'customizableForm.question.typePlaceholder'
+        );
+        expect(
+          screen.queryByPlaceholderText('Enter option')
+        ).not.toBeInTheDocument();
+
+        await user.click(screen.getByRole('button', { name: 'Next' }));
+        expect(screen.getByText('Required type')).toBeInTheDocument();
+        expect(mockOnNext).not.toHaveBeenCalled();
+      }
+    );
+
+    it('keeps the typed options, so picking the type again restores them', async () => {
+      const user = userEvent.setup();
+      renderComponent();
+      await fillAndPickMultipleChoice(user);
+
+      screen.getByRole('combobox').focus();
+      await user.keyboard('{Backspace}');
+      await user.click(screen.getByRole('combobox'));
+      await user.click(screen.getByText('Multiple Choice'));
+
+      expect(screen.getAllByPlaceholderText('Enter option')[0]).toHaveValue(
+        'Red'
+      );
+    });
+  });
+
+  describe('Linear scale range — Backspace / Delete (NFR-024)', () => {
+    it('resets each end to its default instead of emptying it', async () => {
+      const user = userEvent.setup();
+      renderComponent();
+
+      await user.click(getSectionToggle());
+      await user.click(screen.getByRole('combobox'));
+      await user.click(screen.getByText('Linear Scale'));
+      const [, from, to] = screen.getAllByRole('combobox');
+      await user.click(from);
+      await user.click(screen.getByRole('option', { name: '1' }));
+      await user.click(to);
+      await user.click(screen.getByRole('option', { name: '5' }));
+      expect(from).toHaveTextContent('1');
+      expect(to).toHaveTextContent('5');
+
+      from.focus();
+      await user.keyboard('{Backspace}');
+      to.focus();
+      await user.keyboard('{Delete}');
+
+      expect(from).toHaveTextContent('0');
+      expect(to).toHaveTextContent('2');
+    });
+
+    it('leaves an end that is already at its default alone', async () => {
+      const user = userEvent.setup();
+      renderComponent();
+
+      await user.click(getSectionToggle());
+      await user.click(screen.getByRole('combobox'));
+      await user.click(screen.getByText('Linear Scale'));
+      const [, from] = screen.getAllByRole('combobox');
+
+      from.focus();
+      await user.keyboard('{Backspace}');
+
+      expect(from).toHaveTextContent('0');
+      expect(from).toHaveFocus();
+    });
+  });
+
   describe('Maximum forms/questions on duplicate (boundary)', () => {
     it('shows an error toast when duplicating would exceed the maximum number of forms', async () => {
       const user = userEvent.setup({ delay: null });

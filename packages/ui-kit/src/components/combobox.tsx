@@ -19,9 +19,14 @@ import {
   PopoverTrigger,
 } from '@cgp/ui-kit/components/ui/popover';
 import { ScrollArea } from '@cgp/ui-kit/components/ui/scroll-area';
+import { createKeyboardActionHandler } from '@cgp/ui-kit/lib/keyboard-actions';
 import { applyTypography } from '@cgp/ui-kit/lib/typography';
 import { cn, removeEmoji } from '@cgp/ui-kit/lib/utils';
 import { useDebouncedCallback } from 'use-debounce';
+
+/** cmdk value of the "Add \"…\"" row, kept apart from real option values. */
+const ADD_NEW_ITEM_VALUE = '__combobox_add_new__';
+const LOADING_ITEM_VALUE = '__combobox_loading__';
 
 export interface ComboboxOption {
   value: string;
@@ -66,6 +71,13 @@ interface ComboboxProps {
   clearOnSelect?: boolean;
   modal?: boolean;
   addable?: boolean;
+  /** Set by `FormControl` so the field's `FormLabel` points at the input. */
+  id?: string;
+  'aria-label'?: string;
+  'aria-labelledby'?: string;
+  /** Set by `FormControl` to link the field's description and error text. */
+  'aria-describedby'?: string;
+  'aria-invalid'?: boolean;
 }
 
 export function Combobox({
@@ -96,6 +108,11 @@ export function Combobox({
   onOpenChange: controlledOnOpenChange,
   clearOnSelect = false,
   modal = true,
+  id,
+  'aria-label': ariaLabel,
+  'aria-labelledby': ariaLabelledBy,
+  'aria-describedby': ariaDescribedBy,
+  'aria-invalid': ariaInvalid,
 }: ComboboxProps) {
   const { t } = useTranslation();
 
@@ -103,6 +120,11 @@ export function Combobox({
   const isControlled = controlledOpen !== undefined;
   const open = isControlled ? controlledOpen : internalOpen;
   const [searchValue, setSearchValue] = React.useState('');
+  // cmdk's highlighted row, driven from the input by the arrow keys. The
+  // input is the popover trigger, so it sits outside <Command>.
+  const [activeValue, setActiveValue] = React.useState('');
+  const [activeOptionId, setActiveOptionId] = React.useState<string>();
+  const [listEl, setListEl] = React.useState<HTMLDivElement | null>(null);
   const clickingInputRef = React.useRef(false);
   const inputRef = React.useRef<HTMLInputElement>(null);
   const [selectedOption, setSelectedOption] = React.useState<
@@ -189,7 +211,12 @@ export function Combobox({
     controlledOnOpenChange?.(newOpen);
   };
 
-  const handleOpenChange = (newOpen: boolean) => {
+  /**
+   * `prefill` copies the selected label into the search text, so a click
+   * opens on the current value. Typing into the closed field opens it with
+   * the typed text instead (prefilling would overwrite that keystroke).
+   */
+  const handleOpenChange = (newOpen: boolean, prefill = true) => {
     if (!newOpen && clickingInputRef.current) {
       clickingInputRef.current = false;
       return;
@@ -198,7 +225,12 @@ export function Combobox({
     if (newOpen && beforeOpen && !beforeOpen()) {
       return;
     }
-    if (newOpen && !clearOnSelect && selectedOption) {
+    if (newOpen) {
+      // Start the highlight on the current value; cmdk falls back to the
+      // first row when this is empty.
+      setActiveValue(!clearOnSelect && value ? value : '');
+    }
+    if (newOpen && prefill && !clearOnSelect && selectedOption) {
       const displayLabel = selectedLabel ?? selectedOption.label;
       setSearchValue(displayLabel);
       // If the selected option is not in the current options slice (e.g. it
@@ -226,12 +258,129 @@ export function Combobox({
     }
   };
 
+  const showAddNew =
+    searchValue.trim().length > 0 &&
+    !hideAddNew &&
+    !searchValueExists &&
+    addable;
+  // Rows the arrow keys can land on, in render order.
+  const navigableValues = React.useMemo(
+    () => [
+      ...(showAddNew && !loading && !errorMessage ? [ADD_NEW_ITEM_VALUE] : []),
+      ...(loading ? [] : filteredOptions.map(option => option.value)),
+    ],
+    [showAddNew, loading, errorMessage, filteredOptions]
+  );
+
+  // Keep the highlight on a row that is actually rendered as results change.
+  React.useEffect(() => {
+    if (!open) {
+      setActiveValue('');
+      return;
+    }
+    if (activeValue && navigableValues.includes(activeValue)) return;
+    setActiveValue(navigableValues[0] ?? '');
+  }, [open, navigableValues, activeValue]);
+
+  // cmdk only tracks the highlighted row's element id for changes it makes
+  // itself, not for a controlled `value`, so resolve it from the row's static
+  // `data-value` for `aria-activedescendant`.
+  React.useEffect(() => {
+    const item =
+      open && activeValue
+        ? Array.from(
+            listEl?.querySelectorAll<HTMLElement>('[cmdk-item]') ?? []
+          ).find(el => el.dataset.value === activeValue)
+        : undefined;
+    setActiveOptionId(item?.id || undefined);
+  }, [open, listEl, activeValue, navigableValues]);
+
+  const moveActive = (step: 1 | -1) => {
+    if (navigableValues.length === 0) return;
+    const current = navigableValues.indexOf(activeValue);
+    const next =
+      current === -1
+        ? step === 1
+          ? 0
+          : navigableValues.length - 1
+        : (current + step + navigableValues.length) % navigableValues.length;
+    setActiveValue(navigableValues[next]);
+  };
+
+  const selectActive = () => {
+    if (activeValue === ADD_NEW_ITEM_VALUE) {
+      handleAddNew();
+    } else if (navigableValues.includes(activeValue)) {
+      handleSelect(activeValue);
+    }
+  };
+
   const getInputDisplayValue = (): string => {
     if (clearOnSelect || open) return searchValue;
     if (!selectedOption) return '';
     return selectedLabel ?? selectedOption.label;
   };
   const inputDisplayValue = getInputDisplayValue();
+
+  const hasSelection = Boolean(value || selectedOption);
+
+  const deselect = () => {
+    // The step clears `value`, and the label follows it (see the options
+    // effect), so a step that ignored '' keeps showing its value.
+    onValueChange?.('');
+    if (open) {
+      // Stay open on the full list so another option can be picked.
+      setSearchValue('');
+      debouncedSearchChange.cancel();
+      onSearchChange?.('');
+    } else {
+      handleOpenChange(false);
+    }
+  };
+
+  /**
+   * NFR-024 (ATS), within the ARIA APG editable-combobox model, where both
+   * keys edit text. Backspace erases character by character and deselects
+   * once the text is empty. Delete deselects in one press while the input
+   * still shows the selected value untouched (closed, or just opened);
+   * after the user has typed, it edits the text like Backspace.
+   */
+  const clearFromKey = (key: 'Backspace' | 'Delete') => {
+    if (!hasSelection) return false;
+    const shownLabel =
+      !clearOnSelect && selectedOption
+        ? (selectedLabel ?? selectedOption.label)
+        : '';
+    const untouched =
+      inputDisplayValue === '' ||
+      (key === 'Delete' && inputDisplayValue === shownLabel);
+    if (!untouched) return false;
+    deselect();
+    return true;
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // A closed list must not let Enter submit the surrounding form.
+    if (e.key === 'Enter' && !open) {
+      e.preventDefault();
+      return;
+    }
+    if (e.key === 'Backspace' || e.key === 'Delete') {
+      if (clearFromKey(e.key)) e.preventDefault();
+      return;
+    }
+    createKeyboardActionHandler(
+      {
+        onOpen: () => handleOpenChange(true),
+        onMoveDown: () => moveActive(1),
+        onMoveUp: () => moveActive(-1),
+        // The Radix Popover dismiss layer already closes the list on Escape.
+        onEscape: () => undefined,
+        onEnter: selectActive,
+      },
+      open
+    )(e);
+  };
 
   // Report the live input text so external adornments (e.g. a character
   // counter) reflect what's currently in the field, not just the last
@@ -246,10 +395,19 @@ export function Combobox({
         <input
           ref={inputRef}
           type="text"
+          id={id}
           role="combobox"
+          autoComplete="off"
           data-testid="form-combobox-input"
+          aria-label={ariaLabel}
+          aria-labelledby={ariaLabelledBy}
+          aria-describedby={ariaDescribedBy}
+          aria-haspopup="listbox"
+          aria-autocomplete="list"
           aria-expanded={open}
-          aria-invalid={isError || undefined}
+          aria-controls={open ? listEl?.id : undefined}
+          aria-activedescendant={open ? activeOptionId : undefined}
+          aria-invalid={ariaInvalid || isError || undefined}
           value={inputDisplayValue}
           onChange={e => {
             let cleanVal = removeEmoji(
@@ -261,46 +419,36 @@ export function Combobox({
             setSearchValue(cleanVal);
             onImmediateSearchChange?.(cleanVal);
             debouncedSearchChange(cleanVal);
-            if (!open) handleOpenChange(true);
+            // Erasing the whole value (Backspace to the start, select-all
+            // then delete, cut) deselects it: an empty box means no value.
+            if (cleanVal === '' && hasSelection && !clearOnSelect) {
+              onValueChange?.('');
+            }
+            if (!open) handleOpenChange(true, false);
           }}
           onMouseDown={() => {
             if (open) {
               clickingInputRef.current = true;
             }
           }}
-          onKeyDown={e => {
-            if (e.key === 'Enter') {
-              e.preventDefault();
-              return;
-            }
-            // Keyboard accessibility: Backspace clears a previously selected
-            // value once the search text is already empty, mirroring the
-            // multi-select's "Backspace removes the last chip" behaviour for
-            // this single-value combobox.
-            if (
-              (e.key === 'Backspace' || e.key === 'Delete') &&
-              searchValue === '' &&
-              (value || selectedOption)
-            ) {
-              e.preventDefault();
-              setSelectedOption(undefined);
-              onValueChange?.('');
-              handleOpenChange(false);
-            }
-          }}
+          onKeyDown={handleKeyDown}
           placeholder={placeholder}
           disabled={disabled}
           maxLength={maxLength}
           className={cn(
-            'border-input focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:bg-input/30 dark:hover:bg-input/50 !h-11 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-sm shadow-none transition-[color,box-shadow] outline-none placeholder:text-slate-500 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50',
+            'border-input focus-visible:border-ring focus-visible:ring-ring/50 dark:bg-input/30 dark:hover:bg-input/50 !h-11 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-sm shadow-none transition-[color,box-shadow] outline-none placeholder:text-slate-500 focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50',
             applyTypography('body-medium'),
             selectedOption && 'text-slate-900',
-            isError && 'border-destructive',
+            isError &&
+              'ring-destructive/20 dark:ring-destructive/40 border-destructive',
             className
           )}
         />
       </PopoverTrigger>
       <PopoverContent
+        // The popup is only positioning around the listbox; Radix's default
+        // role="dialog" (unnamed) is wrong for a combobox (WCAG 4.1.2).
+        role="presentation"
         className="w-[var(--radix-popover-trigger-width)] max-w-94 overflow-hidden p-0"
         align="start"
         sideOffset={4}
@@ -316,8 +464,13 @@ export function Combobox({
           }
         }}
       >
-        <Command onMouseDown={e => e.preventDefault()}>
-          <CommandList className="max-h-none overflow-hidden">
+        <Command
+          value={activeValue}
+          onValueChange={setActiveValue}
+          shouldFilter={false}
+          onMouseDown={e => e.preventDefault()}
+        >
+          <CommandList ref={setListEl} className="max-h-none overflow-hidden">
             <ScrollArea className="p-3 [&_[data-slot=scroll-area-viewport]]:max-h-[272px] [&_[data-slot=scroll-area-viewport]>div]:!block [&_[data-slot=scroll-area-viewport]>div]:!w-full">
               <div className="w-full overflow-hidden">
                 {searchValue.trim().length > 0 &&
@@ -331,6 +484,7 @@ export function Combobox({
                       )}
                       {addable && (
                         <CommandItem
+                          value={ADD_NEW_ITEM_VALUE}
                           onSelect={handleAddNew}
                           className={clsx(
                             'w-full cursor-pointer gap-1 overflow-hidden rounded-sm bg-neutral-200 p-3 text-slate-900',
@@ -357,6 +511,7 @@ export function Combobox({
                 {loading && (
                   <CommandGroup className="p-0">
                     <CommandItem
+                      value={LOADING_ITEM_VALUE}
                       disabled
                       className={clsx(
                         'mb-0 rounded-sm pb-0 pl-0 text-sm font-medium text-slate-500',
@@ -397,8 +552,11 @@ export function Combobox({
                     {filteredOptions.map(option => (
                       <CommandItem
                         key={option.value}
-                        value={option.label} // use label for shadcn filter
-                        onSelect={() => handleSelect(option.value)} // store real value
+                        // The real value, not the label: labels can repeat
+                        // (e.g. two cities named "Ada"), which would leave
+                        // arrow-key navigation stuck between the duplicates.
+                        value={option.value}
+                        onSelect={() => handleSelect(option.value)}
                         className={cn(
                           'w-full min-w-0 gap-2 overflow-hidden rounded-sm p-3 hover:bg-neutral-100 hover:text-slate-900',
                           option.value === value

@@ -270,6 +270,7 @@ export default function PreferredLanguagesStep({
               </div>
 
               <MultipleSelector
+                aria-label={t('preferredLanguages.sectionLabel')}
                 value={selectedLanguages.map(l => ({
                   value: l.id,
                   label: l.label,

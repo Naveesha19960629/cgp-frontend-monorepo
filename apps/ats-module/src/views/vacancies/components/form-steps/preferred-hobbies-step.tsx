@@ -267,6 +267,7 @@ export default function PreferredHobbiesStep({
               </div>
 
               <MultipleSelector
+                aria-label={t('preferredHobbies.sectionLabel')}
                 value={selectedHobbies.map(h => ({
                   value: h.id,
                   label: h.label,

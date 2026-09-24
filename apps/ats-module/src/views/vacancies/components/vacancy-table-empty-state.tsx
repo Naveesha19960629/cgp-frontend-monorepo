@@ -31,8 +31,10 @@ export default function VacancyTableEmptyState() {
 
   return (
     <div className="relative h-full overflow-hidden rounded-md border border-slate-200">
-      {/* Non-scrollable skeleton table background */}
+      {/* Non-scrollable skeleton table background — decorative, so hidden
+          from screen readers, which would otherwise announce an empty table. */}
       <table
+        aria-hidden="true"
         className="w-full caption-bottom text-sm"
         style={{
           tableLayout: 'fixed',

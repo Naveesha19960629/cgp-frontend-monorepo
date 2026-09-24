@@ -26,8 +26,10 @@ export default function VacancySearchEmptyState() {
 
   return (
     <div className="relative h-full overflow-hidden rounded-md border border-slate-200">
-      {/* Skeleton table background */}
+      {/* Skeleton table background — decorative, so hidden from screen
+          readers, which would otherwise announce an empty table. */}
       <table
+        aria-hidden="true"
         className="w-full caption-bottom text-sm"
         style={{
           tableLayout: 'fixed',

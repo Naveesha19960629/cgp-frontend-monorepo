@@ -362,6 +362,17 @@
         "title": "Successfully Disabled",
         "message": "{{sectionName}} section has been successfully disabled."
       }
+    },
+    "a11y": {
+      "removeOption": "Remove {{label}}",
+      "optionRemoved_zero": "{{label}} removed. Nothing selected.",
+      "optionRemoved_one": "{{label}} removed. {{count}} selected.",
+      "optionRemoved_other": "{{label}} removed. {{count}} selected.",
+      "clearAll": "Clear all selections",
+      "clearDate": "Clear date",
+      "moreInfo": "More information",
+      "chooseDate": "Choose date",
+      "chooseDateTime": "Choose date and time"
     }
   },
   "jobRequirements": {
@@ -618,11 +629,9 @@
       }
     }
   },
-
   "findCandidate": {
     "title": "Find Candidate"
   },
-
   "customizableForm": {
     "title": "Customizable Form",
     "untitledForm": "Untitled Form",
@@ -705,7 +714,6 @@
       "skillLevelValue": "Skill Level {{level}} Value"
     }
   },
-
   "vacancyCancelDialog": {
     "title": "Are you sure?",
     "description": "Are you sure you want to exit the vacancy creation workflow? Any unsaved changes will be lost",
@@ -724,7 +732,6 @@
       }
     }
   },
-
   "vacancySaveAsTemplateDialog": {
     "title": "Are you sure?",
     "description": "This vacancy will be saved as a reusable template. Only enabled sections and configurations will be included.\nTo create this vacancy template, please provide a template name.",
@@ -733,7 +740,6 @@
     "noButton": "No",
     "yesButton": "Yes"
   },
-
   "vacancyEditCancelDialog": {
     "title": "Are you sure?",
     "description": "Are you sure you want to leave without updating your changes? Any unsaved changes will be lost.",
@@ -746,7 +752,6 @@
       }
     }
   },
-
   "preferredPatents": {
     "title": "Preferred Patents",
     "back": "Back",

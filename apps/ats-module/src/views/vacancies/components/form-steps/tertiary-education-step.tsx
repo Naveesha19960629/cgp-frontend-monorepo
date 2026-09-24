@@ -764,6 +764,7 @@ export default function TertiaryEducationStep({
                       name="entries.0.qualificationName"
                       render={({ field }) => (
                         <MultipleSelector
+                          aria-label={t('tertiaryEducation.qualificationName')}
                           ref={qualificationRef}
                           value={field.value}
                           onSearch={searchQualifications}
@@ -883,6 +884,9 @@ export default function TertiaryEducationStep({
                       name="entries.0.tertiaryAwardingBodyLocations"
                       render={({ field }) => (
                         <MultipleSelector
+                          aria-label={t(
+                            'tertiaryEducation.tertiaryAwardingBodyLocations'
+                          )}
                           value={field.value}
                           onSearch={searchLocations}
                           onChange={options => {
@@ -955,6 +959,7 @@ export default function TertiaryEducationStep({
                       name="entries.0.batch"
                       render={({ field }) => (
                         <MultipleSelector
+                          aria-label={t('tertiaryEducation.batch')}
                           ref={batchRef}
                           value={field.value}
                           onSearch={searchBatches}
@@ -1033,6 +1038,9 @@ export default function TertiaryEducationStep({
                       name="entries.0.tertiaryAwardingBody"
                       render={({ field }) => (
                         <MultipleSelector
+                          aria-label={t(
+                            'tertiaryEducation.tertiaryAwardingBody'
+                          )}
                           key={awardingBodySelectorKey}
                           value={field.value}
                           onSearch={async (search: string) => {
@@ -1127,6 +1135,9 @@ export default function TertiaryEducationStep({
                       name="entries.0.levelOfQualification"
                       render={({ field }) => (
                         <MultipleSelector
+                          aria-label={t(
+                            'tertiaryEducation.levelOfQualification'
+                          )}
                           ref={levelRef}
                           value={field.value}
                           onSearch={searchLevels}
@@ -1209,6 +1220,7 @@ export default function TertiaryEducationStep({
                       name="entries.0.specialization"
                       render={({ field }) => (
                         <MultipleSelector
+                          aria-label={t('tertiaryEducation.specialization')}
                           ref={specializationRef}
                           value={field.value}
                           onSearch={searchSpecializations}
@@ -1287,6 +1299,7 @@ export default function TertiaryEducationStep({
                       name="entries.0.studyMode"
                       render={({ field }) => (
                         <MultipleSelector
+                          aria-label={t('tertiaryEducation.studyMode')}
                           value={field.value}
                           onSearch={searchStudyModes}
                           onChange={options => {
@@ -1351,6 +1364,7 @@ export default function TertiaryEducationStep({
                       name="entries.0.studyPattern"
                       render={({ field }) => (
                         <MultipleSelector
+                          aria-label={t('tertiaryEducation.studyPattern')}
                           value={field.value}
                           onSearch={searchStudyPatterns}
                           onChange={options => {
@@ -1415,6 +1429,7 @@ export default function TertiaryEducationStep({
                       name="entries.0.deliverySchedule"
                       render={({ field }) => (
                         <MultipleSelector
+                          aria-label={t('tertiaryEducation.deliverySchedule')}
                           value={field.value}
                           onSearch={searchDeliverySchedules}
                           onChange={options => {
@@ -1485,6 +1500,7 @@ export default function TertiaryEducationStep({
                       name="entries.0.department"
                       render={({ field }) => (
                         <MultipleSelector
+                          aria-label={t('tertiaryEducation.department')}
                           ref={departmentRef}
                           value={field.value}
                           onSearch={searchDepartments}
@@ -1567,6 +1583,7 @@ export default function TertiaryEducationStep({
                       name="entries.0.faculty"
                       render={({ field }) => (
                         <MultipleSelector
+                          aria-label={t('tertiaryEducation.faculty')}
                           ref={facultyRef}
                           value={field.value}
                           onSearch={searchFaculties}

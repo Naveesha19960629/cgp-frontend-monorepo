@@ -75,6 +75,7 @@ import {
 } from '@cgp/ui-kit/components/ui/popover';
 import { Switch } from '@cgp/ui-kit/components/ui/switch';
 import { Textarea } from '@cgp/ui-kit/components/ui/textarea';
+import { createDateClearHandler } from '@cgp/ui-kit/lib/keyboard-actions';
 import { applyTypography } from '@cgp/ui-kit/lib/typography';
 import { cn } from '@cgp/ui-kit/lib/utils';
 
@@ -171,6 +172,11 @@ function SecondaryStartDateField({
             <PopoverTrigger asChild>
               <FormControl>
                 <Button
+                  onKeyDown={createDateClearHandler({
+                    hasValue: !!field.value,
+                    isOpen: isOpen,
+                    onClear: () => field.onChange(''),
+                  })}
                   type="button"
                   variant="outline"
                   disabled={fieldsDisabled}
@@ -197,7 +203,11 @@ function SecondaryStartDateField({
                 </Button>
               </FormControl>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
+            <PopoverContent
+              aria-label={t('common.a11y.chooseDate')}
+              className="w-auto p-0"
+              align="start"
+            >
               <Calendar
                 mode="single"
                 selected={field.value ? new Date(field.value) : undefined}
@@ -207,7 +217,9 @@ function SecondaryStartDateField({
                     : new Date()
                 }
                 onSelect={date => {
-                  field.onChange(date ? formatLocalDate(date) : undefined);
+                  // '' rather than undefined: undefined falls back to the loaded
+                  // value in edit mode, so the cleared date kept showing (DQCGP-4212).
+                  field.onChange(date ? formatLocalDate(date) : '');
                   onOpenChange(false);
                   const endDate = getValues('entries.0.endDate');
                   if (endDate && date && compareDates(endDate, date) <= 0) {
@@ -265,6 +277,11 @@ function SecondaryEndDateField({
             <PopoverTrigger asChild>
               <FormControl>
                 <Button
+                  onKeyDown={createDateClearHandler({
+                    hasValue: !!field.value,
+                    isOpen: isOpen,
+                    onClear: () => field.onChange(''),
+                  })}
                   type="button"
                   variant="outline"
                   disabled={fieldsDisabled}
@@ -291,13 +308,19 @@ function SecondaryEndDateField({
                 </Button>
               </FormControl>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
+            <PopoverContent
+              aria-label={t('common.a11y.chooseDate')}
+              className="w-auto p-0"
+              align="start"
+            >
               <Calendar
                 mode="single"
                 selected={field.value ? new Date(field.value) : undefined}
                 defaultMonth={endDateDefaultMonth}
                 onSelect={date => {
-                  field.onChange(date ? formatLocalDate(date) : undefined);
+                  // '' rather than undefined: undefined falls back to the loaded
+                  // value in edit mode, so the cleared date kept showing (DQCGP-4212).
+                  field.onChange(date ? formatLocalDate(date) : '');
                   onOpenChange(false);
                 }}
                 disabled={date =>
@@ -365,6 +388,7 @@ function SecondarySchoolsField({
         name="entries.0.schools"
         render={({ field }) => (
           <MultipleSelector
+            aria-label={t('secondaryEducation.schoolName')}
             key={schoolsSelectorKey}
             value={field.value}
             onSearch={async (search: string) => {
@@ -467,6 +491,7 @@ function SecondarySchoolLocationsField({
         name="entries.0.schoolLocations"
         render={({ field }) => (
           <MultipleSelector
+            aria-label={t('secondaryEducation.schoolLocation')}
             value={field.value}
             onSearch={searchLocations}
             onChange={options => {
@@ -560,6 +585,7 @@ function SecondaryExaminationsField({
         name="entries.0.examinations"
         render={({ field }) => (
           <MultipleSelector
+            aria-label={t('secondaryEducation.examination')}
             ref={examinationRef}
             value={field.value}
             onSearch={searchExaminations}
@@ -663,6 +689,7 @@ function SecondaryAwardingBodyField({
         name="entries.0.awardingBodies"
         render={({ field }) => (
           <MultipleSelector
+            aria-label={t('secondaryEducation.awardingBody')}
             ref={awardingBodyRef}
             value={field.value}
             onSearch={searchAwardingBodies}
@@ -766,6 +793,7 @@ function SecondaryFieldsOfStudyField({
         name="entries.0.fieldsOfStudy"
         render={({ field }) => (
           <MultipleSelector
+            aria-label={t('secondaryEducation.fieldOfStudy')}
             ref={fieldOfStudyRef}
             value={field.value}
             onSearch={searchFieldsOfStudy}

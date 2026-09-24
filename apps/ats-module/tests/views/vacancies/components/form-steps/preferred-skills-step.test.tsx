@@ -102,6 +102,10 @@ vi.mock('@cgp/ui-kit/components/combobox', () => ({
         <button type="button" onClick={() => onAddNew?.(search)}>
           {`addnew:${placeholder}`}
         </button>
+        {/* What the real combobox sends on Backspace/Delete. */}
+        <button type="button" onClick={() => onValueChange?.('')}>
+          {`clear:${placeholder}`}
+        </button>
       </div>
     );
   },
@@ -465,6 +469,58 @@ describe('PreferredSkillsStep', () => {
       await user.click(deleteBtn);
 
       expect(getRows()).toHaveLength(1);
+    });
+  });
+
+  describe('clearing with Backspace / Delete (NFR-024)', () => {
+    const filledRow = {
+      skillId: 'skill-1',
+      skillName: 'JavaScript',
+      careerPathName: 'Frontend',
+      displayValue: 'JavaScript - Frontend',
+      source: 'MASTER',
+      levelId: 'level-1',
+    };
+
+    it('clears the skill and the career path taken from it, keeping the level', async () => {
+      const user = userEvent.setup();
+      renderStep({ skills: [filledRow] });
+
+      await user.click(
+        screen.getByText('clear:preferredSkills.input.placeholder')
+      );
+
+      expect(
+        screen.getByRole('textbox', {
+          name: 'preferredSkills.input.placeholder',
+        })
+      ).toHaveValue('');
+      expect(
+        screen.getByRole('textbox', {
+          name: 'preferredSkills.careerPath.input.placeholder',
+        })
+      ).toHaveValue('');
+      expect(screen.getByTestId('level-select')).toHaveValue('level-1');
+    });
+
+    it('clears the career path and keeps the skill', async () => {
+      const user = userEvent.setup();
+      renderStep({ skills: [filledRow] });
+
+      await user.click(
+        screen.getByText('clear:preferredSkills.careerPath.input.placeholder')
+      );
+
+      expect(
+        screen.getByRole('textbox', {
+          name: 'preferredSkills.careerPath.input.placeholder',
+        })
+      ).toHaveValue('');
+      expect(
+        screen.getByRole('textbox', {
+          name: 'preferredSkills.input.placeholder',
+        })
+      ).toHaveValue('JavaScript');
     });
   });
 

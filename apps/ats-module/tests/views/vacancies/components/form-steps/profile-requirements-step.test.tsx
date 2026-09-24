@@ -250,20 +250,30 @@ vi.mock('@cgp/ui-kit/components/ui/select', () => ({
     value,
     onValueChange,
     disabled,
+    clearable,
   }: {
     children?: ReactNode;
     value?: string;
     onValueChange?: (v: string) => void;
     disabled?: boolean;
+    clearable?: boolean;
   }) => (
-    <select
-      value={value ?? ''}
-      disabled={disabled}
-      onChange={e => onValueChange?.(e.target.value)}
-    >
-      <option value="">--</option>
-      {children}
-    </select>
+    <>
+      <select
+        value={value ?? ''}
+        disabled={disabled}
+        onChange={e => onValueChange?.(e.target.value)}
+      >
+        <option value="">--</option>
+        {children}
+      </select>
+      {/* What the real clearable Select sends on Backspace/Delete. */}
+      {clearable && (
+        <button type="button" onClick={() => onValueChange?.('__unselected__')}>
+          keyboard clear
+        </button>
+      )}
+    </>
   ),
   SelectTrigger: ({ children }: { children?: ReactNode }) => <>{children}</>,
   SelectContent: ({ children }: { children?: ReactNode }) => <>{children}</>,
@@ -277,6 +287,7 @@ vi.mock('@cgp/ui-kit/components/ui/select', () => ({
   SelectValue: ({ placeholder }: { placeholder?: string }) => (
     <span>{placeholder}</span>
   ),
+  SELECT_CLEAR_VALUE: '__unselected__',
 }));
 
 vi.mock('@cgp/ui-kit/components/ui/input', () => ({
@@ -327,6 +338,14 @@ vi.mock('@cgp/ui-kit/components/combobox', () => ({
           {`opt:${placeholder}:${o.label}`}
         </button>
       ))}
+      {/* What the real combobox sends on Backspace/Delete. */}
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => onValueChange?.('')}
+      >
+        {`clear:${placeholder}`}
+      </button>
     </div>
   ),
 }));
@@ -737,7 +756,7 @@ describe('ProfileRequirementsStep', () => {
       expect(maritalStatusSelect).toHaveValue('single');
     });
 
-    it('clears a previously selected gender via the first "clear" dropdown option', async () => {
+    it('clears a previously selected gender with Backspace/Delete', async () => {
       const user = userEvent.setup();
       renderStep({
         isEnabled: true,
@@ -747,12 +766,15 @@ describe('ProfileRequirementsStep', () => {
       const [genderSelect] = screen.getAllByRole('combobox');
       expect(genderSelect).toHaveValue('male');
 
-      await user.selectOptions(genderSelect, '__unselected__');
+      const [genderClear] = screen.getAllByRole('button', {
+        name: 'keyboard clear',
+      });
+      await user.click(genderClear);
 
       expect(genderSelect).toHaveValue('');
     });
 
-    it('clears a previously selected marital status via the first "clear" dropdown option', async () => {
+    it('clears a previously selected marital status with Backspace/Delete', async () => {
       const user = userEvent.setup();
       renderStep({
         isEnabled: true,
@@ -762,9 +784,33 @@ describe('ProfileRequirementsStep', () => {
       const [, maritalStatusSelect] = screen.getAllByRole('combobox');
       expect(maritalStatusSelect).toHaveValue('single');
 
-      await user.selectOptions(maritalStatusSelect, '__unselected__');
+      const [, maritalClear] = screen.getAllByRole('button', {
+        name: 'keyboard clear',
+      });
+      await user.click(maritalClear);
 
       expect(maritalStatusSelect).toHaveValue('');
+    });
+
+    it('lists only real values: the placeholders stay in the field', () => {
+      renderStep({ isEnabled: true });
+
+      const [genderSelect, maritalStatusSelect] =
+        screen.getAllByRole('combobox');
+      const listed = (select: HTMLElement) =>
+        Array.from(select.querySelectorAll('option'))
+          .filter(option => option.value !== '')
+          .map(option => option.textContent);
+
+      expect(listed(genderSelect)).not.toContain(
+        'profileRequirements.genderPlaceholder'
+      );
+      expect(listed(maritalStatusSelect)).not.toContain(
+        'profileRequirements.maritalStatusPlaceholder'
+      );
+      expect(
+        genderSelect.querySelector('option[value="__unselected__"]')
+      ).toBeNull();
     });
   });
 
@@ -959,6 +1005,44 @@ describe('ProfileRequirementsStep', () => {
         )
       ).toHaveTextContent('');
     });
+  });
+
+  describe('clearing a place with Backspace / Delete (NFR-024)', () => {
+    const current = (field: string) =>
+      screen.getByTestId(
+        `combobox-profileRequirements.${field}Placeholder-current`
+      );
+    const renderWithAddress = () =>
+      renderStep({
+        isEnabled: true,
+        addresses: [
+          {
+            city: { id: 'city-1', label: 'Aachen' },
+            stateProvince: { id: 'state-1', label: 'North Rhine-Westphalia' },
+            country: { id: 'country-1', label: 'Germany' },
+            postalCode: '52062',
+          },
+        ],
+      });
+
+    // City, State and Country describe one place, so clearing any one of
+    // them clears all three. The postal code is kept.
+    it.each(['city', 'stateProvince', 'country'])(
+      'clearing %s clears City, State/Province and Country',
+      async field => {
+        const user = userEvent.setup();
+        renderWithAddress();
+
+        await user.click(
+          screen.getByText(`clear:profileRequirements.${field}Placeholder`)
+        );
+
+        expect(current('city')).toHaveTextContent('');
+        expect(current('stateProvince')).toHaveTextContent('');
+        expect(current('country')).toHaveTextContent('');
+        expect(screen.getByDisplayValue('52062')).toBeInTheDocument();
+      }
+    );
   });
 
   describe('duplicate address detection', () => {

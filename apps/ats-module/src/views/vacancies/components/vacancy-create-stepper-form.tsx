@@ -193,7 +193,10 @@ export default function VacancyCreateStepperForm({
 
           {/* Right — content */}
           <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-            <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto">
+            {/* scroll-pt/pb clear the sticky step header (~69px) and footer
+                (~89px), so a field reached by Tab is never hidden under
+                them (WCAG 2.2 SC 2.4.11). */}
+            <div className="flex min-h-0 min-w-0 flex-1 scroll-pt-20 scroll-pb-24 flex-col overflow-y-auto">
               {visibleSteps.map((step, index) => {
                 const StepComponent = step.component;
                 return (

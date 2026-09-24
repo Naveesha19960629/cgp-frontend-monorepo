@@ -24,6 +24,7 @@ import {
 import { Input } from '@cgp/ui-kit/components/ui/input';
 import { Label } from '@cgp/ui-kit/components/ui/label';
 import {
+  SELECT_CLEAR_VALUE,
   Select,
   SelectContent,
   SelectItem,
@@ -178,10 +179,16 @@ export function AddLicenseCertDialog({
                   </span>
                 </Label>
                 <Select
+                  clearable
                   value={certType}
                   onValueChange={val => {
-                    setCertType(val as LicenseCertType);
-                    if (val) setTypeError(undefined);
+                    // Backspace/Delete (NFR-024) returns the type to unselected.
+                    const next =
+                      val === SELECT_CLEAR_VALUE
+                        ? ''
+                        : (val as LicenseCertType);
+                    setCertType(next);
+                    if (next) setTypeError(undefined);
                   }}
                 >
                   <SelectTrigger className="!h-11 w-full shadow-none">

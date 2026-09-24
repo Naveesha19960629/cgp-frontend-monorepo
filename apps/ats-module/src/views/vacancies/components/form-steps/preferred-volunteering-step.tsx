@@ -50,6 +50,7 @@ import {
   PopoverTrigger,
 } from '@cgp/ui-kit/components/ui/popover';
 import { Switch } from '@cgp/ui-kit/components/ui/switch';
+import { createDateClearHandler } from '@cgp/ui-kit/lib/keyboard-actions';
 import { applyTypography } from '@cgp/ui-kit/lib/typography';
 import { cn } from '@cgp/ui-kit/lib/utils';
 import { isAfter, isBefore, startOfDay } from 'date-fns';
@@ -233,6 +234,9 @@ function VolunteeringCard({
                     </Label>
                   </div>
                   <MultipleSelector
+                    aria-label={t(
+                      'preferredVolunteering.labels.organizationName'
+                    )}
                     key={orgSelectorKey}
                     value={entry.organizationName}
                     onChange={options => {
@@ -323,6 +327,9 @@ function VolunteeringCard({
                     </Label>
                   </div>
                   <MultipleSelector
+                    aria-label={t(
+                      'preferredVolunteering.labels.organizationLocation'
+                    )}
                     value={entry.organizationLocations}
                     onChange={options => {
                       onUpdate(index, {
@@ -392,6 +399,7 @@ function VolunteeringCard({
                     />
                   </div>
                   <MultipleSelector
+                    aria-label={t('preferredVolunteering.labels.cause')}
                     value={entry.cause}
                     onChange={options => {
                       onUpdate(index, {
@@ -502,6 +510,12 @@ function VolunteeringCard({
                   >
                     <PopoverTrigger asChild>
                       <Button
+                        onKeyDown={createDateClearHandler({
+                          hasValue: !!entry.startDate,
+                          isOpen: entry.openDatePopover === 'startDate',
+                          onClear: () =>
+                            onUpdate(index, { startDate: undefined }),
+                        })}
                         type="button"
                         variant="outline"
                         disabled={fieldsDisabled}
@@ -526,7 +540,11 @@ function VolunteeringCard({
                         />
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
+                    <PopoverContent
+                      aria-label={t('common.a11y.chooseDate')}
+                      className="w-auto p-0"
+                      align="start"
+                    >
                       <Calendar
                         mode="single"
                         selected={parseLocalDate(entry.startDate) ?? undefined}
@@ -580,6 +598,12 @@ function VolunteeringCard({
                   >
                     <PopoverTrigger asChild>
                       <Button
+                        onKeyDown={createDateClearHandler({
+                          hasValue: !!entry.endDate,
+                          isOpen: entry.openDatePopover === 'endDate',
+                          onClear: () =>
+                            onUpdate(index, { endDate: undefined }),
+                        })}
                         type="button"
                         variant="outline"
                         disabled={fieldsDisabled}
@@ -604,7 +628,11 @@ function VolunteeringCard({
                         />
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
+                    <PopoverContent
+                      aria-label={t('common.a11y.chooseDate')}
+                      className="w-auto p-0"
+                      align="start"
+                    >
                       <Calendar
                         mode="single"
                         selected={parseLocalDate(entry.endDate) ?? undefined}

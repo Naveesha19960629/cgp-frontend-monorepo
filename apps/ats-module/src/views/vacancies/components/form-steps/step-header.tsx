@@ -1,5 +1,6 @@
 import { ChevronLeft } from 'lucide-react';
 
+import { useId } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { StepHeaderProps } from '@/views/vacancies/types';
@@ -13,6 +14,7 @@ export default function StepHeader({
   onToggle,
 }: Readonly<StepHeaderProps>) {
   const { t } = useTranslation('ats');
+  const titleId = useId();
 
   return (
     <div className="sticky top-0 z-20 flex items-center justify-between border-b border-slate-200 bg-white px-8 py-5">
@@ -25,12 +27,16 @@ export default function StepHeader({
         >
           <ChevronLeft className="size-4" />
         </button>
-        <h2 className="text-lg font-bold text-slate-900">{title}</h2>
+        <h2 id={titleId} className="text-lg font-bold text-slate-900">
+          {title}
+        </h2>
       </div>
 
       <button
         type="button"
         role="switch"
+        // Named by the step title: "<section>, switch, on" (WCAG 4.1.2).
+        aria-labelledby={titleId}
         aria-checked={isEnabled}
         onClick={onToggle}
         className={cn(

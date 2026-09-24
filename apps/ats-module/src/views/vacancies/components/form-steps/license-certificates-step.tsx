@@ -56,6 +56,7 @@ import {
   PopoverTrigger,
 } from '@cgp/ui-kit/components/ui/popover';
 import { Switch } from '@cgp/ui-kit/components/ui/switch';
+import { createDateClearHandler } from '@cgp/ui-kit/lib/keyboard-actions';
 import { applyTypography } from '@cgp/ui-kit/lib/typography';
 import { cn } from '@cgp/ui-kit/lib/utils';
 
@@ -568,6 +569,9 @@ export default function LicenseCertificatesStep({
                           name="entry.nameOfLicenseCert"
                           render={({ field }) => (
                             <MultipleSelector
+                              aria-label={t(
+                                'licenseCertificates.nameOfLicenseCert'
+                              )}
                               key={licenseCertSelectorKey}
                               value={field.value}
                               onSearch={async (search: string) => {
@@ -675,6 +679,9 @@ export default function LicenseCertificatesStep({
                           name="entry.issuingOrganization"
                           render={({ field }) => (
                             <MultipleSelector
+                              aria-label={t(
+                                'licenseCertificates.issuingOrganization'
+                              )}
                               key={organizationSelectorKey}
                               value={field.value}
                               onSearch={async (search: string) => {
@@ -778,6 +785,9 @@ export default function LicenseCertificatesStep({
                           name="entry.organizationLocations"
                           render={({ field }) => (
                             <MultipleSelector
+                              aria-label={t(
+                                'licenseCertificates.organizationLocations'
+                              )}
                               value={field.value}
                               onSearch={async (search: string) => {
                                 const results = await searchLocations(search);
@@ -872,6 +882,11 @@ export default function LicenseCertificatesStep({
                               <PopoverTrigger asChild>
                                 <FormControl>
                                   <Button
+                                    onKeyDown={createDateClearHandler({
+                                      hasValue: !!field.value,
+                                      isOpen: openDatePopover === 'issueDate',
+                                      onClear: () => field.onChange(''),
+                                    })}
                                     type="button"
                                     variant="outline"
                                     disabled={fieldsDisabled}
@@ -906,6 +921,7 @@ export default function LicenseCertificatesStep({
                                 </FormControl>
                               </PopoverTrigger>
                               <PopoverContent
+                                aria-label={t('common.a11y.chooseDate')}
                                 className="w-auto p-0"
                                 align="start"
                               >
@@ -922,8 +938,10 @@ export default function LicenseCertificatesStep({
                                       : new Date()
                                   }
                                   onSelect={date => {
+                                    // '' rather than undefined: undefined falls back to the loaded
+                                    // value in edit mode, so the cleared date kept showing (DQCGP-4212).
                                     field.onChange(
-                                      date ? formatLocalDate(date) : undefined
+                                      date ? formatLocalDate(date) : ''
                                     );
                                     setOpenDatePopover(null);
                                     const expDate = getValues(
@@ -980,6 +998,12 @@ export default function LicenseCertificatesStep({
                               <PopoverTrigger asChild>
                                 <FormControl>
                                   <Button
+                                    onKeyDown={createDateClearHandler({
+                                      hasValue: !!field.value,
+                                      isOpen:
+                                        openDatePopover === 'expirationDate',
+                                      onClear: () => field.onChange(''),
+                                    })}
                                     type="button"
                                     variant="outline"
                                     disabled={fieldsDisabled}
@@ -1014,6 +1038,7 @@ export default function LicenseCertificatesStep({
                                 </FormControl>
                               </PopoverTrigger>
                               <PopoverContent
+                                aria-label={t('common.a11y.chooseDate')}
                                 className="w-auto p-0"
                                 align="start"
                               >
@@ -1032,8 +1057,10 @@ export default function LicenseCertificatesStep({
                                         : new Date()
                                   }
                                   onSelect={date => {
+                                    // '' rather than undefined: undefined falls back to the loaded
+                                    // value in edit mode, so the cleared date kept showing (DQCGP-4212).
                                     field.onChange(
-                                      date ? formatLocalDate(date) : undefined
+                                      date ? formatLocalDate(date) : ''
                                     );
                                     setOpenDatePopover(null);
                                   }}
