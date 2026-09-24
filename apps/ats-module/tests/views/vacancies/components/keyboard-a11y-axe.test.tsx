@@ -8,6 +8,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { axe } from 'vitest-axe';
 
 import atsEn from '@/app/utils/i18n/locales/en/ats.json';
+import DataTableFacetedFilter from '@/views/vacancies/components/data-table-faceted-filter';
 
 import { Combobox } from '@cgp/ui-kit/components/combobox';
 import ExpandableText from '@cgp/ui-kit/components/expandable-text';
@@ -110,6 +111,29 @@ describe('keyboard NFR controls — axe', () => {
     }
     render(<Harness />);
     screen.getByRole('combobox', { name: 'Country' }).focus();
+    await user.keyboard('{Enter}');
+
+    expect(await axeViolations(document.body)).toEqual([]);
+  });
+
+  it.each([
+    ['with search', false],
+    ['without search (Status)', true],
+  ])('vacancy list filter, open %s', async (_, hideSearch) => {
+    const user = userEvent.setup();
+    render(
+      <DataTableFacetedFilter
+        title="Status"
+        options={[
+          { value: 'draft', label: 'Draft' },
+          { value: 'live', label: 'Live' },
+        ]}
+        selectedValues={['live']}
+        onSelectionChange={() => {}}
+        hideSearch={hideSearch}
+      />
+    );
+    screen.getByRole('button', { name: 'Status' }).focus();
     await user.keyboard('{Enter}');
 
     expect(await axeViolations(document.body)).toEqual([]);

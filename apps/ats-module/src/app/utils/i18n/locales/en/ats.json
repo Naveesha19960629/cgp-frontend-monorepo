@@ -615,6 +615,7 @@
         "filterSearchPlaceholder": "Search {{title}}...",
         "loading": "Loading...",
         "noResults": "No results found.",
+        "cleared": "{{title}} filter cleared.",
         "statusOptions": {
           "draft": "Draft",
           "unpublished": "Unpublished",

@@ -487,7 +487,7 @@ export function Combobox({
                           value={ADD_NEW_ITEM_VALUE}
                           onSelect={handleAddNew}
                           className={clsx(
-                            'w-full cursor-pointer gap-1 overflow-hidden rounded-sm bg-neutral-200 p-3 text-slate-900',
+                            'w-full cursor-pointer gap-1 overflow-hidden rounded-sm bg-neutral-200 p-3 text-slate-900 data-[selected=true]:bg-neutral-300',
                             (loading || !!errorMessage) &&
                               'cursor-not-allowed opacity-50'
                           )}
@@ -557,8 +557,10 @@ export function Combobox({
                         // arrow-key navigation stuck between the duplicates.
                         value={option.value}
                         onSelect={() => handleSelect(option.value)}
+                        // WCAG 2.4.7: the active row is the one Enter picks,
+                        // so it is drawn like the hover while the list is open.
                         className={cn(
-                          'w-full min-w-0 gap-2 overflow-hidden rounded-sm p-3 hover:bg-neutral-100 hover:text-slate-900',
+                          'w-full min-w-0 gap-2 overflow-hidden rounded-sm p-3 hover:bg-neutral-100 hover:text-slate-900 data-[selected=true]:bg-neutral-100 data-[selected=true]:text-slate-900',
                           option.value === value
                             ? 'text-slate-900'
                             : 'text-slate-500'

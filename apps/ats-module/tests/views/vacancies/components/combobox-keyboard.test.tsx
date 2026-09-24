@@ -91,6 +91,27 @@ describe('Combobox — keyboard accessibility', () => {
     expect(input).toHaveFocus();
   });
 
+  it('draws the highlight on the row Enter will pick (WCAG 2.4.7)', async () => {
+    const user = setup();
+    render(<Harness />);
+    const input = screen.getByRole('combobox', { name: 'Country' });
+
+    input.focus();
+    await user.keyboard('{ArrowDown}{ArrowDown}');
+
+    const active = document.getElementById(
+      input.getAttribute('aria-activedescendant')!
+    );
+    expect(active).toHaveTextContent('Sri Lanka');
+    expect(active).toHaveAttribute('data-selected', 'true');
+    expect(active).toHaveClass('data-[selected=true]:bg-neutral-100');
+    expect(
+      screen
+        .getAllByRole('option')
+        .filter(option => option.getAttribute('data-selected') === 'true')
+    ).toHaveLength(1);
+  });
+
   it('wraps from the first option to the last on ArrowUp', async () => {
     const user = setup();
     render(<Harness />);

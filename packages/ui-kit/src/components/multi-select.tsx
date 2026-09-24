@@ -22,6 +22,7 @@ import {
   PopoverContent,
 } from '@cgp/ui-kit/components/ui/popover';
 import { ScrollArea } from '@cgp/ui-kit/components/ui/scroll-area';
+import { useListHighlight } from '@cgp/ui-kit/hooks/use-list-highlight';
 import { cn, removeEmoji } from '@cgp/ui-kit/lib/utils';
 import { Command as CommandPrimitive, useCommandState } from 'cmdk';
 
@@ -291,8 +292,6 @@ const MultipleSelector = React.forwardRef<
     // Screen-reader text for chip removals made from the keyboard: the chips
     // render below the field, so a removal is otherwise easy to miss.
     const [announcement, setAnnouncement] = React.useState('');
-    // True once the user has moved cmdk's highlight themselves.
-    const keyboardNavigatedRef = React.useRef(false);
     const [open, setOpen] = React.useState(false);
     const [onScrollbar, setOnScrollbar] = React.useState(false);
     const [isLoading, setIsLoading] = React.useState(false);
@@ -306,6 +305,11 @@ const MultipleSelector = React.forwardRef<
       transToGroupOption(arrayDefaultOptions, groupBy)
     );
     const [inputValue, setInputValue] = React.useState('');
+    // Drawn, and picked by Enter, once the user moves it (see the hook).
+    // With enableEnterToSelect, Enter picks cmdk's first option straight
+    // away, so it is drawn from the start.
+    const highlight = useListHighlight({ open, search: inputValue });
+    const highlightShown = enableEnterToSelect ? open : highlight.shown;
     const debouncedSearchTerm = useDebounce(inputValue, delay || 500);
     const [showMaxError, setShowMaxError] = React.useState(false);
     const [userCreatedOptions, setUserCreatedOptions] = React.useState<
@@ -345,11 +349,11 @@ const MultipleSelector = React.forwardRef<
         const input = inputRef.current;
         if (!input) return;
 
-        if (['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(e.key)) {
-          keyboardNavigatedRef.current = true;
-          // Escape closes the list but keeps focus here, so the arrows must
-          // be able to bring it back.
-          if (!open) setOpen(true);
+        if (!enableEnterToSelect) highlight.onKeyDown(e);
+        // Escape closes the list but keeps focus here, so the arrows must be
+        // able to bring it back.
+        if (['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(e.key) && !open) {
+          setOpen(true);
         }
 
         // NFR-024: Backspace or Delete on an empty search removes the last
@@ -377,21 +381,12 @@ const MultipleSelector = React.forwardRef<
         // with the arrow keys, Enter selects it (NFR-024). Escape is left to
         // the Radix Popover, which closes the list without taking focus off
         // the field (WCAG 2.4.3).
-        if (
-          e.key === 'Enter' &&
-          !enableEnterToSelect &&
-          !keyboardNavigatedRef.current
-        ) {
+        if (e.key === 'Enter' && !enableEnterToSelect && !highlight.shown) {
           e.preventDefault();
         }
       },
-      [enableEnterToSelect, handleUnselect, selected, t, open]
+      [enableEnterToSelect, handleUnselect, selected, t, open, highlight]
     );
-
-    // Typing or closing the list hands the highlight back to cmdk.
-    useEffect(() => {
-      keyboardNavigatedRef.current = false;
-    }, [inputValue, open]);
 
     // cmdk hard-codes aria-expanded="true" on Command.Input. React never
     // rewrites an attribute whose prop hasn't changed, so this correction
@@ -543,6 +538,10 @@ const MultipleSelector = React.forwardRef<
           disabled={disabled}
           className={cn(
             'm-3 flex items-center gap-1 overflow-hidden bg-neutral-200 py-2.5 text-sm font-medium text-slate-900',
+            // The first option below keeps this gap as its own padding, so
+            // its highlight isn't cut off at the top.
+            !showLoading && hasSelectableOptions && 'mb-0',
+            highlightShown && 'data-[selected=true]:bg-neutral-300',
             disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
           )}
           onMouseDown={e => {
@@ -999,8 +998,13 @@ const MultipleSelector = React.forwardRef<
                                       }
                                     }}
                                     className={cn(
-                                      'cursor-pointer overflow-hidden px-0 text-sm text-slate-500 not-first:py-3 first:pt-3 first:pb-3 last:pb-0 aria-[selected="true"]:bg-white aria-[selected="true"]:text-slate-500 data-[disabled="true"]:opacity-100',
-                                      CreatableItem() && 'first:pt-0',
+                                      // -mx-2/px-2 and last:-mb-3 draw the
+                                      // highlight into the group's padding,
+                                      // like the Select's, without moving the
+                                      // text.
+                                      '-mx-2 cursor-pointer overflow-hidden rounded-sm px-2 py-3 text-sm text-slate-500 last:-mb-3 data-[disabled="true"]:opacity-100',
+                                      highlightShown &&
+                                        'data-[selected=true]:bg-accent data-[selected=true]:text-slate-900',
                                       option.disable &&
                                         'text-muted-foreground cursor-default hover:bg-white'
                                     )}

@@ -250,6 +250,78 @@ describe('MultipleSelector — keyboard accessibility', () => {
     });
   });
 
+  describe('visible highlight (WCAG 2.4.7)', () => {
+    /** The option cmdk has active, if the list draws it. */
+    const drawnHighlight = () =>
+      screen
+        .getAllByRole('option')
+        .find(
+          option =>
+            option.getAttribute('data-selected') === 'true' &&
+            option.classList.contains('data-[selected=true]:bg-accent')
+        );
+
+    it('draws no highlight before the user moves it', async () => {
+      const user = setup();
+      render(<Harness />);
+
+      await user.click(screen.getByRole('combobox', { name: 'Hobbies' }));
+
+      expect(drawnHighlight()).toBeUndefined();
+    });
+
+    it('lands the first ArrowDown on the first option, then Enter picks it', async () => {
+      const user = setup();
+      const onChange = vi.fn();
+      render(<Harness onChange={onChange} />);
+
+      await user.click(screen.getByRole('combobox', { name: 'Hobbies' }));
+      await user.keyboard('{ArrowDown}');
+      expect(drawnHighlight()).toHaveTextContent('Reading');
+
+      await user.keyboard('{ArrowDown}');
+      expect(drawnHighlight()).toHaveTextContent('Gaming');
+
+      await user.keyboard('{Enter}');
+      expect(onChange).toHaveBeenLastCalledWith([options[1]]);
+    });
+
+    it('highlights the first option when ArrowDown opens the list', async () => {
+      const user = setup();
+      render(<Harness />);
+
+      await user.click(screen.getByRole('combobox', { name: 'Hobbies' }));
+      await user.keyboard('{Escape}{ArrowDown}');
+
+      expect(drawnHighlight()).toHaveTextContent('Reading');
+    });
+
+    it('hides the highlight again once the user types', async () => {
+      const user = setup();
+      render(<Harness />);
+
+      await user.click(screen.getByRole('combobox', { name: 'Hobbies' }));
+      await user.keyboard('{ArrowDown}h');
+
+      expect(drawnHighlight()).toBeUndefined();
+    });
+
+    it('draws it from the start with the enableEnterToSelect opt-in', async () => {
+      const user = setup();
+      render(
+        <MultipleSelector
+          options={options}
+          enableEnterToSelect
+          aria-label="Hobbies"
+        />
+      );
+
+      await user.click(screen.getByRole('combobox', { name: 'Hobbies' }));
+
+      expect(drawnHighlight()).toHaveTextContent('Reading');
+    });
+  });
+
   it('keeps focus in the field when Escape closes the list, and reopens on ArrowDown', async () => {
     const user = setup();
     render(<Harness />);
