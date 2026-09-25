@@ -29,6 +29,11 @@ function VacancySportsSection({
       <div className="flex flex-col gap-6">
         {preferredSports.content.map((entry, index) => {
           const dateRange = formatDateRange(entry.startDate, entry.endDate);
+          const hasBoxData =
+            entry.nameOfSport.length > 0 ||
+            entry.organizationLocations.length > 0 ||
+            entry.levelRepresented.length > 0 ||
+            entry.representedOrganization.length > 0;
 
           return (
             <div
@@ -63,36 +68,42 @@ function VacancySportsSection({
               </div>
 
               {/* Shaded box grid */}
-              <div className="rounded-lg border border-[#ebedf0] bg-[#f8fafc] p-4">
-                <VacancyView.Grid>
-                  <VacancyView.Field
-                    label={t('preferredSports.fieldList.sport')}
-                    isEmpty={entry.nameOfSport.length === 0}
-                  >
-                    <VacancyView.Tags values={entry.nameOfSport} />
-                  </VacancyView.Field>
-                  <VacancyView.Field
-                    label={t('preferredSports.fieldList.organizationLocation')}
-                    isEmpty={entry.organizationLocations.length === 0}
-                  >
-                    <VacancyView.Tags values={entry.organizationLocations} />
-                  </VacancyView.Field>
-                  <VacancyView.Field
-                    label={t('preferredSports.fieldList.levelRepresented')}
-                    isEmpty={entry.levelRepresented.length === 0}
-                  >
-                    <VacancyView.Tags values={entry.levelRepresented} />
-                  </VacancyView.Field>
-                  <VacancyView.Field
-                    label={t(
-                      'preferredSports.fieldList.representedOrganization'
-                    )}
-                    isEmpty={entry.representedOrganization.length === 0}
-                  >
-                    <VacancyView.Tags values={entry.representedOrganization} />
-                  </VacancyView.Field>
-                </VacancyView.Grid>
-              </div>
+              {hasBoxData && (
+                <div className="rounded-lg border border-[#ebedf0] bg-[#f8fafc] p-4">
+                  <VacancyView.Grid>
+                    <VacancyView.Field
+                      label={t('preferredSports.fieldList.sport')}
+                      isEmpty={entry.nameOfSport.length === 0}
+                    >
+                      <VacancyView.Tags values={entry.nameOfSport} />
+                    </VacancyView.Field>
+                    <VacancyView.Field
+                      label={t(
+                        'preferredSports.fieldList.organizationLocation'
+                      )}
+                      isEmpty={entry.organizationLocations.length === 0}
+                    >
+                      <VacancyView.Tags values={entry.organizationLocations} />
+                    </VacancyView.Field>
+                    <VacancyView.Field
+                      label={t('preferredSports.fieldList.levelRepresented')}
+                      isEmpty={entry.levelRepresented.length === 0}
+                    >
+                      <VacancyView.Tags values={entry.levelRepresented} />
+                    </VacancyView.Field>
+                    <VacancyView.Field
+                      label={t(
+                        'preferredSports.fieldList.representedOrganization'
+                      )}
+                      isEmpty={entry.representedOrganization.length === 0}
+                    >
+                      <VacancyView.Tags
+                        values={entry.representedOrganization}
+                      />
+                    </VacancyView.Field>
+                  </VacancyView.Grid>
+                </div>
+              )}
             </div>
           );
         })}

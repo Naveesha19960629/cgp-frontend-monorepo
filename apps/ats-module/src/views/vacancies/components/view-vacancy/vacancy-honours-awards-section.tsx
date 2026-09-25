@@ -32,6 +32,9 @@ function VacancyHonoursAwardsSection({
             entry.issuedFromDate,
             entry.issuedToDate
           );
+          const hasBoxData =
+            entry.associatedOrganizations.length > 0 ||
+            entry.organizationLocations.length > 0;
 
           return (
             <div
@@ -79,24 +82,28 @@ function VacancyHonoursAwardsSection({
               </div>
 
               {/* Shaded box grid */}
-              <div className="rounded-lg border border-[#ebedf0] bg-[#f8fafc] p-4">
-                <VacancyView.Grid>
-                  <VacancyView.Field
-                    label={t(
-                      'preferredHonoursAwards.fieldList.associatedOrganization'
-                    )}
-                    isEmpty={entry.associatedOrganizations.length === 0}
-                  >
-                    <VacancyView.Tags values={entry.associatedOrganizations} />
-                  </VacancyView.Field>
-                  <VacancyView.Field
-                    label={t('preferredHonoursAwards.organizationLocation')}
-                    isEmpty={entry.organizationLocations.length === 0}
-                  >
-                    <VacancyView.Tags values={entry.organizationLocations} />
-                  </VacancyView.Field>
-                </VacancyView.Grid>
-              </div>
+              {hasBoxData && (
+                <div className="rounded-lg border border-[#ebedf0] bg-[#f8fafc] p-4">
+                  <VacancyView.Grid>
+                    <VacancyView.Field
+                      label={t(
+                        'preferredHonoursAwards.fieldList.associatedOrganization'
+                      )}
+                      isEmpty={entry.associatedOrganizations.length === 0}
+                    >
+                      <VacancyView.Tags
+                        values={entry.associatedOrganizations}
+                      />
+                    </VacancyView.Field>
+                    <VacancyView.Field
+                      label={t('preferredHonoursAwards.organizationLocation')}
+                      isEmpty={entry.organizationLocations.length === 0}
+                    >
+                      <VacancyView.Tags values={entry.organizationLocations} />
+                    </VacancyView.Field>
+                  </VacancyView.Grid>
+                </div>
+              )}
             </div>
           );
         })}

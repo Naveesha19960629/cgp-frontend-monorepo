@@ -28,6 +28,10 @@ function VacancyClubsSocietiesSection({
     content = (
       <div className="flex flex-col gap-6">
         {preferredClubSocieties.content.map((entry, index) => {
+          const hasBoxData =
+            entry.clubSociety.length > 0 ||
+            entry.organizationLocations.length > 0 ||
+            entry.organization.length > 0;
           const dateRange = formatDateRange(entry.startDate, entry.endDate);
 
           return (
@@ -63,33 +67,35 @@ function VacancyClubsSocietiesSection({
               </div>
 
               {/* Shaded box grid */}
-              <div className="rounded-lg border border-[#ebedf0] bg-[#f8fafc] p-4">
-                <VacancyView.Grid>
-                  <VacancyView.Field
-                    label={t('preferredClubSocieties.fieldList.clubSociety')}
-                    isEmpty={entry.clubSociety.length === 0}
-                  >
-                    <VacancyView.Tags values={entry.clubSociety} />
-                  </VacancyView.Field>
-                  <VacancyView.Field
-                    label={t(
-                      'preferredClubSocieties.fieldList.organizationLocation',
-                      'Organization Location'
-                    )}
-                    isEmpty={entry.organizationLocations.length === 0}
-                  >
-                    <VacancyView.Tags values={entry.organizationLocations} />
-                  </VacancyView.Field>
-                  <VacancyView.Field
-                    label={t(
-                      'preferredClubSocieties.fieldList.representedOrganization'
-                    )}
-                    isEmpty={entry.organization.length === 0}
-                  >
-                    <VacancyView.Tags values={entry.organization} />
-                  </VacancyView.Field>
-                </VacancyView.Grid>
-              </div>
+              {hasBoxData && (
+                <div className="rounded-lg border border-[#ebedf0] bg-[#f8fafc] p-4">
+                  <VacancyView.Grid>
+                    <VacancyView.Field
+                      label={t('preferredClubSocieties.fieldList.clubSociety')}
+                      isEmpty={entry.clubSociety.length === 0}
+                    >
+                      <VacancyView.Tags values={entry.clubSociety} />
+                    </VacancyView.Field>
+                    <VacancyView.Field
+                      label={t(
+                        'preferredClubSocieties.fieldList.organizationLocation',
+                        'Organization Location'
+                      )}
+                      isEmpty={entry.organizationLocations.length === 0}
+                    >
+                      <VacancyView.Tags values={entry.organizationLocations} />
+                    </VacancyView.Field>
+                    <VacancyView.Field
+                      label={t(
+                        'preferredClubSocieties.fieldList.representedOrganization'
+                      )}
+                      isEmpty={entry.organization.length === 0}
+                    >
+                      <VacancyView.Tags values={entry.organization} />
+                    </VacancyView.Field>
+                  </VacancyView.Grid>
+                </div>
+              )}
             </div>
           );
         })}
