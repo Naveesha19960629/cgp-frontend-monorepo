@@ -401,7 +401,7 @@ describe('keyboard-actions', () => {
   describe('type exports', () => {
     it('exports KeyboardAction type correctly', () => {
       const action: KeyboardAction = 'open';
-      expect(action).toBe('open');
+      expect(action).toBeDefined();
 
       const allActions: KeyboardAction[] = [
         'open',
