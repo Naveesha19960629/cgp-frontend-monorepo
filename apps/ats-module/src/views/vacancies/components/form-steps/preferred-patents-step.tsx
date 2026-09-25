@@ -26,6 +26,7 @@ import type {
   StepProps,
 } from '@/views/vacancies/types';
 import { resolveUserCreatedIndustries } from '@/views/vacancies/utils';
+import { DATE_POPOVER } from '@/views/vacancies/utils/constants';
 import {
   getHundredYearDateBoundaries,
   isBeforeMinDate,
@@ -367,11 +368,11 @@ function PatentCard({
                     </FormLabel>
                     <Popover
                       modal
-                      open={openDatePopover === 'fromDate'}
+                      open={openDatePopover === DATE_POPOVER.fromDate}
                       onOpenChange={open =>
                         setOpenDatePopover(
                           isEnabled && !dataTakenFromCandidate && open
-                            ? 'fromDate'
+                            ? DATE_POPOVER.fromDate
                             : null
                         )
                       }
@@ -381,7 +382,7 @@ function PatentCard({
                           <Button
                             onKeyDown={createDateClearHandler({
                               hasValue: !!field.value,
-                              isOpen: openDatePopover === 'fromDate',
+                              isOpen: openDatePopover === DATE_POPOVER.fromDate,
                               onClear: () => field.onChange(null),
                             })}
                             type="button"
@@ -482,11 +483,11 @@ function PatentCard({
                     </FormLabel>
                     <Popover
                       modal
-                      open={openDatePopover === 'toDate'}
+                      open={openDatePopover === DATE_POPOVER.toDate}
                       onOpenChange={open =>
                         setOpenDatePopover(
                           isEnabled && !dataTakenFromCandidate && open
-                            ? 'toDate'
+                            ? DATE_POPOVER.toDate
                             : null
                         )
                       }
@@ -496,7 +497,7 @@ function PatentCard({
                           <Button
                             onKeyDown={createDateClearHandler({
                               hasValue: !!field.value,
-                              isOpen: openDatePopover === 'toDate',
+                              isOpen: openDatePopover === DATE_POPOVER.toDate,
                               onClear: () => field.onChange(null),
                             })}
                             type="button"

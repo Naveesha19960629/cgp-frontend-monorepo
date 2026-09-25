@@ -23,6 +23,7 @@ import {
 } from '@/views/vacancies/hooks';
 import type { StepProps } from '@/views/vacancies/types';
 import { formatDate, sanitizePlainText } from '@/views/vacancies/utils';
+import { DATE_POPOVER } from '@/views/vacancies/utils/constants';
 import {
   formatLocalDate,
   getHundredYearDateBoundaries,
@@ -500,11 +501,13 @@ function VolunteeringCard({
                   </div>
                   <Popover
                     modal
-                    open={entry.openDatePopover === 'startDate'}
+                    open={entry.openDatePopover === DATE_POPOVER.startDate}
                     onOpenChange={open =>
                       onUpdate(index, {
                         openDatePopover:
-                          !fieldsDisabled && open ? 'startDate' : null,
+                          !fieldsDisabled && open
+                            ? DATE_POPOVER.startDate
+                            : null,
                       })
                     }
                   >
@@ -512,7 +515,8 @@ function VolunteeringCard({
                       <Button
                         onKeyDown={createDateClearHandler({
                           hasValue: !!entry.startDate,
-                          isOpen: entry.openDatePopover === 'startDate',
+                          isOpen:
+                            entry.openDatePopover === DATE_POPOVER.startDate,
                           onClear: () =>
                             onUpdate(index, { startDate: undefined }),
                         })}
@@ -588,11 +592,11 @@ function VolunteeringCard({
                   </div>
                   <Popover
                     modal
-                    open={entry.openDatePopover === 'endDate'}
+                    open={entry.openDatePopover === DATE_POPOVER.endDate}
                     onOpenChange={open =>
                       onUpdate(index, {
                         openDatePopover:
-                          !fieldsDisabled && open ? 'endDate' : null,
+                          !fieldsDisabled && open ? DATE_POPOVER.endDate : null,
                       })
                     }
                   >
@@ -600,7 +604,8 @@ function VolunteeringCard({
                       <Button
                         onKeyDown={createDateClearHandler({
                           hasValue: !!entry.endDate,
-                          isOpen: entry.openDatePopover === 'endDate',
+                          isOpen:
+                            entry.openDatePopover === DATE_POPOVER.endDate,
                           onClear: () =>
                             onUpdate(index, { endDate: undefined }),
                         })}

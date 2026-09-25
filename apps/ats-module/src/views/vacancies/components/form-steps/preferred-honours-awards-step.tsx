@@ -27,7 +27,10 @@ import type {
   StepProps,
 } from '@/views/vacancies/types';
 import { resolveUserCreatedOrganizations } from '@/views/vacancies/utils';
-import { DATE_DISPLAY_FORMAT } from '@/views/vacancies/utils/constants';
+import {
+  DATE_DISPLAY_FORMAT,
+  DATE_POPOVER,
+} from '@/views/vacancies/utils/constants';
 import { computeRowStartCodes } from '@/views/vacancies/utils/field-grid-layout';
 
 import { CharacterCount } from '@cgp/ui-kit/components/character-count';
@@ -344,10 +347,12 @@ function HonoursAndAwardsCard({
                     </FormLabel>
                     <Popover
                       modal
-                      open={openDatePopover === 'issuedDateFrom'}
+                      open={openDatePopover === DATE_POPOVER.issuedDateFrom}
                       onOpenChange={open =>
                         setOpenDatePopover(
-                          !isFieldDisabled && open ? 'issuedDateFrom' : null
+                          !isFieldDisabled && open
+                            ? DATE_POPOVER.issuedDateFrom
+                            : null
                         )
                       }
                     >
@@ -356,7 +361,8 @@ function HonoursAndAwardsCard({
                           <Button
                             onKeyDown={createDateClearHandler({
                               hasValue: !!field.value,
-                              isOpen: openDatePopover === 'issuedDateFrom',
+                              isOpen:
+                                openDatePopover === DATE_POPOVER.issuedDateFrom,
                               onClear: () => field.onChange(null),
                             })}
                             type="button"
@@ -444,10 +450,12 @@ function HonoursAndAwardsCard({
                     </FormLabel>
                     <Popover
                       modal
-                      open={openDatePopover === 'issuedDateTo'}
+                      open={openDatePopover === DATE_POPOVER.issuedDateTo}
                       onOpenChange={open =>
                         setOpenDatePopover(
-                          !isFieldDisabled && open ? 'issuedDateTo' : null
+                          !isFieldDisabled && open
+                            ? DATE_POPOVER.issuedDateTo
+                            : null
                         )
                       }
                     >
@@ -456,7 +464,8 @@ function HonoursAndAwardsCard({
                           <Button
                             onKeyDown={createDateClearHandler({
                               hasValue: !!field.value,
-                              isOpen: openDatePopover === 'issuedDateTo',
+                              isOpen:
+                                openDatePopover === DATE_POPOVER.issuedDateTo,
                               onClear: () => field.onChange(null),
                             })}
                             type="button"

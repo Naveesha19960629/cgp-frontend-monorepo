@@ -44,6 +44,7 @@ import {
   formatDate,
   toSecondaryEducationPayload,
 } from '@/views/vacancies/utils';
+import { DATE_POPOVER } from '@/views/vacancies/utils/constants';
 import {
   compareDates,
   formatLocalDate,
@@ -1509,9 +1510,9 @@ export default function SecondaryEducationStep({
                     <SecondaryStartDateField
                       control={control}
                       fieldsDisabled={fieldsDisabled}
-                      isOpen={openDatePopover === 'startDate'}
+                      isOpen={openDatePopover === DATE_POPOVER.startDate}
                       onOpenChange={open =>
-                        setOpenDatePopover(open ? 'startDate' : null)
+                        setOpenDatePopover(open ? DATE_POPOVER.startDate : null)
                       }
                       getValues={getValues}
                       resetField={resetField}
@@ -1523,9 +1524,9 @@ export default function SecondaryEducationStep({
                     <SecondaryEndDateField
                       control={control}
                       fieldsDisabled={fieldsDisabled}
-                      isOpen={openDatePopover === 'endDate'}
+                      isOpen={openDatePopover === DATE_POPOVER.endDate}
                       onOpenChange={open =>
-                        setOpenDatePopover(open ? 'endDate' : null)
+                        setOpenDatePopover(open ? DATE_POPOVER.endDate : null)
                       }
                       minEndDate={minEndDate}
                       endDateDefaultMonth={endDateDefaultMonth}

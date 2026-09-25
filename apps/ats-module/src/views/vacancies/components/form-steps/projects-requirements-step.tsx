@@ -23,6 +23,7 @@ import {
 } from '@/views/vacancies/hooks';
 import type { StepProps } from '@/views/vacancies/types';
 import { formatDate } from '@/views/vacancies/utils';
+import { DATE_POPOVER } from '@/views/vacancies/utils/constants';
 import {
   formatLocalDate,
   getHundredYearDateBoundaries,
@@ -418,9 +419,9 @@ function ProjectCard({
                   index={index}
                   project={project}
                   fieldsDisabled={fieldsDisabled}
-                  isOpen={openDatePopover === 'startDate'}
+                  isOpen={openDatePopover === DATE_POPOVER.startDate}
                   onOpenChange={open =>
-                    setOpenDatePopover(open ? 'startDate' : null)
+                    setOpenDatePopover(open ? DATE_POPOVER.startDate : null)
                   }
                   onUpdate={onUpdate}
                   t={t}
@@ -432,9 +433,9 @@ function ProjectCard({
                   index={index}
                   project={project}
                   fieldsDisabled={fieldsDisabled}
-                  isOpen={openDatePopover === 'endDate'}
+                  isOpen={openDatePopover === DATE_POPOVER.endDate}
                   onOpenChange={open =>
-                    setOpenDatePopover(open ? 'endDate' : null)
+                    setOpenDatePopover(open ? DATE_POPOVER.endDate : null)
                   }
                   onUpdate={onUpdate}
                   t={t}

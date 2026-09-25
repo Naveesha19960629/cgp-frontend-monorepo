@@ -30,6 +30,7 @@ import {
   resolveUserCreatedOrganizations,
   toLicenseCertificatesPayload,
 } from '@/views/vacancies/utils';
+import { DATE_POPOVER } from '@/views/vacancies/utils/constants';
 import {
   compareDates,
   formatLocalDate,
@@ -872,10 +873,12 @@ export default function LicenseCertificatesStep({
                             </div>
                             <Popover
                               modal
-                              open={openDatePopover === 'issueDate'}
+                              open={openDatePopover === DATE_POPOVER.issueDate}
                               onOpenChange={open =>
                                 setOpenDatePopover(
-                                  !fieldsDisabled && open ? 'issueDate' : null
+                                  !fieldsDisabled && open
+                                    ? DATE_POPOVER.issueDate
+                                    : null
                                 )
                               }
                             >
@@ -884,7 +887,9 @@ export default function LicenseCertificatesStep({
                                   <Button
                                     onKeyDown={createDateClearHandler({
                                       hasValue: !!field.value,
-                                      isOpen: openDatePopover === 'issueDate',
+                                      isOpen:
+                                        openDatePopover ===
+                                        DATE_POPOVER.issueDate,
                                       onClear: () => field.onChange(''),
                                     })}
                                     type="button"
@@ -986,11 +991,13 @@ export default function LicenseCertificatesStep({
                             </div>
                             <Popover
                               modal
-                              open={openDatePopover === 'expirationDate'}
+                              open={
+                                openDatePopover === DATE_POPOVER.expirationDate
+                              }
                               onOpenChange={open =>
                                 setOpenDatePopover(
                                   !fieldsDisabled && open
-                                    ? 'expirationDate'
+                                    ? DATE_POPOVER.expirationDate
                                     : null
                                 )
                               }
@@ -1001,7 +1008,8 @@ export default function LicenseCertificatesStep({
                                     onKeyDown={createDateClearHandler({
                                       hasValue: !!field.value,
                                       isOpen:
-                                        openDatePopover === 'expirationDate',
+                                        openDatePopover ===
+                                        DATE_POPOVER.expirationDate,
                                       onClear: () => field.onChange(''),
                                     })}
                                     type="button"

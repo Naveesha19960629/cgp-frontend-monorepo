@@ -15,6 +15,7 @@ import {
 import { useStepGuard } from '@/views/vacancies/hooks';
 import type { StepProps } from '@/views/vacancies/types';
 import { formatDate, sanitizePlainText } from '@/views/vacancies/utils';
+import { DATE_POPOVER } from '@/views/vacancies/utils/constants';
 import {
   formatLocalDate,
   getHundredYearDateBoundaries,
@@ -172,11 +173,16 @@ function PublicationCard({
                   </div>
                   <Popover
                     modal
-                    open={publication.openDatePopover === 'publishedDateFrom'}
+                    open={
+                      publication.openDatePopover ===
+                      DATE_POPOVER.publishedDateFrom
+                    }
                     onOpenChange={open =>
                       onUpdate(index, {
                         openDatePopover:
-                          !fieldsDisabled && open ? 'publishedDateFrom' : null,
+                          !fieldsDisabled && open
+                            ? DATE_POPOVER.publishedDateFrom
+                            : null,
                       })
                     }
                   >
@@ -185,7 +191,8 @@ function PublicationCard({
                         onKeyDown={createDateClearHandler({
                           hasValue: !!publication.publishedDateFrom,
                           isOpen:
-                            publication.openDatePopover === 'publishedDateFrom',
+                            publication.openDatePopover ===
+                            DATE_POPOVER.publishedDateFrom,
                           onClear: () =>
                             onUpdate(index, { publishedDateFrom: undefined }),
                         })}
@@ -272,11 +279,16 @@ function PublicationCard({
                   </div>
                   <Popover
                     modal
-                    open={publication.openDatePopover === 'publishedDateTo'}
+                    open={
+                      publication.openDatePopover ===
+                      DATE_POPOVER.publishedDateTo
+                    }
                     onOpenChange={open =>
                       onUpdate(index, {
                         openDatePopover:
-                          !fieldsDisabled && open ? 'publishedDateTo' : null,
+                          !fieldsDisabled && open
+                            ? DATE_POPOVER.publishedDateTo
+                            : null,
                       })
                     }
                   >
@@ -285,7 +297,8 @@ function PublicationCard({
                         onKeyDown={createDateClearHandler({
                           hasValue: !!publication.publishedDateTo,
                           isOpen:
-                            publication.openDatePopover === 'publishedDateTo',
+                            publication.openDatePopover ===
+                            DATE_POPOVER.publishedDateTo,
                           onClear: () =>
                             onUpdate(index, { publishedDateTo: undefined }),
                         })}

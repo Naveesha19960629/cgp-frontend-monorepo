@@ -25,6 +25,7 @@ import {
 } from '@/views/vacancies/hooks';
 import type { StepProps } from '@/views/vacancies/types';
 import { formatDate, sanitizePlainText } from '@/views/vacancies/utils';
+import { DATE_POPOVER } from '@/views/vacancies/utils/constants';
 import {
   formatLocalDate,
   getHundredYearDateBoundaries,
@@ -622,10 +623,10 @@ function SportCard({
                   </div>
                   <Popover
                     modal
-                    open={openDatePopover === 'startDate'}
+                    open={openDatePopover === DATE_POPOVER.startDate}
                     onOpenChange={open =>
                       setOpenDatePopover(
-                        !fieldsDisabled && open ? 'startDate' : null
+                        !fieldsDisabled && open ? DATE_POPOVER.startDate : null
                       )
                     }
                   >
@@ -633,7 +634,7 @@ function SportCard({
                       <Button
                         onKeyDown={createDateClearHandler({
                           hasValue: !!entry.startDate,
-                          isOpen: openDatePopover === 'startDate',
+                          isOpen: openDatePopover === DATE_POPOVER.startDate,
                           onClear: () =>
                             onUpdate(index, { startDate: undefined }),
                         })}
@@ -711,10 +712,10 @@ function SportCard({
                   </div>
                   <Popover
                     modal
-                    open={openDatePopover === 'endDate'}
+                    open={openDatePopover === DATE_POPOVER.endDate}
                     onOpenChange={open =>
                       setOpenDatePopover(
-                        !fieldsDisabled && open ? 'endDate' : null
+                        !fieldsDisabled && open ? DATE_POPOVER.endDate : null
                       )
                     }
                   >
@@ -722,7 +723,7 @@ function SportCard({
                       <Button
                         onKeyDown={createDateClearHandler({
                           hasValue: !!entry.endDate,
-                          isOpen: openDatePopover === 'endDate',
+                          isOpen: openDatePopover === DATE_POPOVER.endDate,
                           onClear: () =>
                             onUpdate(index, { endDate: undefined }),
                         })}
