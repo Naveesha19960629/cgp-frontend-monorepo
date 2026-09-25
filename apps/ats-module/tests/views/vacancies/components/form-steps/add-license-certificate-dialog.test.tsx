@@ -65,6 +65,14 @@ vi.mock('@cgp/ui-kit/components/ui/select', () => ({
       >
         Pick CERTIFICATION
       </button>
+      {/* What the real Select sends on Backspace/Delete (clearable). */}
+      <button
+        type="button"
+        data-testid="select-clear"
+        onClick={() => onValueChange?.('__unselected__')}
+      >
+        Clear
+      </button>
     </div>
   ),
   SelectTrigger: ({ children }: { children: ReactNode }) => (
@@ -79,6 +87,7 @@ vi.mock('@cgp/ui-kit/components/ui/select', () => ({
   SelectItem: ({ children, value }: { children: ReactNode; value: string }) => (
     <div data-value={value}>{children}</div>
   ),
+  SELECT_CLEAR_VALUE: '__unselected__',
 }));
 
 // ── Mock CharacterCount ────────────────────────────────────────────────────
@@ -253,8 +262,18 @@ describe('AddLicenseCertDialog', () => {
     );
     expect(input).toBeInTheDocument();
 
-    // Clear type by selecting empty (simulating type reset)
-    // For this test, we verify the default is shown again after re-render
-    // In a real scenario, the user would need to clear and re-open the dialog
+    // Backspace/Delete on the Select sends the clear value (NFR-024).
+    await user.click(screen.getByTestId('select-clear'));
+
+    expect(
+      screen.getByPlaceholderText(
+        'licenseCertificates.addLicenseCertDialog.namePlaceholderDefault'
+      )
+    ).toBeInTheDocument();
+    expect(
+      screen
+        .getByText('licenseCertificates.addLicenseCertDialog.addNow')
+        .closest('button')
+    ).toBeDisabled();
   });
 });

@@ -6,6 +6,7 @@ import { ArrowDown2, Edit2, ImportCurve } from 'iconsax-reactjs';
 
 import * as React from 'react';
 import { forwardRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { FieldTooltip } from '@cgp/ui-kit/components/field-tooltip';
 import { Badge } from '@cgp/ui-kit/components/ui/badge';
@@ -21,6 +22,7 @@ import {
   PopoverContent,
 } from '@cgp/ui-kit/components/ui/popover';
 import { ScrollArea } from '@cgp/ui-kit/components/ui/scroll-area';
+import { useListHighlight } from '@cgp/ui-kit/hooks/use-list-highlight';
 import { cn, removeEmoji } from '@cgp/ui-kit/lib/utils';
 import { Command as CommandPrimitive, useCommandState } from 'cmdk';
 
@@ -119,9 +121,22 @@ interface MultipleSelectorProps {
   /**
    * Allow pressing Enter to select/deselect the highlighted option.
    * Disabled by default: recruiters pressing Enter to move between fields
-   * were accidentally toggling the highlighted dropdown option.
+   * were accidentally toggling the highlighted dropdown option. Either way,
+   * Enter selects once the user has moved the highlight with the arrow keys.
    */
   enableEnterToSelect?: boolean;
+  /**
+   * Accessible name for the search input. cmdk labels its input with its own
+   * (empty) <label>, which overrides `inputProps['aria-label']`, so the name
+   * is routed through cmdk instead. Needed wherever the visible label isn't a
+   * `FormLabel`.
+   */
+  'aria-label'?: string;
+  'aria-labelledby'?: string;
+  /** Set by `FormControl`; used to find the field's `FormLabel`. */
+  id?: string;
+  'aria-describedby'?: string;
+  'aria-invalid'?: boolean;
 }
 
 export interface MultipleSelectorRef {
@@ -264,10 +279,19 @@ const MultipleSelector = React.forwardRef<
       showArrow = false,
       alwaysShowCreatable,
       enableEnterToSelect = false,
+      'aria-label': ariaLabel,
+      'aria-labelledby': ariaLabelledBy,
+      id,
+      'aria-describedby': ariaDescribedBy,
+      'aria-invalid': ariaInvalid,
     }: MultipleSelectorProps,
     ref: React.Ref<MultipleSelectorRef>
   ) => {
+    const { t } = useTranslation();
     const inputRef = React.useRef<HTMLInputElement>(null);
+    // Screen-reader text for chip removals made from the keyboard: the chips
+    // render below the field, so a removal is otherwise easy to miss.
+    const [announcement, setAnnouncement] = React.useState('');
     const [open, setOpen] = React.useState(false);
     const [onScrollbar, setOnScrollbar] = React.useState(false);
     const [isLoading, setIsLoading] = React.useState(false);
@@ -281,6 +305,11 @@ const MultipleSelector = React.forwardRef<
       transToGroupOption(arrayDefaultOptions, groupBy)
     );
     const [inputValue, setInputValue] = React.useState('');
+    // Drawn, and picked by Enter, once the user moves it (see the hook).
+    // With enableEnterToSelect, Enter picks cmdk's first option straight
+    // away, so it is drawn from the start.
+    const highlight = useListHighlight({ open, search: inputValue });
+    const highlightShown = enableEnterToSelect ? open : highlight.shown;
     const debouncedSearchTerm = useDebounce(inputValue, delay || 500);
     const [showMaxError, setShowMaxError] = React.useState(false);
     const [userCreatedOptions, setUserCreatedOptions] = React.useState<
@@ -318,20 +347,77 @@ const MultipleSelector = React.forwardRef<
     const handleKeyDown = React.useCallback(
       (e: React.KeyboardEvent<HTMLDivElement>) => {
         const input = inputRef.current;
-        if (input) {
-          // This is not a default behavior of the <input /> field
-          if (e.key === 'Escape') {
-            input.blur();
+        if (!input) return;
+
+        if (!enableEnterToSelect) highlight.onKeyDown(e);
+        // Escape closes the list but keeps focus here, so the arrows must be
+        // able to bring it back.
+        if (['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(e.key) && !open) {
+          setOpen(true);
+        }
+
+        // NFR-024: Backspace or Delete on an empty search removes the last
+        // removable chip, and says so to screen readers.
+        if (
+          (e.key === 'Backspace' || e.key === 'Delete') &&
+          input.value === ''
+        ) {
+          const last = [...selected].reverse().find(option => !option.fixed);
+          if (last) {
+            e.preventDefault();
+            handleUnselect(last);
+            setAnnouncement(
+              t('common.a11y.optionRemoved', {
+                label: last.label,
+                count: selected.length - 1,
+              })
+            );
           }
         }
-        // Prevent cmdk from selecting/deselecting the highlighted option on
-        // Enter (DQCGP-3297) unless the consumer explicitly opts in.
-        if (e.key === 'Enter' && !enableEnterToSelect) {
+
+        // cmdk highlights the first option on its own. An Enter the user
+        // didn't aim at an option must not select/deselect it (DQCGP-3297)
+        // unless the consumer opts in; once they have moved the highlight
+        // with the arrow keys, Enter selects it (NFR-024). Escape is left to
+        // the Radix Popover, which closes the list without taking focus off
+        // the field (WCAG 2.4.3).
+        if (e.key === 'Enter' && !enableEnterToSelect && !highlight.shown) {
           e.preventDefault();
         }
       },
-      [enableEnterToSelect]
+      [enableEnterToSelect, handleUnselect, selected, t, open, highlight]
     );
+
+    // cmdk hard-codes aria-expanded="true" on Command.Input. React never
+    // rewrites an attribute whose prop hasn't changed, so this correction
+    // sticks (WCAG 4.1.2).
+    React.useLayoutEffect(() => {
+      inputRef.current?.setAttribute('aria-expanded', String(open));
+    }, [open]);
+
+    // Accessible name (WCAG 1.3.1 / 4.1.2). cmdk points aria-labelledby at its
+    // own <label>, which is empty unless a name is passed in, and that beats
+    // aria-label and placeholder. The input's id must stay cmdk's: cmdk looks
+    // the input up by id to keep focus in it while the highlight moves.
+    const cmdkLabel =
+      commandProps?.label ?? ariaLabel ?? inputProps?.['aria-label'];
+    React.useLayoutEffect(() => {
+      const input = inputRef.current;
+      if (!input) return;
+      const formLabelId = id ? `${id}-label` : undefined;
+      const labelledBy =
+        ariaLabelledBy ??
+        (formLabelId && document.getElementById(formLabelId)
+          ? formLabelId
+          : undefined);
+      if (labelledBy) {
+        input.setAttribute('aria-labelledby', labelledBy);
+      } else if (!cmdkLabel) {
+        // Nothing to name it with: let the placeholder act as the name
+        // rather than the empty cmdk label.
+        input.removeAttribute('aria-labelledby');
+      }
+    }, [id, ariaLabelledBy, cmdkLabel]);
 
     useEffect(() => {
       if (value) {
@@ -452,6 +538,10 @@ const MultipleSelector = React.forwardRef<
           disabled={disabled}
           className={cn(
             'm-3 flex items-center gap-1 overflow-hidden bg-neutral-200 py-2.5 text-sm font-medium text-slate-900',
+            // The first option below keeps this gap as its own padding, so
+            // its highlight isn't cut off at the top.
+            !showLoading && hasSelectableOptions && 'mb-0',
+            highlightShown && 'data-[selected=true]:bg-neutral-300',
             disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
           )}
           onMouseDown={e => {
@@ -680,6 +770,7 @@ const MultipleSelector = React.forwardRef<
           <Command
             ref={dropdownRef}
             {...commandProps}
+            label={cmdkLabel}
             onKeyDown={e => {
               handleKeyDown(e);
               commandProps?.onKeyDown?.(e);
@@ -696,6 +787,7 @@ const MultipleSelector = React.forwardRef<
             filter={commandFilter()}
           >
             <PopoverAnchor asChild>
+              {/* eslint-disable-next-line jsx-a11y-x/click-events-have-key-events, jsx-a11y-x/no-static-element-interactions -- pointer shortcut that focuses the input, which is focusable itself */}
               <div
                 className={cn(
                   'border-input ring-offset-background focus-within:ring-ring flex h-11 items-center justify-between rounded-md border px-3 py-2 text-base shadow-none transition-[color,box-shadow] focus-within:ring-2 focus-within:ring-offset-2 md:text-sm',
@@ -717,6 +809,12 @@ const MultipleSelector = React.forwardRef<
                   {/* Avoid having the "Search" Icon */}
                   <CommandPrimitive.Input
                     {...inputProps}
+                    aria-describedby={
+                      ariaDescribedBy ?? inputProps?.['aria-describedby']
+                    }
+                    aria-invalid={
+                      ariaInvalid || inputProps?.['aria-invalid'] || undefined
+                    }
                     ref={inputRef}
                     data-testid="form-combobox-input"
                     value={inputValue}
@@ -726,6 +824,7 @@ const MultipleSelector = React.forwardRef<
                         value.trimStart().replace(/  +/g, ' ')
                       );
                       setInputValue(trimmedValue);
+                      if (!open) setOpen(true);
                       inputProps?.onValueChange?.(trimmedValue);
                     }}
                     onBlur={event => {
@@ -755,6 +854,7 @@ const MultipleSelector = React.forwardRef<
                 </div>
                 <button
                   type="button"
+                  aria-label={t('common.a11y.clearAll')}
                   onClick={e => {
                     e.stopPropagation();
                     setSelected(selected.filter(s => s.fixed));
@@ -770,7 +870,7 @@ const MultipleSelector = React.forwardRef<
                       'hidden'
                   )}
                 >
-                  <X />
+                  <X aria-hidden />
                 </button>
                 <ChevronDownIcon
                   className={cn(
@@ -792,6 +892,9 @@ const MultipleSelector = React.forwardRef<
               </div>
             </PopoverAnchor>
             <PopoverContent
+              // Positioning only, around the cmdk listbox: Radix's default
+              // role="dialog" (unnamed) is wrong here (WCAG 4.1.2).
+              role="presentation"
               className="mt-1 max-w-94 border-none p-0 shadow-none"
               align="start"
               style={{ width: dropdownWidth }}
@@ -895,8 +998,13 @@ const MultipleSelector = React.forwardRef<
                                       }
                                     }}
                                     className={cn(
-                                      'cursor-pointer overflow-hidden px-0 text-sm text-slate-500 not-first:py-3 first:pt-3 first:pb-3 last:pb-0 aria-[selected="true"]:bg-white aria-[selected="true"]:text-slate-500 data-[disabled="true"]:opacity-100',
-                                      CreatableItem() && 'first:pt-0',
+                                      // -mx-2/px-2 and last:-mb-3 draw the
+                                      // highlight into the group's padding,
+                                      // like the Select's, without moving the
+                                      // text.
+                                      '-mx-2 cursor-pointer overflow-hidden rounded-sm px-2 py-3 text-sm text-slate-500 last:-mb-3 data-[disabled="true"]:opacity-100',
+                                      highlightShown &&
+                                        'data-[selected=true]:bg-accent data-[selected=true]:text-slate-900',
                                       option.disable &&
                                         'text-muted-foreground cursor-default hover:bg-white'
                                     )}
@@ -942,6 +1050,11 @@ const MultipleSelector = React.forwardRef<
             {errorMessage}
           </p>
         )}
+        {/* Always mounted: a live region that appears with its text, or
+            unmounts with the last chip, is not announced. */}
+        <span role="status" aria-live="polite" className="sr-only">
+          {announcement}
+        </span>
         {selected.length > 0 && (
           <div className="mt-2 flex flex-wrap gap-3">
             {selected.map(option => {
@@ -976,15 +1089,15 @@ const MultipleSelector = React.forwardRef<
                   </span>
                   <button
                     type="button"
+                    aria-label={t('common.a11y.removeOption', {
+                      label: option.label,
+                    })}
                     className={cn(
-                      'ring-offset-background focus:ring-ring ml-0 cursor-pointer rounded-full outline-none focus:ring-2 focus:ring-offset-2',
+                      'ring-offset-background focus-visible:ring-ring ml-0 cursor-pointer rounded-full outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
                       (disabled || option.fixed) && 'hidden'
                     )}
-                    onKeyDown={e => {
-                      if (e.key === 'Enter') {
-                        handleUnselect(option);
-                      }
-                    }}
+                    // No onKeyDown: a native button already fires onClick on
+                    // Enter and Space. The old Enter handler removed it twice.
                     onMouseDown={e => {
                       e.preventDefault();
                       e.stopPropagation();
@@ -994,7 +1107,10 @@ const MultipleSelector = React.forwardRef<
                       handleUnselect(option);
                     }}
                   >
-                    <X className="text-muted-foreground hover:text-foreground size-4" />
+                    <X
+                      aria-hidden
+                      className="text-muted-foreground hover:text-foreground size-4"
+                    />
                   </button>
                 </Badge>
               );

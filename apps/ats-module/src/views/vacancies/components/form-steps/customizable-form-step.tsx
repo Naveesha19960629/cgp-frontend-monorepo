@@ -20,6 +20,7 @@ import { CharacterCount } from '@cgp/ui-kit/components/character-count';
 import { ErrorToast, SuccessToast } from '@cgp/ui-kit/components/custom-toast';
 import { Button } from '@cgp/ui-kit/components/ui/button';
 import {
+  SELECT_CLEAR_VALUE,
   Select,
   SelectContent,
   SelectItem,
@@ -67,14 +68,18 @@ interface FormCard {
 
 // ── Factories ────────────────────────────────────────────────────────────────
 
+// A new linear scale's range, and what Backspace/Delete resets each end to.
+const DEFAULT_SCALE_FROM = 0;
+const DEFAULT_SCALE_TO = 2;
+
 const createQuestion = (id: number): Question => ({
   id,
   text: '',
   type: '',
   required: false,
   options: [{ id: 1, value: '' }],
-  from: 0,
-  to: 2,
+  from: DEFAULT_SCALE_FROM,
+  to: DEFAULT_SCALE_TO,
   startLabel: '',
   endLabel: '',
 });
@@ -269,6 +274,13 @@ function QuestionCard({
   // Changing the question type pads option-based types to the minimum number of
   // option fields and clears option values when switching to a non-option type.
   const changeType = (val: string) => {
+    // Backspace/Delete (NFR-024) returns the type to unselected. The options
+    // stay, so picking a choice type again brings them back; they are only
+    // saved for choice types.
+    if (val === SELECT_CLEAR_VALUE) {
+      onUpdate({ ...question, type: '' });
+      return;
+    }
     const newType = val as QuestionType;
     const willBeChoice = isChoiceType(newType);
     const wasChoice = isChoiceType(question.type);
@@ -381,6 +393,7 @@ function QuestionCard({
             <span className="ml-0.5 text-red-500">*</span>
           </label>
           <Select
+            clearable
             value={question.type}
             onValueChange={changeType}
             disabled={fieldsDisabled}
@@ -659,9 +672,19 @@ function QuestionCard({
               >
                 {t('customizableForm.question.from')}
               </label>
+              {/* The range can't be empty, so Backspace/Delete (NFR-024)
+                  resets each end to its default instead. */}
               <Select
+                clearable={question.from !== DEFAULT_SCALE_FROM}
                 value={String(question.from)}
-                onValueChange={val => set({ from: Number(val) })}
+                onValueChange={val =>
+                  set({
+                    from:
+                      val === SELECT_CLEAR_VALUE
+                        ? DEFAULT_SCALE_FROM
+                        : Number(val),
+                  })
+                }
                 disabled={fieldsDisabled}
               >
                 <SelectTrigger className="!h-11 w-[68px] bg-white shadow-none">
@@ -685,8 +708,16 @@ function QuestionCard({
                 {t('customizableForm.question.to')}
               </label>
               <Select
+                clearable={question.to !== DEFAULT_SCALE_TO}
                 value={String(question.to)}
-                onValueChange={val => set({ to: Number(val) })}
+                onValueChange={val =>
+                  set({
+                    to:
+                      val === SELECT_CLEAR_VALUE
+                        ? DEFAULT_SCALE_TO
+                        : Number(val),
+                  })
+                }
                 disabled={fieldsDisabled}
               >
                 <SelectTrigger className="!h-11 w-[68px] bg-white shadow-none">

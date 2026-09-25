@@ -24,8 +24,10 @@ function Harness() {
   );
 }
 
-describe('Combobox — Backspace clears a previously selected value', () => {
-  it('clears the selection when Backspace is pressed while the field is closed', async () => {
+// DQCGP-4310 follows the ARIA APG editable combobox: Backspace edits text
+// and clears the value once the box is empty; Delete clears it in one press.
+describe('Combobox — Backspace/Delete clear a previously selected value', () => {
+  it('clears the selection when Delete is pressed while the field is closed', async () => {
     const user = userEvent.setup({ pointerEventsCheck: 0 });
     render(<Harness />);
 
@@ -33,8 +35,21 @@ describe('Combobox — Backspace clears a previously selected value', () => {
     expect(input).toHaveValue('Aachen');
 
     input.focus();
-    await user.keyboard('{Backspace}');
+    await user.keyboard('{Delete}');
 
+    expect(input).toHaveValue('');
+  });
+
+  it('clears the selection once Backspace has erased every character', async () => {
+    const user = userEvent.setup({ pointerEventsCheck: 0 });
+    render(<Harness />);
+
+    const input = screen.getByTestId('form-combobox-input');
+    input.focus();
+    await user.keyboard('{Backspace>6/}');
+
+    expect(input).toHaveValue('');
+    await user.keyboard('{Escape}');
     expect(input).toHaveValue('');
   });
 
@@ -49,7 +64,18 @@ describe('Combobox — Backspace clears a previously selected value', () => {
     await user.keyboard('{Backspace}');
 
     // One character removed from the open search text — not cleared yet.
-    expect(input).not.toHaveValue('');
+    expect(input).toHaveValue('Aache');
+  });
+
+  it('lets the user edit text they have typed without clearing the selection', async () => {
+    const user = userEvent.setup({ pointerEventsCheck: 0 });
+    render(<Harness />);
+
+    const input = screen.getByTestId('form-combobox-input');
+    await user.click(input);
+    await user.keyboard('x{Backspace}');
+
+    expect(input).toHaveValue('Aachen');
   });
 
   it('does nothing when Backspace is pressed on an already-empty field', async () => {

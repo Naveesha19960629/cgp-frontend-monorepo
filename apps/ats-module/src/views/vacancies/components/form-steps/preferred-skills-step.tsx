@@ -245,6 +245,16 @@ function PreferredSkillRow({
 
   // ── Field handlers ──────────────────────────────────────────────────────
   const handleSkillSelect = (value: string) => {
+    // Backspace/Delete (NFR-024): no skill, and no career path taken from it.
+    // The level stays.
+    if (!value) {
+      onChange(index, {
+        ...createEmptyRow(),
+        levelId: entry.levelId,
+        levelName: entry.levelName,
+      });
+      return;
+    }
     const picked = apiSkills.find(s => s.id === value);
     if (!picked) return;
     const label = picked.label;
@@ -296,7 +306,23 @@ function PreferredSkillRow({
     });
   };
 
-  const handleCareerPathSelect = (value: string) => applyCareerPath(value);
+  const handleCareerPathSelect = (value: string) => {
+    // Backspace/Delete (NFR-024): no career path. The skill/career-path pair is
+    // no longer a known combination, so the row is re-classified as
+    // applyCareerPath does, and waits for a new career path (required).
+    if (!value) {
+      onChange(index, {
+        ...entry,
+        skillId: '',
+        source: 'USER_CREATED',
+        careerPathName: '',
+        careerPathId: undefined,
+        displayValue: entry.skillName,
+      });
+      return;
+    }
+    applyCareerPath(value);
+  };
 
   const handleCareerPathAddNew = (text: string) => {
     const trimmed = text.trim();
@@ -407,7 +433,10 @@ function PreferredSkillRow({
             {t('preferredSkills.level.label')}
             <span className="text-rose-500"> *</span>
           </span>
+          {/* Backspace/Delete (NFR-024) clears the level: handleLevelChange
+              maps the clear value, like any unknown id, to no level. */}
           <Select
+            clearable
             value={entry.levelId ?? ''}
             onValueChange={handleLevelChange}
             disabled={disabled || isJobLevelsLoading}

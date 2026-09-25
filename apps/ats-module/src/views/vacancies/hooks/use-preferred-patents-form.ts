@@ -5,6 +5,7 @@ import { useFieldArray, useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 import type { PreferredPatentsSchema as PreferredPatentsContext } from '@/views/vacancies/types';
+import { clearableDate } from '@/views/vacancies/utils/clearable-date';
 
 const patentIndustrySchema = z.object({
   value: z.string(),
@@ -20,8 +21,8 @@ const patentStatusSchema = z.object({
 const patentEntrySchema = z.object({
   relatedIndustries: z.array(patentIndustrySchema),
   statuses: z.array(patentStatusSchema),
-  fromDate: z.date().optional(),
-  toDate: z.date().optional(),
+  fromDate: clearableDate(z.date().optional()),
+  toDate: clearableDate(z.date().optional()),
   isOpen: z.boolean(),
 });
 

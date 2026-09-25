@@ -242,6 +242,22 @@ const TEMPLATE_SKELETON_COUNT = 8;
 
 const TEMPLATES_LIST_ROUTE = '/dashboard/ats/templates';
 
+// Ids for the date-picker popovers in the vacancy form steps. A card tracks
+// which of its popovers is open by one of these, and hands the same check to
+// createDateClearHandler so Backspace/Delete won't clear while it's open.
+const DATE_POPOVER = {
+  startDate: 'startDate',
+  endDate: 'endDate',
+  fromDate: 'fromDate',
+  toDate: 'toDate',
+  issueDate: 'issueDate',
+  expirationDate: 'expirationDate',
+  issuedDateFrom: 'issuedDateFrom',
+  issuedDateTo: 'issuedDateTo',
+  publishedDateFrom: 'publishedDateFrom',
+  publishedDateTo: 'publishedDateTo',
+} as const;
+
 export {
   URL_PROTOCOL_HTTP,
   URL_PROTOCOL_HTTPS,
@@ -285,4 +301,5 @@ export {
   TWENTY_FOUR_HOUR_TIME_REGEX,
   TEMPLATE_SKELETON_COUNT,
   TEMPLATES_LIST_ROUTE,
+  DATE_POPOVER,
 };

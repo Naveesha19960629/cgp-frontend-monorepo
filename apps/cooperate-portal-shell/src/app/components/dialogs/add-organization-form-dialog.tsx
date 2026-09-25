@@ -307,6 +307,11 @@ export default function AddOrganizationFormDialog({
                               setLocationsSearch(removeEmoji(value))
                             }
                             onValueChange={val => {
+                              // Backspace/Delete in the combobox sends ''.
+                              if (!val) {
+                                field.onChange({ id: '', label: '' });
+                                return;
+                              }
                               const option = locationOptions.find(
                                 o => o.id === val
                               );

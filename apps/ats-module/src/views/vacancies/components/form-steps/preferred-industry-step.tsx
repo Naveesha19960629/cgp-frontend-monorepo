@@ -288,6 +288,7 @@ export default function PreferredIndustryStep({
               </div>
 
               <MultipleSelector
+                aria-label={t('preferredIndustries.sectionLabel')}
                 value={selectedIndustries.map(i => ({
                   value: i.id,
                   label: i.label,

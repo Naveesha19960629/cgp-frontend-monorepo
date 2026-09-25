@@ -23,6 +23,7 @@ import {
 } from '@/views/vacancies/hooks';
 import type { StepProps } from '@/views/vacancies/types';
 import { formatDate } from '@/views/vacancies/utils';
+import { DATE_POPOVER } from '@/views/vacancies/utils/constants';
 import {
   formatLocalDate,
   getHundredYearDateBoundaries,
@@ -49,6 +50,7 @@ import {
   PopoverTrigger,
 } from '@cgp/ui-kit/components/ui/popover';
 import { Switch } from '@cgp/ui-kit/components/ui/switch';
+import { createDateClearHandler } from '@cgp/ui-kit/lib/keyboard-actions';
 import { applyTypography } from '@cgp/ui-kit/lib/typography';
 import { cn } from '@cgp/ui-kit/lib/utils';
 import { isAfter, isBefore, startOfDay } from 'date-fns';
@@ -149,6 +151,11 @@ function ProjectStartDateField({
       >
         <PopoverTrigger asChild>
           <Button
+            onKeyDown={createDateClearHandler({
+              hasValue: !!project.startDate,
+              isOpen: isOpen,
+              onClear: () => handleSelect(undefined),
+            })}
             type="button"
             variant="outline"
             disabled={fieldsDisabled}
@@ -168,7 +175,11 @@ function ProjectStartDateField({
             />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="start">
+        <PopoverContent
+          aria-label={t('common.a11y.chooseDate')}
+          className="w-auto p-0"
+          align="start"
+        >
           <Calendar
             mode="single"
             selected={parseLocalDate(project.startDate) ?? undefined}
@@ -239,6 +250,11 @@ function ProjectEndDateField({
       >
         <PopoverTrigger asChild>
           <Button
+            onKeyDown={createDateClearHandler({
+              hasValue: !!project.endDate,
+              isOpen: isOpen,
+              onClear: () => handleSelect(undefined),
+            })}
             type="button"
             variant="outline"
             disabled={fieldsDisabled}
@@ -258,7 +274,11 @@ function ProjectEndDateField({
             />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="start">
+        <PopoverContent
+          aria-label={t('common.a11y.chooseDate')}
+          className="w-auto p-0"
+          align="start"
+        >
           <Calendar
             mode="single"
             selected={parseLocalDate(project.endDate) ?? undefined}
@@ -399,9 +419,9 @@ function ProjectCard({
                   index={index}
                   project={project}
                   fieldsDisabled={fieldsDisabled}
-                  isOpen={openDatePopover === 'startDate'}
+                  isOpen={openDatePopover === DATE_POPOVER.startDate}
                   onOpenChange={open =>
-                    setOpenDatePopover(open ? 'startDate' : null)
+                    setOpenDatePopover(open ? DATE_POPOVER.startDate : null)
                   }
                   onUpdate={onUpdate}
                   t={t}
@@ -413,9 +433,9 @@ function ProjectCard({
                   index={index}
                   project={project}
                   fieldsDisabled={fieldsDisabled}
-                  isOpen={openDatePopover === 'endDate'}
+                  isOpen={openDatePopover === DATE_POPOVER.endDate}
                   onOpenChange={open =>
-                    setOpenDatePopover(open ? 'endDate' : null)
+                    setOpenDatePopover(open ? DATE_POPOVER.endDate : null)
                   }
                   onUpdate={onUpdate}
                   t={t}
@@ -442,6 +462,7 @@ function ProjectCard({
                     />
                   </div>
                   <MultipleSelector
+                    aria-label={t('projectsRequirements.relatedIndustry')}
                     value={project.relatedIndustry.map(i => ({
                       value: i.value,
                       label: i.label,
@@ -541,6 +562,7 @@ function ProjectCard({
                     </Label>
                   </div>
                   <MultipleSelector
+                    aria-label={t('projectsRequirements.organizationLocation')}
                     value={project.organizationLocations}
                     onChange={options => {
                       onUpdate(index, {
@@ -615,6 +637,7 @@ function ProjectCard({
                     </Label>
                   </div>
                   <MultipleSelector
+                    aria-label={t('projectsRequirements.organizationName')}
                     key={orgSelectorKey}
                     value={project.organizations}
                     onChange={options => {

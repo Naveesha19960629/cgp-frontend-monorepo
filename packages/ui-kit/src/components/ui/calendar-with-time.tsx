@@ -1,7 +1,8 @@
 import { Clock2Icon } from 'lucide-react';
 
-import type { ReactNode } from 'react';
+import type { KeyboardEvent, ReactNode } from 'react';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { Button } from '@cgp/ui-kit/components/ui/button';
 import { Calendar } from '@cgp/ui-kit/components/ui/calendar';
@@ -12,6 +13,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@cgp/ui-kit/components/ui/popover';
+import { createDateClearHandler } from '@cgp/ui-kit/lib/keyboard-actions';
 import { applyTypography } from '@cgp/ui-kit/lib/typography';
 import { cn } from '@cgp/ui-kit/lib/utils';
 
@@ -96,6 +98,13 @@ interface CalendarWithTimeProps {
    * If provided, this will be shown on the button instead of the raw dateValue
    */
   formattedDateDisplay?: string;
+
+  /**
+   * NFR-024 (ATS): clears both the date and the time. When set, Backspace or
+   * Delete on the focused field, or anywhere in the open popover except the
+   * time input (which keeps normal editing), calls it and closes the popover.
+   */
+  onClear?: () => void;
 }
 
 /**
@@ -145,19 +154,42 @@ export function CalendarWithTime({
   startMonth = new Date(),
   endMonth = new Date(new Date().getFullYear() + 100, 11),
   formattedDateDisplay,
+  onClear,
 }: Readonly<CalendarWithTimeProps>) {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
+  const hasValue = Boolean(dateValue || timeValue);
+
+  const clear = () => {
+    onClear?.();
+    setIsOpen(false);
+  };
+
+  // The calendar clears a selected date itself (its deselect lands in
+  // handleDateSelect); this catches the rest of the popover, e.g. a time set
+  // without a date, but never the time input.
+  const handlePopoverKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (!onClear || !hasValue || event.defaultPrevented) return;
+    if (event.key !== 'Backspace' && event.key !== 'Delete') return;
+    if (event.target instanceof HTMLInputElement) return;
+    event.preventDefault();
+    clear();
+  };
 
   const selectedDate = dateValue ? new Date(dateValue) : undefined;
 
   const handleDateSelect = (date: Date | undefined) => {
-    if (date) {
-      // Convert to ISO string (YYYY-MM-DD format)
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      onDateChange(`${year}-${month}-${day}`);
+    // Deselecting the day (click again, or Backspace/Delete) clears the
+    // whole value when the caller allows it; otherwise the date stays.
+    if (!date) {
+      if (onClear) clear();
+      return;
     }
+    // Convert to ISO string (YYYY-MM-DD format)
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    onDateChange(`${year}-${month}-${day}`);
   };
 
   // The native <input type="time"> only accepts 24-hour "HH:mm:ss"; convert so a
@@ -195,6 +227,11 @@ export function CalendarWithTime({
             type="button"
             variant="outline"
             disabled={disabled}
+            onKeyDown={
+              onClear
+                ? createDateClearHandler({ hasValue, isOpen, onClear: clear })
+                : undefined
+            }
             className={cn(
               'border-input flex h-11 w-full items-center justify-between rounded-md border bg-transparent px-3 py-1 text-base transition-[color,box-shadow] outline-none hover:bg-transparent md:text-sm',
               !dateValue && 'text-slate-500',
@@ -229,7 +266,12 @@ export function CalendarWithTime({
             </svg>
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="start">
+        <PopoverContent
+          aria-label={t('common.a11y.chooseDateTime')}
+          className="w-auto p-0"
+          align="start"
+          onKeyDown={handlePopoverKeyDown}
+        >
           <div className="bg-background">
             <Calendar
               mode="single"

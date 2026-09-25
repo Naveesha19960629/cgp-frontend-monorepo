@@ -15,6 +15,7 @@ import {
 import { useStepGuard } from '@/views/vacancies/hooks';
 import type { StepProps } from '@/views/vacancies/types';
 import { formatDate, sanitizePlainText } from '@/views/vacancies/utils';
+import { DATE_POPOVER } from '@/views/vacancies/utils/constants';
 import {
   formatLocalDate,
   getHundredYearDateBoundaries,
@@ -40,6 +41,7 @@ import {
   PopoverTrigger,
 } from '@cgp/ui-kit/components/ui/popover';
 import { Switch } from '@cgp/ui-kit/components/ui/switch';
+import { createDateClearHandler } from '@cgp/ui-kit/lib/keyboard-actions';
 import { applyTypography } from '@cgp/ui-kit/lib/typography';
 import { cn } from '@cgp/ui-kit/lib/utils';
 import { isAfter, isBefore, startOfDay } from 'date-fns';
@@ -171,16 +173,29 @@ function PublicationCard({
                   </div>
                   <Popover
                     modal
-                    open={publication.openDatePopover === 'publishedDateFrom'}
+                    open={
+                      publication.openDatePopover ===
+                      DATE_POPOVER.publishedDateFrom
+                    }
                     onOpenChange={open =>
                       onUpdate(index, {
                         openDatePopover:
-                          !fieldsDisabled && open ? 'publishedDateFrom' : null,
+                          !fieldsDisabled && open
+                            ? DATE_POPOVER.publishedDateFrom
+                            : null,
                       })
                     }
                   >
                     <PopoverTrigger asChild>
                       <Button
+                        onKeyDown={createDateClearHandler({
+                          hasValue: !!publication.publishedDateFrom,
+                          isOpen:
+                            publication.openDatePopover ===
+                            DATE_POPOVER.publishedDateFrom,
+                          onClear: () =>
+                            onUpdate(index, { publishedDateFrom: undefined }),
+                        })}
                         type="button"
                         variant="outline"
                         disabled={fieldsDisabled}
@@ -209,7 +224,11 @@ function PublicationCard({
                         />
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
+                    <PopoverContent
+                      aria-label={t('common.a11y.chooseDate')}
+                      className="w-auto p-0"
+                      align="start"
+                    >
                       <Calendar
                         mode="single"
                         selected={
@@ -260,16 +279,29 @@ function PublicationCard({
                   </div>
                   <Popover
                     modal
-                    open={publication.openDatePopover === 'publishedDateTo'}
+                    open={
+                      publication.openDatePopover ===
+                      DATE_POPOVER.publishedDateTo
+                    }
                     onOpenChange={open =>
                       onUpdate(index, {
                         openDatePopover:
-                          !fieldsDisabled && open ? 'publishedDateTo' : null,
+                          !fieldsDisabled && open
+                            ? DATE_POPOVER.publishedDateTo
+                            : null,
                       })
                     }
                   >
                     <PopoverTrigger asChild>
                       <Button
+                        onKeyDown={createDateClearHandler({
+                          hasValue: !!publication.publishedDateTo,
+                          isOpen:
+                            publication.openDatePopover ===
+                            DATE_POPOVER.publishedDateTo,
+                          onClear: () =>
+                            onUpdate(index, { publishedDateTo: undefined }),
+                        })}
                         type="button"
                         variant="outline"
                         disabled={fieldsDisabled}
@@ -298,7 +330,11 @@ function PublicationCard({
                         />
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
+                    <PopoverContent
+                      aria-label={t('common.a11y.chooseDate')}
+                      className="w-auto p-0"
+                      align="start"
+                    >
                       <Calendar
                         mode="single"
                         selected={

@@ -4,6 +4,7 @@ import * as PopoverPrimitive from '@radix-ui/react-popover';
 
 import type { ReactNode } from 'react';
 import { useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { Popover, PopoverTrigger } from '@cgp/ui-kit/components/ui/popover';
 import { cn } from '@cgp/ui-kit/lib/utils';
@@ -30,6 +31,7 @@ export function FieldTooltip({
   align = 'start',
   alignOffset = -10,
 }: FieldTooltipProps) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -54,14 +56,37 @@ export function FieldTooltip({
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
-        <span
-          className={triggerClassName ?? 'inline-flex cursor-pointer'}
-          onClick={() => setOpen(prev => !prev)}
-        >
-          {children ?? (
-            <InfoCircle size={16} className="text-slate-900" variant="Linear" />
-          )}
-        </span>
+        {children ? (
+          // Wraps a chip that already holds its own focusable remove button,
+          // so it can't also be a button (nested controls, WCAG 4.1.2). The
+          // chip's icon carries the same imported/manual meaning.
+          // eslint-disable-next-line jsx-a11y-x/click-events-have-key-events, jsx-a11y-x/no-static-element-interactions
+          <span
+            className={triggerClassName ?? 'inline-flex cursor-pointer'}
+            onClick={() => setOpen(prev => !prev)}
+          >
+            {children}
+          </span>
+        ) : (
+          // A real button so the help text opens from the keyboard too
+          // (Enter/Space; Escape closes and returns focus here).
+          <button
+            type="button"
+            aria-label={t('common.a11y.moreInfo')}
+            className={cn(
+              triggerClassName ?? 'inline-flex cursor-pointer',
+              'focus-visible:ring-ring rounded-full focus-visible:ring-2 focus-visible:outline-none'
+            )}
+            onClick={() => setOpen(prev => !prev)}
+          >
+            <InfoCircle
+              size={16}
+              aria-hidden
+              className="text-slate-900"
+              variant="Linear"
+            />
+          </button>
+        )}
       </PopoverTrigger>
       <PopoverPrimitive.Portal>
         <PopoverPrimitive.Content

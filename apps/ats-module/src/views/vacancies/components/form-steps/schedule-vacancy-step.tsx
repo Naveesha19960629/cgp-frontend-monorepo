@@ -39,6 +39,7 @@ import {
   isDateTimeInPast,
   to24HourTime,
 } from '@/views/vacancies/utils';
+import { clearFieldQuietly } from '@/views/vacancies/utils/clear-field-quietly';
 import { getHundredYearDateBoundaries } from '@/views/vacancies/utils/date-timezone-safe';
 
 import { ErrorToast, SuccessToast } from '@cgp/ui-kit/components/custom-toast';
@@ -81,8 +82,21 @@ export default function ScheduleVacancyStep({
     handleSubmit,
     watch,
     setValue,
+    trigger,
+    clearErrors,
     formState: { errors, isValid },
   } = useScheduleVacancyForm(form.schedule);
+
+  // NFR-024: Backspace/Delete on a date-time picker clears its date and its
+  // time. Both are required; their errors wait for the next submit.
+  const clearDateTime = (
+    dateName: 'schedulePublishDate' | 'expirationDate',
+    timeName: 'schedulePublishTime' | 'expirationTime'
+  ) => {
+    const quiet = { setValue, trigger, clearErrors };
+    clearFieldQuietly(quiet, dateName, '');
+    clearFieldQuietly(quiet, timeName, '');
+  };
 
   const publishDate = watch('schedulePublishDate');
   const publishTime = watch('schedulePublishTime');
@@ -680,6 +694,12 @@ export default function ScheduleVacancyStep({
                           );
                         }
                       }}
+                      onClear={() =>
+                        clearDateTime(
+                          'schedulePublishDate',
+                          'schedulePublishTime'
+                        )
+                      }
                       timeLabel={t('scheduleVacancy.timeLabel')}
                       dateButtonPlaceholder={t(
                         'scheduleVacancy.publishDatePlaceholder'
@@ -755,6 +775,9 @@ export default function ScheduleVacancyStep({
                           value
                         );
                       }}
+                      onClear={() =>
+                        clearDateTime('expirationDate', 'expirationTime')
+                      }
                       timeLabel={t('scheduleVacancy.expirationTimeLabel')}
                       dateButtonPlaceholder={t(
                         'scheduleVacancy.expirationDatePlaceholder'

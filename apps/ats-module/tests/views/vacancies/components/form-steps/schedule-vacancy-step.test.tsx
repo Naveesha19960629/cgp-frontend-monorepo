@@ -32,6 +32,7 @@ type CalendarWithTimeProps = {
   disabledDates?: (date: Date) => boolean;
   startMonth?: Date;
   endMonth?: Date;
+  onClear?: () => void;
 };
 
 vi.mock('@/views/vacancies/context/vacancy-form-context');
@@ -56,8 +57,13 @@ vi.mock('@cgp/ui-kit/components/ui/calendar-with-time', () => ({
       timeValue,
       onTimeChange,
       formattedDateDisplay,
+      onClear,
     }: CalendarWithTimeProps) => (
       <div data-testid="calendar-with-time">
+        {/* What the real picker does on Backspace/Delete. */}
+        <button type="button" onClick={onClear}>
+          {`clear-${timeLabel}`}
+        </button>
         {error && <div data-testid="calendar-error">{error}</div>}
         <input
           aria-label={`date-${timeLabel}`}
@@ -500,6 +506,40 @@ describe('ScheduleVacancyStep', () => {
         expect(getCreateButton()).not.toBeDisabled();
       });
     });
+
+    it.each([
+      [
+        'publish',
+        'scheduleVacancy.timeLabel',
+        'scheduleVacancy.expirationTimeLabel',
+      ],
+      [
+        'expiration',
+        'scheduleVacancy.expirationTimeLabel',
+        'scheduleVacancy.timeLabel',
+      ],
+    ])(
+      'clears the %s date and time on Backspace/Delete, leaving the other picker and no error',
+      async (_, cleared, kept) => {
+        renderComponent();
+        fillPublish('2099-12-25', '10:00:00 AM');
+        fillExpiration('2099-12-26', '10:00:00 AM');
+        await waitFor(() => {
+          expect(getCreateButton()).not.toBeDisabled();
+        });
+
+        fireEvent.click(screen.getByText(`clear-${cleared}`));
+
+        await waitFor(() => {
+          expect(screen.getByLabelText(`date-${cleared}`)).toHaveValue('');
+          expect(screen.getByLabelText(`time-${cleared}`)).toHaveValue('');
+          // Still required: submitting stays blocked until it is refilled.
+          expect(getCreateButton()).toBeDisabled();
+        });
+        expect(screen.getByLabelText(`date-${kept}`)).not.toHaveValue('');
+        expect(screen.queryByTestId('calendar-error')).not.toBeInTheDocument();
+      }
+    );
 
     it('clears the publish field when it is set to a past date/time (restricted, not just disabled)', async () => {
       renderComponent();

@@ -23,6 +23,7 @@ import {
 } from '@/views/vacancies/hooks';
 import type { StepProps } from '@/views/vacancies/types';
 import { formatDate, sanitizePlainText } from '@/views/vacancies/utils';
+import { DATE_POPOVER } from '@/views/vacancies/utils/constants';
 import {
   formatLocalDate,
   getHundredYearDateBoundaries,
@@ -50,6 +51,7 @@ import {
   PopoverTrigger,
 } from '@cgp/ui-kit/components/ui/popover';
 import { Switch } from '@cgp/ui-kit/components/ui/switch';
+import { createDateClearHandler } from '@cgp/ui-kit/lib/keyboard-actions';
 import { applyTypography } from '@cgp/ui-kit/lib/typography';
 import { cn } from '@cgp/ui-kit/lib/utils';
 import { isAfter, isBefore, startOfDay } from 'date-fns';
@@ -231,6 +233,7 @@ function ClubSocietyCard({
                     />
                   </div>
                   <MultipleSelector
+                    aria-label={t('preferredClubSocieties.labels.clubSociety')}
                     value={entry.clubSociety}
                     onChange={options => {
                       onUpdate(index, {
@@ -326,15 +329,21 @@ function ClubSocietyCard({
                   </div>
                   <Popover
                     modal
-                    open={openDatePopover === 'startDate'}
+                    open={openDatePopover === DATE_POPOVER.startDate}
                     onOpenChange={open =>
                       setOpenDatePopover(
-                        !fieldsDisabled && open ? 'startDate' : null
+                        !fieldsDisabled && open ? DATE_POPOVER.startDate : null
                       )
                     }
                   >
                     <PopoverTrigger asChild>
                       <Button
+                        onKeyDown={createDateClearHandler({
+                          hasValue: !!entry.startDate,
+                          isOpen: openDatePopover === DATE_POPOVER.startDate,
+                          onClear: () =>
+                            onUpdate(index, { startDate: undefined }),
+                        })}
                         type="button"
                         variant="outline"
                         disabled={fieldsDisabled}
@@ -363,7 +372,11 @@ function ClubSocietyCard({
                         />
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
+                    <PopoverContent
+                      aria-label={t('common.a11y.chooseDate')}
+                      className="w-auto p-0"
+                      align="start"
+                    >
                       <Calendar
                         mode="single"
                         selected={parseLocalDate(entry.startDate) ?? undefined}
@@ -407,15 +420,21 @@ function ClubSocietyCard({
                   </div>
                   <Popover
                     modal
-                    open={openDatePopover === 'endDate'}
+                    open={openDatePopover === DATE_POPOVER.endDate}
                     onOpenChange={open =>
                       setOpenDatePopover(
-                        !fieldsDisabled && open ? 'endDate' : null
+                        !fieldsDisabled && open ? DATE_POPOVER.endDate : null
                       )
                     }
                   >
                     <PopoverTrigger asChild>
                       <Button
+                        onKeyDown={createDateClearHandler({
+                          hasValue: !!entry.endDate,
+                          isOpen: openDatePopover === DATE_POPOVER.endDate,
+                          onClear: () =>
+                            onUpdate(index, { endDate: undefined }),
+                        })}
                         type="button"
                         variant="outline"
                         disabled={fieldsDisabled}
@@ -442,7 +461,11 @@ function ClubSocietyCard({
                         />
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
+                    <PopoverContent
+                      aria-label={t('common.a11y.chooseDate')}
+                      className="w-auto p-0"
+                      align="start"
+                    >
                       <Calendar
                         mode="single"
                         selected={parseLocalDate(entry.endDate) ?? undefined}
@@ -496,6 +519,9 @@ function ClubSocietyCard({
                     </Label>
                   </div>
                   <MultipleSelector
+                    aria-label={t(
+                      'preferredClubSocieties.labels.representedOrganization'
+                    )}
                     key={orgSelectorKey}
                     value={entry.representedOrganization}
                     onChange={options => {
@@ -593,6 +619,9 @@ function ClubSocietyCard({
                     </Label>
                   </div>
                   <MultipleSelector
+                    aria-label={t(
+                      'preferredClubSocieties.labels.organizationLocation'
+                    )}
                     value={entry.organizationLocations}
                     onChange={options => {
                       onUpdate(index, {

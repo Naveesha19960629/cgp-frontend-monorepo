@@ -31,8 +31,11 @@ type LocationAutocompleteProps = {
   loading?: boolean;
   isError?: boolean;
   onSearchChange: (value: string) => void;
+  /** Also called with `{ id: '', label: '' }` when the location is cleared. */
   onSelect: (option: Option) => void;
 };
+
+const NO_LOCATION: Option = { id: '', label: '' };
 
 export function LocationAutocomplete({
   options,
@@ -56,6 +59,28 @@ export function LocationAutocomplete({
     }
   }, [value.id, value.label]);
 
+  // NFR-024 (ATS), same rule as the ui-kit Combobox and the ARIA APG
+  // editable combobox: Backspace erases character by character and an empty
+  // box means no location; Delete clears it in one press while the box still
+  // shows the selected location untouched.
+  const clearLocation = () => {
+    setInputValue('');
+    debouncedSearchChange.cancel();
+    onSelect(NO_LOCATION);
+    onSearchChange('');
+  };
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!value.id) return;
+    const untouched =
+      inputValue === '' ||
+      (event.key === 'Delete' && inputValue === value.label);
+    if ((event.key === 'Backspace' || event.key === 'Delete') && untouched) {
+      event.preventDefault();
+      clearLocation();
+    }
+  };
+
   return (
     <Combobox
       value={value}
@@ -67,6 +92,10 @@ export function LocationAutocomplete({
       isItemEqualToValue={(a: Option, b: Option) => a.id === b.id}
       onInputValueChange={val => {
         const clean = removeEmoji(val);
+        if (clean === '' && value.id) {
+          clearLocation();
+          return;
+        }
         setInputValue(clean);
         debouncedSearchChange(clean);
       }}
@@ -83,6 +112,7 @@ export function LocationAutocomplete({
         placeholder={placeholder}
         className="box-border h-11 bg-white shadow-none"
         aria-invalid={isError || undefined}
+        onKeyDown={handleKeyDown}
       />
       <ComboboxContent className="mt-2">
         {loading ? (

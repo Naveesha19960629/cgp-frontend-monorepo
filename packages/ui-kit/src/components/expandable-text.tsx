@@ -4,6 +4,11 @@ import { useEffect, useRef, useState } from 'react';
 
 import { applyTypography } from '@cgp/ui-kit/lib/typography';
 
+// Real buttons so the text expands from the keyboard (NFR-024, WCAG 2.1.1);
+// they used to be click-only spans.
+const FOCUS_RING =
+  'focus-visible:ring-ring rounded-sm focus-visible:ring-2 focus-visible:outline-none';
+
 interface ExpandableTextProps {
   limit?: number; // Optional character limit for truncation
   text: string;
@@ -45,20 +50,25 @@ export default function ExpandableText({
         {text}
 
         {expanded && (
-          <span
+          <button
+            type="button"
+            aria-expanded
             onClick={() => setExpanded(false)}
-            className={moreTextClassName}
+            className={clsx(moreTextClassName, FOCUS_RING)}
           >
             less
-          </span>
+          </button>
         )}
       </p>
 
       {!expanded && showButton && (
-        <span
+        <button
+          type="button"
+          aria-expanded={false}
           onClick={() => setExpanded(true)}
           className={clsx(
             moreTextClassName,
+            FOCUS_RING,
             'absolute right-0 bottom-0 bg-white pl-1 text-base font-bold'
           )}
         >
@@ -66,7 +76,7 @@ export default function ExpandableText({
           <span className="text-brand-primary-500 text-base font-bold">
             more
           </span>
-        </span>
+        </button>
       )}
     </div>
   );

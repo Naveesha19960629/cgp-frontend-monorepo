@@ -1,5 +1,6 @@
 import { Check, ChevronDown } from 'lucide-react';
 
+import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { DataTableFacetedFilterProps } from '@/views/vacancies/types';
@@ -18,6 +19,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@cgp/ui-kit/components/ui/popover';
+import { useListHighlight } from '@cgp/ui-kit/hooks/use-list-highlight';
+import { getKeyboardAction } from '@cgp/ui-kit/lib/keyboard-actions';
 import { cn } from '@cgp/ui-kit/lib/utils';
 
 export default function DataTableFacetedFilter({
@@ -32,13 +35,42 @@ export default function DataTableFacetedFilter({
 }: Readonly<DataTableFacetedFilterProps>) {
   const { t } = useTranslation('ats');
   const selectedSet = new Set(selectedValues);
+  const commandRef = useRef<HTMLDivElement>(null);
+  const [open, setOpen] = useState(false);
+  const [announcement, setAnnouncement] = useState('');
+  // As in the form multi-selects: drawn, and picked by Enter, once the user
+  // moves it with the arrow keys.
+  const highlight = useListHighlight({ open, search: searchValue ?? '' });
+
+  // NFR-024 (ATS): Backspace or Delete clears the whole filter, as they
+  // clear a clearable Select: on the focused button, or in the open list
+  // once its search is empty. Until then they edit the search text.
+  // Enter or a click still picks or unpicks one option.
+  const clearFromKey = (event: React.KeyboardEvent) => {
+    if (selectedValues.length === 0) return;
+    if (getKeyboardAction(event, false) !== 'clear') return;
+    event.preventDefault();
+    onSelectionChange([]);
+    setAnnouncement(t('vacancies.table.filter.cleared', { title }));
+  };
+
+  const handleListKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    highlight.onKeyDown(event);
+    if (event.key === 'Enter' && !highlight.shown) {
+      event.preventDefault();
+      return;
+    }
+    if (event.target instanceof HTMLInputElement && event.target.value) return;
+    clearFromKey(event);
+  };
 
   return (
-    <Popover>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
           variant="outline"
           size="sm"
+          onKeyDown={clearFromKey}
           className="h-12 gap-2 rounded-lg border-slate-300 bg-white px-4! py-3 text-base font-medium text-slate-600 shadow-none hover:bg-white hover:text-slate-600"
         >
           {title}
@@ -48,8 +80,18 @@ export default function DataTableFacetedFilter({
       <PopoverContent
         className="h-62 w-55.25 rounded-lg p-0 shadow-[0px_4px_30px_0px_rgba(0,0,0,0.16)]"
         align="start"
+        aria-label={title}
+        // With no search box, focus the list itself. Otherwise focus stays on
+        // the popover and its arrow keys and Enter never reach cmdk (WCAG 2.1.1).
+        onOpenAutoFocus={event => {
+          if (!hideSearch) return;
+          event.preventDefault();
+          commandRef.current?.focus();
+        }}
       >
         <Command
+          ref={commandRef}
+          onKeyDown={handleListKeyDown}
           shouldFilter={!onSearchChange}
           className="**:data-[slot=command-input-wrapper]:h-12"
         >
@@ -66,7 +108,7 @@ export default function DataTableFacetedFilter({
           <CommandList
             className={cn(
               'overflow-auto pt-3 pb-3',
-              !isLoading && options.length > 0 && 'pl-3'
+              !isLoading && options.length > 0 && 'px-3'
             )}
           >
             <CommandEmpty>
@@ -88,8 +130,12 @@ export default function DataTableFacetedFilter({
                         newSet.add(option.value);
                       }
                       onSelectionChange(Array.from(newSet));
+                      setAnnouncement('');
                     }}
-                    className="gap-2 px-3 py-3"
+                    className={cn(
+                      'group gap-2 rounded-sm px-3 py-3',
+                      highlight.shown && 'data-[selected=true]:bg-accent'
+                    )}
                   >
                     <div
                       className={cn(
@@ -104,7 +150,13 @@ export default function DataTableFacetedFilter({
                     {option.icon && (
                       <option.icon className="text-muted-foreground size-4" />
                     )}
-                    <span className="text-sm font-medium text-slate-500">
+                    <span
+                      className={cn(
+                        'text-sm font-medium text-slate-500',
+                        highlight.shown &&
+                          'group-data-[selected=true]:text-slate-900'
+                      )}
+                    >
                       {option.label}
                     </span>
                   </CommandItem>
@@ -114,6 +166,11 @@ export default function DataTableFacetedFilter({
           </CommandList>
         </Command>
       </PopoverContent>
+      {/* Always mounted: a live region that appears with its text is not
+          announced. sr-only takes it out of the toolbar's flex gap. */}
+      <output aria-live="polite" className="sr-only">
+        {announcement}
+      </output>
     </Popover>
   );
 }

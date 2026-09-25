@@ -46,6 +46,7 @@ import {
 } from '@cgp/ui-kit/components/ui/form';
 import { Input } from '@cgp/ui-kit/components/ui/input';
 import {
+  SELECT_CLEAR_VALUE,
   Select,
   SelectContent,
   SelectItem,
@@ -56,13 +57,6 @@ import { Switch } from '@cgp/ui-kit/components/ui/switch';
 import { cn } from '@cgp/ui-kit/lib/utils';
 
 const MAX_ADDRESS_ENTRIES = 5;
-
-/**
- * Sentinel value for the "clear selection" item placed first in the Gender
- * and Marital Status fixed dropdowns (Radix Select rejects an empty-string
- * item value), per the clear-selection NFR for fixed dropdowns.
- */
-const UNSELECTED_OPTION_VALUE = '__unselected__';
 
 /**
  * Field codes that make up the Addresses group. In the Use Template flow the
@@ -366,7 +360,24 @@ function AddressCard({
     })),
   ];
 
+  // Backspace/Delete in a place combobox (NFR-024) sends ''. City, State and
+  // Country describe one place, so clearing any of them clears all three.
+  const clearPlaces = () => {
+    (['city', 'stateProvince', 'country'] as const).forEach(name =>
+      form.setValue(
+        `addresses.${index}.${name}`,
+        { id: '', label: '' },
+        { shouldValidate: true }
+      )
+    );
+    setTimeout(() => checkDuplicate(), 0);
+  };
+
   const handleCitySelect = (val: string) => {
+    if (!val) {
+      clearPlaces();
+      return;
+    }
     const r = cityData.find(c => c.city.id === val);
     if (!r) return;
     form.setValue(`addresses.${index}.city`, toPlaceOption(r.city), {
@@ -397,6 +408,10 @@ function AddressCard({
   };
 
   const handleStateSelect = (val: string) => {
+    if (!val) {
+      clearPlaces();
+      return;
+    }
     const r = stateData.find(s => s.state.id === val);
     if (!r) return;
     form.setValue(`addresses.${index}.stateProvince`, toPlaceOption(r.state), {
@@ -422,6 +437,10 @@ function AddressCard({
   };
 
   const handleCountrySelect = (val: string) => {
+    if (!val) {
+      clearPlaces();
+      return;
+    }
     const r = countryData.find(co => co.country.id === val);
     if (!r) return;
     form.setValue(
@@ -1017,9 +1036,10 @@ export default function ProfileRequirementsStep({
                     </FormLabel>
                     <FormControl>
                       <Select
+                        clearable
                         value={field.value?.id ?? ''}
                         onValueChange={val => {
-                          if (val === UNSELECTED_OPTION_VALUE) {
+                          if (val === SELECT_CLEAR_VALUE) {
                             field.onChange({ id: '', label: '' });
                             return;
                           }
@@ -1041,9 +1061,6 @@ export default function ProfileRequirementsStep({
                           />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value={UNSELECTED_OPTION_VALUE}>
-                            {t('profileRequirements.genderPlaceholder')}
-                          </SelectItem>
                           {gendersData.map(g => (
                             <SelectItem key={g.id} value={g.id}>
                               {g.label}
@@ -1076,9 +1093,10 @@ export default function ProfileRequirementsStep({
                     </FormLabel>
                     <FormControl>
                       <Select
+                        clearable
                         value={field.value?.id ?? ''}
                         onValueChange={val => {
-                          if (val === UNSELECTED_OPTION_VALUE) {
+                          if (val === SELECT_CLEAR_VALUE) {
                             field.onChange({ id: '', label: '' });
                             return;
                           }
@@ -1102,9 +1120,6 @@ export default function ProfileRequirementsStep({
                           />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value={UNSELECTED_OPTION_VALUE}>
-                            {t('profileRequirements.maritalStatusPlaceholder')}
-                          </SelectItem>
                           {maritalStatusesData.map(ms => (
                             <SelectItem key={ms.id} value={ms.id}>
                               {ms.label}
