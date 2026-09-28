@@ -61,7 +61,7 @@ const isSectionStatusChange = (change: VacancyVersionHistoryChange): boolean =>
 // sorting/comparison stays numeric instead of lexicographic (which would
 // otherwise sort "V12.0" ahead of "V2.0").
 const parseVersionOrdinal = (versionNumber: string): number =>
-  Number(versionNumber.match(/\d+/)?.[0] ?? 0);
+  Number(/\d+/.exec(versionNumber)?.[0] ?? 0);
 
 const compareVersionNumbersDesc = (
   a: { versionNumber: string },
