@@ -927,7 +927,7 @@ interface VacancyDetailData {
   vacancyTemplateId?: string | null;
   title: string;
   status: string;
-  version: number;
+  version: string;
   createdBy: string;
   updatedBy: string;
   createdAt: string;
@@ -1187,7 +1187,7 @@ interface VacancyTableColumn {
   updatedAt: string;
   updatedAtLabel: string;
   updatedBy: string;
-  version: number;
+  version: string;
   status: string;
   availableActions: string[];
   vacancyLink: string;
@@ -1990,7 +1990,7 @@ interface VacancyVersionHistoryChange {
 }
 
 interface VacancyVersionHistoryVersion {
-  versionNumber: number;
+  versionNumber: string;
   updatedAt: string;
   updatedBy: string;
   profilePicture: string | null;
@@ -2167,8 +2167,8 @@ interface VersionHistoryEntry {
 
 interface VersionHistorySidebarProps {
   versions: VacancyVersionHistoryVersion[];
-  selectedVersionNumber: number;
-  onSelectVersion: (versionNumber: number) => void;
+  selectedVersionNumber: string;
+  onSelectVersion: (versionNumber: string) => void;
   /** Fallback actor for versions recorded with `updatedBy: "SYSTEM"` — see
    * resolveVersionActor() in utils/version-history-helpers.ts. */
   createdBy: string;

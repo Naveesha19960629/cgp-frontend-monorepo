@@ -56,6 +56,19 @@ const isDataTakenFromCandidateChange = (
 const isSectionStatusChange = (change: VacancyVersionHistoryChange): boolean =>
   change.fieldName.trim().toLowerCase() === 'section status';
 
+// versionNumber arrives from the API pre-formatted as a "V{n}.0" string
+// (CR-14, was a plain number) — the ordinal is pulled back out here so
+// sorting/comparison stays numeric instead of lexicographic (which would
+// otherwise sort "V12.0" ahead of "V2.0").
+const parseVersionOrdinal = (versionNumber: string): number =>
+  Number(versionNumber.match(/\d+/)?.[0] ?? 0);
+
+const compareVersionNumbersDesc = (
+  a: { versionNumber: string },
+  b: { versionNumber: string }
+): number =>
+  parseVersionOrdinal(b.versionNumber) - parseVersionOrdinal(a.versionNumber);
+
 const getSingleScalar = (value: unknown[] | null): string | null => {
   if (!value || value.length === 0) return null;
   const [first] = value;
@@ -701,6 +714,8 @@ const resolveVersionEntries = (
 export {
   normalizeStatusKey,
   parseBooleanFlag,
+  parseVersionOrdinal,
+  compareVersionNumbersDesc,
   isDataTakenFromCandidateChange,
   isSectionStatusChange,
   getSingleScalar,

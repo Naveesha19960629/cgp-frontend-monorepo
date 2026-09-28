@@ -37,6 +37,7 @@ import {
 } from '@/views/vacancies/utils/constants';
 import { formatChangeValue } from '@/views/vacancies/utils/format-date-range';
 import {
+  compareVersionNumbersDesc,
   getSingleScalar,
   isDataTakenFromCandidateChange,
   isObjectArray,
@@ -44,6 +45,7 @@ import {
   isSystemActor,
   normalizeStatusKey,
   parseBooleanFlag,
+  parseVersionOrdinal,
   pluralizeFieldName,
   resolveChangeVariant,
   resolveScalarChangeLabelKey,
@@ -1545,7 +1547,7 @@ const renderSidebarRowsOnCurrentPage = (
   doc: PDFKit.PDFDocument,
   { x, y, width }: { x: number; y: number; width: number },
   versions: VacancyVersionHistoryVersion[],
-  selectedVersionNumber: number | undefined,
+  selectedVersionNumber: string | undefined,
   createdBy: string,
   metrics: SidebarRowMetrics
 ): number => {
@@ -1561,7 +1563,10 @@ const renderSidebarRowsOnCurrentPage = (
     const actor = resolveVersionActor(version, createdBy);
     const isSystem = isSystemActor(actor);
     const actorLabel = isSystem ? PDF_SYSTEM_LABEL : actor;
-    const versionText = String(version.versionNumber);
+    // versionNumber arrives pre-formatted as "V{n}.0" (CR-14); the sidebar
+    // mirrors the on-screen page's bare-number heading, so the ordinal is
+    // pulled back out rather than shown as the full API string.
+    const versionText = String(parseVersionOrdinal(version.versionNumber));
     const dateText = formatPdfVersionListDate(version.updatedAt);
 
     if (isSelected) {
@@ -1831,7 +1836,7 @@ const buildVersionHistoryDocument = (
   mediumFont: ArrayBuffer,
   semiboldFont: ArrayBuffer,
   boldFont: ArrayBuffer,
-  selectedVersionNumber?: number
+  selectedVersionNumber?: string
 ) => {
   const doc = new PDFDocument({
     size: PDF_PAGE_SIZE,
@@ -2007,9 +2012,7 @@ const buildVersionHistoryDocument = (
   // Two-column layout below the header, matching the on-screen page: every
   // version listed on the left with the downloaded/selected one highlighted,
   // and only that one's Activity Log expanded on the right.
-  const versions = [...data.versions].sort(
-    (a, b) => b.versionNumber - a.versionNumber
-  );
+  const versions = [...data.versions].sort(compareVersionNumbersDesc);
   const selectedVersion =
     versions.find(v => v.versionNumber === selectedVersionNumber) ??
     versions[0];
@@ -2196,7 +2199,7 @@ const buildVersionHistoryDocument = (
 
 const buildVersionHistoryPdfBlob = async (
   data: VacancyVersionHistoryData,
-  options?: { selectedVersionNumber?: number }
+  options?: { selectedVersionNumber?: string }
 ): Promise<Blob> => {
   const [regularFont, mediumFont, semiboldFont, boldFont] = await Promise.all([
     loadFontBuffer(regularFontUrl),
