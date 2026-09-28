@@ -40,11 +40,14 @@ vi.mock('@react-keycloak/web', () => ({
   }),
 }));
 
+let mockLocation = { pathname: '/dashboard/ats/vacancies', search: '' };
+
 vi.mock('react-router-dom', async importOriginal => {
   const actual = await importOriginal<typeof import('react-router-dom')>();
   return {
     ...actual,
     useNavigate: () => navigate,
+    useLocation: () => mockLocation,
   };
 });
 
@@ -90,6 +93,7 @@ vi.mock('@/views/vacancies', async importOriginal => {
 describe('VacanciesPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockLocation = { pathname: '/dashboard/ats/vacancies', search: '' };
     useVacanciesQueryMock.mockReturnValue({
       data: undefined,
       isLoading: false,
@@ -180,6 +184,34 @@ describe('VacanciesPage', () => {
     );
 
     expect(navigate).toHaveBeenCalledWith('/dashboard/ats/vacancies/new');
+  });
+
+  // CR-19: opening a vacancy from the (possibly filtered) list must carry
+  // the current list URL along as router state, so the vacancy view page's
+  // Back button can return the recruiter to the exact same search/filter
+  // results instead of a bare, unfiltered /vacancies.
+  it('passes the current list URL as router state to the onView column action', () => {
+    mockLocation = {
+      pathname: '/dashboard/ats/vacancies',
+      search: '?search=engineer&status=LIVE',
+    };
+    useVacanciesQueryMock.mockReturnValue({
+      isLoading: false,
+      data: { data: { content: [{ id: '1' }], totalPages: 1 } },
+    });
+
+    render(<VacanciesPage />);
+
+    const { onView } = createVacancyColumnsMock.mock
+      .calls[0][0] as CreateColumnsOptions;
+    onView('vacancy-1');
+
+    expect(navigate).toHaveBeenCalledWith(
+      '/dashboard/ats/vacancies/vacancy-1/view',
+      {
+        state: { from: '/dashboard/ats/vacancies?search=engineer&status=LIVE' },
+      }
+    );
   });
 
   it('shows empty state when not loading and no vacancies exist', () => {

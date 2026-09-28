@@ -3,7 +3,7 @@ import { Add } from 'iconsax-reactjs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 import type {
   VacancyQueryParams,
@@ -45,6 +45,7 @@ import {
 export default function VacanciesPage() {
   const { t } = useTranslation('ats');
   const navigate = useNavigate();
+  const location = useLocation();
   const [params, setParams] = useVacancyTableParams();
   const { keycloak, initialized } = useKeycloak();
 
@@ -322,7 +323,9 @@ export default function VacanciesPage() {
         sortOrder: params.sortOrder,
         onSort: handleSort,
         onView: (vacancyId: string) =>
-          void navigate(`/dashboard/ats/vacancies/${vacancyId}/view`),
+          void navigate(`/dashboard/ats/vacancies/${vacancyId}/view`, {
+            state: { from: `${location.pathname}${location.search}` },
+          }),
         onEdit: (vacancyId: string) =>
           void navigate(`/dashboard/ats/vacancies/${vacancyId}/edit`),
         onDelete: (vacancyId: string) => setDeleteVacancyId(vacancyId),
@@ -341,6 +344,8 @@ export default function VacanciesPage() {
       handleMakeACopy,
       handleCopyLink,
       navigate,
+      location.pathname,
+      location.search,
       t,
     ]
   );
@@ -376,7 +381,9 @@ export default function VacanciesPage() {
         table={table}
         isLoading={isFetching}
         onRowClick={row =>
-          void navigate(`/dashboard/ats/vacancies/${row.vacancyId}/view`)
+          void navigate(`/dashboard/ats/vacancies/${row.vacancyId}/view`, {
+            state: { from: `${location.pathname}${location.search}` },
+          })
         }
       />
     );
