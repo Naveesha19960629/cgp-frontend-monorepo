@@ -7,7 +7,7 @@
 // throws "Not a supported font format" under jsdom. Real single-realm
 // browsers don't have this problem, and neither does plain Node, so this
 // file skips jsdom entirely (tests/setup.ts no-ops for non-DOM environments).
-import { parseVersionOrdinal } from '@/views/vacancies/utils/version-history-helpers';
+import { formatVersionNumber } from '@/views/vacancies/utils/version-history-helpers';
 import { buildVersionHistoryPdfBlob } from '@/views/vacancies/utils/version-history-pdf';
 
 import * as fontkitModule from 'fontkit';
@@ -330,7 +330,7 @@ describe('buildVersionHistoryPdfBlob', () => {
 
     expect(xOf('Version History')).toBe(xOf(sampleData.vacancyTitle));
     expect(xOf('Version History')).toBe(
-      xOf(String(parseVersionOrdinal(sampleData.versions[0].versionNumber)))
+      xOf(formatVersionNumber(sampleData.versions[0].versionNumber))
     );
   });
 

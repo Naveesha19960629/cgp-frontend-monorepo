@@ -105,6 +105,7 @@ export { buildVersionHistoryPdfBlob } from '@/views/vacancies/utils/version-hist
 export {
   normalizeStatusKey,
   parseBooleanFlag,
+  formatVersionNumber,
   parseVersionOrdinal,
   compareVersionNumbersDesc,
   isDataTakenFromCandidateChange,

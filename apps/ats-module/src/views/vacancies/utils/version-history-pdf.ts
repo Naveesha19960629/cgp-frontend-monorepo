@@ -38,6 +38,7 @@ import {
 import { formatChangeValue } from '@/views/vacancies/utils/format-date-range';
 import {
   compareVersionNumbersDesc,
+  formatVersionNumber,
   getSingleScalar,
   isDataTakenFromCandidateChange,
   isObjectArray,
@@ -45,7 +46,6 @@ import {
   isSystemActor,
   normalizeStatusKey,
   parseBooleanFlag,
-  parseVersionOrdinal,
   pluralizeFieldName,
   resolveChangeVariant,
   resolveScalarChangeLabelKey,
@@ -1563,10 +1563,9 @@ const renderSidebarRowsOnCurrentPage = (
     const actor = resolveVersionActor(version, createdBy);
     const isSystem = isSystemActor(actor);
     const actorLabel = isSystem ? PDF_SYSTEM_LABEL : actor;
-    // versionNumber arrives pre-formatted as "V{n}.0" (CR-14); the sidebar
-    // mirrors the on-screen page's bare-number heading, so the ordinal is
-    // pulled back out rather than shown as the full API string.
-    const versionText = String(parseVersionOrdinal(version.versionNumber));
+    // versionNumber arrives pre-formatted as "V{n}.0" (CR-14); the PDF
+    // mirrors the on-screen sidebar, dropping only the "V" prefix.
+    const versionText = formatVersionNumber(version.versionNumber);
     const dateText = formatPdfVersionListDate(version.updatedAt);
 
     if (isSelected) {

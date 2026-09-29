@@ -54,12 +54,11 @@ describe('VersionHistorySidebar', () => {
   it('shows the bare version number as the row heading, per Figma', () => {
     renderSidebar();
 
-    // The visible label is just the number; "Version N" lives in the
-    // accessible name so screen readers still get the full phrasing. The
-    // API's own "V{n}.0" string (CR-14) is parsed back down to that bare
-    // ordinal for this one display spot.
-    expect(screen.getByText('2')).toBeInTheDocument();
-    expect(screen.getByText('1')).toBeInTheDocument();
+    // The visible label drops only the API's "V" prefix (CR-14 sends
+    // "V{n}.0"); "Version N.0" lives in the accessible name so screen
+    // readers still get the full phrasing.
+    expect(screen.getByText('2.0')).toBeInTheDocument();
+    expect(screen.getByText('1.0')).toBeInTheDocument();
   });
 
   it('shows an uppercase updated date on each row', () => {
