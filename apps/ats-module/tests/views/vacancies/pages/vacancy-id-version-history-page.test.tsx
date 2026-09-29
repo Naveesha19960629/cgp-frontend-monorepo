@@ -42,7 +42,7 @@ vi.mock('@cgp/ui-kit/components/custom-toast', () => ({
 }));
 
 const versionOne = {
-  versionNumber: 1,
+  versionNumber: 'V1.0',
   updatedAt: '2026-01-01T10:00:00.000',
   updatedBy: 'sahanlmsl@gmail.com',
   profilePicture: null,
@@ -61,7 +61,7 @@ const versionOne = {
 };
 
 const versionTwo = {
-  versionNumber: 2,
+  versionNumber: 'V2.0',
   updatedAt: '2026-07-07T21:40:43.804959',
   updatedBy: 'SYSTEM',
   profilePicture: null,
@@ -214,7 +214,7 @@ describe('VacancyIdVersionHistoryPage', () => {
     await waitFor(() => {
       expect(mockBuildVersionHistoryPdfBlob).toHaveBeenCalledWith(
         versionHistoryData,
-        { selectedVersionNumber: 1 }
+        { selectedVersionNumber: 'V1.0' }
       );
     });
     expect(mockAnchorClick).toHaveBeenCalledTimes(1);
@@ -301,7 +301,7 @@ describe('VacancyIdVersionHistoryPage', () => {
       totalVersions: 4,
       versions: [
         {
-          versionNumber: 4,
+          versionNumber: 'V4.0',
           updatedAt: '2026-09-04T14:13:00.225528',
           updatedBy: 'SYSTEM',
           profilePicture: null,
@@ -334,7 +334,7 @@ describe('VacancyIdVersionHistoryPage', () => {
           },
         },
         {
-          versionNumber: 3,
+          versionNumber: 'V3.0',
           updatedAt: '2026-09-04T13:04:50.032911',
           updatedBy: 'chamathnirmal99@gmail.com',
           profilePicture: null,
@@ -359,7 +359,7 @@ describe('VacancyIdVersionHistoryPage', () => {
           },
         },
         {
-          versionNumber: 2,
+          versionNumber: 'V2.0',
           updatedAt: '2026-09-04T13:04:10.81687',
           updatedBy: 'chamathnirmal99@gmail.com',
           profilePicture: null,
@@ -384,7 +384,7 @@ describe('VacancyIdVersionHistoryPage', () => {
           },
         },
         {
-          versionNumber: 1,
+          versionNumber: 'V1.0',
           updatedAt: '2026-09-03T11:00:02.437395',
           updatedBy: 'SYSTEM',
           profilePicture: null,
@@ -442,11 +442,11 @@ describe('VacancyIdVersionHistoryPage', () => {
 
     const selectVersion = async (
       user: ReturnType<typeof userEvent.setup>,
-      versionNumber: number
+      versionOrdinal: number
     ) => {
       await user.click(
         screen.getByRole('button', {
-          name: new RegExp(`versionLabel:${versionNumber}\\b`),
+          name: new RegExp(`versionLabel:${versionOrdinal}\\b`),
         })
       );
     };

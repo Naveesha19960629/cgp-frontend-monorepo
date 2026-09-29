@@ -1048,7 +1048,7 @@ describe('resolveVersionEntries — Customizable Forms integration', () => {
 
     const entries = resolveVersionEntries(
       {
-        versionNumber: 23,
+        versionNumber: 'V23.0',
         updatedAt: '2026-08-28T09:58:02.808603',
         updatedBy: 'pmo@oxoholdings.group',
         profilePicture: null,

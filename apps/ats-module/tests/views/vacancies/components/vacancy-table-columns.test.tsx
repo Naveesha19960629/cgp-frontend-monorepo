@@ -99,7 +99,7 @@ const sampleRow: VacancyTableColumn = {
   updatedAt: '2026-05-29T11:15:00.000Z',
   updatedAtLabel: 'May 29, 2026',
   updatedBy: 'Cloud Operations',
-  version: 1,
+  version: 'V1.0',
   status: 'ON_HOLD',
   availableActions: ['VIEW', 'EDIT', 'CLOSE'],
   vacancyLink:

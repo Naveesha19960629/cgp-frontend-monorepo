@@ -12,6 +12,7 @@ import {
 import { useVacancyVersionHistoryQuery } from '@/views/vacancies/hooks';
 import {
   buildVersionHistoryPdfBlob,
+  compareVersionNumbersDesc,
   formatDisplayDate,
 } from '@/views/vacancies/utils';
 
@@ -49,7 +50,7 @@ export default function VacancyIdVersionHistoryPage() {
   const { id } = useParams<'id'>();
   const [isDownloading, setIsDownloading] = useState(false);
   const [selectedVersionNumber, setSelectedVersionNumber] = useState<
-    number | null
+    string | null
   >(null);
 
   const { data: queryResponse, isLoading } = useVacancyVersionHistoryQuery(
@@ -61,9 +62,7 @@ export default function VacancyIdVersionHistoryPage() {
 
   const sortedVersions = useMemo(
     () =>
-      [...(versionHistoryData?.versions ?? [])].sort(
-        (a, b) => b.versionNumber - a.versionNumber
-      ),
+      [...(versionHistoryData?.versions ?? [])].sort(compareVersionNumbersDesc),
     [versionHistoryData]
   );
   const latestVersionNumber = sortedVersions[0]?.versionNumber;
@@ -249,7 +248,7 @@ export default function VacancyIdVersionHistoryPage() {
             <>
               <VersionHistorySidebar
                 versions={sortedVersions}
-                selectedVersionNumber={effectiveSelectedVersionNumber ?? -1}
+                selectedVersionNumber={effectiveSelectedVersionNumber ?? ''}
                 onSelectVersion={setSelectedVersionNumber}
                 createdBy={versionHistoryData.createdBy}
               />

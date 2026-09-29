@@ -4,7 +4,9 @@ import { useTranslation } from 'react-i18next';
 
 import type { VersionHistorySidebarProps } from '@/views/vacancies/types';
 import {
+  compareVersionNumbersDesc,
   formatVersionListDate,
+  formatVersionNumber,
   isSystemActor,
   resolveVersionActor,
 } from '@/views/vacancies/utils';
@@ -35,9 +37,7 @@ export default function VersionHistorySidebar({
   createdBy,
 }: Readonly<VersionHistorySidebarProps>) {
   const { t } = useTranslation('ats');
-  const sortedVersions = [...versions].sort(
-    (a, b) => b.versionNumber - a.versionNumber
-  );
+  const sortedVersions = [...versions].sort(compareVersionNumbersDesc);
 
   return (
     // Figma's sidebar is 471 of the 1628px content width (29%); keeping it
@@ -56,6 +56,9 @@ export default function VersionHistorySidebar({
         const actor = resolveVersionActor(version, createdBy);
         const isSystem = isSystemActor(actor);
         const actorLabel = isSystem ? t('versionHistory.systemLabel') : actor;
+        // versionNumber arrives pre-formatted as "V{n}.0" (CR-14) — Figma's
+        // row heading drops only the "V" prefix, showing e.g. "2.0".
+        const displayVersionNumber = formatVersionNumber(version.versionNumber);
 
         return (
           <button
@@ -66,7 +69,7 @@ export default function VersionHistorySidebar({
             // Figma); the full "Version N" phrasing stays in the accessible
             // name so screen readers and tests aren't left with a bare digit.
             aria-label={t('versionHistory.sidebar.versionLabel', {
-              number: version.versionNumber,
+              number: displayVersionNumber,
             })}
             onClick={() => onSelectVersion(version.versionNumber)}
             className={cn(
@@ -81,7 +84,7 @@ export default function VersionHistorySidebar({
                   isSelected ? 'text-[#075056]' : 'text-[#0f172a]'
                 )}
               >
-                {version.versionNumber}
+                {displayVersionNumber}
               </span>
               <span className="text-sm leading-5 font-medium whitespace-nowrap text-[#0f172a]">
                 {formatVersionListDate(version.updatedAt)}

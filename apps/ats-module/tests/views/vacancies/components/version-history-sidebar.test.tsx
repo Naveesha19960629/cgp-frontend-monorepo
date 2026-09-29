@@ -14,14 +14,14 @@ const CREATED_BY = 'sahanlmsl@gmail.com';
 
 const versions = [
   {
-    versionNumber: 1,
+    versionNumber: 'V1.0',
     updatedAt: '2026-01-01T10:00:00.000',
     updatedBy: 'SYSTEM',
     profilePicture: null,
     changes: { user: [], system: [] },
   },
   {
-    versionNumber: 2,
+    versionNumber: 'V2.0',
     updatedAt: '2026-07-07T21:40:43.804959',
     updatedBy: 'ruvin@oxoholdings.group',
     profilePicture: null,
@@ -30,13 +30,13 @@ const versions = [
 ];
 
 const renderSidebar = (props?: {
-  selectedVersionNumber?: number;
+  selectedVersionNumber?: string;
   onSelectVersion?: () => void;
 }) =>
   render(
     <VersionHistorySidebar
       versions={versions}
-      selectedVersionNumber={props?.selectedVersionNumber ?? 2}
+      selectedVersionNumber={props?.selectedVersionNumber ?? 'V2.0'}
       onSelectVersion={props?.onSelectVersion ?? vi.fn()}
       createdBy={CREATED_BY}
     />
@@ -54,10 +54,11 @@ describe('VersionHistorySidebar', () => {
   it('shows the bare version number as the row heading, per Figma', () => {
     renderSidebar();
 
-    // The visible label is just the number; "Version N" lives in the
-    // accessible name so screen readers still get the full phrasing.
-    expect(screen.getByText('2')).toBeInTheDocument();
-    expect(screen.getByText('1')).toBeInTheDocument();
+    // The visible label drops only the API's "V" prefix (CR-14 sends
+    // "V{n}.0"); "Version N.0" lives in the accessible name so screen
+    // readers still get the full phrasing.
+    expect(screen.getByText('2.0')).toBeInTheDocument();
+    expect(screen.getByText('1.0')).toBeInTheDocument();
   });
 
   it('shows an uppercase updated date on each row', () => {
@@ -68,7 +69,7 @@ describe('VersionHistorySidebar', () => {
   });
 
   it('marks only the selected version as pressed', () => {
-    renderSidebar({ selectedVersionNumber: 1 });
+    renderSidebar({ selectedVersionNumber: 'V1.0' });
 
     expect(
       screen.getByRole('button', { name: /versionLabel:1\b/ })
@@ -85,7 +86,7 @@ describe('VersionHistorySidebar', () => {
 
     await user.click(screen.getByRole('button', { name: /versionLabel:1\b/ }));
 
-    expect(onSelectVersion).toHaveBeenCalledWith(1);
+    expect(onSelectVersion).toHaveBeenCalledWith('V1.0');
   });
 
   it("shows each version's updater beside a small avatar", () => {
@@ -111,7 +112,7 @@ describe('VersionHistorySidebar', () => {
     const { container } = render(
       <VersionHistorySidebar
         versions={versions}
-        selectedVersionNumber={2}
+        selectedVersionNumber="V2.0"
         onSelectVersion={vi.fn()}
         createdBy="SYSTEM"
       />

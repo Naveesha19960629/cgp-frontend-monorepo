@@ -7,6 +7,7 @@
 // throws "Not a supported font format" under jsdom. Real single-realm
 // browsers don't have this problem, and neither does plain Node, so this
 // file skips jsdom entirely (tests/setup.ts no-ops for non-DOM environments).
+import { formatVersionNumber } from '@/views/vacancies/utils/version-history-helpers';
 import { buildVersionHistoryPdfBlob } from '@/views/vacancies/utils/version-history-pdf';
 
 import * as fontkitModule from 'fontkit';
@@ -170,7 +171,7 @@ const sampleData = {
   totalVersions: 1,
   versions: [
     {
-      versionNumber: 1,
+      versionNumber: 'V1.0',
       updatedAt: '2026-07-07T20:08:00.032322',
       updatedBy: 'SYSTEM',
       profilePicture: null,
@@ -329,7 +330,7 @@ describe('buildVersionHistoryPdfBlob', () => {
 
     expect(xOf('Version History')).toBe(xOf(sampleData.vacancyTitle));
     expect(xOf('Version History')).toBe(
-      xOf(String(sampleData.versions[0].versionNumber))
+      xOf(formatVersionNumber(sampleData.versions[0].versionNumber))
     );
   });
 
@@ -345,7 +346,7 @@ describe('buildVersionHistoryPdfBlob', () => {
       ...sampleData,
       versions: [
         {
-          versionNumber: 1,
+          versionNumber: 'V1.0',
           updatedAt: '2026-07-07T20:08:00.032322',
           updatedBy: 'SYSTEM',
           profilePicture: null,
@@ -381,7 +382,7 @@ describe('buildVersionHistoryPdfBlob', () => {
       ...sampleData,
       versions: [
         {
-          versionNumber: 1,
+          versionNumber: 'V1.0',
           updatedAt: '2026-07-07T20:08:00.032322',
           updatedBy: 'sahanlmsl@gmail.com',
           profilePicture: null,
@@ -420,7 +421,7 @@ describe('buildVersionHistoryPdfBlob', () => {
       ...sampleData,
       versions: [
         {
-          versionNumber: 1,
+          versionNumber: 'V1.0',
           updatedAt: '2026-07-07T20:08:00.032322',
           updatedBy: 'sahanlmsl@gmail.com',
           profilePicture: null,
@@ -467,7 +468,7 @@ describe('buildVersionHistoryPdfBlob', () => {
       ...sampleData,
       versions: [
         {
-          versionNumber: 1,
+          versionNumber: 'V1.0',
           updatedAt: '2026-07-07T20:08:00.032322',
           updatedBy: 'Sabrina Dorsey',
           profilePicture: null,
@@ -524,7 +525,7 @@ describe('buildVersionHistoryPdfBlob', () => {
       ...sampleData,
       versions: [
         {
-          versionNumber: 1,
+          versionNumber: 'V1.0',
           updatedAt: '2026-07-07T20:08:00.032322',
           updatedBy: 'Sabrina Dorsey',
           profilePicture: null,
@@ -562,7 +563,7 @@ describe('buildVersionHistoryPdfBlob', () => {
       ...sampleData,
       versions: [
         {
-          versionNumber: 1,
+          versionNumber: 'V1.0',
           updatedAt: '2026-07-07T20:08:00.032322',
           updatedBy: 'SYSTEM',
           profilePicture: null,
@@ -605,7 +606,7 @@ describe('buildVersionHistoryPdfBlob', () => {
       ...sampleData,
       versions: [
         {
-          versionNumber: 1,
+          versionNumber: 'V1.0',
           updatedAt: '2026-07-07T20:08:00.032322',
           updatedBy: 'sahanlmsl@gmail.com',
           profilePicture: null,
@@ -645,7 +646,7 @@ describe('buildVersionHistoryPdfBlob', () => {
       ...sampleData,
       versions: [
         {
-          versionNumber: 1,
+          versionNumber: 'V1.0',
           updatedAt: '2026-07-07T20:08:00.032322',
           updatedBy: 'sahanlmsl@gmail.com',
           profilePicture: null,
@@ -682,7 +683,7 @@ describe('buildVersionHistoryPdfBlob', () => {
       ...sampleData,
       versions: [
         {
-          versionNumber: 1,
+          versionNumber: 'V1.0',
           updatedAt: '2026-07-07T20:08:00.032322',
           updatedBy: 'SYSTEM',
           profilePicture: null,
@@ -724,7 +725,7 @@ describe('buildVersionHistoryPdfBlob', () => {
       ...sampleData,
       versions: [
         {
-          versionNumber: 1,
+          versionNumber: 'V1.0',
           updatedAt: '2026-07-07T20:08:00.032322',
           updatedBy: 'ruvin@oxoholdings.group',
           profilePicture: null,
@@ -754,7 +755,7 @@ describe('buildVersionHistoryPdfBlob', () => {
       ...sampleData,
       versions: [
         {
-          versionNumber: 1,
+          versionNumber: 'V1.0',
           updatedAt: '2026-07-07T20:08:00.032322',
           updatedBy: 'ruvin@oxoholdings.group',
           profilePicture: null,
@@ -798,7 +799,7 @@ describe('buildVersionHistoryPdfBlob', () => {
       ...sampleData,
       versions: [
         {
-          versionNumber: 1,
+          versionNumber: 'V1.0',
           updatedAt: '2026-07-07T20:08:00.032322',
           updatedBy: 'SYSTEM',
           profilePicture: null,
@@ -842,7 +843,7 @@ describe('buildVersionHistoryPdfBlob', () => {
       totalVersions: 2,
       versions: [
         {
-          versionNumber: 2,
+          versionNumber: 'V2.0',
           updatedAt: '2026-07-07T21:40:43.804959',
           updatedBy: 'sahanlmsl@gmail.com',
           profilePicture: null,
@@ -894,7 +895,7 @@ describe('buildVersionHistoryPdfBlob', () => {
           },
         },
         {
-          versionNumber: 1,
+          versionNumber: 'V1.0',
           updatedAt: '2026-07-07T20:08:00.032322',
           updatedBy: 'SYSTEM',
           profilePicture: null,
@@ -938,7 +939,7 @@ describe('buildVersionHistoryPdfBlob', () => {
       ...sampleData,
       versions: [
         {
-          versionNumber: 1,
+          versionNumber: 'V1.0',
           updatedAt: '2026-07-07T20:08:00.032322',
           updatedBy: 'SYSTEM',
           profilePicture: null,
@@ -977,7 +978,7 @@ describe('buildVersionHistoryPdfBlob', () => {
       totalVersions: 2,
       versions: [
         {
-          versionNumber: 2,
+          versionNumber: 'V2.0',
           updatedAt: '2026-07-07T21:40:43.804959',
           updatedBy: 'SYSTEM',
           profilePicture: null,
@@ -995,7 +996,7 @@ describe('buildVersionHistoryPdfBlob', () => {
           },
         },
         {
-          versionNumber: 1,
+          versionNumber: 'V1.0',
           // Deliberately a different day from version 2 so the two sidebar
           // rows are distinguishable by their (uppercase) dates — the rows
           // themselves show a bare version number, as in Figma.
@@ -1019,7 +1020,7 @@ describe('buildVersionHistoryPdfBlob', () => {
     };
 
     const blob = await buildVersionHistoryPdfBlob(data, {
-      selectedVersionNumber: 1,
+      selectedVersionNumber: 'V1.0',
     });
     const pages = await readPdfPageTexts(blob);
 
@@ -1039,15 +1040,15 @@ describe('buildVersionHistoryPdfBlob', () => {
   // the same fixed height, so this many versions is guaranteed to overflow
   // regardless of exact font-metric rounding in the test environment.
   const manyVersions = Array.from({ length: 15 }, (_, i) => {
-    const versionNumber = i + 1;
+    const versionOrdinal = i + 1;
     return {
-      versionNumber,
+      versionNumber: `V${versionOrdinal}.0`,
       updatedAt: new Date(2026, i, 5, 10, 0, 0).toISOString(),
       updatedBy: 'sahanlmsl@gmail.com',
       profilePicture: null,
       changes: {
         user:
-          versionNumber === 1
+          versionOrdinal === 1
             ? [
                 {
                   changeType: 'VACANCY_CREATED' as const,
@@ -1057,7 +1058,7 @@ describe('buildVersionHistoryPdfBlob', () => {
                   newValue: ['Vice President'],
                 },
               ]
-            : versionNumber === 15
+            : versionOrdinal === 15
               ? [
                   {
                     changeType: 'FIELD_VALUE_REMOVED' as const,
@@ -1092,7 +1093,7 @@ describe('buildVersionHistoryPdfBlob', () => {
         totalVersions: manyVersions.length,
         versions: manyVersions,
       },
-      { selectedVersionNumber: 15 }
+      { selectedVersionNumber: 'V15.0' }
     );
     const pages = await readPdfPageTexts(blob);
 
@@ -1114,7 +1115,7 @@ describe('buildVersionHistoryPdfBlob', () => {
         totalVersions: manyVersions.length,
         versions: manyVersions,
       },
-      { selectedVersionNumber: 15 }
+      { selectedVersionNumber: 'V15.0' }
     );
     const pages = await readPdfPageTexts(blob);
     const allPagesText = pages.join('\n');
@@ -1140,7 +1141,7 @@ describe('buildVersionHistoryPdfBlob', () => {
         totalVersions: manyVersions.length,
         versions: manyVersions,
       },
-      { selectedVersionNumber: 1 }
+      { selectedVersionNumber: 'V1.0' }
     );
     const pages = await readPdfPageTexts(blob);
     const allPagesText = pages.join('\n');
@@ -1158,7 +1159,7 @@ describe('buildVersionHistoryPdfBlob', () => {
       totalVersions: 2,
       versions: [
         {
-          versionNumber: 2,
+          versionNumber: 'V2.0',
           updatedAt: '2026-07-07T21:40:43.804959',
           updatedBy: 'SYSTEM',
           profilePicture: null,
@@ -1176,7 +1177,7 @@ describe('buildVersionHistoryPdfBlob', () => {
           },
         },
         {
-          versionNumber: 1,
+          versionNumber: 'V1.0',
           updatedAt: '2026-07-07T20:08:00.032322',
           updatedBy: 'SYSTEM',
           profilePicture: null,
@@ -1223,7 +1224,7 @@ describe('buildVersionHistoryPdfBlob', () => {
       totalVersions: 4,
       versions: [
         {
-          versionNumber: 4,
+          versionNumber: 'V4.0',
           updatedAt: '2026-07-07T21:40:43.804959',
           updatedBy: 'sahanlmsl@gmail.com',
           profilePicture: null,
@@ -1265,7 +1266,7 @@ describe('buildVersionHistoryPdfBlob', () => {
           },
         },
         {
-          versionNumber: 2,
+          versionNumber: 'V2.0',
           updatedAt: '2026-07-07T20:55:43.071146',
           updatedBy: 'sahanlmsl@gmail.com',
           profilePicture: null,
@@ -1283,7 +1284,7 @@ describe('buildVersionHistoryPdfBlob', () => {
           },
         },
         {
-          versionNumber: 1,
+          versionNumber: 'V1.0',
           updatedAt: '2026-07-07T20:08:00.032322',
           updatedBy: 'SYSTEM',
           profilePicture: null,
@@ -1320,7 +1321,7 @@ describe('buildVersionHistoryPdfBlob', () => {
     // Version 4 (the latest) is selected — its "user" entries must be
     // attributed to the real updatedBy email, not "System".
     const blob = await buildVersionHistoryPdfBlob(realApiResponseData, {
-      selectedVersionNumber: 4,
+      selectedVersionNumber: 'V4.0',
     });
     const pages = await readPdfPageTexts(blob);
 
@@ -1353,7 +1354,7 @@ describe('buildVersionHistoryPdfBlob', () => {
     // so they must be attributed to the vacancy's createdBy — only the
     // automatic status transition under changes.system reads as "System".
     const version1Blob = await buildVersionHistoryPdfBlob(realApiResponseData, {
-      selectedVersionNumber: 1,
+      selectedVersionNumber: 'V1.0',
     });
     const version1Pages = await readPdfPageTexts(version1Blob);
     expect(version1Pages[0]).toContain('System');
@@ -1372,7 +1373,7 @@ describe('buildVersionHistoryPdfBlob', () => {
       ...sampleData,
       versions: [
         {
-          versionNumber: 1,
+          versionNumber: 'V1.0',
           updatedAt: '2026-07-07T20:08:00.032322',
           updatedBy: 'SYSTEM',
           profilePicture: null,
@@ -1442,7 +1443,7 @@ describe('buildVersionHistoryPdfBlob', () => {
       totalVersions: 6,
       versions: [
         {
-          versionNumber: 6,
+          versionNumber: 'V6.0',
           updatedAt: '2026-08-17T10:32:34.223133',
           updatedBy: 'chamathnirmal99@gmail.com',
           profilePicture: null,
@@ -1509,7 +1510,7 @@ describe('buildVersionHistoryPdfBlob', () => {
           },
         },
         {
-          versionNumber: 5,
+          versionNumber: 'V5.0',
           updatedAt: '2026-08-11T17:59:04.149824',
           updatedBy: 'SYSTEM',
           profilePicture: null,
@@ -1626,7 +1627,7 @@ describe('buildVersionHistoryPdfBlob', () => {
           },
         },
         {
-          versionNumber: 3,
+          versionNumber: 'V3.0',
           updatedAt: '2026-08-11T00:43:49.037074',
           updatedBy: 'SYSTEM',
           profilePicture: null,
@@ -1661,7 +1662,7 @@ describe('buildVersionHistoryPdfBlob', () => {
           },
         },
         {
-          versionNumber: 1,
+          versionNumber: 'V1.0',
           updatedAt: '2026-08-06T11:33:20.515621',
           updatedBy: 'SYSTEM',
           profilePicture: null,
@@ -1717,7 +1718,7 @@ describe('buildVersionHistoryPdfBlob', () => {
     // rather than expecting everything in one default (latest-selected)
     // render.
     const [v6Text, v5Text, v3Text, v1Text] = await Promise.all(
-      [6, 5, 3, 1].map(async selectedVersionNumber => {
+      ['V6.0', 'V5.0', 'V3.0', 'V1.0'].map(async selectedVersionNumber => {
         const blob = await buildVersionHistoryPdfBlob(realResponseData, {
           selectedVersionNumber,
         });
