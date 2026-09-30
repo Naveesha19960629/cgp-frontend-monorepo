@@ -56,6 +56,24 @@ const isDataTakenFromCandidateChange = (
 const isSectionStatusChange = (change: VacancyVersionHistoryChange): boolean =>
   change.fieldName.trim().toLowerCase() === 'section status';
 
+// versionNumber arrives from the API pre-formatted as a "V{n}.0" string
+// (CR-14, was a plain number). Figma's version-history screens (sidebar,
+// PDF) show the bare "{n}.0" without the "V" prefix, so it's dropped here
+// rather than parsed down to just the integer ordinal.
+const formatVersionNumber = (versionNumber: string): string =>
+  versionNumber.replace(/^v/i, '');
+
+// Sorting/comparison still needs a numeric value — lexicographic sort would
+// otherwise misorder e.g. "12.0" ahead of "2.0".
+const parseVersionOrdinal = (versionNumber: string): number =>
+  Number.parseFloat(formatVersionNumber(versionNumber)) || 0;
+
+const compareVersionNumbersDesc = (
+  a: { versionNumber: string },
+  b: { versionNumber: string }
+): number =>
+  parseVersionOrdinal(b.versionNumber) - parseVersionOrdinal(a.versionNumber);
+
 const getSingleScalar = (value: unknown[] | null): string | null => {
   if (!value || value.length === 0) return null;
   const [first] = value;
@@ -701,6 +719,9 @@ const resolveVersionEntries = (
 export {
   normalizeStatusKey,
   parseBooleanFlag,
+  formatVersionNumber,
+  parseVersionOrdinal,
+  compareVersionNumbersDesc,
   isDataTakenFromCandidateChange,
   isSectionStatusChange,
   getSingleScalar,

@@ -17,7 +17,7 @@ describe('VersionHistoryActivityLog', () => {
       <VersionHistoryActivityLog
         createdBy={CREATED_BY}
         version={{
-          versionNumber: 1,
+          versionNumber: 'V1.0',
           updatedAt: '2026-07-07T20:08:00.032322',
           updatedBy: 'SYSTEM',
           profilePicture: null,
@@ -49,7 +49,7 @@ describe('VersionHistoryActivityLog', () => {
       <VersionHistoryActivityLog
         createdBy={CREATED_BY}
         version={{
-          versionNumber: 2,
+          versionNumber: 'V2.0',
           updatedAt: '2026-07-07T21:40:43.804959',
           updatedBy: 'ruvin@oxoholdings.group',
           profilePicture: null,
@@ -96,7 +96,7 @@ describe('VersionHistoryActivityLog', () => {
       <VersionHistoryActivityLog
         createdBy={CREATED_BY}
         version={{
-          versionNumber: 1,
+          versionNumber: 'V1.0',
           updatedAt: '2026-07-07T20:08:00.032322',
           updatedBy: 'SYSTEM',
           profilePicture: null,
@@ -144,7 +144,7 @@ describe('VersionHistoryActivityLog', () => {
       <VersionHistoryActivityLog
         createdBy={CREATED_BY}
         version={{
-          versionNumber: 2,
+          versionNumber: 'V2.0',
           updatedAt: '2026-07-07T20:55:43.071146',
           updatedBy: 'ruvin@oxoholdings.group',
           profilePicture: null,
@@ -187,7 +187,7 @@ describe('VersionHistoryActivityLog', () => {
       <VersionHistoryActivityLog
         createdBy={CREATED_BY}
         version={{
-          versionNumber: 2,
+          versionNumber: 'V2.0',
           updatedAt: '2026-07-07T20:55:43.071146',
           updatedBy: 'ruvin@oxoholdings.group',
           profilePicture: null,
