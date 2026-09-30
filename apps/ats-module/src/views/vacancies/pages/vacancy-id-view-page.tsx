@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 import {
   VacancyCausesSection,
@@ -37,8 +37,10 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 export default function VacancyIdViewPage() {
   const { t } = useTranslation('ats');
   const navigate = useNavigate();
+  const location = useLocation();
   const { id } = useParams<'id'>();
   const { keycloak, initialized } = useKeycloak();
+  const fromPath = (location.state as { from?: string } | null)?.from ?? '';
 
   const {
     data: vacancyResponse,
@@ -111,7 +113,7 @@ export default function VacancyIdViewPage() {
             applicantCount={viewModel.applicantCount}
           />
         }
-        onBack={() => void navigate('/dashboard/ats/vacancies')}
+        onBack={() => void navigate(fromPath || '/dashboard/ats/vacancies')}
       />
 
       <VacancyView.Body>

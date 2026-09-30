@@ -42,6 +42,13 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 
+// nuqs updates the search/filter query string via shallow history.pushState /
+// replaceState calls (see the nuqs react-router adapter), bypassing
+// react-router's own navigate — so react-router's useLocation() never sees
+// those updates and stays stale. window.location is the only source that's
+// always in sync with the URL nuqs actually wrote.
+const getListUrl = () => `${window.location.pathname}${window.location.search}`;
+
 export default function VacanciesPage() {
   const { t } = useTranslation('ats');
   const navigate = useNavigate();
@@ -322,7 +329,9 @@ export default function VacanciesPage() {
         sortOrder: params.sortOrder,
         onSort: handleSort,
         onView: (vacancyId: string) =>
-          void navigate(`/dashboard/ats/vacancies/${vacancyId}/view`),
+          void navigate(`/dashboard/ats/vacancies/${vacancyId}/view`, {
+            state: { from: getListUrl() },
+          }),
         onEdit: (vacancyId: string) =>
           void navigate(`/dashboard/ats/vacancies/${vacancyId}/edit`),
         onDelete: (vacancyId: string) => setDeleteVacancyId(vacancyId),
@@ -376,7 +385,9 @@ export default function VacanciesPage() {
         table={table}
         isLoading={isFetching}
         onRowClick={row =>
-          void navigate(`/dashboard/ats/vacancies/${row.vacancyId}/view`)
+          void navigate(`/dashboard/ats/vacancies/${row.vacancyId}/view`, {
+            state: { from: getListUrl() },
+          })
         }
       />
     );
