@@ -3,7 +3,7 @@ import { Add } from 'iconsax-reactjs';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 import type {
   VacancyQueryParams,
@@ -42,10 +42,16 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 
+// nuqs updates the search/filter query string via shallow history.pushState /
+// replaceState calls (see the nuqs react-router adapter), bypassing
+// react-router's own navigate — so react-router's useLocation() never sees
+// those updates and stays stale. window.location is the only source that's
+// always in sync with the URL nuqs actually wrote.
+const getListUrl = () => `${window.location.pathname}${window.location.search}`;
+
 export default function VacanciesPage() {
   const { t } = useTranslation('ats');
   const navigate = useNavigate();
-  const location = useLocation();
   const [params, setParams] = useVacancyTableParams();
   const { keycloak, initialized } = useKeycloak();
 
@@ -324,7 +330,7 @@ export default function VacanciesPage() {
         onSort: handleSort,
         onView: (vacancyId: string) =>
           void navigate(`/dashboard/ats/vacancies/${vacancyId}/view`, {
-            state: { from: `${location.pathname}${location.search}` },
+            state: { from: getListUrl() },
           }),
         onEdit: (vacancyId: string) =>
           void navigate(`/dashboard/ats/vacancies/${vacancyId}/edit`),
@@ -344,8 +350,6 @@ export default function VacanciesPage() {
       handleMakeACopy,
       handleCopyLink,
       navigate,
-      location.pathname,
-      location.search,
       t,
     ]
   );
@@ -382,7 +386,7 @@ export default function VacanciesPage() {
         isLoading={isFetching}
         onRowClick={row =>
           void navigate(`/dashboard/ats/vacancies/${row.vacancyId}/view`, {
-            state: { from: `${location.pathname}${location.search}` },
+            state: { from: getListUrl() },
           })
         }
       />

@@ -40,14 +40,11 @@ vi.mock('@react-keycloak/web', () => ({
   }),
 }));
 
-let mockLocation = { pathname: '/dashboard/ats/vacancies', search: '' };
-
 vi.mock('react-router-dom', async importOriginal => {
   const actual = await importOriginal<typeof import('react-router-dom')>();
   return {
     ...actual,
     useNavigate: () => navigate,
-    useLocation: () => mockLocation,
   };
 });
 
@@ -93,7 +90,7 @@ vi.mock('@/views/vacancies', async importOriginal => {
 describe('VacanciesPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockLocation = { pathname: '/dashboard/ats/vacancies', search: '' };
+    window.history.pushState({}, '', '/dashboard/ats/vacancies');
     useVacanciesQueryMock.mockReturnValue({
       data: undefined,
       isLoading: false,
@@ -189,12 +186,17 @@ describe('VacanciesPage', () => {
   // CR-19: opening a vacancy from the (possibly filtered) list must carry
   // the current list URL along as router state, so the vacancy view page's
   // Back button can return the recruiter to the exact same search/filter
-  // results instead of a bare, unfiltered /vacancies.
+  // results instead of a bare, unfiltered /vacancies. This must read the
+  // real window.location rather than react-router's useLocation(): nuqs
+  // (the search/filter URL state library) updates the URL via shallow
+  // history.pushState/replaceState, which react-router's own location
+  // tracking never observes, leaving useLocation() stale.
   it('passes the current list URL as router state to the onView column action', () => {
-    mockLocation = {
-      pathname: '/dashboard/ats/vacancies',
-      search: '?search=engineer&status=LIVE',
-    };
+    window.history.pushState(
+      {},
+      '',
+      '/dashboard/ats/vacancies?search=engineer&status=LIVE'
+    );
     useVacanciesQueryMock.mockReturnValue({
       isLoading: false,
       data: { data: { content: [{ id: '1' }], totalPages: 1 } },
@@ -211,6 +213,34 @@ describe('VacanciesPage', () => {
       {
         state: { from: '/dashboard/ats/vacancies?search=engineer&status=LIVE' },
       }
+    );
+  });
+
+  // Regression for CR-19: a real recruiter session applies filters (via
+  // nuqs, after mount) before ever opening a vacancy — react-router's
+  // useLocation() would still report the pre-filter URL it was mounted
+  // with, so the "from" state must be read fresh at click-time rather than
+  // pre-computed once at render.
+  it('reflects a filter applied after mount, not the URL captured at mount time', () => {
+    window.history.pushState({}, '', '/dashboard/ats/vacancies');
+    useVacanciesQueryMock.mockReturnValue({
+      isLoading: false,
+      data: { data: { content: [{ id: '1' }], totalPages: 1 } },
+    });
+
+    render(<VacanciesPage />);
+
+    // Simulate nuqs's shallow history.pushState from applying a filter —
+    // deliberately not routed through react-router's navigate.
+    window.history.pushState({}, '', '/dashboard/ats/vacancies?discipline=IT');
+
+    const { onView } = createVacancyColumnsMock.mock
+      .calls[0][0] as CreateColumnsOptions;
+    onView('vacancy-2');
+
+    expect(navigate).toHaveBeenCalledWith(
+      '/dashboard/ats/vacancies/vacancy-2/view',
+      { state: { from: '/dashboard/ats/vacancies?discipline=IT' } }
     );
   });
 
