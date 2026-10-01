@@ -923,6 +923,7 @@ interface VacancyDetailPatentEntry {
 
 interface VacancyDetailData {
   vacancyId: string;
+  vacancyIdHashtag?: string | null;
   baseVacancyId: string;
   vacancyTemplateId?: string | null;
   title: string;
@@ -1171,6 +1172,7 @@ interface NotifyApplicantsPayload {
 
 interface VacancyTableColumn {
   vacancyId: string;
+  vacancyIdHashtag?: string | null;
   title: string;
   jobTitle: string[];
   discipline: string;

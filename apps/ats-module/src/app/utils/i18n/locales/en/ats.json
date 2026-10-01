@@ -570,7 +570,7 @@
       "selectAll": "Select all",
       "selectRow": "Select row",
       "columns": {
-        "id": "ID",
+        "id": "Vacancy ID",
         "title": "Title",
         "jobTitle": "Job Title",
         "discipline": "Discipline",

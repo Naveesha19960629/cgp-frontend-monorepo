@@ -83,6 +83,7 @@ const onCopyLink = vi.fn();
 
 const sampleRow: VacancyTableColumn = {
   vacancyId: 'f4e3d2c1-b0a9-8f7e-6d5c-4b3a2f1e0d9c',
+  vacancyIdHashtag: '#A1B2C3',
   title: 'DevOps Engineer - AWS/Kubernetes',
   jobTitle: ['DevOps Engineer'],
   discipline: 'Infrastructure',
@@ -211,8 +212,8 @@ describe('createVacancyColumns', () => {
 
   it.each([
     {
-      description: 'vacancyId as first 4 chars uppercase with # prefix',
-      expectedText: '#F4E3',
+      description: 'the vacancyIdHashtag from the API as-is',
+      expectedText: '#A1B2C3',
     },
     {
       description: 'the title cell content',
@@ -311,6 +312,18 @@ describe('createVacancyColumns', () => {
 
     expect(screen.getAllByText('DevOps Engineer')).not.toHaveLength(0);
     expect(screen.getAllByText('Individual Contributor')).not.toHaveLength(0);
+  });
+
+  it('renders N/A in the Vacancy ID cell for vacancies created before the hashtag existed (CR-27)', () => {
+    render(<TableWrapper data={[{ ...sampleRow, vacancyIdHashtag: null }]} />);
+
+    expect(screen.getByTestId('vacancy-id-hashtag')).toHaveTextContent('N/A');
+  });
+
+  it('does not derive the Vacancy ID from the UUID (CR-27)', () => {
+    render(<TableWrapper data={[sampleRow]} />);
+
+    expect(screen.queryByText('#F4E3')).not.toBeInTheDocument();
   });
 
   it('renders an empty job title cell without crashing when the field is missing entirely', () => {
