@@ -64,8 +64,8 @@
     "heading": "Create Template",
     "nameLabel": "Template Name",
     "namePlaceholder": "Enter template name",
-    "nameRequired": "Template name is required",
-    "nameMaxLength": "Exceeded maximum character length of {{max}}",
+    "nameRequired": "Template name is required.",
+    "nameMaxLength": "Exceeded maximum character length of {{max}}.",
     "dataFromCandidate": "If selected, no manual input is required, and data will be taken from the candidate profile",
     "cancel": "Cancel",
     "create": "Create Template",
@@ -403,15 +403,15 @@
     "noAssociatedCareerPathsTitle": "Career Path Not Found",
     "noAssociatedCareerPaths": "No associated career paths with the selected discipline. Add a career path to continue.",
     "noAssociatedRolesTitle": "Role Not Found",
-    "noAssociatedRoles": "No associated role with the selected career path. Add a role to continue.",
+    "noAssociatedRoles": "No associated roles with the selected career path. Add a role to continue.",
     "errors": {
       "maxSelections": "Exceeded maximum of {{max}} selections.",
       "required": {
-        "discipline": "Discipline is required",
-        "careerPath": "Career path is required",
-        "level": "Level is required",
-        "role": "Role is required",
-        "jobTitle": "Job title is required"
+        "discipline": "Discipline is required.",
+        "careerPath": "Career Path is required.",
+        "level": "Level is required.",
+        "role": "Role is required.",
+        "jobTitle": "Job Title is required."
       }
     },
     "dependencyHints": {
@@ -562,7 +562,7 @@
       "formTitle": "Lets Begin with the Vacancy Title",
       "fieldTitle": "Title",
       "titlePlaceholder": "Enter title",
-      "titleRequired": "Title is required",
+      "titleRequired": "Title is required.",
       "cancelButton": "Cancel",
       "nextButton": "Next"
     },
@@ -668,15 +668,15 @@
     },
     "errors": {
       "errorTitle": "Error",
-      "maxLengthExceeded": "Exceeded maximum character length of {{max}}",
-      "maxFormsExceeded": "Exceeded maximum of 5 forms allowed",
-      "maxQuestionsExceeded": "Exceeded maximum of 10 questions allowed per form",
-      "maxOptionsExceeded": "Exceeded maximum of 5 options allowed",
-      "requiredQuestion": "Question is required",
-      "requiredType": "Type is required",
-      "requiredSectionTitle": "Section title is required",
-      "requiredFormTitle": "Form title is required",
-      "requiredOption": "Option is required",
+      "maxLengthExceeded": "Exceeded maximum character length of {{max}}.",
+      "maxFormsExceeded": "Exceeded maximum of 5 forms allowed.",
+      "maxQuestionsExceeded": "Exceeded maximum of 10 questions allowed per form.",
+      "maxOptionsExceeded": "Exceeded maximum of 5 options allowed.",
+      "requiredQuestion": "Question is required.",
+      "requiredType": "Type is required.",
+      "requiredSectionTitle": "Section title is required.",
+      "requiredFormTitle": "Form title is required.",
+      "requiredOption": "Option is required.",
       "duplicateOption": "Duplicate option values are not allowed."
     },
     "question": {
@@ -717,7 +717,7 @@
   },
   "vacancyCancelDialog": {
     "title": "Are you sure?",
-    "description": "Are you sure you want to exit the vacancy creation workflow? Any unsaved changes will be lost",
+    "description": "Are you sure you want to exit the vacancy creation workflow? Any unsaved changes will be lost.",
     "discardButton": "Discard and Exit",
     "saveAsDraftButton": "Save as Draft",
     "notifications": {
@@ -951,8 +951,8 @@
       "schoolUrlPlaceholder": "Enter your school URL",
       "cancel": "Cancel",
       "addNow": "Add Now",
-      "nameRequired": "School name is required",
-      "locationRequired": "School location is required",
+      "nameRequired": "School name is required.",
+      "locationRequired": "School location is required.",
       "schoolUrlInvalid": "School URL must start with http:// or https://.",
       "schoolUrlFormat": "School URL must be a valid format.",
       "success": {
@@ -1036,8 +1036,8 @@
       "urlPlaceholder": "Enter awarding body/institute URL",
       "cancel": "Cancel",
       "addNow": "Add Now",
-      "nameRequired": "Awarding body/institute name is required",
-      "locationRequired": "Awarding body/institute location is required",
+      "nameRequired": "Awarding body/institute name is required.",
+      "locationRequired": "Awarding body/institute location is required.",
       "urlInvalid": "Awarding Body/Institute URL must start with http:// or https://.",
       "urlFormat": "Awarding Body/Institute URL must be a valid format.",
       "success": {
@@ -1170,7 +1170,7 @@
       "typeToSearch": "Type to search skills…"
     },
     "validation": {
-      "maxSkills": "Exceeded maximum of {{max}} selections",
+      "maxSkills": "Exceeded maximum of {{max}} selections.",
       "careerPathRequired": "Career Path is required.",
       "levelRequired": "Level is required."
     },
@@ -1214,7 +1214,7 @@
       "typeToSearch": "Type to search languages…"
     },
     "validation": {
-      "maxLanguages": "Exceeded maximum of {{max}} selections"
+      "maxLanguages": "Exceeded maximum of {{max}} selections."
     },
     "chip": {
       "remove": "Remove {{name}}"
@@ -1242,7 +1242,7 @@
       "typeToSearch": "Type to search causes…"
     },
     "validation": {
-      "maxCauses": "Exceeded maximum of {{max}} selections"
+      "maxCauses": "Exceeded maximum of {{max}} selections."
     },
     "chip": {
       "remove": "Remove {{name}}"
@@ -1270,7 +1270,7 @@
       "typeToSearch": "Type to search hobbies…"
     },
     "validation": {
-      "maxHobbies": "Exceeded maximum of {{max}} selections"
+      "maxHobbies": "Exceeded maximum of {{max}} selections."
     },
     "chip": {
       "remove": "Remove {{name}}"
@@ -1298,7 +1298,7 @@
       "typeToSearch": "Type to search industries…"
     },
     "validation": {
-      "maxIndustries": "Exceeded maximum of {{max}} selections"
+      "maxIndustries": "Exceeded maximum of {{max}} selections."
     },
     "chip": {
       "remove": "Remove {{name}}"
@@ -1351,7 +1351,7 @@
       "organizations": "No organizations found"
     },
     "errors": {
-      "maxSelections": "Exceeded maximum of 10 selections"
+      "maxSelections": "Exceeded maximum of 10 selections."
     },
     "notifications": {
       "disable": {
@@ -1413,7 +1413,7 @@
       "causes": "No causes found"
     },
     "errors": {
-      "maxSelections": "Exceeded maximum of 10 selections"
+      "maxSelections": "Exceeded maximum of 10 selections."
     },
     "notifications": {
       "disable": {
@@ -1466,7 +1466,7 @@
       "updateSuccessTitle": "Successfully Updated",
       "updateSuccessMessage": "Vacancy has been successfully updated.",
       "validationErrorTitle": "Error",
-      "expirationLessOrEqualMessage": "Expiration Date & Time cannot be less than or equal to the Scheduled Publish Date & Time",
+      "expirationLessOrEqualMessage": "Expiration Date & Time cannot be less than or equal to the Scheduled Publish Date & Time.",
       "pastDateTimeMessage": "Scheduled Publish Date & Time and Expiration Date & Time cannot be in the past.",
       "exceedsMaxDateTimeMessage": "Scheduled Publish Date & Time and Expiration Date & Time must not exceed 100 years from today.",
       "apiErrorTitle": "Try Again",
@@ -1563,8 +1563,8 @@
       "locations": "No locations found"
     },
     "errors": {
-      "maxSelections": "Exceeded maximum of 10 selections",
-      "maxCharacters": "Maximum 250 characters allowed"
+      "maxSelections": "Exceeded maximum of 10 selections.",
+      "maxCharacters": "Exceeded maximum of 250 characters."
     },
     "notifications": {
       "disable": {
@@ -1693,7 +1693,7 @@
     },
     "errors": {
       "maxIndustries": "Exceeded maximum of 10 selections.",
-      "maxSelections": "Exceeded maximum of 10 selections"
+      "maxSelections": "Exceeded maximum of 10 selections."
     },
     "confirmDisableDialog": {
       "title": "Are you sure?",
