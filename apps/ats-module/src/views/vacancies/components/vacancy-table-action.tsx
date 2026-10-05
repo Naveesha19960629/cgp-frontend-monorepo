@@ -46,9 +46,12 @@ export default function VacancyTableAction({
     ? availableActions.includes('MAKE_A_COPY')
     : isUnpublished || isLive || isExpired || isOnHold;
   // Version History is not available for Unpublished vacancies.
-  const showVersionHistory = availableActions
-    ? availableActions.includes('VERSION_CONTROL')
-    : isLive || isExpired || isOnHold;
+  const showVersionHistory =
+    !isUnpublished &&
+    !isDraft &&
+    (availableActions
+      ? availableActions.includes('VERSION_CONTROL')
+      : isLive || isExpired || isOnHold);
   const showCopyLink = availableActions
     ? availableActions.includes('COPY_LINK')
     : isUnpublished || isLive || isExpired || isOnHold;

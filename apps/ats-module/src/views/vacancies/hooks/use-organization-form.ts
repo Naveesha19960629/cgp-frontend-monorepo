@@ -27,14 +27,14 @@ function createOrganizationFormSchema(
         1,
         t(
           'ats:organization.validation.nameRequired',
-          'Organization name is required'
+          'Organization Name is required.'
         )
       )
       .max(
         200,
         t(
           'ats:organization.validation.nameMaxLength',
-          'Organization name must be less than 200 characters'
+          'Organization name must be less than 200 characters.'
         )
       ),
     location: z
@@ -45,7 +45,7 @@ function createOrganizationFormSchema(
       .refine((loc: { id: string; label: string }) => loc.id.length > 0, {
         message: t(
           'ats:organization.validation.locationRequired',
-          'Location is required'
+          'Organization Location is required.'
         ),
       }),
     organizationWebSite: z
@@ -54,7 +54,7 @@ function createOrganizationFormSchema(
         200,
         t(
           'ats:organization.validation.urlMaxLength',
-          'URL must be less than 200 characters'
+          'URL must be less than 200 characters.'
         )
       )
       .refine(
