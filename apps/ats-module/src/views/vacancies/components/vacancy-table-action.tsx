@@ -55,9 +55,11 @@ export default function VacancyTableAction({
   const showCopyLink = availableActions
     ? availableActions.includes('COPY_LINK')
     : isUnpublished || isLive || isExpired || isOnHold;
-  const showMatchCandidates = availableActions
-    ? availableActions.includes('MATCH_CANDIDATE')
-    : (isLive || isExpired || isOnHold) && hasApplicants;
+  // Always available for Live/Expired/On hold vacancies with applicants,
+  // even if the API's availableActions omits MATCH_CANDIDATE.
+  const showMatchCandidates =
+    ((isLive || isExpired || isOnHold) && hasApplicants) ||
+    Boolean(availableActions?.includes('MATCH_CANDIDATE'));
   // Delete is available for Draft/Unpublished, and for Live/Expired/On hold
   // only while the vacancy has no applicants yet.
   const showDelete = availableActions

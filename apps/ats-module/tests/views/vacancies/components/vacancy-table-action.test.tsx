@@ -275,6 +275,28 @@ describe('VacancyTableAction', () => {
     expect(onMatchCandidate).toHaveBeenCalledTimes(1);
   });
 
+  it.each(['live', 'expired', 'onhold'])(
+    'shows matchCandidate for %s with applicants even when availableActions omits it',
+    async status => {
+      const user = userEvent.setup();
+      render(
+        <VacancyTableAction
+          {...defaultProps}
+          vacancy={{
+            id: 'test',
+            status,
+            applicantCount: 2,
+            availableActions: ['EDIT'],
+          }}
+        />
+      );
+      await user.click(screen.getByRole('button'));
+      expect(
+        screen.getByText('vacancies.table.actions.matchCandidate')
+      ).toBeInTheDocument();
+    }
+  );
+
   it('respects availableActions array when present', async () => {
     const user = userEvent.setup();
     render(
