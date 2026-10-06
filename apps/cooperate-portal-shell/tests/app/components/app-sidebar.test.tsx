@@ -84,10 +84,10 @@ describe('AppSidebar', () => {
     );
   });
 
-  it('marks Find Candidates active at /dashboard/ats/find-candidate', () => {
+  it('marks Match Candidates active at /dashboard/ats/find-candidate', () => {
     renderWithRouter('/dashboard/ats/find-candidate');
 
-    expect(screen.getByText('Find Candidates').closest('a')).toHaveAttribute(
+    expect(screen.getByText('Match Candidates').closest('a')).toHaveAttribute(
       'data-active',
       'true'
     );

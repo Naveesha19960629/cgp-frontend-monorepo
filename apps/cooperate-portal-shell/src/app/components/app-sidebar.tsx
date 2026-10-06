@@ -1,4 +1,4 @@
-import { ArrowDown2, I3Square, SearchNormal1 } from 'iconsax-reactjs';
+import { ArrowDown2, I3Square, Profile2User } from 'iconsax-reactjs';
 
 import type { ElementType } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -53,7 +53,7 @@ const menuItems: MenuEntry[] = [
   {
     type: 'link',
     labelKey: 'sidebar.findCandidates',
-    icon: SearchNormal1,
+    icon: Profile2User,
     href: '/dashboard/ats/find-candidate',
   },
 ];
@@ -65,7 +65,7 @@ function isPathActive(pathname: string, href: string) {
 const topLevelButtonClass = cn(
   'h-10 gap-3 text-[16px]/6 font-semibold text-slate-600',
   'hover:bg-[#E6EEEE]! hover:text-slate-600!',
-  'data-[active=true]:bg-[#E6EEEE]! data-[active=true]:font-semibold data-[active=true]:text-slate-600!'
+  'data-[active=true]:bg-[#E6EEEE]! data-[active=true]:font-semibold data-[active=true]:text-brand-primary-500!'
 );
 
 const groupButtonClass = cn(
