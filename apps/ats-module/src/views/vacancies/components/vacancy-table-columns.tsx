@@ -105,7 +105,9 @@ const createVacancyColumns = ({
     id: 'vacancyId',
     accessorKey: 'vacancyId',
     header: () => (
-      <span data-testid="id-col-label">{t('vacancies.table.columns.id')}</span>
+      <span className="ml-1" data-testid="id-col-label">
+        {t('vacancies.table.columns.id')}
+      </span>
     ),
     // CR-27: display exactly what the backend sends; vacancies created before
     // the hashtag existed have none. vacancyId (UUID) is still used for actions.
@@ -117,7 +119,8 @@ const createVacancyColumns = ({
         {row.original.vacancyIdHashtag || 'N/A'}
       </span>
     ),
-    size: 80,
+    // Figma: pinned checkbox + Vacancy ID block is 167px (44 + 123).
+    size: 123,
   },
   {
     accessorKey: 'title',
