@@ -5,6 +5,7 @@ type MockApiResponse = {
   data: {
     content: Array<{
       vacancyId: string;
+      vacancyIdHashtag?: string | null;
       title: string;
       jobTitle: string;
       discipline: string;
@@ -41,6 +42,7 @@ const mockApiResponse: MockApiResponse = {
     content: [
       {
         vacancyId: '7b1a2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d',
+        vacancyIdHashtag: '#MOCK01',
         title: 'Senior Full Stack Engineer - React/Node',
         jobTitle: 'Senior Software Engineer',
         discipline: 'Engineering',
@@ -63,6 +65,7 @@ const mockApiResponse: MockApiResponse = {
       },
       {
         vacancyId: '1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d',
+        vacancyIdHashtag: '#MOCK02',
         title: 'Lead Data Scientist - Machine Learning',
         jobTitle: 'Lead Data Scientist',
         discipline: 'Data Science',
@@ -85,6 +88,7 @@ const mockApiResponse: MockApiResponse = {
       },
       {
         vacancyId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
+        vacancyIdHashtag: '#MOCK03',
         title: 'Product Manager - Growth Team',
         jobTitle: 'Product Manager',
         discipline: 'Product',
@@ -107,6 +111,7 @@ const mockApiResponse: MockApiResponse = {
       },
       {
         vacancyId: 'f4e3d2c1-b0a9-8f7e-6d5c-4b3a2f1e0d9c',
+        vacancyIdHashtag: '#MOCK04',
         title: 'DevOps Engineer - AWS/Kubernetes',
         jobTitle: 'DevOps Engineer',
         discipline: 'Infrastructure',

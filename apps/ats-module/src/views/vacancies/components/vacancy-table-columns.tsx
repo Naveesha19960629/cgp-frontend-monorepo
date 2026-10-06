@@ -107,11 +107,16 @@ const createVacancyColumns = ({
     header: () => (
       <span data-testid="id-col-label">{t('vacancies.table.columns.id')}</span>
     ),
-    cell: ({ row }) => {
-      const id = row.original.vacancyId;
-      const shortId = id.slice(0, 4).toUpperCase();
-      return <span className="ml-1 text-sm text-slate-600">#{shortId}</span>;
-    },
+    // CR-27: display exactly what the backend sends; vacancies created before
+    // the hashtag existed have none. vacancyId (UUID) is still used for actions.
+    cell: ({ row }) => (
+      <span
+        className="ml-1 text-sm text-slate-600"
+        data-testid="vacancy-id-hashtag"
+      >
+        {row.original.vacancyIdHashtag || 'N/A'}
+      </span>
+    ),
     size: 80,
   },
   {
