@@ -249,6 +249,12 @@ export default function VacancyDataTable<TData>({
                           return;
                         }
 
+                        // Dragging to select text (e.g. to copy the Vacancy ID)
+                        // ends in a click on the row; don't navigate then.
+                        if (globalThis.getSelection()?.toString()) {
+                          return;
+                        }
+
                         onRowClick(row.original);
                       }}
                     >

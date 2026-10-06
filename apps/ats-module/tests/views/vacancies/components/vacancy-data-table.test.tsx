@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import VacancyDataTable from '@/views/vacancies/components/vacancy-data-table';
@@ -86,6 +86,22 @@ describe('VacancyDataTable', () => {
     await user.click(screen.getByText('First Row'));
 
     expect(onRowClick).toHaveBeenCalledWith(rows[0]);
+  });
+
+  it('does not call onRowClick when text is selected (drag-to-copy)', () => {
+    const onRowClick = vi.fn();
+    render(<TableWrapper data={rows} onRowClick={onRowClick} />);
+
+    const cell = screen.getByText('First Row');
+    const range = document.createRange();
+    range.selectNodeContents(cell);
+    globalThis.getSelection()?.removeAllRanges();
+    globalThis.getSelection()?.addRange(range);
+
+    fireEvent.click(cell);
+
+    expect(onRowClick).not.toHaveBeenCalled();
+    globalThis.getSelection()?.removeAllRanges();
   });
 
   it('does not call onRowClick when the status cell is clicked', async () => {
