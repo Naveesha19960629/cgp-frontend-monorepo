@@ -1598,10 +1598,10 @@ interface PatentGroupApiPayload {
 }
 
 interface HonourContentApiPayload {
-  title: string;
+  title: string | null;
   associatedOrganizations: MasterRef[];
   organizationLocations: MasterRef[];
-  issuedBy: string;
+  issuedBy: string | null;
   issuedFromDate?: string;
   issuedToDate?: string;
 }
@@ -1627,7 +1627,7 @@ interface ProjectGroupApiPayload {
 }
 
 interface PublicationContentApiPayload {
-  acceptedPublisherName: string;
+  acceptedPublisherName: string | null;
   publishedDateFrom: string;
   publishedDateTo: string;
 }
@@ -1642,7 +1642,7 @@ interface ClubSocietyContentApiPayload {
   clubSociety: MasterRef[];
   organization: MasterRef[];
   organizationLocations: MasterRef[];
-  positionRoleHeld: string;
+  positionRoleHeld: string | null;
   startDate: string;
   endDate: string;
 }
@@ -1658,7 +1658,7 @@ interface SportContentApiPayload {
   representedOrganization: MasterRef[];
   organizationLocations: MasterRef[];
   levelRepresented: MasterRef[];
-  positionRoleHeld: string;
+  positionRoleHeld: string | null;
   startDate: string;
   endDate: string;
 }
@@ -1672,7 +1672,7 @@ interface SportsGroupApiPayload {
 interface VolunteeringContentApiPayload {
   organization: MasterRef[];
   organizationLocations: MasterRef[];
-  positionRole: string;
+  positionRole: string | null;
   cause: MasterRef[];
   startDate: string;
   endDate: string;
