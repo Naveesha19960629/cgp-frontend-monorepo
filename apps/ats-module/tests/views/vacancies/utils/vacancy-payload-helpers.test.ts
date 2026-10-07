@@ -738,6 +738,32 @@ describe('toCreateVacancyPayload — honours and awards', () => {
       issuedToDate: undefined,
     });
   });
+
+  it('sends blank title and issuedBy as null', () => {
+    const payload = toCreateVacancyPayload(
+      buildBaseForm({
+        preferredHonoursAwards: {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          honoursAndAwards: [
+            {
+              title: '',
+              issuedBy: '   ',
+              issuedDateFrom: null,
+              issuedDateTo: null,
+              associatedOrganizations: [],
+              organizationLocations: [],
+              isOpen: true,
+            },
+          ],
+        },
+      })
+    );
+
+    const entry = payload.data.honoursAndAwards[0].content[0];
+    expect(entry.title).toBeNull();
+    expect(entry.issuedBy).toBeNull();
+  });
 });
 
 describe('toCreateVacancyPayload — projects', () => {
@@ -850,6 +876,22 @@ describe('toCreateVacancyPayload — publications', () => {
       publishedDateTo: '2022-03-01',
     });
   });
+
+  it('sends a blank acceptedPublisherName as null', () => {
+    const payload = toCreateVacancyPayload(
+      buildBaseForm({
+        preferredPublications: {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          publications: [{ id: 'pub1', isOpen: true, acceptedPublisher: '' }],
+        },
+      })
+    );
+
+    expect(
+      payload.data.publications[0].content[0].acceptedPublisherName
+    ).toBeNull();
+  });
 });
 
 describe('toCreateVacancyPayload — club societies', () => {
@@ -910,6 +952,32 @@ describe('toCreateVacancyPayload — club societies', () => {
       startDate: '2020-01-01',
       endDate: '2021-01-01',
     });
+  });
+
+  it('sends a blank positionRoleHeld as null', () => {
+    const payload = toCreateVacancyPayload(
+      buildBaseForm({
+        preferredClubSocieties: {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          clubSocieties: [
+            {
+              id: 'c1',
+              isOpen: true,
+              clubSociety: [],
+              clubSocietySearch: '',
+              representedOrganization: [],
+              organizationLocations: [],
+              position: '',
+            },
+          ],
+        },
+      })
+    );
+
+    expect(
+      payload.data.clubsAndSocieties[0].content[0].positionRoleHeld
+    ).toBeNull();
   });
 });
 
@@ -978,6 +1046,31 @@ describe('toCreateVacancyPayload — sports', () => {
       endDate: '2020-01-01',
     });
   });
+
+  it('sends a blank positionRoleHeld as null', () => {
+    const payload = toCreateVacancyPayload(
+      buildBaseForm({
+        preferredSports: {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          sports: [
+            {
+              id: 's1',
+              isOpen: true,
+              sport: [],
+              sportSearch: '',
+              levelRepresented: [],
+              representedOrganization: [],
+              organizationLocations: [],
+              position: '',
+            },
+          ],
+        },
+      })
+    );
+
+    expect(payload.data.sports[0].content[0].positionRoleHeld).toBeNull();
+  });
 });
 
 describe('toCreateVacancyPayload — volunteering', () => {
@@ -1038,6 +1131,30 @@ describe('toCreateVacancyPayload — volunteering', () => {
       startDate: '2018-01-01',
       endDate: '2019-01-01',
     });
+  });
+
+  it('sends a blank positionRole as null', () => {
+    const payload = toCreateVacancyPayload(
+      buildBaseForm({
+        preferredVolunteering: {
+          isEnabled: true,
+          dataTakenFromCandidate: false,
+          volunteering: [
+            {
+              id: 'v1',
+              isOpen: true,
+              organizationName: [],
+              organizationLocations: [],
+              cause: [],
+              causeSearch: '',
+              position: '',
+            },
+          ],
+        },
+      })
+    );
+
+    expect(payload.data.volunteering[0].content[0].positionRole).toBeNull();
   });
 });
 

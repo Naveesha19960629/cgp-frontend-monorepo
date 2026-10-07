@@ -64,6 +64,13 @@ function toRefFromAddOrSelect(item: {
   };
 }
 
+// A free-text field left blank is sent as null, not "". A section that was
+// disabled has no stored value (null), so sending "" when it is re-enabled makes
+// the backend record an "Updated <field>" history entry for a field nobody touched.
+function toNullableText(value: string | undefined): string | null {
+  return value?.trim() ? value : null;
+}
+
 function formatOptionalDate(
   date: Date | string | undefined
 ): string | undefined {
@@ -211,7 +218,7 @@ function mapHonoursAndAwards(form: VacancyForm): HonoursGroupApiPayload[] {
       dataTakenFromCandidate:
         form.preferredHonoursAwards.dataTakenFromCandidate,
       content: form.preferredHonoursAwards.honoursAndAwards.map(h => ({
-        title: h.title,
+        title: toNullableText(h.title),
         associatedOrganizations: h.associatedOrganizations.map(o => ({
           source: o.source,
           id: o.value,
@@ -220,7 +227,7 @@ function mapHonoursAndAwards(form: VacancyForm): HonoursGroupApiPayload[] {
           source: 'MASTER' as const,
           id: l.value,
         })),
-        issuedBy: h.issuedBy,
+        issuedBy: toNullableText(h.issuedBy),
         issuedFromDate: formatOptionalDate(h.issuedDateFrom ?? undefined),
         issuedToDate: formatOptionalDate(h.issuedDateTo ?? undefined),
       })),
@@ -281,7 +288,7 @@ function mapPublications(form: VacancyForm): PublicationGroupApiPayload[] {
       isEnabled: form.preferredPublications.isEnabled,
       dataTakenFromCandidate: form.preferredPublications.dataTakenFromCandidate,
       content: form.preferredPublications.publications.map(p => ({
-        acceptedPublisherName: p.acceptedPublisher,
+        acceptedPublisherName: toNullableText(p.acceptedPublisher),
         publishedDateFrom: formatOptionalDate(p.publishedDateFrom) ?? '',
         publishedDateTo: formatOptionalDate(p.publishedDateTo) ?? '',
       })),
@@ -316,7 +323,7 @@ function mapClubSocieties(form: VacancyForm): ClubSocietiesGroupApiPayload[] {
           source: 'MASTER' as const,
           id: l.value,
         })),
-        positionRoleHeld: e.position,
+        positionRoleHeld: toNullableText(e.position),
         startDate: formatOptionalDate(e.startDate) ?? '',
         endDate: formatOptionalDate(e.endDate) ?? '',
       })),
@@ -351,7 +358,7 @@ function mapSports(form: VacancyForm): SportsGroupApiPayload[] {
           id: l.value,
         })),
         levelRepresented: e.levelRepresented.map(l => toRef(l)),
-        positionRoleHeld: e.position,
+        positionRoleHeld: toNullableText(e.position),
         startDate: formatOptionalDate(e.startDate) ?? '',
         endDate: formatOptionalDate(e.endDate) ?? '',
       })),
@@ -384,7 +391,7 @@ function mapVolunteering(form: VacancyForm): VolunteeringGroupApiPayload[] {
           source: 'MASTER' as const,
           id: l.value,
         })),
-        positionRole: e.position,
+        positionRole: toNullableText(e.position),
         cause: e.cause.map(c => toRef(c)),
         startDate: formatOptionalDate(e.startDate) ?? '',
         endDate: formatOptionalDate(e.endDate) ?? '',
