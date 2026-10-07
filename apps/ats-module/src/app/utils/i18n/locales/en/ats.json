@@ -1080,8 +1080,8 @@
     }
   },
   "licenseCertificates": {
-    "title": "Preferred License and Certificate",
-    "sectionTitle": "License and Certificate",
+    "title": "Preferred Licenses and Certifications",
+    "sectionTitle": "License and Certification",
     "collectFromCandidates": "If selected, no manual input is required, and data will be taken from the candidate profile",
     "nameOfLicenseCert": "Name of the License/Certification",
     "issuingOrganization": "Issuing Organization",

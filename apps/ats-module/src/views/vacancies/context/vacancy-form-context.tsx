@@ -125,7 +125,7 @@ const VACANCY_STEPS: readonly VacancyStep[] = [
   },
   {
     key: 'license-certificates',
-    label: 'License and Certificates',
+    label: 'Licenses and Certifications',
     component: LicenseCertificatesStep,
   },
   {
