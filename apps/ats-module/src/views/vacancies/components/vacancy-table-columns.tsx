@@ -9,9 +9,16 @@ import type {
   SortableHeaderProps,
   VacancyTableColumn,
 } from '@/views/vacancies/types';
+import { TABLE_TOOLTIP_CLASS_NAME } from '@/views/vacancies/utils/constants';
 
 import { Button } from '@cgp/ui-kit/components/ui/button';
 import { Checkbox } from '@cgp/ui-kit/components/ui/checkbox';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@cgp/ui-kit/components/ui/tooltip';
+import { cn } from '@cgp/ui-kit/lib/utils';
 import { type ColumnDef } from '@tanstack/react-table';
 
 function SortableHeader({
@@ -133,15 +140,29 @@ const createVacancyColumns = ({
         onSort={onSort}
       />
     ),
+    // The cell truncates long titles; the full title is shown in a styled
+    // hover message (Figma, DQCGP-4542) instead of the browser's native
+    // `title` tooltip, which is delayed, unstyled and not captured in
+    // screenshots/recordings.
     cell: ({ row }) => (
-      <button
-        type="button"
-        title={row.original.title}
-        className="block max-w-70 cursor-pointer truncate text-left text-sm font-medium text-slate-900 hover:underline"
-        onClick={() => onView(row.original.vacancyId)}
-      >
-        {row.original.title}
-      </button>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            type="button"
+            className="block max-w-70 cursor-pointer truncate text-left text-sm font-medium text-slate-900 hover:underline"
+            onClick={() => onView(row.original.vacancyId)}
+          >
+            {row.original.title}
+          </button>
+        </TooltipTrigger>
+        <TooltipContent
+          side="right"
+          align="center"
+          className={cn('max-w-80 break-words', TABLE_TOOLTIP_CLASS_NAME)}
+        >
+          {row.original.title}
+        </TooltipContent>
+      </Tooltip>
     ),
     size: 317,
   },
@@ -377,7 +398,10 @@ const createVacancyColumns = ({
       const isToggleEnabled = isLive || isOnHold;
       return (
         <div className="flex items-center gap-3 px-6">
-          <div className="min-w-30">
+          {/* shrink-0 keeps the badge's own width (e.g. "Live (1800 Applied)")
+              so it can never be squeezed under the toggle; min-w-52 keeps the
+              toggles lined up across rows for the shorter badges. */}
+          <div className="min-w-52 shrink-0">
             <VacancyStatusBadge
               status={status}
               applicantCount={row.original.applicantCount}
@@ -399,7 +423,9 @@ const createVacancyColumns = ({
         </div>
       );
     },
-    size: 270,
+    // px-6 (48) + badge slot (208) + gap (12) + toggle (~96) = 364; the extra
+    // room fits 5-digit applicant counts in the badge without clipping.
+    size: 380,
   },
   {
     id: 'actions',

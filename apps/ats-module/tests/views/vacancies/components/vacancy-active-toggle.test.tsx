@@ -26,6 +26,11 @@ describe('VacancyActiveToggle', () => {
     ).toBeInTheDocument();
   });
 
+  it('does not shrink inside a flex row next to a long status badge (DQCGP-4517)', () => {
+    render(<VacancyActiveToggle isActive onToggle={onToggle} />);
+    expect(screen.getByRole('button')).toHaveClass('shrink-0');
+  });
+
   it('calls onToggle with false when active toggle is clicked', async () => {
     const user = userEvent.setup();
     render(<VacancyActiveToggle isActive onToggle={onToggle} />);

@@ -204,8 +204,7 @@ describe('VacanciesPage', () => {
 
     render(<VacanciesPage />);
 
-    const { onView } = createVacancyColumnsMock.mock
-      .calls[0][0] as CreateColumnsOptions;
+    const { onView } = createVacancyColumnsMock.mock.calls[0][0];
     onView('vacancy-1');
 
     expect(navigate).toHaveBeenCalledWith(
@@ -234,8 +233,7 @@ describe('VacanciesPage', () => {
     // deliberately not routed through react-router's navigate.
     window.history.pushState({}, '', '/dashboard/ats/vacancies?discipline=IT');
 
-    const { onView } = createVacancyColumnsMock.mock
-      .calls[0][0] as CreateColumnsOptions;
+    const { onView } = createVacancyColumnsMock.mock.calls[0][0];
     onView('vacancy-2');
 
     expect(navigate).toHaveBeenCalledWith(

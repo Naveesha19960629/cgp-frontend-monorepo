@@ -126,6 +126,7 @@ const VACANCY_STEPS: readonly VacancyStep[] = [
   {
     key: 'license-certificates',
     label: 'Licenses and Certifications',
+    disableToastNameKey: 'licenseCertificates.disabledSectionName',
     component: LicenseCertificatesStep,
   },
   {
@@ -151,6 +152,7 @@ const VACANCY_STEPS: readonly VacancyStep[] = [
   {
     key: 'preferred-industry',
     label: 'Preferred Industry',
+    disableToastNameKey: 'preferredIndustries.title',
     component: PreferredIndustryStep,
   },
   {

@@ -46,6 +46,20 @@ describe('VacancyMultiValueCell', () => {
     ).toBeInTheDocument();
   });
 
+  it('styles the count trigger as an underlined brand-green label per the Figma (DQCGP-4542)', () => {
+    render(
+      <VacancyMultiValueCell
+        values={['Software Engineer', 'Senior Software Engineer']}
+        countLabel="2 Job Titles"
+      />
+    );
+
+    expect(screen.getByRole('button', { name: '2 Job Titles' })).toHaveClass(
+      'text-brand-primary-500',
+      'underline'
+    );
+  });
+
   it('exposes every configured value alongside the count trigger', () => {
     render(
       <VacancyMultiValueCell

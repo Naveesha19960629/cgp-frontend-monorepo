@@ -268,7 +268,11 @@ export default function VacancyCreateStepperForm({
         confirmLabel={t('stepNavigation.disableDialog.confirmButton')}
         onConfirm={() => {
           if (pendingTargetIndex !== null) {
-            const sectionName = visibleSteps[currentStepIndex].label;
+            const { label, disableToastNameKey } =
+              visibleSteps[currentStepIndex];
+            const sectionName = disableToastNameKey
+              ? t(disableToastNameKey)
+              : label;
             stepDisableRef.current?.();
             removeCompletedStep(currentStepIndex);
             SuccessToast({

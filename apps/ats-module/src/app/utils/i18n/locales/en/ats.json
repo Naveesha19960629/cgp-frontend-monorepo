@@ -1082,6 +1082,7 @@
   "licenseCertificates": {
     "title": "Preferred Licenses and Certifications",
     "sectionTitle": "License and Certification",
+    "disabledSectionName": "Preferred Licenses and Certificates",
     "collectFromCandidates": "If selected, no manual input is required, and data will be taken from the candidate profile",
     "nameOfLicenseCert": "Name of the License/Certification",
     "issuingOrganization": "Issuing Organization",
@@ -1355,8 +1356,8 @@
     },
     "notifications": {
       "disable": {
-        "title": "Section Disabled",
-        "message": "Preferred Sports section has been disabled successfully."
+        "title": "Successfully Disabled",
+        "message": "Preferred Sports section has been successfully disabled."
       }
     },
     "fieldList": {
@@ -1417,8 +1418,8 @@
     },
     "notifications": {
       "disable": {
-        "title": "Section Disabled",
-        "message": "Preferred Volunteering section has been disabled successfully."
+        "title": "Successfully Disabled",
+        "message": "Preferred Volunteering section has been successfully disabled."
       }
     },
     "fieldList": {
@@ -1568,8 +1569,8 @@
     },
     "notifications": {
       "disable": {
-        "title": "Section Disabled",
-        "message": "Preferred Clubs and Societies section has been disabled successfully."
+        "title": "Successfully Disabled",
+        "message": "Preferred Clubs and Societies section has been successfully disabled."
       }
     },
     "fieldList": {
@@ -1615,8 +1616,8 @@
     },
     "notifications": {
       "disable": {
-        "title": "Section Disabled",
-        "message": "Preferred Publications section has been disabled successfully."
+        "title": "Successfully Disabled",
+        "message": "Preferred Publications section has been successfully disabled."
       }
     },
     "fieldList": {
@@ -1658,8 +1659,8 @@
     "expand": "Expand",
     "notifications": {
       "disable": {
-        "title": "Section Disabled",
-        "message": "Project Requirements section has been disabled successfully."
+        "title": "Successfully Disabled",
+        "message": "Project Requirements section has been successfully disabled."
       }
     },
     "placeholders": {

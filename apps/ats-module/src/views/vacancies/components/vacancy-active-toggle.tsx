@@ -21,7 +21,7 @@ export default function VacancyActiveToggle({
         onToggle?.(!isActive);
       }}
       className={cn(
-        'inline-flex h-7 items-center rounded-[100px] transition-opacity',
+        'inline-flex h-7 shrink-0 items-center rounded-[100px] transition-opacity',
         // Only disabled (non Live/On hold) toggles are faded; the functional
         // On hold "Inactive" toggle stays at full opacity per Figma.
         disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer',

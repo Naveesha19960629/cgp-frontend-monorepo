@@ -489,6 +489,12 @@ interface VacancyForm {
 interface VacancyStep {
   readonly key: string;
   readonly label: string;
+  /**
+   * Translation key for the section name shown in the "section disabled" toast
+   * when the step is disabled through step navigation. Falls back to `label`
+   * for steps whose sidebar label already matches the standard section name.
+   */
+  readonly disableToastNameKey?: string;
   readonly component: React.ComponentType<StepProps>;
 }
 interface StepProps {

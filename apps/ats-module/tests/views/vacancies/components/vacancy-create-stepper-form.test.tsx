@@ -15,10 +15,24 @@ const onNext = vi.fn();
 const onBack = vi.fn();
 const onSubmit = vi.fn();
 
+const { mockContext, mockSuccessToast, mockStepDisable, mockRemoveCompleted } =
+  vi.hoisted(() => ({
+    mockContext: { currentStepIndex: 0, stepGuard: false },
+    mockSuccessToast: vi.fn(),
+    mockStepDisable: vi.fn(),
+    mockRemoveCompleted: vi.fn(),
+  }));
+
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
-    t: (key: string) => key,
+    t: (key: string, options?: { sectionName?: string }) =>
+      options?.sectionName ? `${key}|${options.sectionName}` : key,
   }),
+}));
+
+vi.mock('@cgp/ui-kit/components/custom-toast', () => ({
+  SuccessToast: mockSuccessToast,
+  ErrorToast: vi.fn(),
 }));
 
 vi.mock('@cgp/ui-kit/components/ui/scroll-area', () => ({
@@ -102,7 +116,12 @@ vi.mock('@/views/vacancies/context/vacancy-form-context', () => {
 
   const steps = [
     { key: 'step-one', label: 'Step One', component: StepOne },
-    { key: 'step-two', label: 'Step Two', component: StepTwo },
+    {
+      key: 'step-two',
+      label: 'Step Two',
+      disableToastNameKey: 'section.disabledName',
+      component: StepTwo,
+    },
   ];
 
   return {
@@ -110,9 +129,12 @@ vi.mock('@/views/vacancies/context/vacancy-form-context', () => {
     useTemplateFieldVisible: () => () => true,
     useVacancyForm: () => ({
       visibleSteps: steps,
-      currentStepIndex: 0,
+      currentStepIndex: mockContext.currentStepIndex,
       setCurrentStepIndex,
       completedSteps: new Set<number>([0]),
+      stepGuard: mockContext.stepGuard,
+      stepDisableRef: { current: mockStepDisable },
+      removeCompletedStep: mockRemoveCompleted,
       onNext,
       onBack,
       onSubmit,
@@ -127,6 +149,8 @@ vi.mock('@/views/vacancies/context/vacancy-form-context', () => {
 describe('VacancyCreateStepperForm', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockContext.currentStepIndex = 0;
+    mockContext.stepGuard = false;
   });
 
   it('renders heading and step labels', () => {
@@ -156,5 +180,64 @@ describe('VacancyCreateStepperForm', () => {
     await user.click(screen.getByRole('button', { name: 'Trigger Next' }));
 
     expect(onNext).toHaveBeenCalledTimes(1);
+  });
+
+  describe('section disabled notification via step navigation (DQCGP-4532)', () => {
+    it('uses the standard section name for steps that define one', async () => {
+      const user = userEvent.setup();
+      mockContext.currentStepIndex = 1;
+      mockContext.stepGuard = true;
+
+      render(<VacancyCreateStepperForm />);
+
+      await user.click(screen.getByRole('tab', { name: 'Step One' }));
+      await user.click(
+        screen.getByText('stepNavigation.disableDialog.confirmButton')
+      );
+
+      expect(mockStepDisable).toHaveBeenCalledTimes(1);
+      expect(mockRemoveCompleted).toHaveBeenCalledWith(1);
+      expect(mockSuccessToast).toHaveBeenCalledWith({
+        title: 'common.notifications.disable.title',
+        description:
+          'common.notifications.disable.message|section.disabledName',
+      });
+      expect(setCurrentStepIndex).toHaveBeenCalledWith(0);
+    });
+
+    it('falls back to the step label when no section name is defined', async () => {
+      const user = userEvent.setup();
+      mockContext.currentStepIndex = 0;
+      mockContext.stepGuard = true;
+
+      render(<VacancyCreateStepperForm />);
+
+      await user.click(screen.getByRole('tab', { name: 'Step Two' }));
+      await user.click(
+        screen.getByText('stepNavigation.disableDialog.confirmButton')
+      );
+
+      expect(mockSuccessToast).toHaveBeenCalledWith({
+        title: 'common.notifications.disable.title',
+        description: 'common.notifications.disable.message|Step One',
+      });
+      expect(setCurrentStepIndex).toHaveBeenCalledWith(1);
+    });
+
+    it('does not show the notification or change step when the dialog is cancelled', async () => {
+      const user = userEvent.setup();
+      mockContext.stepGuard = true;
+
+      render(<VacancyCreateStepperForm />);
+
+      await user.click(screen.getByRole('tab', { name: 'Step Two' }));
+      await user.click(
+        await screen.findByText('common.disableDialog.cancelButton')
+      );
+
+      expect(mockSuccessToast).not.toHaveBeenCalled();
+      expect(mockStepDisable).not.toHaveBeenCalled();
+      expect(setCurrentStepIndex).not.toHaveBeenCalled();
+    });
   });
 });

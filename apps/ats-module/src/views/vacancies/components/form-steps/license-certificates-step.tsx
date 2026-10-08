@@ -18,6 +18,7 @@ import {
 import {
   useAddLicenseCertificateMutation,
   useCreateOrganizationMutation,
+  useDisableSuccessToast,
   useLicenseCertificatesForm,
   useLicenseCertificatesSearch,
   useOrganizationsSearch,
@@ -93,6 +94,7 @@ export default function LicenseCertificatesStep({
   mode = 'create',
 }: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
+  const showDisableToast = useDisableSuccessToast();
   const isFieldVisible = useTemplateFieldVisible('licensesAndCertifications');
   const hasAnyVisibleField = LICENSE_CERT_FIELD_CODES.some(code =>
     isFieldVisible(code)
@@ -1276,6 +1278,7 @@ export default function LicenseCertificatesStep({
             removeCompletedStep(currentStepIndex);
             setLicenseCertSelectorKey(k => k + 1);
             setConfirmDisableOpen(false);
+            showDisableToast(t('licenseCertificates.disabledSectionName'));
           }}
         />
 
@@ -1291,6 +1294,7 @@ export default function LicenseCertificatesStep({
             setValue('isEnabled', false);
             setLicenseCertSelectorKey(k => k + 1);
             setEmptyDisableOpen(false);
+            showDisableToast(t('licenseCertificates.disabledSectionName'));
             void handleSubmit(values => {
               onNext({
                 licenseCertificates: toLicenseCertificatesPayload(values),
