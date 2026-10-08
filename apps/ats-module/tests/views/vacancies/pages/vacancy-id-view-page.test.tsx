@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import VacancyIdViewPage from '@/views/vacancies/pages/vacancy-id-view-page';
 
 const mockNavigate = vi.fn();
-const mockUseVacancyByIdQuery = vi.fn();
+const mockUseVacancyByIdQuery = vi.fn<() => unknown>();
 let mockLocationState: unknown = null;
 
 vi.mock('react-i18next', () => ({

@@ -29,6 +29,7 @@ import {
   useDeliverySchedulesSearch,
   useDepartmentsQuery,
   useDepartmentsSearch,
+  useDisableSuccessToast,
   useFacultiesQuery,
   useFacultiesSearch,
   useLevelOfQualificationsQuery,
@@ -119,6 +120,7 @@ export default function TertiaryEducationStep({
   mode = 'create',
 }: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
+  const showDisableToast = useDisableSuccessToast();
   const isFieldVisible = useTemplateFieldVisible('tertiaryEducation');
   const {
     form: vacancyForm,
@@ -1722,6 +1724,7 @@ export default function TertiaryEducationStep({
           setValue('isEnabled', false);
           removeCompletedStep(currentStepIndex);
           setConfirmDisableOpen(false);
+          showDisableToast(t('tertiaryEducation.sectionTitle'));
         }}
       />
 
@@ -1736,6 +1739,7 @@ export default function TertiaryEducationStep({
           setValue('dataTakenFromCandidate', false);
           setValue('isEnabled', false);
           setEmptyDisableOpen(false);
+          showDisableToast(t('tertiaryEducation.sectionTitle'));
           void handleSubmit(values => {
             onNext({ tertiaryEducation: toTertiaryEducationPayload(values) });
           })();

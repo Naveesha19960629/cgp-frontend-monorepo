@@ -70,11 +70,13 @@ const {
   mockAwardingBodyMutate,
   mockFieldOfStudyMutate,
   mockAddSchoolMutate,
+  mockShowDisableToast,
 } = vi.hoisted(() => ({
   mockExaminationMutate: vi.fn(),
   mockAwardingBodyMutate: vi.fn(),
   mockFieldOfStudyMutate: vi.fn(),
   mockAddSchoolMutate: vi.fn(),
+  mockShowDisableToast: vi.fn(),
 }));
 
 vi.mock('@/views/vacancies/hooks', async importOriginal => {
@@ -82,6 +84,7 @@ vi.mock('@/views/vacancies/hooks', async importOriginal => {
     await importOriginal<typeof import('@/views/vacancies/hooks')>();
   return {
     ...actual,
+    useDisableSuccessToast: () => mockShowDisableToast,
     useSchoolsQuery: () => ({ data: undefined }),
     useSchoolLocationsQuery: () => ({ data: undefined }),
     useExaminationsQuery: () => ({ data: undefined }),
@@ -803,6 +806,29 @@ describe('SecondaryEducationStep', () => {
         'aria-checked',
         'false'
       );
+    });
+
+    it('shows the section disabled toast once "Disable" is confirmed (DQCGP-4532)', async () => {
+      const user = await openConfirmDialog();
+
+      expect(mockShowDisableToast).not.toHaveBeenCalled();
+
+      await user.click(
+        screen.getByText('secondaryEducation.confirmDisableDialog.disable')
+      );
+
+      expect(mockShowDisableToast).toHaveBeenCalledTimes(1);
+      expect(mockShowDisableToast).toHaveBeenCalledWith(
+        'secondaryEducation.sectionTitle'
+      );
+    });
+
+    it('does not show the toast when the disable dialog is cancelled (DQCGP-4532)', async () => {
+      const user = await openConfirmDialog();
+
+      await user.click(screen.getByText('common.disableDialog.cancelButton'));
+
+      expect(mockShowDisableToast).not.toHaveBeenCalled();
     });
 
     it('clears date fields (shows placeholder text) after "Disable" is confirmed', async () => {

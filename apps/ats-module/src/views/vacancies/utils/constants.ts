@@ -9,6 +9,12 @@ const TABLE_PAGE_SIZE = 12;
 
 const SEARCH_DEBOUNCE_MS = 400;
 
+// Look of the hover messages in the vacancy table (Figma, DQCGP-4542): a dark
+// slate bubble. The shared Tooltip paints its arrow with the default
+// foreground token, so the arrow is recoloured here to match the bubble.
+const TABLE_TOOLTIP_CLASS_NAME =
+  'bg-slate-700 text-white [&_[data-slot=tooltip-arrow]]:bg-slate-700 [&_[data-slot=tooltip-arrow]]:fill-slate-700';
+
 const VACANCY_STATUS_CONFIG: Record<VacancyStatus, StatusConfig> = {
   draft: {
     bg: 'bg-[#f1f5f9]',
@@ -264,6 +270,7 @@ export {
   DATE_DISPLAY_FORMAT,
   TABLE_PAGE_SIZE,
   SEARCH_DEBOUNCE_MS,
+  TABLE_TOOLTIP_CLASS_NAME,
   VACANCY_STATUS_CONFIG,
   VACANCY_STATUS_FALLBACK_CONFIG,
   VACANCY_STATUSES_WITHOUT_APPLICANT_COUNT,

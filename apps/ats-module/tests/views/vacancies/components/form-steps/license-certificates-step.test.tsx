@@ -77,7 +77,24 @@ vi.mock(
 );
 
 vi.mock('@/views/vacancies/components/step-disable-dialog', () => ({
-  default: () => null,
+  default: ({
+    open,
+    title,
+    onConfirm,
+  }: {
+    open: boolean;
+    title: string;
+    onConfirm: () => void;
+  }) =>
+    open ? (
+      <button type="button" onClick={onConfirm}>
+        {`confirm:${title}`}
+      </button>
+    ) : null,
+}));
+
+const { mockShowDisableToast } = vi.hoisted(() => ({
+  mockShowDisableToast: vi.fn(),
 }));
 
 vi.mock('@/components/message-box', () => ({
@@ -112,6 +129,7 @@ vi.mock('@/views/vacancies/hooks', () => ({
   useOrganizationsSearch: () => vi.fn().mockResolvedValue([]),
   useTertiaryAwardingBodyLocationsSearch: () => vi.fn().mockResolvedValue([]),
   useStepGuard: vi.fn(),
+  useDisableSuccessToast: () => mockShowDisableToast,
   useLicenseCertificatesForm: () => {
     const [values, setValues] = React.useState<AnyObj>(stableForm);
 
@@ -336,8 +354,21 @@ vi.mock('@cgp/ui-kit/components/ui/calendar', () => ({
 }));
 
 vi.mock('@cgp/ui-kit/components/ui/switch', () => ({
-  Switch: ({ checked }: { checked?: boolean }) => (
-    <input type="checkbox" checked={checked ?? false} readOnly />
+  Switch: ({
+    checked,
+    onCheckedChange,
+    'data-testid': testId,
+  }: {
+    checked?: boolean;
+    onCheckedChange?: (value: boolean) => void;
+    'data-testid'?: string;
+  }) => (
+    <input
+      type="checkbox"
+      data-testid={testId}
+      checked={checked ?? false}
+      onChange={event => onCheckedChange?.(event.target.checked)}
+    />
   ),
 }));
 
@@ -770,6 +801,57 @@ describe('LicenseCertificatesStep', () => {
       expect(
         screen.getByText('licenseCertificates.placeholders.expirationDate')
       ).toBeInTheDocument();
+    });
+  });
+
+  describe('disable success notification (DQCGP-4532)', () => {
+    it('shows the disabled toast when a section holding data is disabled via the toggle', async () => {
+      const user = userEvent.setup();
+
+      render(
+        <LicenseCertificatesStep
+          onNext={vi.fn()}
+          onBack={vi.fn()}
+          onSubmit={vi.fn()}
+        />
+      );
+
+      await user.click(
+        screen.getByLabelText('licenseCertificates.collectFromCandidates')
+      );
+      await user.click(screen.getByTestId('toggle-on-off-switch'));
+      await user.click(
+        await screen.findByText(
+          'confirm:licenseCertificates.confirmDisableDialog.title'
+        )
+      );
+
+      expect(mockShowDisableToast).toHaveBeenCalledTimes(1);
+      expect(mockShowDisableToast).toHaveBeenCalledWith(
+        'licenseCertificates.disabledSectionName'
+      );
+    });
+
+    it('does not show the toast when the disable confirmation is never accepted', async () => {
+      const user = userEvent.setup();
+
+      render(
+        <LicenseCertificatesStep
+          onNext={vi.fn()}
+          onBack={vi.fn()}
+          onSubmit={vi.fn()}
+        />
+      );
+
+      await user.click(
+        screen.getByLabelText('licenseCertificates.collectFromCandidates')
+      );
+      await user.click(screen.getByTestId('toggle-on-off-switch'));
+      await screen.findByText(
+        'confirm:licenseCertificates.confirmDisableDialog.title'
+      );
+
+      expect(mockShowDisableToast).not.toHaveBeenCalled();
     });
   });
 });

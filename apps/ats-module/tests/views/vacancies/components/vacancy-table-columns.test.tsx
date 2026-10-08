@@ -216,10 +216,6 @@ describe('createVacancyColumns', () => {
       expectedText: '#A1B2C3',
     },
     {
-      description: 'the title cell content',
-      expectedText: 'DevOps Engineer - AWS/Kubernetes',
-    },
-    {
       description: 'a single configured role as plain text (DQCGP-3838)',
       expectedText: 'Individual Contributor',
     },
@@ -228,23 +224,36 @@ describe('createVacancyColumns', () => {
     expect(screen.getByText(expectedText)).toBeInTheDocument();
   });
 
+  it('renders the title cell content as a button', () => {
+    render(<TableWrapper data={[sampleRow]} />);
+
+    expect(
+      screen.getByRole('button', { name: 'DevOps Engineer - AWS/Kubernetes' })
+    ).toBeInTheDocument();
+  });
+
   it('calls onView when title is clicked', async () => {
     const user = userEvent.setup();
     render(<TableWrapper data={[sampleRow]} />);
 
-    await user.click(screen.getByText('DevOps Engineer - AWS/Kubernetes'));
+    await user.click(
+      screen.getByRole('button', { name: 'DevOps Engineer - AWS/Kubernetes' })
+    );
 
     expect(onView).toHaveBeenCalledWith(sampleRow.vacancyId);
   });
 
-  it('truncates a long title with an ellipsis and shows the full text via a title attribute (DQCGP-3308)', () => {
+  it('truncates a long title with an ellipsis and shows the full text in a hover message (DQCGP-3308, DQCGP-4542)', () => {
     const longTitle =
       'Software Engineer Intern - Cloud Infrastructure and Platform Reliability Team';
     render(<TableWrapper data={[{ ...sampleRow, title: longTitle }]} />);
 
-    const titleButton = screen.getByText(longTitle);
+    const titleButton = screen.getByRole('button', { name: longTitle });
     expect(titleButton).toHaveClass('truncate');
-    expect(titleButton).toHaveAttribute('title', longTitle);
+    // The styled hover message replaces the browser's native tooltip, so the
+    // full title is rendered once more as the tooltip content.
+    expect(titleButton).not.toHaveAttribute('title');
+    expect(screen.getAllByText(longTitle)).toHaveLength(2);
   });
 
   it('renders a single configured job title as plain text (DQCGP-3838)', () => {
@@ -348,6 +357,42 @@ describe('createVacancyColumns', () => {
     render(<TableWrapper data={[sampleRow]} />);
     expect(screen.getByTestId('status-badge')).toBeInTheDocument();
     expect(screen.getByTestId('active-toggle')).toBeInTheDocument();
+  });
+
+  // DQCGP-4517: the badge now carries the applicant count ("Live (1800
+  // Applied)"), which overflowed its shrunken wrapper and overlapped the toggle.
+  it('keeps the status badge from shrinking under the active toggle (DQCGP-4517)', () => {
+    render(<TableWrapper data={[{ ...sampleRow, status: 'LIVE' }]} />);
+    const badgeSlot = screen.getByTestId('status-badge').parentElement;
+    expect(badgeSlot).toHaveClass('shrink-0');
+    expect(badgeSlot).toHaveClass('min-w-52');
+    expect(badgeSlot).not.toHaveClass('min-w-30');
+    // Badge slot and toggle are siblings in the same flex row, with a gap.
+    expect(badgeSlot?.parentElement).toContainElement(
+      screen.getByTestId('active-toggle')
+    );
+    expect(badgeSlot?.parentElement).toHaveClass('flex', 'gap-3');
+  });
+
+  it('sizes the status column to fit the badge, gap and toggle (DQCGP-4517)', () => {
+    const cols = createVacancyColumns({
+      sortBy: '',
+      sortOrder: null,
+      onSort,
+      onView,
+      onEdit,
+      onDelete,
+      onMakeACopy,
+      onSaveAsTemplate,
+      onToggleActive,
+      onCopyLink,
+      t,
+    });
+    const statusColumn = cols.find(
+      c => (c as { accessorKey?: string }).accessorKey === 'status'
+    );
+    // px-6 (48) + badge slot (208) + gap (12) + toggle (~96) = 364
+    expect(statusColumn?.size).toBeGreaterThanOrEqual(364);
   });
 
   it('passes the row applicantCount to the status badge (DQCGP-3194)', () => {

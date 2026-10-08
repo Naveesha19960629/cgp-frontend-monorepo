@@ -26,6 +26,7 @@ import {
   useAddFieldOfStudyMutation,
   useAddSchoolMutation,
   useAwardingBodiesSearch,
+  useDisableSuccessToast,
   useExaminationsQuery,
   useExaminationsSearch,
   useFieldsOfStudyQuery,
@@ -855,6 +856,7 @@ export default function SecondaryEducationStep({
   mode = 'create',
 }: Readonly<StepProps>) {
   const { t } = useTranslation('ats');
+  const showDisableToast = useDisableSuccessToast();
   const isFieldVisible = useTemplateFieldVisible('secondaryEducation');
   const {
     form: vacancyForm,
@@ -1713,6 +1715,7 @@ export default function SecondaryEducationStep({
             setValue('isEnabled', false);
             removeCompletedStep(currentStepIndex);
             setConfirmDisableOpen(false);
+            showDisableToast(t('secondaryEducation.sectionTitle'));
           }}
         />
 
@@ -1727,6 +1730,7 @@ export default function SecondaryEducationStep({
             setValue('dataTakenFromCandidate', false);
             setValue('isEnabled', false);
             setEmptyDisableOpen(false);
+            showDisableToast(t('secondaryEducation.sectionTitle'));
             void handleSubmit(values => {
               onNext({
                 secondaryEducation: toSecondaryEducationPayload(values),
