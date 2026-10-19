@@ -1,3 +1,0 @@
-window.__RUNTIME_CONFIG__ = {
-  ATS_MODULE_URL: '__ATS_MODULE_URL__',
-};
